@@ -1,4 +1,4 @@
-module github.com/nobl9-go
+module github.com/nobl9/nobl9-go
 
 go 1.16
 
