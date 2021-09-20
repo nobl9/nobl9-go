@@ -73,9 +73,9 @@ func toAnyJSONObj(in interface{}) AnyJSONObj {
 
 // CountMetricsSpec represents set of two time series of good and total counts
 type CountMetricsSpec struct {
-	Incremental *bool       `json:"incremental" validate:"required"`
-	GoodMetric  *MetricSpec `json:"good" validate:"required"`
-	TotalMetric *MetricSpec `json:"total" validate:"required"`
+	Incremental *bool       `json:"incremental"`
+	GoodMetric  *MetricSpec `json:"good"`
+	TotalMetric *MetricSpec `json:"total"`
 }
 
 // MetricSpec defines single time series kobtained from data source
@@ -95,69 +95,69 @@ type MetricSpec struct {
 
 // PrometheusMetric represents metric from Prometheus
 type PrometheusMetric struct {
-	PromQL *string `json:"promql" validate:"required" example:"cpu_usage_user{cpu=\"cpu-total\"}"`
+	PromQL *string `json:"promql"`
 }
 
 // DatadogMetric represents metric from Datadog
 type DatadogMetric struct {
-	Query *string `json:"query" validate:"required"`
+	Query *string `json:"query"`
 }
 
 // NewRelicMetric represents metric from NewRelic
 type NewRelicMetric struct {
-	NRQL *string `json:"nrql" validate:"required"`
+	NRQL *string `json:"nrql"`
 }
 
 // ThousandEyesMetric represents metric from ThousandEyes
 type ThousandEyesMetric struct {
-	TestID *int64 `json:"testID" validate:"required,gte=0"`
+	TestID *int64 `json:"testID"`
 }
 
 // AppDynamicsMetric represents metric from AppDynamics
 type AppDynamicsMetric struct {
-	ApplicationName *string `json:"applicationName" validate:"required,notEmpty"`
-	MetricPath      *string `json:"metricPath" validate:"required,unambiguousAppDynamicMetricPath"`
+	ApplicationName *string `json:"applicationName"`
+	MetricPath      *string `json:"metricPath"`
 }
 
 // SplunkMetric represents metric from Splunk
 type SplunkMetric struct {
-	Query     *string `json:"query" validate:"required"`
-	FieldName *string `json:"fieldName" validate:"required"`
+	Query     *string `json:"query"`
+	FieldName *string `json:"fieldName"`
 }
 
 // LightstepMetric represents metric from Lightstep
 type LightstepMetric struct {
-	StreamID   *string  `json:"streamId" validate:"required"`
-	TypeOfData *string  `json:"typeOfData" validate:"required,oneof=latency error_rate good total"`
+	StreamID   *string  `json:"streamId"`
+	TypeOfData *string  `json:"typeOfData"`
 	Percentile *float64 `json:"percentile,omitempty"`
 }
 
 // SplunkObservabilityMetric represents metric from SplunkObservability
 type SplunkObservabilityMetric struct {
-	Query *string `json:"query" validate:"required"`
+	Query *string `json:"query"`
 }
 
 // DynatraceMetric represents metric from Dynatrace.
 type DynatraceMetric struct {
-	MetricSelector *string `json:"metricSelector" validate:"required"`
+	MetricSelector *string `json:"metricSelector"`
 }
 
 // GraphiteMetric represents metric from Graphite.
 type GraphiteMetric struct {
-	MetricPath *string `json:"metricPath" validate:"required,metricPathGraphite"`
+	MetricPath *string `json:"metricPath"`
 }
 
 // BigQueryMetric represents metric from BigQuery
 type BigQueryMetric struct {
-	Query     string `json:"query" validate:"required,bigQueryRequiredColumns"`
-	ProjectID string `json:"projectId" validate:"required"`
-	Location  string `json:"location" validate:"required"`
+	Query     string `json:"query"`
+	ProjectID string `json:"projectId"`
+	Location  string `json:"location"`
 }
 
 // ThresholdBase base structure representing a threshold
 type ThresholdBase struct {
-	DisplayName string  `json:"displayName" validate:"objectiveDisplayName" example:"Good"`
-	Value       float64 `json:"value" validate:"numeric" example:"100"`
+	DisplayName string  `json:"displayName"`
+	Value       float64 `json:"value"`
 }
 
 // Threshold represents single threshold for SLO, for internal usage
@@ -165,7 +165,7 @@ type Threshold struct {
 	ThresholdBase
 	// <!-- Go struct field and type names renaming budgetTarget to target has been postponed after GA as requested
 	// in PC-1240. -->
-	BudgetTarget *float64 `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
+	BudgetTarget *float64 `json:"target"`
 	// <!-- Go struct field and type names renaming thresholds to objectives has been postponed after GA as requested
 	// in PC-1240. -->
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty" example:"0.9"`
@@ -175,26 +175,26 @@ type Threshold struct {
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
 type Indicator struct {
-	MetricSource *MetricSourceSpec `json:"metricSource" validate:"required"`
+	MetricSource *MetricSourceSpec `json:"metricSource"`
 	RawMetric    *MetricSpec       `json:"rawMetric,omitempty"`
 }
 
 type MetricSourceSpec struct {
-	Project string `json:"project,omitempty" validate:"omitempty,objectName" example:"default"`
-	Name    string `json:"name" validate:"required,objectName" example:"prometheus-source"`
-	Kind    string `json:"kind" validate:"omitempty,metricSourceKind" example:"Agent"`
+	Project string `json:"project,omitempty"`
+	Name    string `json:"name"`
+	Kind    string `json:"kind"`
 }
 
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
-	Description     string       `json:"description" validate:"description" example:"Total count of server requests"` //nolint:lll
+	Description     string       `json:"description"` //nolint:lll
 	Indicator       Indicator    `json:"indicator"`
-	BudgetingMethod string       `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
-	Thresholds      []Threshold  `json:"objectives" validate:"required,dive"`
-	Service         string       `json:"service" validate:"required,objectName" example:"webapp-service"`
-	TimeWindows     []TimeWindow `json:"timeWindows" validate:"required,len=1,dive"`
-	AlertPolicies   []string     `json:"alertPolicies" validate:"omitempty"`
-	Attachments     []Attachment `json:"attachments,omitempty" validate:"omitempty,len=1,dive"`
+	BudgetingMethod string       `json:"budgetingMethod"`
+	Thresholds      []Threshold  `json:"objectives"`
+	Service         string       `json:"service"`
+	TimeWindows     []TimeWindow `json:"timeWindows"`
+	AlertPolicies   []string     `json:"alertPolicies"`
+	Attachments     []Attachment `json:"attachments,omitempty"`
 	CreatedAt       string       `json:"createdAt,omitempty"`
 }
 
@@ -319,9 +319,9 @@ type ObjectInternal struct {
 
 // Metadata represents part of object which is is common for all available Objects, for internal usage
 type Metadata struct {
-	Name        string `json:"name" validate:"required,objectName" example:"name"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Prometheus Source"`
-	Project     string `json:"project,omitempty" validate:"objectName" example:"default"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+	Project     string `json:"project,omitempty"`
 }
 
 // MetadataHolder is an intermediate structure that can provides metadata related
@@ -332,8 +332,8 @@ type MetadataHolder struct {
 
 // ObjectHeader represents Header which is common for all available Objects
 type ObjectHeader struct {
-	APIVersion string `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string `json:"kind" validate:"required" example:"kind"`
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
 	MetadataHolder
 	ObjectInternal
 }
@@ -372,8 +372,8 @@ func genericToSLO(o ObjectGeneric, onlyHeader bool) (SLO, error) {
 
 // Calendar struct represents calendar time window
 type Calendar struct {
-	StartTime string `json:"startTime" validate:"required,dateWithTime,minDateTime" example:"2020-01-21 12:30:00"`
-	TimeZone  string `json:"timeZone" validate:"required,timeZone" example:"America/New_York"`
+	StartTime string `json:"startTime"`
+	TimeZone  string `json:"timeZone"`
 }
 
 // Period represents period of time
@@ -384,8 +384,8 @@ type Period struct {
 
 // TimeWindow represents content of time window
 type TimeWindow struct {
-	Unit      string    `json:"unit" validate:"required,timeUnit" example:"Week"`
-	Count     int       `json:"count" validate:"required,gt=0" example:"1"`
+	Unit      string    `json:"unit"`
+	Count     int       `json:"count"`
 	IsRolling bool      `json:"isRolling" example:"true"`
 	Calendar  *Calendar `json:"calendar,omitempty"`
 
@@ -395,7 +395,7 @@ type TimeWindow struct {
 
 // Attachment represents user defined URL attached to SLO
 type Attachment struct {
-	URL         string  `json:"url" validate:"required,url"`
+	URL         string  `json:"url"`
 	DisplayName *string `json:"displayName,omitempty"`
 }
 
@@ -408,7 +408,7 @@ type DataSource struct {
 
 // DataSourceSpec represents content of Spec typical for DataSource Object
 type DataSourceSpec struct {
-	Description string             `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
+	Description string             `json:"description,omitempty"` //nolint:lll
 	SourceOf    []string           `json:"sourceOf" example:"Metrics,Services"`
 	Prometheus  *PrometheusConfig  `json:"prometheus,omitempty"`
 	Datadog     *DatadogConfig     `json:"datadog,omitempty"`
@@ -434,44 +434,37 @@ type PrometheusConfig struct {
 type PrometheusServiceDiscovery struct {
 	// empty is treated as once, later support 1m, 2d, etc. (for now not validated, skipped)
 	Interval string                    `json:"interval,omitempty"`
-	Rules    []PrometheusDiscoveryRule `json:"rules,omitempty" validate:"dive"`
+	Rules    []PrometheusDiscoveryRule `json:"rules,omitempty"`
 }
 
 // PrometheusDiscoveryRule provides struct for storing rule for single Service discovery rule from Prometheus
 type PrometheusDiscoveryRule struct {
-	Discovery          string        `json:"discovery" validate:"required,prometheusLabelName"`
-	ServiceNamePattern string        `json:"serviceNamePattern" validate:"required,objectNameWithStringInterpolation"`
-	Filter             []FilterEntry `json:"filter,omitempty" validate:"dive"`
+	Discovery          string        `json:"discovery"`
+	ServiceNamePattern string        `json:"serviceNamePattern"`
+	Filter             []FilterEntry `json:"filter,omitempty"`
 }
 
 // FilterEntry represents single metric label to be matched against value
 type FilterEntry struct {
-	Label string `json:"label" validate:"required,prometheusLabelName"`
-	Value string `json:"value" validate:"required"`
+	Label string `json:"label"`
+	Value string `json:"value"`
 }
 
 // DatadogConfig represents content of Datadog Configuration typical for DataSource Object
 type DatadogConfig struct {
-	Site string `json:"site,omitempty" validate:"site" example:"eu"`
+	Site string `json:"site,omitempty"`
 }
 
 // DatadogAgentConfig represents content of Datadog Configuration typical for Agent Object
 type DatadogAgentConfig struct {
-	Site string `json:"site,omitempty" validate:"site" example:"eu"`
+	Site string `json:"site,omitempty"`
 }
 
 // DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object
 type DatadogDirectConfig struct {
-	Site           string `json:"site,omitempty" validate:"site" example:"eu"`
+	Site           string `json:"site,omitempty"`
 	APIKey         string `json:"apiKey" example:"secret"`
 	ApplicationKey string `json:"applicationKey" example:"secret"`
-}
-
-// PublicDatadogDirectConfig represents content of Datadog Configuration typical for Direct Object without secrets
-type PublicDatadogDirectConfig struct {
-	Site                 string `json:"site,omitempty" example:"eu"`
-	HiddenAPIKey         string `json:"apiKey" example:"[hidden]"`
-	HiddenApplicationKey string `json:"applicationKey" example:"[hidden]"`
 }
 
 // NewRelicConfig represents content of NewRelic Configuration typical for DataSource Object
@@ -486,14 +479,8 @@ type NewRelicAgentConfig struct {
 
 // NewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object
 type NewRelicDirectConfig struct {
-	AccountID        json.Number `json:"accountId" validate:"required" example:"123654"`
+	AccountID        json.Number `json:"accountId"`
 	InsightsQueryKey string      `json:"insightsQueryKey" example:"secret"`
-}
-
-// PublicNewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object without secrets
-type PublicNewRelicDirectConfig struct {
-	AccountID              json.Number `json:"accountId,omitempty" example:"123654"`
-	HiddenInsightsQueryKey string      `json:"insightsQueryKey" example:"[hidden]"`
 }
 
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for DataSource Object
@@ -506,17 +493,9 @@ type AppDynamicsAgentConfig struct {
 	URL *string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
 }
 
-// PublicAppDynamicsDirectConfig represents public content of AppDynamics Configuration
-// typical for Direct Object without secrets.
-type PublicAppDynamicsDirectConfig struct {
-	URL                string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
-	ClientID           string `json:"clientID,omitempty" example:"apiClientID@accountID"`
-	HiddenClientSecret string `json:"clientSecret,omitempty" example:"[hidden]"`
-}
-
 // AppDynamicsDirectConfig represents content of AppDynamics Configuration typical for Direct Object
 type AppDynamicsDirectConfig struct {
-	URL          string `json:"url,omitempty" validate:"httpsURL" example:"https://nobl9.saas.appdynamics.com"`
+	URL          string `json:"url,omitempty"`
 	ClientID     string `json:"clientID,omitempty" example:"apiClientID@accountID"`
 	ClientSecret string `json:"clientSecret,omitempty" example:"secret"`
 }
@@ -545,12 +524,12 @@ type LightstepAgentConfig struct {
 
 // SplunkObservabilityAgentConfig represents content of SplunkObservability Configuration typical for Agent Object
 type SplunkObservabilityAgentConfig struct {
-	URL string `json:"url,omitempty" example:"https://api.eu0.signalfx.com"`
+	Realm string `json:"realm,omitempty" example:"us1"`
 }
 
 // SplunkObservabilityDirectConfig represents content of SplunkObservability Configuration typical for Direct Object
 type SplunkObservabilityDirectConfig struct {
-	URL         string `json:"url,omitempty" validate:"httpsURL" example:"https://api.eu0.signalfx.com"`
+	URL         string `json:"url,omitempty"`
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
@@ -559,37 +538,24 @@ type ThousandEyesDirectConfig struct {
 	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
 }
 
-// PublicSplunkObservabilityDirectConfig represents content of SplunkObservability
-// Configuration typical for Direct Object
-type PublicSplunkObservabilityDirectConfig struct {
-	URL               string `json:"url,omitempty" example:"https://api.eu0.signalfx.com"`
-	HiddenAccessToken string `json:"accessToken,omitempty"`
-}
-
 // ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object
 type ThousandEyesAgentConfig struct {
 	// ThousandEyes agent doesn't require any additional parameters.
 }
 
-// PublicThousandEyesDirectConfig content of ThousandEyes
-// Configuration typical for Direct Object
-type PublicThousandEyesDirectConfig struct {
-	HiddenOauthBearerToken string `json:"oauthBearerToken,omitempty"`
-}
-
 // DynatraceAgentConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceAgentConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlDynatrace" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
+	URL string `json:"url,omitempty"` //nolint: lll
 }
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for DataSource Object.
 type DynatraceConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlDynatrace" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
+	URL string `json:"url,omitempty"` //nolint: lll
 }
 
 // GraphiteAgentConfig represents content of Graphite Configuration typical for Agent Object.
 type GraphiteAgentConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url" example:"http://graphite.example.com"`
+	URL string `json:"url,omitempty"`
 }
 
 // BigQueryAgentConfig represents content of BigQuery configuration.
@@ -601,8 +567,9 @@ type BigQueryDirectConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
 }
 
-type PublicBigQueryDirectConfig struct {
-	HiddenServiceAccountKey string `json:"serviceAccountKey,omitempty"`
+// OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
+type OpenTSDBAgentConfig struct {
+	URL string `json:"url,omitempty" example:"example of OpenTSDB cluster URL"`
 }
 
 // genericToAgent converts ObjectGeneric to ObjectAgent
@@ -644,7 +611,7 @@ type AgentStatus struct {
 
 // AgentSpec represents content of Spec typical for Agent Object
 type AgentSpec struct {
-	Description         string                          `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
+	Description         string                          `json:"description,omitempty" example:"Prometheus description"` //nolint:lll
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
 	Prometheus          *PrometheusConfig               `json:"prometheus,omitempty"`
 	Datadog             *DatadogAgentConfig             `json:"datadog,omitempty"`
@@ -657,6 +624,7 @@ type AgentSpec struct {
 	ThousandEyes        *ThousandEyesAgentConfig        `json:"thousandEyes,omitempty"`
 	Graphite            *GraphiteAgentConfig            `json:"graphite,omitempty"`
 	BigQuery            *BigQueryAgentConfig            `json:"bigQuery,omitempty"`
+	OpenTSDB            *OpenTSDBAgentConfig            `json:"opentsdb,omitempty"`
 }
 
 // genericToDirect converts ObjectGeneric to ObjectDirect
@@ -683,22 +651,9 @@ type Direct struct {
 	Status DirectStatus `json:"status"`
 }
 
-// PublicDirect struct which mapped one to one with kind: Direct yaml definition without secrets
-type PublicDirect struct {
-	ObjectHeader
-	Spec   PublicDirectSpec `json:"spec"`
-	Status DirectStatus     `json:"status"`
-}
-
-// PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
-type PublicDirectWithSLOs struct {
-	Direct PublicDirect `json:"direct"`
-	SLOs   []SLO        `json:"slos"`
-}
-
 // DirectSpec represents content of Spec typical for Direct Object
 type DirectSpec struct {
-	Description         string                           `json:"description,omitempty" validate:"description" example:"Datadog description"` //nolint:lll
+	Description         string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
 	SourceOf            []string                         `json:"sourceOf" example:"Metrics,Services"`
 	Datadog             *DatadogDirectConfig             `json:"datadog,omitempty"`
 	NewRelic            *NewRelicDirectConfig            `json:"newRelic,omitempty"`
@@ -706,18 +661,6 @@ type DirectSpec struct {
 	SplunkObservability *SplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
 	ThousandEyes        *ThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
 	BigQuery            *BigQueryDirectConfig            `json:"bigQuery,omitempty"`
-}
-
-// PublicDirectSpec represents content of Spec typical for Direct Object without secrets
-type PublicDirectSpec struct {
-	Description         string                                 `json:"description,omitempty" validate:"description" example:"Datadog description"` //nolint:lll
-	SourceOf            []string                               `json:"sourceOf" example:"Metrics,Services"`
-	Datadog             *PublicDatadogDirectConfig             `json:"datadog,omitempty"`
-	NewRelic            *PublicNewRelicDirectConfig            `json:"newRelic,omitempty"`
-	SplunkObservability *PublicSplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
-	AppDynamics         *PublicAppDynamicsDirectConfig         `json:"appDynamics,omitempty"`
-	ThousandEyes        *PublicThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
-	BigQuery            *PublicBigQueryDirectConfig            `json:"bigQuery,omitempty"`
 }
 
 // DirectStatus represents content of Status optional for Direct Object
@@ -762,7 +705,7 @@ type ServiceStatus struct {
 
 // ServiceSpec represents content of Spec typical for Service Object
 type ServiceSpec struct {
-	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
+	Description string `json:"description"`
 }
 
 // genericToService converts ObjectGeneric to Object Service
@@ -791,19 +734,19 @@ type AlertPolicy struct {
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
-	Description  string                  `json:"description" validate:"description" example:"Error budget is at risk"`
-	Severity     string                  `json:"severity" validate:"required,severity" example:"High"`
-	Conditions   []AlertCondition        `json:"conditions" validate:"required,min=1,dive"`
-	Integrations []IntegrationAssignment `json:"integrations" validate:"dive"`
+	Description  string                  `json:"description"`
+	Severity     string                  `json:"severity"`
+	Conditions   []AlertCondition        `json:"conditions"`
+	Integrations []IntegrationAssignment `json:"integrations"`
 }
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {
-	Measurement      string      `json:"measurement" validate:"required,alertPolicyMeasurement" example:"BurnedBudget"`
-	Value            interface{} `json:"value" validate:"required" swaggertype:"string" example:"0.97"`
-	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"`                   //nolint:lll
-	CoolDownDuration string      `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
-	Operation        string      `json:"op" validate:"required,alertOperation" example:"lt"`
+	Measurement      string      `json:"measurement"`
+	Value            interface{} `json:"value"`
+	LastsForDuration string      `json:"lastsFor,omitempty"` //nolint:lll
+	CoolDownDuration string      `json:"coolDown,omitempty"` //nolint:lll
+	Operation        string      `json:"op"`
 }
 
 // AlertPolicyWithSLOs struct which mapped one to one with kind: alert policy and slo yaml definition
@@ -814,8 +757,8 @@ type AlertPolicyWithSLOs struct {
 
 // IntegrationAssignment represents an Integration assigned to AlertPolicy.
 type IntegrationAssignment struct {
-	Project string `json:"project,omitempty" validate:"omitempty,objectName" example:"default"`
-	Name    string `json:"name" validate:"required,objectName" example:"webhook-integration"`
+	Project string `json:"project,omitempty"`
+	Name    string `json:"name"`
 }
 
 // genericToAlertPolicy converts ObjectGeneric to ObjectAlertPolicy
@@ -848,7 +791,7 @@ type AlertSpec struct {
 	Service        Metadata `json:"service"`
 	ThresholdValue float64  `json:"thresholdValue,omitempty"`
 	ClockTime      string   `json:"clockTime,omitempty"`
-	Severity       string   `json:"severity" validate:"required,severity" example:"High"`
+	Severity       string   `json:"severity"`
 }
 
 // Integration represents the configuration required to send a notification to an external service
@@ -858,13 +801,6 @@ type Integration struct {
 	Spec IntegrationSpec `json:"spec"`
 }
 
-// PublicIntegration represents the configuration required to send a notification to an external service
-// when an alert is triggered.
-type PublicIntegration struct {
-	ObjectHeader
-	Spec PublicIntegrationSpec `json:"spec"`
-}
-
 // Project represents label used for various entities categorization
 type Project struct {
 	ObjectHeader
@@ -872,8 +808,8 @@ type Project struct {
 
 // IntegrationSpec represents content of Integration's Spec.
 type IntegrationSpec struct {
-	Description string                 `json:"description" validate:"description" example:"Sends notification"`
-	Webhook     *WebhookIntegration    `json:"webhook,omitempty" validate:"omitempty,dive"`
+	Description string                 `json:"description"`
+	Webhook     *WebhookIntegration    `json:"webhook,omitempty"`
 	PagerDuty   *PagerDutyIntegration  `json:"pagerduty,omitempty"`
 	Slack       *SlackIntegration      `json:"slack,omitempty"`
 	Discord     *DiscordIntegration    `json:"discord,omitempty"`
@@ -882,102 +818,47 @@ type IntegrationSpec struct {
 	Jira        *JiraIntegration       `json:"jira,omitempty"`
 }
 
-// PublicIntegrationSpec represents content of Integration's Spec without secrets.
-type PublicIntegrationSpec struct {
-	Description string                       `json:"description" validate:"description" example:"Sends notification"`
-	Webhook     *PublicWebhookIntegration    `json:"webhook,omitempty"`
-	PagerDuty   *PublicPagerDutyIntegration  `json:"pagerduty,omitempty"`
-	Slack       *PublicSlackIntegration      `json:"slack,omitempty"`
-	Discord     *PublicDiscordIntegration    `json:"discord,omitempty"`
-	Opsgenie    *PublicOpsgenieIntegration   `json:"opsgenie,omitempty"`
-	ServiceNow  *PublicServiceNowIntegration `json:"servicenow,omitempty"`
-	Jira        *PublicJiraIntegration       `json:"jira,omitempty"`
-}
-
 // WebhookIntegration represents a set of properties required to send a webhook request.
 type WebhookIntegration struct {
-	URL            string   `json:"url" validate:"optionalURL"` // Field required when Integration is created.
-	Template       *string  `json:"template,omitempty" validate:"omitempty,allowedWebhookTemplateFields"`
-	TemplateFields []string `json:"templateFields,omitempty" validate:"omitempty,min=1,allowedWebhookTemplateFields"`
-}
-
-// PublicWebhookIntegration represents a set of properties required to send a webhook request without secrets.
-type PublicWebhookIntegration struct {
-	HiddenURL      string   `json:"url"`
-	Template       *string  `json:"template,omitempty" validate:"omitempty,allowedWebhookTemplateFields"`
-	TemplateFields []string `json:"templateFields,omitempty" validate:"omitempty,min=1,allowedWebhookTemplateFields"`
+	URL            string   `json:"url"` // Field required when Integration is created.
+	Template       *string  `json:"template,omitempty"`
+	TemplateFields []string `json:"templateFields,omitempty"`
 }
 
 // PagerDutyIntegration represents a set of properties required to open an Incident in PagerDuty.
 type PagerDutyIntegration struct {
-	IntegrationKey string `json:"integrationKey" validate:"pagerDutyIntegrationKey"`
-}
-
-// PublicPagerDutyIntegration represents a set of properties required to open an Incident in PagerDuty without secrets.
-type PublicPagerDutyIntegration struct {
-	HiddenIntegrationKey string `json:"integrationKey"`
+	IntegrationKey string `json:"integrationKey"`
 }
 
 // SlackIntegration represents a set of properties required to send message to Slack.
 type SlackIntegration struct {
-	URL string `json:"url" validate:"optionalURL"` // Required when integration is created.
-}
-
-// PublicSlackIntegration represents a set of properties required to send message to Slack without secrets.
-type PublicSlackIntegration struct {
-	HiddenURL string `json:"url"`
+	URL string `json:"url"` // Required when integration is created.
 }
 
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
 type OpsgenieIntegration struct {
-	Auth string `json:"auth" validate:"opsgenieApiKey"` // Field required when Integration is created.
-	URL  string `json:"url" validate:"optionalURL"`
-}
-
-// PublicOpsgenieIntegration represents a set of properties required to send message to Opsgenie without secrets.
-type PublicOpsgenieIntegration struct {
-	HiddenAuth string `json:"auth"`
-	URL        string `json:"url" validate:"required,url"`
+	Auth string `json:"auth"` // Field required when Integration is created.
+	URL  string `json:"url"`
 }
 
 // ServiceNowIntegration represents a set of properties required to send message to ServiceNow.
 type ServiceNowIntegration struct {
-	Username   string `json:"username" validate:"required"`
+	Username   string `json:"username"`
 	Password   string `json:"password"` // Field required when Integration is created.
-	InstanceID string `json:"instanceid" validate:"required"`
-}
-
-// PublicServiceNowIntegration represents a set of properties required to send message to ServiceNow without secrets.
-type PublicServiceNowIntegration struct {
-	Username       string `json:"username" validate:"required"`
-	InstanceID     string `json:"instanceid" validate:"required"`
-	HiddenPassword string `json:"password"`
+	InstanceID string `json:"instanceid"`
 }
 
 // DiscordIntegration represents a set of properties required to send message to Discord.
 type DiscordIntegration struct {
-	URL string `json:"url" validate:"urlDiscord"` // Field required when Integration is created.
-}
-
-// PublicDiscordIntegration represents a set of properties required to send message to Discord without secrets.
-type PublicDiscordIntegration struct {
-	HiddenURL string `json:"url"`
+	URL string `json:"url"` // Field required when Integration is created.
 }
 
 // JiraIntegration represents a set of properties required create tickets in Jira.
 type JiraIntegration struct {
-	URL       string `json:"url" validate:"required,httpsURL,url"`
-	Username  string `json:"username" validate:"required"`
+	URL       string `json:"url"`
+	Username  string `json:"username"`
 	APIToken  string `json:"apiToken"` // Field required when Integration is created.
-	ProjectID string `json:"projectId" validate:"required"`
-}
-
-// PublicJiraIntegration represents a set of properties required create tickets in Jira without secrets.
-type PublicJiraIntegration struct {
-	URL            string `json:"url" validate:"required,httpsURL,url"`
-	Username       string `json:"username" validate:"required"`
-	ProjectID      string `json:"projectId" validate:"required"`
-	HiddenAPIToken string `json:"apiToken"`
+	ProjectID string `json:"projectId"`
 }
 
 // genericToIntegration converts ObjectGeneric to ObjectIntegration
@@ -1006,19 +887,19 @@ type DataExport struct {
 
 // DataExportSpec represents content of DataExport's Spec
 type DataExportSpec struct {
-	ExportType string      `json:"exportType" validate:"required,exportType" example:"Snowflake"`
-	Spec       interface{} `json:"spec" validate:"required"`
+	ExportType string      `json:"exportType"`
+	Spec       interface{} `json:"spec"`
 }
 
 // S3DataExportSpec represents content of Amazon S3 export type spec.
 type S3DataExportSpec struct {
-	BucketName string `json:"bucketName" validate:"required,min=3,max=63,s3BucketName" example:"examplebucket"`
-	RoleARN    string `json:"roleArn" validate:"required,min=20,max=2048,roleARN" example:"arn:aws:iam::12345/role/n9-access"` //nolint:lll
+	BucketName string `json:"bucketName"`
+	RoleARN    string `json:"roleArn"` //nolint:lll
 }
 
 // GCSDataExportSpec represents content of GCP Cloud Storage export type spec.
 type GCSDataExportSpec struct {
-	BucketName string `json:"bucketName" validate:"required,min=3,max=222,gcsBucketName" example:"example-bucket.org.com"`
+	BucketName string `json:"bucketName"`
 }
 
 // DataExportStatus represents content of Status optional for DataExport Object
@@ -1036,7 +917,7 @@ type DataExportStatusJob struct {
 // dataExportGeneric represents struct to which every DataExport is parsable.
 // Specific types of DataExport have different structures as Spec.
 type dataExportGeneric struct {
-	ExportType string          `json:"exportType" validate:"required,exportType" example:"Snowflake"`
+	ExportType string          `json:"exportType"`
 	Spec       json.RawMessage `json:"spec"`
 }
 
