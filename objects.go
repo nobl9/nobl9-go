@@ -553,12 +553,12 @@ type ThousandEyesAgentConfig struct {
 
 // DynatraceAgentConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceAgentConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url,omitempty"` //nolint: lll
 }
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for DataSource Object.
 type DynatraceConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url,omitempty"` //nolint: lll
 }
 
 // ElasticsearchAgentConfig represents content of Elasticsearch Configuration typical for Agent Object.
@@ -588,10 +588,11 @@ type BigQueryDirectConfig struct {
 // OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
 type OpenTSDBAgentConfig struct {
 	URL string `json:"url,omitempty" example:"example of OpenTSDB cluster URL"`
+}
 
 // GrafanaLokiAgentConfig represents content of GrafanaLoki Configuration typical for Agent Object.
 type GrafanaLokiAgentConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url,omitempty" example:"example of GrafanaLoki cluster URL"`
 }
 
 // genericToAgent converts ObjectGeneric to ObjectAgent
@@ -633,7 +634,7 @@ type AgentStatus struct {
 
 // AgentSpec represents content of Spec typical for Agent Object
 type AgentSpec struct {
-	Description         string                          `json:"description,omitempty"` //nolint:lll
+	Description         string                          `json:"description,omitempty" example:"Prometheus description"` //nolint:lll
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
 	Prometheus          *PrometheusConfig               `json:"prometheus,omitempty"`
 	Datadog             *DatadogAgentConfig             `json:"datadog,omitempty"`
@@ -838,7 +839,7 @@ type IntegrationSpec struct {
 
 // WebhookIntegration represents a set of properties required to send a webhook request.
 type WebhookIntegration struct {
-	URL            string   `json:"url"`
+	URL            string   `json:"url"` // Field required when Integration is created.
 	Template       *string  `json:"template,omitempty"`
 	TemplateFields []string `json:"templateFields,omitempty"`
 }
@@ -850,7 +851,7 @@ type PagerDutyIntegration struct {
 
 // SlackIntegration represents a set of properties required to send message to Slack.
 type SlackIntegration struct {
-	URL string `json:"url"`
+	URL string `json:"url"` // Field required when Integration is created.
 }
 
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
@@ -868,7 +869,7 @@ type ServiceNowIntegration struct {
 
 // DiscordIntegration represents a set of properties required to send message to Discord.
 type DiscordIntegration struct {
-	URL string `json:"url"`
+	URL string `json:"url"` // Field required when Integration is created.
 }
 
 // JiraIntegration represents a set of properties required create tickets in Jira.
@@ -878,7 +879,6 @@ type JiraIntegration struct {
 	APIToken  string `json:"apiToken"` // Field required when Integration is created.
 	ProjectID string `json:"projectId"`
 }
-
 
 // TeamsIntegration represents a set of properties required create Microsoft Teams notifications.
 type TeamsIntegration struct {
