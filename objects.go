@@ -823,6 +823,25 @@ type Integration struct {
 	Spec IntegrationSpec `json:"spec"`
 }
 
+// Project struct which mapped one to one with kind: project yaml definition.
+type Project struct {
+	ObjectInternal
+	APIVersion string          `json:"apiVersion"`
+	Kind       string          `json:"kind"`
+	Metadata   ProjectMetadata `json:"metadata"`
+	Spec       ProjectSpec     `json:"spec"`
+}
+
+type ProjectMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+}
+
+// ProjectSpec represents content of Spec typical for Project Object.
+type ProjectSpec struct {
+	Description string `json:"description"`
+}
+
 // IntegrationSpec represents content of Integration's Spec.
 type IntegrationSpec struct {
 	Description string                 `json:"description"`
@@ -1009,7 +1028,7 @@ func genericToProject(o ObjectGeneric, onlyHeader bool) (Project, error) {
 		return res, err
 	}
 	res.Spec = resSpec
-
+  
 	return res, nil
 }
 
@@ -1026,6 +1045,10 @@ type RoleBindingSpec struct {
 	User       string `json:"user"`
 	RoleRef    string `json:"roleRef"`
 	ProjectRef string `json:"projectRef,omitempty"`
+}
+
+type RoleBindingMetadata struct {
+	Name string `json:"name"`
 }
 
 // genericToRoleBinding converts ObjectGeneric to ObjectRoleBinding
