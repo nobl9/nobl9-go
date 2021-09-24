@@ -572,6 +572,11 @@ type OpenTSDBAgentConfig struct {
 	URL string `json:"url,omitempty" example:"example of OpenTSDB cluster URL"`
 }
 
+// GrafanaLokiAgentConfig represents content of GrafanaLoki Configuration typical for Agent Object.
+type GrafanaLokiAgentConfig struct {
+	URL string `json:"url,omitempty" example:"example of GrafanaLoki cluster URL"`
+}
+
 // genericToAgent converts ObjectGeneric to ObjectAgent
 func genericToAgent(o ObjectGeneric, onlyHeader bool) (Agent, error) {
 	res := Agent{
@@ -625,6 +630,7 @@ type AgentSpec struct {
 	Graphite            *GraphiteAgentConfig            `json:"graphite,omitempty"`
 	BigQuery            *BigQueryAgentConfig            `json:"bigQuery,omitempty"`
 	OpenTSDB            *OpenTSDBAgentConfig            `json:"opentsdb,omitempty"`
+	GrafanaLoki         *GrafanaLokiAgentConfig         `json:"grafanaLoki,omitempty"`
 }
 
 // genericToDirect converts ObjectGeneric to ObjectDirect
@@ -816,6 +822,8 @@ type IntegrationSpec struct {
 	Opsgenie    *OpsgenieIntegration   `json:"opsgenie,omitempty"`
 	ServiceNow  *ServiceNowIntegration `json:"servicenow,omitempty"`
 	Jira        *JiraIntegration       `json:"jira,omitempty"`
+	Teams       *TeamsIntegration      `json:"msteams,omitempty"`
+	Email       *EmailIntegration      `json:"email,omitempty"`
 }
 
 // WebhookIntegration represents a set of properties required to send a webhook request.
@@ -859,6 +867,20 @@ type JiraIntegration struct {
 	Username  string `json:"username"`
 	APIToken  string `json:"apiToken"` // Field required when Integration is created.
 	ProjectID string `json:"projectId"`
+}
+
+// TeamsIntegration represents a set of properties required create Microsoft Teams notifications.
+type TeamsIntegration struct {
+	URL string `json:"url"`
+}
+
+// EmailIntegration represents a set of properties required to send an email.
+type EmailIntegration struct {
+	To      []string `json:"to,omitempty"`
+	Cc      []string `json:"cc,omitempty"`
+	Bcc     []string `json:"bcc,omitempty"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
 }
 
 // genericToIntegration converts ObjectGeneric to ObjectIntegration
