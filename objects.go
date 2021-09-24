@@ -856,7 +856,7 @@ type SlackIntegration struct {
 
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
 type OpsgenieIntegration struct {
-	Auth string `json:"auth"`
+	Auth string `json:"auth"` // Field required when Integration is created.
 	URL  string `json:"url"`
 }
 
