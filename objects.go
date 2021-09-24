@@ -207,7 +207,7 @@ type MetricSourceSpec struct {
 
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
-	Description     string       `json:"description"`
+	Description     string       `json:"description"` //nolint:lll
 	Indicator       Indicator    `json:"indicator"`
 	BudgetingMethod string       `json:"budgetingMethod"`
 	Thresholds      []Threshold  `json:"objectives"`
@@ -475,13 +475,6 @@ type DatadogDirectConfig struct {
 	ApplicationKey string `json:"applicationKey" example:"secret"`
 }
 
-// PublicDatadogDirectConfig represents content of Datadog Configuration typical for Direct Object without secrets
-type PublicDatadogDirectConfig struct {
-	Site                 string `json:"site,omitempty" example:"eu"`
-	HiddenAPIKey         string `json:"apiKey" example:"[hidden]"`
-	HiddenApplicationKey string `json:"applicationKey" example:"[hidden]"`
-}
-
 // NewRelicConfig represents content of NewRelic Configuration typical for DataSource Object
 type NewRelicConfig struct {
 	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
@@ -498,12 +491,6 @@ type NewRelicDirectConfig struct {
 	InsightsQueryKey string      `json:"insightsQueryKey" example:"secret"`
 }
 
-// PublicNewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object without secrets
-type PublicNewRelicDirectConfig struct {
-	AccountID              json.Number `json:"accountId,omitempty" example:"123654"`
-	HiddenInsightsQueryKey string      `json:"insightsQueryKey" example:"[hidden]"`
-}
-
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for DataSource Object
 type AppDynamicsConfig struct {
 	URL string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
@@ -512,14 +499,6 @@ type AppDynamicsConfig struct {
 // AppDynamicsAgentConfig represents content of AppDynamics Configuration typical for Agent Object
 type AppDynamicsAgentConfig struct {
 	URL *string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
-}
-
-// PublicAppDynamicsDirectConfig represents public content of AppDynamics Configuration
-// typical for Direct Object without secrets.
-type PublicAppDynamicsDirectConfig struct {
-	URL                string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
-	ClientID           string `json:"clientID,omitempty" example:"apiClientID@accountID"`
-	HiddenClientSecret string `json:"clientSecret,omitempty" example:"[hidden]"`
 }
 
 // AppDynamicsDirectConfig represents content of AppDynamics Configuration typical for Direct Object
@@ -553,7 +532,7 @@ type LightstepAgentConfig struct {
 
 // SplunkObservabilityAgentConfig represents content of SplunkObservability Configuration typical for Agent Object.
 type SplunkObservabilityAgentConfig struct {
-	Realm string `json:"realm,omitempty"`
+	Realm string `json:"realm,omitempty" example:"us1"`
 }
 
 // SplunkObservabilityDirectConfig represents content of SplunkObservability Configuration typical for Direct Object.
@@ -567,22 +546,9 @@ type ThousandEyesDirectConfig struct {
 	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
 }
 
-// PublicSplunkObservabilityDirectConfig represents content of SplunkObservability
-// Configuration typical for Direct Object.
-type PublicSplunkObservabilityDirectConfig struct {
-	Realm             string `json:"realm,omitempty" example:"us1"`
-	HiddenAccessToken string `json:"accessToken,omitempty"`
-}
-
 // ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object
 type ThousandEyesAgentConfig struct {
 	// ThousandEyes agent doesn't require any additional parameters.
-}
-
-// PublicThousandEyesDirectConfig content of ThousandEyes
-// Configuration typical for Direct Object
-type PublicThousandEyesDirectConfig struct {
-	HiddenOauthBearerToken string `json:"oauthBearerToken,omitempty"`
 }
 
 // DynatraceAgentConfig represents content of Dynatrace Configuration typical for Agent Object.
@@ -619,14 +585,9 @@ type BigQueryDirectConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
 }
 
-type PublicBigQueryDirectConfig struct {
-	HiddenServiceAccountKey string `json:"serviceAccountKey,omitempty"`
-}
-
 // OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
 type OpenTSDBAgentConfig struct {
-	URL string `json:"url,omitempty"`
-}
+	URL string `json:"url,omitempty" example:"example of OpenTSDB cluster URL"`
 
 // GrafanaLokiAgentConfig represents content of GrafanaLoki Configuration typical for Agent Object.
 type GrafanaLokiAgentConfig struct {
@@ -672,7 +633,7 @@ type AgentStatus struct {
 
 // AgentSpec represents content of Spec typical for Agent Object
 type AgentSpec struct {
-	Description         string                          `json:"description,omitempty"`
+	Description         string                          `json:"description,omitempty"` //nolint:lll
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
 	Prometheus          *PrometheusConfig               `json:"prometheus,omitempty"`
 	Datadog             *DatadogAgentConfig             `json:"datadog,omitempty"`
@@ -714,22 +675,9 @@ type Direct struct {
 	Status DirectStatus `json:"status"`
 }
 
-// PublicDirect struct which mapped one to one with kind: Direct yaml definition without secrets
-type PublicDirect struct {
-	ObjectHeader
-	Spec   PublicDirectSpec `json:"spec"`
-	Status DirectStatus     `json:"status"`
-}
-
-// PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
-type PublicDirectWithSLOs struct {
-	Direct PublicDirect `json:"direct"`
-	SLOs   []SLO        `json:"slos"`
-}
-
 // DirectSpec represents content of Spec typical for Direct Object
 type DirectSpec struct {
-	Description         string                           `json:"description,omitempty"`
+	Description         string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
 	SourceOf            []string                         `json:"sourceOf" example:"Metrics,Services"`
 	Datadog             *DatadogDirectConfig             `json:"datadog,omitempty"`
 	NewRelic            *NewRelicDirectConfig            `json:"newRelic,omitempty"`
@@ -737,18 +685,6 @@ type DirectSpec struct {
 	SplunkObservability *SplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
 	ThousandEyes        *ThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
 	BigQuery            *BigQueryDirectConfig            `json:"bigQuery,omitempty"`
-}
-
-// PublicDirectSpec represents content of Spec typical for Direct Object without secrets
-type PublicDirectSpec struct {
-	Description         string                                 `json:"description,omitempty"`
-	SourceOf            []string                               `json:"sourceOf" example:"Metrics,Services"`
-	Datadog             *PublicDatadogDirectConfig             `json:"datadog,omitempty"`
-	NewRelic            *PublicNewRelicDirectConfig            `json:"newRelic,omitempty"`
-	SplunkObservability *PublicSplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
-	AppDynamics         *PublicAppDynamicsDirectConfig         `json:"appDynamics,omitempty"`
-	ThousandEyes        *PublicThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
-	BigQuery            *PublicBigQueryDirectConfig            `json:"bigQuery,omitempty"`
 }
 
 // DirectStatus represents content of Status optional for Direct Object
@@ -829,8 +765,8 @@ type AlertPolicySpec struct {
 type AlertCondition struct {
 	Measurement      string      `json:"measurement"`
 	Value            interface{} `json:"value"`
-	LastsForDuration string      `json:"lastsFor,omitempty"`
-	CoolDownDuration string      `json:"coolDown,omitempty"`
+	LastsForDuration string      `json:"lastsFor,omitempty"` //nolint:lll
+	CoolDownDuration string      `json:"coolDown,omitempty"` //nolint:lll
 	Operation        string      `json:"op"`
 }
 
@@ -886,13 +822,6 @@ type Integration struct {
 	Spec IntegrationSpec `json:"spec"`
 }
 
-// PublicIntegration represents the configuration required to send a notification to an external service
-// when an alert is triggered.
-type PublicIntegration struct {
-	ObjectHeader
-	Spec PublicIntegrationSpec `json:"spec"`
-}
-
 // IntegrationSpec represents content of Integration's Spec.
 type IntegrationSpec struct {
 	Description string                 `json:"description"`
@@ -903,18 +832,8 @@ type IntegrationSpec struct {
 	Opsgenie    *OpsgenieIntegration   `json:"opsgenie,omitempty"`
 	ServiceNow  *ServiceNowIntegration `json:"servicenow,omitempty"`
 	Jira        *JiraIntegration       `json:"jira,omitempty"`
-}
-
-// PublicIntegrationSpec represents content of Integration's Spec without secrets.
-type PublicIntegrationSpec struct {
-	Description string                       `json:"description"`
-	Webhook     *PublicWebhookIntegration    `json:"webhook,omitempty"`
-	PagerDuty   *PublicPagerDutyIntegration  `json:"pagerduty,omitempty"`
-	Slack       *PublicSlackIntegration      `json:"slack,omitempty"`
-	Discord     *PublicDiscordIntegration    `json:"discord,omitempty"`
-	Opsgenie    *PublicOpsgenieIntegration   `json:"opsgenie,omitempty"`
-	ServiceNow  *PublicServiceNowIntegration `json:"servicenow,omitempty"`
-	Jira        *PublicJiraIntegration       `json:"jira,omitempty"`
+	Teams       *TeamsIntegration      `json:"msteams,omitempty"`
+	Email       *EmailIntegration      `json:"email,omitempty"`
 }
 
 // WebhookIntegration represents a set of properties required to send a webhook request.
@@ -924,21 +843,9 @@ type WebhookIntegration struct {
 	TemplateFields []string `json:"templateFields,omitempty"`
 }
 
-// PublicWebhookIntegration represents a set of properties required to send a webhook request without secrets.
-type PublicWebhookIntegration struct {
-	HiddenURL      string   `json:"url"`
-	Template       *string  `json:"template,omitempty"`
-	TemplateFields []string `json:"templateFields,omitempty"`
-}
-
 // PagerDutyIntegration represents a set of properties required to open an Incident in PagerDuty.
 type PagerDutyIntegration struct {
 	IntegrationKey string `json:"integrationKey"`
-}
-
-// PublicPagerDutyIntegration represents a set of properties required to open an Incident in PagerDuty without secrets.
-type PublicPagerDutyIntegration struct {
-	HiddenIntegrationKey string `json:"integrationKey"`
 }
 
 // SlackIntegration represents a set of properties required to send message to Slack.
@@ -946,21 +853,10 @@ type SlackIntegration struct {
 	URL string `json:"url"`
 }
 
-// PublicSlackIntegration represents a set of properties required to send message to Slack without secrets.
-type PublicSlackIntegration struct {
-	HiddenURL string `json:"url"`
-}
-
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
 type OpsgenieIntegration struct {
 	Auth string `json:"auth"`
 	URL  string `json:"url"`
-}
-
-// PublicOpsgenieIntegration represents a set of properties required to send message to Opsgenie without secrets.
-type PublicOpsgenieIntegration struct {
-	HiddenAuth string `json:"auth"`
-	URL        string `json:"url"`
 }
 
 // ServiceNowIntegration represents a set of properties required to send message to ServiceNow.
@@ -970,21 +866,9 @@ type ServiceNowIntegration struct {
 	InstanceID string `json:"instanceid"`
 }
 
-// PublicServiceNowIntegration represents a set of properties required to send message to ServiceNow without secrets.
-type PublicServiceNowIntegration struct {
-	Username       string `json:"username"`
-	InstanceID     string `json:"instanceid"`
-	HiddenPassword string `json:"password"`
-}
-
 // DiscordIntegration represents a set of properties required to send message to Discord.
 type DiscordIntegration struct {
 	URL string `json:"url"`
-}
-
-// PublicDiscordIntegration represents a set of properties required to send message to Discord without secrets.
-type PublicDiscordIntegration struct {
-	HiddenURL string `json:"url"`
 }
 
 // JiraIntegration represents a set of properties required create tickets in Jira.
@@ -995,12 +879,19 @@ type JiraIntegration struct {
 	ProjectID string `json:"projectId"`
 }
 
-// PublicJiraIntegration represents a set of properties required create tickets in Jira without secrets.
-type PublicJiraIntegration struct {
-	URL            string `json:"url"`
-	Username       string `json:"username"`
-	ProjectID      string `json:"projectId"`
-	HiddenAPIToken string `json:"apiToken"`
+
+// TeamsIntegration represents a set of properties required create Microsoft Teams notifications.
+type TeamsIntegration struct {
+	URL string `json:"url"`
+}
+
+// EmailIntegration represents a set of properties required to send an email.
+type EmailIntegration struct {
+	To      []string `json:"to,omitempty"`
+	Cc      []string `json:"cc,omitempty"`
+	Bcc     []string `json:"bcc,omitempty"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
 }
 
 // genericToIntegration converts ObjectGeneric to ObjectIntegration
@@ -1036,7 +927,7 @@ type DataExportSpec struct {
 // S3DataExportSpec represents content of Amazon S3 export type spec.
 type S3DataExportSpec struct {
 	BucketName string `json:"bucketName"`
-	RoleARN    string `json:"roleArn"`
+	RoleARN    string `json:"roleArn"` //nolint:lll
 }
 
 // GCSDataExportSpec represents content of GCP Cloud Storage export type spec.
