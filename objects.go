@@ -28,6 +28,7 @@ const (
 	KindIntegration = "Integration"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
+	KindRoleBinding = "RoleBinding"
 )
 
 // APIObjects - all Objects available for this version of API
@@ -42,6 +43,8 @@ type APIObjects struct {
 	Integrations  []Integration
 	Directs       []Direct
 	DataExports   []DataExport
+	Projects      []Project
+	RoleBindings  []RoleBinding
 }
 
 type Payload struct {
@@ -807,9 +810,23 @@ type Integration struct {
 	Spec IntegrationSpec `json:"spec"`
 }
 
-// Project represents label used for various entities categorization
+// Project struct which mapped one to one with kind: project yaml definition.
 type Project struct {
-	ObjectHeader
+	ObjectInternal
+	APIVersion string          `json:"apiVersion"`
+	Kind       string          `json:"kind"`
+	Metadata   ProjectMetadata `json:"metadata"`
+	Spec       ProjectSpec     `json:"spec"`
+}
+
+type ProjectMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+}
+
+// ProjectSpec represents content of Spec typical for Project Object.
+type ProjectSpec struct {
+	Description string `json:"description"`
 }
 
 // IntegrationSpec represents content of Integration's Spec.
@@ -974,6 +991,75 @@ func genericToDataExport(o ObjectGeneric, onlyHeader bool) (DataExport, error) {
 	return res, nil
 }
 
+// genericToProject converts ObjectGeneric to Project
+func genericToProject(o ObjectGeneric, onlyHeader bool) (Project, error) {
+	res := Project{
+		APIVersion: o.ObjectHeader.APIVersion,
+		Kind:       o.ObjectHeader.Kind,
+		Metadata: ProjectMetadata{
+			Name:        o.Metadata.Name,
+			DisplayName: o.Metadata.DisplayName,
+		},
+		ObjectInternal: ObjectInternal{
+			Organization: o.ObjectHeader.Organization,
+			ManifestSrc:  o.ObjectHeader.ManifestSrc,
+		},
+	}
+	if onlyHeader {
+		return res, nil
+	}
+
+	var resSpec ProjectSpec
+	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
+		err = EnhanceError(o, err)
+		return res, err
+	}
+	res.Spec = resSpec
+	return res, nil
+}
+
+// RoleBinding represents relation of User and Role
+type RoleBinding struct {
+	ObjectInternal
+	APIVersion string              `json:"apiVersion"`
+	Kind       string              `json:"kind"`
+	Metadata   RoleBindingMetadata `json:"metadata"`
+	Spec       RoleBindingSpec     `json:"spec"`
+}
+
+type RoleBindingSpec struct {
+	User       string `json:"user"`
+	RoleRef    string `json:"roleRef"`
+	ProjectRef string `json:"projectRef,omitempty"`
+}
+
+type RoleBindingMetadata struct {
+	Name string `json:"name"`
+}
+
+// genericToRoleBinding converts ObjectGeneric to ObjectRoleBinding
+// onlyHeader parameter is not supported for RoleBinding since ProjectRef is defined on Spec section.
+func genericToRoleBinding(o ObjectGeneric) (RoleBinding, error) {
+	res := RoleBinding{
+		APIVersion: o.ObjectHeader.APIVersion,
+		Kind:       o.ObjectHeader.Kind,
+		Metadata: RoleBindingMetadata{
+			Name: o.Metadata.Name,
+		},
+		ObjectInternal: ObjectInternal{
+			Organization: o.ObjectHeader.Organization,
+			ManifestSrc:  o.ObjectHeader.ManifestSrc,
+		},
+	}
+	var resSpec RoleBindingSpec
+	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
+		err = EnhanceError(o, err)
+		return res, err
+	}
+	res.Spec = resSpec
+	return res, nil
+}
+
 // Parse takes care of all Object supported by n9/v1alpha apiVersion
 func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 
@@ -1027,6 +1113,18 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 			allErrors = append(allErrors, err.Error())
 		}
 		parsedObjects.DataExports = append(parsedObjects.DataExports, dataExport)
+	case KindProject:
+		project, err := genericToProject(o, onlyHeaders)
+		if err != nil {
+			allErrors = append(allErrors, err.Error())
+		}
+		parsedObjects.Projects = append(parsedObjects.Projects, project)
+	case KindRoleBinding:
+		roleBinding, err := genericToRoleBinding(o)
+		if err != nil {
+			allErrors = append(allErrors, err.Error())
+		}
+		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
 	// catching invalid kinds of objects for this apiVersion
 	default:
 		err := UnsupportedKindErr(o)
