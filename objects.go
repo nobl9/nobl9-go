@@ -18,7 +18,6 @@ const HiddenValue = "[hidden]"
 
 // Possible values of field kind for valid Objects.
 const (
-	KindDataSource  = "DataSource"
 	KindSLO         = "SLO"
 	KindService     = "Service"
 	KindAgent       = "Agent"
@@ -34,7 +33,6 @@ const (
 // APIObjects - all Objects available for this version of API
 // Sorted in order of applying
 type APIObjects struct {
-	DataSources   []DataSource
 	SLOs          []SLO
 	Services      []Service
 	Agents        []Agent
@@ -91,9 +89,12 @@ type MetricSpec struct {
 	Lightstep           *LightstepMetric           `json:"lightstep,omitempty"`
 	SplunkObservability *SplunkObservabilityMetric `json:"splunkObservability,omitempty"`
 	Dynatrace           *DynatraceMetric           `json:"dynatrace,omitempty"`
+	Elasticsearch       *ElasticsearchMetric       `json:"elasticsearch,omitempty"`
 	ThousandEyes        *ThousandEyesMetric        `json:"thousandEyes,omitempty"`
 	Graphite            *GraphiteMetric            `json:"graphite,omitempty"`
 	BigQuery            *BigQueryMetric            `json:"bigQuery,omitempty"`
+	OpenTSDB            *OpenTSDBMetric            `json:"opentsdb,omitempty"`
+	GrafanaLoki         *GrafanaLokiMetric         `json:"grafanaLoki,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -137,12 +138,18 @@ type LightstepMetric struct {
 
 // SplunkObservabilityMetric represents metric from SplunkObservability
 type SplunkObservabilityMetric struct {
-	Query *string `json:"query"`
+	Program *string `json:"program"`
 }
 
 // DynatraceMetric represents metric from Dynatrace.
 type DynatraceMetric struct {
 	MetricSelector *string `json:"metricSelector"`
+}
+
+// ElasticsearchMetric represents metric from Elasticsearch.
+type ElasticsearchMetric struct {
+	Index *string `json:"index"`
+	Query *string `json:"query"`
 }
 
 // GraphiteMetric represents metric from Graphite.
@@ -155,6 +162,16 @@ type BigQueryMetric struct {
 	Query     string `json:"query"`
 	ProjectID string `json:"projectId"`
 	Location  string `json:"location"`
+}
+
+// OpenTSDBMetric represents metric from OpenTSDB.
+type OpenTSDBMetric struct {
+	Query *string `json:"query"`
+}
+
+// GrafanaLokiMetric represents metric from GrafanaLokiMetric.
+type GrafanaLokiMetric struct {
+	Logql *string `json:"logql"`
 }
 
 // ThresholdBase base structure representing a threshold
@@ -402,26 +419,6 @@ type Attachment struct {
 	DisplayName *string `json:"displayName,omitempty"`
 }
 
-// DataSource struct which mapped one to one with kind: DataSource yaml definition
-type DataSource struct {
-	ObjectHeader
-	Spec   DataSourceSpec   `json:"spec"`
-	Status DataSourceStatus `json:"status"`
-}
-
-// DataSourceSpec represents content of Spec typical for DataSource Object
-type DataSourceSpec struct {
-	Description string             `json:"description,omitempty"` //nolint:lll
-	SourceOf    []string           `json:"sourceOf" example:"Metrics,Services"`
-	Prometheus  *PrometheusConfig  `json:"prometheus,omitempty"`
-	Datadog     *DatadogConfig     `json:"datadog,omitempty"`
-	NewRelic    *NewRelicConfig    `json:"newRelic,omitempty"`
-	AppDynamics *AppDynamicsConfig `json:"appDynamics,omitempty"`
-	Splunk      *SplunkConfig      `json:"splunk,omitempty"`
-	Lightstep   *LightstepConfig   `json:"lightstep,omitempty"`
-	Dynatrace   *DynatraceConfig   `json:"dynatrace,omitempty"`
-}
-
 // DataSourceStatus represents content of Status optional for DataSource Object
 type DataSourceStatus struct {
 	DataSourceType string `json:"dataSourceType" example:"Prometheus"`
@@ -525,14 +522,14 @@ type LightstepAgentConfig struct {
 	Project      string `json:"project,omitempty" example:"play"`
 }
 
-// SplunkObservabilityAgentConfig represents content of SplunkObservability Configuration typical for Agent Object
+// SplunkObservabilityAgentConfig represents content of SplunkObservability Configuration typical for Agent Object.
 type SplunkObservabilityAgentConfig struct {
 	Realm string `json:"realm,omitempty" example:"us1"`
 }
 
-// SplunkObservabilityDirectConfig represents content of SplunkObservability Configuration typical for Direct Object
+// SplunkObservabilityDirectConfig represents content of SplunkObservability Configuration typical for Direct Object.
 type SplunkObservabilityDirectConfig struct {
-	URL         string `json:"url,omitempty"`
+	Realm       string `json:"realm,omitempty"`
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
@@ -554,6 +551,16 @@ type DynatraceAgentConfig struct {
 // DynatraceConfig represents content of Dynatrace Configuration typical for DataSource Object.
 type DynatraceConfig struct {
 	URL string `json:"url,omitempty"` //nolint: lll
+}
+
+// ElasticsearchAgentConfig represents content of Elasticsearch Configuration typical for Agent Object.
+type ElasticsearchAgentConfig struct {
+	URL string `json:"url,omitempty"`
+}
+
+// ElasticsearchConfig represents content of Elasticsearch Configuration typical for DataSource Object.
+type ElasticsearchConfig struct {
+	URL string `json:"url,omitempty"`
 }
 
 // GraphiteAgentConfig represents content of Graphite Configuration typical for Agent Object.
@@ -629,6 +636,7 @@ type AgentSpec struct {
 	Lightstep           *LightstepAgentConfig           `json:"lightstep,omitempty"`
 	SplunkObservability *SplunkObservabilityAgentConfig `json:"splunkObservability,omitempty"`
 	Dynatrace           *DynatraceAgentConfig           `json:"dynatrace,omitempty"`
+	Elasticsearch       *ElasticsearchAgentConfig       `json:"elasticsearch,omitempty"`
 	ThousandEyes        *ThousandEyesAgentConfig        `json:"thousandEyes,omitempty"`
 	Graphite            *GraphiteAgentConfig            `json:"graphite,omitempty"`
 	BigQuery            *BigQueryAgentConfig            `json:"bigQuery,omitempty"`
@@ -677,23 +685,6 @@ type DirectStatus struct {
 	DirectType string `json:"directType" example:"Datadog"`
 }
 
-// genericToDataSource converts ObjectGeneric to ObjectDataSource
-func genericToDataSource(o ObjectGeneric, onlyHeader bool) (DataSource, error) {
-	res := DataSource{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec DataSourceSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	return res, nil
-}
-
 // Service struct which mapped one to one with kind: service yaml definition
 type Service struct {
 	ObjectHeader
@@ -714,6 +705,25 @@ type ServiceStatus struct {
 
 // ServiceSpec represents content of Spec typical for Service Object
 type ServiceSpec struct {
+	Description string `json:"description"`
+}
+
+// Project struct which mapped one to one with kind: project yaml definition.
+type Project struct {
+	ObjectInternal
+	APIVersion string          `json:"apiVersion"`
+	Kind       string          `json:"kind"`
+	Metadata   ProjectMetadata `json:"metadata"`
+	Spec       ProjectSpec     `json:"spec"`
+}
+
+type ProjectMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+}
+
+// ProjectSpec represents content of Spec typical for Project Object.
+type ProjectSpec struct {
 	Description string `json:"description"`
 }
 
@@ -810,25 +820,6 @@ type Integration struct {
 	Spec IntegrationSpec `json:"spec"`
 }
 
-// Project struct which mapped one to one with kind: project yaml definition.
-type Project struct {
-	ObjectInternal
-	APIVersion string          `json:"apiVersion"`
-	Kind       string          `json:"kind"`
-	Metadata   ProjectMetadata `json:"metadata"`
-	Spec       ProjectSpec     `json:"spec"`
-}
-
-type ProjectMetadata struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName,omitempty"`
-}
-
-// ProjectSpec represents content of Spec typical for Project Object.
-type ProjectSpec struct {
-	Description string `json:"description"`
-}
-
 // IntegrationSpec represents content of Integration's Spec.
 type IntegrationSpec struct {
 	Description string                 `json:"description"`
@@ -857,7 +848,7 @@ type PagerDutyIntegration struct {
 
 // SlackIntegration represents a set of properties required to send message to Slack.
 type SlackIntegration struct {
-	URL string `json:"url"` // Required when integration is created.
+	URL string `json:"url"` // Field required when Integration is created.
 }
 
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
@@ -1015,6 +1006,7 @@ func genericToProject(o ObjectGeneric, onlyHeader bool) (Project, error) {
 		return res, err
 	}
 	res.Spec = resSpec
+
 	return res, nil
 }
 
@@ -1057,6 +1049,7 @@ func genericToRoleBinding(o ObjectGeneric) (RoleBinding, error) {
 		return res, err
 	}
 	res.Spec = resSpec
+
 	return res, nil
 }
 
@@ -1065,12 +1058,6 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 
 	var allErrors []string
 	switch o.Kind {
-	case KindDataSource:
-		dataSource, err := genericToDataSource(o, onlyHeaders)
-		if err != nil {
-			allErrors = append(allErrors, err.Error())
-		}
-		parsedObjects.DataSources = append(parsedObjects.DataSources, dataSource)
 	case KindSLO:
 		slo, err := genericToSLO(o, onlyHeaders)
 		if err != nil {

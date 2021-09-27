@@ -111,6 +111,7 @@ const (
 	ObjectMetricSource Object = "MetricSource"
 	ObjectDirect       Object = "Direct"
 	ObjectDataExport   Object = "DataExport"
+	ObjectRoleBinding  Object = "RoleBinding"
 )
 
 ////////***********///////////
