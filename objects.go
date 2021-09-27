@@ -357,14 +357,6 @@ type ObjectHeader struct {
 	MetadataHolder
 	ObjectInternal
 }
-type ProjectMetadata struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName,omitempty"`
-}
-
-type RoleBindingMetadata struct {
-	Name string `json:"name"`
-}
 
 // ObjectGeneric represents struct to which every Objects is parsable
 // Specific types of Object have different structures as Spec
@@ -725,6 +717,11 @@ type Project struct {
 	Spec       ProjectSpec     `json:"spec"`
 }
 
+type ProjectMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+}
+
 // ProjectSpec represents content of Spec typical for Project Object.
 type ProjectSpec struct {
 	Description string `json:"description"`
@@ -821,25 +818,6 @@ type AlertSpec struct {
 type Integration struct {
 	ObjectHeader
 	Spec IntegrationSpec `json:"spec"`
-}
-
-// Project struct which mapped one to one with kind: project yaml definition.
-type Project struct {
-	ObjectInternal
-	APIVersion string          `json:"apiVersion"`
-	Kind       string          `json:"kind"`
-	Metadata   ProjectMetadata `json:"metadata"`
-	Spec       ProjectSpec     `json:"spec"`
-}
-
-type ProjectMetadata struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName,omitempty"`
-}
-
-// ProjectSpec represents content of Spec typical for Project Object.
-type ProjectSpec struct {
-	Description string `json:"description"`
 }
 
 // IntegrationSpec represents content of Integration's Spec.
@@ -1028,7 +1006,7 @@ func genericToProject(o ObjectGeneric, onlyHeader bool) (Project, error) {
 		return res, err
 	}
 	res.Spec = resSpec
-  
+
 	return res, nil
 }
 
