@@ -342,7 +342,10 @@ type Metadata struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName,omitempty"`
 	Project     string `json:"project,omitempty"`
+	Labels      Labels `json:"labels,omitempty"`
 }
+
+type Labels map[string][]string
 
 // MetadataHolder is an intermediate structure that can provides metadata related
 // field to other structures
