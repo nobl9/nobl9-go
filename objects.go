@@ -24,7 +24,7 @@ const (
 	KindProject     = "Project"
 	KindAlertPolicy = "AlertPolicy"
 	KindAlert       = "Alert"
-	KindIntegration = "Integration"
+	KindAlertMethod = "AlertMethod"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
 	KindRoleBinding = "RoleBinding"
@@ -38,7 +38,7 @@ type APIObjects struct {
 	Agents        []Agent
 	AlertPolicies []AlertPolicy
 	Alerts        []Alert
-	Integrations  []Integration
+	AlertMethods  []AlertMethod
 	Directs       []Direct
 	DataExports   []DataExport
 	Projects      []Project
@@ -756,10 +756,10 @@ type AlertPolicy struct {
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
-	Description  string                  `json:"description"`
-	Severity     string                  `json:"severity"`
-	Conditions   []AlertCondition        `json:"conditions"`
-	Integrations []IntegrationAssignment `json:"integrations"`
+	Description  string                   `json:"description"`
+	Severity     string                   `json:"severity"`
+	Conditions   []AlertCondition         `json:"conditions"`
+	AlertMethods []AlertMethodsAssignment `json:"alertMethods"`
 }
 
 // AlertCondition represents a condition to meet to trigger an alert.
@@ -777,8 +777,8 @@ type AlertPolicyWithSLOs struct {
 	SLOs        []SLO       `json:"slos"`
 }
 
-// IntegrationAssignment represents an Integration assigned to AlertPolicy.
-type IntegrationAssignment struct {
+// AlertMethodsAssignment represents an AlertMethod assigned to AlertPolicy.
+type AlertMethodsAssignment struct {
 	Project string `json:"project,omitempty"`
 	Name    string `json:"name"`
 }
@@ -816,15 +816,15 @@ type AlertSpec struct {
 	Severity       string   `json:"severity"`
 }
 
-// Integration represents the configuration required to send a notification to an external service
+// AlertMethod represents the configuration required to send a notification to an external service
 // when an alert is triggered.
-type Integration struct {
+type AlertMethod struct {
 	ObjectHeader
-	Spec IntegrationSpec `json:"spec"`
+	Spec AlertMethodSpec `json:"spec"`
 }
 
-// IntegrationSpec represents content of Integration's Spec.
-type IntegrationSpec struct {
+// AlertMethodSpec represents content of AlertMethod's Spec.
+type AlertMethodSpec struct {
 	Description string                 `json:"description"`
 	Webhook     *WebhookIntegration    `json:"webhook,omitempty"`
 	PagerDuty   *PagerDutyIntegration  `json:"pagerduty,omitempty"`
@@ -839,7 +839,7 @@ type IntegrationSpec struct {
 
 // WebhookIntegration represents a set of properties required to send a webhook request.
 type WebhookIntegration struct {
-	URL            string   `json:"url"` // Field required when Integration is created.
+	URL            string   `json:"url"` // Field required when AlertMethod is created.
 	Template       *string  `json:"template,omitempty"`
 	TemplateFields []string `json:"templateFields,omitempty"`
 }
@@ -851,33 +851,33 @@ type PagerDutyIntegration struct {
 
 // SlackIntegration represents a set of properties required to send message to Slack.
 type SlackIntegration struct {
-	URL string `json:"url"` // Field required when Integration is created.
+	URL string `json:"url"` // Field required when AlertMethod is created.
 }
 
 // OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
 type OpsgenieIntegration struct {
-	Auth string `json:"auth"` // Field required when Integration is created.
+	Auth string `json:"auth"` // Field required when AlertMethod is created.
 	URL  string `json:"url"`
 }
 
 // ServiceNowIntegration represents a set of properties required to send message to ServiceNow.
 type ServiceNowIntegration struct {
 	Username   string `json:"username"`
-	Password   string `json:"password"` // Field required when Integration is created.
+	Password   string `json:"password"` // Field required when AlertMethod is created.
 	InstanceID string `json:"instanceid"`
 }
 
 // DiscordIntegration represents a set of properties required to send message to Discord.
 type DiscordIntegration struct {
-	URL string `json:"url"` // Field required when Integration is created.
+	URL string `json:"url"` // Field required when AlertMethod is created.
 }
 
 // JiraIntegration represents a set of properties required create tickets in Jira.
 type JiraIntegration struct {
-	URL       string `json:"url"`
-	Username  string `json:"username"`
-	APIToken  string `json:"apiToken"` // Field required when Integration is created.
-	ProjectID string `json:"projectId"`
+	URL        string `json:"url"`
+	Username   string `json:"username"`
+	APIToken   string `json:"apiToken"` // Field required when AlertMethod is created.
+	ProjectKey string `json:"projectKey"`
 }
 
 // TeamsIntegration represents a set of properties required create Microsoft Teams notifications.
@@ -894,15 +894,15 @@ type EmailIntegration struct {
 	Body    string   `json:"body"`
 }
 
-// genericToIntegration converts ObjectGeneric to ObjectIntegration
-func genericToIntegration(o ObjectGeneric, onlyHeader bool) (Integration, error) {
-	res := Integration{
+// genericToIntegration converts ObjectGeneric to ObjectAlertMethod
+func genericToIntegration(o ObjectGeneric, onlyHeader bool) (AlertMethod, error) {
+	res := AlertMethod{
 		ObjectHeader: o.ObjectHeader,
 	}
 	if onlyHeader {
 		return res, nil
 	}
-	var resSpec IntegrationSpec
+	var resSpec AlertMethodSpec
 	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
 		err = EnhanceError(o, err)
 		return res, err
@@ -1085,12 +1085,12 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 			allErrors = append(allErrors, err.Error())
 		}
 		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
-	case KindIntegration:
+	case KindAlertMethod:
 		integration, err := genericToIntegration(o, onlyHeaders)
 		if err != nil {
 			allErrors = append(allErrors, err.Error())
 		}
-		parsedObjects.Integrations = append(parsedObjects.Integrations, integration)
+		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, integration)
 	case KindDirect:
 		direct, err := genericToDirect(o, onlyHeaders)
 		if err != nil {

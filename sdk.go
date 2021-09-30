@@ -106,7 +106,7 @@ const (
 	// ObjectProject represents object used only to return list of Projects.
 	// Applying and deleting projects is not supported.
 	ObjectProject     Object = "Project"
-	ObjectIntegration Object = "Integration"
+	ObjectAlertMethod Object = "AlertMethod"
 	// ObjectMetricSource represents ephemeral object used only to return concatenated list of Agents and DataSources.
 	ObjectMetricSource Object = "MetricSource"
 	ObjectDirect       Object = "Direct"
@@ -166,7 +166,7 @@ func getAllObjects() []Object {
 		ObjectMetricSource,
 		ObjectAlertPolicy,
 		ObjectAlert,
-		ObjectIntegration,
+		ObjectAlertMethod,
 		ObjectDirect,
 		ObjectDataExport,
 	}
@@ -181,7 +181,7 @@ func ObjectName(apiObject string) Object {
 		"alertpolicy": ObjectAlertPolicy,
 		"alert":       ObjectAlert,
 		"project":     ObjectProject,
-		"integration": ObjectIntegration,
+		"integration": ObjectAlertMethod,
 		"direct":      ObjectDirect,
 		"dataExport":  ObjectDataExport,
 	}
