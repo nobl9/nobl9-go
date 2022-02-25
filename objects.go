@@ -756,10 +756,14 @@ type AlertPolicy struct {
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
-	Description  string                   `json:"description"`
-	Severity     string                   `json:"severity"`
-	Conditions   []AlertCondition         `json:"conditions"`
-	AlertMethods []AlertMethodsAssignment `json:"alertMethods"`
+	Description  string              `json:"description"`
+	Severity     string              `json:"severity"`
+	Conditions   []AlertCondition    `json:"conditions"`
+	AlertMethods []PublicAlertMethod `json:"alertMethods"`
+}
+
+func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
+	return spec.AlertMethods
 }
 
 // AlertCondition represents a condition to meet to trigger an alert.
@@ -777,10 +781,15 @@ type AlertPolicyWithSLOs struct {
 	SLOs        []SLO       `json:"slos"`
 }
 
-// AlertMethodsAssignment represents an AlertMethod assigned to AlertPolicy.
-type AlertMethodsAssignment struct {
+// AlertMethodAssignment represents an AlertMethod assigned to AlertPolicy.
+type AlertMethodAssignment struct {
 	Project string `json:"project,omitempty"`
 	Name    string `json:"name"`
+}
+
+type AlertMethodWithAlertPolicy struct {
+	AlertMethod   PublicAlertMethod `json:"alertMethod"`
+	AlertPolicies []AlertPolicy     `json:"alertPolicies"`
 }
 
 // genericToAlertPolicy converts ObjectGeneric to ObjectAlertPolicy
@@ -823,70 +832,160 @@ type AlertMethod struct {
 	Spec AlertMethodSpec `json:"spec"`
 }
 
+// PublicAlertMethod represents the configuration required to send a notification to an external service
+// when an alert is triggered.
+type PublicAlertMethod struct {
+	ObjectHeader
+	Spec   PublicAlertMethodSpec    `json:"spec"`
+	Status *PublicAlertMethodStatus `json:"status,omitempty"`
+}
+
+// PublicAlertMethodStatus represents content of Status optional for PublicAlertMethod Object
+type PublicAlertMethodStatus struct {
+	LastTestDate       string `json:"lastTestDate,omitempty"`
+	NextTestPossibleAt string `json:"nextTestPossibleAt,omitempty"`
+}
+
 // AlertMethodSpec represents content of AlertMethod's Spec.
 type AlertMethodSpec struct {
 	Description string                 `json:"description"`
-	Webhook     *WebhookIntegration    `json:"webhook,omitempty"`
-	PagerDuty   *PagerDutyIntegration  `json:"pagerduty,omitempty"`
-	Slack       *SlackIntegration      `json:"slack,omitempty"`
-	Discord     *DiscordIntegration    `json:"discord,omitempty"`
-	Opsgenie    *OpsgenieIntegration   `json:"opsgenie,omitempty"`
-	ServiceNow  *ServiceNowIntegration `json:"servicenow,omitempty"`
-	Jira        *JiraIntegration       `json:"jira,omitempty"`
-	Teams       *TeamsIntegration      `json:"msteams,omitempty"`
-	Email       *EmailIntegration      `json:"email,omitempty"`
+	Webhook     *WebhookAlertMethod    `json:"webhook,omitempty"`
+	PagerDuty   *PagerDutyAlertMethod  `json:"pagerduty,omitempty"`
+	Slack       *SlackAlertMethod      `json:"slack,omitempty"`
+	Discord     *DiscordAlertMethod    `json:"discord,omitempty"`
+	Opsgenie    *OpsgenieAlertMethod   `json:"opsgenie,omitempty"`
+	ServiceNow  *ServiceNowAlertMethod `json:"servicenow,omitempty"`
+	Jira        *JiraAlertMethod       `json:"jira,omitempty"`
+	Teams       *TeamsAlertMethod      `json:"msteams,omitempty"`
+	Email       *EmailAlertMethod      `json:"email,omitempty"`
 }
 
-// WebhookIntegration represents a set of properties required to send a webhook request.
-type WebhookIntegration struct {
-	URL            string   `json:"url"` // Field required when AlertMethod is created.
-	Template       *string  `json:"template,omitempty"`
-	TemplateFields []string `json:"templateFields,omitempty"`
+// PublicAlertMethodSpec represents content of AlertMethod's Spec without secrets.
+type PublicAlertMethodSpec struct {
+	Description string                       `json:"description"`
+	Webhook     *PublicWebhookAlertMethod    `json:"webhook,omitempty"`
+	PagerDuty   *PublicPagerDutyAlertMethod  `json:"pagerduty,omitempty"`
+	Slack       *PublicSlackAlertMethod      `json:"slack,omitempty"`
+	Discord     *PublicDiscordAlertMethod    `json:"discord,omitempty"`
+	Opsgenie    *PublicOpsgenieAlertMethod   `json:"opsgenie,omitempty"`
+	ServiceNow  *PublicServiceNowAlertMethod `json:"servicenow,omitempty"`
+	Jira        *PublicJiraAlertMethod       `json:"jira,omitempty"`
+	Teams       *PublicTeamsAlertMethod      `json:"msteams,omitempty"`
+	Email       *EmailAlertMethod            `json:"email,omitempty"`
 }
 
-// PagerDutyIntegration represents a set of properties required to open an Incident in PagerDuty.
-type PagerDutyIntegration struct {
-	IntegrationKey string `json:"integrationKey"`
+// WebhookAlertMethod represents a set of properties required to send a webhook request.
+type WebhookAlertMethod struct {
+	URL            string          `json:"url"` // Field required when AlertMethod is created.
+	Template       *string         `json:"template,omitempty"`
+	TemplateFields []string        `json:"templateFields,omitempty"` //nolint:lll
+	Headers        []WebhookHeader `json:"headers,omitempty"`
+}
+type WebhookHeader struct {
+	Name     string `json:"name"`
+	Value    string `json:"value"`
+	IsSecret bool   `json:"isSecret"`
 }
 
-// SlackIntegration represents a set of properties required to send message to Slack.
-type SlackIntegration struct {
-	URL string `json:"url"` // Field required when AlertMethod is created.
+// PublicWebhookAlertMethod represents a set of properties required to send a webhook request without secrets.
+type PublicWebhookAlertMethod struct {
+	HiddenURL      string          `json:"url"`
+	Template       *string         `json:"template,omitempty"`
+	TemplateFields []string        `json:"templateFields,omitempty"` //nolint:lll
+	Headers        []WebhookHeader `json:"headers,omitempty"`
 }
 
-// OpsgenieIntegration represents a set of properties required to send message to Opsgenie.
-type OpsgenieIntegration struct {
+// SendResolution If user set SendResolution, then “Send a notification after the cooldown period is over"
+type SendResolution struct {
+	Message *string `json:"message"`
+}
+
+// PagerDutyAlertMethod represents a set of properties required to open an Incident in PagerDuty.
+type PagerDutyAlertMethod struct {
+	IntegrationKey string          `json:"integrationKey"`
+	SendResolution *SendResolution `json:"sendResolution,omitempty"`
+}
+
+// PublicPagerDutyAlertMethod represents a set of properties required to open an Incident in PagerDuty without secrets.
+type PublicPagerDutyAlertMethod struct {
+	HiddenIntegrationKey string          `json:"integrationKey"`
+	SendResolution       *SendResolution `json:"sendResolution,omitempty"`
+}
+
+// SlackAlertMethod represents a set of properties required to send message to Slack.
+type SlackAlertMethod struct {
+	URL string `json:"url"` // Required when AlertMethod is created.
+}
+
+// PublicSlackAlertMethod represents a set of properties required to send message to Slack without secrets.
+type PublicSlackAlertMethod struct {
+	HiddenURL string `json:"url"`
+}
+
+// OpsgenieAlertMethod represents a set of properties required to send message to Opsgenie.
+type OpsgenieAlertMethod struct {
 	Auth string `json:"auth"` // Field required when AlertMethod is created.
 	URL  string `json:"url"`
 }
 
-// ServiceNowIntegration represents a set of properties required to send message to ServiceNow.
-type ServiceNowIntegration struct {
+// PublicOpsgenieAlertMethod represents a set of properties required to send message to Opsgenie without secrets.
+type PublicOpsgenieAlertMethod struct {
+	HiddenAuth string `json:"auth"`
+	URL        string `json:"url"`
+}
+
+// ServiceNowAlertMethod represents a set of properties required to send message to ServiceNow.
+type ServiceNowAlertMethod struct {
 	Username   string `json:"username"`
 	Password   string `json:"password"` // Field required when AlertMethod is created.
 	InstanceID string `json:"instanceid"`
 }
 
-// DiscordIntegration represents a set of properties required to send message to Discord.
-type DiscordIntegration struct {
+// PublicServiceNowAlertMethod represents a set of properties required to send message to ServiceNow without secrets.
+type PublicServiceNowAlertMethod struct {
+	Username       string `json:"username"`
+	InstanceID     string `json:"instanceid"`
+	HiddenPassword string `json:"password"`
+}
+
+// DiscordAlertMethod represents a set of properties required to send message to Discord.
+type DiscordAlertMethod struct {
 	URL string `json:"url"` // Field required when AlertMethod is created.
 }
 
-// JiraIntegration represents a set of properties required create tickets in Jira.
-type JiraIntegration struct {
+// PublicDiscordAlertMethod represents a set of properties required to send message to Discord without secrets.
+type PublicDiscordAlertMethod struct {
+	HiddenURL string `json:"url"`
+}
+
+// JiraAlertMethod represents a set of properties required create tickets in Jira.
+type JiraAlertMethod struct {
 	URL        string `json:"url"`
 	Username   string `json:"username"`
 	APIToken   string `json:"apiToken"` // Field required when AlertMethod is created.
 	ProjectKey string `json:"projectKey"`
 }
 
-// TeamsIntegration represents a set of properties required create Microsoft Teams notifications.
-type TeamsIntegration struct {
+// PublicJiraAlertMethod represents a set of properties required create tickets in Jira without secrets.
+type PublicJiraAlertMethod struct {
+	URL            string `json:"url"`
+	Username       string `json:"username"`
+	ProjectKey     string `json:"projectKey"`
+	HiddenAPIToken string `json:"apiToken"`
+}
+
+// TeamsAlertMethod represents a set of properties required create Microsoft Teams notifications.
+type TeamsAlertMethod struct {
 	URL string `json:"url"`
 }
 
-// EmailIntegration represents a set of properties required to send an email.
-type EmailIntegration struct {
+// PublicTeamsAlertMethod represents a set of properties required create Microsoft Teams notifications.
+type PublicTeamsAlertMethod struct {
+	HiddenURL string `json:"url"`
+}
+
+// EmailAlertMethod represents a set of properties required to send an email.
+type EmailAlertMethod struct {
 	To      []string `json:"to,omitempty"`
 	Cc      []string `json:"cc,omitempty"`
 	Bcc     []string `json:"bcc,omitempty"`
@@ -894,8 +993,8 @@ type EmailIntegration struct {
 	Body    string   `json:"body"`
 }
 
-// genericToIntegration converts ObjectGeneric to ObjectAlertMethod
-func genericToIntegration(o ObjectGeneric, onlyHeader bool) (AlertMethod, error) {
+// genericToAlertMethod converts ObjectGeneric to ObjectAlertMethod
+func genericToAlertMethod(o ObjectGeneric, onlyHeader bool) (AlertMethod, error) {
 	res := AlertMethod{
 		ObjectHeader: o.ObjectHeader,
 	}
@@ -1086,11 +1185,11 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 		}
 		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
 	case KindAlertMethod:
-		integration, err := genericToIntegration(o, onlyHeaders)
+		alertMethod, err := genericToAlertMethod(o, onlyHeaders)
 		if err != nil {
 			allErrors = append(allErrors, err.Error())
 		}
-		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, integration)
+		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, alertMethod)
 	case KindDirect:
 		direct, err := genericToDirect(o, onlyHeaders)
 		if err != nil {

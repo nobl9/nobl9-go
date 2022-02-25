@@ -177,11 +177,11 @@ func ObjectName(apiObject string) Object {
 		"slo":         ObjectSLO,
 		"service":     ObjectService,
 		"datasource":  ObjectDataSource,
-		"Agent":       ObjectAgent,
+		"agent":       ObjectAgent,
 		"alertpolicy": ObjectAlertPolicy,
 		"alert":       ObjectAlert,
 		"project":     ObjectProject,
-		"integration": ObjectAlertMethod,
+		"alertmethod": ObjectAlertMethod,
 		"direct":      ObjectDirect,
 		"dataExport":  ObjectDataExport,
 	}
