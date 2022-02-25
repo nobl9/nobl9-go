@@ -756,11 +756,10 @@ type AlertPolicy struct {
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
-	Description  string                  `json:"description"`
-	Severity     string                  `json:"severity"`
-	Conditions   []AlertCondition        `json:"conditions"`
-	Integrations []AlertMethodAssignment `json:"integrations,omitempty"`
-	AlertMethods []PublicAlertMethod     `json:"alertMethods"`
+	Description  string              `json:"description"`
+	Severity     string              `json:"severity"`
+	Conditions   []AlertCondition    `json:"conditions"`
+	AlertMethods []PublicAlertMethod `json:"alertMethods"`
 }
 
 func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
