@@ -72,11 +72,26 @@ func toAnyJSONObj(in interface{}) AnyJSONObj {
 	return out
 }
 
+type CompositeBurnRateCondition struct {
+	Value    float64 `json:"value"`
+	Operator string  `json:"op,omitempty" example:"gte"`
+}
+
+type Composite struct {
+	BudgetTarget      *float64                    `json:"target"`
+	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition"`
+}
+
 // CountMetricsSpec represents set of two time series of good and total counts
 type CountMetricsSpec struct {
 	Incremental *bool       `json:"incremental"`
 	GoodMetric  *MetricSpec `json:"good"`
 	TotalMetric *MetricSpec `json:"total"`
+}
+
+// RawMetricSpec represents integration with a metric source for a particular threshold
+type RawMetricSpec struct {
+	MetricQuery *MetricSpec `json:"query" validate:"required"`
 }
 
 // MetricSpec defines single time series kobtained from data source
@@ -190,6 +205,7 @@ type Threshold struct {
 	// in PC-1240. -->
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty" example:"0.9"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
+	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
 	Operator        *string           `json:"op,omitempty" example:"lte"`
 }
 
@@ -216,6 +232,7 @@ type SLOSpec struct {
 	AlertPolicies   []string     `json:"alertPolicies"`
 	Attachments     []Attachment `json:"attachments,omitempty"`
 	CreatedAt       string       `json:"createdAt,omitempty"`
+	Composite       Composite    `json:"composite"`
 }
 
 // SLO struct which mapped one to one with kind: slo yaml definition, external usage
