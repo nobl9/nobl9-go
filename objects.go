@@ -78,7 +78,7 @@ type CompositeBurnRateCondition struct {
 }
 
 type Composite struct {
-	BudgetTarget      *float64                    `json:"target"`
+	BudgetTarget      float64                     `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition"`
 }
 
@@ -232,7 +232,7 @@ type SLOSpec struct {
 	AlertPolicies   []string     `json:"alertPolicies"`
 	Attachments     []Attachment `json:"attachments,omitempty"`
 	CreatedAt       string       `json:"createdAt,omitempty"`
-	Composite       Composite    `json:"composite"`
+	Composite       *Composite   `json:"composite,omitempty"`
 }
 
 // SLO struct which mapped one to one with kind: slo yaml definition, external usage
