@@ -212,7 +212,6 @@ type Threshold struct {
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
 type Indicator struct {
 	MetricSource *MetricSourceSpec `json:"metricSource"`
-	RawMetric    *MetricSpec       `json:"rawMetric,omitempty"`
 }
 
 type MetricSourceSpec struct {
