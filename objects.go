@@ -50,8 +50,8 @@ type Payload struct {
 }
 
 func Newpayload(org string) {
-
 }
+
 func (p *Payload) AddObject(in interface{}) {
 	p.objects = append(p.objects, toAnyJSONObj(in))
 }
@@ -589,8 +589,7 @@ type GraphiteAgentConfig struct {
 
 // BigQueryAgentConfig represents content of BigQuery configuration.
 // Since the agent does not require additional configuration this is just a marker struct.
-type BigQueryAgentConfig struct {
-}
+type BigQueryAgentConfig struct{}
 
 type BigQueryDirectConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
@@ -1173,7 +1172,6 @@ func genericToRoleBinding(o ObjectGeneric) (RoleBinding, error) {
 
 // Parse takes care of all Object supported by n9/v1alpha apiVersion
 func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
-
 	var allErrors []string
 	switch o.Kind {
 	case KindSLO:
