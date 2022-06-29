@@ -127,7 +127,7 @@ func IsDNS1123Label(value string) []string {
 	const dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
 
 	//nolint:gochecknoglobals
-	var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
+	dns1123LabelRegexp := regexp.MustCompile("^" + dns1123LabelFmt + "$")
 	var errs []string
 	if len(value) > dNS1123LabelMaxLength {
 		errs = append(errs, fmt.Sprintf("must be no more than %d characters", dNS1123LabelMaxLength))
@@ -252,7 +252,7 @@ type Client struct {
 	Creds        Credentials
 }
 
-//Credentials stores Okta service-to-service app credentials
+// Credentials stores Okta service-to-service app credentials
 type Credentials struct {
 	ClientID       string
 	ClientSecret   string
@@ -374,7 +374,8 @@ func NewClient(ingestURL, organization, project, userAgent string, clientID stri
 			ClientID:       clientID,
 			ClientSecret:   clientSecret,
 			oktaOrgURL:     oktaOrgURL,
-			oktaAuthServer: oktaAuthServer},
+			oktaAuthServer: oktaAuthServer,
+		},
 	}
 
 	// Obtain, check and cache token, if not successful here end program.
@@ -400,8 +401,8 @@ func getResponseServerError(resp *http.Response) error {
 	return fmt.Errorf(msg)
 }
 
-//GetObject returns array of supported type of Objects, when names are passed - query for these names
-//otherwise returns list of all available objects.
+// GetObject returns array of supported type of Objects, when names are passed - query for these names
+// otherwise returns list of all available objects.
 func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]AnyJSONObj, error) {
 	endpoint := "/get/" + object
 	q := queries{
@@ -411,7 +412,7 @@ func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]
 		q[QueryKeyTime] = []string{timestamp}
 	}
 	req := c.createGetReq(c.ingestURL, endpoint, q)
-	//Ignore project from configuration and from `-p` flag.
+	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
 	}
@@ -474,7 +475,7 @@ func (c *Client) GetAWSExternalID() (string, error) {
 	}
 }
 
-//DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
+// DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
 func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 	endpoint := "/delete/" + object
 	q := queries{
@@ -502,12 +503,12 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 	}
 }
 
-//ApplyObjects applies (create or update) list of objects passed as argument via API.
+// ApplyObjects applies (create or update) list of objects passed as argument via API.
 func (c *Client) ApplyObjects(objects []AnyJSONObj) error {
 	return c.applyOrDeleteObjects(objects, apiApply)
 }
 
-//DeleteObjects deletes list of objects passed as argument via API.
+// DeleteObjects deletes list of objects passed as argument via API.
 func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
 	return c.applyOrDeleteObjects(objects, apiDelete)
 }
@@ -566,8 +567,8 @@ func (c *Client) GetTimeSeries(
 	}
 }
 
-//applyOrDeleteObjects applies or deletes list of objects
-//depending on apiMode parameter.
+// applyOrDeleteObjects applies or deletes list of objects
+// depending on apiMode parameter.
 func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) error {
 	objectAnnotated := make([]AnyJSONObj, 0, len(objects))
 	for _, o := range objects {
