@@ -969,15 +969,15 @@ type PublicOpsgenieAlertMethod struct {
 
 // ServiceNowAlertMethod represents a set of properties required to send message to ServiceNow.
 type ServiceNowAlertMethod struct {
-	Username   string `json:"username"`
-	Password   string `json:"password"` // Field required when AlertMethod is created.
-	InstanceID string `json:"instanceid"`
+	Username     string `json:"username"`
+	Password     string `json:"password"` // Field required when AlertMethod is created.
+	InstanceName string `json:"instanceName"`
 }
 
 // PublicServiceNowAlertMethod represents a set of properties required to send message to ServiceNow without secrets.
 type PublicServiceNowAlertMethod struct {
 	Username       string `json:"username"`
-	InstanceID     string `json:"instanceid"`
+	InstanceName   string `json:"instanceName"`
 	HiddenPassword string `json:"password"`
 }
 
