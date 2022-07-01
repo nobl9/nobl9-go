@@ -110,6 +110,7 @@ type MetricSpec struct {
 	BigQuery            *BigQueryMetric            `json:"bigQuery,omitempty"`
 	OpenTSDB            *OpenTSDBMetric            `json:"opentsdb,omitempty"`
 	GrafanaLoki         *GrafanaLokiMetric         `json:"grafanaLoki,omitempty"`
+	CloudWatch          *CloudWatchMetric          `json:"cloudWatch,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -187,6 +188,23 @@ type OpenTSDBMetric struct {
 // GrafanaLokiMetric represents metric from GrafanaLokiMetric.
 type GrafanaLokiMetric struct {
 	Logql *string `json:"logql"`
+}
+
+// CloudWatchMetric represents metric from CloudWatch.
+type CloudWatchMetric struct {
+	Region     *string                     `json:"region"`
+	Namespace  *string                     `json:"namespace,omitempty"`
+	MetricName *string                     `json:"metricName,omitempty"`
+	Stat       *string                     `json:"stat,omitempty"`
+	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
+	SQL        *string                     `json:"sql,omitempty"`
+	JSON       *string                     `json:"json,omitempty"`
+}
+
+// CloudWatchMetricDimension represents name/value pair that is part of the identity of a metric.
+type CloudWatchMetricDimension struct {
+	Name  *string `json:"name"`
+	Value *string `json:"value"`
 }
 
 // ThresholdBase base structure representing a threshold
