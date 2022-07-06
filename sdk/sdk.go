@@ -49,17 +49,17 @@ const (
 	QueryServiceName         = "service_name"
 )
 
-// ProjectsWildcard is used in HeaderProject when requesting for all projects
+// ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
 
-// Object represents available objects in API to perform operations
+// Object represents available objects in API to perform operations.
 type Object string
 
 func (o Object) String() string {
 	return strings.ToLower(string(o))
 }
 
-// M2MAppCredentials is used for storing client_id and client_secret
+// M2MAppCredentials is used for storing client_id and client_secret.
 type M2MAppCredentials struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
@@ -204,17 +204,17 @@ func (c Client) Authorization() string {
 	return c.authorization
 }
 
-// SetAuth sets an authorization header which should used in future requests
+// SetAuth sets an authorization header which should used in future requests.
 func (c *Client) SetAuth(authorization string) {
 	c.authorization = authorization
 }
 
-// SetOrganization sets an organization which should used in future requests
+// SetOrganization sets an organization which should used in future requests.
 func (c *Client) SetOrganization(organization string) {
 	c.organization = organization
 }
 
-// Organization gets an organization that will be used in future requests
+// Organization gets an organization that will be used in future requests.
 func (c *Client) Organization() string {
 	return c.organization
 }
@@ -410,7 +410,7 @@ func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
 	return c.applyOrDeleteObjects(objects, apiDelete)
 }
 
-// GetAgentCredentials gets agent credentials from Okta
+// GetAgentCredentials gets agent credentials from Okta.
 func (c *Client) GetAgentCredentials(agentsName string) (M2MAppCredentials, error) {
 	request := c.createGetReq(c.ingestURL, "/internal/agent/clientcreds", map[string][]string{"name": {agentsName}})
 	response, err := c.c.Do(request)
