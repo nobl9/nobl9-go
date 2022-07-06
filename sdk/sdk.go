@@ -59,9 +59,10 @@ func (o Object) String() string {
 	return strings.ToLower(string(o))
 }
 
+// M2MAppCredentials is used for storing client_id and client_secret
 type M2MAppCredentials struct {
-	ClientID     string `json:"client_id" validate:"required"`
-	ClientSecret string `json:"client_secret" validate:"required"`
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
 }
 
 // List of available objects in API.
@@ -409,8 +410,9 @@ func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
 	return c.applyOrDeleteObjects(objects, apiDelete)
 }
 
+// GetAgentCredentials gets agent credentials from Okta
 func (c *Client) GetAgentCredentials(agentsName string) (M2MAppCredentials, error) {
-	request := c.createGetReq(c.ingestURL, "/agent/clientcreds", map[string][]string{"name": {agentsName}})
+	request := c.createGetReq(c.ingestURL, "/internal/agent/clientcreds", map[string][]string{"name": {agentsName}})
 	response, err := c.c.Do(request)
 	if err != nil {
 		return M2MAppCredentials{}, pkgErrors.WithStack(err)
