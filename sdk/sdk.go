@@ -59,6 +59,11 @@ func (o Object) String() string {
 	return strings.ToLower(string(o))
 }
 
+type M2MAppCredentials struct {
+	ClientID     string `json:"client_id" validate:"required"`
+	ClientSecret string `json:"client_secret" validate:"required"`
+}
+
 // List of available objects in API.
 const (
 	ObjectSLO         Object = "SLO"
@@ -402,6 +407,24 @@ func (c *Client) ApplyObjects(objects []AnyJSONObj) error {
 // DeleteObjects deletes list of objects passed as argument via API.
 func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
 	return c.applyOrDeleteObjects(objects, apiDelete)
+}
+
+func (c *Client) GetAgentCredentials(agentsName string) (M2MAppCredentials, error) {
+	request := c.createGetReq(c.ingestURL, "/agent/clientcreds", map[string][]string{"name": {agentsName}})
+	response, err := c.c.Do(request)
+	if err != nil {
+		return M2MAppCredentials{}, pkgErrors.WithStack(err)
+	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	var credentials M2MAppCredentials
+	err = json.NewDecoder(response.Body).Decode(&credentials)
+	if err != nil {
+		return M2MAppCredentials{}, pkgErrors.WithStack(err)
+	}
+	return credentials, nil
 }
 
 func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessToken string) error {
