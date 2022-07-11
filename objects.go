@@ -805,7 +805,7 @@ type AlertCondition struct {
 	Value            interface{} `json:"value"`
 	LastsForDuration string      `json:"lastsFor,omitempty"` //nolint:lll
 	CoolDownDuration string      `json:"coolDown,omitempty"` //nolint:lll
-	Operation        string      `json:"op"`
+	Operator         string      `json:"op"`
 }
 
 // AlertPolicyWithSLOs struct which mapped one to one with kind: alert policy and slo yaml definition
