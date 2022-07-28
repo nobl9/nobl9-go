@@ -67,10 +67,11 @@ type M2MAppCredentials struct {
 
 // List of available objects in API.
 const (
-	ObjectSLO         Object = "SLO"
-	ObjectService     Object = "Service"
-	ObjectAgent       Object = "Agent"
-	ObjectAlertPolicy Object = "AlertPolicy"
+	ObjectSLO          Object = "SLO"
+	ObjectService      Object = "Service"
+	ObjectAgent        Object = "Agent"
+	ObjectAlertPolicy  Object = "AlertPolicy"
+	ObjectAlertSilence Object = "AlertSilence"
 	// ObjectAlert represents object used only to return list of Alerts. Applying and deleting alerts is disabled.
 	ObjectAlert Object = "Alert"
 	// ObjectProject represents object used only to return list of Projects.
@@ -97,6 +98,7 @@ func getAllObjects() []Object {
 		ObjectProject,
 		ObjectMetricSource,
 		ObjectAlertPolicy,
+		ObjectAlertSilence,
 		ObjectAlert,
 		// @todo: Backward compatibility. Support for kind Integration should be removed with PC-1805.
 		ObjectIntegration,
@@ -112,12 +114,13 @@ func getAllObjects() []Object {
 
 func ObjectName(apiObject string) Object {
 	objects := map[string]Object{
-		"slo":         ObjectSLO,
-		"service":     ObjectService,
-		"agent":       ObjectAgent,
-		"alertpolicy": ObjectAlertPolicy,
-		"alert":       ObjectAlert,
-		"project":     ObjectProject,
+		"slo":          ObjectSLO,
+		"service":      ObjectService,
+		"agent":        ObjectAgent,
+		"alertpolicy":  ObjectAlertPolicy,
+		"alertsilence": ObjectAlertSilence,
+		"alert":        ObjectAlert,
+		"project":      ObjectProject,
 		// @todo: Backward compatibility. Support for kind Integration should be removed with PC-1805.
 		"integration": ObjectIntegration,
 		"alertmethod": ObjectAlertMethod,
