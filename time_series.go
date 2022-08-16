@@ -1,9 +1,30 @@
 package nobl9
 
+const (
+	P1  string = "p1"
+	P5  string = "p5"
+	P10 string = "p10"
+	P50 string = "p50"
+	P90 string = "p90"
+	P95 string = "p95"
+	P99 string = "p99"
+)
+
+func GetAvailablePercentiles() []string {
+	return []string{P1, P5, P10, P50, P90, P95, P99}
+}
+
 type SLOTimeSeries struct {
 	MetadataHolder
 	TimeWindows                 []TimeWindowTimeSeries `json:"timewindows,omitempty"`
 	RawSLIPercentilesTimeSeries Percentile             `json:"percentiles,omitempty"`
+}
+
+type TimeWindowTimeSeries struct {
+	TimeWindow `json:"timewindow,omitempty"`
+	// <!-- Go struct field and type names renaming thresholds to objectives has been postponed after GA as requested
+	// in PC-1240. -->
+	Thresholds []ThresholdTimeSeries `json:"objectives,omitempty"`
 }
 
 type ThresholdTimeSeries struct {
@@ -22,13 +43,6 @@ type ThresholdTimeSeriesStatus struct {
 	RemainingBudgetDuration *float64 `json:"errorBudgetRemaining,omitempty" example:"300"`
 	InstantaneousBurnRate   *float64 `json:"instantaneousBurnRate,omitempty" example:"1.25"`
 	Condition               *string  `json:"condition,omitempty" example:"ok"`
-}
-
-type TimeWindowTimeSeries struct {
-	TimeWindow `json:"timewindow,omitempty"`
-	// <!-- Go struct field and type names renaming thresholds to objectives has been postponed after GA as requested
-	// in PC-1240. -->
-	Thresholds []ThresholdTimeSeries `json:"objectives,omitempty"`
 }
 
 type TimeSeriesData [][]interface{}
@@ -58,4 +72,19 @@ type CumulativeBurnedTimeSeries struct {
 
 type BurnDownTimeSeries struct {
 	BurnDown []TimeSeriesData `json:"burnDown,omitempty"`
+}
+
+type SLOHistoryReport struct {
+	MetadataHolder
+	TimeWindows []TimeWindowHistoryReport `json:"timewindows,omitempty"`
+}
+
+type TimeWindowHistoryReport struct {
+	TimeWindow `json:"timewindow,omitempty"`
+	Thresholds []ThresholdHistoryReport `json:"objectives,omitempty"`
+}
+
+type ThresholdHistoryReport struct {
+	ThresholdBase
+	BurnDownTimeSeries
 }

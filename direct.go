@@ -1,5 +1,7 @@
 package nobl9
 
+import "encoding/json"
+
 // genericToDirect converts ObjectGeneric to ObjectDirect
 func genericToDirect(o ObjectGeneric, onlyHeader bool) (Direct, error) {
 	res := Direct{
