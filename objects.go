@@ -94,117 +94,195 @@ type RawMetricSpec struct {
 	MetricQuery *MetricSpec `json:"query" validate:"required"`
 }
 
-// MetricSpec defines single time series kobtained from data source
+// MetricSpec defines single time series obtained from data source
 type MetricSpec struct {
-	Prometheus          *PrometheusMetric          `json:"prometheus,omitempty"`
-	Datadog             *DatadogMetric             `json:"datadog,omitempty"`
-	NewRelic            *NewRelicMetric            `json:"newRelic,omitempty"`
+	AmazonPrometheus    *AmazonPrometheusMetric    `json:"amazonPrometheus,omitempty"`
 	AppDynamics         *AppDynamicsMetric         `json:"appDynamics,omitempty"`
-	Splunk              *SplunkMetric              `json:"splunk,omitempty"`
-	Lightstep           *LightstepMetric           `json:"lightstep,omitempty"`
-	SplunkObservability *SplunkObservabilityMetric `json:"splunkObservability,omitempty"`
+	BigQuery            *BigQueryMetric            `json:"bigQuery,omitempty"`
+	CloudWatch          *CloudWatchMetric          `json:"cloudWatch,omitempty"`
+	Datadog             *DatadogMetric             `json:"datadog,omitempty"`
 	Dynatrace           *DynatraceMetric           `json:"dynatrace,omitempty"`
 	Elasticsearch       *ElasticsearchMetric       `json:"elasticsearch,omitempty"`
-	ThousandEyes        *ThousandEyesMetric        `json:"thousandEyes,omitempty"`
-	Graphite            *GraphiteMetric            `json:"graphite,omitempty"`
-	BigQuery            *BigQueryMetric            `json:"bigQuery,omitempty"`
-	OpenTSDB            *OpenTSDBMetric            `json:"opentsdb,omitempty"`
+	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	GrafanaLoki         *GrafanaLokiMetric         `json:"grafanaLoki,omitempty"`
-	CloudWatch          *CloudWatchMetric          `json:"cloudWatch,omitempty"`
+	Graphite            *GraphiteMetric            `json:"graphite,omitempty"`
+	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
+	Instana             *InstanaMetric             `json:"instana,omitempty"`
+	Lightstep           *LightstepMetric           `json:"lightstep,omitempty"`
+	NewRelic            *NewRelicMetric            `json:"newRelic,omitempty"`
+	OpenTSDB            *OpenTSDBMetric            `json:"opentsdb,omitempty"`
+	Pingdom             *PingdomMetric             `json:"pingdom,omitempty"`
+	Prometheus          *PrometheusMetric          `json:"prometheus,omitempty"`
+	Redshift            *RedshiftMetric            `json:"redshift,omitempty"`
+	Splunk              *SplunkMetric              `json:"splunk,omitempty"`
+	SplunkObservability *SplunkObservabilityMetric `json:"splunkObservability,omitempty"`
+	SumoLogic           *SumoLogicMetric           `json:"sumoLogic,omitempty"`
+	ThousandEyes        *ThousandEyesMetric        `json:"thousandEyes,omitempty"`
 }
 
-// PrometheusMetric represents metric from Prometheus
-type PrometheusMetric struct {
+// AmazonPrometheusMetric describes metric from AmazonPrometheus server.
+type AmazonPrometheusMetric struct {
 	PromQL *string `json:"promql"`
 }
 
-// DatadogMetric represents metric from Datadog
-type DatadogMetric struct {
-	Query *string `json:"query"`
-}
-
-// NewRelicMetric represents metric from NewRelic
-type NewRelicMetric struct {
-	NRQL *string `json:"nrql"`
-}
-
-// ThousandEyesMetric represents metric from ThousandEyes
-type ThousandEyesMetric struct {
-	TestID *int64 `json:"testID"`
-}
-
-// AppDynamicsMetric represents metric from AppDynamics
+// AppDynamicsMetric describes metric from AppDynamics
 type AppDynamicsMetric struct {
 	ApplicationName *string `json:"applicationName"`
 	MetricPath      *string `json:"metricPath"`
 }
 
-// SplunkMetric represents metric from Splunk
-type SplunkMetric struct {
-	Query     *string `json:"query"`
-	FieldName *string `json:"fieldName"`
-}
-
-// LightstepMetric represents metric from Lightstep
-type LightstepMetric struct {
-	StreamID   *string  `json:"streamId"`
-	TypeOfData *string  `json:"typeOfData"`
-	Percentile *float64 `json:"percentile,omitempty"`
-}
-
-// SplunkObservabilityMetric represents metric from SplunkObservability
-type SplunkObservabilityMetric struct {
-	Program *string `json:"program"`
-}
-
-// DynatraceMetric represents metric from Dynatrace.
-type DynatraceMetric struct {
-	MetricSelector *string `json:"metricSelector"`
-}
-
-// ElasticsearchMetric represents metric from Elasticsearch.
-type ElasticsearchMetric struct {
-	Index *string `json:"index"`
-	Query *string `json:"query"`
-}
-
-// GraphiteMetric represents metric from Graphite.
-type GraphiteMetric struct {
-	MetricPath *string `json:"metricPath"`
-}
-
-// BigQueryMetric represents metric from BigQuery
+// BigQueryMetric describes metric from BigQuery.
 type BigQueryMetric struct {
 	Query     string `json:"query"`
 	ProjectID string `json:"projectId"`
 	Location  string `json:"location"`
 }
 
-// OpenTSDBMetric represents metric from OpenTSDB.
-type OpenTSDBMetric struct {
+// CloudWatchMetric describes metric from CloudWatch.
+type CloudWatchMetric struct {
+	Region     *string                     `json:"region"`
+	Namespace  *string                     `json:"namespace"`
+	MetricName *string                     `json:"metricName"`
+	Stat       *string                     `json:"stat"`
+	Dimensions []CloudWatchMetricDimension `json:"dimensions"`
+	SQL        *string                     `json:"sql"`
+	JSON       *string                     `json:"json"`
+}
+
+// CloudWatchMetricDimension describes name/value pair that is part of the identity of a metric.
+type CloudWatchMetricDimension struct {
+	Name  *string `json:"name"`
+	Value *string `json:"value"`
+}
+
+// DatadogMetric describes metric from Datadog
+type DatadogMetric struct {
 	Query *string `json:"query"`
 }
 
-// GrafanaLokiMetric represents metric from GrafanaLokiMetric.
+// DynatraceMetric describes metric from Dynatrace.
+type DynatraceMetric struct {
+	MetricSelector *string `json:"metricSelector"`
+}
+
+// ElasticsearchMetric describes metric from Elasticsearch.
+type ElasticsearchMetric struct {
+	Query *string `json:"query"`
+	Index *string `json:"index"`
+}
+
+// GCMMetric describes metadata used to fetch metrics from Google Cloud Monitoring API.
+type GCMMetric struct {
+	ProjectID string `json:"projectId"`
+	Query     string `json:"query"`
+}
+
+// GrafanaLokiMetric describes metric from GrafanaLoki.
 type GrafanaLokiMetric struct {
 	Logql *string `json:"logql"`
 }
 
-// CloudWatchMetric represents metric from CloudWatch.
-type CloudWatchMetric struct {
-	Region     *string                     `json:"region"`
-	Namespace  *string                     `json:"namespace,omitempty"`
-	MetricName *string                     `json:"metricName,omitempty"`
-	Stat       *string                     `json:"stat,omitempty"`
-	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
-	SQL        *string                     `json:"sql,omitempty"`
-	JSON       *string                     `json:"json,omitempty"`
+// GraphiteMetric describes metric from Graphite.
+type GraphiteMetric struct {
+	MetricPath *string `json:"metricPath"`
 }
 
-// CloudWatchMetricDimension represents name/value pair that is part of the identity of a metric.
-type CloudWatchMetricDimension struct {
-	Name  *string `json:"name"`
-	Value *string `json:"value"`
+// InfluxDBMetric describes metric from InfluxDB
+type InfluxDBMetric struct {
+	Query *string `json:"query"`
+}
+
+// InstanaMetric describes metric from Instana server.
+type InstanaMetric struct {
+	MetricType     string                           `json:"metricType"`
+	Infrastructure *InstanaInfrastructureMetricType `json:"infrastructure"`
+	Application    *InstanaApplicationMetricType    `json:"application"`
+}
+
+// InstanaInfrastructureMetricType describes Infrastructure for InstanaMetric.
+type InstanaInfrastructureMetricType struct {
+	MetricRetrievalMethod string  `json:"metricRetrievalMethod"`
+	Query                 *string `json:"query"`
+	SnapshotID            *string `json:"snapshotId"`
+	MetricID              string  `json:"metricId"`
+	PluginID              string  `json:"pluginId"`
+}
+
+// InstanaApplicationMetricType describes Application for InstanaMetric.
+type InstanaApplicationMetricType struct {
+	MetricID         string                          `json:"metricId"`
+	Aggregation      string                          `json:"aggregation"`
+	GroupBy          InstanaApplicationMetricGroupBy `json:"groupBy"`
+	APIQuery         string                          `json:"apiQuery"`
+	IncludeInternal  *bool                           `json:"includeInternal"`
+	IncludeSynthetic *bool                           `json:"includeSynthetic"`
+}
+
+type InstanaApplicationMetricGroupBy struct {
+	Tag               string  `json:"tag"`
+	TagEntity         string  `json:"tagEntity"`
+	TagSecondLevelKey *string `json:"tagSecondLevelKey"`
+}
+
+// LightstepMetric describes metric from Lightstep
+type LightstepMetric struct {
+	StreamID   *string  `json:"streamId"`
+	TypeOfData *string  `json:"typeOfData"`
+	Percentile *float64 `json:"percentile"`
+}
+
+// NewRelicMetric describes metric from NewRelic
+type NewRelicMetric struct {
+	NRQL *string `json:"nrql"`
+}
+
+// OpenTSDBMetric describes metric from OpenTSDB.
+type OpenTSDBMetric struct {
+	Query *string `json:"query"`
+}
+
+// PingdomMetric describes metric from Pingdom.
+type PingdomMetric struct {
+	CheckID   *string `json:"checkId"`
+	CheckType *string `json:"checkType,omitempty"`
+	Status    *string `json:"status"`
+}
+
+// PrometheusMetric describes metric from Prometheus server
+type PrometheusMetric struct {
+	PromQL *string `json:"promql"`
+}
+
+// RedshiftMetric describes metric from Redshift server.
+type RedshiftMetric struct {
+	Region       *string `json:"region"`
+	ClusterID    *string `json:"clusterId"`
+	DatabaseName *string `json:"databaseName"`
+	Query        *string `json:"query"`
+}
+
+// SplunkMetric describes metric from Splunk
+type SplunkMetric struct {
+	Query *string `json:"query"`
+}
+
+// SplunkObservabilityMetric describes metric from SplunkObservability
+type SplunkObservabilityMetric struct {
+	Program *string `json:"program"`
+}
+
+// SumoLogicMetric describes metric from SumoLogic server.
+type SumoLogicMetric struct {
+	Type         *string `json:"type"`
+	Query        *string `json:"query"`
+	Quantization *string `json:"quantization"`
+	Rollup       *string `json:"rollup"`
+}
+
+// ThousandEyesMetric describes metric from ThousandEyes.
+type ThousandEyesMetric struct {
+	TestID   *int64  `json:"testID"`
+	TestType *string `json:"testType"`
 }
 
 // ThresholdBase base structure representing a threshold
@@ -461,8 +539,8 @@ type DataSourceStatus struct {
 	DataSourceType string `json:"dataSourceType" example:"Prometheus"`
 }
 
-// PrometheusConfig represents content of Prometheus Configuration typical for DataSource Object
-type PrometheusConfig struct {
+// PrometheusAgentConfig represents content of Prometheus Configuration typical for DataSource Object
+type PrometheusAgentConfig struct {
 	URL              *string                     `json:"url,omitempty" example:"http://prometheus-service.monitoring:8080"`
 	ServiceDiscovery *PrometheusServiceDiscovery `json:"serviceDiscovery,omitempty"`
 }
@@ -623,6 +701,47 @@ type GrafanaLokiAgentConfig struct {
 	URL string `json:"url,omitempty" example:"example of GrafanaLoki cluster URL"`
 }
 
+// CloudWatchAgentConfig represents content of CloudWatch Configuration typical for Agent Object.
+type CloudWatchAgentConfig struct {
+	// CloudWatch agent doesn't require any additional parameters.
+}
+
+// PingdomAgentConfig represents content of Pingdom Configuration typical for Agent Object.
+type PingdomAgentConfig struct {
+	// Pingdom agent doesn't require any additional parameter
+}
+
+// AmazonPrometheusAgentConfig represents content of Amazon Managed Service Configuration typical for Agent Object.
+type AmazonPrometheusAgentConfig struct {
+	URL    string `json:"url" validate:"required,url"`
+	Region string `json:"region" validate:"required,max=255"`
+}
+
+// RedshiftAgentConfig represents content of Redshift configuration typical for Agent Object
+type RedshiftAgentConfig struct {
+	// RedshiftAgentConfig agent doesn't require any additional parameter
+}
+
+// SumoLogicAgentConfig represents content of Sumo Logic configuration typical for Agent Object.
+type SumoLogicAgentConfig struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
+// InstanaAgentConfig represents content of Instana configuration typical for Agent Object
+type InstanaAgentConfig struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
+// InfluxDBAgentConfig represents content of InfluxDB configuration typical fo Agent Object
+type InfluxDBAgentConfig struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
+// GCMAgentConfig represents content of GCM configuration.
+type GCMAgentConfig struct {
+	// GCMAgentConfig agent doesn't require any additional parameter
+}
+
 // genericToAgent converts ObjectGeneric to ObjectAgent
 func genericToAgent(o ObjectGeneric, onlyHeader bool) (Agent, error) {
 	res := Agent{
@@ -664,7 +783,7 @@ type AgentStatus struct {
 type AgentSpec struct {
 	Description         string                          `json:"description,omitempty" example:"Prometheus description"` //nolint:lll
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
-	Prometheus          *PrometheusConfig               `json:"prometheus,omitempty"`
+	Prometheus          *PrometheusAgentConfig          `json:"prometheus,omitempty"`
 	Datadog             *DatadogAgentConfig             `json:"datadog,omitempty"`
 	NewRelic            *NewRelicAgentConfig            `json:"newRelic,omitempty"`
 	AppDynamics         *AppDynamicsAgentConfig         `json:"appDynamics,omitempty"`
@@ -678,6 +797,14 @@ type AgentSpec struct {
 	BigQuery            *BigQueryAgentConfig            `json:"bigQuery,omitempty"`
 	OpenTSDB            *OpenTSDBAgentConfig            `json:"opentsdb,omitempty"`
 	GrafanaLoki         *GrafanaLokiAgentConfig         `json:"grafanaLoki,omitempty"`
+	CloudWatch          *CloudWatchAgentConfig          `json:"cloudWatch,omitempty"`
+	Pingdom             *PingdomAgentConfig             `json:"pingdom,omitempty"`
+	AmazonPrometheus    *AmazonPrometheusAgentConfig    `json:"amazonPrometheus,omitempty"`
+	Redshift            *RedshiftAgentConfig            `json:"redshift,omitempty"`
+	SumoLogic           *SumoLogicAgentConfig           `json:"sumoLogic,omitempty"`
+	Instana             *InstanaAgentConfig             `json:"instana,omitempty"`
+	InfluxDB            *InfluxDBAgentConfig            `json:"influxdb,omitempty"`
+	GCM                 *GCMAgentConfig                 `json:"gcm,omitempty"`
 }
 
 // genericToDirect converts ObjectGeneric to ObjectDirect
