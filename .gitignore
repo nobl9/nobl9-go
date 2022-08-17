@@ -1,0 +1,8 @@
+# IDE specific
+.vscode
+.metals/
+.idea
+
+# OS specific
+## macOS
+.DS_Store
