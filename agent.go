@@ -2,29 +2,29 @@ package nobl9
 
 import "encoding/json"
 
-// Agent struct which mapped one to one with kind: Agent yaml definition
+// Agent struct which mapped one to one with kind: Agent yaml definition.
 type Agent struct {
 	ObjectHeader
 	Spec   AgentSpec   `json:"spec"`
 	Status AgentStatus `json:"status"`
 }
 
-// AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
+// AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition.
 type AgentWithSLOs struct {
 	Agent Agent `json:"agent"`
 	SLOs  []SLO `json:"slos"`
 }
 
-// AgentStatus represents content of Status optional for Agent Object
+// AgentStatus represents content of Status optional for Agent Object.
 type AgentStatus struct {
 	AgentType      string `json:"agentType" example:"Prometheus"`
 	AgentVersion   string `json:"agentVersion,omitempty" example:"0.0.9"`
 	LastConnection string `json:"lastConnection,omitempty" example:"2020-08-31T14:26:13Z"`
 }
 
-// AgentSpec represents content of Spec typical for Agent Object
+// AgentSpec represents content of Spec typical for Agent Object.
 type AgentSpec struct {
-	Description         string                          `json:"description,omitempty" example:"Prometheus description"` //nolint:lll
+	Description         string                          `json:"description,omitempty"`
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
 	AmazonPrometheus    *AmazonPrometheusAgentConfig    `json:"amazonPrometheus,omitempty"`
 	AppDynamics         *AppDynamicsAgentConfig         `json:"appDynamics,omitempty"`
@@ -50,97 +50,97 @@ type AgentSpec struct {
 	ThousandEyes        *ThousandEyesAgentConfig        `json:"thousandEyes,omitempty"`
 }
 
-// DataSourceStatus represents content of Status optional for DataSource Object
+// DataSourceStatus represents content of Status optional for DataSource Object.
 type DataSourceStatus struct {
 	DataSourceType string `json:"dataSourceType" example:"Prometheus"`
 }
 
-// PrometheusAgentConfig represents content of Prometheus Configuration typical for DataSource Object
+// PrometheusAgentConfig represents content of Prometheus Configuration typical for DataSource Object.
 type PrometheusAgentConfig struct {
 	URL              *string                     `json:"url,omitempty" example:"http://prometheus-service.monitoring:8080"`
 	ServiceDiscovery *PrometheusServiceDiscovery `json:"serviceDiscovery,omitempty"`
 }
 
-// PrometheusServiceDiscovery provides settings for mechanism of auto Service discovery
+// PrometheusServiceDiscovery provides settings for mechanism of auto Service discovery.
 type PrometheusServiceDiscovery struct {
 	// empty is treated as once, later support 1m, 2d, etc. (for now not validated, skipped)
 	Interval string                    `json:"interval,omitempty"`
 	Rules    []PrometheusDiscoveryRule `json:"rules,omitempty"`
 }
 
-// PrometheusDiscoveryRule provides struct for storing rule for single Service discovery rule from Prometheus
+// PrometheusDiscoveryRule provides struct for storing rule for single Service discovery rule from Prometheus.
 type PrometheusDiscoveryRule struct {
 	Discovery          string        `json:"discovery"`
 	ServiceNamePattern string        `json:"serviceNamePattern"`
 	Filter             []FilterEntry `json:"filter,omitempty"`
 }
 
-// FilterEntry represents single metric label to be matched against value
+// FilterEntry represents single metric label to be matched against value.
 type FilterEntry struct {
 	Label string `json:"label"`
 	Value string `json:"value"`
 }
 
-// DatadogConfig represents content of Datadog Configuration typical for DataSource Object
+// DatadogConfig represents content of Datadog Configuration typical for DataSource Object.
 type DatadogConfig struct {
 	Site string `json:"site,omitempty"`
 }
 
-// DatadogAgentConfig represents content of Datadog Configuration typical for Agent Object
+// DatadogAgentConfig represents content of Datadog Configuration typical for Agent Object.
 type DatadogAgentConfig struct {
 	Site string `json:"site,omitempty"`
 }
 
-// DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object
+// DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object.
 type DatadogDirectConfig struct {
 	Site           string `json:"site,omitempty"`
 	APIKey         string `json:"apiKey" example:"secret"`
 	ApplicationKey string `json:"applicationKey" example:"secret"`
 }
 
-// NewRelicConfig represents content of NewRelic Configuration typical for DataSource Object
+// NewRelicConfig represents content of NewRelic Configuration typical for DataSource Object.
 type NewRelicConfig struct {
 	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
 }
 
-// NewRelicAgentConfig represents content of NewRelic Configuration typical for Agent Object
+// NewRelicAgentConfig represents content of NewRelic Configuration typical for Agent Object.
 type NewRelicAgentConfig struct {
 	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
 }
 
-// NewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object
+// NewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object.
 type NewRelicDirectConfig struct {
 	AccountID        json.Number `json:"accountId"`
 	InsightsQueryKey string      `json:"insightsQueryKey" example:"secret"`
 }
 
-// AppDynamicsConfig represents content of AppDynamics Configuration typical for DataSource Object
+// AppDynamicsConfig represents content of AppDynamics Configuration typical for DataSource Object.
 type AppDynamicsConfig struct {
 	URL string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
 }
 
-// AppDynamicsAgentConfig represents content of AppDynamics Configuration typical for Agent Object
+// AppDynamicsAgentConfig represents content of AppDynamics Configuration typical for Agent Object.
 type AppDynamicsAgentConfig struct {
 	URL *string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
 }
 
-// SplunkConfig represents content of Splunk Configuration typical for DataSource Object
+// SplunkConfig represents content of Splunk Configuration typical for DataSource Object.
 type SplunkConfig struct {
 	URL string `json:"url,omitempty" example:"https://localhost:8089/servicesNS/admin/"`
 }
 
-// SplunkAgentConfig represents content of Splunk Configuration typical for Agent Object
+// SplunkAgentConfig represents content of Splunk Configuration typical for Agent Object.
 type SplunkAgentConfig struct {
 	URL string `json:"url,omitempty" example:"https://localhost:8089/servicesNS/admin/"`
 }
 
-// LightstepConfig represents content of Lightstep Configuration typical for DataSource Object
+// LightstepConfig represents content of Lightstep Configuration typical for DataSource Object.
 type LightstepConfig struct {
 	Organization string `json:"organization,omitempty" example:"LightStep-Play"`
 	Project      string `json:"project,omitempty" example:"play"`
 }
 
-// LightstepAgentConfig represents content of Lightstep Configuration typical for Agent Object
+// LightstepAgentConfig represents content of Lightstep Configuration typical for Agent Object.
 type LightstepAgentConfig struct {
 	Organization string `json:"organization,omitempty" example:"LightStep-Play"`
 	Project      string `json:"project,omitempty" example:"play"`
@@ -157,12 +157,12 @@ type SplunkObservabilityDirectConfig struct {
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
-// ThousandEyesDirectConfig represents content of ThousandEyes Configuration typical for Direct Object
+// ThousandEyesDirectConfig represents content of ThousandEyes Configuration typical for Direct Object.
 type ThousandEyesDirectConfig struct {
 	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
 }
 
-// ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object
+// ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object.
 type ThousandEyesAgentConfig struct {
 	// ThousandEyes agent doesn't require any additional parameters.
 }
@@ -226,7 +226,7 @@ type AmazonPrometheusAgentConfig struct {
 	Region string `json:"region" validate:"required,max=255"`
 }
 
-// RedshiftAgentConfig represents content of Redshift configuration typical for Agent Object
+// RedshiftAgentConfig represents content of Redshift configuration typical for Agent Object.
 type RedshiftAgentConfig struct {
 	// RedshiftAgentConfig agent doesn't require any additional parameter
 }
@@ -236,22 +236,22 @@ type SumoLogicAgentConfig struct {
 	URL string `json:"url" validate:"required,url"`
 }
 
-// InstanaAgentConfig represents content of Instana configuration typical for Agent Object
+// InstanaAgentConfig represents content of Instana configuration typical for Agent Object.
 type InstanaAgentConfig struct {
 	URL string `json:"url" validate:"required,url"`
 }
 
-// InfluxDBAgentConfig represents content of InfluxDB configuration typical fo Agent Object
+// InfluxDBAgentConfig represents content of InfluxDB configuration typical fo Agent Object.
 type InfluxDBAgentConfig struct {
 	URL string `json:"url" validate:"required,url"`
 }
 
 // GCMAgentConfig represents content of GCM configuration.
 type GCMAgentConfig struct {
-	// GCMAgentConfig agent doesn't require any additional parameter
+	// GCMAgentConfig agent doesn't require any additional parameters.
 }
 
-// genericToAgent converts ObjectGeneric to ObjectAgent
+// genericToAgent converts ObjectGeneric to ObjectAgent.
 func genericToAgent(o ObjectGeneric, onlyHeader bool) (Agent, error) {
 	res := Agent{
 		ObjectHeader: o.ObjectHeader,
