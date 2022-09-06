@@ -76,9 +76,7 @@ const (
 	ObjectAlert Object = "Alert"
 	// ObjectProject represents object used only to return list of Projects.
 	// Applying and deleting projects is not supported.
-	ObjectProject Object = "Project"
-	// Deprecated: Use `AlertMethod` object instead. Support for kind Integration should be removed with PC-1805.
-	ObjectIntegration Object = "Integration"
+	ObjectProject     Object = "Project"
 	ObjectAlertMethod Object = "AlertMethod"
 	// ObjectMetricSource represents ephemeral object used only to return concatenated list of Agents and Directs.
 	ObjectMetricSource         Object = "MetricSource"
@@ -100,8 +98,6 @@ func getAllObjects() []Object {
 		ObjectAlertPolicy,
 		ObjectAlertSilence,
 		ObjectAlert,
-		// @todo: Backward compatibility. Support for kind Integration should be removed with PC-1805.
-		ObjectIntegration,
 		ObjectAlertMethod,
 		ObjectDirect,
 		ObjectDataExport,
@@ -121,13 +117,11 @@ func ObjectName(apiObject string) Object {
 		"alertsilence": ObjectAlertSilence,
 		"alert":        ObjectAlert,
 		"project":      ObjectProject,
-		// @todo: Backward compatibility. Support for kind Integration should be removed with PC-1805.
-		"integration": ObjectIntegration,
-		"alertmethod": ObjectAlertMethod,
-		"direct":      ObjectDirect,
-		"dataexport":  ObjectDataExport,
-		"rolebinding": ObjectRoleBinding,
-		"annotation":  ObjectAnnotation,
+		"alertmethod":  ObjectAlertMethod,
+		"direct":       ObjectDirect,
+		"dataexport":   ObjectDataExport,
+		"rolebinding":  ObjectRoleBinding,
+		"annotation":   ObjectAnnotation,
 	}
 
 	return objects[apiObject]
