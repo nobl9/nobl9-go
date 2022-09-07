@@ -756,6 +756,7 @@ type Project struct {
 type ProjectMetadata struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName,omitempty"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // ProjectSpec represents content of Spec typical for Project Object.
@@ -1125,6 +1126,7 @@ func genericToProject(o ObjectGeneric, onlyHeader bool) (Project, error) {
 		Metadata: ProjectMetadata{
 			Name:        o.Metadata.Name,
 			DisplayName: o.Metadata.DisplayName,
+			Labels:      o.Metadata.Labels,
 		},
 		ObjectInternal: ObjectInternal{
 			Organization: o.ObjectHeader.Organization,
