@@ -37,6 +37,7 @@ type MetricSourceSpec struct {
 type ThresholdBase struct {
 	DisplayName string  `json:"displayName"`
 	Value       float64 `json:"value"`
+	Name        string  `json:"name"`
 }
 
 // Threshold represents single threshold for SLO, for internal usage
