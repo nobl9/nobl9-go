@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,7 +47,8 @@ const (
 	QueryKeyPercentiles      = "q"
 	QueryKeyPermissionFilter = "pf"
 	QueryKeyLabelsFilter     = "labels"
-	QueryServiceName         = "service_name"
+	QueryKeyServiceName      = "service_name"
+	QueryKeyDryRun           = "dry_run"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
@@ -364,10 +366,11 @@ func (c *Client) GetAWSExternalID() (string, error) {
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
-func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
+func (c *Client) DeleteObjectsByName(object Object, dryRun bool, names ...string) error {
 	endpoint := "/delete/" + object
 	q := queries{
-		QueryKeyName: names,
+		QueryKeyName:   names,
+		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
 	req := c.createDeleteReq(endpoint, q)
 
@@ -398,13 +401,13 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(objects []AnyJSONObj) error {
-	return c.applyOrDeleteObjects(objects, apiApply)
+func (c *Client) ApplyObjects(objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(objects, apiApply, dryRun)
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
 func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
-	return c.applyOrDeleteObjects(objects, apiDelete)
+	return c.applyOrDeleteObjects(objects, apiDelete, false)
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
@@ -471,7 +474,7 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessTo
 
 // applyOrDeleteObjects applies or deletes list of objects
 // depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) error {
+func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string, dryRun bool) error {
 	buf := &bytes.Buffer{}
 	if err := json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
@@ -487,13 +490,15 @@ func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) erro
 	if c.authorization != "" {
 		req.Header.Set(HeaderAuthorization, c.authorization)
 	}
+	q := req.URL.Query()
+	q.Set(QueryKeyDryRun, strconv.FormatBool(dryRun))
+	req.URL.RawQuery = q.Encode()
+
 	resp, err := c.c.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
