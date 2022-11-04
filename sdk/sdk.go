@@ -406,8 +406,8 @@ func (c *Client) ApplyObjects(objects []AnyJSONObj, dryRun bool) error {
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
-	return c.applyOrDeleteObjects(objects, apiDelete, false)
+func (c *Client) DeleteObjects(objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(objects, apiDelete, dryRun)
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
