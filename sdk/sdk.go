@@ -46,6 +46,7 @@ const (
 	QueryKeyPercentiles      = "q"
 	QueryKeyPermissionFilter = "pf"
 	QueryKeyLabelsFilter     = "labels"
+	QueryKeyTextSearch       = "text_search"
 	QueryServiceName         = "service_name"
 )
 
