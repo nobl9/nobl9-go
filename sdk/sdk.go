@@ -49,6 +49,7 @@ const (
 	QueryKeyLabelsFilter     = "labels"
 	QueryKeyServiceName      = "service_name"
 	QueryKeyDryRun           = "dry_run"
+	QueryKeyTextSearch       = "text_search"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
