@@ -509,7 +509,7 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 	}
 }
 
-// ApplyObjects applies (create or update) list of agents passed as argument via API
+// ApplyAgents applies (create or update) list of agents passed as argument via API
 // and returns client_id and client_secret on creation.
 func (c *Client) ApplyAgents(objects []AnyJSONObj) (*M2MAppCredentials, error) {
 	return c.applyOrDeleteObjects(objects, apiApply, true)
