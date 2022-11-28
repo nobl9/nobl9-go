@@ -29,6 +29,12 @@ const (
 	Percentiles
 )
 
+// M2MAppCredentials is used for storing client_id and client_secret.
+type M2MAppCredentials struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
 func getNamesToTimeSeriesMap() map[string]TimeSerie {
 	return map[string]TimeSerie{
 		"instantaneousBurnRate": InstantaneousBurnRate,
@@ -503,14 +509,22 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 	}
 }
 
+// ApplyObjects applies (create or update) list of agents passed as argument via API
+// and returns client_id and client_secret on creation.
+func (c *Client) ApplyAgents(objects []AnyJSONObj) (*M2MAppCredentials, error) {
+	return c.applyOrDeleteObjects(objects, apiApply, true)
+}
+
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
 func (c *Client) ApplyObjects(objects []AnyJSONObj) error {
-	return c.applyOrDeleteObjects(objects, apiApply)
+	_, err := c.applyOrDeleteObjects(objects, apiApply, false)
+	return err
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
 func (c *Client) DeleteObjects(objects []AnyJSONObj) error {
-	return c.applyOrDeleteObjects(objects, apiDelete)
+	_, err := c.applyOrDeleteObjects(objects, apiDelete, false)
+	return err
 }
 
 func (c *Client) GetTimeSeries(
@@ -569,19 +583,23 @@ func (c *Client) GetTimeSeries(
 
 // applyOrDeleteObjects applies or deletes list of objects
 // depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) error {
+func (c *Client) applyOrDeleteObjects(
+	objects []AnyJSONObj,
+	apiMode string,
+	withKeys bool,
+) (*M2MAppCredentials, error) {
 	objectAnnotated := make([]AnyJSONObj, 0, len(objects))
 	for _, o := range objects {
 		objectAnnotated = append(objectAnnotated, Annotate(o, c.organization))
 	}
 	buf := &bytes.Buffer{}
 	if err := json.NewEncoder(buf).Encode(objectAnnotated); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
+		return nil, fmt.Errorf("cannot marshal: %w", err)
 	}
 
 	req, err := c.getRequestForAPIMode(apiMode, buf)
 	if err != nil {
-		return fmt.Errorf("cannot create a request: %w", err)
+		return nil, fmt.Errorf("cannot create a request: %w", err)
 	}
 
 	req.Header.Set(HeaderOrganization, c.organization)
@@ -591,7 +609,7 @@ func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) erro
 	}
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return fmt.Errorf("cannot perform a request to API: %w", err)
+		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -599,16 +617,29 @@ func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string) erro
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		return nil
+		var keys M2MAppCredentials
+		if withKeys {
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, fmt.Errorf("cannot read response body: %w", err)
+			}
+
+			if len(body) > 0 {
+				if err = json.Unmarshal(body, &keys); err != nil {
+					return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
+				}
+			}
+		}
+		return &keys, nil
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s", bytes.TrimSpace(body))
+		return nil, fmt.Errorf("%s", bytes.TrimSpace(body))
 	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
+		return nil, getResponseServerError(resp)
 	default:
-		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
+		return nil, fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
 	}
 }
 
