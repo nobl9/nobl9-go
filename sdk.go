@@ -617,20 +617,7 @@ func (c *Client) applyOrDeleteObjects(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		var keys M2MAppCredentials
-		if withKeys {
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				return nil, fmt.Errorf("cannot read response body: %w", err)
-			}
-
-			if len(body) > 0 {
-				if err = json.Unmarshal(body, &keys); err != nil {
-					return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
-				}
-			}
-		}
-		return &keys, nil
+		return readM2MCredentials(withKeys, resp)
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
@@ -641,6 +628,22 @@ func (c *Client) applyOrDeleteObjects(
 	default:
 		return nil, fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
 	}
+}
+
+func readM2MCredentials(withKeys bool, resp *http.Response) (keys *M2MAppCredentials, err error) {
+	if withKeys {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read response body: %w", err)
+		}
+
+		if len(body) > 0 {
+			if err = json.Unmarshal(body, &keys); err != nil {
+				return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
+			}
+		}
+	}
+	return keys, nil
 }
 
 func (c *Client) getRequestForAPIMode(apiMode string, buf io.Reader) (*http.Request, error) {
