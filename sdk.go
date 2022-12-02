@@ -29,10 +29,11 @@ const (
 	Percentiles
 )
 
-// M2MAppCredentials is used for storing client_id and client_secret.
-type M2MAppCredentials struct {
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
+type agentData struct {
+	Kind         string         `json:"kind"`
+	Metadata     MetadataHolder `json:"metadata"`
+	ClientID     string         `json:"clientID"`
+	ClientSecret string         `json:"clientSecret"`
 }
 
 func getNamesToTimeSeriesMap() map[string]TimeSerie {
@@ -511,7 +512,7 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 
 // ApplyAgents applies (create or update) list of agents passed as argument via API
 // and returns client_id and client_secret on creation.
-func (c *Client) ApplyAgents(objects []AnyJSONObj) (*M2MAppCredentials, error) {
+func (c *Client) ApplyAgents(objects []AnyJSONObj) ([]agentData, error) {
 	return c.applyOrDeleteObjects(objects, apiApply, true)
 }
 
@@ -587,7 +588,7 @@ func (c *Client) applyOrDeleteObjects(
 	objects []AnyJSONObj,
 	apiMode string,
 	withKeys bool,
-) (*M2MAppCredentials, error) {
+) ([]agentData, error) {
 	objectAnnotated := make([]AnyJSONObj, 0, len(objects))
 	for _, o := range objects {
 		objectAnnotated = append(objectAnnotated, Annotate(o, c.organization))
@@ -617,7 +618,7 @@ func (c *Client) applyOrDeleteObjects(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		return readM2MCredentials(withKeys, resp)
+		return readAgentsData(withKeys, resp)
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
@@ -630,7 +631,7 @@ func (c *Client) applyOrDeleteObjects(
 	}
 }
 
-func readM2MCredentials(withKeys bool, resp *http.Response) (keys *M2MAppCredentials, err error) {
+func readAgentsData(withKeys bool, resp *http.Response) (agentsData []agentData, err error) {
 	if withKeys {
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -638,12 +639,12 @@ func readM2MCredentials(withKeys bool, resp *http.Response) (keys *M2MAppCredent
 		}
 
 		if len(body) > 0 {
-			if err = json.Unmarshal(body, &keys); err != nil {
+			if err = json.Unmarshal(body, &agentsData); err != nil {
 				return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
 			}
 		}
 	}
-	return keys, nil
+	return agentsData, nil
 }
 
 func (c *Client) getRequestForAPIMode(apiMode string, buf io.Reader) (*http.Request, error) {
