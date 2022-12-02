@@ -511,7 +511,7 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 }
 
 // ApplyAgents applies (create or update) list of agents passed as argument via API
-// and returns client_id and client_secret on creation.
+// and returns agent data on creation.
 func (c *Client) ApplyAgents(objects []AnyJSONObj) ([]agentData, error) {
 	return c.applyOrDeleteObjects(objects, apiApply, true)
 }
