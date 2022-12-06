@@ -29,7 +29,7 @@ const (
 	Percentiles
 )
 
-type agentData struct {
+type objectData struct {
 	Kind         string         `json:"kind"`
 	Metadata     MetadataHolder `json:"metadata"`
 	ClientID     string         `json:"clientID"`
@@ -512,7 +512,7 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 
 // ApplyAgents applies (create or update) list of agents passed as argument via API
 // and returns agent data on creation.
-func (c *Client) ApplyAgents(objects []AnyJSONObj) ([]agentData, error) {
+func (c *Client) ApplyAgents(objects []AnyJSONObj) ([]objectData, error) {
 	return c.applyOrDeleteObjects(objects, apiApply, true)
 }
 
@@ -587,8 +587,8 @@ func (c *Client) GetTimeSeries(
 func (c *Client) applyOrDeleteObjects(
 	objects []AnyJSONObj,
 	apiMode string,
-	withKeys bool,
-) ([]agentData, error) {
+	withAgentKeys bool,
+) ([]objectData, error) {
 	objectAnnotated := make([]AnyJSONObj, 0, len(objects))
 	for _, o := range objects {
 		objectAnnotated = append(objectAnnotated, Annotate(o, c.organization))
@@ -618,7 +618,10 @@ func (c *Client) applyOrDeleteObjects(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		return readAgentsData(withKeys, resp)
+		if withAgentKeys {
+			return readObjectsData(resp, KindAgent)
+		}
+		return nil, nil
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
@@ -631,20 +634,25 @@ func (c *Client) applyOrDeleteObjects(
 	}
 }
 
-func readAgentsData(withKeys bool, resp *http.Response) (agentsData []agentData, err error) {
-	if withKeys {
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("cannot read response body: %w", err)
-		}
+func readObjectsData(resp *http.Response, kind string) (objectsData []objectData, err error) {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read response body: %w", err)
+	}
 
-		if len(body) > 0 {
-			if err = json.Unmarshal(body, &agentsData); err != nil {
-				return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
-			}
+	if len(body) > 0 {
+		if err = json.Unmarshal(body, &objectsData); err != nil {
+			return nil, fmt.Errorf("cannot unmarshal response body: %w", err)
 		}
 	}
-	return agentsData, nil
+
+	var filteredData []objectData
+	for _, o := range objectsData {
+		if o.Kind == kind {
+			filteredData = append(filteredData, o)
+		}
+	}
+	return filteredData, nil
 }
 
 func (c *Client) getRequestForAPIMode(apiMode string, buf io.Reader) (*http.Request, error) {
