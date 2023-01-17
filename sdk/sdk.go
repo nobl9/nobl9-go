@@ -51,6 +51,7 @@ const (
 	QueryKeyDryRun            = "dry_run"
 	QueryKeyTextSearch        = "text_search"
 	QueryKeySystemAnnotations = "system_annotations"
+	QueryKeyUserAnnotations   = "user_annotations"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
