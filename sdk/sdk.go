@@ -36,20 +36,22 @@ const (
 
 // HTTP GET query keys used across app
 const (
-	QueryKeyName             = "name"
-	QueryKeyTime             = "t"
-	QueryKeyFrom             = "from"
-	QueryKeyTo               = "to"
-	QueryKeySeries           = "series"
-	QueryKeySteps            = "steps"
-	QueryKeySlo              = "slo"
-	QueryKeyTimeWindow       = "window"
-	QueryKeyPercentiles      = "q"
-	QueryKeyPermissionFilter = "pf"
-	QueryKeyLabelsFilter     = "labels"
-	QueryKeyServiceName      = "service_name"
-	QueryKeyDryRun           = "dry_run"
-	QueryKeyTextSearch       = "text_search"
+	QueryKeyName              = "name"
+	QueryKeyTime              = "t"
+	QueryKeyFrom              = "from"
+	QueryKeyTo                = "to"
+	QueryKeySeries            = "series"
+	QueryKeySteps             = "steps"
+	QueryKeySlo               = "slo"
+	QueryKeyTimeWindow        = "window"
+	QueryKeyPercentiles       = "q"
+	QueryKeyPermissionFilter  = "pf"
+	QueryKeyLabelsFilter      = "labels"
+	QueryKeyServiceName       = "service_name"
+	QueryKeyDryRun            = "dry_run"
+	QueryKeyTextSearch        = "text_search"
+	QueryKeySystemAnnotations = "system_annotations"
+	QueryKeyUserAnnotations   = "user_annotations"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
