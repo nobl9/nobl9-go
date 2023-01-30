@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,6 +29,8 @@ const (
 	BurnDown
 	Percentiles
 )
+
+var ErrConcurrencyIssue = errors.New("operation failed due to concurrency issue but can be retried")
 
 type objectData struct {
 	Kind         string         `json:"kind"`
@@ -402,12 +405,6 @@ const (
 	apiDelete = "delete"
 )
 
-func getResponseServerError(resp *http.Response) error {
-	body, _ := io.ReadAll(resp.Body)
-	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
-	return fmt.Errorf(msg)
-}
-
 // GetObject returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
 func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]AnyJSONObj, error) {
@@ -432,20 +429,14 @@ func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]
 		_ = resp.Body.Close()
 	}()
 
-	switch {
-	case resp.StatusCode == http.StatusOK:
+	if resp.StatusCode == http.StatusOK {
 		content, err := decodeBody(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("cannot decode response from API: %w", err)
 		}
 		return content, nil
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return nil, getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return nil, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
+	return nil, handleHttpError(resp)
 }
 
 func (c *Client) GetAWSExternalID() (string, error) {
@@ -457,8 +448,7 @@ func (c *Client) GetAWSExternalID() (string, error) {
 		_ = resp.Body.Close()
 	}()
 
-	switch {
-	case resp.StatusCode == http.StatusOK:
+	if resp.StatusCode == http.StatusOK {
 		jsonMap := make(map[string]interface{})
 		if err := json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
 			return "", fmt.Errorf("cannot decode response from API: %w", err)
@@ -473,13 +463,8 @@ func (c *Client) GetAWSExternalID() (string, error) {
 			return "", fmt.Errorf("field: %s is not a string", field)
 		}
 		return externalIDString, nil
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return "", getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return "", fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
+	return "", handleHttpError(resp)
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
@@ -498,16 +483,10 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 		_ = resp.Body.Close()
 	}()
 
-	switch {
-	case resp.StatusCode == http.StatusOK:
+	if resp.StatusCode == http.StatusOK {
 		return nil
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
+	return handleHttpError(resp)
 }
 
 // ApplyAgents applies (create or update) list of agents passed as argument via API
@@ -616,22 +595,14 @@ func (c *Client) applyOrDeleteObjects(
 		_ = resp.Body.Close()
 	}()
 
-	switch {
-	case resp.StatusCode == http.StatusOK:
+	if resp.StatusCode == http.StatusOK {
 		if withAgentKeys {
 			return readObjectsData(resp, KindAgent)
 		}
 		return nil, nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return nil, getResponseServerError(resp)
-	default:
-		return nil, fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
 	}
+	return nil, handleHttpError(resp)
+
 }
 
 func readObjectsData(resp *http.Response, kind string) (objectsData []objectData, err error) {
@@ -741,4 +712,16 @@ func createRetryableClient() *retryablehttp.Client {
 	retryableClient.RetryWaitMin = 1 * time.Second
 
 	return retryableClient
+}
+
+func handleHttpError(resp *http.Response) error {
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("request finished with status code: %d", resp.StatusCode)
+	}
+	msg := bytes.TrimSpace(body)
+	if string(msg) == ErrConcurrencyIssue.Error() {
+		return ErrConcurrencyIssue
+	}
+	return fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 }
