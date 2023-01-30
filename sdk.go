@@ -21,6 +21,8 @@ import (
 // TimeSerie represents a type of possible time series defined over an object kind
 type TimeSerie int
 
+var ErrConcurrencyIssue = errors.New("operation failed due to concurrency issue but can be retried")
+
 // Possible time series that can be retrieved
 const (
 	InstantaneousBurnRate TimeSerie = iota + 1
@@ -29,8 +31,6 @@ const (
 	BurnDown
 	Percentiles
 )
-
-var ErrConcurrencyIssue = errors.New("operation failed due to concurrency issue but can be retried")
 
 type objectData struct {
 	Kind         string         `json:"kind"`
