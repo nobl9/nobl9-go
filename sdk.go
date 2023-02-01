@@ -429,14 +429,14 @@ func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]
 		_ = resp.Body.Close()
 	}()
 
-	if resp.StatusCode == http.StatusOK {
-		content, err := decodeBody(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("cannot decode response from API: %w", err)
-		}
-		return content, nil
+	if err = checkResponseErrors(resp); err != nil {
+		return nil, err
 	}
-	return nil, handleHttpError(resp)
+	content, err := decodeBody(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cannot decode response from API: %w", err)
+	}
+	return content, nil
 }
 
 func (c *Client) GetAWSExternalID() (string, error) {
@@ -448,23 +448,23 @@ func (c *Client) GetAWSExternalID() (string, error) {
 		_ = resp.Body.Close()
 	}()
 
-	if resp.StatusCode == http.StatusOK {
-		jsonMap := make(map[string]interface{})
-		if err := json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
-			return "", fmt.Errorf("cannot decode response from API: %w", err)
-		}
-		const field = "awsExternalID"
-		externalID, ok := jsonMap[field]
-		if !ok {
-			return "", fmt.Errorf("missing field: %s", field)
-		}
-		externalIDString, ok := externalID.(string)
-		if !ok {
-			return "", fmt.Errorf("field: %s is not a string", field)
-		}
-		return externalIDString, nil
+	if err = checkResponseErrors(resp); err != nil {
+		return "", err
 	}
-	return "", handleHttpError(resp)
+	jsonMap := make(map[string]interface{})
+	if err := json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
+		return "", fmt.Errorf("cannot decode response from API: %w", err)
+	}
+	const field = "awsExternalID"
+	externalID, ok := jsonMap[field]
+	if !ok {
+		return "", fmt.Errorf("missing field: %s", field)
+	}
+	externalIDString, ok := externalID.(string)
+	if !ok {
+		return "", fmt.Errorf("field: %s is not a string", field)
+	}
+	return externalIDString, nil
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
@@ -482,11 +482,10 @@ func (c *Client) DeleteObjectsByName(object Object, names ...string) error {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
-
-	if resp.StatusCode == http.StatusOK {
-		return nil
+	if err = checkResponseErrors(resp); err != nil {
+		return err
 	}
-	return handleHttpError(resp)
+	return nil
 }
 
 // ApplyAgents applies (create or update) list of agents passed as argument via API
@@ -595,14 +594,13 @@ func (c *Client) applyOrDeleteObjects(
 		_ = resp.Body.Close()
 	}()
 
-	if resp.StatusCode == http.StatusOK {
-		if withAgentKeys {
-			return readObjectsData(resp, KindAgent)
-		}
-		return nil, nil
+	if err = checkResponseErrors(resp); err != nil {
+		return nil, err
 	}
-	return nil, handleHttpError(resp)
-
+	if withAgentKeys {
+		return readObjectsData(resp, KindAgent)
+	}
+	return nil, nil
 }
 
 func readObjectsData(resp *http.Response, kind string) (objectsData []objectData, err error) {
@@ -714,7 +712,14 @@ func createRetryableClient() *retryablehttp.Client {
 	return retryableClient
 }
 
-func handleHttpError(resp *http.Response) error {
+func checkResponseErrors(resp *http.Response) error {
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+	return getResponseServerError(resp)
+}
+
+func getResponseServerError(resp *http.Response) error {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("request finished with status code: %d", resp.StatusCode)
