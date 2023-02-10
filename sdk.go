@@ -725,7 +725,7 @@ func getResponseServerError(resp *http.Response) error {
 		return fmt.Errorf("request finished with status code: %d", resp.StatusCode)
 	}
 	msg := bytes.TrimSpace(body)
-	if errors.As(errors.New(string(msg)), &ErrConcurrencyIssue) {
+	if string(msg) == ErrConcurrencyIssue.Error() {
 		return ErrConcurrencyIssue
 	}
 	return fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
