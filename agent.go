@@ -91,13 +91,6 @@ type DatadogAgentConfig struct {
 	Site string `json:"site,omitempty"`
 }
 
-// DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object.
-type DatadogDirectConfig struct {
-	Site           string `json:"site,omitempty"`
-	APIKey         string `json:"apiKey" example:"secret"`
-	ApplicationKey string `json:"applicationKey" example:"secret"`
-}
-
 // NewRelicConfig represents content of NewRelic Configuration typical for DataSource Object.
 type NewRelicConfig struct {
 	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
@@ -106,12 +99,6 @@ type NewRelicConfig struct {
 // NewRelicAgentConfig represents content of NewRelic Configuration typical for Agent Object.
 type NewRelicAgentConfig struct {
 	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
-}
-
-// NewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object.
-type NewRelicDirectConfig struct {
-	AccountID        json.Number `json:"accountId"`
-	InsightsQueryKey string      `json:"insightsQueryKey" example:"secret"`
 }
 
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for DataSource Object.
@@ -151,17 +138,6 @@ type SplunkObservabilityAgentConfig struct {
 	Realm string `json:"realm,omitempty" example:"us1"`
 }
 
-// SplunkObservabilityDirectConfig represents content of SplunkObservability Configuration typical for Direct Object.
-type SplunkObservabilityDirectConfig struct {
-	Realm       string `json:"realm,omitempty"`
-	AccessToken string `json:"accessToken,omitempty"`
-}
-
-// ThousandEyesDirectConfig represents content of ThousandEyes Configuration typical for Direct Object.
-type ThousandEyesDirectConfig struct {
-	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
-}
-
 // ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object.
 type ThousandEyesAgentConfig struct {
 	// ThousandEyes agent doesn't require any additional parameters.
@@ -195,10 +171,6 @@ type GraphiteAgentConfig struct {
 // BigQueryAgentConfig represents content of BigQuery configuration.
 // Since the agent does not require additional configuration this is just a marker struct.
 type BigQueryAgentConfig struct{}
-
-type BigQueryDirectConfig struct {
-	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
-}
 
 // OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
 type OpenTSDBAgentConfig struct {
