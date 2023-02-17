@@ -16,24 +16,25 @@ type DirectStatus struct {
 
 // DirectSpec represents content of Spec typical for Direct Object
 type DirectSpec struct {
-	Description         string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
-	SourceOf            []string                         `json:"sourceOf" example:"Metrics,Services"`
-	AppDynamics         *AppDynamicsDirectConfig         `json:"appDynamics,omitempty"`
-	BigQuery            *BigQueryDirectConfig            `json:"bigQuery,omitempty"`
-	CloudWatch          *CloudWatchDirectConfig          `json:"cloudWatch,omitempty"`
-	Datadog             *DatadogDirectConfig             `json:"datadog,omitempty"`
-	Dynatrace           *DynatraceDirectConfig           `json:"dynatrace,omitempty"`
-	GCM                 *GCMDirectConfig                 `json:"gcm,omitempty"`
-	InfluxDB            *InfluxDBDirectConfig            `json:"influxdb,omitempty"`
-	Instana             *InstanaDirectConfig             `json:"instana,omitempty"`
-	Lightstep           *LightstepDirectConfig           `json:"lightstep,omitempty"`
-	NewRelic            *NewRelicDirectConfig            `json:"newRelic,omitempty"`
-	Pingdom             *PingdomDirectConfig             `json:"pingdom,omitempty"`
-	Redshift            *RedshiftDirectConfig            `json:"redshift,omitempty"`
-	Splunk              *SplunkDirectConfig              `json:"splunk,omitempty"`
-	SplunkObservability *SplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
-	SumoLogic           *SumoLogicDirectConfig           `json:"sumoLogic,omitempty"`
-	ThousandEyes        *ThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
+	Description             string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
+	SourceOf                []string                         `json:"sourceOf" example:"Metrics,Services"`
+	HistoricalDataRetrieval *HistoricalDataRetrieval         `json:"historicalDataRetrieval"`
+	AppDynamics             *AppDynamicsDirectConfig         `json:"appDynamics,omitempty"`
+	BigQuery                *BigQueryDirectConfig            `json:"bigQuery,omitempty"`
+	CloudWatch              *CloudWatchDirectConfig          `json:"cloudWatch,omitempty"`
+	Datadog                 *DatadogDirectConfig             `json:"datadog,omitempty"`
+	Dynatrace               *DynatraceDirectConfig           `json:"dynatrace,omitempty"`
+	GCM                     *GCMDirectConfig                 `json:"gcm,omitempty"`
+	InfluxDB                *InfluxDBDirectConfig            `json:"influxdb,omitempty"`
+	Instana                 *InstanaDirectConfig             `json:"instana,omitempty"`
+	Lightstep               *LightstepDirectConfig           `json:"lightstep,omitempty"`
+	NewRelic                *NewRelicDirectConfig            `json:"newRelic,omitempty"`
+	Pingdom                 *PingdomDirectConfig             `json:"pingdom,omitempty"`
+	Redshift                *RedshiftDirectConfig            `json:"redshift,omitempty"`
+	Splunk                  *SplunkDirectConfig              `json:"splunk,omitempty"`
+	SplunkObservability     *SplunkObservabilityDirectConfig `json:"splunkObservability,omitempty"`
+	SumoLogic               *SumoLogicDirectConfig           `json:"sumoLogic,omitempty"`
+	ThousandEyes            *ThousandEyesDirectConfig        `json:"thousandEyes,omitempty"`
 }
 
 // AppDynamicsDirectConfig represents content of AppDynamics configuration typical for Direct Object
