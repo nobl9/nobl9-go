@@ -137,7 +137,7 @@ type ThousandEyesDirectConfig struct {
 	OauthBearerToken string `json:"oauthBearerToken,omitempty" example:"secret"`
 }
 
-// genericToDirect converts ObjectGeneric to ObjectDirect
+// genericToDirect converts ObjectGeneric to ObjectDirect.
 func genericToDirect(o ObjectGeneric, onlyHeader bool) (Direct, error) {
 	res := Direct{
 		ObjectHeader: o.ObjectHeader,
