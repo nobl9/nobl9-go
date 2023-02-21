@@ -408,6 +408,27 @@ const (
 // GetObject returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
 func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]AnyJSONObj, error) {
+	var objects []AnyJSONObj
+	err := c.getObjects(object, &objects, timestamp, names)
+	if err != nil {
+		return objects, err
+	}
+	return objects, nil
+}
+
+// GetDirects returns array of Direct, when names are passed - query for these names
+// otherwise returns list of all available objects.
+func (c *Client) GetDirects(timestamp string, names ...string) ([]Direct, error) {
+	var directs []Direct
+	err := c.getObjects(ObjectDirect, &directs, timestamp, names)
+	if err != nil {
+		return directs, err
+	}
+	return directs, nil
+
+}
+
+func (c *Client) getObjects(object Object, objects interface{}, timestamp string, names []string) error {
 	endpoint := "/get/" + object
 	q := queries{
 		QueryKeyName: names,
@@ -423,20 +444,30 @@ func (c *Client) GetObject(object Object, timestamp string, names ...string) ([]
 
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
+		return fmt.Errorf("cannot perform a request to API: %w", err)
 	}
+
+	if err = checkResponseErrors(resp); err != nil {
+		return err
+	}
+
+	err = c.unmarshalResponse(resp, objects)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) unmarshalResponse(resp *http.Response, object interface{}) error {
 	defer func() {
 		_ = resp.Body.Close()
 	}()
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(&object); err != nil {
+		return fmt.Errorf("cannot decode response from API: %w", err)
+	}
 
-	if err = checkResponseErrors(resp); err != nil {
-		return nil, err
-	}
-	content, err := decodeBody(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("cannot decode response from API: %w", err)
-	}
-	return content, nil
+	return nil
 }
 
 func (c *Client) GetAWSExternalID() (string, error) {
@@ -683,16 +714,6 @@ func Annotate(
 ) AnyJSONObj {
 	object["organization"] = org
 	return object
-}
-
-// decodeBody assumes that passed body is an array of JSON objects
-func decodeBody(r io.Reader) ([]AnyJSONObj, error) {
-	dec := json.NewDecoder(r)
-	var parsed []AnyJSONObj
-	if err := dec.Decode(&parsed); err != nil {
-		return nil, err
-	}
-	return parsed, nil
 }
 
 type queries map[string][]string

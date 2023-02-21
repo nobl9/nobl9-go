@@ -121,6 +121,16 @@ type ObjectGeneric struct {
 	Spec json.RawMessage `json:"spec"`
 }
 
+type HistoricalDataRetrieval struct {
+	DefaultDuration HistoricalDataRetrievalDuration `json:"defaultDuration"`
+	MaxDuration     HistoricalDataRetrievalDuration `json:"maxDuration"`
+}
+
+type HistoricalDataRetrievalDuration struct {
+	Unit  string      `json:"unit" example:"Day"`
+	Value json.Number `json:"value" example:"30"`
+}
+
 // EnhanceError annotates error with path of manifest source, if it exists
 // it not returns the same error as passed as argument
 func EnhanceError(o ObjectGeneric, err error) error {
