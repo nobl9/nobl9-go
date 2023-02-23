@@ -197,12 +197,12 @@ type Client struct {
 }
 
 // UserAgent returns users version.
-func (c Client) UserAgent() string {
+func (c *Client) UserAgent() string {
 	return c.userAgent
 }
 
 // Authorization returns authorization header value that is used in the requests.
-func (c Client) Authorization() string {
+func (c *Client) Authorization() string {
 	return c.authorization
 }
 
@@ -267,6 +267,7 @@ func getResponseServerError(resp *http.Response) error {
 // GetObject returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
 func (c *Client) GetObject(
+	ctx context.Context,
 	object Object,
 	timestamp string,
 	filterLabel map[string][]string,
@@ -285,7 +286,7 @@ func (c *Client) GetObject(
 		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
 	}
 
-	req := c.createGetReq(c.ingestURL, endpoint, q)
+	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
 	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
@@ -334,8 +335,9 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 	return strings.Join(labels, ",")
 }
 
-func (c *Client) GetAWSExternalID() (string, error) {
-	resp, err := c.c.Do(c.createGetReq(c.ingestURL, "/get/dataexport/aws-external-id", nil))
+func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
+	req := c.createGetReq(ctx, c.ingestURL, "/get/dataexport/aws-external-id", nil)
+	resp, err := c.c.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -369,13 +371,13 @@ func (c *Client) GetAWSExternalID() (string, error) {
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
-func (c *Client) DeleteObjectsByName(object Object, dryRun bool, names ...string) error {
+func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun bool, names ...string) error {
 	endpoint := "/delete/" + object
 	q := queries{
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req := c.createDeleteReq(endpoint, q)
+	req := c.createDeleteReq(ctx, endpoint, q)
 
 	resp, err := c.c.Do(req)
 	if err != nil {
@@ -404,18 +406,22 @@ func (c *Client) DeleteObjectsByName(object Object, dryRun bool, names ...string
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(objects, apiApply, dryRun)
+func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(objects, apiDelete, dryRun)
+func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
-func (c *Client) GetAgentCredentials(agentsName string) (M2MAppCredentials, error) {
-	request := c.createGetReq(c.ingestURL, "/internal/agent/clientcreds", map[string][]string{"name": {agentsName}})
+func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (M2MAppCredentials, error) {
+	request := c.createGetReq(
+		ctx,
+		c.ingestURL,
+		"/internal/agent/clientcreds",
+		map[string][]string{"name": {agentsName}})
 	response, err := c.c.Do(request)
 	if err != nil {
 		return M2MAppCredentials{}, pkgErrors.WithStack(err)
@@ -477,13 +483,13 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessTo
 
 // applyOrDeleteObjects applies or deletes list of objects
 // depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string, dryRun bool) error {
+func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
 	buf := &bytes.Buffer{}
 	if err := json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
 
-	req, err := c.getRequestForAPIMode(apiMode, buf)
+	req, err := c.getRequestForAPIMode(ctx, apiMode, buf)
 	if err != nil {
 		return fmt.Errorf("cannot create a request: %w", err)
 	}
@@ -519,17 +525,17 @@ func (c *Client) applyOrDeleteObjects(objects []AnyJSONObj, apiMode string, dryR
 	}
 }
 
-func (c *Client) getRequestForAPIMode(apiMode string, buf io.Reader) (*http.Request, error) {
+func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf io.Reader) (*http.Request, error) {
 	switch apiMode {
 	case apiApply:
-		return http.NewRequest(http.MethodPut, c.ingestURL+"/apply", buf)
+		return http.NewRequestWithContext(ctx, http.MethodPut, c.ingestURL+"/apply", buf)
 	case apiDelete:
-		return http.NewRequest(http.MethodDelete, c.ingestURL+"/delete", buf)
+		return http.NewRequestWithContext(ctx, http.MethodDelete, c.ingestURL+"/delete", buf)
 	}
 	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
 }
 
-func (c *Client) createGetReq(apiURL string, endpoint Object, q queries) *http.Request {
+func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Object, q queries) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint.String(), nil)
 	req.Header.Set(HeaderOrganization, c.organization)
 	req.Header.Set(HeaderProject, c.project)
@@ -547,10 +553,10 @@ func (c *Client) createGetReq(apiURL string, endpoint Object, q queries) *http.R
 		}
 	}
 	req.URL.RawQuery = values.Encode()
-	return req
+	return req.WithContext(ctx)
 }
 
-func (c *Client) createDeleteReq(endpoint Object, q queries) *http.Request {
+func (c *Client) createDeleteReq(ctx context.Context, endpoint Object, q queries) *http.Request {
 	req, _ := http.NewRequest(http.MethodDelete, c.ingestURL+endpoint.String(), nil)
 	req.Header.Set(HeaderOrganization, c.organization)
 	req.Header.Set(HeaderProject, c.project)
@@ -568,7 +574,7 @@ func (c *Client) createDeleteReq(endpoint Object, q queries) *http.Request {
 		}
 	}
 	req.URL.RawQuery = values.Encode()
-	return req
+	return req.WithContext(ctx)
 }
 
 // Annotate injects to objects additional fields with values passed as map in parameter
