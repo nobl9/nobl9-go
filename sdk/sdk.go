@@ -221,6 +221,14 @@ func (c *Client) Organization() string {
 	return c.organization
 }
 
+func (c *Client) SetProject(project string) {
+	c.project = project
+}
+
+func (c *Client) Project() string {
+	return c.project
+}
+
 // NewClientWithTimeout returns fully configured instance of API high level client with timeout used for every request.
 func NewClientWithTimeout(
 	ingestURL, intakeURL, organization, project, userAgent string, client *http.Client,
