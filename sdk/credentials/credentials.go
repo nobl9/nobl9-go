@@ -48,6 +48,7 @@ type m2mTokenResponse struct {
 }
 
 func (credentials *Credentials) RefreshOrRequestAccessToken(
+	ctx context.Context,
 	oktaOrgURL,
 	oktaAuthServer string,
 	disableOkta bool,
@@ -57,7 +58,7 @@ func (credentials *Credentials) RefreshOrRequestAccessToken(
 		return false, nil
 	}
 	if credentials.checkAccessToken(oktaOrgURL, oktaAuthServer, client) != nil {
-		if err := credentials.requestAccessToken(oktaOrgURL, oktaAuthServer, client); err != nil {
+		if err := credentials.requestAccessToken(ctx, oktaOrgURL, oktaAuthServer, client); err != nil {
 			return false, fmt.Errorf("error getting new access token from the customer identity provider: %w", err)
 		}
 		// Access token was updated so we need to update config file.
@@ -67,7 +68,11 @@ func (credentials *Credentials) RefreshOrRequestAccessToken(
 	return false, nil
 }
 
-func (credentials *Credentials) requestAccessToken(oktaOrgURL, oktaAuthServer string, client *http.Client) error {
+func (credentials *Credentials) requestAccessToken(
+	ctx context.Context,
+	oktaOrgURL, oktaAuthServer string,
+	client *http.Client,
+) error {
 	data := url.Values{}
 	data.Set("grant_type", "client_credentials")
 	data.Set("scope", "m2m")
@@ -80,6 +85,7 @@ func (credentials *Credentials) requestAccessToken(oktaOrgURL, oktaAuthServer st
 	}
 	req.Header.Set("Authorization", credentials.getTokenReqAuthHeader())
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req = req.WithContext(ctx)
 
 	resp, err := client.Do(req)
 	if err != nil {
