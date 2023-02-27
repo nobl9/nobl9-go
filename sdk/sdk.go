@@ -425,21 +425,24 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 
 // GetAgentCredentials gets agent credentials from Okta.
 func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (M2MAppCredentials, error) {
-	request := c.createGetReq(
+	req := c.createGetReq(
 		ctx,
 		c.ingestURL,
 		"/internal/agent/clientcreds",
 		map[string][]string{"name": {agentsName}})
-	response, err := c.c.Do(request)
+	resp, err := c.c.Do(req)
 	if err != nil {
 		return M2MAppCredentials{}, pkgErrors.WithStack(err)
 	}
-	defer func() {
-		_ = response.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		rawErr, _ := io.ReadAll(resp.Body)
+		return M2MAppCredentials{},
+			fmt.Errorf("bad status code response: %d, error: %s", resp.StatusCode, string(rawErr))
+	}
 
 	var credentials M2MAppCredentials
-	err = json.NewDecoder(response.Body).Decode(&credentials)
+	err = json.NewDecoder(resp.Body).Decode(&credentials)
 	if err != nil {
 		return M2MAppCredentials{}, pkgErrors.WithStack(err)
 	}
