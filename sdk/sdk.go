@@ -424,26 +424,26 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
-func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (M2MAppCredentials, error) {
-	request := c.createGetReq(
+func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (creds M2MAppCredentials, err error) {
+	req := c.createGetReq(
 		ctx,
 		c.ingestURL,
 		"/internal/agent/clientcreds",
 		map[string][]string{"name": {agentsName}})
-	response, err := c.c.Do(request)
+	resp, err := c.c.Do(req)
 	if err != nil {
-		return M2MAppCredentials{}, pkgErrors.WithStack(err)
+		return creds, pkgErrors.WithStack(err)
 	}
-	defer func() {
-		_ = response.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		rawErr, _ := io.ReadAll(resp.Body)
+		return creds, fmt.Errorf("bad status code response: %d, error: %s", resp.StatusCode, string(rawErr))
+	}
 
-	var credentials M2MAppCredentials
-	err = json.NewDecoder(response.Body).Decode(&credentials)
-	if err != nil {
-		return M2MAppCredentials{}, pkgErrors.WithStack(err)
+	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
+		return creds, pkgErrors.WithStack(err)
 	}
-	return credentials, nil
+	return creds, nil
 }
 
 func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessToken string) error {
