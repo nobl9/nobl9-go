@@ -147,6 +147,7 @@ type LightstepMetric struct {
 	StreamID   *string  `json:"streamId"`
 	TypeOfData *string  `json:"typeOfData"`
 	Percentile *float64 `json:"percentile"`
+	UQL        *string  `json:"uql"`
 }
 
 // NewRelicMetric describes metric from NewRelic
