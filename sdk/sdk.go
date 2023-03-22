@@ -285,27 +285,29 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	q := queries{}
-	if len(names) > 0 {
-		q[QueryKeyName] = names
-	}
-	if timestamp != "" {
-		q[QueryKeyTime] = []string{timestamp}
-	}
-	if len(filterLabel) > 0 {
-		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
-	}
-	return c.GetObjectWithQuery(ctx, object, q)
+	return c.GetObjectWithQuery(
+		ctx,
+		object,
+		map[string][]string{QueryKeyName: names},
+		map[string][]string{QueryKeyTime: {timestamp}},
+		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
+	)
 }
 
 func (c *Client) GetObjectWithQuery(
 	ctx context.Context,
 	object Object,
-	queryParams queries,
+	queryParams ...map[string][]string,
 ) ([]AnyJSONObj, error) {
 	endpoint := "/get/" + object
 
-	req := c.createGetReq(ctx, c.ingestURL, endpoint, queryParams)
+	q := queries{}
+	for _, param := range queryParams {
+		for key, value := range param {
+			q[key] = value
+		}
+	}
+	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
 	resp, err := c.c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
