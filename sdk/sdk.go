@@ -52,6 +52,10 @@ const (
 	QueryKeyTextSearch        = "text_search"
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
+	QueryKeyAlertPolicy       = "alert_policy"
+	QueryKeyObjectiveName     = "objective_name"
+	QueryKeyObjectiveValue    = "objective_value"
+	QueryKeyStatus            = "status"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
@@ -295,11 +299,6 @@ func (c *Client) GetObject(
 	}
 
 	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
-	// Ignore project from configuration and from `-p` flag.
-	if object == ObjectAlert {
-		req.Header.Set(HeaderProject, ProjectsWildcard)
-	}
-
 	resp, err := c.c.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
