@@ -300,8 +300,9 @@ func (c *Client) GetObjectWithParams(
 	ctx context.Context,
 	object Object,
 	queryParams ...map[string][]string,
-) ([]AnyJSONObj, bool, error) {
+) (objects []AnyJSONObj, truncatedMax int, err error) {
 	endpoint := "/get/" + object
+	truncatedMax = -1
 
 	q := queries{}
 	for _, param := range queryParams {
@@ -312,7 +313,7 @@ func (c *Client) GetObjectWithParams(
 	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return nil, false, fmt.Errorf("cannot perform a request to API: %w", err)
+		return nil, 0, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -322,21 +323,26 @@ func (c *Client) GetObjectWithParams(
 	case resp.StatusCode == http.StatusOK:
 		content, err := decodeBody(resp.Body)
 		if err != nil {
-			return nil, false, fmt.Errorf("cannot decode response from API: %w", err)
+			return nil, 0, fmt.Errorf("cannot decode response from API: %w", err)
 		}
-		truncated := resp.Header.Get(HeaderTruncatedLimitMax) != ""
-		return content, truncated, nil
+		if truncatedLimit := resp.Header.Get(HeaderTruncatedLimitMax); truncatedLimit != "" {
+			truncatedMax, err = strconv.Atoi(truncatedLimit)
+			if err != nil {
+				fmt.Errorf("unable to decode response header '%s'", HeaderTruncatedLimitMax)
+			}
+		}
+		return content, truncatedMax, nil
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
 		body, _ := io.ReadAll(resp.Body)
-		return nil, false, fmt.Errorf("%s", bytes.TrimSpace(body))
+		return nil, -1, fmt.Errorf("%s", bytes.TrimSpace(body))
 	case resp.StatusCode >= http.StatusInternalServerError:
-		return nil, false, getResponseServerError(resp)
+		return nil, -1, getResponseServerError(resp)
 	default:
 		body, _ := io.ReadAll(resp.Body)
 		msg := strings.TrimSpace(string(body))
-		return nil, false, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+		return nil, -1, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
 }
 
