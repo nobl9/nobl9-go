@@ -55,7 +55,7 @@ const (
 	QueryKeyAlertPolicy       = "alert_policy"
 	QueryKeyObjectiveName     = "objective_name"
 	QueryKeyObjectiveValue    = "objective_value"
-	QueryKeyStatus            = "status"
+	QueryKeyResolved          = "resolved"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
