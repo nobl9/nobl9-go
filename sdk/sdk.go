@@ -54,9 +54,10 @@ const (
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
 	QueryKeyAlertPolicy       = "alert_policy"
-	QueryKeyObjectiveName     = "objective_name"
+	QueryKeyObjective         = "objective"
 	QueryKeyObjectiveValue    = "objective_value"
 	QueryKeyResolved          = "resolved"
+	QueryKeyTriggered         = "triggered"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
