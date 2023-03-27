@@ -187,46 +187,13 @@ type AnyJSONObj = map[string]interface{}
 
 // Client represents API high level client.
 type Client struct {
-	c             http.Client
-	ingestURL     string
-	intakeURL     string
-	organization  string
-	project       string
-	authorization string
-	userAgent     string
-}
-
-// UserAgent returns users version.
-func (c *Client) UserAgent() string {
-	return c.userAgent
-}
-
-// Authorization returns authorization header value that is used in the requests.
-func (c *Client) Authorization() string {
-	return c.authorization
-}
-
-// SetAuth sets an authorization header which should used in future requests.
-func (c *Client) SetAuth(authorization string) {
-	c.authorization = authorization
-}
-
-// SetOrganization sets an organization which should used in future requests.
-func (c *Client) SetOrganization(organization string) {
-	c.organization = organization
-}
-
-// Organization gets an organization that will be used in future requests.
-func (c *Client) Organization() string {
-	return c.organization
-}
-
-func (c *Client) SetProject(project string) {
-	c.project = project
-}
-
-func (c *Client) Project() string {
-	return c.project
+	HTTP          http.Client
+	IngestURL     string
+	IntakeURL     string
+	Organization  string
+	Project       string
+	Authorization string
+	UserAgent     string
 }
 
 // NewClientWithTimeout returns fully configured instance of API high level client with timeout used for every request.
@@ -243,12 +210,12 @@ func NewClientWithTimeout(
 	}
 
 	return Client{
-		c:            *client,
-		ingestURL:    ingestURL,
-		intakeURL:    intakeURL,
-		organization: organization,
-		project:      project,
-		userAgent:    userAgent,
+		HTTP:         *client,
+		IngestURL:    ingestURL,
+		IntakeURL:    intakeURL,
+		Organization: organization,
+		Project:      project,
+		UserAgent:    userAgent,
 	}, nil
 }
 
@@ -294,13 +261,13 @@ func (c *Client) GetObject(
 		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
 	}
 
-	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
+	req := c.createGetReq(ctx, c.IngestURL, endpoint, q)
 	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
 	}
 
-	resp, err := c.c.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -344,8 +311,8 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
-	req := c.createGetReq(ctx, c.ingestURL, "/get/dataexport/aws-external-id", nil)
-	resp, err := c.c.Do(req)
+	req := c.createGetReq(ctx, c.IngestURL, "/get/dataexport/aws-external-id", nil)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -387,7 +354,7 @@ func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun 
 	}
 	req := c.createDeleteReq(ctx, endpoint, q)
 
-	resp, err := c.c.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -427,10 +394,10 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (creds M2MAppCredentials, err error) {
 	req := c.createGetReq(
 		ctx,
-		c.ingestURL,
+		c.IngestURL,
 		"/internal/agent/clientcreds",
 		map[string][]string{"name": {agentsName}})
-	resp, err := c.c.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return creds, pkgErrors.WithStack(err)
 	}
@@ -457,18 +424,18 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessTo
 		request, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodPost,
-			c.intakeURL+"/data",
+			c.IntakeURL+"/data",
 			strings.NewReader(buf.String()),
 		)
 		if err != nil {
 			panic(err)
 		}
-		request.Header.Set(HeaderOrganization, c.organization)
-		request.Header.Set(HeaderUserAgent, c.userAgent)
-		if c.authorization != "" {
+		request.Header.Set(HeaderOrganization, c.Organization)
+		request.Header.Set(HeaderUserAgent, c.UserAgent)
+		if c.Authorization != "" {
 			request.Header.Set(HeaderAuthorization, accessToken)
 		}
-		response, err := c.c.Do(request)
+		response, err := c.HTTP.Do(request)
 		if err != nil {
 			return pkgErrors.Wrapf(
 				err,
@@ -502,16 +469,16 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 		return fmt.Errorf("cannot create a request: %w", err)
 	}
 
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
+	req.Header.Set(HeaderOrganization, c.Organization)
+	req.Header.Set(HeaderUserAgent, c.UserAgent)
+	if c.Authorization != "" {
+		req.Header.Set(HeaderAuthorization, c.Authorization)
 	}
 	q := req.URL.Query()
 	q.Set(QueryKeyDryRun, strconv.FormatBool(dryRun))
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := c.c.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -536,20 +503,20 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf io.Reader) (*http.Request, error) {
 	switch apiMode {
 	case apiApply:
-		return http.NewRequestWithContext(ctx, http.MethodPut, c.ingestURL+"/apply", buf)
+		return http.NewRequestWithContext(ctx, http.MethodPut, c.IngestURL+"/apply", buf)
 	case apiDelete:
-		return http.NewRequestWithContext(ctx, http.MethodDelete, c.ingestURL+"/delete", buf)
+		return http.NewRequestWithContext(ctx, http.MethodDelete, c.IngestURL+"/delete", buf)
 	}
 	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
 }
 
 func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Object, q queries) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint.String(), nil)
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderProject, c.project)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
+	req.Header.Set(HeaderOrganization, c.Organization)
+	req.Header.Set(HeaderProject, c.Project)
+	req.Header.Set(HeaderUserAgent, c.UserAgent)
+	if c.Authorization != "" {
+		req.Header.Set(HeaderAuthorization, c.Authorization)
 	}
 
 	// add query parameters to request, to pass arrays convention of repeat entries is used
@@ -565,12 +532,12 @@ func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Objec
 }
 
 func (c *Client) createDeleteReq(ctx context.Context, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodDelete, c.ingestURL+endpoint.String(), nil)
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderProject, c.project)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
+	req, _ := http.NewRequest(http.MethodDelete, c.IngestURL+endpoint.String(), nil)
+	req.Header.Set(HeaderOrganization, c.Organization)
+	req.Header.Set(HeaderProject, c.Project)
+	req.Header.Set(HeaderUserAgent, c.UserAgent)
+	if c.Authorization != "" {
+		req.Header.Set(HeaderAuthorization, c.Authorization)
 	}
 
 	// add query parameters to request, to pass arrays convention of repeat entries is used
