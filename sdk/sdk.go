@@ -60,6 +60,11 @@ const (
 	QueryKeyTriggered         = "triggered"
 )
 
+type Response struct {
+	Objects      []AnyJSONObj
+	TruncatedMax int
+}
+
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
 
@@ -287,23 +292,25 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	objects, _, err := c.GetObjectWithParams(
+	response, err := c.GetObjectWithParams(
 		ctx,
 		object,
 		map[string][]string{QueryKeyName: names},
 		map[string][]string{QueryKeyTime: {timestamp}},
 		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
 	)
-	return objects, err
+	return response.Objects, err
 }
 
 func (c *Client) GetObjectWithParams(
 	ctx context.Context,
 	object Object,
 	queryParams ...map[string][]string,
-) (objects []AnyJSONObj, truncatedMax int, err error) {
+) (response Response, err error) {
 	endpoint := "/get/" + object
-	truncatedMax = -1
+	response = Response{
+		TruncatedMax: -1,
+	}
 
 	q := queries{}
 	for _, param := range queryParams {
@@ -314,7 +321,7 @@ func (c *Client) GetObjectWithParams(
 	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return nil, 0, fmt.Errorf("cannot perform a request to API: %w", err)
+		return response, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -324,26 +331,33 @@ func (c *Client) GetObjectWithParams(
 	case resp.StatusCode == http.StatusOK:
 		content, err := decodeBody(resp.Body)
 		if err != nil {
-			return nil, 0, fmt.Errorf("cannot decode response from API: %w", err)
+			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
+		response.Objects = content
+
 		if truncatedLimit := resp.Header.Get(HeaderTruncatedLimitMax); truncatedLimit != "" {
-			truncatedMax, err = strconv.Atoi(truncatedLimit)
+			truncatedMax, err := strconv.Atoi(truncatedLimit)
 			if err != nil {
-				fmt.Errorf("unable to decode response header '%s'", HeaderTruncatedLimitMax)
+				fmt.Errorf(
+					"'%s' header value: '%s' is not a valid integer",
+					HeaderTruncatedLimitMax,
+					truncatedLimit,
+				)
 			}
+			response.TruncatedMax = truncatedMax
 		}
-		return content, truncatedMax, nil
+		return response, nil
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
 		body, _ := io.ReadAll(resp.Body)
-		return nil, -1, fmt.Errorf("%s", bytes.TrimSpace(body))
+		return response, fmt.Errorf("%s", bytes.TrimSpace(body))
 	case resp.StatusCode >= http.StatusInternalServerError:
-		return nil, -1, getResponseServerError(resp)
+		return response, getResponseServerError(resp)
 	default:
 		body, _ := io.ReadAll(resp.Body)
 		msg := strings.TrimSpace(string(body))
-		return nil, -1, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+		return response, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
 }
 
