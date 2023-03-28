@@ -335,16 +335,18 @@ func (c *Client) GetObjectWithParams(
 		}
 		response.Objects = content
 
-		if truncatedLimit := resp.Header.Get(HeaderTruncatedLimitMax); truncatedLimit != "" {
-			truncatedMax, err := strconv.Atoi(truncatedLimit)
-			if err != nil {
-				fmt.Errorf(
-					"'%s' header value: '%s' is not a valid integer",
-					HeaderTruncatedLimitMax,
-					truncatedLimit,
-				)
+		if _, exists := resp.Header[HeaderTruncatedLimitMax]; exists {
+			if truncatedValue := resp.Header.Get(HeaderTruncatedLimitMax); truncatedValue != "" {
+				truncatedMax, err := strconv.Atoi(truncatedValue)
+				if err != nil {
+					return response, fmt.Errorf(
+						"'%s' header value: '%s' is not a valid integer",
+						HeaderTruncatedLimitMax,
+						truncatedValue,
+					)
+				}
+				response.TruncatedMax = truncatedMax
 			}
-			response.TruncatedMax = truncatedMax
 		}
 		return response, nil
 	case resp.StatusCode == http.StatusBadRequest,
