@@ -1,0 +1,94 @@
+package sdk
+
+import (
+	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	oktaTokenEndpoint = "v1/token"
+	oktaKeysEndpoint  = "v1/keys"
+)
+
+func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (string, error) {
+	authServerURL := path.Join(oktaOrgURL, "oauth2", oktaAuthServer)
+	if _, err := url.Parse(authServerURL); err != nil {
+		return "", errors.Wrapf(err, "invalid authorization server URL: %s", authServerURL)
+	}
+	return authServerURL, nil
+}
+
+func OktaKeysEndpoint(authServerURL string) string {
+	return path.Join(authServerURL, oktaKeysEndpoint)
+}
+
+type OktaClient struct {
+	HTTP          *http.Client
+	authServerURL string
+}
+
+func NewOktaClient(oktaOrgURL, oktaAuthServer string) (*OktaClient, error) {
+	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
+	if err != nil {
+		return nil, err
+	}
+	return &OktaClient{
+		HTTP:          NewHTTPClient(Timeout, log.Logger, "Fetching Token failed. Retrying."),
+		authServerURL: authServerURL,
+	}, nil
+}
+
+type m2mTokenResponse struct {
+	AccessToken string `json:"access_token"`
+}
+
+func (okta *OktaClient) RequestAccessToken(
+	ctx context.Context,
+	clientID, clientSecret string,
+) (token string, err error) {
+	data := url.Values{
+		"grant_type": {"client_credentials"},
+		"scope":      {"m2m"},
+	}
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		path.Join(okta.authServerURL, oktaTokenEndpoint),
+		strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", okta.authHeader(clientID, clientSecret))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := okta.HTTP.Do(req)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to execute request to IDP")
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", errors.Errorf(
+			"cannot access the token, IDP replied with (status: %d): %s", resp.StatusCode, string(body))
+	}
+	var tokenResponse m2mTokenResponse
+	if err = json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+		return "", errors.Wrap(err, "cannot decode the token provided by IDP")
+	}
+	return tokenResponse.AccessToken, nil
+}
+
+func (okta *OktaClient) authHeader(clientID, clientSecret string) string {
+	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(
+		[]byte(fmt.Sprintf("%s:%s", clientID, clientSecret))))
+}

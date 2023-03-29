@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/influxdata/influxdb/v2/models"
 	pkgErrors "github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // Timeout use for every request
@@ -24,14 +26,16 @@ const (
 	Timeout = 10 * time.Second
 )
 
+// DefaultProject is a value of the default project.
+const DefaultProject = "default"
+
 // HTTP headers keys used across app
 const (
 	HeaderOrganization  = "organization"
 	HeaderProject       = "project"
 	HeaderAuthorization = "Authorization"
 	HeaderUserAgent     = "User-Agent"
-	HeaderClientID      = "ClientID"
-	traceIDHeader       = "trace-id"
+	HeaderTraceID       = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -93,101 +97,59 @@ const (
 	ObjectAnnotation           Object = "Annotation"
 )
 
-func getAllObjects() []Object {
-	return []Object{
-		ObjectSLO,
-		ObjectService,
-		ObjectAgent,
-		ObjectProject,
-		ObjectMetricSource,
-		ObjectAlertPolicy,
-		ObjectAlertSilence,
-		ObjectAlert,
-		ObjectAlertMethod,
-		ObjectDirect,
-		ObjectDataExport,
-		ObjectUsageSummary,
-		ObjectRoleBinding,
-		ObjectSLOErrorBudgetStatus,
-		ObjectAnnotation,
-	}
+var allObjects = []Object{
+	ObjectSLO,
+	ObjectService,
+	ObjectAgent,
+	ObjectProject,
+	ObjectMetricSource,
+	ObjectAlertPolicy,
+	ObjectAlertSilence,
+	ObjectAlert,
+	ObjectAlertMethod,
+	ObjectDirect,
+	ObjectDataExport,
+	ObjectUsageSummary,
+	ObjectRoleBinding,
+	ObjectSLOErrorBudgetStatus,
+	ObjectAnnotation,
+}
+
+var objectNamesMap = map[string]Object{
+	"slo":          ObjectSLO,
+	"service":      ObjectService,
+	"agent":        ObjectAgent,
+	"alertpolicy":  ObjectAlertPolicy,
+	"alertsilence": ObjectAlertSilence,
+	"alert":        ObjectAlert,
+	"project":      ObjectProject,
+	"alertmethod":  ObjectAlertMethod,
+	"direct":       ObjectDirect,
+	"dataexport":   ObjectDataExport,
+	"rolebinding":  ObjectRoleBinding,
+	"annotation":   ObjectAnnotation,
 }
 
 func ObjectName(apiObject string) Object {
-	objects := map[string]Object{
-		"slo":          ObjectSLO,
-		"service":      ObjectService,
-		"agent":        ObjectAgent,
-		"alertpolicy":  ObjectAlertPolicy,
-		"alertsilence": ObjectAlertSilence,
-		"alert":        ObjectAlert,
-		"project":      ObjectProject,
-		"alertmethod":  ObjectAlertMethod,
-		"direct":       ObjectDirect,
-		"dataexport":   ObjectDataExport,
-		"rolebinding":  ObjectRoleBinding,
-		"annotation":   ObjectAnnotation,
-	}
-
-	return objects[apiObject]
+	return objectNamesMap[apiObject]
 }
 
 // IsObjectAvailable returns true if given object is available in SDK.
 func IsObjectAvailable(o Object) bool {
-	for _, availableObject := range getAllObjects() {
-		if strings.EqualFold(o.String(), availableObject.String()) {
+	for i := range allObjects {
+		if strings.EqualFold(o.String(), allObjects[i].String()) {
 			return true
 		}
 	}
 	return false
 }
 
-// Operation is an enum that represents an operation that can be done over an
-// object kind.
-type Operation int
-
-// Possible values of Operation.
-const (
-	Get Operation = iota + 1
-	TimeSeries
-	Reports
-)
-
-func getNamesToOperationsMap() map[string]Operation {
-	return map[string]Operation{
-		"get":        Get,
-		"timeseries": TimeSeries,
-		"reports":    Reports,
-	}
-}
-
-// ParseOperation return Operation matching given string.
-func ParseOperation(val string) (Operation, error) {
-	op, ok := getNamesToOperationsMap()[val]
-	if !ok {
-		return Operation(0), fmt.Errorf("'%s' is not a valid operation", val)
-	}
-	return op, nil
-}
-
-func (operation Operation) String() string {
-	for k, v := range getNamesToOperationsMap() {
-		if v == operation {
-			return k
-		}
-	}
-	return "UNKNOWN"
-}
-
-// DefaultProject is a value of the default project.
-const DefaultProject = "default"
-
 // AnyJSONObj can store a generic representation on any valid JSON.
 type AnyJSONObj = map[string]interface{}
 
 // Client represents API high level client.
 type Client struct {
-	HTTP          http.Client
+	HTTP          *http.Client
 	IngestURL     string
 	IntakeURL     string
 	Organization  string
@@ -196,21 +158,19 @@ type Client struct {
 	UserAgent     string
 }
 
-// NewClientWithTimeout returns fully configured instance of API high level client with timeout used for every request.
-func NewClientWithTimeout(
-	ingestURL, intakeURL, organization, project, userAgent string, client *http.Client,
-) (Client, error) {
-	_, err := url.ParseRequestURI(ingestURL)
-	if err != nil {
+// DefaultClient returns fully configured instance of API high level client with default timeout.
+func DefaultClient(ingestURL, intakeURL, organization, project, userAgent string) (Client, error) {
+	if _, err := url.ParseRequestURI(ingestURL); err != nil {
 		return Client{}, fmt.Errorf("invalid url in configuration: %s", ingestURL)
 	}
 
 	if project != "*" && len(isDNS1123Label(project)) != 0 {
 		return Client{}, fmt.Errorf("invalid project name %s", project)
 	}
+	httpClient := NewHTTPClient(Timeout, log.Logger, "Request to the API failed. Retrying.")
 
 	return Client{
-		HTTP:         *client,
+		HTTP:         httpClient,
 		IngestURL:    ingestURL,
 		IntakeURL:    intakeURL,
 		Organization: organization,
@@ -219,20 +179,16 @@ func NewClientWithTimeout(
 	}, nil
 }
 
-// NewClient returns fully configured instance of API high level client with default timeout.
-func NewClient(ingestURL, intakeURL, organization, project, userAgent string, client *http.Client) (Client, error) {
-	return NewClientWithTimeout(ingestURL, intakeURL, organization, project, userAgent, client)
-}
-
 const (
 	apiApply  = "apply"
 	apiDelete = "delete"
+	apiGet    = "get"
 )
 
 func getResponseServerError(resp *http.Response) error {
 	body, _ := io.ReadAll(resp.Body)
 	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
-	traceID := resp.Header.Get(traceIDHeader)
+	traceID := resp.Header.Get(HeaderTraceID)
 	if traceID != "" {
 		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
 	}
@@ -248,7 +204,6 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	endpoint := "/get/" + object
 	q := queries{}
 	if len(names) > 0 {
 		q[QueryKeyName] = names
@@ -256,12 +211,11 @@ func (c *Client) GetObject(
 	if timestamp != "" {
 		q[QueryKeyTime] = []string{timestamp}
 	}
-
 	if len(filterLabel) > 0 {
 		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
 	}
 
-	req := c.createGetReq(ctx, c.IngestURL, endpoint, q)
+	req := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), q)
 	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
@@ -271,9 +225,7 @@ func (c *Client) GetObject(
 	if err != nil {
 		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
@@ -311,7 +263,7 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
-	req := c.createGetReq(ctx, c.IngestURL, "/get/dataexport/aws-external-id", nil)
+	req := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", nil)
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
@@ -323,7 +275,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
 	switch {
 	case resp.StatusCode == http.StatusOK:
 		jsonMap := make(map[string]interface{})
-		if err := json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
+		if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
 			return "", fmt.Errorf("cannot decode response from API: %w", err)
 		}
 		const field = "awsExternalID"
@@ -347,12 +299,11 @@ func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
 func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun bool, names ...string) error {
-	endpoint := "/delete/" + object
 	q := queries{
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req := c.createDeleteReq(ctx, endpoint, q)
+	req := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), q)
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -392,9 +343,9 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 
 // GetAgentCredentials gets agent credentials from Okta.
 func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (creds M2MAppCredentials, err error) {
-	req := c.createGetReq(
+	req := c.createRequest(
 		ctx,
-		c.IngestURL,
+		http.MethodGet,
 		"/internal/agent/clientcreds",
 		map[string][]string{"name": {agentsName}})
 	resp, err := c.HTTP.Do(req)
@@ -510,8 +461,8 @@ func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf i
 	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
 }
 
-func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint.String(), nil)
+func (c *Client) createRequest(ctx context.Context, method, endpoint string, q queries) *http.Request {
+	req, _ := http.NewRequestWithContext(ctx, method, path.Join(c.IngestURL, endpoint), nil)
 	req.Header.Set(HeaderOrganization, c.Organization)
 	req.Header.Set(HeaderProject, c.Project)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
@@ -519,8 +470,8 @@ func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Objec
 		req.Header.Set(HeaderAuthorization, c.Authorization)
 	}
 
-	// add query parameters to request, to pass arrays convention of repeat entries is used
-	// for example /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3]
+	// Add query parameters to request, to pass array, convention of repeated entries is used.
+	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	values := req.URL.Query()
 	for queryKey, queryValues := range q {
 		for _, v := range queryValues {
@@ -528,28 +479,7 @@ func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Objec
 		}
 	}
 	req.URL.RawQuery = values.Encode()
-	return req.WithContext(ctx)
-}
-
-func (c *Client) createDeleteReq(ctx context.Context, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodDelete, c.IngestURL+endpoint.String(), nil)
-	req.Header.Set(HeaderOrganization, c.Organization)
-	req.Header.Set(HeaderProject, c.Project)
-	req.Header.Set(HeaderUserAgent, c.UserAgent)
-	if c.Authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.Authorization)
-	}
-
-	// add query parameters to request, to pass arrays convention of repeat entries is used
-	// for example /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3]
-	values := req.URL.Query()
-	for queryKey, queryValues := range q {
-		for _, v := range queryValues {
-			values.Add(queryKey, v)
-		}
-	}
-	req.URL.RawQuery = values.Encode()
-	return req.WithContext(ctx)
+	return req
 }
 
 // Annotate injects to objects additional fields with values passed as map in parameter
@@ -572,7 +502,7 @@ func Annotate(
 	case m["project"] == nil:
 		m["project"] = project
 		object["metadata"] = m
-	// If value in YAML is not empty but is different than value from --project flag
+	// If value in YAML is not empty but is different from --project flag value.
 	case m["project"] != nil && m["project"] != project && isProjectOverwritten:
 		return AnyJSONObj{},
 			fmt.Errorf(
