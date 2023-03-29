@@ -26,12 +26,13 @@ const (
 
 // HTTP headers keys used across app
 const (
-	HeaderOrganization  = "organization"
-	HeaderProject       = "project"
-	HeaderAuthorization = "Authorization"
-	HeaderUserAgent     = "User-Agent"
-	HeaderClientID      = "ClientID"
-	traceIDHeader       = "trace-id"
+	HeaderOrganization      = "organization"
+	HeaderProject           = "project"
+	HeaderAuthorization     = "Authorization"
+	HeaderUserAgent         = "User-Agent"
+	HeaderClientID          = "ClientID"
+	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
+	traceIDHeader           = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -52,7 +53,17 @@ const (
 	QueryKeyTextSearch        = "text_search"
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
+	QueryKeyAlertPolicy       = "alert_policy"
+	QueryKeyObjective         = "objective"
+	QueryKeyObjectiveValue    = "objective_value"
+	QueryKeyResolved          = "resolved"
+	QueryKeyTriggered         = "triggered"
 )
+
+type Response struct {
+	Objects      []AnyJSONObj
+	TruncatedMax int
+}
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
@@ -281,28 +292,36 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
+	response, err := c.GetObjectWithParams(
+		ctx,
+		object,
+		map[string][]string{QueryKeyName: names},
+		map[string][]string{QueryKeyTime: {timestamp}},
+		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
+	)
+	return response.Objects, err
+}
+
+func (c *Client) GetObjectWithParams(
+	ctx context.Context,
+	object Object,
+	queryParams ...map[string][]string,
+) (response Response, err error) {
 	endpoint := "/get/" + object
+	response = Response{
+		TruncatedMax: -1,
+	}
+
 	q := queries{}
-	if len(names) > 0 {
-		q[QueryKeyName] = names
+	for _, param := range queryParams {
+		for key, value := range param {
+			q[key] = value
+		}
 	}
-	if timestamp != "" {
-		q[QueryKeyTime] = []string{timestamp}
-	}
-
-	if len(filterLabel) > 0 {
-		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
-	}
-
 	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
-	// Ignore project from configuration and from `-p` flag.
-	if object == ObjectAlert {
-		req.Header.Set(HeaderProject, ProjectsWildcard)
-	}
-
 	resp, err := c.c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("cannot perform a request to API: %w", err)
+		return response, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
 	defer func() {
 		_ = resp.Body.Close()
@@ -312,20 +331,36 @@ func (c *Client) GetObject(
 	case resp.StatusCode == http.StatusOK:
 		content, err := decodeBody(resp.Body)
 		if err != nil {
-			return nil, fmt.Errorf("cannot decode response from API: %w", err)
+			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
-		return content, nil
+		response.Objects = content
+
+		if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {
+			return response, nil
+		}
+
+		truncatedValue := resp.Header.Get(HeaderTruncatedLimitMax)
+		truncatedMax, err := strconv.Atoi(truncatedValue)
+		if err != nil {
+			return response, fmt.Errorf(
+				"'%s' header value: '%s' is not a valid integer",
+				HeaderTruncatedLimitMax,
+				truncatedValue,
+			)
+		}
+		response.TruncatedMax = truncatedMax
+		return response, nil
 	case resp.StatusCode == http.StatusBadRequest,
 		resp.StatusCode == http.StatusUnprocessableEntity,
 		resp.StatusCode == http.StatusForbidden:
 		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("%s", bytes.TrimSpace(body))
+		return response, fmt.Errorf("%s", bytes.TrimSpace(body))
 	case resp.StatusCode >= http.StatusInternalServerError:
-		return nil, getResponseServerError(resp)
+		return response, getResponseServerError(resp)
 	default:
 		body, _ := io.ReadAll(resp.Body)
 		msg := strings.TrimSpace(string(body))
-		return nil, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+		return response, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
 	}
 }
 
