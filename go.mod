@@ -11,6 +11,7 @@ require (
 	github.com/influxdata/influxdb/v2 v2.2.0
 	github.com/lestrrat-go/jwx v1.2.25
 	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.21.0
