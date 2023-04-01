@@ -11,14 +11,13 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/influxdata/influxdb/v2/models"
 	pkgErrors "github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 // Timeout use for every request
@@ -149,73 +148,65 @@ type AnyJSONObj = map[string]interface{}
 
 // Client represents API high level client.
 type Client struct {
-	HTTP          *http.Client
-	IngestURL     string
-	IntakeURL     string
-	Organization  string
-	Project       string
-	Authorization string
-	UserAgent     string
+	HTTP        *http.Client
+	Credentials *Credentials
+	UserAgent   string
+	apiURL      string
+	mu          sync.Mutex
 }
 
 // DefaultClient returns fully configured instance of API high level client with default timeout.
-func DefaultClient(ingestURL, intakeURL, organization, project, userAgent string) (Client, error) {
-	if _, err := url.ParseRequestURI(ingestURL); err != nil {
-		return Client{}, fmt.Errorf("invalid url in configuration: %s", ingestURL)
+func DefaultClient(oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error) {
+	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
+	if err != nil {
+		return nil, err
 	}
-
-	if project != "*" && len(isDNS1123Label(project)) != 0 {
-		return Client{}, fmt.Errorf("invalid project name %s", project)
+	creds, err := DefaultCredentials(authServerURL)
+	if err != nil {
+		return nil, err
 	}
-	httpClient := NewHTTPClient(Timeout, log.Logger, "Request to the API failed. Retrying.")
-
-	return Client{
-		HTTP:         httpClient,
-		IngestURL:    ingestURL,
-		IntakeURL:    intakeURL,
-		Organization: organization,
-		Project:      project,
-		UserAgent:    userAgent,
+	return &Client{
+		HTTP:        newRetryableHTTPClient(Timeout),
+		Credentials: creds,
+		UserAgent:   userAgent,
 	}, nil
 }
 
-const (
-	apiApply  = "apply"
-	apiDelete = "delete"
-	apiGet    = "get"
-)
-
-func getResponseServerError(resp *http.Response) error {
-	body, _ := io.ReadAll(resp.Body)
-	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
-	traceID := resp.Header.Get(HeaderTraceID)
-	if traceID != "" {
-		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
-	}
-	return fmt.Errorf(msg)
+func (c *Client) SetApiURL(u string) {
+	c.mu.Lock()
+	c.apiURL = u
+	c.mu.Unlock()
 }
+
+const (
+	apiApply     = "apply"
+	apiDelete    = "delete"
+	apiGet       = "get"
+	apiInputData = "input/data"
+)
 
 // GetObject returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
 func (c *Client) GetObject(
 	ctx context.Context,
+	project string,
 	object Object,
 	timestamp string,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	q := queries{}
+	q := url.Values{}
 	if len(names) > 0 {
 		q[QueryKeyName] = names
 	}
-	if timestamp != "" {
-		q[QueryKeyTime] = []string{timestamp}
+	if len(timestamp) > 0 {
+		q.Set(QueryKeyName, timestamp)
 	}
 	if len(filterLabel) > 0 {
-		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
+		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
 	}
 
-	req := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), q)
+	req := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q)
 	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
@@ -229,7 +220,7 @@ func (c *Client) GetObject(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		content, err := decodeBody(resp.Body)
+		content, err := decodeJSONResponse(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("cannot decode response from API: %w", err)
 		}
@@ -262,8 +253,8 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 	return strings.Join(labels, ",")
 }
 
-func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
-	req := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", nil)
+func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
+	req := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil)
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
@@ -298,12 +289,12 @@ func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
-func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun bool, names ...string) error {
-	q := queries{
+func (c *Client) DeleteObjectsByName(ctx context.Context, project string, object Object, dryRun bool, names ...string) error {
+	q := url.Values{
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), q)
+	req := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q)
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -342,11 +333,12 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
-func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (creds M2MAppCredentials, err error) {
+func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName string) (creds M2MAppCredentials, err error) {
 	req := c.createRequest(
 		ctx,
 		http.MethodGet,
 		"/internal/agent/clientcreds",
+		project,
 		map[string][]string{"name": {agentsName}})
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -364,7 +356,7 @@ func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (cr
 	return creds, nil
 }
 
-func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessToken string) error {
+func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
 	const postChunkSize = 500
 	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postChunkSize {
 		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postChunkSize)))]
@@ -372,21 +364,19 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessTo
 		for _, point := range chunk {
 			buf.WriteString(point.String() + "\n")
 		}
-		request, err := http.NewRequestWithContext(
+		req, err := http.NewRequestWithContext(
 			ctx,
 			http.MethodPost,
-			c.IntakeURL+"/data",
+			path.Join(c.apiURL, apiInputData),
 			strings.NewReader(buf.String()),
 		)
 		if err != nil {
 			panic(err)
 		}
-		request.Header.Set(HeaderOrganization, c.Organization)
-		request.Header.Set(HeaderUserAgent, c.UserAgent)
-		if c.Authorization != "" {
-			request.Header.Set(HeaderAuthorization, accessToken)
-		}
-		response, err := c.HTTP.Do(request)
+		req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
+		req.Header.Set(HeaderUserAgent, c.UserAgent)
+		c.Credentials.SetAuthorizationHeader(req)
+		response, err := c.HTTP.Do(req)
 		if err != nil {
 			return pkgErrors.Wrapf(
 				err,
@@ -415,19 +405,16 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
 
-	req, err := c.getRequestForAPIMode(ctx, apiMode, buf)
-	if err != nil {
-		return fmt.Errorf("cannot create a request: %w", err)
+	endpoint := path.Join(c.apiURL, apiMode)
+	var method string
+	switch apiMode {
+	case apiApply:
+		method = http.MethodPut
+	case apiDelete:
+		method = http.MethodDelete
 	}
-
-	req.Header.Set(HeaderOrganization, c.Organization)
-	req.Header.Set(HeaderUserAgent, c.UserAgent)
-	if c.Authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.Authorization)
-	}
-	q := req.URL.Query()
-	q.Set(QueryKeyDryRun, strconv.FormatBool(dryRun))
-	req.URL.RawQuery = q.Encode()
+	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
+	req := c.createRequest(ctx, method, endpoint, "", q)
 
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -451,34 +438,19 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 	}
 }
 
-func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf io.Reader) (*http.Request, error) {
-	switch apiMode {
-	case apiApply:
-		return http.NewRequestWithContext(ctx, http.MethodPut, c.IngestURL+"/apply", buf)
-	case apiDelete:
-		return http.NewRequestWithContext(ctx, http.MethodDelete, c.IngestURL+"/delete", buf)
-	}
-	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
-}
-
-func (c *Client) createRequest(ctx context.Context, method, endpoint string, q queries) *http.Request {
-	req, _ := http.NewRequestWithContext(ctx, method, path.Join(c.IngestURL, endpoint), nil)
-	req.Header.Set(HeaderOrganization, c.Organization)
-	req.Header.Set(HeaderProject, c.Project)
+func (c *Client) createRequest(ctx context.Context, method, endpoint, project string, q url.Values) *http.Request {
+	req, _ := http.NewRequestWithContext(ctx, method, path.Join(c.apiURL, endpoint), nil)
+	// Mandatory headers for all API requests.
+	req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
-	if c.Authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.Authorization)
+	c.Credentials.SetAuthorizationHeader(req)
+	// Optional headers.
+	if len(project) > 0 {
+		req.Header.Set(HeaderProject, project)
 	}
-
 	// Add query parameters to request, to pass array, convention of repeated entries is used.
 	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
-	values := req.URL.Query()
-	for queryKey, queryValues := range q {
-		for _, v := range queryValues {
-			values.Add(queryKey, v)
-		}
-	}
-	req.URL.RawQuery = values.Encode()
+	req.URL.RawQuery = q.Encode()
 	return req
 }
 
@@ -515,52 +487,24 @@ func Annotate(
 	return object, nil
 }
 
-// decodeBody assumes that passed body is an array of JSON objects.
-func decodeBody(r io.Reader) ([]AnyJSONObj, error) {
+func getResponseServerError(resp *http.Response) error {
+	body, _ := io.ReadAll(resp.Body)
+	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
+	traceID := resp.Header.Get(HeaderTraceID)
+	if traceID != "" {
+		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
+	}
+	return fmt.Errorf(msg)
+}
+
+// decodeJSONResponse assumes that passed body is an array of JSON objects.
+func decodeJSONResponse(r io.Reader) ([]AnyJSONObj, error) {
 	dec := json.NewDecoder(r)
 	var parsed []AnyJSONObj
 	if err := dec.Decode(&parsed); err != nil {
 		return nil, err
 	}
 	return parsed, nil
-}
-
-type queries map[string][]string
-
-// isDNS1123Label tests for a string that conforms to the definition of a label in
-// DNS (RFC 1123).
-func isDNS1123Label(value string) []string {
-	// dNS1123LabelMaxLength is a label's max length in DNS (RFC 1123)
-	const dNS1123LabelMaxLength int = 63
-	const dns1123LabelFmt string = "[a-z0-9]([-a-z0-9]*[a-z0-9])?"
-
-	const dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
-
-	dns1123LabelRegexp := regexp.MustCompile("^" + dns1123LabelFmt + "$")
-	var errs []string
-	if len(value) > dNS1123LabelMaxLength {
-		errs = append(errs, fmt.Sprintf("must be no more than %d characters", dNS1123LabelMaxLength))
-	}
-	if !dns1123LabelRegexp.MatchString(value) {
-		errs = append(errs, regexError(dns1123LabelErrMsg, dns1123LabelFmt, "my-name", "123-abc"))
-	}
-	return errs
-}
-
-// regexError returns a string explanation of a regex validation failure.
-func regexError(msg, format string, examples ...string) string {
-	if len(examples) == 0 {
-		return msg + " (regex used for validation is '" + format + "')"
-	}
-	msg += " (e.g. "
-	for i := range examples {
-		if i > 0 {
-			msg += " or "
-		}
-		msg += "'" + examples[i] + "', "
-	}
-	msg += "regex used for validation is '" + format + "')"
-	return msg
 }
 
 // getResponseFields returns set of fields to use when logging an http response error.

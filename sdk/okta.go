@@ -10,14 +10,16 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
 	oktaTokenEndpoint = "v1/token"
 	oktaKeysEndpoint  = "v1/keys"
+
+	oktaRequestTokenTimeout = 5 * time.Second
 )
 
 func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (string, error) {
@@ -28,24 +30,24 @@ func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (string, error) {
 	return authServerURL, nil
 }
 
+func OktaTokenEndpoint(authServerURL string) string {
+	return path.Join(authServerURL, oktaTokenEndpoint)
+}
+
 func OktaKeysEndpoint(authServerURL string) string {
 	return path.Join(authServerURL, oktaKeysEndpoint)
 }
 
 type OktaClient struct {
-	HTTP          *http.Client
-	authServerURL string
+	HTTP                 *http.Client
+	requestTokenEndpoint string
 }
 
-func NewOktaClient(oktaOrgURL, oktaAuthServer string) (*OktaClient, error) {
-	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
-	if err != nil {
-		return nil, err
-	}
+func NewOktaClient(authServerURL string) *OktaClient {
 	return &OktaClient{
-		HTTP:          NewHTTPClient(Timeout, log.Logger, "Fetching Token failed. Retrying."),
-		authServerURL: authServerURL,
-	}, nil
+		HTTP:                 newRetryableHTTPClient(oktaRequestTokenTimeout),
+		requestTokenEndpoint: OktaTokenEndpoint(authServerURL),
+	}
 }
 
 type m2mTokenResponse struct {
@@ -63,7 +65,7 @@ func (okta *OktaClient) RequestAccessToken(
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		path.Join(okta.authServerURL, oktaTokenEndpoint),
+		okta.requestTokenEndpoint,
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err

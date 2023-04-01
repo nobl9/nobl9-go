@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
@@ -30,23 +32,15 @@ type AccessTokenM2MProfile struct {
 	Environment  string `json:"environment,omitempty"`
 }
 
-func DefaultCredentials(oktaOrgURL, oktaAuthServer string) (*Credentials, error) {
-	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
-	if err != nil {
-		return nil, err
-	}
+func DefaultCredentials(authServerURL string) (*Credentials, error) {
 	parser, err := NewAccessTokenParser(authServerURL, OktaKeysEndpoint(authServerURL))
-	if err != nil {
-		return nil, err
-	}
-	provider, err := NewOktaClient(oktaOrgURL, oktaAuthServer)
 	if err != nil {
 		return nil, err
 	}
 	return &Credentials{
 		authServerURL: authServerURL,
 		TokenParser:   parser,
-		TokenProvider: provider,
+		TokenProvider: NewOktaClient(authServerURL),
 	}, nil
 }
 
@@ -55,8 +49,10 @@ func DefaultCredentials(oktaOrgURL, oktaAuthServer string) (*Credentials, error)
 type Credentials struct {
 	ClientID     string
 	ClientSecret string
-	AccessToken  string
-	M2MProfile   AccessTokenM2MProfile
+
+	AccessToken string
+	M2MProfile  AccessTokenM2MProfile
+	claims      jwt.MapClaims
 
 	HTTP *http.Client
 	// TokenParser is used to verify the token and its claims.
@@ -68,46 +64,80 @@ type Credentials struct {
 
 	authServerURL string
 	offlineMode   bool
+	mu            sync.Mutex
 }
 
-// OfflineMode turns RefreshOrRequestAccessToken into a no-op.
-func (creds *Credentials) OfflineMode() {
+func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
+	if err := creds.RefreshAccessToken(req.Context()); err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
+// SetOfflineMode turns RefreshAccessToken into a no-op.
+func (creds *Credentials) SetOfflineMode() {
 	creds.offlineMode = true
 }
 
-// GetBearerHeader returns an authorization header which should be included if not empty in requests to
-// the resource server
-func (creds *Credentials) GetBearerHeader() string {
+// SetAuthorizationHeader sets an authorization header which should be included
+// if access token was set in request to the resource server.
+func (creds *Credentials) SetAuthorizationHeader(r *http.Request) {
 	if creds.AccessToken == "" {
-		return ""
+		return
 	}
-	return fmt.Sprintf("Bearer %s", creds.AccessToken)
+	r.Header.Set(HeaderAuthorization, fmt.Sprintf("Bearer %s", creds.AccessToken))
 }
 
-func (creds *Credentials) RefreshOrRequestAccessToken(ctx context.Context) error {
+func (creds *Credentials) SetAccessToken(ctx context.Context, token string) error {
+	creds.mu.Lock()
+	defer creds.mu.Unlock()
+	return creds.setNewToken(ctx, token, false)
+}
+
+const tokenExpiryOffset = 2 * time.Minute
+
+func (creds *Credentials) RefreshAccessToken(ctx context.Context) error {
 	if creds.offlineMode {
 		return nil
 	}
-	claims, err := creds.TokenParser.Parse(ctx, creds.AccessToken, creds.ClientID)
-	switch err {
-	case ErrTokenVerifyExpirationDateFailed:
-		token, err := creds.TokenProvider.RequestAccessToken(ctx, creds.ClientID, creds.ClientSecret)
-		if err != nil {
-			return errors.Wrap(err, "error getting new access token from IDP")
-		}
+	shouldRefresh := len(creds.claims) == 0 ||
+		creds.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
+	if !shouldRefresh {
+		return nil
+	}
+	creds.mu.Lock()
+	defer creds.mu.Unlock()
+	if !shouldRefresh {
+		return nil
+	}
+	return creds.requestNewToken(ctx)
+}
+
+func (creds *Credentials) requestNewToken(ctx context.Context) (err error) {
+	token, err := creds.TokenProvider.RequestAccessToken(ctx, creds.ClientID, creds.ClientSecret)
+	if err != nil {
+		return errors.Wrap(err, "error getting new access token from IDP")
+	}
+	return creds.setNewToken(ctx, token, true)
+}
+
+func (creds *Credentials) setNewToken(ctx context.Context, token string, withHook bool) error {
+	claims, err := creds.TokenParser.Parse(ctx, token, creds.ClientID)
+	if err != nil {
+		return err
+	}
+	m2mProfile, err := M2MProfileFromClaims(claims)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
+	}
+	if withHook {
 		if err = creds.PostRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
-		m2mProfile, err := M2MProfileFromClaims(claims)
-		if err != nil {
-			return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
-		}
-		creds.M2MProfile = m2mProfile
-		creds.AccessToken = token
-		return nil
-	case nil:
-		return nil
-	default:
-		return err
 	}
+
+	creds.M2MProfile = m2mProfile
+	creds.AccessToken = token
+	creds.claims = claims
+	return nil
 }

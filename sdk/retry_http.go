@@ -3,14 +3,13 @@ package sdk
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
 	"net/http"
 	"net/url"
 	"regexp"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -18,8 +17,8 @@ var (
 	schemeErrorRe    = regexp.MustCompile(`unsupported protocol scheme`)
 )
 
-// NewHTTPClient returns http.Client with preconfigured retry feature.
-func NewHTTPClient(timeout time.Duration, logger zerolog.Logger, messageOnRetry string) *http.Client {
+// newRetryableHTTPClient returns http.Client with preconfigured retry feature.
+func newRetryableHTTPClient(timeout time.Duration) *http.Client {
 	rc := retryablehttp.NewClient()
 	rc.Logger = noopLogger{}
 	rc.ErrorHandler = retryablehttp.PassthroughErrorHandler
@@ -30,11 +29,7 @@ func NewHTTPClient(timeout time.Duration, logger zerolog.Logger, messageOnRetry 
 	rc.CheckRetry = checkRetry
 	rc.RequestLogHook = func(l retryablehttp.Logger, req *http.Request, c int) {
 		if c > 0 {
-			switch req.URL.Path {
-			default:
-				fmt.Println(req.URL.Path)
-			}
-			logger.Info().Msgf("retrying HTTP request: %s", messageOnRetry)
+			log.Info().Msgf("%s %s request failed. Retrying.", req.Method, req.URL.Path)
 		}
 	}
 	return rc.StandardClient()
@@ -51,7 +46,7 @@ func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, erro
 
 func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 	if retryErr != nil {
-		if v, isURLError := retryErr.(*url.Error); isURLError {
+		if v, isUrlError := retryErr.(*url.Error); isUrlError {
 			// Don't retry if the error was due to too many redirects.
 			if redirectsErrorRe.MatchString(v.Error()) {
 				return false

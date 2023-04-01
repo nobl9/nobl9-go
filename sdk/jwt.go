@@ -15,7 +15,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -50,7 +49,7 @@ func NewAccessTokenParser(issuer, jwkFetchURL string) (*AccessTokenParser, error
 		return nil, errors.Wrapf(err, "invalid JWK fetching URL: %s", jwkFetchURL)
 	}
 	return &AccessTokenParser{
-		HTTP:        NewHTTPClient(Timeout, log.Logger, "Fetching JWK failed. Retrying."),
+		HTTP:        newRetryableHTTPClient(Timeout),
 		jwksCache:   cache.New(time.Hour, time.Hour),
 		jwkSetMu:    new(sync.Mutex),
 		jwkFetchURL: jwkFetchURL,
