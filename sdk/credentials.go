@@ -70,13 +70,13 @@ type Credentials struct {
 // It's important for this to be clean client, request middleware in Go is kinda clunky
 // and requires chaining multiple http clients, timeouts and retries should be handled
 // by the predecessors of this one.
-var cleanCredentialsHTTPClient = &http.Client{}
+var credentialsCleanHTTPClient = &http.Client{}
 
 func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err := creds.RefreshAccessToken(req.Context()); err != nil {
 		return nil, err
 	}
-	return cleanCredentialsHTTPClient.Do(req)
+	return credentialsCleanHTTPClient.Do(req)
 }
 
 // SetOfflineMode turns RefreshAccessToken into a no-op.
@@ -99,12 +99,11 @@ func (creds *Credentials) SetAccessToken(ctx context.Context, token string) erro
 	return creds.setNewToken(ctx, token, false)
 }
 
-const tokenExpiryOffset = 2 * time.Minute
-
 func (creds *Credentials) RefreshAccessToken(ctx context.Context) error {
 	if creds.offlineMode {
 		return nil
 	}
+	const tokenExpiryOffset = 2 * time.Minute
 	shouldRefresh := len(creds.claims) == 0 ||
 		creds.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
 	if !shouldRefresh {

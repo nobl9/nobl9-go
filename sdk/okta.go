@@ -13,11 +13,14 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 const (
-	oktaTokenEndpoint = "v1/token"
-	oktaKeysEndpoint  = "v1/keys"
+	oktaTokenEndpoint     = "v1/token"
+	oktaKeysEndpoint      = "v1/keys"
+	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
 )
@@ -45,7 +48,7 @@ type OktaClient struct {
 
 func NewOktaClient(authServerURL string) *OktaClient {
 	return &OktaClient{
-		HTTP:                 newRetryableHTTPClient(oktaRequestTimeout, nil),
+		HTTP:                 retryhttp.NewClient(oktaRequestTimeout, nil),
 		requestTokenEndpoint: OktaTokenEndpoint(authServerURL),
 	}
 }
@@ -54,10 +57,15 @@ type m2mTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+var errMissingClientCredentials = errors.New("client id and client secret must not be empty")
+
 func (okta *OktaClient) RequestAccessToken(
 	ctx context.Context,
 	clientID, clientSecret string,
 ) (token string, err error) {
+	if clientID == "" || clientSecret == "" {
+		return "", errMissingClientCredentials
+	}
 	data := url.Values{
 		"grant_type": {"client_credentials"},
 		"scope":      {"m2m"},
@@ -71,21 +79,24 @@ func (okta *OktaClient) RequestAccessToken(
 		return "", err
 	}
 	req.Header.Set("Authorization", okta.authHeader(clientID, clientSecret))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", oktaHeaderContentType)
 
 	resp, err := okta.HTTP.Do(req)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to execute request to IDP")
+		return "", errors.Wrapf(err,
+			"failed to execute POST %s request to IDP", okta.requestTokenEndpoint)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return "", errors.Errorf(
-			"cannot access the token, IDP replied with (status: %d): %s", resp.StatusCode, string(body))
+			"cannot access the token from POST %s, IDP replied with (status: %d): %s",
+			okta.requestTokenEndpoint, resp.StatusCode, string(body))
 	}
 	var tokenResponse m2mTokenResponse
 	if err = json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		return "", errors.Wrap(err, "cannot decode the token provided by IDP")
+		return "", errors.Wrapf(err,
+			"cannot decode the token provided by IDP from POST %s", okta.requestTokenEndpoint)
 	}
 	return tokenResponse.AccessToken, nil
 }

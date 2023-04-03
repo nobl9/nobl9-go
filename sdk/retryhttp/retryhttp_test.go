@@ -1,4 +1,4 @@
-package sdk
+package retryhttp
 
 import (
 	"context"

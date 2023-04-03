@@ -18,6 +18,8 @@ import (
 
 	"github.com/influxdata/influxdb/v2/models"
 	pkgErrors "github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // Timeout use for every request
@@ -166,7 +168,7 @@ func DefaultClient(oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error
 		return nil, err
 	}
 	return &Client{
-		HTTP:        newRetryableHTTPClient(Timeout, creds),
+		HTTP:        retryhttp.NewClient(Timeout, creds),
 		Credentials: creds,
 		UserAgent:   userAgent,
 	}, nil

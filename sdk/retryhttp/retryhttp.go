@@ -1,4 +1,4 @@
-package sdk
+package retryhttp
 
 import (
 	"context"
@@ -17,8 +17,8 @@ var (
 	schemeErrorRe    = regexp.MustCompile(`unsupported protocol scheme`)
 )
 
-// newRetryableHTTPClient returns http.Client with preconfigured retry feature.
-func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
+// NewClient returns http.Client with preconfigured retry feature.
+func NewClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
 	rc.Logger = noopLogger{}
 	rc.ErrorHandler = retryablehttp.PassthroughErrorHandler
