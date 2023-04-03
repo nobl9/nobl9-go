@@ -18,11 +18,11 @@ var (
 )
 
 // newRetryableHTTPClient returns http.Client with preconfigured retry feature.
-func newRetryableHTTPClient(timeout time.Duration) *http.Client {
+func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
 	rc.Logger = noopLogger{}
 	rc.ErrorHandler = retryablehttp.PassthroughErrorHandler
-	rc.HTTPClient = &http.Client{Timeout: timeout}
+	rc.HTTPClient = &http.Client{Timeout: timeout, Transport: rt}
 	rc.RetryMax = 4
 	rc.RetryWaitMax = 30 * time.Second
 	rc.RetryWaitMin = 1 * time.Second

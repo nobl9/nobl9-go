@@ -67,11 +67,16 @@ type Credentials struct {
 	mu            sync.Mutex
 }
 
+// It's important for this to be clean client, request middleware in Go is kinda clunky
+// and requires chaining multiple http clients, timeouts and retries should be handled
+// by the predecessors of this one.
+var cleanCredentialsHTTPClient = &http.Client{}
+
 func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err := creds.RefreshAccessToken(req.Context()); err != nil {
 		return nil, err
 	}
-	return http.DefaultClient.Do(req)
+	return cleanCredentialsHTTPClient.Do(req)
 }
 
 // SetOfflineMode turns RefreshAccessToken into a no-op.

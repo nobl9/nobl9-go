@@ -19,7 +19,7 @@ const (
 	oktaTokenEndpoint = "v1/token"
 	oktaKeysEndpoint  = "v1/keys"
 
-	oktaRequestTokenTimeout = 5 * time.Second
+	oktaRequestTimeout = 5 * time.Second
 )
 
 func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (string, error) {
@@ -45,7 +45,7 @@ type OktaClient struct {
 
 func NewOktaClient(authServerURL string) *OktaClient {
 	return &OktaClient{
-		HTTP:                 newRetryableHTTPClient(oktaRequestTokenTimeout),
+		HTTP:                 newRetryableHTTPClient(oktaRequestTimeout, nil),
 		requestTokenEndpoint: OktaTokenEndpoint(authServerURL),
 	}
 }

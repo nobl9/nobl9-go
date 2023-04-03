@@ -166,7 +166,7 @@ func DefaultClient(oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error
 		return nil, err
 	}
 	return &Client{
-		HTTP:        newRetryableHTTPClient(Timeout),
+		HTTP:        newRetryableHTTPClient(Timeout, creds),
 		Credentials: creds,
 		UserAgent:   userAgent,
 	}, nil

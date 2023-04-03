@@ -20,6 +20,7 @@ import (
 const (
 	jwtSigningAlgorithm        = jwa.RS256
 	jwtAllowedClockSkewSeconds = 120
+	jwtKeysRequestTimeout      = 5 * time.Second
 
 	jwtHeaderAlgorithm = "alg"
 	jwtHeaderKeyID     = "kid"
@@ -49,7 +50,7 @@ func NewAccessTokenParser(issuer, jwkFetchURL string) (*AccessTokenParser, error
 		return nil, errors.Wrapf(err, "invalid JWK fetching URL: %s", jwkFetchURL)
 	}
 	return &AccessTokenParser{
-		HTTP:        newRetryableHTTPClient(Timeout),
+		HTTP:        newRetryableHTTPClient(jwtKeysRequestTimeout, nil),
 		jwksCache:   cache.New(time.Hour, time.Hour),
 		jwkSetMu:    new(sync.Mutex),
 		jwkFetchURL: jwkFetchURL,
