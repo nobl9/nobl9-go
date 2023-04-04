@@ -33,7 +33,7 @@ type AccessTokenM2MProfile struct {
 }
 
 func DefaultCredentials(authServerURL string) (*Credentials, error) {
-	parser, err := NewAccessTokenParser(authServerURL, OktaKeysEndpoint(authServerURL))
+	parser, err := NewJWTParser(authServerURL, OktaKeysEndpoint(authServerURL))
 	if err != nil {
 		return nil, err
 	}

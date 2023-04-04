@@ -24,41 +24,11 @@ const (
 	jwtAllowedClockSkewSeconds = 120
 	jwtKeysRequestTimeout      = 5 * time.Second
 
-	jwtHeaderAlgorithm = "alg"
-	jwtHeaderKeyID     = "kid"
-
 	jwtTokenClaimProfile = "m2mProfile"
 	jwtTokenClaimCID     = "cid"
 )
 
-var (
-	ErrJWKSetNotFound                  = errors.New("jwk not found for kid (key id)")
-	ErrTokenVerifyExpirationDateFailed = errors.New("expiry claim validation failed")
-	ErrTokenVerifyIssuedAtFailed       = errors.New("iat (issued at) claim validation failed")
-	ErrTokenVerifyNotBeforeFailed      = errors.New("nbf (not before) claim validation failed")
-	ErrTokenInvalidCID                 = errors.New("client id does not match token's 'cid' claim")
-)
-
-type AccessTokenParser struct {
-	HTTP        *http.Client
-	jwkFetchURL string
-	issuer      string
-	jwksCache   *cache.Cache
-	jwkSetMu    *sync.Mutex
-}
-
-func NewAccessTokenParser(issuer, jwkFetchURL string) (*AccessTokenParser, error) {
-	if _, err := url.Parse(jwkFetchURL); err != nil {
-		return nil, errors.Wrapf(err, "invalid JWK fetching URL: %s", jwkFetchURL)
-	}
-	return &AccessTokenParser{
-		HTTP:        retryhttp.NewClient(jwtKeysRequestTimeout, nil),
-		jwksCache:   cache.New(time.Hour, time.Hour),
-		jwkSetMu:    new(sync.Mutex),
-		jwkFetchURL: jwkFetchURL,
-		issuer:      issuer,
-	}, nil
-}
+var errTokenParseMissingArguments = errors.New("token and/or client id missing in jwtParser.Parse call")
 
 // M2MProfileFromClaims returns AccessTokenM2MProfile object parsed from m2mProfile claim of provided token.
 func M2MProfileFromClaims(claims jwt.MapClaims) (AccessTokenM2MProfile, error) {
@@ -67,8 +37,32 @@ func M2MProfileFromClaims(claims jwt.MapClaims) (AccessTokenM2MProfile, error) {
 	return accessKeyProfile, err
 }
 
+type JWTParser struct {
+	HTTP        *http.Client
+	jwkFetchURL string
+	issuer      string
+	jwksCache   *cache.Cache
+	jwkSetMu    *sync.Mutex
+}
+
+func NewJWTParser(issuer, jwkFetchURL string) (*JWTParser, error) {
+	if _, err := url.Parse(jwkFetchURL); err != nil {
+		return nil, errors.Wrapf(err, "invalid JWK fetching URL: %s", jwkFetchURL)
+	}
+	return &JWTParser{
+		HTTP:        retryhttp.NewClient(jwtKeysRequestTimeout, nil),
+		jwksCache:   cache.New(time.Hour, time.Hour),
+		jwkSetMu:    new(sync.Mutex),
+		jwkFetchURL: jwkFetchURL,
+		issuer:      issuer,
+	}, nil
+}
+
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.
-func (a *AccessTokenParser) Parse(ctx context.Context, token, clientID string) (jwt.MapClaims, error) {
+func (a *JWTParser) Parse(ctx context.Context, token, clientID string) (jwt.MapClaims, error) {
+	if token == "" || clientID == "" {
+		return nil, errTokenParseMissingArguments
+	}
 	jwtParser := jwt.NewParser(
 		jwt.WithValidMethods([]string{jwtSigningAlgorithm.String()}),
 		jwt.WithoutClaimsValidation()) // We'll perform claims validation ourselves to account for clock skew.
@@ -76,25 +70,31 @@ func (a *AccessTokenParser) Parse(ctx context.Context, token, clientID string) (
 	if err != nil {
 		return nil, err
 	}
-	alg, ok := unverifiedJwtToken.Header[jwtHeaderAlgorithm].(string)
-	if !ok {
-		return nil, errors.Errorf("expecting JWT header to contain '%s' field as a string, was: '%s'",
-			jwtHeaderAlgorithm, alg)
-	}
-	if alg != jwtSigningAlgorithm.String() {
+	// Parser will also check if 'alg' header is set. We should still be extra cautious here.
+	alg, ok := unverifiedJwtToken.Header[jwk.AlgorithmKey].(string)
+	if !ok || alg != jwtSigningAlgorithm.String() {
 		return nil, errors.Errorf("expecting JWT header field '%s' to contain '%s' algorithm, was: '%s'",
-			jwtSigningAlgorithm, jwtHeaderAlgorithm, alg)
+			jwtSigningAlgorithm, jwk.AlgorithmKey, alg)
 	}
-	kid, ok := unverifiedJwtToken.Header[jwtHeaderKeyID].(string)
-	if !ok {
-		return nil, errors.Errorf("expecting JWT header to contain '%s' filed as a string, was: '%s'",
-			jwtHeaderKeyID, kid)
+	kid, ok := unverifiedJwtToken.Header[jwk.KeyIDKey].(string)
+	if !ok || kid == "" {
+		return nil, errors.Errorf("expecting JWT header to contain '%s' field as a string, was: '%s'",
+			jwk.KeyIDKey, kid)
 	}
 	jwkSet, err := a.getJWKSet(ctx, kid)
 	if err != nil {
 		return nil, err
 	}
 
+	// This check is only run for clarity, jws.VerifySet will detect 'kid' mismatch too,
+	// but the error it returns is ambiguous.
+	if _, found := jwkSet.LookupKeyID(kid); !found {
+		return nil, errors.Errorf("jwk not found for kid: %s (key id)", kid)
+	}
+	// One might think that it would be useful to cache the error for a given kid. Unfortunately we can't
+	// easily do that because /v1/keys endpoint might return stale information for a bit after signing keys
+	// rotation. /v1/keys docs: "Note: The information returned from this endpoint could lag slightly, but will
+	// eventually be up-to-date."
 	rawClaims, err := jws.VerifySet([]byte(token), jwkSet)
 	if err != nil {
 		return nil, err
@@ -110,11 +110,13 @@ func (a *AccessTokenParser) Parse(ctx context.Context, token, clientID string) (
 	return claims, err
 }
 
-func (a *AccessTokenParser) getJWKSet(ctx context.Context, kid string) (jwk.Set, error) {
+var jwksFetchFunction = jwk.Fetch
+
+func (a *JWTParser) getJWKSet(ctx context.Context, kid string) (jwk.Set, error) {
 	// There are three scenarios under which a token might not be found in the cache:
-	// 1. cache is empty right after the startup
-	// 2. cache expired
-	// 3. signing keys rotation happened
+	// 1. Cache is empty right after the startup.
+	// 2. Cache expired.
+	// 3. Signing keys have been rotated.
 	if keySet, found := a.jwksCache.Get(kid); found {
 		return keySet.(jwk.Set), nil
 	}
@@ -129,50 +131,37 @@ func (a *AccessTokenParser) getJWKSet(ctx context.Context, kid string) (jwk.Set,
 	// Fetch doesn't perform retries. Use background context because we don't want client disconnects to interrupt
 	// JWKS cache population process while other clients might be waiting for it.
 	ctx = context.Background()
-	jwkSet, err := jwk.Fetch(ctx, a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
+	jwkSet, err := jwksFetchFunction(ctx, a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
 	if err != nil {
 		return nil, err
 	}
-
-	kidMatchingKeySets := make(map[string]jwk.Set)
-	for it := jwkSet.Iterate(ctx); it.Next(ctx); {
-		key := it.Pair().Value.(jwk.Key)
-		if _, ok := kidMatchingKeySets[key.KeyID()]; !ok {
-			kidMatchingKeySets[key.KeyID()] = jwk.NewSet()
-		}
-		kidMatchingKeySets[key.KeyID()].Add(key)
-	}
-	for kid, keySet := range kidMatchingKeySets {
-		a.jwksCache.SetDefault(kid, keySet)
-	}
-
-	if _, found := jwkSet.LookupKeyID(kid); !found {
-		// One might think that it would be useful to cache the error for a given kid. Unfortunately we can't
-		// easily do that because /v1/keys endpoint might return stale information for a bit after signing keys
-		// rotation. /v1/keys docs: "Note: The information returned from this endpoint could lag slightly, but will
-		// eventually be up-to-date."
-		return nil, ErrJWKSetNotFound
-	}
-
-	return kidMatchingKeySets[kid], nil
+	a.jwksCache.SetDefault(kid, jwkSet)
+	return jwkSet, nil
 }
 
-func (a *AccessTokenParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
+func (a *JWTParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
+	claimsJSON := func() string {
+		data, _ := json.Marshal(claims)
+		return string(data)
+	}
+
 	if !claims.VerifyIssuer(a.issuer, true) {
-		return errors.New("issuer claim validation failed")
+		return errors.Errorf("issuer claim validation failed, issuer: %s, claims: %v", a.issuer, claimsJSON())
 	}
+	// We're using 'cid' instead of audience ('aud') for some reason ¯\_(ツ)_/¯.
 	if cid, ok := claims[jwtTokenClaimCID].(string); !ok || cid != clientID {
-		return ErrTokenInvalidCID
+		return errors.Errorf("client id does not match token's 'cid' claim, clientID: %s, claims: %v", clientID, claimsJSON())
 	}
-	now := time.Now().Unix()
-	if !claims.VerifyExpiresAt(now-jwtAllowedClockSkewSeconds, true) {
-		return ErrTokenVerifyExpirationDateFailed
+	// By adding the skew we're saying that we might be behind the clock.
+	nowWithOffset := time.Now().Unix() + jwtAllowedClockSkewSeconds
+	if !claims.VerifyExpiresAt(nowWithOffset, true) {
+		return errors.Errorf("exp (expiry) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
 	}
-	if !claims.VerifyIssuedAt(now+jwtAllowedClockSkewSeconds, true) {
-		return ErrTokenVerifyIssuedAtFailed
+	if !claims.VerifyIssuedAt(nowWithOffset, true) {
+		return errors.Errorf("iat (issued at) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
 	}
-	if !claims.VerifyNotBefore(now+jwtAllowedClockSkewSeconds, false) {
-		return ErrTokenVerifyNotBeforeFailed
+	if !claims.VerifyNotBefore(nowWithOffset, false) {
+		return errors.Errorf("nbf (not before) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
 	}
 	return nil
 }
