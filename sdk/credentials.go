@@ -11,8 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// AccessTokenParserInterface parses and verifies fetched access token.
-type AccessTokenParserInterface interface {
+// AccessTokenParser parses and verifies fetched access token.
+type AccessTokenParser interface {
 	Parse(ctx context.Context, token, clientID string) (jwt.MapClaims, error)
 }
 
@@ -34,7 +34,7 @@ type AccessTokenM2MProfile struct {
 
 func DefaultCredentials(clientID, clientSecret, authServerURL string) (*Credentials, error) {
 	if clientID == "" || clientSecret == "" || authServerURL == "" {
-		return nil, errors.New("clientID, clientSecret and AuthServerURL must all be provided in DefaultCredentials call")
+		return nil, errors.New("clientID, clientSecret and AuthServerURL must all be provided for DefaultCredentials call")
 	}
 	parser, err := NewJWTParser(authServerURL, OktaKeysEndpoint(authServerURL))
 	if err != nil {
@@ -66,7 +66,7 @@ type Credentials struct {
 
 	HTTP *http.Client
 	// TokenParser is used to verify the token and its claims.
-	TokenParser AccessTokenParserInterface
+	TokenParser AccessTokenParser
 	// TokenProvider is used to provide an access token.
 	TokenProvider AccessTokenProvider
 	// PostRequestHook is not run in offline mode.
@@ -86,6 +86,7 @@ func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err := creds.RefreshAccessToken(req.Context()); err != nil {
 		return nil, err
 	}
+	creds.SetAuthorizationHeader(req)
 	return credentialsCleanHTTPClient.Do(req)
 }
 
@@ -121,18 +122,24 @@ func (creds *Credentials) RefreshAccessToken(ctx context.Context) error {
 	if creds.offlineMode {
 		return nil
 	}
-	const tokenExpiryOffset = 2 * time.Minute
-	shouldRefresh := len(creds.claims) == 0 ||
-		creds.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
-	if !shouldRefresh {
+	if !creds.shouldRefresh() {
 		return nil
 	}
 	creds.mu.Lock()
 	defer creds.mu.Unlock()
-	if !shouldRefresh {
+	if !creds.shouldRefresh() {
 		return nil
 	}
 	return creds.requestNewToken(ctx)
+}
+
+// tokenExpiryOffset is added to the current time reading to make sure the token won't expiry before
+// it reaches the API server.
+const tokenExpiryOffset = 2 * time.Minute
+
+// shouldRefresh defines token expiry policy for the JWT managed by Credentials.
+func (creds *Credentials) shouldRefresh() bool {
+	return len(creds.claims) == 0 || !creds.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
 }
 
 // requestNewToken uses TokenProvider to fetch the new token and parse it via setNewToken function.
@@ -156,7 +163,7 @@ func (creds *Credentials) setNewToken(ctx context.Context, token string, withHoo
 	if err != nil {
 		return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
 	}
-	if withHook {
+	if withHook && creds.PostRequestHook != nil {
 		if err = creds.PostRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
@@ -165,12 +172,5 @@ func (creds *Credentials) setNewToken(ctx context.Context, token string, withHoo
 	creds.M2MProfile = m2mProfile
 	creds.AccessToken = token
 	creds.claims = claims
-	// Since we're using m2mProfile.environment claim to set the URL for request
-	oldEnvironment := creds.M2MProfile.Environment
-	if oldEnvironment != "" && oldEnvironment != m2mProfile.Environment {
-		return errors.Wrapf(err, "environment has been changed for the new token,"+
-			" the request should be reconstructed, old env: %s, new env: %s",
-			creds.M2MProfile.Environment, m2mProfile.Environment)
-	}
 	return nil
 }

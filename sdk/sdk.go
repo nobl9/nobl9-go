@@ -164,7 +164,7 @@ type Client struct {
 	HTTP        *http.Client
 	Credentials *Credentials
 	UserAgent   string
-	apiURL      string
+	apiURL      *url.URL
 	once        sync.Once
 }
 
@@ -192,15 +192,20 @@ func (c *Client) SetAccessToken(token string) error {
 	if err := c.Credentials.SetAccessToken(context.Background(), token); err != nil {
 		return err
 	}
-	if c.apiURL == "" {
+	if c.apiURL == nil {
 		c.setApiUrlFromM2MProfile()
 	}
 	return nil
 }
 
 // SetApiURL allows to override the API URL otherwise inferred from access token.
-func (c *Client) SetApiURL(u string) {
-	c.apiURL = u
+func (c *Client) SetApiURL(u string) error {
+	up, err := url.Parse(u)
+	if err != nil {
+		return err
+	}
+	c.apiURL = up
+	return nil
 }
 
 // preRequestOnce runs exactly one time, before we execute the first request.
@@ -210,7 +215,7 @@ func (c *Client) SetApiURL(u string) {
 // extract the URL from the token.
 func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 	c.once.Do(func() {
-		if c.apiURL != "" {
+		if c.apiURL != nil {
 			return
 		}
 		err = c.Credentials.RefreshAccessToken(ctx)
@@ -224,12 +229,11 @@ func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 
 // setApiUrlFromM2MProfile sets Client.apiURL using environment from m2mProfile JWT claim.
 func (c *Client) setApiUrlFromM2MProfile() {
-	u := url.URL{
+	c.apiURL = &url.URL{
 		Scheme: "https",
 		Host:   c.Credentials.M2MProfile.Environment,
 		Path:   "api",
 	}
-	c.apiURL = u.String()
 }
 
 const (
@@ -457,9 +461,6 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
 		if err != nil {
 			return err
 		}
-		req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
-		req.Header.Set(HeaderUserAgent, c.UserAgent)
-		c.Credentials.SetAuthorizationHeader(req)
 		response, err := c.HTTP.Do(req)
 		if err != nil {
 			return pkgErrors.Wrapf(
@@ -532,14 +533,13 @@ func (c *Client) createRequest(
 	if err := c.preRequestOnce(ctx); err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, method, path.Join(c.apiURL, endpoint), body)
+	req, err := http.NewRequestWithContext(ctx, method, c.apiURL.JoinPath(endpoint).String(), body)
 	if err != nil {
 		return nil, err
 	}
 	// Mandatory headers for all API requests.
 	req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
-	c.Credentials.SetAuthorizationHeader(req)
 	// Optional headers.
 	if len(project) > 0 {
 		req.Header.Set(HeaderProject, project)

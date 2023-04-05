@@ -21,8 +21,8 @@ type ClientBuilder struct {
 	apiURL         string
 }
 
-// NewClientBuilder accepts the required minimum of arguments.
-// To fully configure the Client you must also supply Client with Credentials instance,
+// NewClientBuilder creates a new ClientBuilder instance.
+// To fully configure the Client you must also supply ClientBuilder with Credentials instance,
 // either by running ClientBuilder.WithDefaultCredentials or ClientBuilder.WithCredentials.
 // Recommended usage:
 //
@@ -77,11 +77,11 @@ func (b ClientBuilder) WithApiURL(apiURL string) ClientBuilder {
 
 // Build figures out which parts were supplied for ClientBuilder and sets the defaults for the Client it constructs.
 func (b ClientBuilder) Build() (*Client, error) {
-	authServerURL, err := OktaAuthServer(b.oktaOrgURL, b.oktaAuthServer)
-	if err != nil {
-		return nil, err
-	}
 	if b.credentials == nil {
+		authServerURL, err := OktaAuthServer(b.oktaOrgURL, b.oktaAuthServer)
+		if err != nil {
+			return nil, err
+		}
 		b.credentials, err = DefaultCredentials(b.clientID, b.clientSecret, authServerURL)
 		if err != nil {
 			return nil, err
@@ -96,10 +96,15 @@ func (b ClientBuilder) Build() (*Client, error) {
 		}
 		b.http = retryhttp.NewClient(b.timeout, b.credentials)
 	}
-	return &Client{
+	client := &Client{
 		HTTP:        b.http,
 		Credentials: b.credentials,
 		UserAgent:   b.userAgent,
-		apiURL:      b.apiURL,
-	}, nil
+	}
+	if b.apiURL != "" {
+		if err := client.SetApiURL(b.apiURL); err != nil {
+			return nil, err
+		}
+	}
+	return client, nil
 }
