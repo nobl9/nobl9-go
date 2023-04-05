@@ -253,9 +253,11 @@ func (c *Client) GetObject(
 		ctx,
 		project,
 		object,
-		map[string][]string{QueryKeyName: names},
-		map[string][]string{QueryKeyTime: {timestamp}},
-		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
+		url.Values{
+			QueryKeyName:         names,
+			QueryKeyTime:         []string{timestamp},
+			QueryKeyLabelsFilter: []string{c.prepareFilterLabelsString(filterLabel)},
+		},
 	)
 	return response.Objects, err
 }
@@ -264,15 +266,9 @@ func (c *Client) GetObjectWithParams(
 	ctx context.Context,
 	project string,
 	object Object,
-	queryParams ...map[string][]string,
+	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
-	q := url.Values{}
-	for _, param := range queryParams {
-		for key, value := range param {
-			q[key] = value
-		}
-	}
 	req, err := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q, nil)
 	if err != nil {
 		return response, err
