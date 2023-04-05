@@ -30,6 +30,9 @@ const (
 // DefaultProject is a value of the default project.
 const DefaultProject = "default"
 
+// ProjectsWildcard is used in HeaderProject when requesting for all projects.
+const ProjectsWildcard = "*"
+
 // HTTP headers keys used across app
 const (
 	HeaderOrganization      = "organization"
@@ -37,7 +40,7 @@ const (
 	HeaderAuthorization     = "Authorization"
 	HeaderUserAgent         = "User-Agent"
 	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
-	HeaderTraceID       = "trace-id"
+	HeaderTraceID           = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -69,9 +72,6 @@ type Response struct {
 	Objects      []AnyJSONObj
 	TruncatedMax int
 }
-
-// ProjectsWildcard is used in HeaderProject when requesting for all projects.
-const ProjectsWildcard = "*"
 
 // Object represents available objects in API to perform operations.
 type Object string
@@ -266,12 +266,8 @@ func (c *Client) GetObjectWithParams(
 	object Object,
 	queryParams ...map[string][]string,
 ) (response Response, err error) {
-	endpoint := "/get/" + object
-	response = Response{
-		TruncatedMax: -1,
-	}
-
-	q := queries{}
+	response = Response{TruncatedMax: -1}
+	q := url.Values{}
 	for _, param := range queryParams {
 		for key, value := range param {
 			q[key] = value
@@ -279,8 +275,9 @@ func (c *Client) GetObjectWithParams(
 	}
 	req, err := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q, nil)
 	if err != nil {
-		return nil, err
+		return response, err
 	}
+
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return response, fmt.Errorf("cannot perform a request to API: %w", err)
