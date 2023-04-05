@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -13,8 +14,11 @@ import (
 )
 
 var (
-	redirectsErrorRe = regexp.MustCompile(`stopped after \d+ redirects\z`)
-	schemeErrorRe    = regexp.MustCompile(`unsupported protocol scheme`)
+	redirectsErrorRe      = regexp.MustCompile(`stopped after \d+ redirects\z`)
+	urlVerificationErrors = []string{
+		"unsupported protocol scheme",
+		"http: no Host in request URL",
+	}
 )
 
 // NewClient returns http.Client with preconfigured retry feature.
@@ -51,9 +55,11 @@ func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 			if redirectsErrorRe.MatchString(v.Error()) {
 				return false
 			}
-			// Don't retry if the error was due to an invalid protocol scheme.
-			if schemeErrorRe.MatchString(v.Error()) {
-				return false
+			// Don't retry if the error was due to a malformed url.
+			for _, s := range urlVerificationErrors {
+				if strings.Contains(v.Error(), s) {
+					return false
+				}
 			}
 			// Don't retry if the error was due to TLS cert verification failure.
 			if _, isUnknownAuthorityError := v.Err.(x509.UnknownAuthorityError); isUnknownAuthorityError {

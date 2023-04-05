@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 // AccessTokenParser parses and verifies fetched access token.
 type AccessTokenParser interface {
-	Parse(ctx context.Context, token, clientID string) (jwt.MapClaims, error)
+	Parse(token, clientID string) (jwt.MapClaims, error)
 }
 
 // AccessTokenProvider fetches the access token based on client it and client secret.
@@ -32,11 +33,11 @@ type AccessTokenM2MProfile struct {
 	Environment  string `json:"environment,omitempty"`
 }
 
-func DefaultCredentials(clientID, clientSecret, authServerURL string) (*Credentials, error) {
-	if clientID == "" || clientSecret == "" || authServerURL == "" {
+func DefaultCredentials(clientID, clientSecret string, authServerURL *url.URL) (*Credentials, error) {
+	if clientID == "" || clientSecret == "" || authServerURL == nil {
 		return nil, errors.New("clientID, clientSecret and AuthServerURL must all be provided for DefaultCredentials call")
 	}
-	parser, err := NewJWTParser(authServerURL, OktaKeysEndpoint(authServerURL))
+	parser, err := NewJWTParser(authServerURL.String(), OktaKeysEndpoint(authServerURL))
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,6 @@ func DefaultCredentials(clientID, clientSecret, authServerURL string) (*Credenti
 		ClientSecret:  clientSecret,
 		TokenParser:   parser,
 		TokenProvider: NewOktaClient(authServerURL),
-		AuthServerURL: authServerURL,
 	}, nil
 }
 
@@ -55,9 +55,8 @@ func DefaultCredentials(clientID, clientSecret, authServerURL string) (*Credenti
 // Currently, the only supported IDP is Okta.
 type Credentials struct {
 	// Required to fetch the token.
-	ClientID      string
-	ClientSecret  string
-	AuthServerURL string
+	ClientID     string
+	ClientSecret string
 
 	// Set after the token is fetched.
 	AccessToken string
@@ -109,10 +108,10 @@ func (creds *Credentials) SetAuthorizationHeader(r *http.Request) {
 
 // SetAccessToken allows setting new access token without using TokenProvider.
 // The provided token will be still parsed using setNewToken function.
-func (creds *Credentials) SetAccessToken(ctx context.Context, token string) error {
+func (creds *Credentials) SetAccessToken(token string) error {
 	creds.mu.Lock()
 	defer creds.mu.Unlock()
-	return creds.setNewToken(ctx, token, false)
+	return creds.setNewToken(token, false)
 }
 
 // RefreshAccessToken checks the AccessToken expiry with an offset to detect if the token
@@ -148,14 +147,14 @@ func (creds *Credentials) requestNewToken(ctx context.Context) (err error) {
 	if err != nil {
 		return errors.Wrap(err, "error getting new access token from IDP")
 	}
-	return creds.setNewToken(ctx, token, true)
+	return creds.setNewToken(token, true)
 }
 
 // setNewToken parses and verifies the provided JWT using TokenParser.
 // It will then decode 'm2mProfile' from the extracted claims and set
 // the new values for M2MProfile, AccessToken and claims Credentials fields.
-func (creds *Credentials) setNewToken(ctx context.Context, token string, withHook bool) error {
-	claims, err := creds.TokenParser.Parse(ctx, token, creds.ClientID)
+func (creds *Credentials) setNewToken(token string, withHook bool) error {
+	claims, err := creds.TokenParser.Parse(token, creds.ClientID)
 	if err != nil {
 		return err
 	}

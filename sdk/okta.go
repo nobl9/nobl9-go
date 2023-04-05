@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 	"time"
 
@@ -25,20 +24,20 @@ const (
 	oktaRequestTimeout = 5 * time.Second
 )
 
-func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (string, error) {
-	authServerURL := path.Join(oktaOrgURL, "oauth2", oktaAuthServer)
-	if _, err := url.Parse(authServerURL); err != nil {
-		return "", errors.Wrapf(err, "invalid authorization server URL: %s", authServerURL)
+func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (*url.URL, error) {
+	authServerURL, err := url.Parse(oktaOrgURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "invalid oktaOrgURL: %s", oktaOrgURL)
 	}
-	return authServerURL, nil
+	return authServerURL.JoinPath("oauth2", oktaAuthServer), nil
 }
 
-func OktaTokenEndpoint(authServerURL string) string {
-	return path.Join(authServerURL, oktaTokenEndpoint)
+func OktaTokenEndpoint(authServerURL *url.URL) *url.URL {
+	return authServerURL.JoinPath(oktaTokenEndpoint)
 }
 
-func OktaKeysEndpoint(authServerURL string) string {
-	return path.Join(authServerURL, oktaKeysEndpoint)
+func OktaKeysEndpoint(authServerURL *url.URL) *url.URL {
+	return authServerURL.JoinPath(oktaKeysEndpoint)
 }
 
 type OktaClient struct {
@@ -46,10 +45,10 @@ type OktaClient struct {
 	requestTokenEndpoint string
 }
 
-func NewOktaClient(authServerURL string) *OktaClient {
+func NewOktaClient(authServerURL *url.URL) *OktaClient {
 	return &OktaClient{
 		HTTP:                 retryhttp.NewClient(oktaRequestTimeout, nil),
-		requestTokenEndpoint: OktaTokenEndpoint(authServerURL),
+		requestTokenEndpoint: OktaTokenEndpoint(authServerURL).String(),
 	}
 }
 

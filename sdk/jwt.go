@@ -45,21 +45,18 @@ type JWTParser struct {
 	jwkSetMu    *sync.Mutex
 }
 
-func NewJWTParser(issuer, jwkFetchURL string) (*JWTParser, error) {
-	if _, err := url.Parse(jwkFetchURL); err != nil {
-		return nil, errors.Wrapf(err, "invalid JWK fetching URL: %s", jwkFetchURL)
-	}
+func NewJWTParser(issuer string, jwkFetchURL *url.URL) (*JWTParser, error) {
 	return &JWTParser{
 		HTTP:        retryhttp.NewClient(jwtKeysRequestTimeout, nil),
 		jwksCache:   cache.New(time.Hour, time.Hour),
 		jwkSetMu:    new(sync.Mutex),
-		jwkFetchURL: jwkFetchURL,
+		jwkFetchURL: jwkFetchURL.String(),
 		issuer:      issuer,
 	}, nil
 }
 
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.
-func (a *JWTParser) Parse(ctx context.Context, token, clientID string) (jwt.MapClaims, error) {
+func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 	if token == "" || clientID == "" {
 		return nil, errTokenParseMissingArguments
 	}

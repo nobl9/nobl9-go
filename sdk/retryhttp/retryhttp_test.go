@@ -23,11 +23,14 @@ func TestCheckRetry(t *testing.T) {
 	})
 
 	t.Run("do not retry on these url errors", func(t *testing.T) {
-		for _, err := range []error{
+		errs := []error{
 			errors.New("stopped after 10 redirects"),
-			errors.New("unsupported protocol scheme"),
 			x509.UnknownAuthorityError{},
-		} {
+		}
+		for _, vErr := range urlVerificationErrors {
+			errs = append(errs, errors.New(vErr))
+		}
+		for _, err := range errs {
 			shouldRetry, err := checkRetry(context.Background(), nil, &url.Error{Err: err})
 			require.NoError(t, err)
 			assert.False(t, shouldRetry)
@@ -39,7 +42,7 @@ func TestCheckRetry(t *testing.T) {
 			&url.Error{Err: errors.New("stopped!")},
 			errors.New("failed..."),
 		} {
-			shouldRetry, err := checkRetry(context.Background(), nil, &url.Error{Err: err})
+			shouldRetry, err := checkRetry(context.Background(), nil, err)
 			require.NoError(t, err)
 			assert.True(t, shouldRetry)
 		}

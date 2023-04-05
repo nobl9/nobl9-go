@@ -189,7 +189,7 @@ func DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent
 // It should be used before executing the first request with the Client,
 // as the Client, before executing request, will fetch a new token if none was provided.
 func (c *Client) SetAccessToken(token string) error {
-	if err := c.Credentials.SetAccessToken(context.Background(), token); err != nil {
+	if err := c.Credentials.SetAccessToken(token); err != nil {
 		return err
 	}
 	if c.apiURL == nil {

@@ -128,7 +128,7 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 		TokenParser:     tokenParser,
 		PostRequestHook: func(token string) error { return errors.New("hook should not be called!") },
 	}
-	err := creds.SetAccessToken(context.Background(), "access-token")
+	err := creds.SetAccessToken("access-token")
 	require.NoError(t, err)
 	assert.Equal(t, "access-token", tokenParser.calledWithToken)
 	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
@@ -149,7 +149,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			TokenParser:     &mockTokenParser{err: parserErr},
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		err := creds.setNewToken(context.Background(), "", true)
+		err := creds.setNewToken("", true)
 		require.Error(t, err)
 		assert.Equal(t, parserErr, err)
 		assert.False(t, hookCalled, "PostRequestHook should not be called")
@@ -161,7 +161,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			TokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		err := creds.setNewToken(context.Background(), "", true)
+		err := creds.setNewToken("", true)
 		assert.Error(t, err)
 		assert.False(t, hookCalled, "PostRequestHook should not be called")
 	})
@@ -175,7 +175,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			TokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { return hookErr },
 		}
-		err := creds.setNewToken(context.Background(), "my-token", true)
+		err := creds.setNewToken("my-token", true)
 		require.Error(t, err)
 		assert.ErrorIs(t, err, hookErr)
 		assert.Empty(t, creds.AccessToken)
@@ -208,7 +208,7 @@ type mockTokenParser struct {
 	err    error
 }
 
-func (m *mockTokenParser) Parse(_ context.Context, token, clientID string) (jwt.MapClaims, error) {
+func (m *mockTokenParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 	m.calledTimes++
 	m.calledWithToken = token
 	m.calledWithClientID = clientID
