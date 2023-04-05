@@ -81,7 +81,7 @@ func (a *JWTParser) Parse(ctx context.Context, token, clientID string) (jwt.MapC
 		return nil, errors.Errorf("expecting JWT header to contain '%s' field as a string, was: '%s'",
 			jwk.KeyIDKey, kid)
 	}
-	jwkSet, err := a.getJWKSet(ctx, kid)
+	jwkSet, err := a.getJWKSet(kid)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (a *JWTParser) Parse(ctx context.Context, token, clientID string) (jwt.MapC
 
 var jwksFetchFunction = jwk.Fetch
 
-func (a *JWTParser) getJWKSet(ctx context.Context, kid string) (jwk.Set, error) {
+func (a *JWTParser) getJWKSet(kid string) (jwk.Set, error) {
 	// There are three scenarios under which a token might not be found in the cache:
 	// 1. Cache is empty right after the startup.
 	// 2. Cache expired.
@@ -130,8 +130,7 @@ func (a *JWTParser) getJWKSet(ctx context.Context, kid string) (jwk.Set, error) 
 
 	// Fetch doesn't perform retries. Use background context because we don't want client disconnects to interrupt
 	// JWKS cache population process while other clients might be waiting for it.
-	ctx = context.Background()
-	jwkSet, err := jwksFetchFunction(ctx, a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
+	jwkSet, err := jwksFetchFunction(context.Background(), a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
 	if err != nil {
 		return nil, err
 	}

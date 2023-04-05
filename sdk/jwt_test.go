@@ -80,7 +80,7 @@ func TestJWTParser_Parse(t *testing.T) {
 			jwksFetchCalledTimes++
 			return nil, nil
 		}
-		result, err := parser.getJWKSet(context.Background(), "my-kid")
+		result, err := parser.getJWKSet("my-kid")
 		require.NoError(t, err)
 		assert.Equal(t, 0, jwksFetchCalledTimes)
 		assert.Equal(t, set, result)
@@ -106,7 +106,7 @@ func TestJWTParser_Parse(t *testing.T) {
 		for i := 0; i < n; i++ {
 			go func() {
 				defer wg.Done()
-				result, err := parser.getJWKSet(context.Background(), kid)
+				result, err := parser.getJWKSet(kid)
 				require.NoError(t, err)
 				assert.Equal(t, set, result)
 			}()
