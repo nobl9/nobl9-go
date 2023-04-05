@@ -22,21 +22,29 @@ type ClientBuilder struct {
 }
 
 // NewClientBuilder accepts the required minimum of arguments.
-// To fully configure the Client
+// To fully configure the Client you must also supply Client with Credentials instance,
+// either by running ClientBuilder.WithDefaultCredentials or ClientBuilder.WithCredentials.
+// Recommended usage:
+//
+//	NewClientBuilder().WithDefaultCredentials().Build()
 func NewClientBuilder(userAgent string) ClientBuilder {
 	return ClientBuilder{userAgent: userAgent}
 }
 
+// WithCredentials allows setting an initialized Credentials instance.
 func (b ClientBuilder) WithCredentials(credentials *Credentials) ClientBuilder {
 	b.credentials = credentials
 	return b
 }
 
+// WithOfflineMode will turn the Client.Credentials into a noop.
 func (b ClientBuilder) WithOfflineMode() ClientBuilder {
 	b.offlineMode = true
 	return b
 }
 
+// WithDefaultCredentials instructs the ClientBuilder to supply a default Credentials instance.
+// It is recommended for most use cases over WithCredentials.
 func (b ClientBuilder) WithDefaultCredentials(oktaOrgURL, oktaAuthServer, clientID, clientSecret string) ClientBuilder {
 	b.oktaOrgURL = oktaOrgURL
 	b.oktaAuthServer = oktaAuthServer
@@ -45,21 +53,29 @@ func (b ClientBuilder) WithDefaultCredentials(oktaOrgURL, oktaAuthServer, client
 	return b
 }
 
+// WithHTTPClient allows supplying a custom http.Client for the client to use.
+// Note that the access token life cycle management is done by Credentials,
+// which become part of default http.Client request middleware chain, making sure
+// the token is up to date before each request.
 func (b ClientBuilder) WithHTTPClient(client *http.Client) ClientBuilder {
 	b.http = client
 	return b
 }
 
+// WithTimeout will only work for default HTTP client,
+// it won't affect the client supplied with WithHTTPClient.
 func (b ClientBuilder) WithTimeout(timeout time.Duration) ClientBuilder {
 	b.timeout = timeout
 	return b
 }
 
+// WithApiURL should only be used for development workflows as the URL is constructed from JWT claims.
 func (b ClientBuilder) WithApiURL(apiURL string) ClientBuilder {
 	b.apiURL = apiURL
 	return b
 }
 
+// Build figures out which parts were supplied for ClientBuilder and sets the defaults for the Client it constructs.
 func (b ClientBuilder) Build() (*Client, error) {
 	authServerURL, err := OktaAuthServer(b.oktaOrgURL, b.oktaAuthServer)
 	if err != nil {

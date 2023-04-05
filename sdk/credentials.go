@@ -161,9 +161,16 @@ func (creds *Credentials) setNewToken(ctx context.Context, token string, withHoo
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
 	}
-
+	// We can now update the token.
 	creds.M2MProfile = m2mProfile
 	creds.AccessToken = token
 	creds.claims = claims
+	// Since we're using m2mProfile.environment claim to set the URL for request
+	oldEnvironment := creds.M2MProfile.Environment
+	if oldEnvironment != "" && oldEnvironment != m2mProfile.Environment {
+		return errors.Wrapf(err, "environment has been changed for the new token,"+
+			" the request should be reconstructed, old env: %s, new env: %s",
+			creds.M2MProfile.Environment, m2mProfile.Environment)
+	}
 	return nil
 }
