@@ -52,7 +52,7 @@ func NewOktaClient(authServerURL *url.URL) *OktaClient {
 	}
 }
 
-type m2mTokenResponse struct {
+type oktaTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
@@ -92,12 +92,12 @@ func (okta *OktaClient) RequestAccessToken(
 			"cannot access the token from POST %s, IDP replied with (status: %d): %s",
 			okta.requestTokenEndpoint, resp.StatusCode, string(body))
 	}
-	var tokenResponse m2mTokenResponse
-	if err = json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+	var tr oktaTokenResponse
+	if err = json.NewDecoder(resp.Body).Decode(&tr); err != nil {
 		return "", errors.Wrapf(err,
 			"cannot decode the token provided by IDP from POST %s", okta.requestTokenEndpoint)
 	}
-	return tokenResponse.AccessToken, nil
+	return tr.AccessToken, nil
 }
 
 func (okta *OktaClient) authHeader(clientID, clientSecret string) string {

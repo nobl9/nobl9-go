@@ -227,10 +227,14 @@ func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 	return err
 }
 
+// urlScheme is exported into var purely for testing purposes.
+// While it's possible to run https test server, it is much easier to go without TLS.
+var urlScheme = "https"
+
 // setApiUrlFromM2MProfile sets Client.apiURL using environment from m2mProfile JWT claim.
 func (c *Client) setApiUrlFromM2MProfile() {
 	c.apiURL = &url.URL{
-		Scheme: "https",
+		Scheme: urlScheme,
 		Host:   c.Credentials.M2MProfile.Environment,
 		Path:   "api",
 	}

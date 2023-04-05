@@ -61,7 +61,7 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 
 	t.Run("golden path", func(t *testing.T) {
 		respondWithStatusCode = http.StatusOK
-		respondWithPayload, _ = json.Marshal(m2mTokenResponse{AccessToken: "access-token"})
+		respondWithPayload, _ = json.Marshal(oktaTokenResponse{AccessToken: "access-token"})
 
 		token, err := okta.RequestAccessToken(context.Background(), "123", "secret")
 		require.NoError(t, err)
