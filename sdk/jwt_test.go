@@ -136,15 +136,60 @@ func TestJWTParser_Parse(t *testing.T) {
 		assert.EqualError(t, err, "jwk not found for kid: other-kid (key id)")
 	})
 
+	t.Run("golden path", func(t *testing.T) {
+		parser, err := NewJWTParser(testIssuer, "https://jwk.io/keys")
+		require.NoError(t, err)
+
+		// Create a signed token and use the generated public key to create JWK.
+		rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		require.NoError(t, err)
+
+		const kid = "my-kid"
+		// Create a JSON Web Key with a key id matching the tokens' kid.
+		JWK := jwk.NewRSAPublicKey()
+		require.NoError(t, JWK.Set(jwk.KeyIDKey, kid))
+		require.NoError(t, JWK.Set(jwk.AlgorithmKey, jwtSigningAlgorithm))
+		require.NoError(t, JWK.FromRaw(&rsaKey.PublicKey))
+		// Create a JWK Set and add a single JWK.
+		set := jwk.NewSet()
+		set.Add(JWK)
+		parser.jwksCache.Set(kid, set, time.Hour)
+
+		// Prepare the token.
+		claims := jwt.MapClaims{
+			"iss": testIssuer,
+			"cid": "123",
+			"exp": time.Now().Add(time.Hour).Unix(),
+			"iat": time.Now().Add(-time.Hour).Unix(),
+			"nbf": time.Now().Add(-time.Hour).Unix(),
+			"m2mProfile": map[string]interface{}{
+				"environment":  "dev.nobl9.com",
+				"organization": "my-org",
+				"user":         "test@nobl9.com",
+			},
+		}
+		jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod(jwtSigningAlgorithm.String()), claims)
+		jwtToken.Header["kid"] = kid
+		token, err := jwtToken.SignedString(rsaKey)
+		require.NoError(t, err)
+
+		result, err := parser.Parse(context.Background(), token, "123")
+		require.NoError(t, err)
+
+		assert.Contains(t, result, "m2mProfile")
+		assert.Equal(t, claims["m2mProfile"], result["m2mProfile"])
+	})
 }
 
 func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 	parser, err := NewJWTParser(testIssuer, "https://jwk.io/keys")
 	require.NoError(t, err)
 
-	const kid = "my-kid"
 	// Create a signed token and use the generated public key to create JWK.
 	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	const kid = "my-kid"
 	// Create a JSON Web Key with a key id matching the tokens' kid.
 	JWK := jwk.NewRSAPublicKey()
 	require.NoError(t, JWK.Set(jwk.KeyIDKey, kid))
@@ -210,6 +255,24 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			assert.ErrorContains(t, err, test.ExpectedError)
 		})
 	}
+}
+
+func TestM2MProfileFromClaims(t *testing.T) {
+	claims := jwt.MapClaims{
+		"m2mProfile": map[string]interface{}{
+			"user":         "test@nobl9.com",
+			"organization": "my-org",
+			"environment":  "dev.nobl9.com",
+		},
+	}
+	m2mProfile, err := M2MProfileFromClaims(claims)
+	require.NoError(t, err)
+	expected := AccessTokenM2MProfile{
+		User:         "test@nobl9.com",
+		Organization: "my-org",
+		Environment:  "dev.nobl9.com",
+	}
+	assert.Equal(t, expected, m2mProfile)
 }
 
 func signToken(t *testing.T, jwtToken *jwt.Token) (token string, key *rsa.PrivateKey) {

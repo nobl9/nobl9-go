@@ -154,16 +154,16 @@ type Client struct {
 	Credentials *Credentials
 	UserAgent   string
 	apiURL      string
-	mu          sync.Mutex
+	once        sync.Once
 }
 
-// DefaultClient returns fully configured instance of API high level client with default timeout.
-func DefaultClient(oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error) {
+// DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
+func DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error) {
 	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
 	if err != nil {
 		return nil, err
 	}
-	creds, err := DefaultCredentials(authServerURL)
+	creds, err := DefaultCredentials(clientID, clientSecret, authServerURL)
 	if err != nil {
 		return nil, err
 	}
@@ -174,10 +174,51 @@ func DefaultClient(oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error
 	}, nil
 }
 
+// SetAccessToken provisions an initial token for the Client to use.
+// It should be used before executing the first request with the Client,
+// as the Client, before executing request, will fetch a new token if none was provided.
+func (c *Client) SetAccessToken(token string) error {
+	if err := c.Credentials.SetAccessToken(context.Background(), token); err != nil {
+		return err
+	}
+	if c.apiURL == "" {
+		c.setApiUrlFromM2MProfile()
+	}
+	return nil
+}
+
+// SetApiURL allows to override the API URL otherwise inferred from access token.
 func (c *Client) SetApiURL(u string) {
-	c.mu.Lock()
 	c.apiURL = u
-	c.mu.Unlock()
+}
+
+// preRequestOnce runs exactly one time, before we execute the first request.
+// It first makes sure the token is up-to-date by calling Credentials.RefreshAccessToken.
+// We need to make sure the Client.apiURL is set, and it has to be done, before
+// any http.Request is constructed. If the API URL was set using SetApiURL we won't
+// extract the URL from the token.
+func (c *Client) preRequestOnce(ctx context.Context) (err error) {
+	c.once.Do(func() {
+		if c.apiURL != "" {
+			return
+		}
+		err = c.Credentials.RefreshAccessToken(ctx)
+		if err != nil {
+			return
+		}
+		c.setApiUrlFromM2MProfile()
+	})
+	return err
+}
+
+// setApiUrlFromM2MProfile sets Client.apiURL using environment from m2mProfile JWT claim.
+func (c *Client) setApiUrlFromM2MProfile() {
+	u := url.URL{
+		Scheme: "https",
+		Host:   c.Credentials.M2MProfile.Environment,
+		Path:   "api",
+	}
+	c.apiURL = u.String()
 }
 
 const (
@@ -208,7 +249,10 @@ func (c *Client) GetObject(
 		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
 	}
 
-	req := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q)
+	req, err := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q, nil)
+	if err != nil {
+		return nil, err
+	}
 	// Ignore project from configuration and from `-p` flag.
 	if object == ObjectAlert {
 		req.Header.Set(HeaderProject, ProjectsWildcard)
@@ -256,14 +300,15 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
-	req := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil)
+	req, err := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
+	if err != nil {
+		return "", err
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
@@ -296,8 +341,10 @@ func (c *Client) DeleteObjectsByName(ctx context.Context, project string, object
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q)
-
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q, nil)
+	if err != nil {
+		return err
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
@@ -336,12 +383,16 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun
 
 // GetAgentCredentials gets agent credentials from Okta.
 func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName string) (creds M2MAppCredentials, err error) {
-	req := c.createRequest(
+	req, err := c.createRequest(
 		ctx,
 		http.MethodGet,
 		"/internal/agent/clientcreds",
 		project,
-		map[string][]string{"name": {agentsName}})
+		map[string][]string{"name": {agentsName}},
+		nil)
+	if err != nil {
+		return creds, err
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return creds, pkgErrors.WithStack(err)
@@ -366,14 +417,15 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
 		for _, point := range chunk {
 			buf.WriteString(point.String() + "\n")
 		}
-		req, err := http.NewRequestWithContext(
+		req, err := c.createRequest(
 			ctx,
 			http.MethodPost,
-			path.Join(c.apiURL, apiInputData),
-			strings.NewReader(buf.String()),
-		)
+			apiInputData,
+			"",
+			nil,
+			strings.NewReader(buf.String()))
 		if err != nil {
-			panic(err)
+			return err
 		}
 		req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
 		req.Header.Set(HeaderUserAgent, c.UserAgent)
@@ -407,7 +459,6 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
 
-	endpoint := path.Join(c.apiURL, apiMode)
 	var method string
 	switch apiMode {
 	case apiApply:
@@ -416,8 +467,10 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 		method = http.MethodDelete
 	}
 	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
-	req := c.createRequest(ctx, method, endpoint, "", q)
-
+	req, err := c.createRequest(ctx, method, apiMode, "", q, nil)
+	if err != nil {
+		return err
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
@@ -440,8 +493,19 @@ func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj,
 	}
 }
 
-func (c *Client) createRequest(ctx context.Context, method, endpoint, project string, q url.Values) *http.Request {
-	req, _ := http.NewRequestWithContext(ctx, method, path.Join(c.apiURL, endpoint), nil)
+func (c *Client) createRequest(
+	ctx context.Context,
+	method, endpoint, project string,
+	q url.Values,
+	body io.Reader,
+) (*http.Request, error) {
+	if err := c.preRequestOnce(ctx); err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, method, path.Join(c.apiURL, endpoint), body)
+	if err != nil {
+		return nil, err
+	}
 	// Mandatory headers for all API requests.
 	req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
@@ -453,7 +517,7 @@ func (c *Client) createRequest(ctx context.Context, method, endpoint, project st
 	// Add query parameters to request, to pass array, convention of repeated entries is used.
 	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	req.URL.RawQuery = q.Encode()
-	return req
+	return req, nil
 }
 
 // Annotate injects to objects additional fields with values passed as map in parameter
