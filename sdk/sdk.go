@@ -292,12 +292,22 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
+	q := queries{}
+	if len(names) > 0 {
+		q[QueryKeyName] = names
+	}
+	if timestamp != "" {
+		q[QueryKeyTime] = []string{timestamp}
+	}
+
+	if len(filterLabel) > 0 {
+		q[QueryKeyLabelsFilter] = []string{c.prepareFilterLabelsString(filterLabel)}
+	}
+
 	response, err := c.GetObjectWithParams(
 		ctx,
 		object,
-		map[string][]string{QueryKeyName: names},
-		map[string][]string{QueryKeyTime: {timestamp}},
-		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
+		q,
 	)
 	return response.Objects, err
 }
@@ -305,19 +315,13 @@ func (c *Client) GetObject(
 func (c *Client) GetObjectWithParams(
 	ctx context.Context,
 	object Object,
-	queryParams ...map[string][]string,
+	q queries,
 ) (response Response, err error) {
 	endpoint := "/get/" + object
 	response = Response{
 		TruncatedMax: -1,
 	}
 
-	q := queries{}
-	for _, param := range queryParams {
-		for key, value := range param {
-			q[key] = value
-		}
-	}
 	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
 	resp, err := c.c.Do(req)
 	if err != nil {
