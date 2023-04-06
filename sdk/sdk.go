@@ -26,12 +26,13 @@ const (
 
 // HTTP headers keys used across app
 const (
-	HeaderOrganization  = "organization"
-	HeaderProject       = "project"
-	HeaderAuthorization = "Authorization"
-	HeaderUserAgent     = "User-Agent"
-	HeaderClientID      = "ClientID"
-	traceIDHeader       = "trace-id"
+	HeaderOrganization      = "organization"
+	HeaderProject           = "project"
+	HeaderAuthorization     = "Authorization"
+	HeaderUserAgent         = "User-Agent"
+	HeaderClientID          = "ClientID"
+	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
+	traceIDHeader           = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -52,7 +53,17 @@ const (
 	QueryKeyTextSearch        = "text_search"
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
+	QueryKeyAlertPolicy       = "alert_policy"
+	QueryKeyObjective         = "objective"
+	QueryKeyObjectiveValue    = "objective_value"
+	QueryKeyResolved          = "resolved"
+	QueryKeyTriggered         = "triggered"
 )
+
+type Response struct {
+	Objects      []AnyJSONObj
+	TruncatedMax int
+}
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
@@ -91,6 +102,12 @@ const (
 	ObjectRoleBinding          Object = "RoleBinding"
 	ObjectSLOErrorBudgetStatus Object = "SLOErrorBudgetStatus"
 	ObjectAnnotation           Object = "Annotation"
+	ObjectGroup                Object = "Group"
+)
+
+const (
+	ObjectDefaultURI        string = "/get/%s"
+	ObjectGroupSpecifiedURI string = "/usrmgmt/groups"
 )
 
 func getAllObjects() []Object {
@@ -110,6 +127,7 @@ func getAllObjects() []Object {
 		ObjectRoleBinding,
 		ObjectSLOErrorBudgetStatus,
 		ObjectAnnotation,
+		ObjectGroup,
 	}
 }
 
@@ -127,6 +145,7 @@ func ObjectName(apiObject string) Object {
 		"dataexport":   ObjectDataExport,
 		"rolebinding":  ObjectRoleBinding,
 		"annotation":   ObjectAnnotation,
+		"group":        ObjectGroup,
 	}
 
 	return objects[apiObject]
@@ -140,6 +159,29 @@ func IsObjectAvailable(o Object) bool {
 		}
 	}
 	return false
+}
+
+func ObjectsSpecifiedURIs() map[Object]string {
+	return map[Object]string{
+		ObjectGroup: ObjectGroupSpecifiedURI,
+	}
+}
+
+func GetObjectSpecifiedURI(o Object) string {
+	return ObjectsSpecifiedURIs()[o]
+}
+
+func HasObjectSpecifiedURI(o Object) bool {
+	_, ok := ObjectsSpecifiedURIs()[o]
+	return ok
+}
+
+func ResolveObjectURI(o Object) string {
+	if HasObjectSpecifiedURI(o) {
+		return GetObjectSpecifiedURI(o)
+	}
+
+	return fmt.Sprintf(ObjectDefaultURI, o.String())
 }
 
 // Operation is an enum that represents an operation that can be done over an
@@ -281,7 +323,7 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	endpoint := "/get/" + object
+	endpoint := ResolveObjectURI(object)
 	q := queries{}
 	if len(names) > 0 {
 		q[QueryKeyName] = names
@@ -543,8 +585,8 @@ func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf i
 	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
 }
 
-func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint.String(), nil)
+func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint string, q queries) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint, nil)
 	req.Header.Set(HeaderOrganization, c.organization)
 	req.Header.Set(HeaderProject, c.project)
 	req.Header.Set(HeaderUserAgent, c.userAgent)

@@ -27,6 +27,7 @@ const (
 	KindAlertMethod = "AlertMethod"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
+	KindGroup       = "KindGroup"
 	KindRoleBinding = "RoleBinding"
 )
 
