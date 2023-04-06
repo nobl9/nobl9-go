@@ -26,13 +26,12 @@ const (
 
 // HTTP headers keys used across app
 const (
-	HeaderOrganization      = "organization"
-	HeaderProject           = "project"
-	HeaderAuthorization     = "Authorization"
-	HeaderUserAgent         = "User-Agent"
-	HeaderClientID          = "ClientID"
-	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
-	traceIDHeader           = "trace-id"
+	HeaderOrganization  = "organization"
+	HeaderProject       = "project"
+	HeaderAuthorization = "Authorization"
+	HeaderUserAgent     = "User-Agent"
+	HeaderClientID      = "ClientID"
+	traceIDHeader       = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -53,17 +52,7 @@ const (
 	QueryKeyTextSearch        = "text_search"
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
-	QueryKeyAlertPolicy       = "alert_policy"
-	QueryKeyObjective         = "objective"
-	QueryKeyObjectiveValue    = "objective_value"
-	QueryKeyResolved          = "resolved"
-	QueryKeyTriggered         = "triggered"
 )
-
-type Response struct {
-	Objects      []AnyJSONObj
-	TruncatedMax int
-}
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
