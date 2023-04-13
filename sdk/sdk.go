@@ -185,6 +185,15 @@ func DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent
 	}, nil
 }
 
+// Organization returns the organization set from the access token.
+// If you call it before the first request is executed it will be empty
+// as the token was not yet fetched.
+// To force it to be set earlier you could provide the access token
+// to Credentials or call Credentials.RefreshAccessToken.
+func (c *Client) Organization() string {
+	return c.Credentials.M2MProfile.Organization
+}
+
 // SetAccessToken provisions an initial token for the Client to use.
 // It should be used before executing the first request with the Client,
 // as the Client, before executing request, will fetch a new token if none was provided.
