@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClient_GetObject(t *testing.T) {
+func TestClient_GetObjects(t *testing.T) {
 	urlScheme = "http"
 	const (
 		oktaAuthServer = "ausdh151kj9OOWv5x191"
@@ -109,11 +109,10 @@ func TestClient_GetObject(t *testing.T) {
 	srv.Start()
 	defer srv.Close()
 
-	objects, err := client.GetObject(
+	objects, err := client.GetObjects(
 		context.Background(),
 		project,
 		ObjectService,
-		"2023-01-01T15:30:27Z",
 		map[string][]string{"team": {"green", "purple"}},
 		"service1", "service2",
 	)
@@ -128,7 +127,6 @@ func TestClient_GetObject(t *testing.T) {
 	assert.Equal(t, "Bearer "+token, recordedRequest.Header.Get(HeaderAuthorization))
 	assert.Equal(t, url.Values{
 		QueryKeyName:         []string{"service1", "service2"},
-		QueryKeyTime:         []string{"2023-01-01T15:30:27Z"},
 		QueryKeyLabelsFilter: []string{"team:green,team:purple"},
 	}, recordedRequest.URL.Query())
 }

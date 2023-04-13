@@ -247,13 +247,12 @@ const (
 	apiInputData = "input/data"
 )
 
-// GetObject returns array of supported type of Objects, when names are passed - query for these names
+// GetObjects returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
-func (c *Client) GetObject(
+func (c *Client) GetObjects(
 	ctx context.Context,
 	project string,
 	object Object,
-	timestamp string,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
@@ -261,20 +260,17 @@ func (c *Client) GetObject(
 	if len(names) > 0 {
 		q[QueryKeyName] = names
 	}
-	if timestamp != "" {
-		q.Set(QueryKeyTime, timestamp)
-	}
 	if len(filterLabel) > 0 {
 		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
 	}
-	response, err := c.GetObjectWithParams(ctx, project, object, q)
+	response, err := c.GetObjectsWithParams(ctx, project, object, q)
 	if err != nil {
 		return nil, err
 	}
 	return response.Objects, nil
 }
 
-func (c *Client) GetObjectWithParams(
+func (c *Client) GetObjectsWithParams(
 	ctx context.Context,
 	project string,
 	object Object,
