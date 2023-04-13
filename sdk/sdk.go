@@ -563,39 +563,6 @@ func (c *Client) createRequest(
 	return req, nil
 }
 
-// Annotate injects to objects additional fields with values passed as map in parameter
-// If objects does not contain project - default value is added.
-func Annotate(
-	object AnyJSONObj,
-	annotations map[string]string,
-	project string,
-	isProjectOverwritten bool,
-) (AnyJSONObj, error) {
-	for k, v := range annotations {
-		object[k] = v
-	}
-	m, ok := object["metadata"].(map[string]interface{})
-
-	switch {
-	case !ok:
-		return AnyJSONObj{}, fmt.Errorf("cannot retrieve metadata section")
-	// If project in YAML is empty - fill project
-	case m["project"] == nil:
-		m["project"] = project
-		object["metadata"] = m
-	// If value in YAML is not empty but is different from --project flag value.
-	case m["project"] != nil && m["project"] != project && isProjectOverwritten:
-		return AnyJSONObj{},
-			fmt.Errorf(
-				"the project from the provided object %s does not match "+
-					"the project %s. You must pass '--project=%s' to perform this operation",
-				m["project"],
-				project,
-				m["project"])
-	}
-	return object, nil
-}
-
 func getResponseServerError(resp *http.Response) error {
 	body, _ := io.ReadAll(resp.Body)
 	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))

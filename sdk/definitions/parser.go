@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/nobl9/nobl9-go/sdk"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
+
+	"github.com/nobl9/nobl9-go/sdk"
 )
 
 var (
@@ -30,7 +31,7 @@ func processRawDefinitionsToJSONArray(a Annotations, rds rawDefinitions) ([]sdk.
 			}
 			// FIXME: sdk.Annotate adds Project to all objects, no matter the Kind, it should not do that
 			// for Project or RoleBinding (project agnostic objects), it should be fixed in the sdk.
-			annotated, err := sdk.Annotate(defInJSON, annotations, a.Project, a.ProjectOverwritesCfgFile)
+			annotated, err := annotateObject(defInJSON, annotations, a.Project, a.ProjectOverwritesCfgFile)
 			if err != nil {
 				return nil, err
 			}
@@ -81,4 +82,36 @@ func decodeYAMLToJSON(content []byte) ([]sdk.AnyJSONObj, error) {
 		return nil, errNoDefinitionsInInput
 	}
 	return jsonArray, nil
+}
+
+// annotateObject injects to objects additional fields with values passed as map in parameter
+// If objects does not contain project - default value is added.
+func annotateObject(
+	object sdk.AnyJSONObj,
+	annotations map[string]string,
+	project string,
+	isProjectOverwritten bool,
+) (sdk.AnyJSONObj, error) {
+	for k, v := range annotations {
+		object[k] = v
+	}
+	m, ok := object["metadata"].(map[string]interface{})
+
+	switch {
+	case !ok:
+		return nil, fmt.Errorf("cannot retrieve metadata section")
+	// If project in YAML is empty - fill project
+	case m["project"] == nil:
+		m["project"] = project
+		object["metadata"] = m
+	// If value in YAML is not empty but is different from --project flag value.
+	case m["project"] != nil && m["project"] != project && isProjectOverwritten:
+		return nil, fmt.Errorf(
+			"the project from the provided object %s does not match "+
+				"the project %s. You must pass '--project=%s' to perform this operation",
+			m["project"],
+			project,
+			m["project"])
+	}
+	return object, nil
 }

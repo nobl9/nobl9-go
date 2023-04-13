@@ -1,5 +1,3 @@
-//go:build unit_test
-
 package definitions
 
 import (
@@ -15,9 +13,10 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/nobl9/nobl9-go/sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/sdk"
 )
 
 //go:embed test_data
