@@ -3,6 +3,7 @@ module github.com/nobl9/nobl9-go
 go 1.16
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -15,7 +16,6 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.21.0
-	github.com/stretchr/testify v1.7.1
-	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	github.com/stretchr/testify v1.8.1
+	k8s.io/apimachinery v0.27.0
 )
