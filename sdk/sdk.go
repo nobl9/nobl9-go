@@ -257,17 +257,21 @@ func (c *Client) GetObject(
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	response, err := c.GetObjectWithParams(
-		ctx,
-		project,
-		object,
-		url.Values{
-			QueryKeyName:         names,
-			QueryKeyTime:         []string{timestamp},
-			QueryKeyLabelsFilter: []string{c.prepareFilterLabelsString(filterLabel)},
-		},
-	)
-	return response.Objects, err
+	q := url.Values{}
+	if len(names) > 0 {
+		q[QueryKeyName] = names
+	}
+	if timestamp != "" {
+		q.Set(QueryKeyTime, timestamp)
+	}
+	if len(filterLabel) > 0 {
+		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
+	}
+	response, err := c.GetObjectWithParams(ctx, project, object, q)
+	if err != nil {
+		return nil, err
+	}
+	return response.Objects, nil
 }
 
 func (c *Client) GetObjectWithParams(
