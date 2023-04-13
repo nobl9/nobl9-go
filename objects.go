@@ -131,6 +131,14 @@ type HistoricalDataRetrievalDuration struct {
 	Value json.Number `json:"value" example:"30"`
 }
 
+type QueryDelay struct {
+	QueryDelayDuration QueryDelayDuration
+}
+type QueryDelayDuration struct {
+	Unit  string      `json:"unit" example:"Minute"`
+	Value json.Number `json:"value" example:"1"`
+}
+
 // EnhanceError annotates error with path of manifest source, if it exists
 // it not returns the same error as passed as argument
 func EnhanceError(o ObjectGeneric, err error) error {
