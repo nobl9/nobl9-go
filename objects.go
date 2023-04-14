@@ -131,9 +131,6 @@ type HistoricalDataRetrievalDuration struct {
 	Value json.Number `json:"value" example:"30"`
 }
 
-type QueryDelay struct {
-	QueryDelayDuration QueryDelayDuration
-}
 type QueryDelayDuration struct {
 	Unit  string      `json:"unit" example:"Minute"`
 	Value json.Number `json:"value" example:"1"`

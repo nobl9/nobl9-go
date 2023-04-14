@@ -19,7 +19,7 @@ type DirectSpec struct {
 	Description             string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
 	SourceOf                []string                         `json:"sourceOf" example:"Metrics,Services"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval         `json:"historicalDataRetrieval"`
-	QueryDelay              *QueryDelay                      `json:"queryDelay"`
+	QueryDelay              *QueryDelayDuration              `json:"queryDelay"`
 	AppDynamics             *AppDynamicsDirectConfig         `json:"appDynamics,omitempty"`
 	BigQuery                *BigQueryDirectConfig            `json:"bigQuery,omitempty"`
 	CloudWatch              *CloudWatchDirectConfig          `json:"cloudWatch,omitempty"`
