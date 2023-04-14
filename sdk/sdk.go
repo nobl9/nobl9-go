@@ -217,6 +217,11 @@ func (c *Client) SetApiURL(u string) error {
 	return nil
 }
 
+// GetApiURL retrieves the API URL of the configured Client instance.
+func (c *Client) GetApiURL() url.URL {
+	return *c.apiURL
+}
+
 // preRequestOnce runs exactly one time, before we execute the first request.
 // It first makes sure the token is up-to-date by calling Credentials.RefreshAccessToken.
 // We need to make sure the Client.apiURL is set, and it has to be done, before
