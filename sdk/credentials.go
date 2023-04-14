@@ -101,7 +101,7 @@ func (creds *Credentials) SetAuthorizationHeader(r *http.Request) {
 		return
 	}
 	if r.Header == nil {
-		r.Header = map[string][]string{}
+		r.Header = http.Header{}
 	}
 	r.Header.Set(HeaderAuthorization, fmt.Sprintf("Bearer %s", creds.AccessToken))
 }
