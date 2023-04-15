@@ -19,6 +19,10 @@ import (
 const testIssuer = "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191"
 
 func TestJWTParser_Parse(t *testing.T) {
+	// This is very important! sdk_test.go which runs a full path for it's methods
+	// should use the standard jwk.Fetch function and not the test replacements.
+	defer func() { jwksFetchFunction = jwk.Fetch }()
+
 	t.Run("return error if either token or clientID are empty", func(t *testing.T) {
 		_, err := new(JWTParser).Parse("", "")
 		require.Error(t, err)

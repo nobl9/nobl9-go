@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 func TestCredentials_SetAuthorizationHeader(t *testing.T) {
@@ -32,8 +34,9 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("don't run in offline mode", func(t *testing.T) {
 		creds := &Credentials{offlineMode: true}
-		err := creds.RefreshAccessToken(context.Background())
+		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
 		require.NoError(t, err)
+		assert.False(t, tokenUpdated)
 	})
 
 	for name, test := range map[string]struct {
@@ -64,7 +67,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				TokenProvider: tokenProvider,
 				TokenParser:   tokenParser,
 			}
-			err := creds.RefreshAccessToken(context.Background())
+			_, err := creds.RefreshAccessToken(context.Background())
 			require.NoError(t, err)
 			expectedCalledTimes := 0
 			if test.TokenFetched {
@@ -96,8 +99,9 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			TokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		err := creds.RefreshAccessToken(context.Background())
+		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
 		require.NoError(t, err)
+		assert.True(t, tokenUpdated, "AccessToken must be updated")
 		assert.True(t, hookCalled, "PostRequestHook must be called")
 		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
 		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
@@ -184,19 +188,78 @@ func TestCredentials_setNewToken(t *testing.T) {
 	})
 }
 
+func TestCredentials_RoundTrip(t *testing.T) {
+	t.Run("wrap errors with NonRetryableError", func(t *testing.T) {
+		tokenProvider := &mockTokenProvider{err: errors.New("token fetching failed!")}
+		creds := &Credentials{
+			TokenProvider: tokenProvider,
+			TokenParser:   &mockTokenParser{},
+		}
+
+		req := &http.Request{}
+		_, err := creds.RoundTrip(req)
+		require.Error(t, err)
+		_, isNonRetryableError := err.(retryhttp.NonRetryableError)
+		assert.True(t, isNonRetryableError, "err is of type NonRetryableError")
+	})
+
+	t.Run("set auth header if not present", func(t *testing.T) {
+		creds := &Credentials{
+			AccessToken:   "my-token",
+			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
+			TokenProvider: &mockTokenProvider{},
+			TokenParser:   &mockTokenParser{},
+		}
+
+		req := &http.Request{}
+		_, _ = creds.RoundTrip(req)
+		require.Contains(t, req.Header, HeaderAuthorization)
+		assert.Equal(t, "Bearer my-token", req.Header.Get(HeaderAuthorization))
+	})
+
+	t.Run("update auth header if token was updated", func(t *testing.T) {
+		creds := &Credentials{
+			AccessToken:   "my-old-token",
+			claims:        jwt.MapClaims{"exp": float64(time.Now().Unix())}, // expired
+			TokenProvider: &mockTokenProvider{token: "my-new-token"},
+			TokenParser:   &mockTokenParser{},
+		}
+
+		req := &http.Request{Header: http.Header{HeaderAuthorization: []string{"Bearer my-old-token"}}}
+		_, _ = creds.RoundTrip(req)
+		require.Contains(t, req.Header, HeaderAuthorization)
+		assert.Equal(t, "Bearer my-new-token", req.Header.Get(HeaderAuthorization))
+	})
+
+	t.Run("don't update auth header if token was not updated", func(t *testing.T) {
+		creds := &Credentials{
+			AccessToken:   "my-old-token",
+			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())}, // not expired
+			TokenProvider: &mockTokenProvider{token: "my-new-token"},
+			TokenParser:   &mockTokenParser{},
+		}
+
+		req := &http.Request{Header: http.Header{HeaderAuthorization: []string{"Bearer my-old-token"}}}
+		_, _ = creds.RoundTrip(req)
+		require.Contains(t, req.Header, HeaderAuthorization)
+		assert.Equal(t, "Bearer my-old-token", req.Header.Get(HeaderAuthorization))
+	})
+}
+
 type mockTokenProvider struct {
 	calledTimes            int
 	calledWithClientID     string
 	calledWithClientSecret string
 
 	token string
+	err   error
 }
 
 func (m *mockTokenProvider) RequestAccessToken(_ context.Context, clientID, clientSecret string) (token string, err error) {
 	m.calledTimes++
 	m.calledWithClientID = clientID
 	m.calledWithClientSecret = clientSecret
-	return m.token, nil
+	return m.token, m.err
 }
 
 type mockTokenParser struct {

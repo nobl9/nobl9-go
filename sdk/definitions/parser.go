@@ -16,7 +16,7 @@ var (
 	errMalformedInput       = errors.New("malformed input")
 )
 
-// AnnotateObject injects to objects additional fields with values passed as map in parameter
+// AnnotateObject annotates an sdk.Object with additional fields.
 // If objects does not contain project - default value is added.
 func AnnotateObject(
 	object sdk.AnyJSONObj,

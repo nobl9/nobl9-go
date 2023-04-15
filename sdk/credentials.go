@@ -10,6 +10,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // AccessTokenParser parses and verifies fetched access token.
@@ -81,11 +83,16 @@ type Credentials struct {
 // by the predecessors of this one.
 var credentialsCleanHTTPClient = &http.Client{}
 
+// RoundTrip will wrap any errors returned from RefreshAccessToken
+// in retryhttp.NonRetryableError to ensure the request is not retried by the wrapping client.
 func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
-	if err := creds.RefreshAccessToken(req.Context()); err != nil {
-		return nil, err
+	tokenUpdated, err := creds.RefreshAccessToken(req.Context())
+	if err != nil {
+		return nil, retryhttp.NonRetryableError{Err: err}
 	}
-	creds.SetAuthorizationHeader(req)
+	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
+		creds.SetAuthorizationHeader(req)
+	}
 	return credentialsCleanHTTPClient.Do(req)
 }
 
@@ -117,19 +124,22 @@ func (creds *Credentials) SetAccessToken(token string) error {
 // RefreshAccessToken checks the AccessToken expiry with an offset to detect if the token
 // is soon to be expired. If so, it wll request a new token and update the Credentials state.
 // If the token was not yet set, it will request a new one all the same.
-func (creds *Credentials) RefreshAccessToken(ctx context.Context) error {
+func (creds *Credentials) RefreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if creds.offlineMode {
-		return nil
+		return
 	}
 	if !creds.shouldRefresh() {
-		return nil
+		return
 	}
 	creds.mu.Lock()
 	defer creds.mu.Unlock()
 	if !creds.shouldRefresh() {
-		return nil
+		return
 	}
-	return creds.requestNewToken(ctx)
+	if err = creds.requestNewToken(ctx); err == nil {
+		updated = true
+	}
+	return
 }
 
 // tokenExpiryOffset is added to the current time reading to make sure the token won't expiry before

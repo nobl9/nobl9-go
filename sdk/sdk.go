@@ -232,8 +232,7 @@ func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 		if c.apiURL != nil {
 			return
 		}
-		err = c.Credentials.RefreshAccessToken(ctx)
-		if err != nil {
+		if _, err = c.Credentials.RefreshAccessToken(ctx); err != nil {
 			return
 		}
 		c.setApiUrlFromM2MProfile()

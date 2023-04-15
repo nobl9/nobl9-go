@@ -21,6 +21,11 @@ var (
 	}
 )
 
+// NonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
+type NonRetryableError struct{ Err error }
+
+func (n NonRetryableError) Error() string { return n.Err.Error() }
+
 // NewClient returns http.Client with preconfigured retry feature.
 func NewClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
@@ -65,19 +70,21 @@ func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 			if _, isUnknownAuthorityError := v.Err.(x509.UnknownAuthorityError); isUnknownAuthorityError {
 				return false
 			}
+			// Don't retry if the error is not retryable.
+			// This error type is returned by from round trippers to inform the retryable client which calls them,
+			// that the error should be permanent.
+			if _, isNotRetryable := v.Err.(NonRetryableError); isNotRetryable {
+				return false
+			}
 		}
 		// The error is likely recoverable so retry.
 		return true
-	}
-	// Don't retry because user has to take action to resolve conflict first.
-	if resp.StatusCode == http.StatusConflict {
-		return false
 	}
 	// Unexpected errors, usually service is not available or overwhelmed in which case retry.
 	if resp.StatusCode == 0 || (resp.StatusCode >= 500 && resp.StatusCode != http.StatusNotImplemented) {
 		return true
 	}
-	// Otherwise don't retry by default.
+	// Otherwise don't retry by default. This involves user errors most of the time with 400+ status codes.
 	return false
 }
 
