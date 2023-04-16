@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb/v2/models"
-	pkgErrors "github.com/pkg/errors"
+	influx "github.com/influxdata/influxdb/v2/models"
+	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
@@ -350,6 +350,58 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 	return strings.Join(labels, ",")
 }
 
+// ApplyObjects applies (create or update) list of objects passed as argument via API.
+func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
+}
+
+// DeleteObjects deletes list of objects passed as argument via API.
+func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
+}
+
+// applyOrDeleteObjects applies or deletes list of objects
+// depending on apiMode parameter.
+func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(objects); err != nil {
+		return fmt.Errorf("cannot marshal: %w", err)
+	}
+
+	var method string
+	switch apiMode {
+	case apiApply:
+		method = http.MethodPut
+	case apiDelete:
+		method = http.MethodDelete
+	}
+	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
+	req, err := c.createRequest(ctx, method, apiMode, "", q, buf)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return fmt.Errorf("cannot perform a request to API: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	switch {
+	case resp.StatusCode == http.StatusOK:
+		return nil
+	case resp.StatusCode == http.StatusBadRequest,
+		resp.StatusCode == http.StatusConflict,
+		resp.StatusCode == http.StatusUnprocessableEntity,
+		resp.StatusCode == http.StatusForbidden:
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("%s", bytes.TrimSpace(body))
+	case resp.StatusCode >= http.StatusInternalServerError:
+		return getResponseServerError(resp)
+	default:
+		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
+	}
+}
+
 func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
 	req, err := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
 	if err != nil {
@@ -422,16 +474,6 @@ func (c *Client) DeleteObjectsByName(ctx context.Context, project string, object
 	}
 }
 
-// ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
-}
-
-// DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
-}
-
 // GetAgentCredentials gets agent credentials from Okta.
 func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName string) (creds M2MAppCredentials, err error) {
 	req, err := c.createRequest(
@@ -439,14 +481,14 @@ func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName st
 		http.MethodGet,
 		"/internal/agent/clientcreds",
 		project,
-		map[string][]string{"name": {agentsName}},
+		url.Values{QueryKeyName: {agentsName}},
 		nil)
 	if err != nil {
 		return creds, err
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return creds, pkgErrors.WithStack(err)
+		return creds, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
@@ -455,15 +497,16 @@ func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName st
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
-		return creds, pkgErrors.WithStack(err)
+		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
 }
 
-func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
-	const postChunkSize = 500
-	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postChunkSize {
-		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postChunkSize)))]
+const postMetricsChunkSize = 500
+
+func (c *Client) PostMetrics(ctx context.Context, points influx.Points) error {
+	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postMetricsChunkSize {
+		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postMetricsChunkSize)))]
 		var buf strings.Builder
 		for _, point := range chunk {
 			buf.WriteString(point.String() + "\n")
@@ -480,13 +523,13 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
 		}
 		response, err := c.HTTP.Do(req)
 		if err != nil {
-			return pkgErrors.Wrapf(
+			return errors.Wrapf(
 				err,
 				"Error making request to api. %d points got written successfully.",
 				chunkOffset)
 		}
 		if response.StatusCode != http.StatusOK {
-			err = pkgErrors.Errorf(
+			err = errors.Errorf(
 				"Received unexpected response from api %v. %d points got written successfully.",
 				getResponseFields(response),
 				chunkOffset)
@@ -497,48 +540,6 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points) error {
 		}
 	}
 	return nil
-}
-
-// applyOrDeleteObjects applies or deletes list of objects
-// depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
-	buf := &bytes.Buffer{}
-	if err := json.NewEncoder(buf).Encode(objects); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
-	}
-
-	var method string
-	switch apiMode {
-	case apiApply:
-		method = http.MethodPut
-	case apiDelete:
-		method = http.MethodDelete
-	}
-	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
-	req, err := c.createRequest(ctx, method, apiMode, "", q, nil)
-	if err != nil {
-		return err
-	}
-	resp, err := c.HTTP.Do(req)
-	if err != nil {
-		return fmt.Errorf("cannot perform a request to API: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		return nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusConflict,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
-	default:
-		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
-	}
 }
 
 func (c *Client) createRequest(
