@@ -37,10 +37,10 @@ func (b *ClientBuilder) WithCredentials(credentials *Credentials) *ClientBuilder
 	return b
 }
 
-// WithOfflineMode will turn the Client.Credentials into a noop.
-// If used in conjunction with WithCredentials or WithDefaultCredentials will render them useless.
-func (b *ClientBuilder) WithOfflineMode() *ClientBuilder {
-	b.offlineMode = true
+// WithOfflineMode if true will turn the Client.Credentials into a noop.
+// If true and used in conjunction with WithCredentials or WithDefaultCredentials will render them useless.
+func (b *ClientBuilder) WithOfflineMode(offlineMode bool) *ClientBuilder {
+	b.offlineMode = offlineMode
 	return b
 }
 
