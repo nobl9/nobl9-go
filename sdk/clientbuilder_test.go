@@ -69,9 +69,26 @@ func TestClientBuilder_WithCredentialsAndHTTPClient(t *testing.T) {
 
 func TestClientBuilder_WithOfflineMode(t *testing.T) {
 	client, err := NewClientBuilder("sloctl").
-		WithCredentials(&Credentials{}).
 		WithOfflineMode().
 		Build()
 	require.NoError(t, err)
-	assert.True(t, client.Credentials.offlineMode)
+	assert.Equal(t, &Credentials{offlineMode: true}, client.Credentials)
+
+	t.Run("WithCredentials", func(t *testing.T) {
+		client, err = NewClientBuilder("sloctl").
+			WithCredentials(&Credentials{ClientID: "123"}).
+			WithOfflineMode().
+			Build()
+		require.NoError(t, err)
+		assert.Equal(t, &Credentials{offlineMode: true}, client.Credentials)
+	})
+
+	t.Run("WithDefaultCredentials", func(t *testing.T) {
+		client, err = NewClientBuilder("sloctl").
+			WithDefaultCredentials("url", "server", "id", "secret").
+			WithOfflineMode().
+			Build()
+		require.NoError(t, err)
+		assert.Equal(t, &Credentials{offlineMode: true}, client.Credentials)
+	})
 }

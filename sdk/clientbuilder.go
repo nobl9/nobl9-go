@@ -38,6 +38,7 @@ func (b *ClientBuilder) WithCredentials(credentials *Credentials) *ClientBuilder
 }
 
 // WithOfflineMode will turn the Client.Credentials into a noop.
+// If used in conjunction with WithCredentials or WithDefaultCredentials will render them useless.
 func (b *ClientBuilder) WithOfflineMode() *ClientBuilder {
 	b.offlineMode = true
 	return b
@@ -77,7 +78,10 @@ func (b *ClientBuilder) WithApiURL(apiURL string) *ClientBuilder {
 
 // Build figures out which parts were supplied for ClientBuilder and sets the defaults for the Client it constructs.
 func (b *ClientBuilder) Build() (*Client, error) {
-	if b.credentials == nil {
+	if b.offlineMode {
+		b.credentials = &Credentials{}
+		b.credentials.offlineMode = true
+	} else if b.credentials == nil {
 		authServerURL, err := OktaAuthServer(b.oktaOrgURL, b.oktaAuthServer)
 		if err != nil {
 			return nil, err
@@ -86,9 +90,6 @@ func (b *ClientBuilder) Build() (*Client, error) {
 		if err != nil {
 			return nil, err
 		}
-	}
-	if b.offlineMode {
-		b.credentials.offlineMode = true
 	}
 	if b.http == nil {
 		if b.timeout == 0 {
