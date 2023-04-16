@@ -185,15 +185,6 @@ func DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent
 	}, nil
 }
 
-// Organization returns the organization set from the access token.
-// If you call it before the first request is executed it will be empty
-// as the token was not yet fetched.
-// To force it to be set earlier you could provide the access token
-// to Credentials or call Credentials.RefreshAccessToken.
-func (c *Client) Organization() string {
-	return c.Credentials.M2MProfile.Organization
-}
-
 // SetAccessToken provisions an initial token for the Client to use.
 // It should be used before executing the first request with the Client,
 // as the Client, before executing request, will fetch a new token if none was provided.
@@ -248,7 +239,7 @@ var urlScheme = "https"
 func (c *Client) setApiUrlFromM2MProfile() {
 	c.apiURL = &url.URL{
 		Scheme: urlScheme,
-		Host:   c.Credentials.M2MProfile.Environment,
+		Host:   c.Credentials.m2mProfile.Environment,
 		Path:   "api",
 	}
 }
@@ -556,7 +547,7 @@ func (c *Client) createRequest(
 		return nil, err
 	}
 	// Mandatory headers for all API requests.
-	req.Header.Set(HeaderOrganization, c.Credentials.M2MProfile.Organization)
+	req.Header.Set(HeaderOrganization, c.Credentials.GetOrganization())
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
 	// Optional headers.
 	if len(project) > 0 {

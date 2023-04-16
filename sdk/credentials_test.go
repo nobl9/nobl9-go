@@ -108,11 +108,12 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 		assert.Equal(t, "access-token", creds.AccessToken)
-		assert.Equal(t, AccessTokenM2MProfile{
+		assert.Equal(t, tokenTypeM2M, creds.tokenType)
+		assert.Equal(t, accessTokenM2MProfile{
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, creds.M2MProfile)
+		}, creds.m2mProfile)
 		assert.Equal(t, tokenParser.claims, creds.claims)
 	})
 }
@@ -134,15 +135,25 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	}
 	err := creds.SetAccessToken("access-token")
 	require.NoError(t, err)
+	assert.Equal(t, 1, tokenParser.calledTimes)
 	assert.Equal(t, "access-token", tokenParser.calledWithToken)
 	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 	assert.Equal(t, "access-token", creds.AccessToken)
-	assert.Equal(t, AccessTokenM2MProfile{
+	assert.Equal(t, tokenTypeM2M, creds.tokenType)
+	assert.Equal(t, accessTokenM2MProfile{
 		User:         "test@user.com",
 		Environment:  "app.nobl9.com",
 		Organization: "my-org",
-	}, creds.M2MProfile)
+	}, creds.m2mProfile)
 	assert.Equal(t, tokenParser.claims, creds.claims)
+
+	t.Run("offline mode", func(t *testing.T) {
+		creds.offlineMode = true
+		err = creds.SetAccessToken("new-access-token")
+		require.NoError(t, err)
+		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+	})
 }
 
 func TestCredentials_setNewToken(t *testing.T) {
@@ -183,7 +194,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 		require.Error(t, err)
 		assert.ErrorIs(t, err, hookErr)
 		assert.Empty(t, creds.AccessToken)
-		assert.Empty(t, creds.M2MProfile)
+		assert.Empty(t, creds.m2mProfile)
 		assert.Empty(t, creds.claims)
 	})
 }

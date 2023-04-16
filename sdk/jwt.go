@@ -24,17 +24,43 @@ const (
 	jwtAllowedClockSkewSeconds = 120
 	jwtKeysRequestTimeout      = 5 * time.Second
 
-	jwtTokenClaimProfile = "m2mProfile"
-	jwtTokenClaimCID     = "cid"
+	jwtTokenClaimM2MProfile   = "m2mProfile"
+	jwtTokenClaimAgentProfile = "agentProfile"
+	jwtTokenClaimCID          = "cid"
 )
 
 var errTokenParseMissingArguments = errors.New("token and/or client id missing in jwtParser.Parse call")
 
-// M2MProfileFromClaims returns AccessTokenM2MProfile object parsed from m2mProfile claim of provided token.
-func M2MProfileFromClaims(claims jwt.MapClaims) (AccessTokenM2MProfile, error) {
-	var accessKeyProfile AccessTokenM2MProfile
-	err := mapstructure.Decode(claims[jwtTokenClaimProfile], &accessKeyProfile)
-	return accessKeyProfile, err
+// tokenType describes what kind of token and specific claims do we expect.
+type tokenType int
+
+const (
+	tokenTypeM2M tokenType = iota + 1
+	tokenTypeAgent
+)
+
+func tokenTypeFromClaims(claims jwt.MapClaims) (typ tokenType) {
+	switch {
+	case claims[jwtTokenClaimM2MProfile] != "":
+		typ = tokenTypeM2M
+	case claims[jwtTokenClaimAgentProfile] != "":
+		typ = tokenTypeAgent
+	}
+	return
+}
+
+// m2mProfileFromClaims returns accessTokenM2MProfile object parsed from m2mProfile claim of provided token.
+func m2mProfileFromClaims(claims jwt.MapClaims) (accessTokenM2MProfile, error) {
+	var profile accessTokenM2MProfile
+	err := mapstructure.Decode(claims[jwtTokenClaimM2MProfile], &profile)
+	return profile, err
+}
+
+// agentProfileFromClaims returns accessTokenAgentProfile object parsed from agentProfile claim of provided token.
+func agentProfileFromClaims(claims jwt.MapClaims) (accessTokenAgentProfile, error) {
+	var profile accessTokenAgentProfile
+	err := mapstructure.Decode(claims[jwtTokenClaimAgentProfile], &profile)
+	return profile, err
 }
 
 type JWTParser struct {

@@ -28,11 +28,20 @@ type AccessTokenProvider interface {
 // It can be used, for example, to update persistent access token storage.
 type AccessTokenPostRequestHook = func(token string) error
 
-// AccessTokenM2MProfile stores information specific to an Okta application.
-type AccessTokenM2MProfile struct {
-	User         string `json:"user,omitempty"`
-	Organization string `json:"organization,omitempty"`
-	Environment  string `json:"environment,omitempty"`
+// accessTokenM2MProfile stores information specific to an Okta M2M application.
+type accessTokenM2MProfile struct {
+	User         string `json:"user"`
+	Organization string `json:"organization"`
+	Environment  string `json:"environment"`
+}
+
+// accessTokenAgentProfile stores information specific to an Okta Agent application.
+type accessTokenAgentProfile struct {
+	User         string `json:"user"`
+	Organization string `json:"organization"`
+	Environment  string `json:"environment"`
+	Name         string `json:"name"`
+	Project      string `json:"project"`
 }
 
 func DefaultCredentials(clientID, clientSecret string, authServerURL *url.URL) (*Credentials, error) {
@@ -61,9 +70,11 @@ type Credentials struct {
 	ClientSecret string
 
 	// Set after the token is fetched.
-	AccessToken string
-	M2MProfile  AccessTokenM2MProfile
-	claims      jwt.MapClaims
+	AccessToken  string
+	m2mProfile   accessTokenM2MProfile
+	agentProfile accessTokenAgentProfile
+	tokenType    tokenType
+	claims       jwt.MapClaims
 
 	HTTP *http.Client
 	// TokenParser is used to verify the token and its claims.
@@ -115,10 +126,40 @@ func (creds *Credentials) SetAuthorizationHeader(r *http.Request) {
 
 // SetAccessToken allows setting new access token without using TokenProvider.
 // The provided token will be still parsed using setNewToken function.
+// In offline mode this is a noop.
 func (creds *Credentials) SetAccessToken(token string) error {
+	if creds.offlineMode {
+		return nil
+	}
 	creds.mu.Lock()
 	defer creds.mu.Unlock()
 	return creds.setNewToken(token, false)
+}
+
+// GetOrganization returns the organization set from the access token.
+// If you call it before the first request is executed it will be empty
+// as the token was not yet fetched.
+// To force it to be set earlier you could provide the access token
+// to Credentials or call Credentials.RefreshAccessToken.
+func (creds *Credentials) GetOrganization() (org string) {
+	switch creds.tokenType {
+	case tokenTypeM2M:
+		org = creds.m2mProfile.Organization
+	case tokenTypeAgent:
+		org = creds.agentProfile.Organization
+	}
+	return
+}
+
+// SetOrganization will override the organization set in the access token profile.
+// Only useful for offline mode.
+func (creds *Credentials) SetOrganization(org string) {
+	switch creds.tokenType {
+	case tokenTypeM2M:
+		creds.m2mProfile.Organization = org
+	case tokenTypeAgent:
+		creds.agentProfile.Organization = org
+	}
 }
 
 // RefreshAccessToken checks the AccessToken expiry with an offset to detect if the token
@@ -162,15 +203,28 @@ func (creds *Credentials) requestNewToken(ctx context.Context) (err error) {
 
 // setNewToken parses and verifies the provided JWT using TokenParser.
 // It will then decode 'm2mProfile' from the extracted claims and set
-// the new values for M2MProfile, AccessToken and claims Credentials fields.
+// the new values for m2mProfile, AccessToken and claims Credentials fields.
 func (creds *Credentials) setNewToken(token string, withHook bool) error {
 	claims, err := creds.TokenParser.Parse(token, creds.ClientID)
 	if err != nil {
 		return err
 	}
-	m2mProfile, err := M2MProfileFromClaims(claims)
-	if err != nil {
-		return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
+	var (
+		m2mProfile   accessTokenM2MProfile
+		agentProfile accessTokenAgentProfile
+	)
+	tokenTyp := tokenTypeFromClaims(claims)
+	switch tokenTyp {
+	case tokenTypeM2M:
+		m2mProfile, err = m2mProfileFromClaims(claims)
+		if err != nil {
+			return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
+		}
+	case tokenTypeAgent:
+		agentProfile, err = agentProfileFromClaims(claims)
+		if err != nil {
+			return errors.Wrap(err, "failed to decode JWT claims to agent profile object")
+		}
 	}
 	if withHook && creds.PostRequestHook != nil {
 		if err = creds.PostRequestHook(token); err != nil {
@@ -178,7 +232,9 @@ func (creds *Credentials) setNewToken(token string, withHook bool) error {
 		}
 	}
 	// We can now update the token.
-	creds.M2MProfile = m2mProfile
+	creds.tokenType = tokenTyp
+	creds.m2mProfile = m2mProfile
+	creds.agentProfile = agentProfile
 	creds.AccessToken = token
 	creds.claims = claims
 	return nil
