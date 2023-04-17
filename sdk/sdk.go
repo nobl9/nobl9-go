@@ -235,11 +235,11 @@ func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 // While it's possible to run https test server, it is much easier to go without TLS.
 var urlScheme = "https"
 
-// setApiUrlFromM2MProfile sets Client.apiURL using environment from m2mProfile JWT claim.
+// setApiUrlFromM2MProfile sets Client.apiURL using environment from JWT claims.
 func (c *Client) setApiUrlFromM2MProfile() {
 	c.apiURL = &url.URL{
 		Scheme: urlScheme,
-		Host:   c.Credentials.m2mProfile.Environment,
+		Host:   c.Credentials.Environment,
 		Path:   "api",
 	}
 }
@@ -547,7 +547,7 @@ func (c *Client) createRequest(
 		return nil, err
 	}
 	// Mandatory headers for all API requests.
-	req.Header.Set(HeaderOrganization, c.Credentials.GetOrganization())
+	req.Header.Set(HeaderOrganization, c.Credentials.Organization)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
 	// Optional headers.
 	if len(project) > 0 {

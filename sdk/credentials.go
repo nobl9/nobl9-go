@@ -70,7 +70,15 @@ type Credentials struct {
 	ClientSecret string
 
 	// Set after the token is fetched.
-	AccessToken  string
+	AccessToken string
+	// Extracted from claims.
+	// Organization and Environment, if accessed before the first request
+	// is executed, will be empty as the token was not yet fetched.
+	// To force them to be set earlier you could provide the access token
+	// to Credentials or call Credentials.RefreshAccessToken manually.
+	Organization string
+	Environment  string
+	// Claims.
 	m2mProfile   accessTokenM2MProfile
 	agentProfile accessTokenAgentProfile
 	tokenType    tokenType
@@ -134,32 +142,6 @@ func (creds *Credentials) SetAccessToken(token string) error {
 	creds.mu.Lock()
 	defer creds.mu.Unlock()
 	return creds.setNewToken(token, false)
-}
-
-// GetOrganization returns the organization set from the access token.
-// If you call it before the first request is executed it will be empty
-// as the token was not yet fetched.
-// To force it to be set earlier you could provide the access token
-// to Credentials or call Credentials.RefreshAccessToken.
-func (creds *Credentials) GetOrganization() (org string) {
-	switch creds.tokenType {
-	case tokenTypeM2M:
-		org = creds.m2mProfile.Organization
-	case tokenTypeAgent:
-		org = creds.agentProfile.Organization
-	}
-	return
-}
-
-// SetOrganization will override the organization set in the access token profile.
-// Only useful for offline mode.
-func (creds *Credentials) SetOrganization(org string) {
-	switch creds.tokenType {
-	case tokenTypeM2M:
-		creds.m2mProfile.Organization = org
-	case tokenTypeAgent:
-		creds.agentProfile.Organization = org
-	}
 }
 
 // RefreshAccessToken checks the AccessToken expiry with an offset to detect if the token
@@ -231,11 +213,19 @@ func (creds *Credentials) setNewToken(token string, withHook bool) error {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
 	}
-	// We can now update the token.
+	// We can now update the token and it's claims.
+	creds.AccessToken = token
+	switch tokenTyp {
+	case tokenTypeM2M:
+		creds.Organization = m2mProfile.Organization
+		creds.Environment = m2mProfile.Environment
+	case tokenTypeAgent:
+		creds.Organization = agentProfile.Organization
+		creds.Environment = agentProfile.Environment
+	}
 	creds.tokenType = tokenTyp
 	creds.m2mProfile = m2mProfile
 	creds.agentProfile = agentProfile
-	creds.AccessToken = token
 	creds.claims = claims
 	return nil
 }

@@ -263,47 +263,55 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 }
 
 func TestM2MProfileFromClaims(t *testing.T) {
-	claims := jwt.MapClaims{
-		"agentProfile": "",
-		"m2mProfile": map[string]interface{}{
-			"user":         "test@nobl9.com",
-			"organization": "my-org",
-			"environment":  "dev.nobl9.com",
-		},
+	m2mProfile := map[string]interface{}{
+		"user":         "test@nobl9.com",
+		"organization": "my-org",
+		"environment":  "dev.nobl9.com",
 	}
-	assert.Equal(t, tokenTypeM2M, tokenTypeFromClaims(claims))
-	profile, err := m2mProfileFromClaims(claims)
-	require.NoError(t, err)
-	expected := accessTokenM2MProfile{
-		User:         "test@nobl9.com",
-		Organization: "my-org",
-		Environment:  "dev.nobl9.com",
+	for _, claims := range []jwt.MapClaims{
+		{},
+		{"agentProfile": nil},
+		{"agentProfile": ""},
+	} {
+		claims["m2mProfile"] = m2mProfile
+		assert.Equal(t, tokenTypeM2M, tokenTypeFromClaims(claims))
+		profile, err := m2mProfileFromClaims(claims)
+		require.NoError(t, err)
+		expected := accessTokenM2MProfile{
+			User:         "test@nobl9.com",
+			Organization: "my-org",
+			Environment:  "dev.nobl9.com",
+		}
+		assert.Equal(t, expected, profile)
 	}
-	assert.Equal(t, expected, profile)
 }
 
 func TestAgentProfileFromClaims(t *testing.T) {
-	claims := jwt.MapClaims{
-		"m2mProfile": "",
-		"agentProfile": map[string]interface{}{
-			"user":         "test@nobl9.com",
-			"organization": "my-org",
-			"environment":  "dev.nobl9.com",
-			"name":         "my-agent",
-			"project":      "default",
-		},
+	agentProfile := map[string]interface{}{
+		"user":         "test@nobl9.com",
+		"organization": "my-org",
+		"environment":  "dev.nobl9.com",
+		"name":         "my-agent",
+		"project":      "default",
 	}
-	assert.Equal(t, tokenTypeAgent, tokenTypeFromClaims(claims))
-	profile, err := agentProfileFromClaims(claims)
-	require.NoError(t, err)
-	expected := accessTokenAgentProfile{
-		User:         "test@nobl9.com",
-		Organization: "my-org",
-		Environment:  "dev.nobl9.com",
-		Name:         "my-agent",
-		Project:      "default",
+	for _, claims := range []jwt.MapClaims{
+		{},
+		{"m2mProfile": nil},
+		{"m2mProfile": ""},
+	} {
+		claims["agentProfile"] = agentProfile
+		assert.Equal(t, tokenTypeAgent, tokenTypeFromClaims(claims))
+		profile, err := agentProfileFromClaims(claims)
+		require.NoError(t, err)
+		expected := accessTokenAgentProfile{
+			User:         "test@nobl9.com",
+			Organization: "my-org",
+			Environment:  "dev.nobl9.com",
+			Name:         "my-agent",
+			Project:      "default",
+		}
+		assert.Equal(t, expected, profile)
 	}
-	assert.Equal(t, expected, profile)
 }
 
 func signToken(t *testing.T, jwtToken *jwt.Token) (token string, key *rsa.PrivateKey) {

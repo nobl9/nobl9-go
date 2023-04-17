@@ -78,7 +78,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		})
 	}
 
-	t.Run("golden path", func(t *testing.T) {
+	t.Run("golden path, m2m token", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{
 			token: "access-token",
 		}
@@ -108,12 +108,59 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, "app.nobl9.com", creds.Environment)
+		assert.Equal(t, "my-org", creds.Organization)
 		assert.Equal(t, tokenTypeM2M, creds.tokenType)
 		assert.Equal(t, accessTokenM2MProfile{
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
 		}, creds.m2mProfile)
+		assert.Equal(t, tokenParser.claims, creds.claims)
+	})
+
+	t.Run("golden path, agent token", func(t *testing.T) {
+		tokenProvider := &mockTokenProvider{
+			token: "access-token",
+		}
+		tokenParser := &mockTokenParser{
+			claims: jwt.MapClaims{
+				"agentProfile": map[string]interface{}{
+					"user":         "test@user.com",
+					"environment":  "app.nobl9.com",
+					"organization": "my-org",
+					"name":         "my-agent",
+					"project":      "default",
+				},
+			},
+		}
+		hookCalled := false
+		creds := &Credentials{
+			ClientID:        "client-id",
+			ClientSecret:    "my-secret",
+			TokenProvider:   tokenProvider,
+			TokenParser:     tokenParser,
+			PostRequestHook: func(token string) error { hookCalled = true; return nil },
+		}
+		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.True(t, tokenUpdated, "AccessToken must be updated")
+		assert.True(t, hookCalled, "PostRequestHook must be called")
+		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
+		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
+		assert.Equal(t, "access-token", tokenParser.calledWithToken)
+		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
+		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, "app.nobl9.com", creds.Environment)
+		assert.Equal(t, "my-org", creds.Organization)
+		assert.Equal(t, tokenTypeAgent, creds.tokenType)
+		assert.Equal(t, accessTokenAgentProfile{
+			User:         "test@user.com",
+			Environment:  "app.nobl9.com",
+			Organization: "my-org",
+			Name:         "my-agent",
+			Project:      "default",
+		}, creds.agentProfile)
 		assert.Equal(t, tokenParser.claims, creds.claims)
 	})
 }
@@ -139,6 +186,8 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	assert.Equal(t, "access-token", tokenParser.calledWithToken)
 	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 	assert.Equal(t, "access-token", creds.AccessToken)
+	assert.Equal(t, "app.nobl9.com", creds.Environment)
+	assert.Equal(t, "my-org", creds.Organization)
 	assert.Equal(t, tokenTypeM2M, creds.tokenType)
 	assert.Equal(t, accessTokenM2MProfile{
 		User:         "test@user.com",

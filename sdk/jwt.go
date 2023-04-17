@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"reflect"
 	"sync"
 	"time"
 
@@ -40,10 +41,17 @@ const (
 )
 
 func tokenTypeFromClaims(claims jwt.MapClaims) (typ tokenType) {
+	isZero := func(v interface{}) bool {
+		vo := reflect.ValueOf(v)
+		if !vo.IsValid() {
+			return true
+		}
+		return vo.IsZero()
+	}
 	switch {
-	case claims[jwtTokenClaimM2MProfile] != "":
+	case !isZero(claims[jwtTokenClaimM2MProfile]):
 		typ = tokenTypeM2M
-	case claims[jwtTokenClaimAgentProfile] != "":
+	case !isZero(claims[jwtTokenClaimAgentProfile]):
 		typ = tokenTypeAgent
 	}
 	return
