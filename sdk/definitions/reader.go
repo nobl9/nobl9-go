@@ -18,12 +18,6 @@ import (
 )
 
 type (
-	// Annotations defines a set of annotations appended to applied objects definitions.
-	Annotations struct {
-		Organization             string
-		Project                  string
-		ProjectOverwritesCfgFile bool
-	}
 	// RawSource may be interpreted as (with interpretation):
 	// - file path  (SourceTypeFile or SourceTypeDirectory)
 	// - glob pattern (SourceTypeGlobPattern)
@@ -43,7 +37,7 @@ type (
 )
 
 // Read resolves the RawSource(s) it receives and calls ReadSources on the resolved Source(s).
-func Read(ctx context.Context, annotations Annotations, rawSources ...RawSource) ([]sdk.AnyJSONObj, error) {
+func Read(ctx context.Context, annotations MetadataAnnotations, rawSources ...RawSource) ([]sdk.AnyJSONObj, error) {
 	sources, err := ResolveSources(rawSources...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve all raw sources")
@@ -61,7 +55,7 @@ func Read(ctx context.Context, annotations Annotations, rawSources ...RawSource)
 // type SourceTypeGlobPattern or SourceTypeDirectory and a file does not
 // contain the required APIVersionRegex, it is skipped. However in case
 // of SourceTypeFile, it will thrown ErrInvalidFile error.
-func ReadSources(ctx context.Context, annotations Annotations, sources ...*Source) ([]sdk.AnyJSONObj, error) {
+func ReadSources(ctx context.Context, annotations MetadataAnnotations, sources ...*Source) ([]sdk.AnyJSONObj, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})

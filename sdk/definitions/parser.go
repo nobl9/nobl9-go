@@ -16,54 +16,17 @@ var (
 	errMalformedInput       = errors.New("malformed input")
 )
 
-// AnnotateObject annotates an sdk.Object with additional fields.
-// If objects does not contain project - default value is added.
-func AnnotateObject(
-	object sdk.AnyJSONObj,
-	annotations map[string]string,
-	project string,
-	isProjectOverwritten bool,
-) (sdk.AnyJSONObj, error) {
-	for k, v := range annotations {
-		object[k] = v
-	}
-	m, ok := object["metadata"].(map[string]interface{})
-
-	switch {
-	case !ok:
-		return nil, fmt.Errorf("cannot retrieve metadata section")
-	// If project in YAML is empty - fill project
-	case m["project"] == nil:
-		m["project"] = project
-		object["metadata"] = m
-	// If value in YAML is not empty but is different from --project flag value.
-	case m["project"] != nil && m["project"] != project && isProjectOverwritten:
-		return nil, fmt.Errorf(
-			"the project from the provided object %s does not match "+
-				"the project %s. You must pass '--project=%s' to perform this operation",
-			m["project"],
-			project,
-			m["project"])
-	}
-	return object, nil
-}
-
 // processRawDefinitionsToJSONArray function converts raw definitions to JSON array.
-func processRawDefinitionsToJSONArray(a Annotations, rds rawDefinitions) ([]sdk.AnyJSONObj, error) {
+func processRawDefinitionsToJSONArray(a MetadataAnnotations, rds rawDefinitions) ([]sdk.AnyJSONObj, error) {
 	jsonArray := make([]sdk.AnyJSONObj, 0, len(rds))
 	for _, rd := range rds {
+		a.ManifestSource = rd.ResolvedSource
 		defsInJSON, err := decodeYAMLToJSON(rd.Definition)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
 		}
 		for _, defInJSON := range defsInJSON {
-			annotations := map[string]string{
-				"manifestSrc":  rd.ResolvedSource,
-				"organization": a.Organization,
-			}
-			// FIXME: sdk.Annotate adds Project to all objects, no matter the Kind, it should not do that
-			// for Project or RoleBinding (project agnostic objects), it should be fixed in the sdk.
-			annotated, err := AnnotateObject(defInJSON, annotations, a.Project, a.ProjectOverwritesCfgFile)
+			annotated, err := a.AnnotateObject(defInJSON)
 			if err != nil {
 				return nil, err
 			}

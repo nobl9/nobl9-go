@@ -99,7 +99,7 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader", func(t *testing.T) {
 		definitions, err := ReadSources(
 			context.Background(),
-			Annotations{Organization: "my-org"},
+			MetadataAnnotations{Organization: "my-org"},
 			NewInputSource(readTestFile(t, "service_and_agent.yaml"), "stdin"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: "stdin"})
@@ -108,7 +108,7 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader for empty source", func(t *testing.T) {
 		definitions, err := ReadSources(
 			context.Background(),
-			Annotations{Organization: "org"},
+			MetadataAnnotations{Organization: "org"},
 			NewInputSource(readTestFile(t, "service_and_agent.yaml"), "test"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
@@ -117,7 +117,7 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	})
 
 	t.Run("report an error when io.Reader is nil", func(t *testing.T) {
-		_, err := ReadSources(context.Background(), Annotations{}, NewInputSource(nil, "nil"))
+		_, err := ReadSources(context.Background(), MetadataAnnotations{}, NewInputSource(nil, "nil"))
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrIoReaderIsNil)
 	})
@@ -133,7 +133,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		defer srv.Close()
 		require.Regexp(t, "^http://", srv.URL)
 
-		definitions, err := Read(context.Background(), Annotations{Organization: "my-org"}, srv.URL)
+		definitions, err := Read(context.Background(), MetadataAnnotations{Organization: "my-org"}, srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "annotations", ManifestSrc: srv.URL})
 	})
@@ -148,7 +148,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
 		require.Regexp(t, "^https://", srv.URL)
 
-		definitions, err := Read(context.Background(), Annotations{Organization: "org"}, srv.URL)
+		definitions, err := Read(context.Background(), MetadataAnnotations{Organization: "org"}, srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
@@ -163,7 +163,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
 		defer srv.Close()
 
-		_, err := Read(context.Background(), Annotations{Organization: "my-org"}, srv.URL)
+		_, err := Read(context.Background(), MetadataAnnotations{Organization: "my-org"}, srv.URL)
 		require.Error(t, err)
 		assert.ErrorContains(t, err, fmt.Sprintf("GET %s response: 403 some error reason", srv.URL))
 	})
@@ -177,7 +177,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		var err error
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		_, err = Read(ctx, Annotations{Organization: "my-org"}, srv.URL)
+		_, err = Read(ctx, MetadataAnnotations{Organization: "my-org"}, srv.URL)
 
 		require.Error(t, err)
 		assert.ErrorIs(t, err, context.Canceled)
@@ -347,7 +347,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			definitions, err := Read(ctx, Annotations{Organization: organization}, test.Sources...)
+			definitions, err := Read(ctx, MetadataAnnotations{Organization: organization}, test.Sources...)
 			require.NoError(t, err)
 
 			definitionsMatchExpected(t, definitions, test.Expected...)
@@ -368,7 +368,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, err = Read(ctx, Annotations{Organization: organization}, test.Sources...)
+			_, err = Read(ctx, MetadataAnnotations{Organization: organization}, test.Sources...)
 			require.Error(t, err)
 			assert.ErrorIs(t, err, test.Expected)
 		})
