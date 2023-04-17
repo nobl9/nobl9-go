@@ -48,14 +48,11 @@ func decodeYAMLToJSON(content []byte) ([]sdk.AnyJSONObj, error) {
 			return nil, err
 		}
 		switch obj := rawData.(type) {
-		// Single N9 object.
 		case map[string]interface{}:
 			if len(obj) > 0 {
 				jsonArray = append(jsonArray, obj)
 			}
-		// Multiple N9 objects.
 		case []interface{}:
-			// Try parsing each to a single N9App object.
 			for _, def := range obj {
 				switch o := def.(type) {
 				case sdk.AnyJSONObj:
@@ -66,9 +63,7 @@ func decodeYAMLToJSON(content []byte) ([]sdk.AnyJSONObj, error) {
 					return nil, errMalformedInput
 				}
 			}
-		// Empty object.
 		case nil:
-		// Something unexpected.
 		default:
 			return nil, errMalformedInput
 		}
