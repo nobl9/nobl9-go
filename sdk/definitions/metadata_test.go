@@ -17,11 +17,11 @@ func TestMetadataAnnotations_AnnotateObject(t *testing.T) {
 			ManifestSource: "my-source",
 		}.AnnotateObject(sdk.AnyJSONObj{"metadata": map[string]interface{}{}})
 		require.NoError(t, err)
-		expected := sdk.AnyJSONObj{"metadata": map[string]interface{}{
+		expected := sdk.AnyJSONObj{
 			"organization": "my-org",
-			"project":      "default",
 			"manifestSrc":  "my-source",
-		}}
+			"metadata":     map[string]interface{}{"project": "default"},
+		}
 		assert.Equal(t, expected, result)
 	})
 
@@ -41,17 +41,17 @@ func TestMetadataAnnotations_AnnotateObject(t *testing.T) {
 			Organization:   "different-org",
 			Project:        "non-default",
 			ManifestSource: "other-source",
-		}.AnnotateObject(sdk.AnyJSONObj{"metadata": map[string]interface{}{
+		}.AnnotateObject(sdk.AnyJSONObj{
 			"organization": "my-org",
-			"project":      "default",
 			"manifestSrc":  "my-source",
-		}})
+			"metadata":     map[string]interface{}{"project": "default"},
+		})
 		require.NoError(t, err)
-		expected := sdk.AnyJSONObj{"metadata": map[string]interface{}{
-			"organization": "my-org",
-			"project":      "default",
+		expected := sdk.AnyJSONObj{
 			"manifestSrc":  "my-source",
-		}}
+			"organization": "my-org",
+			"metadata":     map[string]interface{}{"project": "default"},
+		}
 		assert.Equal(t, expected, result)
 	})
 }
