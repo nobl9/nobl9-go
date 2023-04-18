@@ -213,3 +213,20 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 	}
 	return nil
 }
+
+// AnomalyConfig represents relationship between anomaly type and selected notification methods.
+type AnomalyConfig struct {
+	NoData *AnomalyConfigNoData `json:"noData" validate:"omitempty"`
+}
+
+// AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
+type AnomalyConfigNoData struct {
+	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods" validate:"required"`
+}
+
+// AnomalyConfigAlertMethod represents a single alert method used in AnomalyConfig
+// defined by name and project.
+type AnomalyConfigAlertMethod struct {
+	Name    string `json:"name" validate:"required,objectName" example:"slack-monitoring-channel"`
+	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
+}
