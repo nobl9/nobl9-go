@@ -75,6 +75,31 @@ func TestClient_GetObjects(t *testing.T) {
 	assert.Equal(t, responsePayload, objects)
 }
 
+func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
+	calledTimes := 0
+	client, srv := prepareTestClient(t, endpointConfig{
+		// Define endpoint response.
+		Path: "api/usrmgmt/groups",
+		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+			require.NoError(t, json.NewEncoder(w).Encode([]AnyJSONObj{}))
+		},
+		// Verify request parameters.
+		TestRequestFunc: func(t *testing.T, r *http.Request) {
+			calledTimes++
+		},
+	})
+
+	// Start and close the test server.
+	srv.Start()
+	defer srv.Close()
+
+	// Run the API method.
+	_, err := client.GetObjects(context.Background(), "", ObjectGroup, nil)
+	// Verify response handling.
+	require.NoError(t, err)
+	assert.Equal(t, 1, calledTimes)
+}
+
 func TestClient_ApplyObjects(t *testing.T) {
 	requestPayload := []AnyJSONObj{
 		{
