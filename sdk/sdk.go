@@ -107,6 +107,7 @@ const (
 	ObjectRoleBinding          Object = "RoleBinding"
 	ObjectSLOErrorBudgetStatus Object = "SLOErrorBudgetStatus"
 	ObjectAnnotation           Object = "Annotation"
+	ObjectGroup                Object = "Group"
 )
 
 var allObjects = []Object{
@@ -140,6 +141,7 @@ var objectNamesMap = map[string]Object{
 	"dataexport":   ObjectDataExport,
 	"rolebinding":  ObjectRoleBinding,
 	"annotation":   ObjectAnnotation,
+	"group":        ObjectGroup,
 }
 
 func ObjectName(apiObject string) Object {
@@ -249,6 +251,7 @@ const (
 	apiDelete    = "delete"
 	apiGet       = "get"
 	apiInputData = "input/data"
+	apiGetGroups = "/usrmgmt/groups"
 )
 
 // GetObjects returns array of supported type of Objects, when names are passed - query for these names
@@ -281,7 +284,7 @@ func (c *Client) GetObjectsWithParams(
 	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
-	req, err := c.createRequest(ctx, http.MethodGet, path.Join(apiGet, object.String()), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(object), project, q, nil)
 	if err != nil {
 		return response, err
 	}
@@ -324,6 +327,15 @@ func (c *Client) GetObjectsWithParams(
 		body, _ := io.ReadAll(resp.Body)
 		msg := strings.TrimSpace(string(body))
 		return response, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+	}
+}
+
+func (c *Client) resolveGetObjectEndpoint(o Object) string {
+	switch o {
+	case ObjectGroup:
+		return apiGetGroups
+	default:
+		return path.Join(apiGet, o.String())
 	}
 }
 

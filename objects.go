@@ -27,6 +27,7 @@ const (
 	KindAlertMethod = "AlertMethod"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
+	KindGroup       = "Group"
 	KindRoleBinding = "RoleBinding"
 )
 
@@ -43,6 +44,7 @@ type APIObjects struct {
 	DataExports   []DataExport
 	Projects      []Project
 	RoleBindings  []RoleBinding
+	Groups        []Group
 }
 
 type Payload struct {
@@ -131,6 +133,11 @@ type HistoricalDataRetrievalDuration struct {
 	Value json.Number `json:"value" example:"30"`
 }
 
+type QueryDelayDuration struct {
+	Unit  string      `json:"unit" example:"Minute"`
+	Value json.Number `json:"value" example:"1"`
+}
+
 // EnhanceError annotates error with path of manifest source, if it exists
 // it not returns the same error as passed as argument
 func EnhanceError(o ObjectGeneric, err error) error {
@@ -198,6 +205,12 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 			allErrors = append(allErrors, err.Error())
 		}
 		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
+	case KindGroup:
+		group, err := genericToGroup(o)
+		if err != nil {
+			allErrors = append(allErrors, err.Error())
+		}
+		parsedObjects.Groups = append(parsedObjects.Groups, group)
 	// catching invalid kinds of objects for this apiVersion
 	default:
 		err := UnsupportedKindErr(o)

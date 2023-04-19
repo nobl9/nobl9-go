@@ -425,7 +425,17 @@ func (c *Client) GetDirects(timestamp string, names ...string) ([]Direct, error)
 		return directs, err
 	}
 	return directs, nil
+}
 
+// GetAgents returns array of Agent, when names are passed - query for these names
+// otherwise returns list of all available objects.
+func (c *Client) GetAgents(timestamp string, names ...string) ([]Agent, error) {
+	var agents []Agent
+	err := c.getObjects(ObjectAgent, &agents, timestamp, names)
+	if err != nil {
+		return agents, err
+	}
+	return agents, nil
 }
 
 func (c *Client) getObjects(object Object, objects interface{}, timestamp string, names []string) error {
