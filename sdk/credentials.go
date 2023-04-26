@@ -114,7 +114,6 @@ func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
 		creds.SetAuthorizationHeader(req)
 	}
-	req.Header.Set(HeaderOrganization, creds.Organization)
 	return credentialsCleanHTTPClient.Do(req)
 }
 
