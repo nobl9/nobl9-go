@@ -226,11 +226,10 @@ func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 			return
 		}
 		// The only use case for API URL override are debugging/dev needs.
-		if c.apiURL != nil {
-			return
-		}
 		// Only set the API URL if it was not overridden.
-		c.setApiUrlFromM2MProfile()
+		if c.apiURL == nil {
+			c.setApiUrlFromM2MProfile()
+		}
 	})
 	return err
 }
