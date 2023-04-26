@@ -102,7 +102,9 @@ type Credentials struct {
 // by the predecessors of this one.
 var credentialsCleanHTTPClient = &http.Client{}
 
-// RoundTrip will wrap any errors returned from RefreshAccessToken
+// RoundTrip is responsible for making sure the access token is set and also update it
+// if the expiry is imminent. It also sets the HeaderOrganization.
+// It will wrap any errors returned from RefreshAccessToken
 // in retryhttp.NonRetryableError to ensure the request is not retried by the wrapping client.
 func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := creds.RefreshAccessToken(req.Context())

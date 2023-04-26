@@ -222,13 +222,14 @@ func (c *Client) GetApiURL() url.URL {
 // extract the URL from the token.
 func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 	c.once.Do(func() {
-		if c.apiURL != nil {
-			return
-		}
 		if _, err = c.Credentials.RefreshAccessToken(ctx); err != nil {
 			return
 		}
-		c.setApiUrlFromM2MProfile()
+		// The only use case for API URL override are debugging/dev needs.
+		// Only set the API URL if it was not overridden.
+		if c.apiURL == nil {
+			c.setApiUrlFromM2MProfile()
+		}
 	})
 	return err
 }
