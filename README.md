@@ -40,7 +40,7 @@ func main() {
     c, _ := nobl9.NewClient("https://main.nobl9.dev/api",
         "nobl9-dev", "test", "nobl9-go",
         "[CLIENT_ID]", "CLIENT_SECRET",
-        "https://accounts.nobl9.dev", "ausdcmej8i7EvpOTY4x6")   
+        "https://accounts.nobl9.dev", "auseg9kiegWKEtJZC416")   
 
     err := c.ApplyObjects(p.GetObjects())
     fmt.Println(err)

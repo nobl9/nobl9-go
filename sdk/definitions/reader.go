@@ -101,7 +101,6 @@ var (
 		APIVersionRegex)
 	ErrInvalidSourceType = errors.New("invalid SourceType provided")
 
-	// nolint: gochecknoglobals
 	matchingRulesDisclaimer = fmt.Sprintf(
 		"valid resource definition file must have one of the extensions: [%s]",
 		strings.Join(supportedFileExtensions, ","))
@@ -127,8 +126,6 @@ func readFromReader(in io.Reader) ([]byte, error) {
 // HTTP clients should be reused whenever possible as they cache TCP connections, they are also
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.
-//
-// nolint: gochecknoglobals
 var httpClientFactory = func(url string) *http.Client {
 	return retryhttp.NewClient(sdk.Timeout, nil)
 }

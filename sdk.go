@@ -136,7 +136,6 @@ func IsDNS1123Label(value string) []string {
 	//nolint:lll
 	const dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
 
-	//nolint:gochecknoglobals
 	dns1123LabelRegexp := regexp.MustCompile("^" + dns1123LabelFmt + "$")
 	var errs []string
 	if len(value) > dNS1123LabelMaxLength {

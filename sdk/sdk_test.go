@@ -322,7 +322,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	t.Helper()
 	urlScheme = "http"
 	const (
-		oktaAuthServer = "ausdh151kj9OOWv5x191"
+		oktaAuthServer = "auseg9kiegWKEtJZC416"
 		kid            = "my-kid"
 		clientID       = "client-id"
 		clientSecret   = "super-secret"

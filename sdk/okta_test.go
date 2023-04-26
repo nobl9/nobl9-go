@@ -51,7 +51,7 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 	defer srv.Close()
 	okta := OktaClient{HTTP: new(http.Client), requestTokenEndpoint: srv.URL}
 
-	t.Run("return error for invalid satus codes", func(t *testing.T) {
+	t.Run("return error for invalid status codes", func(t *testing.T) {
 		for _, respondWithStatusCode = range []int{401, 409, 500, 300} {
 			_, err := okta.RequestAccessToken(context.Background(), "123", "secret")
 			require.Error(t, err)

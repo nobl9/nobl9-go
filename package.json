@@ -1,0 +1,10 @@
+{
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "cspell": "6.31.1",
+    "license-checker": "25.0.1",
+    "markdownlint-cli": "0.33.0"
+  },
+  "packageManager": "yarn@3.4.1"
+}
