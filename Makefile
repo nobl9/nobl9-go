@@ -2,8 +2,8 @@
 test:
 	@go test -race -cover $(shell go list ./... | grep -v -E '')
 
-.PHONY: check check/lint check/gosec check/spell check/trailing
-check: check/lint check/gosec check/spell check/trailing
+.PHONY: check check/lint check/gosec check/spell check/trailing check/markdown check/install
+check: check/lint check/gosec check/spell check/trailing check/markdown
 
 check/lint:
 	@echo "Running golangci-lint..."
@@ -11,7 +11,7 @@ check/lint:
 
 check/gosec:
 	@echo "Running gosec..."
-	@gosec -quiet -exclude-generated ./...
+	@gosec -exclude-generated ./...
 
 check/spell:
 	@echo "Verifying spelling..."
@@ -20,3 +20,7 @@ check/spell:
 check/trailing:
 	@echo "Looking for trailing whitespaces..."
 	@yarn check-trailing-whitespaces
+
+check/markdown:
+	@echo "Verifying Mardown files..."
+	@yarn markdownlint '*.md'
