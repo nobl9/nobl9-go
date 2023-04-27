@@ -8,9 +8,9 @@ on:
       - main
 permissions:
   security-events: write
-  actions: read
+  contents: read
 jobs:
-  check:
+  scan:
     name: Run Golang vulnerability check
     runs-on: ubuntu-latest
     steps:
