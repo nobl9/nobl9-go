@@ -38,8 +38,6 @@ jobs:
           make check/spell check/trailing check/markdown
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
-        with:
-          args: ./...ake run/checks/spell-and-markdown
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
