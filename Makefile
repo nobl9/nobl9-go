@@ -23,4 +23,4 @@ check/trailing:
 
 check/markdown:
 	@echo "Verifying Mardown files..."
-	@yarn markdownlint '*.md'
+	@yarn markdownlint '*.md' --disable MD010 # MD010 does not handle code blocks well.
