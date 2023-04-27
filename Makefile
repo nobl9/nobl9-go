@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	@go test -race -cover $(shell go list ./... | grep -v -E '')
+	@go test -race -cover ./...
 
 .PHONY: check check/lint check/gosec check/spell check/trailing check/markdown check/install
 check: check/lint check/gosec check/spell check/trailing check/markdown
