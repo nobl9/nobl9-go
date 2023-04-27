@@ -2,8 +2,7 @@
   "apiVersion": "n9/v1alpha",
   "kind": "Project",
   "metadata": {
-    "name": "json-project",
-    "project": ""
+    "name": "json-project"
   },
   "spec": {
     "description": ""
