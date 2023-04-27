@@ -2,8 +2,8 @@
 test:
 	@go test -race -cover ./...
 
-.PHONY: check check/lint check/gosec check/spell check/trailing check/markdown check/install
-check: check/lint check/gosec check/spell check/trailing check/markdown
+.PHONY: check check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+check: check/lint check/gosec check/spell check/trailing check/markdown check/vulns
 
 check/lint:
 	@echo "Running golangci-lint..."
@@ -24,3 +24,7 @@ check/trailing:
 check/markdown:
 	@echo "Verifying Mardown files..."
 	@yarn markdownlint '*.md' --disable MD010 # MD010 does not handle code blocks well.
+
+check/vulns:
+	@echo "Running govulncheck..."
+	@govulncheck ./...

@@ -1,0 +1,24 @@
+name: checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions:
+  security-events: write
+jobs:
+  check:
+    name: Run Golang vulnerability check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Golang Vulncheck
+        uses: Templum/govulncheck-action@v0.10.1
+        with:
+          go-version: 1.19
+          vulncheck-version: v0.1.0
+          package: ./...
+          fail-on-vuln: false
