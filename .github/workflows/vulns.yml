@@ -6,8 +6,6 @@ on:
   pull_request:
     branches:
       - main
-permissions:
-  security-events: write
 jobs:
   check:
     name: Run Golang vulnerability check
