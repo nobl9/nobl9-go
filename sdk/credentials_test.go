@@ -248,6 +248,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 	})
 }
 
+// nolint: bodyclose
 func TestCredentials_RoundTrip(t *testing.T) {
 	t.Run("wrap errors with NonRetryableError", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{err: errors.New("token fetching failed!")}
@@ -315,7 +316,10 @@ type mockTokenProvider struct {
 	err   error
 }
 
-func (m *mockTokenProvider) RequestAccessToken(_ context.Context, clientID, clientSecret string) (token string, err error) {
+func (m *mockTokenProvider) RequestAccessToken(
+	_ context.Context,
+	clientID, clientSecret string,
+) (token string, err error) {
 	m.calledTimes++
 	m.calledWithClientID = clientID
 	m.calledWithClientSecret = clientSecret
