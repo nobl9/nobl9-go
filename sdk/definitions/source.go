@@ -81,7 +81,6 @@ func (s Source) String() string {
 	return fmt.Sprintf("{SourceType: %s, Raw: %s}", s.Type, s.Raw)
 }
 
-// nolint: gochecknoglobals
 var supportedFileExtensions = []string{".yaml", ".yml", ".json"}
 
 // GetSupportedFileExtensions returns the file extensions which are used to filter out files to be processed.

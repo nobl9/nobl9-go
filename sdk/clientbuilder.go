@@ -46,7 +46,10 @@ func (b *ClientBuilder) WithOfflineMode() *ClientBuilder {
 
 // WithDefaultCredentials instructs the ClientBuilder to supply a default Credentials instance.
 // It is recommended for most use cases over WithCredentials.
-func (b *ClientBuilder) WithDefaultCredentials(oktaOrgURL, oktaAuthServer, clientID, clientSecret string) *ClientBuilder {
+func (b *ClientBuilder) WithDefaultCredentials(
+	oktaOrgURL, oktaAuthServer,
+	clientID, clientSecret string,
+) *ClientBuilder {
 	b.oktaOrgURL = oktaOrgURL
 	b.oktaAuthServer = oktaAuthServer
 	b.clientID = clientID

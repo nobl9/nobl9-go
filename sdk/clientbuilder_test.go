@@ -23,7 +23,9 @@ func TestClientBuilder_WithDefaults(t *testing.T) {
 	require.NotEmpty(t, client.Credentials)
 	assert.Equal(t, "client-id", client.Credentials.ClientID)
 	assert.Equal(t, "client-secret", client.Credentials.ClientSecret)
-	assert.Equal(t, OktaTokenEndpoint(expectedAuthServer).String(), client.Credentials.TokenProvider.(*OktaClient).requestTokenEndpoint)
+	assert.Equal(t,
+		OktaTokenEndpoint(expectedAuthServer).String(),
+		client.Credentials.TokenProvider.(*OktaClient).requestTokenEndpoint)
 	assert.Equal(t, Timeout, client.HTTP.Transport.(*retryablehttp.RoundTripper).Client.HTTPClient.Timeout)
 }
 

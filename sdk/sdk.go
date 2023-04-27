@@ -443,7 +443,13 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
-func (c *Client) DeleteObjectsByName(ctx context.Context, project string, object Object, dryRun bool, names ...string) error {
+func (c *Client) DeleteObjectsByName(
+	ctx context.Context,
+	project string,
+	object Object,
+	dryRun bool,
+	names ...string,
+) error {
 	q := url.Values{
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
@@ -479,7 +485,10 @@ func (c *Client) DeleteObjectsByName(ctx context.Context, project string, object
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
-func (c *Client) GetAgentCredentials(ctx context.Context, project, agentsName string) (creds M2MAppCredentials, err error) {
+func (c *Client) GetAgentCredentials(
+	ctx context.Context,
+	project, agentsName string,
+) (creds M2MAppCredentials, err error) {
 	req, err := c.createRequest(
 		ctx,
 		http.MethodGet,

@@ -1,0 +1,33 @@
+name: checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+permissions:
+  security-events: write
+  contents: read
+jobs:
+  scan:
+    name: Run Golang vulnerability check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Golang Vulncheck
+        uses: Templum/govulncheck-action@v0.10.1
+        with:
+          go-version: 1.19
+          vulncheck-version: v0.1.0
+          package: ./...
+          fail-on-vuln: false
+      # When the SDK becomes public, we'll want to enable the free upload.
+      # The artifact upload below should be removed then too.
+          skip-upload: true
+      - name: Upload Sarif Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: sarif-report
+          path: govulncheck-report.sarif

@@ -51,9 +51,6 @@ type Payload struct {
 	objects []AnyJSONObj
 }
 
-func Newpayload(org string) {
-}
-
 func (p *Payload) AddObject(in interface{}) {
 	p.objects = append(p.objects, toAnyJSONObj(in))
 }

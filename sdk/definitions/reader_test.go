@@ -168,7 +168,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		assert.ErrorContains(t, err, fmt.Sprintf("GET %s response: 403 some error reason", srv.URL))
 	})
 
-	t.Run("cancel request if context is cancelled", func(t *testing.T) {
+	t.Run("cancel request if context is canceled", func(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		}))
@@ -212,7 +212,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 			0o777))
 	}
 	// - Create symlink.
-	createSymlink := func(old, new string) { require.NoError(t, os.Symlink(old, new)) }
+	createSymlink := func(oldName, newName string) { require.NoError(t, os.Symlink(oldName, newName)) }
 
 	// The resulting structure (full names were truncated for readability):
 	//
