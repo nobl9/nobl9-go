@@ -1,6 +1,9 @@
 run:
   timeout: 5m
   modules-download-mode: readonly
+  skip-dirs-use-default: true
+  skip-files:
+    - old_sdk.go
 
 issues:
   # Enable all checks (which was as default disabled e.g. comments).
