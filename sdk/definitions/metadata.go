@@ -31,8 +31,17 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve metadata section")
 	}
-	if meta["project"] == nil && ma.Project != "" {
-		meta["project"] = ma.Project
+	kind, ok := object["kind"].(string)
+	if !ok {
+		return nil, fmt.Errorf("cannot retrieve object kind")
+	}
+	switch sdk.Object(kind) {
+	case sdk.ObjectProject, sdk.ObjectRoleBinding, sdk.ObjectGroup:
+		// Do not append the project name.
+	default:
+		if meta["project"] == nil && ma.Project != "" {
+			meta["project"] = ma.Project
+		}
 	}
 	return object, nil
 }

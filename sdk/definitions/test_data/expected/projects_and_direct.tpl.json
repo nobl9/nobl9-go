@@ -25,8 +25,7 @@
     "apiVersion": "n9/v1alpha",
     "kind": "Project",
     "metadata": {
-      "name": "default",
-      "project": ""
+      "name": "default"
     },
     "spec": {
       "description": ""
@@ -38,8 +37,7 @@
     "apiVersion": "n9/v1alpha",
     "kind": "Project",
     "metadata": {
-      "name": "non-default",
-      "project": ""
+      "name": "non-default"
     },
     "spec": {
       "description": ""
