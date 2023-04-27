@@ -51,6 +51,8 @@
     "msgf",
     "println",
     "promql",
-    "bmatcuk"
+    "bmatcuk",
+    "vulns",
+    "govulncheck"
   ]
 }
