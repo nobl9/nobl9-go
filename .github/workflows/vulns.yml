@@ -23,4 +23,11 @@ jobs:
           vulncheck-version: v0.1.0
           package: ./...
           fail-on-vuln: false
-          skip-upload: true # When the SDK becomes public, we'll want to enable the free upload.
+      # When the SDK becomes public, we'll want to enable the free upload.
+      # The artifact upload below should be removed then too.
+          skip-upload: true
+      - name: Upload Sarif Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: sarif-report
+          path: govulncheck-report.sarif
