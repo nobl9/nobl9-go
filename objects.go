@@ -27,6 +27,7 @@ const (
 	KindAlertMethod = "AlertMethod"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
+	KindGroup       = "Group"
 	KindRoleBinding = "RoleBinding"
 )
 
@@ -43,13 +44,11 @@ type APIObjects struct {
 	DataExports   []DataExport
 	Projects      []Project
 	RoleBindings  []RoleBinding
+	Groups        []Group
 }
 
 type Payload struct {
 	objects []AnyJSONObj
-}
-
-func Newpayload(org string) {
 }
 
 func (p *Payload) AddObject(in interface{}) {
@@ -131,6 +130,11 @@ type HistoricalDataRetrievalDuration struct {
 	Value json.Number `json:"value" example:"30"`
 }
 
+type QueryDelayDuration struct {
+	Unit  string      `json:"unit" example:"Minute"`
+	Value json.Number `json:"value" example:"1"`
+}
+
 // EnhanceError annotates error with path of manifest source, if it exists
 // it not returns the same error as passed as argument
 func EnhanceError(o ObjectGeneric, err error) error {
@@ -198,6 +202,12 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 			allErrors = append(allErrors, err.Error())
 		}
 		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
+	case KindGroup:
+		group, err := genericToGroup(o)
+		if err != nil {
+			allErrors = append(allErrors, err.Error())
+		}
+		parsedObjects.Groups = append(parsedObjects.Groups, group)
 	// catching invalid kinds of objects for this apiVersion
 	default:
 		err := UnsupportedKindErr(o)
@@ -207,4 +217,21 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 		return errors.New(strings.Join(allErrors, "\n"))
 	}
 	return nil
+}
+
+// AnomalyConfig represents relationship between anomaly type and selected notification methods.
+type AnomalyConfig struct {
+	NoData *AnomalyConfigNoData `json:"noData" validate:"omitempty"`
+}
+
+// AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
+type AnomalyConfigNoData struct {
+	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods" validate:"required"`
+}
+
+// AnomalyConfigAlertMethod represents a single alert method used in AnomalyConfig
+// defined by name and project.
+type AnomalyConfigAlertMethod struct {
+	Name    string `json:"name" validate:"required,objectName" example:"slack-monitoring-channel"`
+	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
 }

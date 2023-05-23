@@ -10,13 +10,16 @@ import (
 	"math"
 	"net/http"
 	"net/url"
-	"regexp"
+	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/influxdata/influxdb/v2/models"
-	pkgErrors "github.com/pkg/errors"
+	influx "github.com/influxdata/influxdb/v2/models"
+	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // Timeout use for every request
@@ -24,15 +27,20 @@ const (
 	Timeout = 10 * time.Second
 )
 
+// DefaultProject is a value of the default project.
+const DefaultProject = "default"
+
+// ProjectsWildcard is used in HeaderProject when requesting for all projects.
+const ProjectsWildcard = "*"
+
 // HTTP headers keys used across app
 const (
 	HeaderOrganization      = "organization"
 	HeaderProject           = "project"
 	HeaderAuthorization     = "Authorization"
 	HeaderUserAgent         = "User-Agent"
-	HeaderClientID          = "ClientID"
 	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
-	traceIDHeader           = "trace-id"
+	HeaderTraceID           = "trace-id"
 )
 
 // HTTP GET query keys used across app
@@ -64,9 +72,6 @@ type Response struct {
 	Objects      []AnyJSONObj
 	TruncatedMax int
 }
-
-// ProjectsWildcard is used in HeaderProject when requesting for all projects.
-const ProjectsWildcard = "*"
 
 // Object represents available objects in API to perform operations.
 type Object string
@@ -102,243 +107,205 @@ const (
 	ObjectRoleBinding          Object = "RoleBinding"
 	ObjectSLOErrorBudgetStatus Object = "SLOErrorBudgetStatus"
 	ObjectAnnotation           Object = "Annotation"
+	ObjectGroup                Object = "Group"
 )
 
-func getAllObjects() []Object {
-	return []Object{
-		ObjectSLO,
-		ObjectService,
-		ObjectAgent,
-		ObjectProject,
-		ObjectMetricSource,
-		ObjectAlertPolicy,
-		ObjectAlertSilence,
-		ObjectAlert,
-		ObjectAlertMethod,
-		ObjectDirect,
-		ObjectDataExport,
-		ObjectUsageSummary,
-		ObjectRoleBinding,
-		ObjectSLOErrorBudgetStatus,
-		ObjectAnnotation,
-	}
+var allObjects = []Object{
+	ObjectSLO,
+	ObjectService,
+	ObjectAgent,
+	ObjectProject,
+	ObjectMetricSource,
+	ObjectAlertPolicy,
+	ObjectAlertSilence,
+	ObjectAlert,
+	ObjectAlertMethod,
+	ObjectDirect,
+	ObjectDataExport,
+	ObjectUsageSummary,
+	ObjectRoleBinding,
+	ObjectSLOErrorBudgetStatus,
+	ObjectAnnotation,
+}
+
+var objectNamesMap = map[string]Object{
+	"slo":          ObjectSLO,
+	"service":      ObjectService,
+	"agent":        ObjectAgent,
+	"alertpolicy":  ObjectAlertPolicy,
+	"alertsilence": ObjectAlertSilence,
+	"alert":        ObjectAlert,
+	"project":      ObjectProject,
+	"alertmethod":  ObjectAlertMethod,
+	"direct":       ObjectDirect,
+	"dataexport":   ObjectDataExport,
+	"rolebinding":  ObjectRoleBinding,
+	"annotation":   ObjectAnnotation,
+	"group":        ObjectGroup,
 }
 
 func ObjectName(apiObject string) Object {
-	objects := map[string]Object{
-		"slo":          ObjectSLO,
-		"service":      ObjectService,
-		"agent":        ObjectAgent,
-		"alertpolicy":  ObjectAlertPolicy,
-		"alertsilence": ObjectAlertSilence,
-		"alert":        ObjectAlert,
-		"project":      ObjectProject,
-		"alertmethod":  ObjectAlertMethod,
-		"direct":       ObjectDirect,
-		"dataexport":   ObjectDataExport,
-		"rolebinding":  ObjectRoleBinding,
-		"annotation":   ObjectAnnotation,
-	}
-
-	return objects[apiObject]
+	return objectNamesMap[apiObject]
 }
 
 // IsObjectAvailable returns true if given object is available in SDK.
 func IsObjectAvailable(o Object) bool {
-	for _, availableObject := range getAllObjects() {
-		if strings.EqualFold(o.String(), availableObject.String()) {
+	for i := range allObjects {
+		if strings.EqualFold(o.String(), allObjects[i].String()) {
 			return true
 		}
 	}
 	return false
 }
 
-// Operation is an enum that represents an operation that can be done over an
-// object kind.
-type Operation int
-
-// Possible values of Operation.
-const (
-	Get Operation = iota + 1
-	TimeSeries
-	Reports
-)
-
-func getNamesToOperationsMap() map[string]Operation {
-	return map[string]Operation{
-		"get":        Get,
-		"timeseries": TimeSeries,
-		"reports":    Reports,
-	}
-}
-
-// ParseOperation return Operation matching given string.
-func ParseOperation(val string) (Operation, error) {
-	op, ok := getNamesToOperationsMap()[val]
-	if !ok {
-		return Operation(0), fmt.Errorf("'%s' is not a valid operation", val)
-	}
-	return op, nil
-}
-
-func (operation Operation) String() string {
-	for k, v := range getNamesToOperationsMap() {
-		if v == operation {
-			return k
-		}
-	}
-	return "UNKNOWN"
-}
-
-// DefaultProject is a value of the default project.
-const DefaultProject = "default"
-
 // AnyJSONObj can store a generic representation on any valid JSON.
 type AnyJSONObj = map[string]interface{}
 
 // Client represents API high level client.
 type Client struct {
-	c             http.Client
-	ingestURL     string
-	intakeURL     string
-	organization  string
-	project       string
-	authorization string
-	userAgent     string
+	HTTP        *http.Client
+	Credentials *Credentials
+	UserAgent   string
+	apiURL      *url.URL
+	once        sync.Once
 }
 
-// UserAgent returns users version.
-func (c *Client) UserAgent() string {
-	return c.userAgent
-}
-
-// Authorization returns authorization header value that is used in the requests.
-func (c *Client) Authorization() string {
-	return c.authorization
-}
-
-// SetAuth sets an authorization header which should used in future requests.
-func (c *Client) SetAuth(authorization string) {
-	c.authorization = authorization
-}
-
-// SetOrganization sets an organization which should used in future requests.
-func (c *Client) SetOrganization(organization string) {
-	c.organization = organization
-}
-
-// Organization gets an organization that will be used in future requests.
-func (c *Client) Organization() string {
-	return c.organization
-}
-
-func (c *Client) SetProject(project string) {
-	c.project = project
-}
-
-func (c *Client) Project() string {
-	return c.project
-}
-
-// NewClientWithTimeout returns fully configured instance of API high level client with timeout used for every request.
-func NewClientWithTimeout(
-	ingestURL, intakeURL, organization, project, userAgent string, client *http.Client,
-) (Client, error) {
-	_, err := url.ParseRequestURI(ingestURL)
+// DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
+func DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent string) (*Client, error) {
+	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
 	if err != nil {
-		return Client{}, fmt.Errorf("invalid url in configuration: %s", ingestURL)
+		return nil, err
 	}
-
-	if project != "*" && len(isDNS1123Label(project)) != 0 {
-		return Client{}, fmt.Errorf("invalid project name %s", project)
+	creds, err := DefaultCredentials(clientID, clientSecret, authServerURL)
+	if err != nil {
+		return nil, err
 	}
-
-	return Client{
-		c:            *client,
-		ingestURL:    ingestURL,
-		intakeURL:    intakeURL,
-		organization: organization,
-		project:      project,
-		userAgent:    userAgent,
+	return &Client{
+		HTTP:        retryhttp.NewClient(Timeout, creds),
+		Credentials: creds,
+		UserAgent:   userAgent,
 	}, nil
 }
 
-// NewClient returns fully configured instance of API high level client with default timeout.
-func NewClient(ingestURL, intakeURL, organization, project, userAgent string, client *http.Client) (Client, error) {
-	return NewClientWithTimeout(ingestURL, intakeURL, organization, project, userAgent, client)
+// SetAccessToken provisions an initial token for the Client to use.
+// It should be used before executing the first request with the Client,
+// as the Client, before executing request, will fetch a new token if none was provided.
+func (c *Client) SetAccessToken(token string) error {
+	if err := c.Credentials.SetAccessToken(token); err != nil {
+		return err
+	}
+	if c.apiURL == nil {
+		c.setApiUrlFromM2MProfile()
+	}
+	return nil
+}
+
+// SetApiURL allows to override the API URL otherwise inferred from access token.
+func (c *Client) SetApiURL(u string) error {
+	up, err := url.Parse(u)
+	if err != nil {
+		return err
+	}
+	c.apiURL = up
+	return nil
+}
+
+// GetApiURL retrieves the API URL of the configured Client instance.
+func (c *Client) GetApiURL() url.URL {
+	return *c.apiURL
+}
+
+// preRequestOnce runs exactly one time, before we execute the first request.
+// It first makes sure the token is up-to-date by calling Credentials.RefreshAccessToken.
+// We need to make sure the Client.apiURL is set, and it has to be done, before
+// any http.Request is constructed. If the API URL was set using SetApiURL we won't
+// extract the URL from the token.
+func (c *Client) preRequestOnce(ctx context.Context) (err error) {
+	c.once.Do(func() {
+		if _, err = c.Credentials.RefreshAccessToken(ctx); err != nil {
+			return
+		}
+		// The only use case for API URL override are debugging/dev needs.
+		// Only set the API URL if it was not overridden.
+		if c.apiURL == nil {
+			c.setApiUrlFromM2MProfile()
+		}
+	})
+	return err
+}
+
+// urlScheme is exported into var purely for testing purposes.
+// While it's possible to run https test server, it is much easier to go without TLS.
+var urlScheme = "https"
+
+// setApiUrlFromM2MProfile sets Client.apiURL using environment from JWT claims.
+func (c *Client) setApiUrlFromM2MProfile() {
+	c.apiURL = &url.URL{
+		Scheme: urlScheme,
+		Host:   c.Credentials.Environment,
+		Path:   "api",
+	}
 }
 
 const (
-	apiApply  = "apply"
-	apiDelete = "delete"
+	apiApply     = "apply"
+	apiDelete    = "delete"
+	apiGet       = "get"
+	apiInputData = "input/data"
+	apiGetGroups = "/usrmgmt/groups"
 )
 
-func getResponseServerError(resp *http.Response) error {
-	body, _ := io.ReadAll(resp.Body)
-	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
-	traceID := resp.Header.Get(traceIDHeader)
-	if traceID != "" {
-		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
-	}
-	return fmt.Errorf(msg)
-}
-
-// GetObject returns array of supported type of Objects, when names are passed - query for these names
+// GetObjects returns array of supported type of Objects, when names are passed - query for these names
 // otherwise returns list of all available objects.
-func (c *Client) GetObject(
+func (c *Client) GetObjects(
 	ctx context.Context,
+	project string,
 	object Object,
-	timestamp string,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
-	response, err := c.GetObjectWithParams(
-		ctx,
-		object,
-		map[string][]string{QueryKeyName: names},
-		map[string][]string{QueryKeyTime: {timestamp}},
-		map[string][]string{QueryKeyLabelsFilter: {c.prepareFilterLabelsString(filterLabel)}},
-	)
-	return response.Objects, err
+	q := url.Values{}
+	if len(names) > 0 {
+		q[QueryKeyName] = names
+	}
+	if len(filterLabel) > 0 {
+		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
+	}
+	response, err := c.GetObjectsWithParams(ctx, project, object, q)
+	if err != nil {
+		return nil, err
+	}
+	return response.Objects, nil
 }
 
-func (c *Client) GetObjectWithParams(
+func (c *Client) GetObjectsWithParams(
 	ctx context.Context,
+	project string,
 	object Object,
-	queryParams ...map[string][]string,
+	q url.Values,
 ) (response Response, err error) {
-	endpoint := "/get/" + object
-	response = Response{
-		TruncatedMax: -1,
+	response = Response{TruncatedMax: -1}
+	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(object), project, q, nil)
+	if err != nil {
+		return response, err
 	}
 
-	q := queries{}
-	for _, param := range queryParams {
-		for key, value := range param {
-			q[key] = value
-		}
-	}
-	req := c.createGetReq(ctx, c.ingestURL, endpoint, q)
-	resp, err := c.c.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return response, fmt.Errorf("cannot perform a request to API: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		content, err := decodeBody(resp.Body)
+		content, err := decodeJSONResponse(resp.Body)
 		if err != nil {
 			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
 		response.Objects = content
-
 		if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {
 			return response, nil
 		}
-
 		truncatedValue := resp.Header.Get(HeaderTruncatedLimitMax)
 		truncatedMax, err := strconv.Atoi(truncatedValue)
 		if err != nil {
@@ -364,6 +331,15 @@ func (c *Client) GetObjectWithParams(
 	}
 }
 
+func (c *Client) resolveGetObjectEndpoint(o Object) string {
+	switch o {
+	case ObjectGroup:
+		return apiGetGroups
+	default:
+		return path.Join(apiGet, o.String())
+	}
+}
+
 func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) string {
 	var labels []string
 	for key, values := range filterLabel {
@@ -378,20 +354,73 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 	return strings.Join(labels, ",")
 }
 
-func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
-	req := c.createGetReq(ctx, c.ingestURL, "/get/dataexport/aws-external-id", nil)
-	resp, err := c.c.Do(req)
+// ApplyObjects applies (create or update) list of objects passed as argument via API.
+func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
+}
+
+// DeleteObjects deletes list of objects passed as argument via API.
+func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
+}
+
+// applyOrDeleteObjects applies or deletes list of objects
+// depending on apiMode parameter.
+func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(objects); err != nil {
+		return fmt.Errorf("cannot marshal: %w", err)
+	}
+
+	var method string
+	switch apiMode {
+	case apiApply:
+		method = http.MethodPut
+	case apiDelete:
+		method = http.MethodDelete
+	}
+	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
+	req, err := c.createRequest(ctx, method, apiMode, "", q, buf)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return fmt.Errorf("cannot perform a request to API: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	switch {
+	case resp.StatusCode == http.StatusOK:
+		return nil
+	case resp.StatusCode == http.StatusBadRequest,
+		resp.StatusCode == http.StatusConflict,
+		resp.StatusCode == http.StatusUnprocessableEntity,
+		resp.StatusCode == http.StatusForbidden:
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("%s", bytes.TrimSpace(body))
+	case resp.StatusCode >= http.StatusInternalServerError:
+		return getResponseServerError(resp)
+	default:
+		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
+	}
+}
+
+func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
+	req, err := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("cannot perform a request to API: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
 		jsonMap := make(map[string]interface{})
-		if err := json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
+		if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
 			return "", fmt.Errorf("cannot decode response from API: %w", err)
 		}
 		const field = "awsExternalID"
@@ -414,15 +443,22 @@ func (c *Client) GetAWSExternalID(ctx context.Context) (string, error) {
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
-func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun bool, names ...string) error {
-	endpoint := "/delete/" + object
-	q := queries{
+func (c *Client) DeleteObjectsByName(
+	ctx context.Context,
+	project string,
+	object Object,
+	dryRun bool,
+	names ...string,
+) error {
+	q := url.Values{
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req := c.createDeleteReq(ctx, endpoint, q)
-
-	resp, err := c.c.Do(req)
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("cannot perform a request to API: %w", err)
 	}
@@ -448,26 +484,24 @@ func (c *Client) DeleteObjectsByName(ctx context.Context, object Object, dryRun 
 	}
 }
 
-// ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
-}
-
-// DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
-}
-
 // GetAgentCredentials gets agent credentials from Okta.
-func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (creds M2MAppCredentials, err error) {
-	req := c.createGetReq(
+func (c *Client) GetAgentCredentials(
+	ctx context.Context,
+	project, agentsName string,
+) (creds M2MAppCredentials, err error) {
+	req, err := c.createRequest(
 		ctx,
-		c.ingestURL,
+		http.MethodGet,
 		"/internal/agent/clientcreds",
-		map[string][]string{"name": {agentsName}})
-	resp, err := c.c.Do(req)
+		project,
+		url.Values{QueryKeyName: {agentsName}},
+		nil)
 	if err != nil {
-		return creds, pkgErrors.WithStack(err)
+		return creds, err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return creds, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
@@ -476,42 +510,39 @@ func (c *Client) GetAgentCredentials(ctx context.Context, agentsName string) (cr
 	}
 
 	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
-		return creds, pkgErrors.WithStack(err)
+		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
 }
 
-func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessToken string) error {
-	const postChunkSize = 500
-	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postChunkSize {
-		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postChunkSize)))]
+const postMetricsChunkSize = 500
+
+func (c *Client) PostMetrics(ctx context.Context, points influx.Points) error {
+	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postMetricsChunkSize {
+		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postMetricsChunkSize)))]
 		var buf strings.Builder
 		for _, point := range chunk {
 			buf.WriteString(point.String() + "\n")
 		}
-		request, err := http.NewRequestWithContext(
+		req, err := c.createRequest(
 			ctx,
 			http.MethodPost,
-			c.intakeURL+"/data",
-			strings.NewReader(buf.String()),
-		)
+			apiInputData,
+			"",
+			nil,
+			strings.NewReader(buf.String()))
 		if err != nil {
-			panic(err)
+			return err
 		}
-		request.Header.Set(HeaderOrganization, c.organization)
-		request.Header.Set(HeaderUserAgent, c.userAgent)
-		if c.authorization != "" {
-			request.Header.Set(HeaderAuthorization, accessToken)
-		}
-		response, err := c.c.Do(request)
+		response, err := c.HTTP.Do(req)
 		if err != nil {
-			return pkgErrors.Wrapf(
+			return errors.Wrapf(
 				err,
 				"Error making request to api. %d points got written successfully.",
 				chunkOffset)
 		}
 		if response.StatusCode != http.StatusOK {
-			err = pkgErrors.Errorf(
+			err = errors.Errorf(
 				"Received unexpected response from api %v. %d points got written successfully.",
 				getResponseFields(response),
 				chunkOffset)
@@ -524,181 +555,50 @@ func (c *Client) PostMetrics(ctx context.Context, points models.Points, accessTo
 	return nil
 }
 
-// applyOrDeleteObjects applies or deletes list of objects
-// depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
-	buf := &bytes.Buffer{}
-	if err := json.NewEncoder(buf).Encode(objects); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
+func (c *Client) createRequest(
+	ctx context.Context,
+	method, endpoint, project string,
+	q url.Values,
+	body io.Reader,
+) (*http.Request, error) {
+	if err := c.preRequestOnce(ctx); err != nil {
+		return nil, err
 	}
-
-	req, err := c.getRequestForAPIMode(ctx, apiMode, buf)
+	req, err := http.NewRequestWithContext(ctx, method, c.apiURL.JoinPath(endpoint).String(), body)
 	if err != nil {
-		return fmt.Errorf("cannot create a request: %w", err)
+		return nil, err
 	}
-
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
+	// Mandatory headers for all API requests.
+	req.Header.Set(HeaderOrganization, c.Credentials.Organization)
+	req.Header.Set(HeaderUserAgent, c.UserAgent)
+	// Optional headers.
+	if len(project) > 0 {
+		req.Header.Set(HeaderProject, project)
 	}
-	q := req.URL.Query()
-	q.Set(QueryKeyDryRun, strconv.FormatBool(dryRun))
+	// Add query parameters to request, to pass array, convention of repeated entries is used.
+	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	req.URL.RawQuery = q.Encode()
-
-	resp, err := c.c.Do(req)
-	if err != nil {
-		return fmt.Errorf("cannot perform a request to API: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		return nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusConflict,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
-	default:
-		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
-	}
+	return req, nil
 }
 
-func (c *Client) getRequestForAPIMode(ctx context.Context, apiMode string, buf io.Reader) (*http.Request, error) {
-	switch apiMode {
-	case apiApply:
-		return http.NewRequestWithContext(ctx, http.MethodPut, c.ingestURL+"/apply", buf)
-	case apiDelete:
-		return http.NewRequestWithContext(ctx, http.MethodDelete, c.ingestURL+"/delete", buf)
+func getResponseServerError(resp *http.Response) error {
+	body, _ := io.ReadAll(resp.Body)
+	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), bytes.TrimSpace(body))
+	traceID := resp.Header.Get(HeaderTraceID)
+	if traceID != "" {
+		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
 	}
-	return nil, fmt.Errorf("wrong request type, only %s and %s values are valid", apiApply, apiDelete)
+	return fmt.Errorf(msg)
 }
 
-func (c *Client) createGetReq(ctx context.Context, apiURL string, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, apiURL+endpoint.String(), nil)
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderProject, c.project)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
-	}
-
-	// add query parameters to request, to pass arrays convention of repeat entries is used
-	// for example /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3]
-	values := req.URL.Query()
-	for queryKey, queryValues := range q {
-		for _, v := range queryValues {
-			values.Add(queryKey, v)
-		}
-	}
-	req.URL.RawQuery = values.Encode()
-	return req.WithContext(ctx)
-}
-
-func (c *Client) createDeleteReq(ctx context.Context, endpoint Object, q queries) *http.Request {
-	req, _ := http.NewRequest(http.MethodDelete, c.ingestURL+endpoint.String(), nil)
-	req.Header.Set(HeaderOrganization, c.organization)
-	req.Header.Set(HeaderProject, c.project)
-	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if c.authorization != "" {
-		req.Header.Set(HeaderAuthorization, c.authorization)
-	}
-
-	// add query parameters to request, to pass arrays convention of repeat entries is used
-	// for example /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3]
-	values := req.URL.Query()
-	for queryKey, queryValues := range q {
-		for _, v := range queryValues {
-			values.Add(queryKey, v)
-		}
-	}
-	req.URL.RawQuery = values.Encode()
-	return req.WithContext(ctx)
-}
-
-// Annotate injects to objects additional fields with values passed as map in parameter
-// If objects does not contain project - default value is added.
-func Annotate(
-	object AnyJSONObj,
-	annotations map[string]string,
-	project string,
-	isProjectOverwritten bool,
-) (AnyJSONObj, error) {
-	for k, v := range annotations {
-		object[k] = v
-	}
-	m, ok := object["metadata"].(map[string]interface{})
-
-	switch {
-	case !ok:
-		return AnyJSONObj{}, fmt.Errorf("cannot retrieve metadata section")
-	// If project in YAML is empty - fill project
-	case m["project"] == nil:
-		m["project"] = project
-		object["metadata"] = m
-	// If value in YAML is not empty but is different than value from --project flag
-	case m["project"] != nil && m["project"] != project && isProjectOverwritten:
-		return AnyJSONObj{},
-			fmt.Errorf(
-				"the project from the provided object %s does not match "+
-					"the project %s. You must pass '--project=%s' to perform this operation",
-				m["project"],
-				project,
-				m["project"])
-	}
-	return object, nil
-}
-
-// decodeBody assumes that passed body is an array of JSON objects.
-func decodeBody(r io.Reader) ([]AnyJSONObj, error) {
+// decodeJSONResponse assumes that passed body is an array of JSON objects.
+func decodeJSONResponse(r io.Reader) ([]AnyJSONObj, error) {
 	dec := json.NewDecoder(r)
 	var parsed []AnyJSONObj
 	if err := dec.Decode(&parsed); err != nil {
 		return nil, err
 	}
 	return parsed, nil
-}
-
-type queries map[string][]string
-
-// isDNS1123Label tests for a string that conforms to the definition of a label in
-// DNS (RFC 1123).
-func isDNS1123Label(value string) []string {
-	// dNS1123LabelMaxLength is a label's max length in DNS (RFC 1123)
-	const dNS1123LabelMaxLength int = 63
-	const dns1123LabelFmt string = "[a-z0-9]([-a-z0-9]*[a-z0-9])?"
-
-	const dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
-
-	dns1123LabelRegexp := regexp.MustCompile("^" + dns1123LabelFmt + "$")
-	var errs []string
-	if len(value) > dNS1123LabelMaxLength {
-		errs = append(errs, fmt.Sprintf("must be no more than %d characters", dNS1123LabelMaxLength))
-	}
-	if !dns1123LabelRegexp.MatchString(value) {
-		errs = append(errs, regexError(dns1123LabelErrMsg, dns1123LabelFmt, "my-name", "123-abc"))
-	}
-	return errs
-}
-
-// regexError returns a string explanation of a regex validation failure.
-func regexError(msg, format string, examples ...string) string {
-	if len(examples) == 0 {
-		return msg + " (regex used for validation is '" + format + "')"
-	}
-	msg += " (e.g. "
-	for i := range examples {
-		if i > 0 {
-			msg += " or "
-		}
-		msg += "'" + examples[i] + "', "
-	}
-	msg += "regex used for validation is '" + format + "')"
-	return msg
 }
 
 // getResponseFields returns set of fields to use when logging an http response error.

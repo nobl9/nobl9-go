@@ -10,16 +10,17 @@ type SLO struct {
 
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
-	Description     string       `json:"description"`
-	Indicator       Indicator    `json:"indicator"`
-	BudgetingMethod string       `json:"budgetingMethod"`
-	Thresholds      []Threshold  `json:"objectives"`
-	Service         string       `json:"service"`
-	TimeWindows     []TimeWindow `json:"timeWindows"`
-	AlertPolicies   []string     `json:"alertPolicies"`
-	Attachments     []Attachment `json:"attachments,omitempty"`
-	CreatedAt       string       `json:"createdAt,omitempty"`
-	Composite       *Composite   `json:"composite,omitempty"`
+	Description     string         `json:"description"`
+	Indicator       Indicator      `json:"indicator"`
+	BudgetingMethod string         `json:"budgetingMethod"`
+	Thresholds      []Threshold    `json:"objectives"`
+	Service         string         `json:"service"`
+	TimeWindows     []TimeWindow   `json:"timeWindows"`
+	AlertPolicies   []string       `json:"alertPolicies"`
+	Attachments     []Attachment   `json:"attachments,omitempty"`
+	CreatedAt       string         `json:"createdAt,omitempty"`
+	Composite       *Composite     `json:"composite,omitempty"`
+	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty" validate:"omitempty"`
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
