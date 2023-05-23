@@ -18,7 +18,8 @@
     "**/go.mod",
     "**/go.sum",
     "**/node_modules/**",
-    "cspell.json"
+    "cspell.json",
+    "CODEOWNERS"
   ],
   "words": [
     "nobl",
