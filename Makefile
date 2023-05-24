@@ -2,8 +2,12 @@
 test:
 	@go test -race -cover ./...
 
-.PHONY: check check/lint check/gosec check/spell check/trailing check/markdown check/vulns
-check: check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+.PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+
+check/vet:
+	@echo "Running go vet..."
+	@go vet ./...
 
 check/lint:
 	@echo "Running golangci-lint..."
