@@ -10,5 +10,5 @@
   "scripts": {
     "check-trailing-whitespaces": "node .github/scripts/check-trailing-whitespaces.js"
   },
-  "packageManager": "yarn@3.4.1"
+  "packageManager": "yarn@3.5.1"
 }
