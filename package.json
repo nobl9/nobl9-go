@@ -5,10 +5,10 @@
   "devDependencies": {
     "cspell": "6.31.1",
     "license-checker": "25.0.1",
-    "markdownlint-cli": "0.33.0"
+    "markdownlint-cli": "0.34.0"
   },
   "scripts": {
     "check-trailing-whitespaces": "node .github/scripts/check-trailing-whitespaces.js"
   },
-  "packageManager": "yarn@3.4.1"
+  "packageManager": "yarn@3.5.1"
 }
