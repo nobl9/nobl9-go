@@ -36,6 +36,9 @@ jobs:
       - name: Run spell and markdown checkers
         run: |
           make check/spell check/trailing check/markdown
+      - name: Run go vet
+        run: |
+          make check/vet
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
       - name: Run golangci-lint
