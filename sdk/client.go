@@ -73,10 +73,10 @@ type Response struct {
 	TruncatedMax int
 }
 
-// Object represents available objects in API to perform operations.
-type Object string
+// Kind represents available objects in API to perform operations.
+type Kind string
 
-func (o Object) String() string {
+func (o Kind) String() string {
 	return strings.ToLower(string(o))
 }
 
@@ -86,72 +86,68 @@ type M2MAppCredentials struct {
 	ClientSecret string `json:"client_secret"`
 }
 
-// List of available objects in API.
+// List of available Kind in API.
 const (
-	ObjectSLO          Object = "SLO"
-	ObjectService      Object = "Service"
-	ObjectAgent        Object = "Agent"
-	ObjectAlertPolicy  Object = "AlertPolicy"
-	ObjectAlertSilence Object = "AlertSilence"
-	// ObjectAlert represents object used only to return list of Alerts. Applying and deleting alerts is disabled.
-	ObjectAlert Object = "Alert"
-	// ObjectProject represents object used only to return list of Projects.
-	// Applying and deleting projects is not supported.
-	ObjectProject     Object = "Project"
-	ObjectAlertMethod Object = "AlertMethod"
-	// ObjectMetricSource represents ephemeral object used only to return concatenated list of Agents and Directs.
-	ObjectMetricSource         Object = "MetricSource"
-	ObjectDirect               Object = "Direct"
-	ObjectDataExport           Object = "DataExport"
-	ObjectUsageSummary         Object = "UsageSummary"
-	ObjectRoleBinding          Object = "RoleBinding"
-	ObjectSLOErrorBudgetStatus Object = "SLOErrorBudgetStatus"
-	ObjectAnnotation           Object = "Annotation"
-	ObjectGroup                Object = "Group"
+	KindSLO                  Kind = "SLO"
+	KindService              Kind = "Service"
+	KindAgent                Kind = "Agent"
+	KindAlertPolicy          Kind = "AlertPolicy"
+	KindAlertSilence         Kind = "AlertSilence"
+	KindAlert                Kind = "Alert"
+	KindProject              Kind = "Project"
+	KindAlertMethod          Kind = "AlertMethod"
+	KindMetricSource         Kind = "MetricSource"
+	KindDirect               Kind = "Direct"
+	KindDataExport           Kind = "DataExport"
+	KindUsageSummary         Kind = "UsageSummary"
+	KindRoleBinding          Kind = "RoleBinding"
+	KindSLOErrorBudgetStatus Kind = "SLOErrorBudgetStatus"
+	KindAnnotation           Kind = "Annotation"
+	KindGroup                Kind = "Group"
 )
 
-var allObjects = []Object{
-	ObjectSLO,
-	ObjectService,
-	ObjectAgent,
-	ObjectProject,
-	ObjectMetricSource,
-	ObjectAlertPolicy,
-	ObjectAlertSilence,
-	ObjectAlert,
-	ObjectAlertMethod,
-	ObjectDirect,
-	ObjectDataExport,
-	ObjectUsageSummary,
-	ObjectRoleBinding,
-	ObjectSLOErrorBudgetStatus,
-	ObjectAnnotation,
+var allObjectKinds = []Kind{
+	KindSLO,
+	KindService,
+	KindAgent,
+	KindProject,
+	KindMetricSource,
+	KindAlertPolicy,
+	KindAlertSilence,
+	KindAlert,
+	KindAlertMethod,
+	KindDirect,
+	KindDataExport,
+	KindUsageSummary,
+	KindRoleBinding,
+	KindSLOErrorBudgetStatus,
+	KindAnnotation,
 }
 
-var objectNamesMap = map[string]Object{
-	"slo":          ObjectSLO,
-	"service":      ObjectService,
-	"agent":        ObjectAgent,
-	"alertpolicy":  ObjectAlertPolicy,
-	"alertsilence": ObjectAlertSilence,
-	"alert":        ObjectAlert,
-	"project":      ObjectProject,
-	"alertmethod":  ObjectAlertMethod,
-	"direct":       ObjectDirect,
-	"dataexport":   ObjectDataExport,
-	"rolebinding":  ObjectRoleBinding,
-	"annotation":   ObjectAnnotation,
-	"group":        ObjectGroup,
+var kindNamesMap = map[string]Kind{
+	"slo":          KindSLO,
+	"service":      KindService,
+	"agent":        KindAgent,
+	"alertpolicy":  KindAlertPolicy,
+	"alertsilence": KindAlertSilence,
+	"alert":        KindAlert,
+	"project":      KindProject,
+	"alertmethod":  KindAlertMethod,
+	"direct":       KindDirect,
+	"dataexport":   KindDataExport,
+	"rolebinding":  KindRoleBinding,
+	"annotation":   KindAnnotation,
+	"group":        KindGroup,
 }
 
-func ObjectName(apiObject string) Object {
-	return objectNamesMap[apiObject]
+func KindFromString(s string) Kind {
+	return kindNamesMap[s]
 }
 
-// IsObjectAvailable returns true if given object is available in SDK.
-func IsObjectAvailable(o Object) bool {
-	for i := range allObjects {
-		if strings.EqualFold(o.String(), allObjects[i].String()) {
+// IsValidKind returns true if given object Kind is available in the SDK.
+func IsValidKind(kind Kind) bool {
+	for i := range allObjectKinds {
+		if strings.EqualFold(kind.String(), allObjectKinds[i].String()) {
 			return true
 		}
 	}
@@ -260,7 +256,7 @@ const (
 func (c *Client) GetObjects(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
@@ -271,7 +267,7 @@ func (c *Client) GetObjects(
 	if len(filterLabel) > 0 {
 		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
 	}
-	response, err := c.GetObjectsWithParams(ctx, project, object, q)
+	response, err := c.GetObjectsWithParams(ctx, project, kind, q)
 	if err != nil {
 		return nil, err
 	}
@@ -281,11 +277,11 @@ func (c *Client) GetObjects(
 func (c *Client) GetObjectsWithParams(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
-	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(object), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(kind), project, q, nil)
 	if err != nil {
 		return response, err
 	}
@@ -331,9 +327,9 @@ func (c *Client) GetObjectsWithParams(
 	}
 }
 
-func (c *Client) resolveGetObjectEndpoint(o Object) string {
+func (c *Client) resolveGetObjectEndpoint(o Kind) string {
 	switch o {
-	case ObjectGroup:
+	case KindGroup:
 		return apiGetGroups
 	default:
 		return path.Join(apiGet, o.String())
@@ -446,7 +442,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 func (c *Client) DeleteObjectsByName(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	dryRun bool,
 	names ...string,
 ) error {
@@ -454,7 +450,7 @@ func (c *Client) DeleteObjectsByName(
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.String()), project, q, nil)
 	if err != nil {
 		return err
 	}

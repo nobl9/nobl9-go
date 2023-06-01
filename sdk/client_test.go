@@ -65,7 +65,7 @@ func TestClient_GetObjects(t *testing.T) {
 	objects, err := client.GetObjects(
 		context.Background(),
 		"non-default",
-		ObjectService,
+		KindService,
 		map[string][]string{"team": {"green", "purple"}},
 		"service1", "service2",
 	)
@@ -94,7 +94,7 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	_, err := client.GetObjects(context.Background(), "", ObjectGroup, nil)
+	_, err := client.GetObjects(context.Background(), "", KindGroup, nil)
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, 1, calledTimes)
@@ -201,7 +201,7 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	err := client.DeleteObjectsByName(
 		context.Background(),
 		"my-project",
-		ObjectService,
+		KindService,
 		true,
 		"service1",
 		"service2",
