@@ -76,8 +76,8 @@ type Response struct {
 // Kind represents available objects in API to perform operations.
 type Kind string
 
-func (o Kind) String() string {
-	return strings.ToLower(string(o))
+func (k Kind) String() string {
+	return strings.ToLower(string(k))
 }
 
 // M2MAppCredentials is used for storing client_id and client_secret.
@@ -327,12 +327,12 @@ func (c *Client) GetObjectsWithParams(
 	}
 }
 
-func (c *Client) resolveGetObjectEndpoint(o Kind) string {
-	switch o {
+func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
+	switch kind {
 	case KindGroup:
 		return apiGetGroups
 	default:
-		return path.Join(apiGet, o.String())
+		return path.Join(apiGet, kind.String())
 	}
 }
 
