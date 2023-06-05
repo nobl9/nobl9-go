@@ -554,16 +554,3 @@ func decodeJSONResponse(r io.Reader) ([]AnyJSONObj, error) {
 	}
 	return parsed, nil
 }
-
-// getResponseFields returns set of fields to use when logging an http response error.
-func getResponseFields(resp *http.Response) map[string]interface{} {
-	fields := map[string]interface{}{
-		"http.status_code": resp.StatusCode,
-	}
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fields
-	}
-	fields["resp"] = string(respBody)
-	return fields
-}
