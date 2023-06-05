@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"path"
@@ -16,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	influx "github.com/influxdata/influxdb/v2/models"
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
@@ -509,46 +507,6 @@ func (c *Client) GetAgentCredentials(
 		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
-}
-
-const postMetricsChunkSize = 500
-
-func (c *Client) PostMetrics(ctx context.Context, points influx.Points) error {
-	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postMetricsChunkSize {
-		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postMetricsChunkSize)))]
-		var buf strings.Builder
-		for _, point := range chunk {
-			buf.WriteString(point.String() + "\n")
-		}
-		req, err := c.createRequest(
-			ctx,
-			http.MethodPost,
-			apiInputData,
-			"",
-			nil,
-			strings.NewReader(buf.String()))
-		if err != nil {
-			return err
-		}
-		response, err := c.HTTP.Do(req)
-		if err != nil {
-			return errors.Wrapf(
-				err,
-				"Error making request to api. %d points got written successfully.",
-				chunkOffset)
-		}
-		if response.StatusCode != http.StatusOK {
-			err = errors.Errorf(
-				"Received unexpected response from api %v. %d points got written successfully.",
-				getResponseFields(response),
-				chunkOffset)
-		}
-		_ = response.Body.Close()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (c *Client) createRequest(
