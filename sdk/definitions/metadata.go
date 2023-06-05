@@ -16,7 +16,7 @@ type MetadataAnnotations struct {
 	ManifestSource string
 }
 
-// AnnotateObject annotates an sdk.Object with additional metadata.
+// AnnotateObject annotates an sdk.Kind with additional metadata.
 // If objects does not contain project - default value is added.
 // If value 'metadata.project' in the definition is different from
 // the Project provided in MetadataAnnotations, an error is returned.
@@ -35,8 +35,8 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve object kind")
 	}
-	switch sdk.Object(kind) {
-	case sdk.ObjectProject, sdk.ObjectRoleBinding, sdk.ObjectGroup:
+	switch sdk.Kind(kind) {
+	case sdk.KindProject, sdk.KindRoleBinding, sdk.KindGroup:
 		// Do not append the project name.
 	default:
 		if meta["project"] == nil && ma.Project != "" {
