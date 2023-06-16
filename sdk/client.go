@@ -255,7 +255,7 @@ func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
 	case KindGroup:
 		return apiGetGroups
 	default:
-		return path.Join(apiGet, kind.String())
+		return path.Join(apiGet, kind.ToLower())
 	}
 }
 
@@ -373,7 +373,7 @@ func (c *Client) DeleteObjectsByName(
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.String()), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.ToLower()), project, q, nil)
 	if err != nil {
 		return err
 	}

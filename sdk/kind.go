@@ -1,5 +1,6 @@
-//go:generate stringer -trimprefix=Kind -type=Kind
 package sdk
+
+//go:generate stringer -trimprefix=Kind -type=Kind
 
 import (
 	"strings"
