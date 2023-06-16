@@ -38,19 +38,22 @@ const (
 )
 
 var stringToKind = map[string]Kind{
-	"slo":          KindSLO,
-	"service":      KindService,
-	"agent":        KindAgent,
-	"alertpolicy":  KindAlertPolicy,
-	"alertsilence": KindAlertSilence,
-	"alert":        KindAlert,
-	"project":      KindProject,
-	"alertmethod":  KindAlertMethod,
-	"direct":       KindDirect,
-	"dataexport":   KindDataExport,
-	"rolebinding":  KindRoleBinding,
-	"annotation":   KindAnnotation,
-	"group":        KindGroup,
+	"slo":                  KindSLO,
+	"service":              KindService,
+	"agent":                KindAgent,
+	"alertpolicy":          KindAlertPolicy,
+	"alertsilence":         KindAlertSilence,
+	"alert":                KindAlert,
+	"project":              KindProject,
+	"alertmethod":          KindAlertMethod,
+	"metricsource":         KindMetricSource,
+	"direct":               KindDirect,
+	"dataexport":           KindDataExport,
+	"usagesummary":         KindUsageSummary,
+	"rolebinding":          KindRoleBinding,
+	"sloerrorbudgetstatus": KindSLOErrorBudgetStatus,
+	"annotation":           KindAnnotation,
+	"group":                KindGroup,
 }
 
 func KindFromString(s string) (Kind, error) {
