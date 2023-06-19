@@ -59,7 +59,16 @@ var stringToKind = map[string]Kind{
 func KindFromString(s string) (Kind, error) {
 	kind, valid := stringToKind[strings.ToLower(s)]
 	if !valid {
-		return 0, ErrInvalidKind
+		return kindFromStringEqualFold(s) // Fallback
 	}
 	return kind, nil
+}
+
+func kindFromStringEqualFold(s string) (Kind, error) {
+	for k := range stringToKind {
+		if strings.EqualFold(k, s) {
+			return stringToKind[k], nil
+		}
+	}
+	return 0, ErrInvalidKind
 }
