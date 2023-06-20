@@ -31,11 +31,15 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve metadata section")
 	}
-	kind, ok := object["kind"].(string)
+	kindStr, ok := object["kind"].(string)
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve object kind")
 	}
-	switch sdk.Kind(kind) {
+	kind, err := sdk.KindFromString(kindStr)
+	if err != nil {
+		return nil, err
+	}
+	switch kind {
 	case sdk.KindProject, sdk.KindRoleBinding, sdk.KindGroup:
 		// Do not append the project name.
 	default:
