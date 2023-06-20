@@ -71,85 +71,10 @@ type Response struct {
 	TruncatedMax int
 }
 
-// Kind represents available objects in API to perform operations.
-type Kind string
-
-func (k Kind) String() string {
-	return strings.ToLower(string(k))
-}
-
 // M2MAppCredentials is used for storing client_id and client_secret.
 type M2MAppCredentials struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
-}
-
-// List of available Kind in API.
-const (
-	KindSLO                  Kind = "SLO"
-	KindService              Kind = "Service"
-	KindAgent                Kind = "Agent"
-	KindAlertPolicy          Kind = "AlertPolicy"
-	KindAlertSilence         Kind = "AlertSilence"
-	KindAlert                Kind = "Alert"
-	KindProject              Kind = "Project"
-	KindAlertMethod          Kind = "AlertMethod"
-	KindMetricSource         Kind = "MetricSource"
-	KindDirect               Kind = "Direct"
-	KindDataExport           Kind = "DataExport"
-	KindUsageSummary         Kind = "UsageSummary"
-	KindRoleBinding          Kind = "RoleBinding"
-	KindSLOErrorBudgetStatus Kind = "SLOErrorBudgetStatus"
-	KindAnnotation           Kind = "Annotation"
-	KindGroup                Kind = "Group"
-)
-
-var allObjectKinds = []Kind{
-	KindSLO,
-	KindService,
-	KindAgent,
-	KindProject,
-	KindMetricSource,
-	KindAlertPolicy,
-	KindAlertSilence,
-	KindAlert,
-	KindAlertMethod,
-	KindDirect,
-	KindDataExport,
-	KindUsageSummary,
-	KindRoleBinding,
-	KindSLOErrorBudgetStatus,
-	KindAnnotation,
-}
-
-var kindNamesMap = map[string]Kind{
-	"slo":          KindSLO,
-	"service":      KindService,
-	"agent":        KindAgent,
-	"alertpolicy":  KindAlertPolicy,
-	"alertsilence": KindAlertSilence,
-	"alert":        KindAlert,
-	"project":      KindProject,
-	"alertmethod":  KindAlertMethod,
-	"direct":       KindDirect,
-	"dataexport":   KindDataExport,
-	"rolebinding":  KindRoleBinding,
-	"annotation":   KindAnnotation,
-	"group":        KindGroup,
-}
-
-func KindFromString(s string) Kind {
-	return kindNamesMap[s]
-}
-
-// IsValidKind returns true if given object Kind is available in the SDK.
-func IsValidKind(kind Kind) bool {
-	for i := range allObjectKinds {
-		if strings.EqualFold(kind.String(), allObjectKinds[i].String()) {
-			return true
-		}
-	}
-	return false
 }
 
 // AnyJSONObj can store a generic representation on any valid JSON.
@@ -330,7 +255,7 @@ func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
 	case KindGroup:
 		return apiGetGroups
 	default:
-		return path.Join(apiGet, kind.String())
+		return path.Join(apiGet, kind.ToLower())
 	}
 }
 
@@ -448,7 +373,7 @@ func (c *Client) DeleteObjectsByName(
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.String()), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.ToLower()), project, q, nil)
 	if err != nil {
 		return err
 	}

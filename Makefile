@@ -2,6 +2,11 @@
 test:
 	@go test -race -cover ./...
 
+.PHONY: generate
+generate:
+	@echo "Generating Go code..."
+	@go generate ./...
+
 .PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
 check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
 

@@ -54,6 +54,7 @@
     "promql",
     "bmatcuk",
     "vulns",
-    "govulncheck"
+    "govulncheck",
+    "sloerrorbudgetstatus"
   ]
 }
