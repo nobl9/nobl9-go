@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"path"
@@ -16,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	influx "github.com/influxdata/influxdb/v2/models"
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
@@ -73,89 +71,10 @@ type Response struct {
 	TruncatedMax int
 }
 
-// Object represents available objects in API to perform operations.
-type Object string
-
-func (o Object) String() string {
-	return strings.ToLower(string(o))
-}
-
 // M2MAppCredentials is used for storing client_id and client_secret.
 type M2MAppCredentials struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
-}
-
-// List of available objects in API.
-const (
-	ObjectSLO          Object = "SLO"
-	ObjectService      Object = "Service"
-	ObjectAgent        Object = "Agent"
-	ObjectAlertPolicy  Object = "AlertPolicy"
-	ObjectAlertSilence Object = "AlertSilence"
-	// ObjectAlert represents object used only to return list of Alerts. Applying and deleting alerts is disabled.
-	ObjectAlert Object = "Alert"
-	// ObjectProject represents object used only to return list of Projects.
-	// Applying and deleting projects is not supported.
-	ObjectProject     Object = "Project"
-	ObjectAlertMethod Object = "AlertMethod"
-	// ObjectMetricSource represents ephemeral object used only to return concatenated list of Agents and Directs.
-	ObjectMetricSource         Object = "MetricSource"
-	ObjectDirect               Object = "Direct"
-	ObjectDataExport           Object = "DataExport"
-	ObjectUsageSummary         Object = "UsageSummary"
-	ObjectRoleBinding          Object = "RoleBinding"
-	ObjectSLOErrorBudgetStatus Object = "SLOErrorBudgetStatus"
-	ObjectAnnotation           Object = "Annotation"
-	ObjectGroup                Object = "Group"
-)
-
-var allObjects = []Object{
-	ObjectSLO,
-	ObjectService,
-	ObjectAgent,
-	ObjectProject,
-	ObjectMetricSource,
-	ObjectAlertPolicy,
-	ObjectAlertSilence,
-	ObjectAlert,
-	ObjectAlertMethod,
-	ObjectDirect,
-	ObjectDataExport,
-	ObjectUsageSummary,
-	ObjectRoleBinding,
-	ObjectSLOErrorBudgetStatus,
-	ObjectAnnotation,
-}
-
-var objectNamesMap = map[string]Object{
-	"slo":          ObjectSLO,
-	"service":      ObjectService,
-	"agent":        ObjectAgent,
-	"alertpolicy":  ObjectAlertPolicy,
-	"alertsilence": ObjectAlertSilence,
-	"alert":        ObjectAlert,
-	"project":      ObjectProject,
-	"alertmethod":  ObjectAlertMethod,
-	"direct":       ObjectDirect,
-	"dataexport":   ObjectDataExport,
-	"rolebinding":  ObjectRoleBinding,
-	"annotation":   ObjectAnnotation,
-	"group":        ObjectGroup,
-}
-
-func ObjectName(apiObject string) Object {
-	return objectNamesMap[apiObject]
-}
-
-// IsObjectAvailable returns true if given object is available in SDK.
-func IsObjectAvailable(o Object) bool {
-	for i := range allObjects {
-		if strings.EqualFold(o.String(), allObjects[i].String()) {
-			return true
-		}
-	}
-	return false
 }
 
 // AnyJSONObj can store a generic representation on any valid JSON.
@@ -260,7 +179,7 @@ const (
 func (c *Client) GetObjects(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
@@ -271,7 +190,7 @@ func (c *Client) GetObjects(
 	if len(filterLabel) > 0 {
 		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
 	}
-	response, err := c.GetObjectsWithParams(ctx, project, object, q)
+	response, err := c.GetObjectsWithParams(ctx, project, kind, q)
 	if err != nil {
 		return nil, err
 	}
@@ -281,11 +200,11 @@ func (c *Client) GetObjects(
 func (c *Client) GetObjectsWithParams(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
-	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(object), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(kind), project, q, nil)
 	if err != nil {
 		return response, err
 	}
@@ -331,12 +250,12 @@ func (c *Client) GetObjectsWithParams(
 	}
 }
 
-func (c *Client) resolveGetObjectEndpoint(o Object) string {
-	switch o {
-	case ObjectGroup:
+func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
+	switch kind {
+	case KindGroup:
 		return apiGetGroups
 	default:
-		return path.Join(apiGet, o.String())
+		return path.Join(apiGet, kind.ToLower())
 	}
 }
 
@@ -446,7 +365,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 func (c *Client) DeleteObjectsByName(
 	ctx context.Context,
 	project string,
-	object Object,
+	kind Kind,
 	dryRun bool,
 	names ...string,
 ) error {
@@ -454,7 +373,7 @@ func (c *Client) DeleteObjectsByName(
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, object.String()), project, q, nil)
+	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.ToLower()), project, q, nil)
 	if err != nil {
 		return err
 	}
@@ -515,46 +434,6 @@ func (c *Client) GetAgentCredentials(
 	return creds, nil
 }
 
-const postMetricsChunkSize = 500
-
-func (c *Client) PostMetrics(ctx context.Context, points influx.Points) error {
-	for chunkOffset := 0; chunkOffset < len(points); chunkOffset += postMetricsChunkSize {
-		chunk := points[chunkOffset:int(math.Min(float64(len(points)), float64(chunkOffset+postMetricsChunkSize)))]
-		var buf strings.Builder
-		for _, point := range chunk {
-			buf.WriteString(point.String() + "\n")
-		}
-		req, err := c.createRequest(
-			ctx,
-			http.MethodPost,
-			apiInputData,
-			"",
-			nil,
-			strings.NewReader(buf.String()))
-		if err != nil {
-			return err
-		}
-		response, err := c.HTTP.Do(req)
-		if err != nil {
-			return errors.Wrapf(
-				err,
-				"Error making request to api. %d points got written successfully.",
-				chunkOffset)
-		}
-		if response.StatusCode != http.StatusOK {
-			err = errors.Errorf(
-				"Received unexpected response from api %v. %d points got written successfully.",
-				getResponseFields(response),
-				chunkOffset)
-		}
-		_ = response.Body.Close()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (c *Client) createRequest(
 	ctx context.Context,
 	method, endpoint, project string,
@@ -599,17 +478,4 @@ func decodeJSONResponse(r io.Reader) ([]AnyJSONObj, error) {
 		return nil, err
 	}
 	return parsed, nil
-}
-
-// getResponseFields returns set of fields to use when logging an http response error.
-func getResponseFields(resp *http.Response) map[string]interface{} {
-	fields := map[string]interface{}{
-		"http.status_code": resp.StatusCode,
-	}
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fields
-	}
-	fields["resp"] = string(respBody)
-	return fields
 }

@@ -58,7 +58,6 @@ linters:
     # All linters from list https://golangci-lint.run/usage/linters/ are speciefed here and explicit enable/disable.
     - asciicheck
     - bodyclose
-    - depguard
     - dogsled
     - errcheck
     - exhaustive

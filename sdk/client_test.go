@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,7 +13,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	influx "github.com/influxdata/influxdb/v2/models"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -65,7 +63,7 @@ func TestClient_GetObjects(t *testing.T) {
 	objects, err := client.GetObjects(
 		context.Background(),
 		"non-default",
-		ObjectService,
+		KindService,
 		map[string][]string{"team": {"green", "purple"}},
 		"service1", "service2",
 	)
@@ -94,7 +92,7 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	_, err := client.GetObjects(context.Background(), "", ObjectGroup, nil)
+	_, err := client.GetObjects(context.Background(), "", KindGroup, nil)
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, 1, calledTimes)
@@ -201,7 +199,7 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	err := client.DeleteObjectsByName(
 		context.Background(),
 		"my-project",
-		ObjectService,
+		KindService,
 		true,
 		"service1",
 		"service2",
@@ -268,48 +266,6 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, responsePayload, objects)
-}
-
-func TestClient_PostMetrics(t *testing.T) {
-	point, err := influx.NewPoint("ms", nil, influx.Fields{"n9_value": float64(123)}, time.Now().UTC())
-	require.NoError(t, err)
-	points := influx.Points{}
-	chunks := 2
-	for i := 0; i < chunks*postMetricsChunkSize; i++ {
-		points = append(points, point)
-	}
-
-	calledTimes := 0
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/input/data",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			w.WriteHeader(http.StatusOK)
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			calledTimes++
-			assert.Equal(t, http.MethodPost, r.Method)
-			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			data, err := io.ReadAll(r.Body)
-			require.NoError(t, err)
-			points, err := influx.ParsePoints(data)
-			require.NoError(t, err)
-			assert.Len(t, points, postMetricsChunkSize)
-			assert.Equal(t, point.String(), points[0].String())
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	err = client.PostMetrics(context.Background(), points)
-	// Verify response handling.
-	require.NoError(t, err)
-	// Make sure response is chunked.
-	assert.Equal(t, chunks, calledTimes)
 }
 
 type endpointConfig struct {
