@@ -30,12 +30,15 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-      - name: Install checkers
+      - name: Install dependencies
         run: |
-          yarn install
+          make install
       - name: Run spell and markdown checkers
         run: |
           make check/spell check/trailing check/markdown
+      - name: Check generated code
+        run: |
+          make check/generate
       - name: Run go vet
         run: |
           make check/vet
