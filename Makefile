@@ -47,9 +47,13 @@ generate:
 	@echo "Generating Go code..."
 	@go generate ./...
 
-.PHONY: install install/go-enum
-install: install/go-enum
+.PHONY: install install/go-enum install/yarn
+install: install/go-enum install/yarn
 
 install/go-enum:
 	@echo "Downloading go-enum..."
 	@curl -fsSL "https://github.com/abice/go-enum/releases/download/$(GO_ENUM_VERSION)/go-enum_$$(uname -s)_$$(uname -m)" -o $(GO_ENUM_PATH) && chmod +x $(GO_ENUM_PATH)
+
+install/yarn:
+	@echo "Installing yarn dependencies"
+	@yarn install
