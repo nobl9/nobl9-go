@@ -36,6 +36,9 @@ jobs:
       - name: Run spell and markdown checkers
         run: |
           make check/spell check/trailing check/markdown
+      - name: Check generated code
+        run: |
+          make check/generate
       - name: Run go vet
         run: |
           make check/vet

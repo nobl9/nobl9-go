@@ -39,6 +39,7 @@ check/vulns:
 
 check/generate:
 	@echo "Checking if generate code matches the provided definitions..."
+	@./scripts/check-generate.sh
 
 .PHONY: generate
 generate:
