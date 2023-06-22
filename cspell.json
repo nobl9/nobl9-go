@@ -19,7 +19,8 @@
     "**/go.sum",
     "**/node_modules/**",
     "cspell.json",
-    "CODEOWNERS"
+    "CODEOWNERS",
+    "bin/**"
   ],
   "words": [
     "nobl",
@@ -55,6 +56,8 @@
     "bmatcuk",
     "vulns",
     "govulncheck",
-    "sloerrorbudgetstatus"
+    "sloerrorbudgetstatus",
+    "nocomments",
+    "nocase"
   ]
 }

@@ -35,7 +35,7 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve object kind")
 	}
-	kind, err := sdk.KindFromString(kindStr)
+	kind, err := sdk.ParseKind(kindStr)
 	if err != nil {
 		return nil, err
 	}
