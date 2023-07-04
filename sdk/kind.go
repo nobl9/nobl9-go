@@ -21,7 +21,7 @@ UsageSummary
 RoleBinding
 SLOErrorBudgetStatus
 Annotation
-Group
+UserGroup
 )*/
 type Kind int
 
