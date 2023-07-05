@@ -40,7 +40,7 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 		return nil, err
 	}
 	switch kind {
-	case sdk.KindProject, sdk.KindRoleBinding, sdk.KindGroup:
+	case sdk.KindProject, sdk.KindRoleBinding, sdk.KindUserGroup:
 		// Do not append the project name.
 	default:
 		if meta["project"] == nil && ma.Project != "" {

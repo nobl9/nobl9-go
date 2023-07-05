@@ -29,12 +29,12 @@ const (
 	KindRoleBinding
 	KindSLOErrorBudgetStatus
 	KindAnnotation
-	KindGroup
+	KindUserGroup
 )
 
 var ErrInvalidKind = errors.New("not a valid Kind")
 
-const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodMetricSourceDirectDataExportUsageSummaryRoleBindingSLOErrorBudgetStatusAnnotationGroup"
+const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodMetricSourceDirectDataExportUsageSummaryRoleBindingSLOErrorBudgetStatusAnnotationUserGroup"
 
 var _KindMap = map[Kind]string{
 	KindSLO:                  _KindName[0:3],
@@ -52,7 +52,7 @@ var _KindMap = map[Kind]string{
 	KindRoleBinding:          _KindName[101:112],
 	KindSLOErrorBudgetStatus: _KindName[112:132],
 	KindAnnotation:           _KindName[132:142],
-	KindGroup:                _KindName[142:147],
+	KindUserGroup:            _KindName[142:151],
 }
 
 // String implements the Stringer interface.
@@ -101,8 +101,8 @@ var _KindValue = map[string]Kind{
 	strings.ToLower(_KindName[112:132]): KindSLOErrorBudgetStatus,
 	_KindName[132:142]:                  KindAnnotation,
 	strings.ToLower(_KindName[132:142]): KindAnnotation,
-	_KindName[142:147]:                  KindGroup,
-	strings.ToLower(_KindName[142:147]): KindGroup,
+	_KindName[142:151]:                  KindUserGroup,
+	strings.ToLower(_KindName[142:151]): KindUserGroup,
 }
 
 // ParseKind attempts to convert a string to a Kind.

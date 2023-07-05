@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 )
 
-type Group struct {
+type UserGroup struct {
 	ObjectInternal
 	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
 	Kind       string        `json:"kind" validate:"required" example:"kind"`
 	Metadata   GroupMetadata `json:"metadata"`
-	Spec       GroupSpec     `json:"spec"`
+	Spec       UserGroupSpec `json:"spec"`
 }
 
-// GroupSpec represents content of Group's Spec
-type GroupSpec struct {
+// UserGroupSpec represents content of UserGroup's Spec
+type UserGroupSpec struct {
 	DisplayName string   `json:"displayName"`
 	Members     []Member `json:"members"`
 }
@@ -26,9 +26,9 @@ type GroupMetadata struct {
 	Name string `json:"name" validate:"required,objectName" example:"name"`
 }
 
-// genericToGroup converts ObjectGeneric to Group object
-func genericToGroup(o ObjectGeneric) (Group, error) {
-	res := Group{
+// genericToUserGroup converts ObjectGeneric to UserGroup object
+func genericToUserGroup(o ObjectGeneric) (UserGroup, error) {
+	res := UserGroup{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
 		Metadata: GroupMetadata{
@@ -39,7 +39,7 @@ func genericToGroup(o ObjectGeneric) (Group, error) {
 			ManifestSrc:  o.ObjectHeader.ManifestSrc,
 		},
 	}
-	var resSpec GroupSpec
+	var resSpec UserGroupSpec
 	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
 		err = EnhanceError(o, err)
 		return res, err

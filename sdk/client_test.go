@@ -92,7 +92,7 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	_, err := client.GetObjects(context.Background(), "", KindGroup, nil)
+	_, err := client.GetObjects(context.Background(), "", KindUserGroup, nil)
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, 1, calledTimes)

@@ -252,7 +252,7 @@ func (c *Client) GetObjectsWithParams(
 
 func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
 	switch kind {
-	case KindGroup:
+	case KindUserGroup:
 		return apiGetGroups
 	default:
 		return path.Join(apiGet, kind.ToLower())
