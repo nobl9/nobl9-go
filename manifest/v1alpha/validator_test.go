@@ -10,7 +10,7 @@ import (
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nobl9/n9/pkg/manifest"
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestValidateURLDynatrace(t *testing.T) {
