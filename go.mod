@@ -10,7 +10,6 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/lestrrat-go/jwx v1.2.26
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/nobl9/n9 v1.56.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.1
@@ -23,6 +22,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
+	github.com/fatih/color v1.14.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
