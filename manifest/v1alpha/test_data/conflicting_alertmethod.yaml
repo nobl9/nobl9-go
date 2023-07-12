@@ -1,0 +1,63 @@
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.com
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.eu
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: zero-conflict
+    project: default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.pl
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: zero-conflict
+    project: super-project
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.ua
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.gg
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.gz
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    opsgenie:
+      auth: '[hidden]'
+      url: https://api.opsgenie.gl

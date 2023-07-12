@@ -1,0 +1,105 @@
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/1
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/2
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: zero-conflicts
+    project: default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/3
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: zero-conflicts
+    project: super-project
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/4
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/5
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/6
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: dataexport-dev-orange
+      roleArn: arn:aws:iam::341861879477:role/7
+  status:
+    awsExternalID: n9-integration-nobl9-dev
+    exportJob:
+      state: successful
+      timestamp: "2022-12-16T12:30:12Z"

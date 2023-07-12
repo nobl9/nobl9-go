@@ -1,0 +1,133 @@
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    datadog:
+      site: com
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    datadog:
+      site: eu
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: zero-conflict
+    project: default
+  spec:
+    datadog:
+      site: com
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: zero-conflict
+    project: secret-agent
+  spec:
+    datadog:
+      site: eu
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: double-conflict
+    project: not-so-default
+  spec:
+    datadog:
+      site: com
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: double-conflict
+    project: not-so-default
+  spec:
+    datadog:
+      site: eu
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: double-conflict
+    project: not-so-default
+  spec:
+    datadog:
+      site: com
+    historicalDataRetrieval:
+      defaultDuration:
+        unit: Day
+        value: 0
+      maxDuration:
+        unit: Day
+        value: 0
+    sourceOf:
+      - Metrics
+  status:
+    agentType: Datadog
