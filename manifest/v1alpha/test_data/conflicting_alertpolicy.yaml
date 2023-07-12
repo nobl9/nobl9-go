@@ -1,0 +1,98 @@
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 5m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 10m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: zero-conflict
+    project: default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 15m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: zero-conflict
+    project: super-project
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 20m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 25m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 30m
+    severity: Medium
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: double-conflict
+    project: non-default
+  spec:
+    alertMethods: []
+    conditions:
+      - lastsFor: 1h
+        measurement: timeToBurnBudget
+        op: lt
+        value: 72h
+    coolDown: 35m
+    severity: Medium

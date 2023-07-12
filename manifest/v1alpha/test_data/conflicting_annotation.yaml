@@ -1,0 +1,70 @@
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-01T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: single-conflict
+    project: default
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-02T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: zero-conflict
+    project: default
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-02T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: zero-conflict
+    project: non-default
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-03T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: double-conflict
+    project: super-project
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-04T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: double-conflict
+    project: super-project
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-05T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: double-conflict
+    project: super-project
+  spec:
+    description: "i'm required..."
+    endTime: "2022-09-06T05:42:27Z"
+    slo: newrelic-rolling-occurrences-ratio
+    startTime: "2022-08-27T05:42:27Z"
