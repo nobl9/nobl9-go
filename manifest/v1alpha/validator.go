@@ -206,18 +206,19 @@ func NewValidator() *Validate {
 	}
 }
 
+const (
+	// dNS1123LabelMaxLength is a label's max length in DNS (RFC 1123)
+	dNS1123LabelMaxLength int    = 63
+	dns1123LabelFmt       string = "[a-z0-9]([-a-z0-9]*[a-z0-9])?"
+	//nolint:lll
+	dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
+)
+
+var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
+
 // IsDNS1123Label tests for a string that conforms to the definition of a label in DNS (RFC 1123).
-// nolint:lll
 // Source: https://github.com/kubernetes/kubernetes/blob/fdb2cb4c8832da1499069bda918c014762d8ac05/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go
 func IsDNS1123Label(value string) []string {
-	// dNS1123LabelMaxLength is a label's max length in DNS (RFC 1123)
-	const dNS1123LabelMaxLength int = 63
-	const dns1123LabelFmt string = "[a-z0-9]([-a-z0-9]*[a-z0-9])?"
-
-	//nolint:lll
-	const dns1123LabelErrMsg string = "a DNS-1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
-
-	var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
 	var errs []string
 	if len(value) > dNS1123LabelMaxLength {
 		errs = append(errs, fmt.Sprintf("must be no more than %d characters", dNS1123LabelMaxLength))
