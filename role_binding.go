@@ -18,7 +18,8 @@ type RoleBindingSpec struct {
 }
 
 type RoleBindingMetadata struct {
-	Name string `json:"name"`
+	Name               string `json:"name"`
+	ProjectDisplayName string `json:"projectDisplayName,omitempty" validate:"omitempty,objectName"`
 }
 
 // genericToRoleBinding converts ObjectGeneric to ObjectRoleBinding

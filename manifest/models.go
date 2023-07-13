@@ -32,10 +32,11 @@ type AlertSilenceMetadata struct {
 
 // Metadata represents part of object which is common for all available Objects, for internal usage
 type Metadata struct {
-	Name        string `json:"name" validate:"required,objectName" example:"name"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Prometheus Source"`
-	Project     string `json:"project,omitempty" validate:"objectName" example:"default"`
-	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name               string `json:"name" validate:"required,objectName" example:"name"`
+	DisplayName        string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Prometheus Source"`
+	Project            string `json:"project,omitempty" validate:"objectName" example:"default"`
+	ProjectDisplayName string `json:"projectDisplayName,omitempty" validate:"omitempty,objectName" example:"default"`
+	Labels             Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // FullName returns full name of an object as `{name}.{project}`
