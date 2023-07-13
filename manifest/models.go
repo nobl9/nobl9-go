@@ -57,7 +57,8 @@ type ProjectMetadata struct {
 }
 
 type RoleBindingMetadata struct {
-	Name string `json:"name" validate:"required,objectName" example:"name"`
+	Name               string `json:"name" validate:"required,objectName" example:"name"`
+	ProjectDisplayName string `json:"projectDisplayName,omitempty" validate:"omitempty,objectName"`
 }
 
 // ObjectHeader represents Header which is common for all available Objects
