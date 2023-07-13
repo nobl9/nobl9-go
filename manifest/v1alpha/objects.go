@@ -137,6 +137,12 @@ func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
 	return clone
 }
 
+func (u UserGroupsSlice) Clone() UserGroupsSlice {
+	clone := make([]UserGroup, len(u))
+	copy(clone, u)
+	return clone
+}
+
 // APIObjects - all Objects available for this version of API
 // Sorted in order of applying
 type APIObjects struct {
@@ -152,7 +158,7 @@ type APIObjects struct {
 	Projects      ProjectsSlice      `json:"projects,omitempty"`
 	RoleBindings  RoleBindingsSlice  `json:"rolebindings,omitempty"`
 	Annotations   AnnotationsSlice   `json:"annotations,omitempty"`
-	UserGroups    []UserGroup        `json:"usergroups,omitempty"`
+	UserGroups    UserGroupsSlice    `json:"usergroups,omitempty"`
 }
 
 func (o APIObjects) Clone() APIObjects {
