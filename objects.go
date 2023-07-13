@@ -27,7 +27,6 @@ const (
 	KindAlertMethod = "AlertMethod"
 	KindDirect      = "Direct"
 	KindDataExport  = "DataExport"
-	KindUserGroup   = "UserGroup"
 	KindRoleBinding = "RoleBinding"
 )
 
@@ -44,7 +43,6 @@ type APIObjects struct {
 	DataExports   []DataExport
 	Projects      []Project
 	RoleBindings  []RoleBinding
-	UserGroups    []UserGroup
 }
 
 type Payload struct {
@@ -202,12 +200,6 @@ func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) error {
 			allErrors = append(allErrors, err.Error())
 		}
 		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
-	case KindUserGroup:
-		group, err := genericToUserGroup(o)
-		if err != nil {
-			allErrors = append(allErrors, err.Error())
-		}
-		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
 	// catching invalid kinds of objects for this apiVersion
 	default:
 		err := UnsupportedKindErr(o)
