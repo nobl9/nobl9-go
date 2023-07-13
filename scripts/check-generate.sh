@@ -1,15 +1,18 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
 
-make generate
-
 ENUM_PATH=sdk/kind_enum.go
+TMP_DIR=$(mktemp -d)
 
-CHANGED=$(git diff --name-only ${ENUM_PATH})
+cp -r . "$TMP_DIR"
+
+make -C "$TMP_DIR" install/go-enum
+make -C "$TMP_DIR" generate
+
+CHANGED=$(git -C "$TMP_DIR" diff --name-only ${ENUM_PATH})
 if [ -n "${CHANGED}" ]; then
   echo >&2 "There are generated code changes that haven't been committed: ${CHANGED}"
-  git restore ${ENUM_PATH}
   exit 1
 else
   echo "Looks good!"

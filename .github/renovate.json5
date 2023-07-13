@@ -42,4 +42,14 @@
   // Manager-specific configs:
   // This will run go mod tidy after each go.mod update.
   "postUpdateOptions": ["gomodTidy"],
+  // Custom version extraction from Makefile.
+  "regexManagers": [
+    {
+      "fileMatch": ["^Makefile$"],
+      "matchStrings": [
+        ".*renovate datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\\\s.*?_VERSION\\s?:=\\s?(?<currentValue>.*)\\\\s"
+      ],
+      "datasourceTemplate": "github-releases"
+    }
+  ]
 }
