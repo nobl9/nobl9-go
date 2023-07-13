@@ -350,7 +350,9 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	})}
 
 	// Prepare our client.
-	client, err = DefaultClient(clientID, clientSecret, oktaOrgURL, oktaAuthServer, userAgent)
+	client, err = NewClientBuilder(userAgent).
+		WithDefaultCredentials(oktaOrgURL, oktaAuthServer, clientID, clientSecret).
+		Build()
 	require.NoError(t, err)
 
 	return client, srv

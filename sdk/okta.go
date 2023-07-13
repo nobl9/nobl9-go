@@ -17,12 +17,19 @@ import (
 )
 
 const (
+	defaultOktaOrgURL       = "https://accounts.nobl9.com"
+	defaultOktaAuthServerID = "auseg9kiegWKEtJZC416"
+
 	oktaTokenEndpoint     = "v1/token"
 	oktaKeysEndpoint      = "v1/keys"
 	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
 )
+
+func DefaultOktaAuthServer() (*url.URL, error) {
+	return OktaAuthServer(defaultOktaOrgURL, defaultOktaAuthServerID)
+}
 
 func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (*url.URL, error) {
 	authServerURL, err := url.Parse(oktaOrgURL)
