@@ -217,6 +217,7 @@ const (
 var dns1123LabelRegexp = regexp.MustCompile("^" + dns1123LabelFmt + "$")
 
 // IsDNS1123Label tests for a string that conforms to the definition of a label in DNS (RFC 1123).
+// nolint:lll
 // Source: https://github.com/kubernetes/kubernetes/blob/fdb2cb4c8832da1499069bda918c014762d8ac05/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go
 func IsDNS1123Label(value string) []string {
 	var errs []string
