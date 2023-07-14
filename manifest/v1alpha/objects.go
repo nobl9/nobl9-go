@@ -35,6 +35,7 @@ const (
 	KindDataExport   Kind = "DataExport"
 	KindRoleBinding  Kind = "RoleBinding"
 	KindAnnotation   Kind = "Annotation"
+	KindUserGroup    Kind = "UserGroup"
 )
 
 const DatasourceStableChannel = "stable"
@@ -51,6 +52,7 @@ type DataExportsSlice []DataExport
 type ProjectsSlice []Project
 type RoleBindingsSlice []RoleBinding
 type AnnotationsSlice []Annotation
+type UserGroupsSlice []UserGroup
 
 func KindFromString(kindString string) Kind {
 	for _, kind := range []Kind{
@@ -135,6 +137,12 @@ func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
 	return clone
 }
 
+func (u UserGroupsSlice) Clone() UserGroupsSlice {
+	clone := make([]UserGroup, len(u))
+	copy(clone, u)
+	return clone
+}
+
 // APIObjects - all Objects available for this version of API
 // Sorted in order of applying
 type APIObjects struct {
@@ -150,6 +158,7 @@ type APIObjects struct {
 	Projects      ProjectsSlice      `json:"projects,omitempty"`
 	RoleBindings  RoleBindingsSlice  `json:"rolebindings,omitempty"`
 	Annotations   AnnotationsSlice   `json:"annotations,omitempty"`
+	UserGroups    UserGroupsSlice    `json:"usergroups,omitempty"`
 }
 
 func (o APIObjects) Clone() APIObjects {
@@ -1857,6 +1866,10 @@ func Parse(o manifest.ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool
 		var annotation Annotation
 		annotation, err = genericToAnnotation(o, v)
 		parsedObjects.Annotations = append(parsedObjects.Annotations, annotation)
+	case KindUserGroup:
+		var group UserGroup
+		group, err = genericToUserGroup(o)
+		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
 	// catching invalid kinds of objects for this apiVersion
 	default:
 		err = manifest.UnsupportedKindErr(o)

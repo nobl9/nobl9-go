@@ -1,11 +1,13 @@
-package nobl9
+package v1alpha
 
 import (
 	"encoding/json"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 type UserGroup struct {
-	ObjectInternal
+	manifest.ObjectInternal
 	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
 	Kind       string        `json:"kind" validate:"required" example:"kind"`
 	Metadata   GroupMetadata `json:"metadata"`
@@ -27,21 +29,21 @@ type GroupMetadata struct {
 }
 
 // genericToUserGroup converts ObjectGeneric to UserGroup object
-func genericToUserGroup(o ObjectGeneric) (UserGroup, error) {
+func genericToUserGroup(o manifest.ObjectGeneric) (UserGroup, error) {
 	res := UserGroup{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
 		Metadata: GroupMetadata{
 			Name: o.Metadata.Name,
 		},
-		ObjectInternal: ObjectInternal{
+		ObjectInternal: manifest.ObjectInternal{
 			Organization: o.ObjectHeader.Organization,
 			ManifestSrc:  o.ObjectHeader.ManifestSrc,
 		},
 	}
 	var resSpec UserGroupSpec
 	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = EnhanceError(o, err)
+		err = manifest.EnhanceError(o, err)
 		return res, err
 	}
 	res.Spec = resSpec
