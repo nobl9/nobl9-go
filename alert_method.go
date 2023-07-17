@@ -167,8 +167,8 @@ type EmailAlertMethod struct {
 	To      []string `json:"to,omitempty"`
 	Cc      []string `json:"cc,omitempty"`
 	Bcc     []string `json:"bcc,omitempty"`
-	Subject string   `json:"subject,omitempty"` // deprecated
-	Body    string   `json:"body,omitempty"`    // deprecated
+	Subject string   `json:"subject,omitempty"`
+	Body    string   `json:"body,omitempty"`
 }
 
 // genericToAlertMethod converts ObjectGeneric to ObjectAlertMethod

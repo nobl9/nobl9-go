@@ -293,6 +293,9 @@ func isValidWebhookTemplate(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
 }
 
+// Deprecated: Email Subject is no longer needed and is ignored by notificationsemail.
+// This validation is kept for backwards compatibility and will be removed in the future.
+// Ref. PC-9759
 func isValidAlertMethodEmailSubject(fl v.FieldLevel) bool {
 	emailSubjectAllowedFields := make(map[string]struct{})
 	for k, v := range notificationTemplateAllowedFields {
@@ -304,6 +307,9 @@ func isValidAlertMethodEmailSubject(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, emailSubjectAllowedFields)
 }
 
+// Deprecated: Email Body is no longer needed and is ignored by notificationsemail.
+// This validation is kept for backwards compatibility and will be removed in the future.
+// Ref. PC-9759
 func isValidAlertMethodEmailBody(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
 }

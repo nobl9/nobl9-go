@@ -1603,8 +1603,8 @@ type EmailAlertMethod struct {
 	To      []string `json:"to,omitempty" validate:"omitempty,max=10,emails"`
 	Cc      []string `json:"cc,omitempty" validate:"omitempty,max=10,emails"`
 	Bcc     []string `json:"bcc,omitempty" validate:"omitempty,max=10,emails"`
-	Subject string   `json:"subject" validate:"required,max=90,allowedAlertMethodEmailSubjectFields"`
-	Body    string   `json:"body" validate:"required,max=2000,allowedAlertMethodEmailBodyFields"`
+	Subject string   `json:"subject" validate:"omitempty,max=90,allowedAlertMethodEmailSubjectFields"`
+	Body    string   `json:"body" validate:"omitempty,max=2000,allowedAlertMethodEmailBodyFields"`
 }
 
 // genericToAlertMethod converts ObjectGeneric to ObjectAlertMethod
