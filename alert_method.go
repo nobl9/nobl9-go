@@ -164,11 +164,13 @@ type PublicTeamsAlertMethod struct {
 
 // EmailAlertMethod represents a set of properties required to send an email.
 type EmailAlertMethod struct {
-	To      []string `json:"to,omitempty"`
-	Cc      []string `json:"cc,omitempty"`
-	Bcc     []string `json:"bcc,omitempty"`
-	Subject string   `json:"subject,omitempty"`
-	Body    string   `json:"body,omitempty"`
+	To  []string `json:"to,omitempty"`
+	Cc  []string `json:"cc,omitempty"`
+	Bcc []string `json:"bcc,omitempty"`
+	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
+	Subject string `json:"subject,omitempty"`
+	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
+	Body string `json:"body,omitempty"`
 }
 
 // genericToAlertMethod converts ObjectGeneric to ObjectAlertMethod
