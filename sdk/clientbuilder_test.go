@@ -12,13 +12,13 @@ import (
 
 func TestClientBuilder_WithDefaults(t *testing.T) {
 	client, err := NewClientBuilder("sloctl").
-		WithDefaultCredentials("https://accounts.com", "123", "client-id", "client-secret").
+		WithDefaultCredentials("client-id", "client-secret").
 		Build()
 	require.NoError(t, err)
 	assert.Equal(t, "sloctl", client.UserAgent)
 	assert.NotEmpty(t, client.HTTP)
 
-	expectedAuthServer, err := OktaAuthServer("https://accounts.com", "123")
+	expectedAuthServer, err := OktaAuthServerURL(defaultOktaOrgURL, defaultOktaAuthServerID)
 	require.NoError(t, err)
 	require.NotEmpty(t, client.Credentials)
 	assert.Equal(t, "client-id", client.Credentials.ClientID)
@@ -27,6 +27,12 @@ func TestClientBuilder_WithDefaults(t *testing.T) {
 		OktaTokenEndpoint(expectedAuthServer).String(),
 		client.Credentials.TokenProvider.(*OktaClient).requestTokenEndpoint)
 	assert.Equal(t, Timeout, client.HTTP.Transport.(*retryablehttp.RoundTripper).Client.HTTPClient.Timeout)
+}
+
+func TestClientBuilder_NoCredentialsProvided(t *testing.T) {
+	_, err := NewClientBuilder("sloctl").Build()
+	require.Error(t, err)
+	assert.Equal(t, ErrClientBuilderMissingCredentials, err)
 }
 
 func TestClientBuilder_WithTimeout(t *testing.T) {
@@ -87,10 +93,23 @@ func TestClientBuilder_WithOfflineMode(t *testing.T) {
 
 	t.Run("WithDefaultCredentials", func(t *testing.T) {
 		client, err = NewClientBuilder("sloctl").
-			WithDefaultCredentials("url", "server", "id", "secret").
+			WithDefaultCredentials("id", "secret").
 			WithOfflineMode().
 			Build()
 		require.NoError(t, err)
 		assert.Equal(t, &Credentials{offlineMode: true}, client.Credentials)
 	})
+}
+
+func TestClientBuilder_WithOktaAuthServerURL(t *testing.T) {
+	oktaURL, err := OktaAuthServerURL("https://okta.org/api", "123")
+	require.NoError(t, err)
+	client, err := NewClientBuilder("sloctl").
+		WithOktaAuthServerURL(oktaURL).
+		WithDefaultCredentials("client-id", "client-secret").
+		Build()
+	require.NoError(t, err)
+	assert.Equal(t,
+		"https://okta.org/api/oauth2/123/v1/token",
+		client.Credentials.TokenProvider.(*OktaClient).requestTokenEndpoint)
 }

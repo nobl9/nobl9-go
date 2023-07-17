@@ -91,7 +91,7 @@ type Client struct {
 
 // DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
 func DefaultClient(clientID, clientSecret, userAgent string) (*Client, error) {
-	authServerURL, err := DefaultOktaAuthServer()
+	authServerURL, err := DefaultOktaAuthServerURL()
 	if err != nil {
 		return nil, err
 	}

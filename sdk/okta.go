@@ -27,11 +27,11 @@ const (
 	oktaRequestTimeout = 5 * time.Second
 )
 
-func DefaultOktaAuthServer() (*url.URL, error) {
-	return OktaAuthServer(defaultOktaOrgURL, defaultOktaAuthServerID)
+func DefaultOktaAuthServerURL() (*url.URL, error) {
+	return OktaAuthServerURL(defaultOktaOrgURL, defaultOktaAuthServerID)
 }
 
-func OktaAuthServer(oktaOrgURL, oktaAuthServer string) (*url.URL, error) {
+func OktaAuthServerURL(oktaOrgURL, oktaAuthServer string) (*url.URL, error) {
 	authServerURL, err := url.Parse(oktaOrgURL)
 	if err != nil {
 		return nil, errors.Wrapf(err, "invalid oktaOrgURL: %s", oktaOrgURL)

@@ -289,7 +289,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	srv = httptest.NewUnstartedServer(nil)
 	// Our server url will be our oktaOrgURL.
 	oktaOrgURL := "http://" + srv.Listener.Addr().String()
-	authServerURL, err := OktaAuthServer(oktaOrgURL, oktaAuthServer)
+	authServerURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
 	require.NoError(t, err)
 
 	// Create a signed token and use the generated public key to create JWK.
@@ -350,8 +350,11 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	})}
 
 	// Prepare our client.
+	oktaURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
+	require.NoError(t, err)
 	client, err = NewClientBuilder(userAgent).
-		WithDefaultCredentials(oktaOrgURL, oktaAuthServer, clientID, clientSecret).
+		WithDefaultCredentials(clientID, clientSecret).
+		WithOktaAuthServerURL(oktaURL).
 		Build()
 	require.NoError(t, err)
 
