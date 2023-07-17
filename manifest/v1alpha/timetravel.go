@@ -40,9 +40,8 @@ type TimeTravelStatus struct {
 
 // Variants of TimeTravelStatus.Status.
 const (
-	TimeTravelStatusInProgress = "In progress"
-	TimeTravelStatusFailed     = "Failed"
-	TimeTravelStatusCompleted  = "Completed"
+	TimeTravelStatusFailed    = "failed"
+	TimeTravelStatusCompleted = "completed"
 )
 
 type TimeTravelAvailability struct {
