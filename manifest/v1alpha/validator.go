@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
+	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -293,6 +294,9 @@ func isValidWebhookTemplate(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
 }
 
+// Deprecated: Email Subject is no longer needed and is ignored by notificationsemail.
+// This validation is kept for backwards compatibility and will be removed in the future.
+// Ref. PC-9759
 func isValidAlertMethodEmailSubject(fl v.FieldLevel) bool {
 	emailSubjectAllowedFields := make(map[string]struct{})
 	for k, v := range notificationTemplateAllowedFields {
@@ -304,6 +308,9 @@ func isValidAlertMethodEmailSubject(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, emailSubjectAllowedFields)
 }
 
+// Deprecated: Email Body is no longer needed and is ignored by notificationsemail.
+// This validation is kept for backwards compatibility and will be removed in the future.
+// Ref. PC-9759
 func isValidAlertMethodEmailBody(fl v.FieldLevel) bool {
 	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
 }
@@ -676,19 +683,13 @@ func isBadOverTotalEnabledForDataSource(spec SLOSpec) bool {
 		for _, threshold := range spec.Thresholds {
 			if threshold.CountMetrics != nil {
 				if threshold.CountMetrics.BadMetric != nil &&
-					isMetricSourceEnabledForBadOverTotal(threshold) {
+					!isBadOverTotalEnabledForDataSourceType(threshold) {
 					return false
 				}
 			}
 		}
 	}
 	return true
-}
-
-// List of currently supported data sources for bad over total - extend the list when adding support for
-// new data source integration
-func isMetricSourceEnabledForBadOverTotal(threshold Threshold) bool {
-	return threshold.CountMetrics.BadMetric.DataSourceType() != CloudWatch
 }
 
 func hasOnlyOneRawMetricDefinitionTypeOrNone(spec SLOSpec) bool {
@@ -1349,11 +1350,12 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(thresh Threshold) bool {
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
 	if thresh.CountMetrics != nil {
 		if thresh.CountMetrics.BadMetric == nil {
 			return false
 		}
-		return thresh.CountMetrics.BadMetric.DataSourceType() == CloudWatch
+		return slices.Contains(enabledDataSources, thresh.CountMetrics.BadMetric.DataSourceType())
 	}
 	return true
 }
