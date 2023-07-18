@@ -2314,8 +2314,16 @@ func isValidRoleARN(fl v.FieldLevel) bool {
 }
 
 func isValidMetricSourceKind(fl v.FieldLevel) bool {
-	value := fl.Field().String()
-	return value == KindAgent || value == KindDirect
+	switch fl.Field().Kind() {
+	case reflect.Int:
+		kind := manifest.Kind(fl.Field().Int())
+		if !kind.IsValid() {
+			return false
+		}
+		return kind == manifest.KindAgent || kind == manifest.KindDirect
+	default:
+		return false
+	}
 }
 
 func isValidMetricPathGraphite(fl v.FieldLevel) bool {

@@ -18,26 +18,6 @@ const (
 // HiddenValue can be used as a value of a secret field and is ignored during saving
 const HiddenValue = "[hidden]"
 
-// Kind groups Objects describing a specific type. Use this alias to increase code readability.
-type Kind = string
-
-// Possible values of field kind for valid Objects.
-const (
-	KindSLO          Kind = "SLO"
-	KindService      Kind = "Service"
-	KindAgent        Kind = "Agent"
-	KindProject      Kind = "Project"
-	KindAlertPolicy  Kind = "AlertPolicy"
-	KindAlertSilence Kind = "AlertSilence"
-	KindAlert        Kind = "Alert"
-	KindAlertMethod  Kind = "AlertMethod"
-	KindDirect       Kind = "Direct"
-	KindDataExport   Kind = "DataExport"
-	KindRoleBinding  Kind = "RoleBinding"
-	KindAnnotation   Kind = "Annotation"
-	KindUserGroup    Kind = "UserGroup"
-)
-
 const DatasourceStableChannel = "stable"
 
 type AgentsSlice []Agent
@@ -53,18 +33,6 @@ type ProjectsSlice []Project
 type RoleBindingsSlice []RoleBinding
 type AnnotationsSlice []Annotation
 type UserGroupsSlice []UserGroup
-
-func KindFromString(kindString string) Kind {
-	for _, kind := range []Kind{
-		KindSLO, KindService, KindAgent, KindProject, KindAlertPolicy, KindAlertSilence, KindAlert, KindAlertMethod,
-		KindDirect, KindDataExport, KindRoleBinding, KindAnnotation,
-	} {
-		if strings.EqualFold(kindString, kind) {
-			return kind
-		}
-	}
-	return ""
-}
 
 func (agents AgentsSlice) Clone() AgentsSlice {
 	clone := make([]Agent, len(agents))
@@ -441,9 +409,9 @@ type Indicator struct {
 }
 
 type MetricSourceSpec struct {
-	Project string `json:"project,omitempty" validate:"omitempty,objectName" example:"default"`
-	Name    string `json:"name" validate:"required,objectName" example:"prometheus-source"`
-	Kind    string `json:"kind" validate:"omitempty,metricSourceKind" example:"Agent"`
+	Project string        `json:"project,omitempty" validate:"omitempty,objectName" example:"default"`
+	Name    string        `json:"name" validate:"required,objectName" example:"prometheus-source"`
+	Kind    manifest.Kind `json:"kind" validate:"omitempty,metricSourceKind" example:"Agent"`
 }
 
 // Composite represents configuration for Composite SLO.
@@ -540,8 +508,8 @@ func genericToSLO(o manifest.ObjectGeneric, v validator, onlyHeader bool) (SLO, 
 	if res.Spec.Indicator.MetricSource.Project == "" {
 		res.Spec.Indicator.MetricSource.Project = res.Metadata.Project
 	}
-	if res.Spec.Indicator.MetricSource.Kind == "" {
-		res.Spec.Indicator.MetricSource.Kind = KindAgent
+	if !res.Spec.Indicator.MetricSource.Kind.IsValid() {
+		res.Spec.Indicator.MetricSource.Kind = manifest.KindAgent
 	}
 
 	// we're moving towards the version where raw metrics are defined on each objective, but for now,
@@ -1102,7 +1070,7 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 	return 0, errors.New("unknown agent type")
 }
 
-// genericToDirect converts ObjectGeneric to ObjectDirect
+// genericToDirect converts manifest.ObjectGeneric to Direct.
 func genericToDirect(o manifest.ObjectGeneric, v validator, onlyHeader bool) (Direct, error) {
 	res := Direct{
 		ObjectHeader: o.ObjectHeader,
@@ -1300,7 +1268,7 @@ type ServiceSpec struct {
 type Project struct {
 	manifest.ObjectInternal
 	APIVersion string                   `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string                   `json:"kind" validate:"required" example:"kind"`
+	Kind       manifest.Kind            `json:"kind" validate:"required" example:"kind"`
 	Metadata   manifest.ProjectMetadata `json:"metadata"`
 	Spec       ProjectSpec              `json:"spec"`
 }
@@ -1761,7 +1729,7 @@ func genericToProject(o manifest.ObjectGeneric, v validator, onlyHeader bool) (P
 type RoleBinding struct {
 	manifest.ObjectInternal
 	APIVersion string                       `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string                       `json:"kind" validate:"required" example:"kind"`
+	Kind       manifest.Kind                `json:"kind" validate:"required" example:"kind"`
 	Metadata   manifest.RoleBindingMetadata `json:"metadata"`
 	Spec       RoleBindingSpec              `json:"spec"`
 }
@@ -1820,15 +1788,15 @@ const allowedAgentsToModify = 1
 func Parse(o manifest.ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) (err error) {
 	v := NewValidator()
 	switch o.Kind {
-	case KindSLO:
+	case manifest.KindSLO:
 		var slo SLO
 		slo, err = genericToSLO(o, v, onlyHeaders)
 		parsedObjects.SLOs = append(parsedObjects.SLOs, slo)
-	case KindService:
+	case manifest.KindService:
 		var service Service
 		service, err = genericToService(o, v, onlyHeaders)
 		parsedObjects.Services = append(parsedObjects.Services, service)
-	case KindAgent:
+	case manifest.KindAgent:
 		var agent Agent
 		if len(parsedObjects.Agents) >= allowedAgentsToModify {
 			err = manifest.EnhanceError(o, errors.New("only one Agent can be defined in this configuration"))
@@ -1836,39 +1804,39 @@ func Parse(o manifest.ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool
 			agent, err = genericToAgent(o, v, onlyHeaders)
 			parsedObjects.Agents = append(parsedObjects.Agents, agent)
 		}
-	case KindAlertPolicy:
+	case manifest.KindAlertPolicy:
 		var alertPolicy AlertPolicy
 		alertPolicy, err = genericToAlertPolicy(o, v, onlyHeaders)
 		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
-	case KindAlertSilence:
+	case manifest.KindAlertSilence:
 		var alertSilence AlertSilence
 		alertSilence, err = genericToAlertSilence(o, v, onlyHeaders)
 		parsedObjects.AlertSilences = append(parsedObjects.AlertSilences, alertSilence)
-	case KindAlertMethod:
+	case manifest.KindAlertMethod:
 		var alertMethod AlertMethod
 		alertMethod, err = genericToAlertMethod(o, v, onlyHeaders)
 		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, alertMethod)
-	case KindDirect:
+	case manifest.KindDirect:
 		var direct Direct
 		direct, err = genericToDirect(o, v, onlyHeaders)
 		parsedObjects.Directs = append(parsedObjects.Directs, direct)
-	case KindDataExport:
+	case manifest.KindDataExport:
 		var dataExport DataExport
 		dataExport, err = genericToDataExport(o, v, onlyHeaders)
 		parsedObjects.DataExports = append(parsedObjects.DataExports, dataExport)
-	case KindProject:
+	case manifest.KindProject:
 		var project Project
 		project, err = genericToProject(o, v, onlyHeaders)
 		parsedObjects.Projects = append(parsedObjects.Projects, project)
-	case KindRoleBinding:
+	case manifest.KindRoleBinding:
 		var roleBinding RoleBinding
 		roleBinding, err = genericToRoleBinding(o, v)
 		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
-	case KindAnnotation:
+	case manifest.KindAnnotation:
 		var annotation Annotation
 		annotation, err = genericToAnnotation(o, v)
 		parsedObjects.Annotations = append(parsedObjects.Annotations, annotation)
-	case KindUserGroup:
+	case manifest.KindUserGroup:
 		var group UserGroup
 		group, err = genericToUserGroup(o)
 		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
@@ -1882,37 +1850,40 @@ func Parse(o manifest.ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool
 // Validate performs validation of parsed APIObjects.
 func (o APIObjects) Validate() (err error) {
 	var errs []error
-	if err = validateUniquenessConstraints(KindSLO, o.SLOs); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindSLO, o.SLOs); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindService, o.Services); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindService, o.Services); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindProject, o.Projects); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindProject, o.Projects); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindAgent, o.Agents); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindAgent, o.Agents); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindDirect, o.Directs); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindDirect, o.Directs); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindAlertMethod, o.AlertMethods); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindAlertMethod, o.AlertMethods); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindAlertPolicy, o.AlertPolicies); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindAlertPolicy, o.AlertPolicies); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindAlertSilence, o.AlertSilences); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindAlertSilence, o.AlertSilences); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindDataExport, o.DataExports); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindDataExport, o.DataExports); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindRoleBinding, o.RoleBindings); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindRoleBinding, o.RoleBindings); err != nil {
 		errs = append(errs, err)
 	}
-	if err = validateUniquenessConstraints(KindAnnotation, o.Annotations); err != nil {
+	if err = validateUniquenessConstraints(manifest.KindAnnotation, o.Annotations); err != nil {
+		errs = append(errs, err)
+	}
+	if err = validateUniquenessConstraints(manifest.KindUserGroup, o.UserGroups); err != nil {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
@@ -1944,7 +1915,7 @@ type uniqueIdentifiersGetter interface {
 // validateUniquenessConstraints finds conflicting objects in a Kind slice.
 // It returns an error if any conflicts were encountered.
 // The error informs about the cause and lists ALL conflicts.
-func validateUniquenessConstraints[T uniqueIdentifiersGetter](kind Kind, slice []T) error {
+func validateUniquenessConstraints[T uniqueIdentifiersGetter](kind manifest.Kind, slice []T) error {
 	unique := make(map[string]struct{}, len(slice))
 	var details []string
 	for i := range slice {
@@ -1963,9 +1934,9 @@ func validateUniquenessConstraints[T uniqueIdentifiersGetter](kind Kind, slice [
 }
 
 // conflictDetails creates a formatted string identifying a single conflict between two objects.
-func conflictDetails(kind Kind, uid uniqueIdentifiers) string {
+func conflictDetails(kind manifest.Kind, uid uniqueIdentifiers) string {
 	switch kind {
-	case KindProject, KindRoleBinding:
+	case manifest.KindProject, manifest.KindRoleBinding, manifest.KindUserGroup:
 		return fmt.Sprintf(`"%s"`, uid.Name)
 	default:
 		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, uid.Project, kind, uid.Name)
@@ -1974,15 +1945,15 @@ func conflictDetails(kind Kind, uid uniqueIdentifiers) string {
 
 // conflictError formats an error returned for a specific Kind with all it's conflicts listed as a JSON array.
 // nolint: stylecheck
-func conflictError(kind Kind, details []string) error {
+func conflictError(kind manifest.Kind, details []string) error {
 	return fmt.Errorf(`Constraint "%s" was violated due to the following conflicts: [%s]`,
 		constraintDetails(kind), strings.Join(details, ", "))
 }
 
 // constraintDetails creates a formatted string specifying the constraint which was broken.
-func constraintDetails(kind Kind) string {
+func constraintDetails(kind manifest.Kind) string {
 	switch kind {
-	case KindProject, KindRoleBinding:
+	case manifest.KindProject, manifest.KindRoleBinding, manifest.KindUserGroup:
 		return fmt.Sprintf(`%s.metadata.name has to be unique`, kind)
 	default:
 		return fmt.Sprintf(`%s.metadata.name has to be unique across a single Project`, kind)
