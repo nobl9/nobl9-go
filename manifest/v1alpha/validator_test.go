@@ -930,3 +930,27 @@ func TestLightstepMetric(t *testing.T) {
 		})
 	}
 }
+
+func TestIsBadOverTotalEnabledForDataSource_appd(t *testing.T) {
+	slo := SLOSpec{
+		Thresholds: []Threshold{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
+			TotalMetric: &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
+		}}},
+	}
+
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}
+
+func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
+	slo := SLOSpec{
+		Thresholds: []Threshold{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{CloudWatch: &CloudWatchMetric{}},
+			TotalMetric: &MetricSpec{CloudWatch: &CloudWatchMetric{}},
+		}}},
+	}
+
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}

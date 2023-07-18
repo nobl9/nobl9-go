@@ -2,23 +2,25 @@ package sdk
 
 import (
 	"net/http"
+	"net/url"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // ClientBuilder allows constructing Client using builder pattern (https://refactoring.guru/design-patterns/builder).
 type ClientBuilder struct {
-	http           *http.Client
-	timeout        time.Duration
-	credentials    *Credentials
-	userAgent      string
-	clientID       string
-	clientSecret   string
-	oktaOrgURL     string
-	oktaAuthServer string
-	offlineMode    bool
-	apiURL         string
+	http         *http.Client
+	timeout      time.Duration
+	credentials  *Credentials
+	userAgent    string
+	clientID     string
+	clientSecret string
+	oktaURL      *url.URL
+	offlineMode  bool
+	apiURL       string
 }
 
 // NewClientBuilder creates a new ClientBuilder instance.
@@ -46,14 +48,16 @@ func (b *ClientBuilder) WithOfflineMode() *ClientBuilder {
 
 // WithDefaultCredentials instructs the ClientBuilder to supply a default Credentials instance.
 // It is recommended for most use cases over WithCredentials.
-func (b *ClientBuilder) WithDefaultCredentials(
-	oktaOrgURL, oktaAuthServer,
-	clientID, clientSecret string,
-) *ClientBuilder {
-	b.oktaOrgURL = oktaOrgURL
-	b.oktaAuthServer = oktaAuthServer
+func (b *ClientBuilder) WithDefaultCredentials(clientID, clientSecret string) *ClientBuilder {
 	b.clientID = clientID
 	b.clientSecret = clientSecret
+	return b
+}
+
+// WithOktaAuthServerURL instructs the ClientBuilder to supply OktaClient instance configured with the provided URL.
+// If not supplied the default URL will be used.
+func (b *ClientBuilder) WithOktaAuthServerURL(u *url.URL) *ClientBuilder {
+	b.oktaURL = u
 	return b
 }
 
@@ -79,13 +83,20 @@ func (b *ClientBuilder) WithApiURL(apiURL string) *ClientBuilder {
 	return b
 }
 
+var ErrClientBuilderMissingCredentials = errors.New(
+	"at the very least sdk.ClientBuilder assembly chain must contain" +
+		" sdk.ClientBuilder.WithDefaultCredentials call in order to build an sdk.Client")
+
 // Build figures out which parts were supplied for ClientBuilder and sets the defaults for the Client it constructs.
 func (b *ClientBuilder) Build() (*Client, error) {
 	if b.offlineMode {
 		b.credentials = &Credentials{}
 		b.credentials.offlineMode = true
 	} else if b.credentials == nil {
-		authServerURL, err := OktaAuthServer(b.oktaOrgURL, b.oktaAuthServer)
+		if b.clientID == "" && b.clientSecret == "" {
+			return nil, ErrClientBuilderMissingCredentials
+		}
+		authServerURL, err := b.getAuthServerURL()
 		if err != nil {
 			return nil, err
 		}
@@ -111,4 +122,11 @@ func (b *ClientBuilder) Build() (*Client, error) {
 		}
 	}
 	return client, nil
+}
+
+func (b *ClientBuilder) getAuthServerURL() (*url.URL, error) {
+	if b.oktaURL == nil {
+		return DefaultOktaAuthServerURL()
+	}
+	return b.oktaURL, nil
 }
