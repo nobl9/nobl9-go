@@ -18,6 +18,7 @@ type DirectStatus struct {
 type DirectSpec struct {
 	Description             string                           `json:"description,omitempty" example:"Datadog description"` //nolint:lll
 	SourceOf                []string                         `json:"sourceOf" example:"Metrics,Services"`
+	ReleaseChannel          string                           `json:"releaseChannel,omitempty" example:"beta,stable"`
 	LogCollectionEnabled    *bool                            `json:"logCollectionEnabled,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval         `json:"historicalDataRetrieval"`
 	QueryDelay              *QueryDelayDuration              `json:"queryDelay"`
