@@ -954,3 +954,17 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
+
+func TestAlertConditionOpIsDeprecatedForTimeToBurnEntireBudget(t *testing.T) {
+	validate := NewValidator()
+	for _, op := range []string{"gt", "lt", "lte", "gte", "noop"} {
+		condition := AlertCondition{
+			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+			Operator:         op,
+		}
+		err := validate.Check(condition)
+		assert.Error(t, err)
+	}
+}
