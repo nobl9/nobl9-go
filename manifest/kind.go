@@ -27,6 +27,12 @@ func (k Kind) ToLower() string {
 	return strings.ToLower(k.String())
 }
 
+// Equals returns true if the Kind is equal to the given string.
+// The comparison is case-insensitive.
+func (k Kind) Equals(s string) bool {
+	return strings.EqualFold(k.String(), s)
+}
+
 // Applicable returns true if the Kind can be applied or deleted by the user.
 // In other words, it informs whether the Kind's lifecycle is managed by the user.
 func (k Kind) Applicable() bool {
