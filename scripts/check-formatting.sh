@@ -14,7 +14,7 @@ main() {
   cleanup_git
   
   make -C "$TMP_DIR" format
-  
+ 
   CHANGED=$(git -C "$TMP_DIR" diff --name-only)
   if [ -n "${CHANGED}" ]; then
     printf >&2 "The following file(s) are not formatted:\n%s\n" "$CHANGED"
