@@ -16,6 +16,8 @@ import (
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -63,7 +65,7 @@ func TestClient_GetObjects(t *testing.T) {
 	objects, err := client.GetObjects(
 		context.Background(),
 		"non-default",
-		KindService,
+		manifest.KindService,
 		map[string][]string{"team": {"green", "purple"}},
 		"service1", "service2",
 	)
@@ -92,7 +94,7 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	_, err := client.GetObjects(context.Background(), "", KindUserGroup, nil)
+	_, err := client.GetObjects(context.Background(), "", manifest.KindUserGroup, nil)
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, 1, calledTimes)
@@ -199,7 +201,7 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	err := client.DeleteObjectsByName(
 		context.Background(),
 		"my-project",
-		KindService,
+		manifest.KindService,
 		true,
 		"service1",
 		"service2",
