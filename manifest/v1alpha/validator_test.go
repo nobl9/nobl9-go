@@ -3,6 +3,7 @@
 package v1alpha
 
 import (
+	"golang.org/x/exp/slices"
 	"reflect"
 	"sort"
 	"testing"
@@ -955,16 +956,39 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
-func TestAlertConditionOpIsDeprecatedForTimeToBurnEntireBudget(t *testing.T) {
+func TestAlertConditionOpSupport(t *testing.T) {
+	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
 	validate := NewValidator()
-	for _, op := range []string{"gt", "lt", "lte", "gte", "noop"} {
-		condition := AlertCondition{
+	for condition, allowedOps := range map[AlertCondition][]string{
+		AlertCondition{
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-			Operator:         op,
-		}
-		err := validate.Check(condition)
-		assert.Error(t, err)
+		}: []string{},
+		AlertCondition{
+			Measurement:      MeasurementTimeToBurnBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+		}: []string{"lt"},
+		AlertCondition{
+			Measurement: MeasurementBurnedBudget.String(),
+			Value:       30,
+		}: []string{"gte"},
+		AlertCondition{
+			Measurement: MeasurementAverageBurnRate.String(),
+			Value:       30.0,
+		}: []string{"gte"},
+	} {
+		t.Run(condition.Measurement, func(t *testing.T) {
+			for _, op := range allOps {
+				condition.Operator = op
+				err := validate.Check(condition)
+				if slices.Contains(allowedOps, op) {
+					assert.NoError(t, err)
+				} else {
+					assert.Error(t, err)
+				}
+			}
+		})
 	}
 }
