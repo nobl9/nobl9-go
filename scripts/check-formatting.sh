@@ -12,7 +12,7 @@ cleanup_git() {
 main() {
   cp -r . "$TMP_DIR"
   cleanup_git
-  
+ 
   make -C "$TMP_DIR" format
  
   CHANGED=$(git -C "$TMP_DIR" diff --name-only)
