@@ -17,6 +17,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
@@ -179,7 +180,7 @@ const (
 func (c *Client) GetObjects(
 	ctx context.Context,
 	project string,
-	kind Kind,
+	kind manifest.Kind,
 	filterLabel map[string][]string,
 	names ...string,
 ) ([]AnyJSONObj, error) {
@@ -200,7 +201,7 @@ func (c *Client) GetObjects(
 func (c *Client) GetObjectsWithParams(
 	ctx context.Context,
 	project string,
-	kind Kind,
+	kind manifest.Kind,
 	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
@@ -250,9 +251,9 @@ func (c *Client) GetObjectsWithParams(
 	}
 }
 
-func (c *Client) resolveGetObjectEndpoint(kind Kind) string {
+func (c *Client) resolveGetObjectEndpoint(kind manifest.Kind) string {
 	switch kind {
-	case KindUserGroup:
+	case manifest.KindUserGroup:
 		return apiGetGroups
 	default:
 		return path.Join(apiGet, kind.ToLower())
@@ -365,7 +366,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 func (c *Client) DeleteObjectsByName(
 	ctx context.Context,
 	project string,
-	kind Kind,
+	kind manifest.Kind,
 	dryRun bool,
 	names ...string,
 ) error {
