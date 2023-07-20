@@ -51,7 +51,7 @@ check/lint:
 check/gosec:
 	$(call _ensure_installed,binary,gosec)
 	echo "Running gosec..."
-	$(BIN_DIR)/gosec -exclude-generated ./...
+	$(BIN_DIR)/gosec -exclude-generated -quiet ./...
 
 ## Check spelling, rules are defined in cspell.json.
 check/spell:
