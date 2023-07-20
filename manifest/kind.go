@@ -1,6 +1,6 @@
 package manifest
 
-//go:generate ../bin/go-enum --nocase --lower --names --marshal --values
+//go:generate ../bin/go-enum --nocase --lower --names --values
 
 import "strings"
 
@@ -49,4 +49,21 @@ func ApplicableKinds() []Kind {
 		}
 	}
 	return applicable
+}
+
+// MarshalText implements the text encoding.TextMarshaler interface.
+func (k Kind) MarshalText() ([]byte, error) {
+	return []byte(k.String()), nil
+}
+
+// UnmarshalText implements the text encoding.TextUnmarshaler interface.
+func (k *Kind) UnmarshalText(text []byte) error {
+	tmp, err := ParseKind(string(text))
+	// We cannot fail here as we often use a partial representation of our objects.
+	// For instance, embedding AlertMethod inside AlertPolicy.
+	if err != nil {
+		tmp = 0
+	}
+	*k = tmp
+	return nil
 }

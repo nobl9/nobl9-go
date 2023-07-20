@@ -157,19 +157,3 @@ func ParseKind(name string) (Kind, error) {
 	}
 	return Kind(0), fmt.Errorf("%s is %w", name, ErrInvalidKind)
 }
-
-// MarshalText implements the text marshaller method.
-func (x Kind) MarshalText() ([]byte, error) {
-	return []byte(x.String()), nil
-}
-
-// UnmarshalText implements the text unmarshaller method.
-func (x *Kind) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := ParseKind(name)
-	if err != nil {
-		return err
-	}
-	*x = tmp
-	return nil
-}
