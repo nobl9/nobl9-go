@@ -6,10 +6,12 @@
     "cspell": "6.31.2",
     "license-checker": "25.0.1",
     "markdownlint-cli": "0.35.0",
-    "renovate": "36.8.1"
+    "renovate": "36.8.1",
+    "yaml": "2.3.1"
   },
   "scripts": {
-    "check-trailing-whitespaces": "node .github/scripts/check-trailing-whitespaces.js"
+    "check-trailing-whitespaces": "node ./scripts/check-trailing-whitespaces.js",
+    "format-cspell-config": "node ./scripts/format-cspell-config.js"
   },
   "packageManager": "yarn@3.6.1"
 }

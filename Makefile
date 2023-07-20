@@ -4,7 +4,7 @@ MAKEFLAGS += --silent --no-print-directory
 BIN_DIR := ./bin
 
 # renovate datasource=github-releases depName=abice/go-enum
-GO_ENUM_VERSION := v0.5.6
+GO_ENUM_VERSION := v0.5.5
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.16.0
 # renovate datasource=github-releases depName=golangci/golangci-lint
@@ -93,6 +93,19 @@ generate:
 	$(call _ensure_installed,binary,go-enum)
 	echo "Generating Go code..."
 	go generate ./...
+
+.PHONY: format format/go format/cspell
+## Format files.
+format: format/go format/cspell
+
+## Format Go files.
+format/go:
+	go fmt ./...
+	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
+
+## Format cspell config file.
+format/cspell:
+	yarn format-cspell-config
 
 .PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
 ## Install all dev dependencies.
