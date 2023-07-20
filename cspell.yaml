@@ -29,6 +29,8 @@ words:
   - auseg9kiegWKEtJZC416
   - dynatrace
   - falsef
+  - goimports
+  - golangci
   - gomnd
   - gosec
   - govulncheck
@@ -51,9 +53,6 @@ words:
   - truef
   - tsdb
   - usrmgmt
+  - vuln
   - vulns
   - wrapf
-  - goimports
-  - golangci
-  - gosec
-  - vuln

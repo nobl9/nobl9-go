@@ -10,7 +10,6 @@ import { readFileSync, writeFileSync } from 'fs';
 const CSPELL_CONFIG = "cspell.yaml"
 
 function format() {
-  console.info(`Formatting ${CSPELL_CONFIG}`)
   const f = readFileSync(CSPELL_CONFIG, 'utf8')
   const yaml = YAML.parse(f)
 

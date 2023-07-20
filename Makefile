@@ -107,12 +107,14 @@ format: format/go format/cspell
 ## Format Go files.
 format/go:
 	$(call _ensure_installed,binary,goimports)
+	echo "Formatting Go files..."
 	go fmt ./...
 	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
 
 ## Format cspell config file.
 format/cspell:
 	$(call _ensure_installed,yarn,yaml)
+	echo "Formatting cspell.yaml configuration (words list)..."
 	yarn --silent format-cspell-config
 
 .PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
