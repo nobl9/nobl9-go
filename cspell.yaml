@@ -17,40 +17,43 @@ ignoreRegExpList:
 ignorePaths:
   - sdk/definitions/test_data
   - .golangci.yml
-  - '**/*.lock'
-  - '**/go.mod'
-  - '**/go.sum'
-  - '**/node_modules/**'
+  - "**/*.lock"
+  - "**/go.mod"
+  - "**/go.sum"
+  - "**/node_modules/**"
   - cspell.json
   - CODEOWNERS
   - bin/**
-  # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
 words:
-  - nobl
-  - slos
-  - dynatrace
-  - tsdb
-  - msteams
-  - rollup
-  - sloctl
-  - nrql
-  - slis
-  - logql
-  - opentsdb
-  - gosec
-  - gomnd
-  - jwks
-  - wrapf
-  - falsef
-  - truef
-  - usrmgmt
   - auseg9kiegWKEtJZC416
+  - dynatrace
+  - falsef
+  - gomnd
+  - gosec
+  - govulncheck
+  - jwks
+  - logql
   - msgf
+  - msteams
+  - nobl
+  - nocase
+  - nocomments
+  - nrql
+  - opentsdb
   - println
   - promql
-  - vulns
-  - govulncheck
+  - rollup
+  - slis
+  - sloctl
   - sloerrorbudgetstatus
-  - nocomments
-  - nocase
+  - slos
+  - truef
+  - tsdb
+  - usrmgmt
+  - vulns
+  - wrapf
+  - goimports
+  - golangci
+  - gosec
+  - vuln

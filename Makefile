@@ -87,6 +87,12 @@ check/renovate:
 	echo "Validating Renovate configuration..."
 	yarn --silent renovate-config-validator
 
+## Verify if the files are formatted.
+## You must first commit the changes, otherwise it won't detect the diffs.
+check/format:
+	echo "Checking if files are formatted..."
+	./scripts/check-formatting.sh
+
 .PHONY: generate
 ## Auto generate code.
 generate:
@@ -100,12 +106,14 @@ format: format/go format/cspell
 
 ## Format Go files.
 format/go:
+	$(call _ensure_installed,binary,goimports)
 	go fmt ./...
 	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
 
 ## Format cspell config file.
 format/cspell:
-	yarn format-cspell-config
+	$(call _ensure_installed,yarn,yaml)
+	yarn --silent format-cspell-config
 
 .PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
 ## Install all dev dependencies.
