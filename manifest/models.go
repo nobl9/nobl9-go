@@ -62,7 +62,7 @@ type RoleBindingMetadata struct {
 // ObjectHeader represents Header which is common for all available Objects
 type ObjectHeader struct {
 	APIVersion string `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string `json:"kind" validate:"required" example:"kind"`
+	Kind       Kind   `json:"kind" validate:"required" example:"kind"`
 	MetadataHolder
 	ObjectInternal
 }
@@ -90,7 +90,7 @@ func JSONToGenericObjects(jsonPayload []byte) ([]ObjectGeneric, error) {
 // for not empty field kind returns always that is not supported for this apiVersion
 // so have to be validated before
 func UnsupportedKindErr(o ObjectGeneric) error {
-	if strings.TrimSpace(o.Kind) == "" {
+	if strings.TrimSpace(o.Kind.String()) == "" {
 		return EnhanceError(o, errors.New("missing or empty field kind for an Object"))
 	}
 	return EnhanceError(o, fmt.Errorf("invalid Object kind: %s for apiVersion: %s", o.Kind, o.APIVersion))

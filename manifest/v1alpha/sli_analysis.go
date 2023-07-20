@@ -3,6 +3,7 @@ package v1alpha
 import (
 	"time"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
@@ -17,7 +18,7 @@ type SLIAnalysis struct {
 }
 
 type AnalysisMetricSpec struct {
-	Kind         string            `json:"kind" validate:"required,metricSourceKind"`
+	Kind         manifest.Kind     `json:"kind" validate:"required,metricSourceKind"`
 	MetricSource string            `json:"metricSource" validate:"required,objectName"`
 	RawMetric    *MetricSpec       `json:"rawMetric,omitempty"`
 	CountMetrics *CountMetricsSpec `json:"countMetrics,omitempty"`

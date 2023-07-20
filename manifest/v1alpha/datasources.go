@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 type DataSourceType int
@@ -335,13 +337,14 @@ var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	AppDynamics.String(): {Value: ptr(30), Unit: HRDDay},
 }
 
-func GetDataRetrievalMaxDuration(kind Kind, typeName string) (HistoricalRetrievalDuration, error) {
+func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
+	//nolint: exhaustive
 	switch kind {
-	case KindAgent:
+	case manifest.KindAgent:
 		if hrd, ok := agentDataRetrievalMaxDuration[typeName]; ok {
 			return hrd, nil
 		}
-	case KindDirect:
+	case manifest.KindDirect:
 		if hrd, ok := directDataRetrievalMaxDuration[typeName]; ok {
 			return hrd, nil
 		}
