@@ -14,6 +14,7 @@ ignoreRegExpList:
   - /https?:\/\/.*/g
   - /github.*/g
   - /nolint.*/g
+  - /nosec.*/g
 ignorePaths:
   - sdk/definitions/test_data
   - .golangci.yml
@@ -28,7 +29,9 @@ ignorePaths:
 words:
   - auseg9kiegWKEtJZC416
   - dynatrace
+  - endef
   - falsef
+  - gobin
   - goimports
   - golangci
   - gomnd

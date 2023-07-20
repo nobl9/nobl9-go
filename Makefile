@@ -64,7 +64,7 @@ check/trailing:
 	echo "Looking for trailing whitespaces..."
 	yarn --silent check-trailing-whitespaces
 
-## Check markdown files for potential issues with mardkownlint.
+## Check markdown files for potential issues with markdownlint.
 check/markdown:
 	$(call _ensure_installed,yarn,markdownlint)
 	echo "Verifying Mardown files..."
