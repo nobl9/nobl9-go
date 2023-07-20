@@ -4,7 +4,7 @@ MAKEFLAGS += --silent --no-print-directory
 BIN_DIR := ./bin
 
 # renovate datasource=github-releases depName=abice/go-enum
-GO_ENUM_VERSION := v0.5.5
+GO_ENUM_VERSION := v0.5.6
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.16.0
 # renovate datasource=github-releases depName=golangci/golangci-lint
@@ -27,77 +27,84 @@ define _install_go_binary
 	GOBIN=$(realpath $(BIN_DIR)) go install "${1}"
 endef
 
+# Print Makefile target step description for check.
+# Only print 'check' steps this way, and not dependent steps, like 'install'.
+# ${1} - step description
+define _print_check_step
+	printf -- '------\n%s...\n' "${1}"
+endef
+
 .PHONY: test
 ## Run all unit tests.
 test:
 	go test -race -cover ./...
 
-.PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+.PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/renovate check/format check/generate check/vulns
 ## Run all checks.
-check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/vulns
+check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/renovate check/format check/generate check/vulns
 
 ## Run 'go vet' on the whole project.
 check/vet:
-	echo "Running go vet..."
+	$(call _print_check_step,Running go vet)
 	go vet ./...
 
 ## Run golangci-lint all-in-one linter with configuration defined inside .golangci.yml.
 check/lint:
+	$(call _print_check_step,Running golangci-lint)
 	$(call _ensure_installed,binary,golangci-lint)
-	echo "Running golangci-lint..."
 	$(BIN_DIR)/golangci-lint run
 
 ## Check for security problems using gosec, which inspects the Go code by scanning the AST.
 check/gosec:
+	$(call _print_check_step,Running gosec)
 	$(call _ensure_installed,binary,gosec)
-	echo "Running gosec..."
 	$(BIN_DIR)/gosec -exclude-generated -quiet ./...
 
 ## Check spelling, rules are defined in cspell.json.
 check/spell:
+	$(call _print_check_step,Verifying spelling)
 	$(call _ensure_installed,yarn,cspell)
-	echo "Verifying spelling..."
 	yarn --silent cspell --no-progress '**/**'
 
 ## Check for trailing whitespaces in any of the projects' files.
 check/trailing:
-	echo "Looking for trailing whitespaces..."
+	$(call _print_check_step,Looking for trailing whitespaces)
 	yarn --silent check-trailing-whitespaces
 
 ## Check markdown files for potential issues with markdownlint.
 check/markdown:
+	$(call _print_check_step,Verifying Mardown files)
 	$(call _ensure_installed,yarn,markdownlint)
-	echo "Verifying Mardown files..."
 	yarn --silent markdownlint '*.md' --disable MD010 # MD010 does not handle code blocks well.
 
 ## Check for potential vulnerabilities across all Go dependencies.
 check/vulns:
+	$(call _print_check_step,Running govulncheck)
 	$(call _ensure_installed,binary,govulncheck)
-	echo "Running govulncheck..."
 	$(BIN_DIR)/govulncheck ./...
 
 ## Verify if the auto generated code has been committed.
 check/generate:
-	echo "Checking if generated code matches the provided definitions..."
+	$(call _print_check_step,Checking if generated code matches the provided definitions)
 	./scripts/check-generate.sh
 
 ## Validate Renovate configuration.
 check/renovate:
+	$(call _print_check_step,Validating Renovate configuration)
 	$(call _ensure_installed,yarn,renovate)
-	echo "Validating Renovate configuration..."
 	yarn --silent renovate-config-validator
 
 ## Verify if the files are formatted.
 ## You must first commit the changes, otherwise it won't detect the diffs.
 check/format:
-	echo "Checking if files are formatted..."
+	$(call _print_check_step,Checking if files are formatted)
 	./scripts/check-formatting.sh
 
 .PHONY: generate
 ## Auto generate code.
 generate:
-	$(call _ensure_installed,binary,go-enum)
 	echo "Generating Go code..."
+	$(call _ensure_installed,binary,go-enum)
 	go generate ./...
 
 .PHONY: format format/go format/cspell
@@ -106,15 +113,15 @@ format: format/go format/cspell
 
 ## Format Go files.
 format/go:
-	$(call _ensure_installed,binary,goimports)
 	echo "Formatting Go files..."
+	$(call _ensure_installed,binary,goimports)
 	go fmt ./...
 	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
 
 ## Format cspell config file.
 format/cspell:
-	$(call _ensure_installed,yarn,yaml)
 	echo "Formatting cspell.yaml configuration (words list)..."
+	$(call _ensure_installed,yarn,yaml)
 	yarn --silent format-cspell-config
 
 .PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
