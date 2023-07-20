@@ -9,9 +9,15 @@ import (
 type UserGroup struct {
 	manifest.ObjectInternal
 	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string        `json:"kind" validate:"required" example:"kind"`
+	Kind       manifest.Kind `json:"kind" validate:"required" example:"kind"`
 	Metadata   GroupMetadata `json:"metadata"`
 	Spec       UserGroupSpec `json:"spec"`
+}
+
+// getUniqueIdentifiers returns uniqueIdentifiers used to check
+// potential conflicts between simultaneously applied objects.
+func (u UserGroup) getUniqueIdentifiers() uniqueIdentifiers {
+	return uniqueIdentifiers{Name: u.Metadata.Name}
 }
 
 // UserGroupSpec represents content of UserGroup's Spec
