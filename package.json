@@ -11,8 +11,7 @@
   },
   "scripts": {
     "check-trailing-whitespaces": "node ./scripts/check-trailing-whitespaces.js",
-    "format-cspell-config": "node ./scripts/format-cspell-config.js",
-    "check-versions-integrity": "node ./scripts/check-versions-integrity.js"
+    "format-cspell-config": "node ./scripts/format-cspell-config.js"
   },
   "packageManager": "yarn@3.6.1"
 }
