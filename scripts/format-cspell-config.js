@@ -11,14 +11,20 @@ const CSPELL_CONFIG = "cspell.yaml"
 
 function format() {
   const f = readFileSync(CSPELL_CONFIG, 'utf8')
-  const yaml = YAML.parse(f)
+  const yaml = YAML.parseDocument(f, { keepSourceTokens: true })
 
-  let words = yaml['words']
-  words.sort()
-  words = [...new Set(words)]
-  yaml['words'] = words
+  let words = yaml.get('words')
+  words.items.sort()
+  let set = new Set()
+  words.items = words.items.filter((w) => {
+    if (!set.has(w.value)) {
+      set.add(w.value)
+      return true
+    }
+    return false
+  })
 
-  writeFileSync(CSPELL_CONFIG, YAML.stringify(yaml))
+  writeFileSync(CSPELL_CONFIG, yaml.toString())
 }
 
 try { format() } catch (err) { console.error(err) }

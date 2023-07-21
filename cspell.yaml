@@ -25,6 +25,7 @@ ignorePaths:
   - cspell.json
   - CODEOWNERS
   - bin/**
+  # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
 words:
   - auseg9kiegWKEtJZC416
