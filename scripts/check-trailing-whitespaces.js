@@ -1,8 +1,8 @@
 /*
-    Linter which checks if all files under git control do not contain any trailing
-    white spaces (both spaces and tabs characters), moreover non-text files are
-    excluded from check based on extension from array fileExtensionsToIgnore
-    Requires git available in PATH and can be run only in a repository
+  Linter which checks if all files under git control do not contain any trailing
+  white spaces (both spaces and tabs characters), moreover non-text files are
+  excluded from check based on extension from array fileExtensionsToIgnore
+  Requires git available in PATH and can be run only in a repository
 */
 
 import { readFile } from 'fs'
