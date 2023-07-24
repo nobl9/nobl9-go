@@ -3,10 +3,11 @@
 package v1alpha
 
 import (
-	"golang.org/x/exp/slices"
 	"reflect"
 	"sort"
 	"testing"
+
+	"golang.org/x/exp/slices"
 
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
@@ -964,20 +965,20 @@ func TestAlertConditionOpSupport(t *testing.T) {
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: []string{},
+		}: {},
 		AlertCondition{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: []string{"lt"},
+		}: {"lt"},
 		AlertCondition{
 			Measurement: MeasurementBurnedBudget.String(),
 			Value:       30.0,
-		}: []string{"gte"},
+		}: {"gte"},
 		AlertCondition{
 			Measurement: MeasurementAverageBurnRate.String(),
 			Value:       30.0,
-		}: []string{"gte"},
+		}: {"gte"},
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
 			for _, op := range allOps {
