@@ -958,21 +958,21 @@ func TestAlertConditionOpSupport(t *testing.T) {
 	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
 	validate := NewValidator()
 	for condition, allowedOps := range map[AlertCondition][]string{
-		AlertCondition{
+		{
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
 		}: {},
-		AlertCondition{
+		{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
 		}: {"lt"},
-		AlertCondition{
+		{
 			Measurement: MeasurementBurnedBudget.String(),
 			Value:       30.0,
 		}: {"gte"},
-		AlertCondition{
+		{
 			Measurement: MeasurementAverageBurnRate.String(),
 			Value:       30.0,
 		}: {"gte"},
