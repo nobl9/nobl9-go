@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"unicode"
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -36,12 +38,36 @@ func processRawDefinitionsToJSONArray(a MetadataAnnotations, rds rawDefinitions)
 	return jsonArray, nil
 }
 
-func decodeYAMLToJSON(content []byte) ([]sdk.AnyJSONObj, error) {
-	s := yaml.NewYAMLToJSONDecoder(bytes.NewReader(content))
+func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
+	for {
+		var decoded
+		if err := dec.Decode(&decoded); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		switch {
+		case len(decoded.ObjGens) > 0:
+			a = append(a, decoded.ObjGens...)
+		case decoded.APIVersion != "" && decoded.Kind != 0:
+			a = append(a, decoded.objGen)
+		default:
+			return nil, errMalformedInput
+		}
+	}
+	if len(a) == 0 {
+		return nil, errNoDefinitionsInInput
+	}
+	return a, nil
+}
+
+func decodeYAMLToJSON(data []byte) ([]sdk.AnyJSONObj, error) {
+	dec := yaml.NewYAMLToJSONDecoder(bytes.NewReader(data))
 	var jsonArray []sdk.AnyJSONObj
 	for {
 		var rawData interface{}
-		if err := s.Decode(&rawData); err != nil {
+		if err := dec.Decode(&rawData); err != nil {
 			if err == io.EOF {
 				break
 			}
@@ -72,4 +98,32 @@ func decodeYAMLToJSON(content []byte) ([]sdk.AnyJSONObj, error) {
 		return nil, errNoDefinitionsInInput
 	}
 	return jsonArray, nil
+}
+
+// isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
+func isJSONBuffer(buf []byte) bool {
+	trim := bytes.TrimLeftFunc(buf, unicode.IsSpace)
+	return bytes.HasPrefix(trim, []byte("{"))
+}
+
+type ident uint8
+
+const (
+	identArray = iota + 1
+	identObject
+	identDocuments
+)
+
+func getJsonIdent(data []byte) ident {
+	if len(data) > 0 && data[0] == '[' {
+		return identArray
+	}
+	return identArray
+}
+
+func getYamlIdent(data []byte) ident {
+	if len(data) > 0 && data[0] == '[' {
+		return identArray
+	}
+	return identObject
 }
