@@ -9,13 +9,15 @@ const (
 	MeasurementBurnedBudget Measurement = iota + 1
 	MeasurementAverageBurnRate
 	MeasurementTimeToBurnBudget
+	MeasurementTimeToBurnEntireBudget
 )
 
 func getMeasurements() map[string]Measurement {
 	return map[string]Measurement{
-		"burnedBudget":     MeasurementBurnedBudget,
-		"averageBurnRate":  MeasurementAverageBurnRate,
-		"timeToBurnBudget": MeasurementTimeToBurnBudget,
+		"burnedBudget":           MeasurementBurnedBudget,
+		"averageBurnRate":        MeasurementAverageBurnRate,
+		"timeToBurnBudget":       MeasurementTimeToBurnBudget,
+		"timeToBurnEntireBudget": MeasurementTimeToBurnEntireBudget,
 	}
 }
 
