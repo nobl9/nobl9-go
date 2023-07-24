@@ -2,7 +2,6 @@
 
 set -e
 
-ENUM_PATH="*_enum.go"
 TMP_DIR=$(mktemp -d)
 
 cleanup_git() {
@@ -14,11 +13,11 @@ main() {
   cp -r . "$TMP_DIR"
   cleanup_git
 
-  make -C "$TMP_DIR" generate
+  make -C "$TMP_DIR" format
 
-  CHANGED=$(git -C "$TMP_DIR" diff --name-only "${ENUM_PATH}")
+  CHANGED=$(git -C "$TMP_DIR" diff --name-only)
   if [ -n "${CHANGED}" ]; then
-    printf >&2 "There are generated code changes that are not committed:\n%s\n" "$CHANGED"
+    printf >&2 "The following file(s) are not formatted:\n%s\n" "$CHANGED"
     exit 1
   else
     echo "Looks good!"
