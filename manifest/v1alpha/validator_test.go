@@ -7,10 +7,9 @@ import (
 	"sort"
 	"testing"
 
-	"golang.org/x/exp/slices"
-
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
