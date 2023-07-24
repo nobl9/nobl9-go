@@ -2123,8 +2123,8 @@ func alertPolicyConditionWithLastsForMeasurementValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
 	switch condition.Measurement {
-	case MeasurementTimeToBurnBudget.String():
-	case MeasurementTimeToBurnEntireBudget.String():
+	case MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String():
 		valueDuration, ok := condition.Value.(string)
 		if !ok {
 			sl.ReportError(condition, "measurement", "Measurement", "invalidValueDuration", "")
@@ -2137,8 +2137,8 @@ func alertPolicyConditionWithLastsForMeasurementValidation(sl v.StructLevel) {
 		if duration <= 0 {
 			sl.ReportError(condition, "measurement", "Measurement", "negativeOrZeroValueDuration", "")
 		}
-	case MeasurementBurnedBudget.String():
-	case MeasurementAverageBurnRate.String():
+	case MeasurementBurnedBudget.String(),
+		MeasurementAverageBurnRate.String():
 		_, ok := condition.Value.(float64)
 		if !ok {
 			sl.ReportError(condition, "measurement", "Measurement", "invalidValue", "")

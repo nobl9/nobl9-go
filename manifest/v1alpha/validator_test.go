@@ -972,7 +972,7 @@ func TestAlertConditionOpSupport(t *testing.T) {
 		}: []string{"lt"},
 		AlertCondition{
 			Measurement: MeasurementBurnedBudget.String(),
-			Value:       30,
+			Value:       30.0,
 		}: []string{"gte"},
 		AlertCondition{
 			Measurement: MeasurementAverageBurnRate.String(),
