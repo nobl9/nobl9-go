@@ -19,7 +19,7 @@ var ThousandEyesTestAgentConfig map[string]thousandEyesConfig
 
 type thousandEyesConfig struct {
 	MinimumAgent      string
-	SupportedChannels []string
+	SupportedChannels map[string]struct{}
 }
 
 const (
@@ -36,8 +36,8 @@ const (
 
 // nolint: gochecknoinits
 func init() {
-	all := []string{stable, beta, alpha}
-	betaOnly := []string{beta}
+	all := map[string]struct{}{stable: {}, beta: {}, alpha: {}}
+	betaOnly := map[string]struct{}{beta: {}}
 
 	ThousandEyesTestAgentConfig = map[string]thousandEyesConfig{
 		ThousandEyesNetLatency:       {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
