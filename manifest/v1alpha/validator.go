@@ -2547,7 +2547,10 @@ func supportedThousandEyesTestType(fl v.FieldLevel) bool {
 		ThousandEyesWebDOMLoad,
 		ThousandEyesHTTPResponseTime,
 		ThousandEyesServerAvailability,
-		ThousandEyesServerThroughput:
+		ThousandEyesServerThroughput,
+		ThousandEyesServerTotalTime,
+		ThousandEyesDNSServerResolutionTime,
+		ThousandEyesDNSSECValid:
 		return true
 	}
 	return false
