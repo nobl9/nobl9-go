@@ -1,59 +1,62 @@
 allowCompoundWords: true
 language: en_US
 dictionaries:
-  - bash
   - companies
-  - go
   - misc
   - softwareTerms
+  - go
+  - bash
+  - typescript
+  - node
+  - npm
 ignoreRegExpList:
   - /\|\s+[T|G]{2,}\s+\|/g
+  - /https?:\/\/.*/g
+  - /github.*/g
+  - /nolint.*/g
+  - /nosec.*/g
 ignorePaths:
   - sdk/definitions/test_data
   - .golangci.yml
-  - '**/*.lock'
-  - '**/go.mod'
-  - '**/go.sum'
-  - '**/node_modules/**'
+  - "**/*.lock"
+  - "**/go.mod"
+  - "**/go.sum"
+  - "**/node_modules/**"
   - cspell.json
   - CODEOWNERS
   - bin/**
   # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
 words:
-  - nobl
-  - slos
-  - dynatrace
-  - tsdb
-  - msteams
-  - nolint
-  - rollup
-  - sloctl
-  - nrql
-  - nosec
-  - gosec
-  - slis
-  - logql
-  - opentsdb
-  - logql
-  - gomnd
-  - golangci
-  - stretchr
-  - jwks
-  - lestrrat
-  - wrapf
-  - falsef
-  - truef
-  - usrmgmt
-  - patrickmn
-  - mitchellh
   - auseg9kiegWKEtJZC416
+  - dynatrace
+  - endef
+  - falsef
+  - gobin
+  - goimports
+  - golangci
+  - gomnd
+  - gosec
+  - govulncheck
+  - jwks
+  - logql
   - msgf
+  - msteams
+  - nobl
+  - nocase
+  - nocomments
+  - nrql
+  - opentsdb
   - println
   - promql
-  - bmatcuk
-  - vulns
-  - govulncheck
+  - rollup
+  - slis
+  - sloctl
   - sloerrorbudgetstatus
-  - nocomments
-  - nocase
+  - slos
+  - truef
+  - tsdb
+  - usrmgmt
+  - vuln
+  - vulns
+  - wrapf

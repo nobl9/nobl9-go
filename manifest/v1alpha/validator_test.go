@@ -1,5 +1,3 @@
-//go:build unit_test
-
 package v1alpha
 
 import (
@@ -9,6 +7,7 @@ import (
 
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
@@ -965,4 +964,41 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
+}
+
+func TestAlertConditionOpSupport(t *testing.T) {
+	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
+	validate := NewValidator()
+	for condition, allowedOps := range map[AlertCondition][]string{
+		{
+			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+		}: {},
+		{
+			Measurement:      MeasurementTimeToBurnBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+		}: {"lt"},
+		{
+			Measurement: MeasurementBurnedBudget.String(),
+			Value:       30.0,
+		}: {"gte"},
+		{
+			Measurement: MeasurementAverageBurnRate.String(),
+			Value:       30.0,
+		}: {"gte"},
+	} {
+		t.Run(condition.Measurement, func(t *testing.T) {
+			for _, op := range allOps {
+				condition.Operator = op
+				err := validate.Check(condition)
+				if slices.Contains(allowedOps, op) {
+					assert.NoError(t, err)
+				} else {
+					assert.Error(t, err)
+				}
+			}
+		})
+	}
 }
