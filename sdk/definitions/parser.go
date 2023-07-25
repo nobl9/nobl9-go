@@ -5,12 +5,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"regexp"
 	"unicode"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/util/yaml"
+	"gopkg.in/yaml.v3"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -47,26 +46,25 @@ type genericObject struct {
 }
 
 func (o *genericObject) UnmarshalJSON(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
+	ufunc := func(v interface{}) error { return json.Unmarshal(data, v) }
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON, ufunc)
 }
 
-func (o *genericObject) UnmarshalYAML(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
+func (o *genericObject) UnmarshalYAML(value *yaml.Node) error {
+	ufunc := func(v interface{}) error { return value.Decode(v) }
+	return o.unmarshalGeneric(nil, manifest.RawObjectFormatYAML, ufunc)
 }
 
-func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
+func (o *genericObject) unmarshalGeneric(
+	data []byte,
+	format manifest.RawObjectFormat,
+	unmarshal func(v interface{}) error,
+) error {
 	var object struct {
 		ApiVersion manifest.Version `json:"apiVersion"`
 		Kind       manifest.Kind    `json:"kind"`
 	}
-	var unmarshal func(data []byte, v interface{}) error
-	switch format {
-	case manifest.RawObjectFormatJSON:
-		unmarshal = json.Unmarshal
-	case manifest.RawObjectFormatYAML:
-		unmarshal = yaml.Unmarshal
-	}
-	if err := unmarshal(data, &object); err != nil {
+	if err := unmarshal(&object); err != nil {
 		return err
 	}
 	switch object.ApiVersion {
@@ -90,10 +88,10 @@ func decodePrototype(data []byte) ([]manifest.Object, error) {
 }
 
 func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
-	var a []genericObject
+	var res []genericObject
 	switch getJsonIdent(data) {
 	case identArray:
-		if err := json.Unmarshal(data, &a); err != nil {
+		if err := json.Unmarshal(data, &res); err != nil {
 			return nil, err
 		}
 	case identObject:
@@ -101,14 +99,14 @@ func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
 		if err := json.Unmarshal(data, &object); err != nil {
 			return nil, err
 		}
-		a = append(a, object)
+		res = append(res, object)
 	}
-	if len(a) == 0 {
+	if len(res) == 0 {
 		return nil, errNoDefinitionsInInput
 	}
-	objects := make([]manifest.Object, 0, len(a))
-	for i := range a {
-		objects = append(objects, a[i].Object)
+	objects := make([]manifest.Object, 0, len(res))
+	for i := range res {
+		objects = append(objects, res[i].Object)
 	}
 	return objects, nil
 }
@@ -116,68 +114,71 @@ func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
 func decodePrototypeYAML(data []byte) ([]manifest.Object, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(data))
 	scanner.Split(splitYAMLDocument)
-	var a []genericObject
+	var res []genericObject
 	for scanner.Scan() {
 		doc := scanner.Bytes()
 		switch getYamlIdent(doc) {
-		case identObject:
+		case identArray:
+			var a []genericObject
 			if err := yaml.Unmarshal(data, &a); err != nil {
 				return nil, err
 			}
-		case identArray:
+			res = append(res, a...)
+		case identObject:
 			var object genericObject
 			if err := yaml.Unmarshal(data, &object); err != nil {
 				return nil, err
 			}
-			a = append(a, object)
+			res = append(res, object)
 		}
 	}
-	if len(a) == 0 {
+	if len(res) == 0 {
 		return nil, errNoDefinitionsInInput
 	}
-	objects := make([]manifest.Object, 0, len(a))
-	for i := range a {
-		objects = append(objects, a[i].Object)
+	objects := make([]manifest.Object, 0, len(res))
+	for i := range res {
+		objects = append(objects, res[i].Object)
 	}
 	return objects, nil
 }
 
 func decodeYAMLToJSON(data []byte) ([]sdk.AnyJSONObj, error) {
-	dec := yaml.NewYAMLToJSONDecoder(bytes.NewReader(data))
-	var jsonArray []sdk.AnyJSONObj
-	for {
-		var rawData interface{}
-		if err := dec.Decode(&rawData); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-		switch obj := rawData.(type) {
-		case map[string]interface{}:
-			if len(obj) > 0 {
-				jsonArray = append(jsonArray, obj)
-			}
-		case []interface{}:
-			for _, def := range obj {
-				switch o := def.(type) {
-				case sdk.AnyJSONObj:
-					if len(o) > 0 {
-						jsonArray = append(jsonArray, o)
-					}
-				default:
-					return nil, errMalformedInput
-				}
-			}
-		case nil:
-		default:
-			return nil, errMalformedInput
-		}
-	}
-	if len(jsonArray) == 0 {
-		return nil, errNoDefinitionsInInput
-	}
-	return jsonArray, nil
+	return nil, nil
+	//dec := yaml.NewYAMLToJSONDecoder(bytes.NewReader(data))
+	//var jsonArray []sdk.AnyJSONObj
+	//for {
+	//	var rawData interface{}
+	//	if err := dec.Decode(&rawData); err != nil {
+	//		if err == io.EOF {
+	//			break
+	//		}
+	//		return nil, err
+	//	}
+	//	switch obj := rawData.(type) {
+	//	case map[string]interface{}:
+	//		if len(obj) > 0 {
+	//			jsonArray = append(jsonArray, obj)
+	//		}
+	//	case []interface{}:
+	//		for _, def := range obj {
+	//			switch o := def.(type) {
+	//			case sdk.AnyJSONObj:
+	//				if len(o) > 0 {
+	//					jsonArray = append(jsonArray, o)
+	//				}
+	//			default:
+	//				return nil, errMalformedInput
+	//			}
+	//		}
+	//	case nil:
+	//	default:
+	//		return nil, errMalformedInput
+	//	}
+	//}
+	//if len(jsonArray) == 0 {
+	//	return nil, errNoDefinitionsInInput
+	//}
+	//return jsonArray, nil
 }
 
 // isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
@@ -200,10 +201,10 @@ func getJsonIdent(data []byte) ident {
 	return identObject
 }
 
-var yamlArrayIdentRegex = regexp.MustCompile(`^- `)
+var yamlArrayIdentRegex = regexp.MustCompile(`(?m)^\s*[\[-]\s`)
 
 func getYamlIdent(data []byte) ident {
-	if len(data) > 0 && yamlArrayIdentRegex.Match(data) {
+	if len(data) > 0 && (yamlArrayIdentRegex.Match(data) || data[0] == '[') {
 		return identArray
 	}
 	return identObject

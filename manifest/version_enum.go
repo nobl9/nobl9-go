@@ -12,16 +12,14 @@ import (
 )
 
 const (
-	// VersionV1alpha is a Version of type V1alpha.
-	VersionV1alpha Version = iota
+	// VersionV1alpha is a Version of type v1alpha.
+	VersionV1alpha Version = "n9/v1alpha"
 )
 
 var ErrInvalidVersion = fmt.Errorf("not a valid Version, try [%s]", strings.Join(_VersionNames, ", "))
 
-const _VersionName = "v1alpha"
-
 var _VersionNames = []string{
-	_VersionName[0:7],
+	string(VersionV1alpha),
 }
 
 // VersionNames returns a list of possible string values of Version.
@@ -38,27 +36,20 @@ func VersionValues() []Version {
 	}
 }
 
-var _VersionMap = map[Version]string{
-	VersionV1alpha: _VersionName[0:7],
-}
-
 // String implements the Stringer interface.
 func (x Version) String() string {
-	if str, ok := _VersionMap[x]; ok {
-		return str
-	}
-	return fmt.Sprintf("Version(%d)", x)
+	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x Version) IsValid() bool {
-	_, ok := _VersionMap[x]
-	return ok
+	_, err := ParseVersion(string(x))
+	return err == nil
 }
 
 var _VersionValue = map[string]Version{
-	_VersionName[0:7]: VersionV1alpha,
+	"n9/v1alpha": VersionV1alpha,
 }
 
 // ParseVersion attempts to convert a string to a Version.
@@ -66,5 +57,20 @@ func ParseVersion(name string) (Version, error) {
 	if x, ok := _VersionValue[name]; ok {
 		return x, nil
 	}
-	return Version(0), fmt.Errorf("%s is %w", name, ErrInvalidVersion)
+	return Version(""), fmt.Errorf("%s is %w", name, ErrInvalidVersion)
+}
+
+// MarshalText implements the text marshaller method.
+func (x Version) MarshalText() ([]byte, error) {
+	return []byte(string(x)), nil
+}
+
+// UnmarshalText implements the text unmarshaller method.
+func (x *Version) UnmarshalText(text []byte) error {
+	tmp, err := ParseVersion(string(text))
+	if err != nil {
+		return err
+	}
+	*x = tmp
+	return nil
 }
