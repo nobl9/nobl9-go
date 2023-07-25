@@ -15,9 +15,9 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.RawObjectForma
 	var unmarshal unmarshalFunc
 	switch format {
 	case manifest.RawObjectFormatJSON:
-		unmarshal = yaml.Unmarshal
-	case manifest.RawObjectFormatYAML:
 		unmarshal = json.Unmarshal
+	case manifest.RawObjectFormatYAML:
+		unmarshal = yaml.Unmarshal
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)
 	}

@@ -1,30 +1,58 @@
 package definitions
 
 import (
+	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 var this = `
-- apiVersion: v1
+- apiVersion: n9/v1alpha
   kind: Service
-- apiVersion: extensions/v1beta1
+- apiVersion: n9/v1alpha
   kind: SLO
 ---
-apiVersion: extensions/v1beta1
+apiVersion: n9/v1alpha
 kind: SLO
 `
 
 var jazon = `
-{"apiVersion":"v1","kind":"Service","spec":{"name":"this"}}
+[
+	{"apiVersion":"n9/v1alpha","kind":"Service","spec":{"name":"this"}},
+	{"apiVersion":"n9/v1alpha","kind":"Service","spec":{"name":"this"}},
+]
 `
 
+var simple = []byte(`
+apiVersion: n9/v1alpha
+kind: SLO
+`)
+
 func TestParsers(t *testing.T) {
-	res, err := decodePrototype([]byte(jazon))
+	res, err := decodePrototype([]byte(this))
 	require.NoError(t, err)
-	fmt.Println(res)
+	data, err := json.MarshalIndent(res, "", " ")
+	require.NoError(t, err)
+	fmt.Println(string(data))
+}
+
+func TestSimple(t *testing.T) {
+	var obj genericObject
+	err := yaml.Unmarshal(simple, &obj)
+	require.NoError(t, err)
+	fmt.Println(obj)
+}
+
+var testRegex = regexp.MustCompile(`(?m)^- `)
+
+func TestThis(t *testing.T) {
+	data := []byte(this)
+	fmt.Println(testRegex.Match(data))
+	fmt.Println(data[0] == '[')
 }
 
 func BenchmarkThis(b *testing.B) {
