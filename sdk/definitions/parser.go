@@ -2,14 +2,17 @@ package definitions
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
 	"unicode"
 
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/yaml"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -38,28 +41,53 @@ func processRawDefinitionsToJSONArray(a MetadataAnnotations, rds rawDefinitions)
 	return jsonArray, nil
 }
 
+var apiVersionNamedRegex = regexp.MustCompile(`"?apiVersion"?\s*:\s*"?n9(?P<version>[a-zA-Z0-9]+)"|\n`)
+
+type genericObject struct {
+	Object manifest.Object
+}
+
+func (o *genericObject) UnmarshalJSON(data []byte) error {
+	matches := apiVersionRegex.FindSubmatch(data)
+	if len(matches) == 0 {
+		return nil
+	}
+	version := string(matches[apiVersionNamedRegex.SubexpIndex("version")])
+	switch version {
+	case "v1alpha":
+		object, err := v1alpha.ParseObject[v1alpha.Service](data, manifest.RawObjectFormatJSON)
+		if err != nil {
+			return err
+		}
+		o.Object = object
+	}
+	return nil
+}
+
 func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
-	for {
-		var decoded
-		if err := dec.Decode(&decoded); err != nil {
-			if err == io.EOF {
-				break
-			}
+	var a []genericObject
+	switch getJsonIdent(data) {
+	case identArray:
+		if err := json.Unmarshal(data, &a); err != nil {
 			return nil, err
 		}
-		switch {
-		case len(decoded.ObjGens) > 0:
-			a = append(a, decoded.ObjGens...)
-		case decoded.APIVersion != "" && decoded.Kind != 0:
-			a = append(a, decoded.objGen)
-		default:
-			return nil, errMalformedInput
+	case identObject:
+		var object genericObject
+		if err := json.Unmarshal(data, &object); err != nil {
+			return nil, err
 		}
+		a = append(a, object)
+	default:
+		return nil, errMalformedInput
 	}
 	if len(a) == 0 {
 		return nil, errNoDefinitionsInInput
 	}
-	return a, nil
+	objects := make([]manifest.Object, 0, len(a))
+	for i := range a {
+		objects = append(objects, a[i].Object)
+	}
+	return objects, nil
 }
 
 func decodeYAMLToJSON(data []byte) ([]sdk.AnyJSONObj, error) {
