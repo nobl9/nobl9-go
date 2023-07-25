@@ -87,19 +87,3 @@ func ParseReleaseChannel(name string) (ReleaseChannel, error) {
 	}
 	return ReleaseChannel(0), fmt.Errorf("%s is %w", name, ErrInvalidReleaseChannel)
 }
-
-// MarshalText implements the text marshaller method.
-func (x ReleaseChannel) MarshalText() ([]byte, error) {
-	return []byte(x.String()), nil
-}
-
-// UnmarshalText implements the text unmarshaller method.
-func (x *ReleaseChannel) UnmarshalText(text []byte) error {
-	name := string(text)
-	tmp, err := ParseReleaseChannel(name)
-	if err != nil {
-		return err
-	}
-	*x = tmp
-	return nil
-}
