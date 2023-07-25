@@ -1,5 +1,3 @@
-//go:build unit_test
-
 package v1alpha
 
 import (
@@ -9,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestHistoricalRetrievalDuration_durationInMinutes(t *testing.T) {
@@ -69,33 +69,33 @@ func TestHistoricalRetrievalDuration_durationInMinutes_unsupportedUnit(t *testin
 
 func TestGetDataRetrievalMaxDuration(t *testing.T) {
 	for _, test := range []struct {
-		Kind       Kind
+		Kind       manifest.Kind
 		SourceType string
 		Valid      bool
 		Expected   HistoricalRetrievalDuration
 	}{
 		{
-			Kind:       KindAgent,
+			Kind:       manifest.KindAgent,
 			SourceType: CloudWatch.String(),
 			Valid:      true,
 			Expected:   agentDataRetrievalMaxDuration[CloudWatch.String()],
 		},
 		{
-			Kind:       KindAgent,
+			Kind:       manifest.KindAgent,
 			SourceType: "",
 		},
 		{
-			Kind:       KindDirect,
+			Kind:       manifest.KindDirect,
 			SourceType: CloudWatch.String(),
 			Valid:      true,
 			Expected:   directDataRetrievalMaxDuration[CloudWatch.String()],
 		},
 		{
-			Kind:       KindDirect,
+			Kind:       manifest.KindDirect,
 			SourceType: "invalid",
 		},
 		{
-			Kind:       KindSLO,
+			Kind:       manifest.KindSLO,
 			SourceType: "",
 		},
 	} {
