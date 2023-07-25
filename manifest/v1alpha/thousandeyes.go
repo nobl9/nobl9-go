@@ -33,18 +33,25 @@ const (
 	DNSTestTypeIntroductionAgentVersion             = "v0.67.0-beta03"
 )
 
+// nolint: gochecknoinits
 func init() {
 	all := []string{stable, beta, alpha}
 	betaOnly := []string{beta}
 
 	ThousandEyesTestAgentConfig = map[string]thousandEyesConfig{
-		ThousandEyesNetLatency:              {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesNetLoss:                 {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesWebPageLoad:             {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesWebDOMLoad:              {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesHTTPResponseTime:        {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesServerAvailability:      {MinimumAgent: AvailabilityAndThroughputIntroducedAgentVersion, SupportedChannels: all},
-		ThousandEyesServerThroughput:        {MinimumAgent: AvailabilityAndThroughputIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesNetLatency:       {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesNetLoss:          {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesWebPageLoad:      {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesWebDOMLoad:       {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesHTTPResponseTime: {MinimumAgent: TestTypesIntroducedAgentVersion, SupportedChannels: all},
+		ThousandEyesServerAvailability: {
+			MinimumAgent:      AvailabilityAndThroughputIntroducedAgentVersion,
+			SupportedChannels: all,
+		},
+		ThousandEyesServerThroughput: {
+			MinimumAgent:      AvailabilityAndThroughputIntroducedAgentVersion,
+			SupportedChannels: all,
+		},
 		ThousandEyesServerTotalTime:         {MinimumAgent: DNSTestTypeIntroductionAgentVersion, SupportedChannels: betaOnly},
 		ThousandEyesDNSServerResolutionTime: {MinimumAgent: DNSTestTypeIntroductionAgentVersion, SupportedChannels: betaOnly},
 		ThousandEyesDNSSECValid:             {MinimumAgent: DNSTestTypeIntroductionAgentVersion, SupportedChannels: betaOnly},
