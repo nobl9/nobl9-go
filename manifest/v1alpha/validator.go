@@ -1507,7 +1507,7 @@ func agentSpecStructLevelValidation(sl v.StructLevel) {
 	agentQueryDelayValidation(sa, sl)
 	sourceOfValidation(sa.SourceOf, sl)
 
-	if !isValidReleaseChannel(sa.ReleaseChannel) {
+	if !sa.ReleaseChannel.IsValid() {
 		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
 	}
 }
@@ -1879,7 +1879,7 @@ func directSpecStructLevelValidation(sl v.StructLevel) {
 	directQueryDelayValidation(sa, sl)
 	sourceOfValidation(sa.SourceOf, sl)
 
-	if !isValidReleaseChannel(sa.ReleaseChannel) {
+	if !sa.ReleaseChannel.IsValid() {
 		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
 	}
 }
@@ -1999,10 +1999,6 @@ func sourceOfItemsValidation(sourceOf []string, sl v.StructLevel) bool {
 		}
 	}
 	return true
-}
-
-func isValidReleaseChannel(releaseChannel string) bool {
-	return releaseChannel == "" || GetAvailableReleaseChannels()[releaseChannel]
 }
 
 // Check performs validation, it accepts all possible structs and perform checks based on tags for structs fields
