@@ -2002,7 +2002,11 @@ func sourceOfItemsValidation(sourceOf []string, sl v.StructLevel) bool {
 }
 
 func isValidReleaseChannel(releaseChannel ReleaseChannel) bool {
-	return releaseChannel == 0 || releaseChannel.IsValid()
+	if releaseChannel == 0 {
+		return true
+	}
+	// We do not allow ReleaseChannelAlpha to be set by the user.
+	return releaseChannel.IsValid() && releaseChannel != ReleaseChannelAlpha
 }
 
 // Check performs validation, it accepts all possible structs and perform checks based on tags for structs fields
