@@ -13,7 +13,7 @@ import (
 
 const (
 	// ReleaseChannelStable is a ReleaseChannel of type Stable.
-	ReleaseChannelStable ReleaseChannel = iota
+	ReleaseChannelStable ReleaseChannel = iota + 1
 	// ReleaseChannelBeta is a ReleaseChannel of type Beta.
 	ReleaseChannelBeta
 	// ReleaseChannelAlpha is a ReleaseChannel of type Alpha.
@@ -22,7 +22,7 @@ const (
 
 var ErrInvalidReleaseChannel = fmt.Errorf("not a valid ReleaseChannel, try [%s]", strings.Join(_ReleaseChannelNames, ", "))
 
-const _ReleaseChannelName = "StableBetaAlpha"
+const _ReleaseChannelName = "stablebetaalpha"
 
 var _ReleaseChannelNames = []string{
 	_ReleaseChannelName[0:6],
