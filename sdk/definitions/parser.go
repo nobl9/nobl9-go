@@ -1,6 +1,7 @@
 package definitions
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -41,27 +42,51 @@ func processRawDefinitionsToJSONArray(a MetadataAnnotations, rds rawDefinitions)
 	return jsonArray, nil
 }
 
-var apiVersionNamedRegex = regexp.MustCompile(`"?apiVersion"?\s*:\s*"?n9(?P<version>[a-zA-Z0-9]+)"|\n`)
-
 type genericObject struct {
 	Object manifest.Object
 }
 
 func (o *genericObject) UnmarshalJSON(data []byte) error {
-	matches := apiVersionRegex.FindSubmatch(data)
-	if len(matches) == 0 {
-		return nil
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
+}
+
+func (o *genericObject) UnmarshalYAML(data []byte) error {
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
+}
+
+func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
+	var object struct {
+		ApiVersion manifest.Version `json:"apiVersion"`
+		Kind       manifest.Kind    `json:"kind"`
 	}
-	version := string(matches[apiVersionNamedRegex.SubexpIndex("version")])
-	switch version {
-	case "v1alpha":
-		object, err := v1alpha.ParseObject[v1alpha.Service](data, manifest.RawObjectFormatJSON)
+	var unmarshal func(data []byte, v interface{}) error
+	switch format {
+	case manifest.RawObjectFormatJSON:
+		unmarshal = json.Unmarshal
+	case manifest.RawObjectFormatYAML:
+		unmarshal = yaml.Unmarshal
+	}
+	if err := unmarshal(data, &object); err != nil {
+		return err
+	}
+	switch object.ApiVersion {
+	case manifest.VersionV1alpha:
+		parsed, err := v1alpha.ParseObject(data, object.Kind, format)
 		if err != nil {
 			return err
 		}
-		o.Object = object
+		o.Object = parsed
+	default:
+		return manifest.ErrInvalidVersion
 	}
 	return nil
+}
+
+func decodePrototype(data []byte) ([]manifest.Object, error) {
+	if isJSONBuffer(data) {
+		return decodePrototypeJSON(data)
+	}
+	return decodePrototypeYAML(data)
 }
 
 func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
@@ -77,8 +102,35 @@ func decodePrototypeJSON(data []byte) ([]manifest.Object, error) {
 			return nil, err
 		}
 		a = append(a, object)
-	default:
-		return nil, errMalformedInput
+	}
+	if len(a) == 0 {
+		return nil, errNoDefinitionsInInput
+	}
+	objects := make([]manifest.Object, 0, len(a))
+	for i := range a {
+		objects = append(objects, a[i].Object)
+	}
+	return objects, nil
+}
+
+func decodePrototypeYAML(data []byte) ([]manifest.Object, error) {
+	scanner := bufio.NewScanner(bytes.NewBuffer(data))
+	scanner.Split(splitYAMLDocument)
+	var a []genericObject
+	for scanner.Scan() {
+		doc := scanner.Bytes()
+		switch getYamlIdent(doc) {
+		case identObject:
+			if err := yaml.Unmarshal(data, &a); err != nil {
+				return nil, err
+			}
+		case identArray:
+			var object genericObject
+			if err := yaml.Unmarshal(data, &object); err != nil {
+				return nil, err
+			}
+			a = append(a, object)
+		}
 	}
 	if len(a) == 0 {
 		return nil, errNoDefinitionsInInput
@@ -139,19 +191,52 @@ type ident uint8
 const (
 	identArray = iota + 1
 	identObject
-	identDocuments
 )
 
 func getJsonIdent(data []byte) ident {
 	if len(data) > 0 && data[0] == '[' {
 		return identArray
 	}
-	return identArray
+	return identObject
 }
 
+var yamlArrayIdentRegex = regexp.MustCompile(`^- `)
+
 func getYamlIdent(data []byte) ident {
-	if len(data) > 0 && data[0] == '[' {
+	if len(data) > 0 && yamlArrayIdentRegex.Match(data) {
 		return identArray
 	}
 	return identObject
+}
+
+const yamlDocSep = "\n---"
+
+// splitYAMLDocument is a bufio.SplitFunc for splitting YAML streams into individual documents.
+func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
+	}
+	sep := len([]byte(yamlDocSep))
+	if i := bytes.Index(data, []byte(yamlDocSep)); i >= 0 {
+		// We have a potential document terminator
+		i += sep
+		after := data[i:]
+		if len(after) == 0 {
+			// we can't read any more characters
+			if atEOF {
+				return len(data), data[:len(data)-sep], nil
+			}
+			return 0, nil, nil
+		}
+		if j := bytes.IndexByte(after, '\n'); j >= 0 {
+			return i + j + 1, data[0 : i-sep], nil
+		}
+		return 0, nil, nil
+	}
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), data, nil
+	}
+	// Request more data.
+	return 0, nil, nil
 }
