@@ -21,6 +21,8 @@ type Object interface {
 type ProjectScopedObject interface {
 	// GetProject returns the name of the project which the ProjectScopedObject belongs to.
 	GetProject() string
+	// SetProject sets the name of the project which the ProjectScopedObject belongs to.
+	SetProject(project string)
 }
 
 //go:generate ../bin/go-enum --names
