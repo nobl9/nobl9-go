@@ -17,8 +17,8 @@ const APIVersion = "n9/v1alpha"
 const HiddenValue = "[hidden]"
 
 const (
-	DatasourceStableChannel = "stable"
-	DefaultLastsForDuration = "0m"
+	DatasourceStableChannel            = "stable"
+	DefaultAlertPolicyLastsForDuration = "0m"
 )
 
 type AgentsSlice []Agent
@@ -1379,7 +1379,7 @@ func genericToAlertPolicy(o manifest.ObjectGeneric, v validator, onlyHeader bool
 func setAlertPolicyDefaults(policy *AlertPolicy) {
 	for i, condition := range policy.Spec.Conditions {
 		if condition.AlertingWindow == "" && condition.LastsForDuration == "" {
-			policy.Spec.Conditions[i].LastsForDuration = DefaultLastsForDuration
+			policy.Spec.Conditions[i].LastsForDuration = DefaultAlertPolicyLastsForDuration
 		}
 	}
 }
