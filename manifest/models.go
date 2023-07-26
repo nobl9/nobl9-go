@@ -18,6 +18,13 @@ type ObjectInternal struct {
 	ManifestSrc  string `json:",omitempty" example:"x.yml"`
 }
 
+type ObjectInternalI interface {
+	GetOrganization() string
+	GetManifestSource() string
+	SetOrganization(org string)
+	SetManifestSource(src string)
+}
+
 type LabelKey = string
 type LabelValue = string
 type Labels map[LabelKey][]LabelValue
