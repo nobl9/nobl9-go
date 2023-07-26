@@ -2198,19 +2198,19 @@ func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
 	switch condition.Measurement {
 	case MeasurementTimeToBurnBudget.String():
 		if condition.Operator != LessThan.String() {
-			sl.ReportError(condition, "value", "Value", "valueOperatorForTimeToBurnBudgetLessThanRequired", "")
+			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnBudgetLessThanRequired", "")
 		}
 	case MeasurementBurnedBudget.String():
 		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "value", "Value", "valueOperatorBurnedBudgetGreaterThanEqualRequired", "")
+			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnedBudgetGreaterThanEqualRequired", "")
 		}
 	case MeasurementAverageBurnRate.String():
 		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "value", "Value", "valueOperatorBurnRateGreaterThanEqualRequired", "")
+			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnRateGreaterThanEqualRequired", "")
 		}
 	case MeasurementTimeToBurnEntireBudget.String():
-		if condition.Operator != "" {
-			sl.ReportError(condition, "op", "Operator", "operatorFieldIsDeprecated", "")
+		if condition.Operator != LessThan.String() {
+			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnEntireBudgetLessThanRequired", "")
 		}
 	}
 }
