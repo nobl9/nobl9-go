@@ -16,7 +16,6 @@ const StringInterpolationPlaceholder = "{}"
 type ObjectInternal struct {
 	Organization string `json:"organization,omitempty" example:"nobl9-dev"`
 	ManifestSrc  string `json:",omitempty" example:"x.yml"`
-	OktaClientID string `json:"-"` // used only by kind Agent
 }
 
 type LabelKey = string

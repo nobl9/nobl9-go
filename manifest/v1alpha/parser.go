@@ -2,9 +2,10 @@ package v1alpha
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
@@ -29,8 +30,10 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.RawObjectForma
 	switch kind {
 	case manifest.KindService:
 		object, err = genericParseObject[Service](data, unmarshal)
+	case manifest.KindSLO:
+		object, err = genericParseObject[SLO](data, unmarshal)
 	default:
-		return nil, manifest.ErrInvalidKind
+		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}
 	if err != nil {
 		return nil, err
