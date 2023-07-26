@@ -68,3 +68,78 @@ func TestAPIObjects_Validate(t *testing.T) {
 	expected := strings.Replace(strings.TrimSpace(expectedError), "\n", "; ", len(manifest.KindValues()))
 	assert.EqualError(t, err, expected)
 }
+
+func TestSetAlertPolicyDefaults(t *testing.T) {
+	for _, testCase := range []struct {
+		desc string
+		in   AlertPolicy
+		out  AlertPolicy
+	}{
+		{
+			desc: "when alertingWindow is defined, lastsFor default value should not be set",
+			in: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{
+							AlertingWindow: "30m",
+						},
+					},
+				},
+			},
+			out: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{
+							AlertingWindow: "30m",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "when alertingWindow is not defined and lastsFor is empty zero value should be set",
+			in: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{},
+					},
+				},
+			},
+			out: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{
+							LastsForDuration: "0m",
+						},
+					},
+				},
+			},
+		},
+		{
+			desc: "when alertingWindow is not defined and lastsFor is not empty do not change lastsFor",
+			in: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{
+							LastsForDuration: "1h",
+						},
+					},
+				},
+			},
+			out: AlertPolicy{
+				Spec: AlertPolicySpec{
+					Conditions: []AlertCondition{
+						{
+							LastsForDuration: "1h",
+						},
+					},
+				},
+			},
+		},
+	} {
+		t.Run(testCase.desc, func(t *testing.T) {
+			setAlertPolicyDefaults(&testCase.in)
+			assert.Equal(t, testCase.out, testCase.in)
+		})
+	}
+}
