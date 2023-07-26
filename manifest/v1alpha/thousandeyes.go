@@ -13,8 +13,8 @@ const (
 	ThousandEyesDNSSECValid             = "dns-dnssec-valid"
 )
 
-// nolint:gochecknoglobals
 // ThousandEyesTestAgentConfig for each test type holds minimum agent version and supported release channels
+// nolint:gochecknoglobals
 var ThousandEyesTestAgentConfig map[string]thousandEyesConfig
 
 type thousandEyesConfig struct {
