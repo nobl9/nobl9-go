@@ -3,6 +3,7 @@ package definitions
 import (
 	"fmt"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -35,12 +36,12 @@ func (ma MetadataAnnotations) AnnotateObject(object sdk.AnyJSONObj) (sdk.AnyJSON
 	if !ok {
 		return nil, fmt.Errorf("cannot retrieve object kind")
 	}
-	kind, err := sdk.ParseKind(kindStr)
+	kind, err := manifest.ParseKind(kindStr)
 	if err != nil {
 		return nil, err
 	}
 	switch kind {
-	case sdk.KindProject, sdk.KindRoleBinding, sdk.KindUserGroup:
+	case manifest.KindProject, manifest.KindRoleBinding, manifest.KindUserGroup:
 		// Do not append the project name.
 	default:
 		if meta["project"] == nil && ma.Project != "" {

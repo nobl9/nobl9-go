@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 type DataSourceType int
@@ -322,24 +324,27 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Lightstep.String():        {Value: ptr(30), Unit: HRDDay},
 	CloudWatch.String():       {Value: ptr(15), Unit: HRDDay},
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
+	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
-	Datadog.String():    {Value: ptr(30), Unit: HRDDay},
-	NewRelic.String():   {Value: ptr(30), Unit: HRDDay},
-	Splunk.String():     {Value: ptr(30), Unit: HRDDay},
-	Lightstep.String():  {Value: ptr(30), Unit: HRDDay},
-	CloudWatch.String(): {Value: ptr(15), Unit: HRDDay},
-	Dynatrace.String():  {Value: ptr(28), Unit: HRDDay},
+	Datadog.String():     {Value: ptr(30), Unit: HRDDay},
+	NewRelic.String():    {Value: ptr(30), Unit: HRDDay},
+	Splunk.String():      {Value: ptr(30), Unit: HRDDay},
+	Lightstep.String():   {Value: ptr(30), Unit: HRDDay},
+	CloudWatch.String():  {Value: ptr(15), Unit: HRDDay},
+	Dynatrace.String():   {Value: ptr(28), Unit: HRDDay},
+	AppDynamics.String(): {Value: ptr(30), Unit: HRDDay},
 }
 
-func GetDataRetrievalMaxDuration(kind Kind, typeName string) (HistoricalRetrievalDuration, error) {
+func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
+	//nolint: exhaustive
 	switch kind {
-	case KindAgent:
+	case manifest.KindAgent:
 		if hrd, ok := agentDataRetrievalMaxDuration[typeName]; ok {
 			return hrd, nil
 		}
-	case KindDirect:
+	case manifest.KindDirect:
 		if hrd, ok := directDataRetrievalMaxDuration[typeName]; ok {
 			return hrd, nil
 		}

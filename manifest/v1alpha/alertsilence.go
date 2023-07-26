@@ -11,7 +11,7 @@ import (
 type AlertSilence struct {
 	manifest.ObjectInternal
 	APIVersion string                        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       string                        `json:"kind" validate:"required" example:"kind"`
+	Kind       manifest.Kind                 `json:"kind" validate:"required" example:"kind"`
 	Metadata   manifest.AlertSilenceMetadata `json:"metadata"`
 	Spec       AlertSilenceSpec              `json:"spec"`
 	Status     AlertSilenceStatus            `json:"status,omitempty"`
