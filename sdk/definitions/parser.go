@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"unicode"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v3"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -41,30 +41,37 @@ func processRawDefinitionsToJSONArray(a MetadataAnnotations, rds rawDefinitions)
 	return jsonArray, nil
 }
 
+// genericObject is a container for manifest.Object which helps in decoding process.
 type genericObject struct {
 	Object manifest.Object
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (o *genericObject) UnmarshalJSON(data []byte) error {
-	ufunc := func(v interface{}) error { return json.Unmarshal(data, v) }
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON, ufunc)
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
 }
 
-func (o *genericObject) UnmarshalYAML(value *yaml.Node) error {
-	ufunc := func(v interface{}) error { return value.Decode(v) }
-	return o.unmarshalGeneric(nil, manifest.RawObjectFormatYAML, ufunc)
+// UnmarshalYAML implements yaml.BytesUnmarshaler.
+func (o *genericObject) UnmarshalYAML(data []byte) error {
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
 }
 
-func (o *genericObject) unmarshalGeneric(
-	data []byte,
-	format manifest.RawObjectFormat,
-	unmarshal func(v interface{}) error,
-) error {
+// unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.RawObjectFormat.
+// It uses an intermediate decoding step to extract manifest.Version and manifest.Kind from the object.
+// Decoding is then delegated to the parser for specific manifest.Version.
+func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
 	var object struct {
-		ApiVersion manifest.Version `json:"apiVersion"`
-		Kind       manifest.Kind    `json:"kind"`
+		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
+		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
 	}
-	if err := unmarshal(&object); err != nil {
+	var unmarshal func(data []byte, v interface{}) error
+	switch format {
+	case manifest.RawObjectFormatJSON:
+		unmarshal = json.Unmarshal
+	case manifest.RawObjectFormatYAML:
+		unmarshal = yaml.Unmarshal
+	}
+	if err := unmarshal(data, &object); err != nil {
 		return err
 	}
 	switch object.ApiVersion {
@@ -120,13 +127,13 @@ func decodePrototypeYAML(data []byte) ([]manifest.Object, error) {
 		switch getYamlIdent(doc) {
 		case identArray:
 			var a []genericObject
-			if err := yaml.Unmarshal(data, &a); err != nil {
+			if err := yaml.Unmarshal(doc, &a); err != nil {
 				return nil, err
 			}
 			res = append(res, a...)
 		case identObject:
 			var object genericObject
-			if err := yaml.Unmarshal(data, &object); err != nil {
+			if err := yaml.Unmarshal(doc, &object); err != nil {
 				return nil, err
 			}
 			res = append(res, object)
