@@ -994,7 +994,7 @@ type QueryDelay struct {
 type AgentSpec struct {
 	Description             string                          `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
 	SourceOf                []string                        `json:"sourceOf" example:"Metrics,Services"`
-	ReleaseChannel          string                          `json:"releaseChannel,omitempty" example:"beta,stable"`
+	ReleaseChannel          ReleaseChannel                  `json:"releaseChannel,omitempty" example:"beta,stable"`
 	Prometheus              *PrometheusAgentConfig          `json:"prometheus,omitempty"`
 	Datadog                 *DatadogAgentConfig             `json:"datadog,omitempty"`
 	NewRelic                *NewRelicAgentConfig            `json:"newRelic,omitempty"`
@@ -1122,6 +1122,7 @@ type PublicDirectWithSLOs struct {
 type DirectSpec struct {
 	Description             string                           `json:"description,omitempty" validate:"description" example:"Datadog description"` //nolint:lll
 	SourceOf                []string                         `json:"sourceOf" example:"Metrics,Services"`
+	ReleaseChannel          ReleaseChannel                   `json:"releaseChannel,omitempty" example:"beta,stable"`
 	Datadog                 *DatadogDirectConfig             `json:"datadog,omitempty"`
 	LogCollectionEnabled    *bool                            `json:"logCollectionEnabled,omitempty"`
 	NewRelic                *NewRelicDirectConfig            `json:"newRelic,omitempty"`

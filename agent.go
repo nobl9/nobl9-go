@@ -26,6 +26,7 @@ type AgentStatus struct {
 type AgentSpec struct {
 	Description         string                          `json:"description,omitempty"`
 	SourceOf            []string                        `json:"sourceOf" example:"Metrics,Services"`
+	ReleaseChannel      string                          `json:"releaseChannel,omitempty" example:"beta,stable"`
 	QueryDelay          *QueryDelayDuration             `json:"queryDelay"`
 	AmazonPrometheus    *AmazonPrometheusAgentConfig    `json:"amazonPrometheus,omitempty"`
 	AppDynamics         *AppDynamicsAgentConfig         `json:"appDynamics,omitempty"`
