@@ -144,6 +144,21 @@ type AmazonPrometheusAgentConfig struct {
 type RedshiftAgentConfig struct {
 }
 
+// OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
+type OpenTSDBAgentConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url" example:"example of OpenTSDB cluster URL"` //nolint: lll
+}
+
+// GrafanaLokiAgentConfig represents content of GrafanaLoki Configuration typical for Agent Object.
+type GrafanaLokiAgentConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url" example:"example of GrafanaLoki cluster URL"` //nolint: lll
+}
+
+// CloudWatchAgentConfig represents content of CloudWatch Configuration typical for Agent Object.
+type CloudWatchAgentConfig struct {
+	// CloudWatch agent doesn't require any additional parameters.
+}
+
 // SumoLogicAgentConfig represents content of Sumo Logic configuration typical for Agent Object.
 type SumoLogicAgentConfig struct {
 	URL string `json:"url" validate:"required,url"`
