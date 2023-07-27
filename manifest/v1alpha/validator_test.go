@@ -757,6 +757,18 @@ func TestSupportedThousandEyesTestType(t *testing.T) {
 			true,
 		},
 		{
+			"http-server-total-time",
+			true,
+		},
+		{
+			"dns-server-resolution-time",
+			true,
+		},
+		{
+			"dns-dnssec-valid",
+			true,
+		},
+		{
 			"",
 			false,
 		},
