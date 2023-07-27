@@ -41,6 +41,19 @@ const (
 	GCM
 )
 
+// HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
+// TimeMachine-related SLO properties
+type HistoricalDataRetrieval struct {
+	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
+	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
+	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
+}
+
+type QueryDelay struct {
+	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
+	QueryDelayDuration
+}
+
 type SourceOf int
 
 const (
