@@ -151,9 +151,15 @@ type QueryIntervalDuration struct {
 	Unit  QueryIntervalDurationUnit `json:"unit" validate:"required"`
 }
 
+type CollectionJitterDuration struct {
+	Value *int                         `json:"value" validate:"required,min=0,max=86400"`
+	Unit  CollectionJitterDurationUnit `json:"unit" validate:"required"`
+}
+
 type HistoricalRetrievalDurationUnit string
 type QueryDelayDurationUnit string
 type QueryIntervalDurationUnit string
+type CollectionJitterDurationUnit string
 
 const (
 	HRDDay         HistoricalRetrievalDurationUnit = "Day"
@@ -167,6 +173,10 @@ const (
 	QIDSecond      QueryIntervalDurationUnit       = "Second"
 	QIDMinuteAlias                                 = "M"
 	QIDSecondAlias                                 = "S"
+	CJDMinute      CollectionJitterDurationUnit    = "Minute"
+	CJDSecond      CollectionJitterDurationUnit    = "Second"
+	CJDMinuteAlias                                 = "M"
+	CJDSecondAlias                                 = "S"
 )
 
 const (
@@ -291,6 +301,13 @@ func (qid QueryIntervalDuration) String() string {
 		return fmt.Sprintf("%dm", *qid.Value)
 	}
 	return fmt.Sprintf("%ds", *qid.Value)
+}
+
+func (cjd CollectionJitterDuration) String() string {
+	if cjd.Unit == CJDMinute {
+		return fmt.Sprintf("%dm", *cjd.Value)
+	}
+	return fmt.Sprintf("%ds", *cjd.Value)
 }
 
 func (qdd QueryDelayDuration) BiggerThanMax() bool {
