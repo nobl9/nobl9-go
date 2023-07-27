@@ -11,14 +11,15 @@ import (
 )
 
 // APIVersion is a value of valid apiVersions
-const (
-	APIVersion = "n9/v1alpha"
-)
+const APIVersion = "n9/v1alpha"
 
 // HiddenValue can be used as a value of a secret field and is ignored during saving
 const HiddenValue = "[hidden]"
 
-const DatasourceStableChannel = "stable"
+const (
+	DatasourceStableChannel            = "stable"
+	DefaultAlertPolicyLastsForDuration = "0m"
+)
 
 type AgentsSlice []Agent
 type SLOsSlice []SLO
@@ -1371,7 +1372,17 @@ func genericToAlertPolicy(o manifest.ObjectGeneric, v validator, onlyHeader bool
 		err = manifest.EnhanceError(o, err)
 		return res, err
 	}
+
+	setAlertPolicyDefaults(&res)
 	return res, nil
+}
+
+func setAlertPolicyDefaults(policy *AlertPolicy) {
+	for i, condition := range policy.Spec.Conditions {
+		if condition.AlertingWindow == "" && condition.LastsForDuration == "" {
+			policy.Spec.Conditions[i].LastsForDuration = DefaultAlertPolicyLastsForDuration
+		}
+	}
 }
 
 // Alert represents triggered alert
