@@ -31,7 +31,7 @@ const (
 const (
 	TestTypesIntroducedAgentVersion                 = "v0.33.0"
 	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
-	DNSTestTypeIntroductionAgentVersion             = "v0.67.0-beta03"
+	DNSTestTypeIntroductionAgentVersion             = "v0.67.0-beta04"
 )
 
 // nolint: gochecknoinits
