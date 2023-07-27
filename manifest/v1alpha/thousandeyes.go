@@ -23,12 +23,6 @@ type thousandEyesConfig struct {
 }
 
 const (
-	stable = "stable"
-	beta   = "beta"
-	alpha  = "alpha"
-)
-
-const (
 	TestTypesIntroducedAgentVersion                 = "v0.33.0"
 	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
 	DNSTestTypeIntroductionAgentVersion             = "v0.67.0-beta04"
