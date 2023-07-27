@@ -1506,6 +1506,10 @@ func agentSpecStructLevelValidation(sl v.StructLevel) {
 	}
 	agentQueryDelayValidation(sa, sl)
 	sourceOfValidation(sa.SourceOf, sl)
+
+	if !isValidReleaseChannel(sa.ReleaseChannel) {
+		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
+	}
 }
 
 func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
@@ -1874,6 +1878,10 @@ func directSpecStructLevelValidation(sl v.StructLevel) {
 	directTypeValidation(sa, sl)
 	directQueryDelayValidation(sa, sl)
 	sourceOfValidation(sa.SourceOf, sl)
+
+	if !isValidReleaseChannel(sa.ReleaseChannel) {
+		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
+	}
 }
 
 func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
@@ -1991,6 +1999,14 @@ func sourceOfItemsValidation(sourceOf []string, sl v.StructLevel) bool {
 		}
 	}
 	return true
+}
+
+func isValidReleaseChannel(releaseChannel ReleaseChannel) bool {
+	if releaseChannel == 0 {
+		return true
+	}
+	// We do not allow ReleaseChannelAlpha to be set by the user.
+	return releaseChannel.IsValid() && releaseChannel != ReleaseChannelAlpha
 }
 
 // Check performs validation, it accepts all possible structs and perform checks based on tags for structs fields
