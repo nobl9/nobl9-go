@@ -27,7 +27,7 @@ type Agent struct {
 type AgentSpec struct {
 	Description             string                          `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
 	SourceOf                []string                        `json:"sourceOf" example:"Metrics,Services"`
-	ReleaseChannel          string                          `json:"releaseChannel,omitempty" example:"beta,stable"`
+	ReleaseChannel          ReleaseChannel                  `json:"releaseChannel,omitempty" example:"beta,stable"`
 	Prometheus              *PrometheusAgentConfig          `json:"prometheus,omitempty"`
 	Datadog                 *DatadogAgentConfig             `json:"datadog,omitempty"`
 	NewRelic                *NewRelicAgentConfig            `json:"newRelic,omitempty"`

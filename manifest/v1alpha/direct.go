@@ -42,6 +42,7 @@ type PublicDirect struct {
 type DirectSpec struct {
 	Description             string                           `json:"description,omitempty" validate:"description" example:"Datadog description"` //nolint:lll
 	SourceOf                []string                         `json:"sourceOf" example:"Metrics,Services"`
+	ReleaseChannel          ReleaseChannel                   `json:"releaseChannel,omitempty" example:"beta,stable"`
 	Datadog                 *DatadogDirectConfig             `json:"datadog,omitempty"`
 	LogCollectionEnabled    *bool                            `json:"logCollectionEnabled,omitempty"`
 	NewRelic                *NewRelicDirectConfig            `json:"newRelic,omitempty"`
