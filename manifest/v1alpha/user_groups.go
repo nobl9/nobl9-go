@@ -6,6 +6,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
+type UserGroupsSlice []UserGroup
+
+func (u UserGroupsSlice) Clone() UserGroupsSlice {
+	clone := make([]UserGroup, len(u))
+	copy(clone, u)
+	return clone
+}
+
 type UserGroup struct {
 	manifest.ObjectInternal
 	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`

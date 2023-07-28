@@ -7,6 +7,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
+type AlertSilencesSlice []AlertSilence
+
+func (alertSilences AlertSilencesSlice) Clone() AlertSilencesSlice {
+	clone := make([]AlertSilence, len(alertSilences))
+	copy(clone, alertSilences)
+	return clone
+}
+
 // AlertSilence represents alerts silencing configuration for given SLO and AlertPolicy.
 type AlertSilence struct {
 	manifest.ObjectInternal

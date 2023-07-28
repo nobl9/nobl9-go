@@ -7,6 +7,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
+type AnnotationsSlice []Annotation
+
+func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
+	clone := make([]Annotation, len(annotations))
+	copy(clone, annotations)
+	return clone
+}
+
 type Annotation struct {
 	manifest.ObjectHeader
 	Spec   AnnotationSpec   `json:"spec"`

@@ -70,3 +70,8 @@ type ThresholdStatus struct {
 		BurnedBudget
 	} `json:"status"`
 }
+
+// BurnedBudget represents content of burned budget for a given threshold.
+type BurnedBudget struct {
+	Value *float64 `json:"burnedBudget,omitempty"`
+}
