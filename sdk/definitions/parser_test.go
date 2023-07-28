@@ -11,6 +11,7 @@ import (
 )
 
 var this = `
+---
 - apiVersion: n9/v1alpha
   kind: Service
 - apiVersion: n9/v1alpha
@@ -50,9 +51,9 @@ func TestSimple(t *testing.T) {
 var testRegex = regexp.MustCompile(`(?m)^- `)
 
 func TestThis(t *testing.T) {
-	data := []byte(this)
-	fmt.Println(testRegex.Match(data))
-	fmt.Println(data[0] == '[')
+	data := []byte("\n---")
+	fmt.Println(len(data))
+	fmt.Println(len("\n---"))
 }
 
 func BenchmarkThis(b *testing.B) {
