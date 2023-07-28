@@ -16,6 +16,31 @@ type Alert struct {
 	Spec AlertSpec `json:"spec"`
 }
 
+func (a *Alert) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *Alert) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *Alert) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *Alert) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *Alert) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *Alert) SetProject(project string) {
+	a.Metadata.Project = project
+}
+
 // AlertSpec represents content of Alert's Spec
 type AlertSpec struct {
 	AlertPolicy         manifest.Metadata `json:"alertPolicy"`

@@ -9,8 +9,6 @@ type Object interface {
 	GetKind() Kind
 	// GetName returns the name of the Object (RFC 1123 compliant DNS).
 	GetName() string
-	// GetUniqueIdentifier returns a key which uniquely identifies the Object instance of a Kind.
-	GetUniqueIdentifier() string
 	// Validate performs static validation of the Object.
 	Validate() error
 }
@@ -21,7 +19,7 @@ type Object interface {
 type ProjectScopedObject interface {
 	// GetProject returns the name of the project which the ProjectScopedObject belongs to.
 	GetProject() string
-	// SetProject sets the name of the project which the ProjectScopedObject belongs to.
+	// SetProject sets the name of the project which the ProjectScopedObject should belong to.
 	SetProject(project string)
 }
 

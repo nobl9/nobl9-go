@@ -22,13 +22,6 @@ type LabelKey = string
 type LabelValue = string
 type Labels map[LabelKey][]LabelValue
 
-// AlertSilenceMetadata defines only basic metadata fields - name and project which uniquely identifies
-// object on project level.
-type AlertSilenceMetadata struct {
-	Name    string `json:"name" validate:"required,objectName" example:"name"`
-	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
-}
-
 // Metadata represents part of object which is common for all available Objects, for internal usage
 type Metadata struct {
 	Name        string `json:"name" validate:"required,objectName" example:"name"`
@@ -46,16 +39,6 @@ func (m Metadata) FullName() string {
 // field to other structures
 type MetadataHolder struct {
 	Metadata Metadata `json:"metadata"`
-}
-
-type ProjectMetadata struct {
-	Name        string `json:"name" validate:"required,objectName" example:"name"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Shopping App"`
-	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
-}
-
-type RoleBindingMetadata struct {
-	Name string `json:"name" validate:"required,objectName" example:"name"`
 }
 
 // ObjectHeader represents Header which is common for all available Objects

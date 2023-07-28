@@ -21,10 +21,29 @@ type Service struct {
 	Status *ServiceStatus `json:"status,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (s Service) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: s.Metadata.Name, Project: s.Metadata.Project}
+func (s *Service) GetAPIVersion() string {
+	return s.APIVersion
+}
+
+func (s *Service) GetKind() manifest.Kind {
+	return s.Kind
+}
+
+func (s *Service) GetName() string {
+	return s.Metadata.Name
+}
+
+func (s *Service) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *Service) GetProject() string {
+	return s.Metadata.Project
+}
+
+func (s *Service) SetProject(project string) {
+	s.Metadata.Project = project
 }
 
 // ServiceStatus represents content of Status optional for Service Object.

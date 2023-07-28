@@ -17,16 +17,33 @@ func (projects ProjectsSlice) Clone() ProjectsSlice {
 // Project struct which mapped one to one with kind: project yaml definition.
 type Project struct {
 	manifest.ObjectInternal
-	APIVersion string                   `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind            `json:"kind" validate:"required" example:"kind"`
-	Metadata   manifest.ProjectMetadata `json:"metadata"`
-	Spec       ProjectSpec              `json:"spec"`
+	APIVersion string          `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind       manifest.Kind   `json:"kind" validate:"required" example:"kind"`
+	Metadata   ProjectMetadata `json:"metadata"`
+	Spec       ProjectSpec     `json:"spec"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (p Project) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: p.Metadata.Name}
+func (p Project) GetAPIVersion() string {
+	return p.APIVersion
+}
+
+func (p Project) GetKind() manifest.Kind {
+	return p.Kind
+}
+
+func (p Project) GetName() string {
+	return p.Metadata.Name
+}
+
+func (p Project) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+type ProjectMetadata struct {
+	Name        string          `json:"name" validate:"required,objectName" example:"name"`
+	DisplayName string          `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Shopping App"`
+	Labels      manifest.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // ProjectSpec represents content of Spec typical for Project Object.
@@ -39,7 +56,7 @@ func genericToProject(o manifest.ObjectGeneric, v validator, onlyHeader bool) (P
 	res := Project{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
-		Metadata: manifest.ProjectMetadata{
+		Metadata: ProjectMetadata{
 			Name:        o.Metadata.Name,
 			DisplayName: o.Metadata.DisplayName,
 			Labels:      o.Metadata.Labels,

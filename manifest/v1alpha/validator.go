@@ -75,6 +75,9 @@ const (
 	PingdomTypeTransaction = "transaction"
 )
 
+// HiddenValue can be used as a value of a secret field and is ignored during saving
+const HiddenValue = "[hidden]"
+
 //nolint:golint
 var (
 	ErrAgentTypeChanged          = fmt.Errorf("cannot change agent type")

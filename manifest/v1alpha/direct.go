@@ -25,10 +25,29 @@ type Direct struct {
 	Status DirectStatus `json:"status"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (d Direct) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: d.Metadata.Name, Project: d.Metadata.Project}
+func (d *Direct) GetAPIVersion() string {
+	return d.APIVersion
+}
+
+func (d *Direct) GetKind() manifest.Kind {
+	return d.Kind
+}
+
+func (d *Direct) GetName() string {
+	return d.Metadata.Name
+}
+
+func (d *Direct) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *Direct) GetProject() string {
+	return d.Metadata.Project
+}
+
+func (d *Direct) SetProject(project string) {
+	d.Metadata.Project = project
 }
 
 // PublicDirect struct which mapped one to one with kind: Direct yaml definition without secrets
