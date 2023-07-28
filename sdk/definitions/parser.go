@@ -217,6 +217,8 @@ func getYamlIdent(data []byte) ident {
 	return identObject
 }
 
+// yamlDocSep includes a prefixed newline character as we do now want to split on the first
+// document separator located at the beginning of the file.
 const yamlDocSep = "\n---"
 
 // splitYAMLDocument is a bufio.SplitFunc for splitting YAML streams into individual documents.
@@ -224,13 +226,12 @@ func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err 
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil
 	}
-	sep := len([]byte(yamlDocSep))
+	// We have a potential document terminator.
 	if i := bytes.Index(data, []byte(yamlDocSep)); i >= 0 {
-		// We have a potential document terminator
+		sep := len(yamlDocSep)
 		i += sep
 		after := data[i:]
 		if len(after) == 0 {
-			// we can't read any more characters
 			if atEOF {
 				return len(data), data[:len(data)-sep], nil
 			}
