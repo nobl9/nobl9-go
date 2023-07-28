@@ -21,6 +21,31 @@ type SLO struct {
 	Status *SLOStatus `json:"status,omitempty"`
 }
 
+func (s *SLO) GetAPIVersion() string {
+	return s.APIVersion
+}
+
+func (s *SLO) GetKind() manifest.Kind {
+	return s.Kind
+}
+
+func (s *SLO) GetName() string {
+	return s.Metadata.Name
+}
+
+func (s *SLO) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (s *SLO) GetProject() string {
+	return s.Metadata.Project
+}
+
+func (s *SLO) SetProject(project string) {
+	s.Metadata.Project = project
+}
+
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
 	Description     string         `json:"description" validate:"description" example:"Total count of server requests"` //nolint:lll
@@ -34,12 +59,6 @@ type SLOSpec struct {
 	CreatedAt       string         `json:"createdAt,omitempty"`
 	Composite       *Composite     `json:"composite,omitempty" validate:"omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty" validate:"omitempty"`
-}
-
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (s SLO) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: s.Metadata.Name, Project: s.Metadata.Project}
 }
 
 type SLOStatus struct {

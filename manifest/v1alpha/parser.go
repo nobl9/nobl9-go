@@ -27,11 +27,34 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.RawObjectForma
 		object manifest.Object
 		err    error
 	)
+	//exhaustive:enforce
 	switch kind {
 	case manifest.KindService:
 		object, err = genericParseObject[Service](data, unmarshal)
 	case manifest.KindSLO:
 		object, err = genericParseObject[SLO](data, unmarshal)
+	case manifest.KindProject:
+		object, err = genericParseObject[Project](data, unmarshal)
+	case manifest.KindAgent:
+		object, err = genericParseObject[Agent](data, unmarshal)
+	case manifest.KindDirect:
+		object, err = genericParseObject[Direct](data, unmarshal)
+	case manifest.KindAlert:
+		object, err = genericParseObject[Alert](data, unmarshal)
+	case manifest.KindAlertMethod:
+		object, err = genericParseObject[AlertMethod](data, unmarshal)
+	case manifest.KindAlertPolicy:
+		object, err = genericParseObject[AlertPolicy](data, unmarshal)
+	case manifest.KindAlertSilence:
+		object, err = genericParseObject[AlertSilence](data, unmarshal)
+	case manifest.KindRoleBinding:
+		object, err = genericParseObject[RoleBinding](data, unmarshal)
+	case manifest.KindDataExport:
+		object, err = genericParseObject[DataExport](data, unmarshal)
+	case manifest.KindAnnotation:
+		object, err = genericParseObject[Annotation](data, unmarshal)
+	case manifest.KindUserGroup:
+		object, err = genericParseObject[UserGroup](data, unmarshal)
 	default:
 		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}

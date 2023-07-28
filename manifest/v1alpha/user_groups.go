@@ -16,16 +16,27 @@ func (u UserGroupsSlice) Clone() UserGroupsSlice {
 
 type UserGroup struct {
 	manifest.ObjectInternal
-	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind `json:"kind" validate:"required" example:"kind"`
-	Metadata   GroupMetadata `json:"metadata"`
-	Spec       UserGroupSpec `json:"spec"`
+	APIVersion string            `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind       manifest.Kind     `json:"kind" validate:"required" example:"kind"`
+	Metadata   UserGroupMetadata `json:"metadata"`
+	Spec       UserGroupSpec     `json:"spec"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (u UserGroup) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: u.Metadata.Name}
+func (u UserGroup) GetAPIVersion() string {
+	return u.APIVersion
+}
+
+func (u UserGroup) GetKind() manifest.Kind {
+	return u.Kind
+}
+
+func (u UserGroup) GetName() string {
+	return u.Metadata.Name
+}
+
+func (u UserGroup) Validate() error {
+	//TODO implement me
+	panic("implement me")
 }
 
 // UserGroupSpec represents content of UserGroup's Spec
@@ -38,7 +49,7 @@ type Member struct {
 	ID string `json:"id"`
 }
 
-type GroupMetadata struct {
+type UserGroupMetadata struct {
 	Name string `json:"name" validate:"required,objectName" example:"name"`
 }
 
@@ -47,7 +58,7 @@ func genericToUserGroup(o manifest.ObjectGeneric) (UserGroup, error) {
 	res := UserGroup{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
-		Metadata: GroupMetadata{
+		Metadata: UserGroupMetadata{
 			Name: o.Metadata.Name,
 		},
 		ObjectInternal: manifest.ObjectInternal{

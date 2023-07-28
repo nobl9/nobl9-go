@@ -18,17 +18,36 @@ func (alertSilences AlertSilencesSlice) Clone() AlertSilencesSlice {
 // AlertSilence represents alerts silencing configuration for given SLO and AlertPolicy.
 type AlertSilence struct {
 	manifest.ObjectInternal
-	APIVersion string                        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind                 `json:"kind" validate:"required" example:"kind"`
-	Metadata   manifest.AlertSilenceMetadata `json:"metadata"`
-	Spec       AlertSilenceSpec              `json:"spec"`
-	Status     AlertSilenceStatus            `json:"status,omitempty"`
+	APIVersion string               `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind       manifest.Kind        `json:"kind" validate:"required" example:"kind"`
+	Metadata   AlertSilenceMetadata `json:"metadata"`
+	Spec       AlertSilenceSpec     `json:"spec"`
+	Status     AlertSilenceStatus   `json:"status,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertSilence) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+func (a *AlertSilence) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *AlertSilence) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *AlertSilence) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *AlertSilence) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AlertSilence) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *AlertSilence) SetProject(project string) {
+	a.Metadata.Project = project
 }
 
 // AlertSilenceSpec represents content of AlertSilence's Spec.
@@ -37,6 +56,13 @@ type AlertSilenceSpec struct {
 	Slo         string                        `json:"slo" validate:"required"`
 	AlertPolicy AlertSilenceAlertPolicySource `json:"alertPolicy" validate:"required,dive"`
 	Period      AlertSilencePeriod            `json:"period" validate:"required,dive"`
+}
+
+// AlertSilenceMetadata defines only basic metadata fields - name and project which uniquely identifies
+// object on project level.
+type AlertSilenceMetadata struct {
+	Name    string `json:"name" validate:"required,objectName" example:"name"`
+	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
 }
 
 func (a AlertSilenceSpec) GetParsedDuration() (time.Duration, error) {
@@ -91,7 +117,7 @@ func genericToAlertSilence(o manifest.ObjectGeneric, v validator, onlyHeader boo
 	res := AlertSilence{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
-		Metadata: manifest.AlertSilenceMetadata{
+		Metadata: AlertSilenceMetadata{
 			Name:    o.Metadata.Name,
 			Project: o.Metadata.Project,
 		},

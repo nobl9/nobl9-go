@@ -21,10 +21,29 @@ type DataExport struct {
 	Status DataExportStatus `json:"status"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (d DataExport) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: d.Metadata.Project, Name: d.Metadata.Name}
+func (d *DataExport) GetAPIVersion() string {
+	return d.APIVersion
+}
+
+func (d *DataExport) GetKind() manifest.Kind {
+	return d.Kind
+}
+
+func (d *DataExport) GetName() string {
+	return d.Metadata.Name
+}
+
+func (d *DataExport) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (d *DataExport) GetProject() string {
+	return d.Metadata.Project
+}
+
+func (d *DataExport) SetProject(project string) {
+	d.Metadata.Project = project
 }
 
 // DataExportSpec represents content of DataExport's Spec

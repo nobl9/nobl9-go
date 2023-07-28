@@ -17,16 +17,31 @@ func (roleBindings RoleBindingsSlice) Clone() RoleBindingsSlice {
 // RoleBinding represents relation of User and Role
 type RoleBinding struct {
 	manifest.ObjectInternal
-	APIVersion string                       `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind                `json:"kind" validate:"required" example:"kind"`
-	Metadata   manifest.RoleBindingMetadata `json:"metadata"`
-	Spec       RoleBindingSpec              `json:"spec"`
+	APIVersion string              `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind       manifest.Kind       `json:"kind" validate:"required" example:"kind"`
+	Metadata   RoleBindingMetadata `json:"metadata"`
+	Spec       RoleBindingSpec     `json:"spec"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (r RoleBinding) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: r.Metadata.Name}
+func (r RoleBinding) GetAPIVersion() string {
+	return r.APIVersion
+}
+
+func (r RoleBinding) GetKind() manifest.Kind {
+	return r.Kind
+}
+
+func (r RoleBinding) GetName() string {
+	return r.Metadata.Name
+}
+
+func (r RoleBinding) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+type RoleBindingMetadata struct {
+	Name string `json:"name" validate:"required,objectName" example:"name"`
 }
 
 type RoleBindingSpec struct {
@@ -42,7 +57,7 @@ func genericToRoleBinding(o manifest.ObjectGeneric, v validator) (RoleBinding, e
 	res := RoleBinding{
 		APIVersion: o.ObjectHeader.APIVersion,
 		Kind:       o.ObjectHeader.Kind,
-		Metadata: manifest.RoleBindingMetadata{
+		Metadata: RoleBindingMetadata{
 			Name: o.Metadata.Name,
 		},
 		ObjectInternal: manifest.ObjectInternal{

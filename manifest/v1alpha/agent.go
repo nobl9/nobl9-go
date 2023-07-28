@@ -23,6 +23,31 @@ type Agent struct {
 	Status AgentStatus `json:"status"`
 }
 
+func (a *Agent) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *Agent) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *Agent) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *Agent) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *Agent) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *Agent) SetProject(project string) {
+	a.Metadata.Project = project
+}
+
 // AgentSpec represents content of Spec typical for Agent Object
 type AgentSpec struct {
 	Description             string                          `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
@@ -109,12 +134,6 @@ type AgentStatus struct {
 	AgentType      string `json:"agentType" example:"Prometheus"`
 	AgentVersion   string `json:"agentVersion,omitempty" example:"0.0.9"`
 	LastConnection string `json:"lastConnection,omitempty" example:"2020-08-31T14:26:13Z"`
-}
-
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a Agent) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: a.Metadata.Name, Project: a.Metadata.Project}
 }
 
 // PrometheusAgentConfig represents content of Prometheus Configuration typical for Agent Object.

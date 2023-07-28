@@ -6,6 +6,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
+const DefaultAlertPolicyLastsForDuration = "0m"
+
 type AlertPoliciesSlice []AlertPolicy
 
 func (alertPolicies AlertPoliciesSlice) Clone() AlertPoliciesSlice {
@@ -20,10 +22,29 @@ type AlertPolicy struct {
 	Spec AlertPolicySpec `json:"spec"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertPolicy) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+func (a *AlertPolicy) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *AlertPolicy) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *AlertPolicy) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *AlertPolicy) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AlertPolicy) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *AlertPolicy) SetProject(project string) {
+	a.Metadata.Project = project
 }
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.

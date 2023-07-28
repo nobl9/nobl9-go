@@ -21,10 +21,29 @@ type AlertMethod struct {
 	Spec AlertMethodSpec `json:"spec"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertMethod) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+func (a *AlertMethod) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *AlertMethod) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *AlertMethod) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *AlertMethod) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *AlertMethod) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *AlertMethod) SetProject(project string) {
+	a.Metadata.Project = project
 }
 
 // PublicAlertMethod represents the configuration required to send a notification to an external service

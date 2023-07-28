@@ -12,14 +12,6 @@ import (
 // APIVersion is a value of valid apiVersions
 const APIVersion = "n9/v1alpha"
 
-// HiddenValue can be used as a value of a secret field and is ignored during saving
-const HiddenValue = "[hidden]"
-
-const (
-	DatasourceStableChannel            = "stable"
-	DefaultAlertPolicyLastsForDuration = "0m"
-)
-
 // APIObjects - all Objects available for this version of API
 // Sorted in order of applying
 type APIObjects struct {
@@ -68,6 +60,19 @@ func (o APIObjects) Len() int {
 		len(o.Projects) +
 		len(o.RoleBindings) +
 		len(o.Annotations)
+}
+
+type ObjectSpec struct {
+	ApiVersion string        `json:"apiVersion"`
+	Kind       manifest.Kind `json:"kind"`
+}
+
+func (o ObjectSpec) GetVersion() string {
+	return o.ApiVersion
+}
+
+func (o ObjectSpec) GetKind() manifest.Kind {
+	return o.Kind
 }
 
 // FilterEntry represents single metric label to be matched against value
@@ -201,30 +206,19 @@ func (o APIObjects) Validate() (err error) {
 	return nil
 }
 
-// uniqueIdentifiers holds metadata used to uniquely identify an object across a single organization.
-// While Name is required, Project might not apply to all objects.
-type uniqueIdentifiers struct {
-	Name    string
-	Project string
-}
-
-// uniqueIdentifiersGetter allows generics to be used when iterating
-// over all Kind slices like SLOsSlice or ServicesSlice.
-type uniqueIdentifiersGetter interface {
-	getUniqueIdentifiers() uniqueIdentifiers
-}
-
 // validateUniquenessConstraints finds conflicting objects in a Kind slice.
 // It returns an error if any conflicts were encountered.
 // The error informs about the cause and lists ALL conflicts.
-func validateUniquenessConstraints[T uniqueIdentifiersGetter](kind manifest.Kind, slice []T) error {
+func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice []T) error {
 	unique := make(map[string]struct{}, len(slice))
 	var details []string
 	for i := range slice {
-		uid := slice[i].getUniqueIdentifiers()
-		key := uid.Project + uid.Name
+		key := slice[i].GetName()
+		if v, ok := any(slice[i]).(manifest.ProjectScopedObject); ok {
+			key = v.GetProject() + "_" + key
+		}
 		if _, conflicts := unique[key]; conflicts {
-			details = append(details, conflictDetails(kind, uid))
+			details = append(details, conflictDetails(slice[i], kind))
 			continue
 		}
 		unique[key] = struct{}{}
@@ -236,12 +230,12 @@ func validateUniquenessConstraints[T uniqueIdentifiersGetter](kind manifest.Kind
 }
 
 // conflictDetails creates a formatted string identifying a single conflict between two objects.
-func conflictDetails(kind manifest.Kind, uid uniqueIdentifiers) string {
-	switch kind {
-	case manifest.KindProject, manifest.KindRoleBinding, manifest.KindUserGroup:
-		return fmt.Sprintf(`"%s"`, uid.Name)
+func conflictDetails(object manifest.Object, kind manifest.Kind) string {
+	switch v := object.(type) {
+	case manifest.ProjectScopedObject:
+		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, v.GetProject(), kind, object.GetName())
 	default:
-		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, uid.Project, kind, uid.Name)
+		return fmt.Sprintf(`"%s"`, object.GetName())
 	}
 }
 

@@ -21,10 +21,29 @@ type Annotation struct {
 	Status AnnotationStatus `json:"status"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a Annotation) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: a.Metadata.Name, Project: a.Metadata.Project}
+func (a *Annotation) GetAPIVersion() string {
+	return a.APIVersion
+}
+
+func (a *Annotation) GetKind() manifest.Kind {
+	return a.Kind
+}
+
+func (a *Annotation) GetName() string {
+	return a.Metadata.Name
+}
+
+func (a *Annotation) Validate() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *Annotation) GetProject() string {
+	return a.Metadata.Project
+}
+
+func (a *Annotation) SetProject(project string) {
+	a.Metadata.Project = project
 }
 
 type AnnotationSpec struct {
