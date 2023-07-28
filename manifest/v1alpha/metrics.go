@@ -3,6 +3,225 @@ package v1alpha
 
 import "sort"
 
+// CountMetricsSpec represents set of two time series of good and total counts
+type CountMetricsSpec struct {
+	Incremental *bool       `json:"incremental" validate:"required"`
+	GoodMetric  *MetricSpec `json:"good,omitempty"`
+	BadMetric   *MetricSpec `json:"bad,omitempty"`
+	TotalMetric *MetricSpec `json:"total" validate:"required"`
+}
+
+// RawMetricSpec represents integration with a metric source for a particular threshold
+type RawMetricSpec struct {
+	MetricQuery *MetricSpec `json:"query" validate:"required"`
+}
+
+// MetricSpec defines single time series obtained from data source
+type MetricSpec struct {
+	Prometheus          *PrometheusMetric          `json:"prometheus,omitempty"`
+	Datadog             *DatadogMetric             `json:"datadog,omitempty"`
+	NewRelic            *NewRelicMetric            `json:"newRelic,omitempty"`
+	AppDynamics         *AppDynamicsMetric         `json:"appDynamics,omitempty"`
+	Splunk              *SplunkMetric              `json:"splunk,omitempty"`
+	Lightstep           *LightstepMetric           `json:"lightstep,omitempty"`
+	SplunkObservability *SplunkObservabilityMetric `json:"splunkObservability,omitempty"`
+	Dynatrace           *DynatraceMetric           `json:"dynatrace,omitempty"`
+	Elasticsearch       *ElasticsearchMetric       `json:"elasticsearch,omitempty"`
+	ThousandEyes        *ThousandEyesMetric        `json:"thousandEyes,omitempty"`
+	Graphite            *GraphiteMetric            `json:"graphite,omitempty"`
+	BigQuery            *BigQueryMetric            `json:"bigQuery,omitempty"`
+	OpenTSDB            *OpenTSDBMetric            `json:"opentsdb,omitempty"`
+	GrafanaLoki         *GrafanaLokiMetric         `json:"grafanaLoki,omitempty"`
+	CloudWatch          *CloudWatchMetric          `json:"cloudWatch,omitempty"`
+	Pingdom             *PingdomMetric             `json:"pingdom,omitempty"`
+	AmazonPrometheus    *AmazonPrometheusMetric    `json:"amazonPrometheus,omitempty"`
+	Redshift            *RedshiftMetric            `json:"redshift,omitempty"`
+	SumoLogic           *SumoLogicMetric           `json:"sumoLogic,omitempty"`
+	Instana             *InstanaMetric             `json:"instana,omitempty"`
+	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
+	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
+}
+
+// PrometheusMetric represents metric from Prometheus
+type PrometheusMetric struct {
+	PromQL *string `json:"promql" validate:"required" example:"cpu_usage_user{cpu=\"cpu-total\"}"`
+}
+
+// AmazonPrometheusMetric represents metric from Amazon Managed Prometheus
+type AmazonPrometheusMetric struct {
+	PromQL *string `json:"promql" validate:"required" example:"cpu_usage_user{cpu=\"cpu-total\"}"`
+}
+
+// DatadogMetric represents metric from Datadog
+type DatadogMetric struct {
+	Query *string `json:"query" validate:"required"`
+}
+
+// NewRelicMetric represents metric from NewRelic
+type NewRelicMetric struct {
+	NRQL *string `json:"nrql" validate:"required,noSinceOrUntil"`
+}
+
+// ThousandEyesMetric represents metric from ThousandEyes
+type ThousandEyesMetric struct {
+	TestID   *int64  `json:"testID" validate:"required,gte=0"`
+	TestType *string `json:"testType" validate:"supportedThousandEyesTestType"`
+}
+
+// AppDynamicsMetric represents metric from AppDynamics
+type AppDynamicsMetric struct {
+	ApplicationName *string `json:"applicationName" validate:"required,notEmpty"`
+	MetricPath      *string `json:"metricPath" validate:"required,unambiguousAppDynamicMetricPath"`
+}
+
+// SplunkMetric represents metric from Splunk
+type SplunkMetric struct {
+	Query *string `json:"query" validate:"required,notEmpty,splunkQueryValid"`
+}
+
+// LightstepMetric represents metric from Lightstep
+type LightstepMetric struct {
+	StreamID   *string  `json:"streamId,omitempty"`
+	TypeOfData *string  `json:"typeOfData" validate:"required,oneof=latency error_rate good total metric"`
+	Percentile *float64 `json:"percentile,omitempty"`
+	UQL        *string  `json:"uql,omitempty"`
+}
+
+// SplunkObservabilityMetric represents metric from SplunkObservability
+type SplunkObservabilityMetric struct {
+	Program *string `json:"program" validate:"required"`
+}
+
+// DynatraceMetric represents metric from Dynatrace.
+type DynatraceMetric struct {
+	MetricSelector *string `json:"metricSelector" validate:"required"`
+}
+
+// ElasticsearchMetric represents metric from Elasticsearch.
+type ElasticsearchMetric struct {
+	Index *string `json:"index" validate:"required"`
+	Query *string `json:"query" validate:"required,elasticsearchBeginEndTimeRequired"`
+}
+
+// CloudWatchMetric represents metric from CloudWatch.
+type CloudWatchMetric struct {
+	Region     *string                     `json:"region" validate:"required,max=255"`
+	Namespace  *string                     `json:"namespace,omitempty"`
+	MetricName *string                     `json:"metricName,omitempty"`
+	Stat       *string                     `json:"stat,omitempty"`
+	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty" validate:"max=10,uniqueDimensionNames,dive"`
+	SQL        *string                     `json:"sql,omitempty"`
+	JSON       *string                     `json:"json,omitempty"`
+}
+
+// RedshiftMetric represents metric from Redshift.
+type RedshiftMetric struct {
+	Region       *string `json:"region" validate:"required,max=255"`
+	ClusterID    *string `json:"clusterId" validate:"required"`
+	DatabaseName *string `json:"databaseName" validate:"required"`
+	Query        *string `json:"query" validate:"required,redshiftRequiredColumns"`
+}
+
+// SumoLogicMetric represents metric from Sumo Logic.
+type SumoLogicMetric struct {
+	Type         *string `json:"type" validate:"required"`
+	Query        *string `json:"query" validate:"required"`
+	Quantization *string `json:"quantization,omitempty"`
+	Rollup       *string `json:"rollup,omitempty"`
+	// For struct level validation refer to sumoLogicStructValidation in pkg/manifest/v1alpha/validator.go
+}
+
+// InstanaMetric represents metric from Redshift.
+type InstanaMetric struct {
+	MetricType     string                           `json:"metricType" validate:"required,oneof=infrastructure application"` //nolint:lll
+	Infrastructure *InstanaInfrastructureMetricType `json:"infrastructure,omitempty"`
+	Application    *InstanaApplicationMetricType    `json:"application,omitempty"`
+}
+
+// InfluxDBMetric represents metric from InfluxDB
+type InfluxDBMetric struct {
+	Query *string `json:"query" validate:"required,influxDBRequiredPlaceholders"`
+}
+
+// GCMMetric represents metric from GCM
+type GCMMetric struct {
+	Query     string `json:"query" validate:"required"`
+	ProjectID string `json:"projectId" validate:"required"`
+}
+
+type InstanaInfrastructureMetricType struct {
+	MetricRetrievalMethod string  `json:"metricRetrievalMethod" validate:"required,oneof=query snapshot"`
+	Query                 *string `json:"query,omitempty"`
+	SnapshotID            *string `json:"snapshotId,omitempty"`
+	MetricID              string  `json:"metricId" validate:"required"`
+	PluginID              string  `json:"pluginId" validate:"required"`
+}
+
+type InstanaApplicationMetricType struct {
+	MetricID         string                          `json:"metricId" validate:"required,oneof=calls erroneousCalls errors latency"` //nolint:lll
+	Aggregation      string                          `json:"aggregation" validate:"required"`
+	GroupBy          InstanaApplicationMetricGroupBy `json:"groupBy" validate:"required"`
+	APIQuery         string                          `json:"apiQuery" validate:"required,json"`
+	IncludeInternal  bool                            `json:"includeInternal,omitempty"`
+	IncludeSynthetic bool                            `json:"includeSynthetic,omitempty"`
+}
+
+type InstanaApplicationMetricGroupBy struct {
+	Tag               string  `json:"tag" validate:"required"`
+	TagEntity         string  `json:"tagEntity" validate:"required,oneof=DESTINATION SOURCE NOT_APPLICABLE"`
+	TagSecondLevelKey *string `json:"tagSecondLevelKey,omitempty"`
+}
+
+// IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.
+func (c CloudWatchMetric) IsStandardConfiguration() bool {
+	return c.Stat != nil || c.Dimensions != nil || c.MetricName != nil || c.Namespace != nil
+}
+
+// IsSQLConfiguration returns true if the struct represents CloudWatch SQL configuration.
+func (c CloudWatchMetric) IsSQLConfiguration() bool {
+	return c.SQL != nil
+}
+
+// IsJSONConfiguration returns true if the struct represents CloudWatch JSON configuration.
+func (c CloudWatchMetric) IsJSONConfiguration() bool {
+	return c.JSON != nil
+}
+
+// CloudWatchMetricDimension represents name/value pair that is part of the identity of a metric.
+type CloudWatchMetricDimension struct {
+	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
+	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
+}
+
+// PingdomMetric represents metric from Pingdom.
+type PingdomMetric struct {
+	CheckID   *string `json:"checkId" validate:"required,notBlank,numeric" example:"1234567"`
+	CheckType *string `json:"checkType" validate:"required,pingdomCheckTypeFieldValid" example:"uptime"`
+	Status    *string `json:"status,omitempty" validate:"omitempty,pingdomStatusValid" example:"up,down"`
+}
+
+// GraphiteMetric represents metric from Graphite.
+type GraphiteMetric struct {
+	MetricPath *string `json:"metricPath" validate:"required,metricPathGraphite"`
+}
+
+// BigQueryMetric represents metric from BigQuery
+type BigQueryMetric struct {
+	Query     string `json:"query" validate:"required,bigQueryRequiredColumns"`
+	ProjectID string `json:"projectId" validate:"required"`
+	Location  string `json:"location" validate:"required"`
+}
+
+// OpenTSDBMetric represents metric from OpenTSDB.
+type OpenTSDBMetric struct {
+	Query *string `json:"query" validate:"required"`
+}
+
+// GrafanaLokiMetric represents metric from GrafanaLokiMetric.
+type GrafanaLokiMetric struct {
+	Logql *string `json:"logql" validate:"required"`
+}
+
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
 	return slo.Indicator.RawMetric != nil
 }
