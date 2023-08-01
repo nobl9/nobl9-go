@@ -16,12 +16,12 @@ type Object interface {
 // ProjectScopedObject an Object which is tied to a specific KindProject.
 // Example of such an object is KindSLO.
 // On the other hand KindRoleBinding is an example of organization scoped Object which is not tied to any KindProject.
-type ProjectScopedObject[T Object] interface {
+type ProjectScopedObject interface {
 	// GetProject returns the name of the project which the ProjectScopedObject belongs to.
 	GetProject() string
 	// SetProject sets the name of the project which the ProjectScopedObject should belong to.
 	// It returns the copy of the Object with the updated Project.
-	SetProject(project string) T
+	SetProject(project string) Object
 }
 
 //go:generate ../bin/go-enum --names

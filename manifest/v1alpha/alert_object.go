@@ -25,7 +25,7 @@ func (a Alert) GetProject() string {
 	return a.Metadata.Project
 }
 
-func (a Alert) SetProject(project string) Alert {
+func (a Alert) SetProject(project string) manifest.Object {
 	a.Metadata.Project = project
 	return a
 }

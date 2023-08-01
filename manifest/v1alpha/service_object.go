@@ -25,7 +25,7 @@ func (s Service) GetProject() string {
 	return s.Metadata.Project
 }
 
-func (s Service) SetProject(project string) Service {
+func (s Service) SetProject(project string) manifest.Object {
 	s.Metadata.Project = project
 	return s
 }
@@ -34,7 +34,7 @@ func (s Service) GetOrganization() string {
 	return s.Organization
 }
 
-func (s Service) SetOrganization(org string) Service {
+func (s Service) SetOrganization(org string) manifest.Object {
 	s.Organization = org
 	return s
 }
@@ -43,7 +43,7 @@ func (s Service) GetManifestSource() string {
 	return s.ManifestSource
 }
 
-func (s Service) SetManifestSource(src string) Service {
+func (s Service) SetManifestSource(src string) manifest.Object {
 	s.ManifestSource = src
 	return s
 }

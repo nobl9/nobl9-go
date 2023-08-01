@@ -62,11 +62,11 @@ func (o APIObjects) Len() int {
 		len(o.Annotations)
 }
 
-type ObjectContext[T manifest.Object] interface {
+type ObjectContext interface {
 	GetOrganization() string
-	SetOrganization(org string) T
+	SetOrganization(org string) manifest.Object
 	GetManifestSource() string
-	SetManifestSource(src string) T
+	SetManifestSource(src string) manifest.Object
 }
 
 // FilterEntry represents single metric label to be matched against value
@@ -209,11 +209,11 @@ func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice 
 	var details []string
 	for _, object := range slice {
 		key := object.GetName()
-		if v, ok := any(object).(manifest.ProjectScopedObject[T]); ok {
+		if v, ok := any(object).(manifest.ProjectScopedObject); ok {
 			key = v.GetProject() + "_" + key
 		}
 		if _, conflicts := unique[key]; conflicts {
-			details = append(details, conflictDetails[T](object, kind))
+			details = append(details, conflictDetails(object, kind))
 			continue
 		}
 		unique[key] = struct{}{}
@@ -225,9 +225,9 @@ func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice 
 }
 
 // conflictDetails creates a formatted string identifying a single conflict between two objects.
-func conflictDetails[T manifest.Object](object T, kind manifest.Kind) string {
+func conflictDetails(object manifest.Object, kind manifest.Kind) string {
 	switch v := any(object).(type) {
-	case manifest.ProjectScopedObject[T]:
+	case manifest.ProjectScopedObject:
 		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, v.GetProject(), kind, object.GetName())
 	default:
 		return fmt.Sprintf(`"%s"`, object.GetName())

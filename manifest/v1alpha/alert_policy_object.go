@@ -25,7 +25,7 @@ func (a AlertPolicy) GetProject() string {
 	return a.Metadata.Project
 }
 
-func (a AlertPolicy) SetProject(project string) AlertPolicy {
+func (a AlertPolicy) SetProject(project string) manifest.Object {
 	a.Metadata.Project = project
 	return a
 }
@@ -34,7 +34,7 @@ func (a AlertPolicy) GetOrganization() string {
 	return a.Organization
 }
 
-func (a AlertPolicy) SetOrganization(org string) AlertPolicy {
+func (a AlertPolicy) SetOrganization(org string) manifest.Object {
 	a.Organization = org
 	return a
 }
@@ -43,7 +43,7 @@ func (a AlertPolicy) GetManifestSource() string {
 	return a.ManifestSource
 }
 
-func (a AlertPolicy) SetManifestSource(src string) AlertPolicy {
+func (a AlertPolicy) SetManifestSource(src string) manifest.Object {
 	a.ManifestSource = src
 	return a
 }

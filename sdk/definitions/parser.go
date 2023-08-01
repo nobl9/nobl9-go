@@ -43,9 +43,9 @@ func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 func annotateWithManifestSource(object manifest.Object, source string) (manifest.Object, error) {
 	switch object.GetVersion() {
 	case "n9/v1alpha":
-		if v, ok := object.(v1alpha.ObjectContextI); ok {
+		if v, ok := object.(v1alpha.ObjectContext); ok {
 			if v.GetManifestSource() == "" && source != "" {
-				v.SetManifestSource(source)
+				object = v.SetManifestSource(source)
 			}
 		}
 	}

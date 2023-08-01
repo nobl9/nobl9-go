@@ -25,7 +25,7 @@ func (d Direct) GetProject() string {
 	return d.Metadata.Project
 }
 
-func (d Direct) SetProject(project string) Direct {
+func (d Direct) SetProject(project string) manifest.Object {
 	d.Metadata.Project = project
 	return d
 }
@@ -34,7 +34,7 @@ func (d Direct) GetOrganization() string {
 	return d.Organization
 }
 
-func (d Direct) SetOrganization(org string) Direct {
+func (d Direct) SetOrganization(org string) manifest.Object {
 	d.Organization = org
 	return d
 }
@@ -43,7 +43,7 @@ func (d Direct) GetManifestSource() string {
 	return d.ManifestSource
 }
 
-func (d Direct) SetManifestSource(src string) Direct {
+func (d Direct) SetManifestSource(src string) manifest.Object {
 	d.ManifestSource = src
 	return d
 }

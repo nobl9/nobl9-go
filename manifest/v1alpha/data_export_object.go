@@ -25,7 +25,7 @@ func (d DataExport) GetProject() string {
 	return d.Metadata.Project
 }
 
-func (d DataExport) SetProject(project string) DataExport {
+func (d DataExport) SetProject(project string) manifest.Object {
 	d.Metadata.Project = project
 	return d
 }
@@ -34,7 +34,7 @@ func (d DataExport) GetOrganization() string {
 	return d.Organization
 }
 
-func (d DataExport) SetOrganization(org string) DataExport {
+func (d DataExport) SetOrganization(org string) manifest.Object {
 	d.Organization = org
 	return d
 }
@@ -43,7 +43,7 @@ func (d DataExport) GetManifestSource() string {
 	return d.ManifestSource
 }
 
-func (d DataExport) SetManifestSource(src string) DataExport {
+func (d DataExport) SetManifestSource(src string) manifest.Object {
 	d.ManifestSource = src
 	return d
 }
