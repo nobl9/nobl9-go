@@ -25,7 +25,7 @@ func (a AlertMethod) GetProject() string {
 	return a.Metadata.Project
 }
 
-func (a AlertMethod) SetProject(project string) AlertMethod {
+func (a AlertMethod) SetProject(project string) manifest.Object {
 	a.Metadata.Project = project
 	return a
 }
@@ -34,7 +34,7 @@ func (a AlertMethod) GetOrganization() string {
 	return a.Organization
 }
 
-func (a AlertMethod) SetOrganization(org string) AlertMethod {
+func (a AlertMethod) SetOrganization(org string) manifest.Object {
 	a.Organization = org
 	return a
 }
@@ -43,7 +43,7 @@ func (a AlertMethod) GetManifestSource() string {
 	return a.ManifestSource
 }
 
-func (a AlertMethod) SetManifestSource(src string) AlertMethod {
+func (a AlertMethod) SetManifestSource(src string) manifest.Object {
 	a.ManifestSource = src
 	return a
 }

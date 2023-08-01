@@ -30,7 +30,7 @@ func ({{ .Receiver }} {{ .StructName }}) GetProject() string {
     return {{ .Receiver }}.Metadata.Project
 }
 
-func ({{ .Receiver }} {{ .StructName }}) SetProject(project string) {{ .StructName }} {
+func ({{ .Receiver }} {{ .StructName }}) SetProject(project string) manifest.Object {
   {{ .Receiver }}.Metadata.Project = project
   return {{ .Receiver }}
 }
@@ -42,7 +42,7 @@ func ({{ .Receiver }} {{ .StructName }}) GetOrganization() string {
   return {{ .Receiver }}.Organization
 }
 
-func ({{ .Receiver }} {{ .StructName }}) SetOrganization(org string) {{ .StructName }} {
+func ({{ .Receiver }} {{ .StructName }}) SetOrganization(org string) manifest.Object {
   {{ .Receiver }}.Organization = org
   return {{ .Receiver }}
 }
@@ -51,7 +51,7 @@ func ({{ .Receiver }} {{ .StructName }}) GetManifestSource() string {
   return {{ .Receiver }}.ManifestSource
 }
 
-func ({{ .Receiver }} {{ .StructName }}) SetManifestSource(src string) {{ .StructName }} {
+func ({{ .Receiver }} {{ .StructName }}) SetManifestSource(src string) manifest.Object {
   {{ .Receiver }}.ManifestSource = src
   return {{ .Receiver }}
 }

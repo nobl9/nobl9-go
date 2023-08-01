@@ -25,7 +25,7 @@ func (u UserGroup) GetOrganization() string {
 	return u.Organization
 }
 
-func (u UserGroup) SetOrganization(org string) UserGroup {
+func (u UserGroup) SetOrganization(org string) manifest.Object {
 	u.Organization = org
 	return u
 }
@@ -34,7 +34,7 @@ func (u UserGroup) GetManifestSource() string {
 	return u.ManifestSource
 }
 
-func (u UserGroup) SetManifestSource(src string) UserGroup {
+func (u UserGroup) SetManifestSource(src string) manifest.Object {
 	u.ManifestSource = src
 	return u
 }

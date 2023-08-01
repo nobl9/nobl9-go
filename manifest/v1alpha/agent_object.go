@@ -25,7 +25,7 @@ func (a Agent) GetProject() string {
 	return a.Metadata.Project
 }
 
-func (a Agent) SetProject(project string) Agent {
+func (a Agent) SetProject(project string) manifest.Object {
 	a.Metadata.Project = project
 	return a
 }
@@ -34,7 +34,7 @@ func (a Agent) GetOrganization() string {
 	return a.Organization
 }
 
-func (a Agent) SetOrganization(org string) Agent {
+func (a Agent) SetOrganization(org string) manifest.Object {
 	a.Organization = org
 	return a
 }
@@ -43,7 +43,7 @@ func (a Agent) GetManifestSource() string {
 	return a.ManifestSource
 }
 
-func (a Agent) SetManifestSource(src string) Agent {
+func (a Agent) SetManifestSource(src string) manifest.Object {
 	a.ManifestSource = src
 	return a
 }

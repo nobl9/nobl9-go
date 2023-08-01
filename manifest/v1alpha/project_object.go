@@ -25,7 +25,7 @@ func (p Project) GetOrganization() string {
 	return p.Organization
 }
 
-func (p Project) SetOrganization(org string) Project {
+func (p Project) SetOrganization(org string) manifest.Object {
 	p.Organization = org
 	return p
 }
@@ -34,7 +34,7 @@ func (p Project) GetManifestSource() string {
 	return p.ManifestSource
 }
 
-func (p Project) SetManifestSource(src string) Project {
+func (p Project) SetManifestSource(src string) manifest.Object {
 	p.ManifestSource = src
 	return p
 }

@@ -25,7 +25,7 @@ func (s SLO) GetProject() string {
 	return s.Metadata.Project
 }
 
-func (s SLO) SetProject(project string) SLO {
+func (s SLO) SetProject(project string) manifest.Object {
 	s.Metadata.Project = project
 	return s
 }
@@ -34,7 +34,7 @@ func (s SLO) GetOrganization() string {
 	return s.Organization
 }
 
-func (s SLO) SetOrganization(org string) SLO {
+func (s SLO) SetOrganization(org string) manifest.Object {
 	s.Organization = org
 	return s
 }
@@ -43,7 +43,7 @@ func (s SLO) GetManifestSource() string {
 	return s.ManifestSource
 }
 
-func (s SLO) SetManifestSource(src string) SLO {
+func (s SLO) SetManifestSource(src string) manifest.Object {
 	s.ManifestSource = src
 	return s
 }
