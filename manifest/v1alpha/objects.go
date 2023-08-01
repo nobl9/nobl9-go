@@ -69,17 +69,6 @@ type ObjectContext interface {
 	SetManifestSource(src string) manifest.Object
 }
 
-// FilterEntry represents single metric label to be matched against value
-type FilterEntry struct {
-	Label string `json:"label" validate:"required,prometheusLabelName"`
-	Value string `json:"value" validate:"required"`
-}
-
-type OrganizationInformation struct {
-	ID          string  `json:"id"`
-	DisplayName *string `json:"displayName"`
-}
-
 // Applying multiple Agents at once can cause timeout for whole sloctl apply command.
 // This is caused by long request to Okta to create client credentials app.
 // The same case is applicable for delete command.
