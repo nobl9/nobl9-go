@@ -12,7 +12,7 @@ func _() {
 	_ = x[SourceTypeDirectory-1]
 	_ = x[SourceTypeGlobPattern-2]
 	_ = x[SourceTypeURL-3]
-	_ = x[SourceTypeInput-4]
+	_ = x[SourceTypeReader-4]
 }
 
 const _SourceType_name = "FileDirectoryGlobPatternURLInput"

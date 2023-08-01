@@ -27,7 +27,7 @@ func ResolveSources(rawSources ...RawSource) ([]*Source, error) {
 
 // ResolveSource attempts to resolve a single RawSource producing a Source instance read to be passed to ReadSources.
 // It interprets the provided URI and associates it with a specific SourceType.
-// If you wish to create a SourceTypeInput Source you should use a separate method: NewInputSource.
+// If you wish to create a SourceTypeReader Source you should use a separate method: NewReaderSource.
 func ResolveSource(rawSource RawSource) (src *Source, err error) {
 	src = &Source{Raw: rawSource}
 	switch {
@@ -43,11 +43,11 @@ func ResolveSource(rawSource RawSource) (src *Source, err error) {
 	return src, err
 }
 
-// NewInputSource creates a special instance of Source with SourceTypeInput.
+// NewReaderSource creates a special instance of Source with SourceTypeReader.
 // ReadSources will process the Source by reading form the provided io.Reader.
-func NewInputSource(r io.Reader, source RawSource) *Source {
+func NewReaderSource(r io.Reader, source RawSource) *Source {
 	return &Source{
-		Type:   SourceTypeInput,
+		Type:   SourceTypeReader,
 		Paths:  []string{source},
 		Reader: r,
 		Raw:    source,
@@ -60,7 +60,7 @@ type Source struct {
 	Type SourceType
 	// Paths lists all resolved URIs the Source points at.
 	Paths []string
-	// Reader may be optionally provided with SourceTypeInput for ReadSources to read from the io.Reader.
+	// Reader may be optionally provided with SourceTypeReader for ReadSources to read from the io.Reader.
 	Reader io.Reader
 	// Raw is the original, unresolved RawSource, an example might be a relative path
 	// which was resolved to its absolute form.
@@ -74,7 +74,7 @@ const (
 	SourceTypeDirectory
 	SourceTypeGlobPattern
 	SourceTypeURL
-	SourceTypeInput
+	SourceTypeReader
 )
 
 func (s Source) String() string {

@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/sdk/definitions"
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
@@ -68,7 +69,7 @@ const (
 )
 
 type Response struct {
-	Objects      []AnyJSONObj
+	Objects      []manifest.Object
 	TruncatedMax int
 }
 
@@ -77,9 +78,6 @@ type M2MAppCredentials struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 }
-
-// AnyJSONObj can store a generic representation on any valid JSON.
-type AnyJSONObj = map[string]interface{}
 
 // Client represents API high level client.
 type Client struct {
@@ -171,7 +169,6 @@ const (
 	apiApply     = "apply"
 	apiDelete    = "delete"
 	apiGet       = "get"
-	apiInputData = "input/data"
 	apiGetGroups = "/usrmgmt/groups"
 )
 
@@ -183,7 +180,7 @@ func (c *Client) GetObjects(
 	kind manifest.Kind,
 	filterLabel map[string][]string,
 	names ...string,
-) ([]AnyJSONObj, error) {
+) ([]manifest.Object, error) {
 	q := url.Values{}
 	if len(names) > 0 {
 		q[QueryKeyName] = names
@@ -218,11 +215,11 @@ func (c *Client) GetObjectsWithParams(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		content, err := decodeJSONResponse(resp.Body)
+		response.Objects, err = definitions.ReadSources(ctx,
+			definitions.NewReaderSource(resp.Body, sourceFromRequest(resp.Request)))
 		if err != nil {
 			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
-		response.Objects = content
 		if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {
 			return response, nil
 		}
@@ -275,18 +272,18 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+func (c *Client) ApplyObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
 	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(ctx context.Context, objects []AnyJSONObj, dryRun bool) error {
+func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
 	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
 }
 
 // applyOrDeleteObjects applies or deletes list of objects
 // depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []AnyJSONObj, apiMode string, dryRun bool) error {
+func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []manifest.Object, apiMode string, dryRun bool) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
@@ -471,12 +468,6 @@ func getResponseServerError(resp *http.Response) error {
 	return fmt.Errorf(msg)
 }
 
-// decodeJSONResponse assumes that passed body is an array of JSON objects.
-func decodeJSONResponse(r io.Reader) ([]AnyJSONObj, error) {
-	dec := json.NewDecoder(r)
-	var parsed []AnyJSONObj
-	if err := dec.Decode(&parsed); err != nil {
-		return nil, err
-	}
-	return parsed, nil
+func sourceFromRequest(r *http.Request) definitions.RawSource {
+	return fmt.Sprintf("%s %s://%s%s", r.Method, r.URL.Scheme, r.URL.Host, r.URL.Path)
 }
