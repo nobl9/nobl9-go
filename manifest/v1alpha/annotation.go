@@ -1,11 +1,12 @@
 package v1alpha
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
+
+//go:generate go run ../../scripts/generate-object-impl.go Annotation
 
 type AnnotationsSlice []Annotation
 
@@ -16,34 +17,19 @@ func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
 }
 
 type Annotation struct {
-	manifest.ObjectHeader
-	Spec   AnnotationSpec   `json:"spec"`
-	Status AnnotationStatus `json:"status"`
+	APIVersion string             `json:"apiVersion"`
+	Kind       manifest.Kind      `json:"kind"`
+	Metadata   AnnotationMetadata `json:"metadata"`
+	Spec       AnnotationSpec     `json:"spec"`
+	Status     *AnnotationStatus  `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-func (a *Annotation) GetAPIVersion() string {
-	return a.APIVersion
-}
-
-func (a *Annotation) GetKind() manifest.Kind {
-	return a.Kind
-}
-
-func (a *Annotation) GetName() string {
-	return a.Metadata.Name
-}
-
-func (a *Annotation) Validate() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *Annotation) GetProject() string {
-	return a.Metadata.Project
-}
-
-func (a *Annotation) SetProject(project string) {
-	a.Metadata.Project = project
+type AnnotationMetadata struct {
+	Name    string `json:"name" validate:"required,objectName"`
+	Project string `json:"project,omitempty" validate:"objectName"`
 }
 
 type AnnotationSpec struct {
@@ -66,24 +52,4 @@ func (a AnnotationSpec) GetParsedStartTime() (time.Time, error) {
 
 func (a AnnotationSpec) GetParsedEndTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, a.EndTime)
-}
-
-// genericToAnnotation converts ObjectGeneric to Annotation object
-func genericToAnnotation(o manifest.ObjectGeneric, v validator) (Annotation, error) {
-	res := Annotation{
-		ObjectHeader: o.ObjectHeader,
-	}
-	var resSpec AnnotationSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-
-	return res, nil
 }

@@ -62,17 +62,11 @@ func (o APIObjects) Len() int {
 		len(o.Annotations)
 }
 
-type ObjectSpec struct {
-	ApiVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-}
-
-func (o ObjectSpec) GetVersion() string {
-	return o.ApiVersion
-}
-
-func (o ObjectSpec) GetKind() manifest.Kind {
-	return o.Kind
+type ObjectContext[T manifest.Object] interface {
+	GetOrganization() string
+	SetOrganization(org string) T
+	GetManifestSource() string
+	SetManifestSource(src string) T
 }
 
 // FilterEntry represents single metric label to be matched against value
@@ -91,68 +85,69 @@ type OrganizationInformation struct {
 // The same case is applicable for delete command.
 const allowedAgentsToModify = 1
 
-// Parse takes care of all Object supported by n9/v1alpha apiVersion
-func Parse(o manifest.ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) (err error) {
-	v := NewValidator()
-	switch o.Kind {
-	case manifest.KindSLO:
-		var slo SLO
-		slo, err = genericToSLO(o, v, onlyHeaders)
-		parsedObjects.SLOs = append(parsedObjects.SLOs, slo)
-	case manifest.KindService:
-		var service Service
-		service, err = genericToService(o, v, onlyHeaders)
-		parsedObjects.Services = append(parsedObjects.Services, service)
-	case manifest.KindAgent:
-		var agent Agent
-		if len(parsedObjects.Agents) >= allowedAgentsToModify {
-			err = manifest.EnhanceError(o, errors.New("only one Agent can be defined in this configuration"))
-		} else {
-			agent, err = genericToAgent(o, v, onlyHeaders)
-			parsedObjects.Agents = append(parsedObjects.Agents, agent)
-		}
-	case manifest.KindAlertPolicy:
-		var alertPolicy AlertPolicy
-		alertPolicy, err = genericToAlertPolicy(o, v, onlyHeaders)
-		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
-	case manifest.KindAlertSilence:
-		var alertSilence AlertSilence
-		alertSilence, err = genericToAlertSilence(o, v, onlyHeaders)
-		parsedObjects.AlertSilences = append(parsedObjects.AlertSilences, alertSilence)
-	case manifest.KindAlertMethod:
-		var alertMethod AlertMethod
-		alertMethod, err = genericToAlertMethod(o, v, onlyHeaders)
-		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, alertMethod)
-	case manifest.KindDirect:
-		var direct Direct
-		direct, err = genericToDirect(o, v, onlyHeaders)
-		parsedObjects.Directs = append(parsedObjects.Directs, direct)
-	case manifest.KindDataExport:
-		var dataExport DataExport
-		dataExport, err = genericToDataExport(o, v, onlyHeaders)
-		parsedObjects.DataExports = append(parsedObjects.DataExports, dataExport)
-	case manifest.KindProject:
-		var project Project
-		project, err = genericToProject(o, v, onlyHeaders)
-		parsedObjects.Projects = append(parsedObjects.Projects, project)
-	case manifest.KindRoleBinding:
-		var roleBinding RoleBinding
-		roleBinding, err = genericToRoleBinding(o, v)
-		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
-	case manifest.KindAnnotation:
-		var annotation Annotation
-		annotation, err = genericToAnnotation(o, v)
-		parsedObjects.Annotations = append(parsedObjects.Annotations, annotation)
-	case manifest.KindUserGroup:
-		var group UserGroup
-		group, err = genericToUserGroup(o)
-		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
-	// catching invalid kinds of objects for this apiVersion
-	default:
-		err = manifest.UnsupportedKindErr(o)
-	}
-	return err
-}
+//
+//// Parse takes care of all Object supported by n9/v1alpha apiVersion
+//func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) (err error) {
+//	v := NewValidator()
+//	switch o.Kind {
+//	case manifest.KindSLO:
+//		var slo SLO
+//		slo, err = genericToSLO(o, v, onlyHeaders)
+//		parsedObjects.SLOs = append(parsedObjects.SLOs, slo)
+//	case manifest.KindService:
+//		var service Service
+//		service, err = genericToService(o, v, onlyHeaders)
+//		parsedObjects.Services = append(parsedObjects.Services, service)
+//	case manifest.KindAgent:
+//		var agent Agent
+//		if len(parsedObjects.Agents) >= allowedAgentsToModify {
+//			err = EnhanceError(o, errors.New("only one Agent can be defined in this configuration"))
+//		} else {
+//			agent, err = genericToAgent(o, v, onlyHeaders)
+//			parsedObjects.Agents = append(parsedObjects.Agents, agent)
+//		}
+//	case manifest.KindAlertPolicy:
+//		var alertPolicy AlertPolicy
+//		alertPolicy, err = genericToAlertPolicy(o, v, onlyHeaders)
+//		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
+//	case manifest.KindAlertSilence:
+//		var alertSilence AlertSilence
+//		alertSilence, err = genericToAlertSilence(o, v, onlyHeaders)
+//		parsedObjects.AlertSilences = append(parsedObjects.AlertSilences, alertSilence)
+//	case manifest.KindAlertMethod:
+//		var alertMethod AlertMethod
+//		alertMethod, err = genericToAlertMethod(o, v, onlyHeaders)
+//		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, alertMethod)
+//	case manifest.KindDirect:
+//		var direct Direct
+//		direct, err = genericToDirect(o, v, onlyHeaders)
+//		parsedObjects.Directs = append(parsedObjects.Directs, direct)
+//	case manifest.KindDataExport:
+//		var dataExport DataExport
+//		dataExport, err = genericToDataExport(o, v, onlyHeaders)
+//		parsedObjects.DataExports = append(parsedObjects.DataExports, dataExport)
+//	case manifest.KindProject:
+//		var project Project
+//		project, err = genericToProject(o, v, onlyHeaders)
+//		parsedObjects.Projects = append(parsedObjects.Projects, project)
+//	case manifest.KindRoleBinding:
+//		var roleBinding RoleBinding
+//		roleBinding, err = genericToRoleBinding(o, v)
+//		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
+//	case manifest.KindAnnotation:
+//		var annotation Annotation
+//		annotation, err = genericToAnnotation(o, v)
+//		parsedObjects.Annotations = append(parsedObjects.Annotations, annotation)
+//	case manifest.KindUserGroup:
+//		var group UserGroup
+//		group, err = genericToUserGroup(o)
+//		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
+//	// catching invalid kinds of objects for this apiVersion
+//	default:
+//		err = UnsupportedKindErr(o)
+//	}
+//	return err
+//}
 
 // Validate performs validation of parsed APIObjects.
 func (o APIObjects) Validate() (err error) {
@@ -212,13 +207,13 @@ func (o APIObjects) Validate() (err error) {
 func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice []T) error {
 	unique := make(map[string]struct{}, len(slice))
 	var details []string
-	for i := range slice {
-		key := slice[i].GetName()
-		if v, ok := any(slice[i]).(manifest.ProjectScopedObject); ok {
+	for _, object := range slice {
+		key := object.GetName()
+		if v, ok := any(object).(manifest.ProjectScopedObject[T]); ok {
 			key = v.GetProject() + "_" + key
 		}
 		if _, conflicts := unique[key]; conflicts {
-			details = append(details, conflictDetails(slice[i], kind))
+			details = append(details, conflictDetails[T](object, kind))
 			continue
 		}
 		unique[key] = struct{}{}
@@ -230,9 +225,9 @@ func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice 
 }
 
 // conflictDetails creates a formatted string identifying a single conflict between two objects.
-func conflictDetails(object manifest.Object, kind manifest.Kind) string {
-	switch v := object.(type) {
-	case manifest.ProjectScopedObject:
+func conflictDetails[T manifest.Object](object T, kind manifest.Kind) string {
+	switch v := any(object).(type) {
+	case manifest.ProjectScopedObject[T]:
 		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, v.GetProject(), kind, object.GetName())
 	default:
 		return fmt.Sprintf(`"%s"`, object.GetName())

@@ -1,7 +1,6 @@
 package v1alpha
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,8 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
+
+//go:generate go run ../../scripts/generate-object-impl.go Direct
 
 type DirectsSlice []Direct
 
@@ -20,41 +21,30 @@ func (directs DirectsSlice) Clone() DirectsSlice {
 
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
-	manifest.ObjectHeader
-	Spec   DirectSpec   `json:"spec"`
-	Status DirectStatus `json:"status"`
-}
+	APIVersion string         `json:"apiVersion"`
+	Kind       manifest.Kind  `json:"kind"`
+	Metadata   DirectMetadata `json:"metadata"`
+	Spec       DirectSpec     `json:"spec"`
+	Status     *DirectStatus  `json:"status,omitempty"`
 
-func (d *Direct) GetAPIVersion() string {
-	return d.APIVersion
-}
-
-func (d *Direct) GetKind() manifest.Kind {
-	return d.Kind
-}
-
-func (d *Direct) GetName() string {
-	return d.Metadata.Name
-}
-
-func (d *Direct) Validate() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (d *Direct) GetProject() string {
-	return d.Metadata.Project
-}
-
-func (d *Direct) SetProject(project string) {
-	d.Metadata.Project = project
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 // PublicDirect struct which mapped one to one with kind: Direct yaml definition without secrets
 type PublicDirect struct {
-	manifest.ObjectHeader
-	Spec   PublicDirectSpec `json:"spec"`
-	Status DirectStatus     `json:"status"`
+	APIVersion string           `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   DirectMetadata   `json:"metadata"`
+	Spec       PublicDirectSpec `json:"spec"`
+	Status     *DirectStatus    `json:"status,omitempty"`
+}
+
+type DirectMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // DirectSpec represents content of Spec typical for Direct Object
@@ -192,14 +182,14 @@ type PublicDatadogDirectConfig struct {
 
 // NewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object.
 type NewRelicDirectConfig struct {
-	AccountID        json.Number `json:"accountId" validate:"required" example:"123654"`
-	InsightsQueryKey string      `json:"insightsQueryKey" validate:"newRelicApiKey" example:"secret"`
+	AccountID        int    `json:"accountId" validate:"required" example:"123654"`
+	InsightsQueryKey string `json:"insightsQueryKey" validate:"newRelicApiKey" example:"secret"`
 }
 
 // PublicNewRelicDirectConfig represents content of NewRelic Configuration typical for Direct Object without secrets.
 type PublicNewRelicDirectConfig struct {
-	AccountID              json.Number `json:"accountId,omitempty" example:"123654"`
-	HiddenInsightsQueryKey string      `json:"insightsQueryKey" example:"[hidden]"`
+	AccountID              int    `json:"accountId,omitempty" example:"123654"`
+	HiddenInsightsQueryKey string `json:"insightsQueryKey" example:"[hidden]"`
 }
 
 // PublicAppDynamicsDirectConfig represents public content of AppDynamics Configuration
@@ -400,27 +390,6 @@ type PublicSumoLogicDirectConfig struct {
 	HiddenAccessID  string `json:"accessID"`
 	HiddenAccessKey string `json:"accessKey"`
 	URL             string `json:"url"`
-}
-
-// genericToDirect converts manifest.ObjectGeneric to Direct.
-func genericToDirect(o manifest.ObjectGeneric, v validator, onlyHeader bool) (Direct, error) {
-	res := Direct{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec DirectSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }
 
 // PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition

@@ -18,8 +18,7 @@
         "insightsQueryKey": ""
       }
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   },
   {
     "apiVersion": "n9/v1alpha",
@@ -30,8 +29,7 @@
     "spec": {
       "description": ""
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   },
   {
     "apiVersion": "n9/v1alpha",
@@ -42,7 +40,6 @@
     "spec": {
       "description": ""
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   }
 ]

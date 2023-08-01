@@ -1,14 +1,10 @@
 // Package v1alpha represents objects available in API n9/v1alpha
 package v1alpha
 
-import (
-	"github.com/nobl9/nobl9-go/manifest"
-)
-
 // Time Series
 
 type SLOTimeSeries struct {
-	manifest.MetadataHolder
+	MetadataHolder
 	TimeWindows []TimeWindowTimeSeries `json:"timewindows,omitempty"`
 	Status      *SLOStatus             `json:"status,omitempty"`
 }
@@ -108,7 +104,7 @@ type DownsamplingConfig struct {
 // SLO History Report
 
 type SLOHistoryReport struct {
-	manifest.MetadataHolder
+	MetadataHolder
 	TimeWindows []TimeWindowHistoryReport `json:"timewindows,omitempty"`
 }
 

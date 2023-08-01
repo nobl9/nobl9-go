@@ -8,8 +8,6 @@ import (
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
-
-	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestValidateURLDynatrace(t *testing.T) {
@@ -74,7 +72,7 @@ func TestValidateURLDynatrace(t *testing.T) {
 func TestValidateLabels(t *testing.T) {
 	testCases := []struct {
 		desc    string
-		labels  manifest.Labels
+		labels  Labels
 		isValid bool
 	}{
 		{

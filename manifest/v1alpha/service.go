@@ -1,10 +1,8 @@
 package v1alpha
 
-import (
-	"encoding/json"
+import "github.com/nobl9/nobl9-go/manifest"
 
-	"github.com/nobl9/nobl9-go/manifest"
-)
+//go:generate go run ../../scripts/generate-object-impl.go Service
 
 type ServicesSlice []Service
 
@@ -16,34 +14,21 @@ func (services ServicesSlice) Clone() ServicesSlice {
 
 // Service struct which mapped one to one with kind: service yaml definition
 type Service struct {
-	manifest.ObjectHeader
-	Spec   ServiceSpec    `json:"spec"`
-	Status *ServiceStatus `json:"status,omitempty"`
+	APIVersion string          `json:"apiVersion"`
+	Kind       manifest.Kind   `json:"kind"`
+	Metadata   ServiceMetadata `json:"metadata"`
+	Spec       ServiceSpec     `json:"spec"`
+	Status     *ServiceStatus  `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-func (s *Service) GetAPIVersion() string {
-	return s.APIVersion
-}
-
-func (s *Service) GetKind() manifest.Kind {
-	return s.Kind
-}
-
-func (s *Service) GetName() string {
-	return s.Metadata.Name
-}
-
-func (s *Service) Validate() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *Service) GetProject() string {
-	return s.Metadata.Project
-}
-
-func (s *Service) SetProject(project string) {
-	s.Metadata.Project = project
+type ServiceMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // ServiceStatus represents content of Status optional for Service Object.
@@ -54,28 +39,6 @@ type ServiceStatus struct {
 // ServiceSpec represents content of Spec typical for Service Object.
 type ServiceSpec struct {
 	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
-}
-
-// genericToService converts ObjectGeneric to Object Service.
-func genericToService(o manifest.ObjectGeneric, v validator, onlyHeader bool) (Service, error) {
-	res := Service{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-
-	var resSpec ServiceSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }
 
 // ServiceWithSLOs struct which mapped one to one with kind: service and slo yaml definition.

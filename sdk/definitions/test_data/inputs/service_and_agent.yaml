@@ -6,7 +6,7 @@ metadata:
   project: appdynamics
 spec:
   appDynamics:
-    URL: https://nobl9.saas.appdynamics.com
+    url: https://nobl9.saas.appdynamics.com
   sourceOf:
     - Metrics
     - Services

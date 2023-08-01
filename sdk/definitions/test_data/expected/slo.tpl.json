@@ -29,7 +29,7 @@
           "rawMetric": {
             "query": {
               "lightstep": {
-                "streamID": "DzpxcSRh",
+                "streamId": "DzpxcSRh",
                 "typeOfData": "latency",
                 "percentile": 95
               }
@@ -40,7 +40,6 @@
         }
       ]
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   }
 ]

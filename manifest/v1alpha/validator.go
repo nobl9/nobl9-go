@@ -1600,12 +1600,12 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	labels := fl.Field().Interface().(manifest.Labels)
+	labels := fl.Field().Interface().(Labels)
 
 	return validateLabels(labels)
 }
 
-func validateLabels(labels manifest.Labels) bool {
+func validateLabels(labels Labels) bool {
 	for key, values := range labels {
 		if !validateLabelKey(key) {
 			return false
@@ -2240,12 +2240,12 @@ func isValidTimeSliceTargetValue(tsv float64) bool {
 
 func isValidObjectNameWithStringInterpolation(fl v.FieldLevel) bool {
 	toCheck := fl.Field().String()
-	if !strings.Contains(toCheck, manifest.StringInterpolationPlaceholder) {
+	if !strings.Contains(toCheck, StringInterpolationPlaceholder) {
 		return false
 	}
 	// During actual interpolation {} will be replaced with previous validated name,
 	// replace here with test because valid DNS1123Label cannot contain {} and check
-	toCheck = manifest.StringInterpolation(toCheck, "test")
+	toCheck = StringInterpolation(toCheck, "test")
 	return len(IsDNS1123Label(toCheck)) == 0
 }
 

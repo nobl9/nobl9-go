@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/sdk"
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 //go:embed test_data
@@ -99,7 +99,6 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader", func(t *testing.T) {
 		definitions, err := ReadSources(
 			context.Background(),
-			MetadataAnnotations{Organization: "my-org"},
 			NewInputSource(readTestFile(t, "service_and_agent.yaml"), "stdin"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: "stdin"})
@@ -108,16 +107,15 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader for empty source", func(t *testing.T) {
 		definitions, err := ReadSources(
 			context.Background(),
-			MetadataAnnotations{Organization: "org"},
 			NewInputSource(readTestFile(t, "service_and_agent.yaml"), "test"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
-			expectedMeta{Name: "service_and_agent", ManifestSrc: "test", Organization: "org"})
+			expectedMeta{Name: "service_and_agent", ManifestSrc: "test"})
 	})
 
 	t.Run("report an error when io.Reader is nil", func(t *testing.T) {
-		_, err := ReadSources(context.Background(), MetadataAnnotations{}, NewInputSource(nil, "nil"))
+		_, err := ReadSources(context.Background(), NewInputSource(nil, "nil"))
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrIoReaderIsNil)
 	})
@@ -133,7 +131,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		defer srv.Close()
 		require.Regexp(t, "^http://", srv.URL)
 
-		definitions, err := Read(context.Background(), MetadataAnnotations{Organization: "my-org"}, srv.URL)
+		definitions, err := Read(context.Background(), srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "annotations", ManifestSrc: srv.URL})
 	})
@@ -148,11 +146,11 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
 		require.Regexp(t, "^https://", srv.URL)
 
-		definitions, err := Read(context.Background(), MetadataAnnotations{Organization: "org"}, srv.URL)
+		definitions, err := Read(context.Background(), srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
-			expectedMeta{Name: "annotations", ManifestSrc: srv.URL, Organization: "org"},
+			expectedMeta{Name: "annotations", ManifestSrc: srv.URL},
 		)
 	})
 
@@ -163,7 +161,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
 		defer srv.Close()
 
-		_, err := Read(context.Background(), MetadataAnnotations{Organization: "my-org"}, srv.URL)
+		_, err := Read(context.Background(), srv.URL)
 		require.Error(t, err)
 		assert.ErrorContains(t, err, fmt.Sprintf("GET %s response: 403 some error reason", srv.URL))
 	})
@@ -177,7 +175,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		var err error
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		_, err = Read(ctx, MetadataAnnotations{Organization: "my-org"}, srv.URL)
+		_, err = Read(ctx, srv.URL)
 
 		require.Error(t, err)
 		assert.ErrorIs(t, err, context.Canceled)
@@ -262,7 +260,6 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		{Name: "project", ManifestSrc: workingDir("test_data/inputs/project.json")},
 	}
 
-	const organization = "my-org"
 	for name, test := range map[string]struct {
 		Sources  []RawSource
 		Expected []expectedMeta
@@ -347,7 +344,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			definitions, err := Read(ctx, MetadataAnnotations{Organization: organization}, test.Sources...)
+			definitions, err := Read(ctx, test.Sources...)
 			require.NoError(t, err)
 
 			definitionsMatchExpected(t, definitions, test.Expected...)
@@ -368,7 +365,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, err = Read(ctx, MetadataAnnotations{Organization: organization}, test.Sources...)
+			_, err = Read(ctx, test.Sources...)
 			require.Error(t, err)
 			assert.ErrorIs(t, err, test.Expected)
 		})
@@ -376,18 +373,18 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 }
 
 type expectedMeta struct {
-	Name         string
-	Organization string
-	ManifestSrc  string
+	Name        string
+	ManifestSrc string
 }
 
-func definitionsMatchExpected(t *testing.T, definitions []sdk.AnyJSONObj, meta ...expectedMeta) {
+func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta ...expectedMeta) {
 	t.Helper()
-	expected := make([]sdk.AnyJSONObj, 0, len(definitions))
+
+	actual, err := json.MarshalIndent(definitions, "", " ")
+	require.NoError(t, err)
+
+	expectedAcc := make([]map[string]interface{}, 0, len(definitions))
 	for _, m := range meta {
-		if len(m.Organization) == 0 {
-			m.Organization = "my-org"
-		}
 		buf := bytes.NewBuffer([]byte{})
 		err := templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
 		require.NoError(t, err)
@@ -397,15 +394,17 @@ func definitionsMatchExpected(t *testing.T, definitions []sdk.AnyJSONObj, meta .
 		switch v := decoded.(type) {
 		case []interface{}:
 			for _, i := range v {
-				expected = append(expected, i.(map[string]interface{}))
+				expectedAcc = append(expectedAcc, i.(map[string]interface{}))
 			}
 		case map[string]interface{}:
-			expected = append(expected, v)
+			expectedAcc = append(expectedAcc, v)
 		}
 	}
-	require.Equal(t, len(expected), len(definitions))
+	require.Equal(t, len(expectedAcc), len(definitions))
+	expected, err := json.MarshalIndent(expectedAcc, "", " ")
+	require.NoError(t, err)
 
-	assert.ElementsMatch(t, expected, definitions)
+	assert.JSONEq(t, string(expected), string(actual))
 }
 
 // readTestFile attempts to read the designated file from test_data folder.
