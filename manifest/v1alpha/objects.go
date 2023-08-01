@@ -4,6 +4,7 @@ package v1alpha
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -60,6 +61,24 @@ func (o APIObjects) Len() int {
 		len(o.Projects) +
 		len(o.RoleBindings) +
 		len(o.Annotations)
+}
+
+// Object defines which manifest.Object are part of the manifest.VersionV1alpha.
+type Object interface {
+	SLO | Project | Service | Agent | Direct | Alert | AlertMethod | AlertSilence | AlertPolicy | Annotation | RoleBinding | UserGroup
+}
+
+// FilterKind filters a slice of manifest.Object and returns a subset of objects
+// with the manifest.Kind defined in the type constraint.
+func FilterKind[T manifest.Object](objects []manifest.Object) []T {
+	var s []T
+	for i := range objects {
+		v, ok := objects[i].(T)
+		if ok {
+			s = append(s, v)
+		}
+	}
+	return s
 }
 
 type ObjectContext interface {
@@ -138,77 +157,46 @@ const allowedAgentsToModify = 1
 //	return err
 //}
 
-// Validate performs validation of parsed APIObjects.
-func (o APIObjects) Validate() (err error) {
+// CheckObjectsUniqueness performs validation of parsed APIObjects.
+func CheckObjectsUniqueness(objects []manifest.Object) (err error) {
+	type uniqueKey struct {
+		Kind    manifest.Kind
+		Name    string
+		Project string
+	}
+
+	unique := make(map[uniqueKey]struct{}, len(objects))
+	details := make(map[manifest.Kind][]string)
+	for _, obj := range objects {
+		key := uniqueKey{
+			Kind: obj.GetKind(),
+			Name: obj.GetName(),
+		}
+		if v, ok := obj.(manifest.ProjectScopedObject); ok {
+			key.Project = v.GetProject()
+		}
+		if _, conflicts := unique[key]; conflicts {
+			details[obj.GetKind()] = append(details[obj.GetKind()], conflictDetails(obj, obj.GetKind()))
+			continue
+		}
+		unique[key] = struct{}{}
+	}
 	var errs []error
-	if err = validateUniquenessConstraints(manifest.KindSLO, o.SLOs); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindService, o.Services); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindProject, o.Projects); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindAgent, o.Agents); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindDirect, o.Directs); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindAlertMethod, o.AlertMethods); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindAlertPolicy, o.AlertPolicies); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindAlertSilence, o.AlertSilences); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindDataExport, o.DataExports); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindRoleBinding, o.RoleBindings); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindAnnotation, o.Annotations); err != nil {
-		errs = append(errs, err)
-	}
-	if err = validateUniquenessConstraints(manifest.KindUserGroup, o.UserGroups); err != nil {
-		errs = append(errs, err)
+	if len(details) > 0 {
+		for kind, d := range details {
+			errs = append(errs, conflictError(kind, d))
+		}
 	}
 	if len(errs) > 0 {
+		sort.Slice(errs, func(i, j int) bool { return errs[j].Error() > errs[i].Error() })
 		builder := strings.Builder{}
-		for i, err := range errs {
-			builder.WriteString(err.Error())
+		for i, e := range errs {
+			builder.WriteString(e.Error())
 			if i < len(errs)-1 {
 				builder.WriteString("; ")
 			}
 		}
 		return errors.New(builder.String())
-	}
-	return nil
-}
-
-// validateUniquenessConstraints finds conflicting objects in a Kind slice.
-// It returns an error if any conflicts were encountered.
-// The error informs about the cause and lists ALL conflicts.
-func validateUniquenessConstraints[T manifest.Object](kind manifest.Kind, slice []T) error {
-	unique := make(map[string]struct{}, len(slice))
-	var details []string
-	for _, object := range slice {
-		key := object.GetName()
-		if v, ok := any(object).(manifest.ProjectScopedObject); ok {
-			key = v.GetProject() + "_" + key
-		}
-		if _, conflicts := unique[key]; conflicts {
-			details = append(details, conflictDetails(object, kind))
-			continue
-		}
-		unique[key] = struct{}{}
-	}
-	if len(details) > 0 {
-		return conflictError(kind, details)
 	}
 	return nil
 }

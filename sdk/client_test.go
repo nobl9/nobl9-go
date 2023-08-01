@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -18,24 +19,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/definitions"
 )
 
 func TestClient_GetObjects(t *testing.T) {
-	responsePayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	responsePayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: "n9/v1alpha",
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service2",
-				"project": "default",
+		v1alpha.Service{
+			APIVersion: "n9/v1alpha",
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service2",
+				Project: "default",
 			},
 		},
 	}
@@ -61,6 +64,15 @@ func TestClient_GetObjects(t *testing.T) {
 	srv.Start()
 	defer srv.Close()
 
+	// Add expected ManifestSource details.
+	expected := make([]manifest.Object, 0, len(responsePayload))
+	for _, obj := range responsePayload {
+		expected = append(
+			expected,
+			obj.(v1alpha.ObjectContext).
+				SetManifestSource(fmt.Sprintf("GET %s/api/get/service", srv.URL)))
+	}
+
 	// Run the API method.
 	objects, err := client.GetObjects(
 		context.Background(),
@@ -72,16 +84,26 @@ func TestClient_GetObjects(t *testing.T) {
 	// Verify response handling.
 	require.NoError(t, err)
 	require.Len(t, objects, 2)
-	assert.Equal(t, responsePayload, objects)
+	assert.Equal(t, expected, objects)
 }
 
-func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
+func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
+	responsePayload := []manifest.Object{
+		v1alpha.UserGroup{
+			APIVersion: "n9/v1alpha",
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.UserGroupMetadata{
+				Name: "service1",
+			},
+		},
+	}
+
 	calledTimes := 0
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
 		Path: "api/usrmgmt/groups",
 		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode([]AnyJSONObj{}))
+			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
 		},
 		// Verify request parameters.
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
@@ -101,13 +123,13 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 }
 
 func TestClient_ApplyObjects(t *testing.T) {
-	requestPayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	requestPayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: "n9/v1alpha",
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
 	}
@@ -123,8 +145,8 @@ func TestClient_ApplyObjects(t *testing.T) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			var objects []AnyJSONObj
-			require.NoError(t, json.NewDecoder(r.Body).Decode(&objects))
+			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			require.NoError(t, err)
 			assert.Equal(t, requestPayload, objects)
 		},
 	})
@@ -140,13 +162,13 @@ func TestClient_ApplyObjects(t *testing.T) {
 }
 
 func TestClient_DeleteObjects(t *testing.T) {
-	requestPayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	requestPayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: "n9/v1alpha",
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
 	}

@@ -17,11 +17,20 @@ import (
 
 var errNoDefinitionsInInput = errors.New("no definitions in input")
 
+// Decode reads objects from the provided bytes slice.
+// It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
+func Decode(data []byte) ([]manifest.Object, error) {
+	if isJSONBuffer(data) {
+		return decodeJSON(data)
+	}
+	return decodeYAML(data)
+}
+
 // processRawDefinitions function converts raw definitions to a slice of manifest.Object.
 func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	result := make([]manifest.Object, 0, len(rds))
 	for _, rd := range rds {
-		objects, err := decodeDefinitions(rd.Definition)
+		objects, err := Decode(rd.Definition)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
 		}
@@ -50,60 +59,6 @@ func annotateWithManifestSource(object manifest.Object, source string) (manifest
 		}
 	}
 	return object, nil
-}
-
-// genericObject is a container for manifest.Object which helps in decoding process.
-type genericObject struct {
-	Object manifest.Object
-}
-
-// UnmarshalJSON implements json.Unmarshaler.
-func (o *genericObject) UnmarshalJSON(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
-}
-
-// UnmarshalYAML implements yaml.BytesUnmarshaler.
-func (o *genericObject) UnmarshalYAML(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
-}
-
-// unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.RawObjectFormat.
-// It uses an intermediate decoding step to extract manifest.Version and manifest.Kind from the object.
-// Decoding is then delegated to the parser for specific manifest.Version.
-func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
-	var object struct {
-		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
-		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
-	}
-	var unmarshal func(data []byte, v interface{}) error
-	//exhaustive: enforce
-	switch format {
-	case manifest.RawObjectFormatJSON:
-		unmarshal = json.Unmarshal
-	case manifest.RawObjectFormatYAML:
-		unmarshal = yaml.Unmarshal
-	}
-	if err := unmarshal(data, &object); err != nil {
-		return err
-	}
-	switch object.ApiVersion {
-	case manifest.VersionV1alpha:
-		parsed, err := v1alpha.ParseObject(data, object.Kind, format)
-		if err != nil {
-			return err
-		}
-		o.Object = parsed
-	default:
-		return manifest.ErrInvalidVersion
-	}
-	return nil
-}
-
-func decodeDefinitions(data []byte) ([]manifest.Object, error) {
-	if isJSONBuffer(data) {
-		return decodeJSON(data)
-	}
-	return decodeYAML(data)
 }
 
 func decodeJSON(data []byte) ([]manifest.Object, error) {
@@ -162,6 +117,53 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 		objects = append(objects, res[i].Object)
 	}
 	return objects, nil
+}
+
+// genericObject is a container for manifest.Object which helps in decoding process.
+type genericObject struct {
+	Object manifest.Object
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (o *genericObject) UnmarshalJSON(data []byte) error {
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
+}
+
+// UnmarshalYAML implements yaml.BytesUnmarshaler.
+func (o *genericObject) UnmarshalYAML(data []byte) error {
+	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
+}
+
+// unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.RawObjectFormat.
+// It uses an intermediate decoding step to extract manifest.Version and manifest.Kind from the object.
+// Decoding is then delegated to the parser for specific manifest.Version.
+func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
+	var object struct {
+		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
+		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
+	}
+	var unmarshal func(data []byte, v interface{}) error
+	//exhaustive: enforce
+	switch format {
+	case manifest.RawObjectFormatJSON:
+		unmarshal = json.Unmarshal
+	case manifest.RawObjectFormatYAML:
+		unmarshal = yaml.Unmarshal
+	}
+	if err := unmarshal(data, &object); err != nil {
+		return err
+	}
+	switch object.ApiVersion {
+	case manifest.VersionV1alpha:
+		parsed, err := v1alpha.ParseObject(data, object.Kind, format)
+		if err != nil {
+			return err
+		}
+		o.Object = parsed
+	default:
+		return manifest.ErrInvalidVersion
+	}
+	return nil
 }
 
 // isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
