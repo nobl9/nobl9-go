@@ -2225,8 +2225,8 @@ func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
 			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnRateGreaterThanEqualRequired", "")
 		}
 	case MeasurementTimeToBurnEntireBudget.String():
-		if condition.Operator != LessThan.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnEntireBudgetLessThanRequired", "")
+		if condition.Operator != LessThanEqual.String() {
+			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnEntireBudgetLessThanEqualRequired", "")
 		}
 	}
 }
