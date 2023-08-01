@@ -12,8 +12,7 @@
       "startTime": "2006-01-02T17:10:05Z",
       "endTime": "2006-01-02T17:10:05Z"
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   },
   {
     "apiVersion": "n9/v1alpha",
@@ -28,7 +27,6 @@
       "startTime": "2006-01-02T17:20:05Z",
       "endTime": "2006-01-02T17:30:05Z"
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   }
 ]

@@ -20,7 +20,7 @@ spec:
       rawMetric:
         query:
           lightstep:
-            streamID: DzpxcSRh
+            streamId: DzpxcSRh
             typeOfData: latency
             percentile: 95
       value: 150

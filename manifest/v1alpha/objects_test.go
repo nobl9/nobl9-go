@@ -42,7 +42,7 @@ func TestAPIObjects_Validate(t *testing.T) {
 		rawJSON, err := json.Marshal(decodedYAML)
 		require.NoError(t, err)
 
-		var genericObjects []manifest.ObjectGeneric
+		var genericObjects []ObjectGeneric
 		err = json.Unmarshal(rawJSON, &genericObjects)
 		require.NoError(t, err)
 		require.Greater(t, len(genericObjects), 0)
@@ -141,5 +141,13 @@ func TestSetAlertPolicyDefaults(t *testing.T) {
 			setAlertPolicyDefaults(&testCase.in)
 			assert.Equal(t, testCase.out, testCase.in)
 		})
+	}
+}
+
+func setAlertPolicyDefaults(policy *AlertPolicy) {
+	for i, condition := range policy.Spec.Conditions {
+		if condition.AlertingWindow == "" && condition.LastsForDuration == "" {
+			policy.Spec.Conditions[i].LastsForDuration = DefaultAlertPolicyLastsForDuration
+		}
 	}
 }

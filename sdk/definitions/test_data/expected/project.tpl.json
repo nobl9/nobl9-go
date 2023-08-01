@@ -7,6 +7,5 @@
   "spec": {
     "description": ""
   },
-  "manifestSrc": "{{ .ManifestSrc }}",
-  "organization": "{{ .Organization }}"
+  "manifestSrc": "{{ .ManifestSrc }}"
 }

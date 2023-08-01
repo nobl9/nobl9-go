@@ -8,15 +8,14 @@
     },
     "spec": {
       "appDynamics": {
-        "URL": "https://nobl9.saas.appdynamics.com"
+        "url": "https://nobl9.saas.appdynamics.com"
       },
       "sourceOf": [
         "Metrics",
         "Services"
       ]
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   },
   {
     "apiVersion": "n9/v1alpha",
@@ -29,7 +28,6 @@
     "spec": {
       "description": "polakpotrafi website"
     },
-    "manifestSrc": "{{ .ManifestSrc }}",
-    "organization": "{{ .Organization }}"
+    "manifestSrc": "{{ .ManifestSrc }}"
   }
 ]

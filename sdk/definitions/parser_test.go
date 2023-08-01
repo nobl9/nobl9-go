@@ -1,16 +1,14 @@
 package definitions
 
 import (
-	"encoding/json"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
 )
 
-var this = `
+var this = []byte(`
 ---
 - apiVersion: n9/v1alpha
   kind: Service
@@ -19,7 +17,7 @@ var this = `
 ---
 apiVersion: n9/v1alpha
 kind: SLO
-`
+`)
 
 var jazon = `
 [
@@ -33,12 +31,22 @@ apiVersion: n9/v1alpha
 kind: SLO
 `)
 
+var testz = []byte(`
+{
+  "apiVersion": "n9/v1alpha",
+  "kind": "Project",
+  "metadata": {
+    "name": "json-project"
+  },
+  "spec": {
+    "description": ""
+  }
+}
+`)
+
 func TestParsers(t *testing.T) {
-	res, err := decodePrototype([]byte(this))
-	require.NoError(t, err)
-	data, err := json.MarshalIndent(res, "", " ")
-	require.NoError(t, err)
-	fmt.Println(string(data))
+	obj, _ := decodeDefinitions(testz)
+	fmt.Println(obj)
 }
 
 func TestSimple(t *testing.T) {
@@ -48,16 +56,8 @@ func TestSimple(t *testing.T) {
 	fmt.Println(obj)
 }
 
-var testRegex = regexp.MustCompile(`(?m)^- `)
-
-func TestThis(t *testing.T) {
-	data := []byte("\n---")
-	fmt.Println(len(data))
-	fmt.Println(len("\n---"))
-}
-
 func BenchmarkThis(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_, _ = decodePrototype([]byte(jazon))
+		_, _ = decodeDefinitions([]byte(jazon))
 	}
 }

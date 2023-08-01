@@ -1,11 +1,13 @@
 // Package manifest provides
-package manifest
+package v1alpha
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 // StringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"
@@ -43,8 +45,8 @@ type MetadataHolder struct {
 
 // ObjectHeader represents Header which is common for all available Objects
 type ObjectHeader struct {
-	APIVersion string `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       Kind   `json:"kind" validate:"required" example:"kind"`
+	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind       manifest.Kind `json:"kind" validate:"required" example:"kind"`
 	MetadataHolder
 	ObjectInternal
 }
