@@ -140,12 +140,12 @@ type genericObject struct {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (o *genericObject) UnmarshalJSON(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatJSON)
+	return o.unmarshalGeneric(data, manifest.ObjectFormatJSON)
 }
 
 // UnmarshalYAML implements yaml.BytesUnmarshaler.
 func (o *genericObject) UnmarshalYAML(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
+	return o.unmarshalGeneric(data, manifest.ObjectFormatYAML)
 }
 
 // unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.ObjectFormat.
@@ -159,9 +159,9 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 	var unmarshal func(data []byte, v interface{}) error
 	//exhaustive: enforce
 	switch format {
-	case manifest.RawObjectFormatJSON:
+	case manifest.ObjectFormatJSON:
 		unmarshal = json.Unmarshal
-	case manifest.RawObjectFormatYAML:
+	case manifest.ObjectFormatYAML:
 		unmarshal = yaml.Unmarshal
 	}
 	if err := unmarshal(data, &object); err != nil {
