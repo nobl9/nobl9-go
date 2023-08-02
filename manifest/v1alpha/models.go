@@ -77,25 +77,6 @@ type ObjectHeader struct {
 //	}
 //	return EnhanceError(o, fmt.Errorf("invalid Object kind: %s for apiVersion: %s", o.Kind, o.APIVersion))
 //}
-//
-//// UnsupportedAPIVersionErr returns appropriate error for missing value in field apiVersion
-//// for not empty field apiVersion returns always that this version is not supported so have to be
-//// validated before
-//func UnsupportedAPIVersionErr(o ObjectGeneric) error {
-//	if strings.TrimSpace(o.APIVersion) == "" {
-//		return EnhanceError(o, errors.New("missing or empty field apiVersion for an Object"))
-//	}
-//	return EnhanceError(o, fmt.Errorf("not supported apiVersion: %s", o.APIVersion))
-//}
-//
-//// EnhanceError annotates error with path of manifest source, if it exists
-//// if not returns the same error as passed as argument
-//func EnhanceError(o ObjectGeneric, err error) error {
-//	if err != nil && o.ManifestSrc != "" {
-//		err = fmt.Errorf("%s: %w", o.ManifestSrc, err)
-//	}
-//	return err
-//}
 
 // StringInterpolation for arguments ("{}-my-{}-string-{}", "xd") returns string xd-my-xd-string-xd
 func StringInterpolation(withPlaceholder, replacer string) string {

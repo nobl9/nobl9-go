@@ -19,7 +19,8 @@ type Alert struct {
 	Metadata   AlertMetadata `json:"metadata"`
 	Spec       AlertSpec     `json:"spec"`
 
-	Organization string `json:"organization"`
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 type AlertMetadata struct {

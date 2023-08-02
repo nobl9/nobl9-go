@@ -29,3 +29,21 @@ func (a Alert) SetProject(project string) manifest.Object {
 	a.Metadata.Project = project
 	return a
 }
+
+func (a Alert) GetOrganization() string {
+	return a.Organization
+}
+
+func (a Alert) SetOrganization(org string) manifest.Object {
+	a.Organization = org
+	return a
+}
+
+func (a Alert) GetManifestSource() string {
+	return a.ManifestSource
+}
+
+func (a Alert) SetManifestSource(src string) manifest.Object {
+	a.ManifestSource = src
+	return a
+}
