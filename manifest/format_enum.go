@@ -12,36 +12,36 @@ import (
 )
 
 const (
-	// RawObjectFormatJSON is a ObjectFormat of type JSON.
-	RawObjectFormatJSON ObjectFormat = iota + 1
-	// RawObjectFormatYAML is a ObjectFormat of type YAML.
-	RawObjectFormatYAML
+	// ObjectFormatJSON is a ObjectFormat of type JSON.
+	ObjectFormatJSON ObjectFormat = iota + 1
+	// ObjectFormatYAML is a ObjectFormat of type YAML.
+	ObjectFormatYAML
 )
 
-var ErrInvalidRawObjectFormat = fmt.Errorf("not a valid ObjectFormat, try [%s]", strings.Join(_RawObjectFormatNames, ", "))
+var ErrInvalidObjectFormat = fmt.Errorf("not a valid ObjectFormat, try [%s]", strings.Join(_ObjectFormatNames, ", "))
 
-const _RawObjectFormatName = "JSONYAML"
+const _ObjectFormatName = "JSONYAML"
 
-var _RawObjectFormatNames = []string{
-	_RawObjectFormatName[0:4],
-	_RawObjectFormatName[4:8],
+var _ObjectFormatNames = []string{
+	_ObjectFormatName[0:4],
+	_ObjectFormatName[4:8],
 }
 
-// RawObjectFormatNames returns a list of possible string values of ObjectFormat.
-func RawObjectFormatNames() []string {
-	tmp := make([]string, len(_RawObjectFormatNames))
-	copy(tmp, _RawObjectFormatNames)
+// ObjectFormatNames returns a list of possible string values of ObjectFormat.
+func ObjectFormatNames() []string {
+	tmp := make([]string, len(_ObjectFormatNames))
+	copy(tmp, _ObjectFormatNames)
 	return tmp
 }
 
-var _RawObjectFormatMap = map[ObjectFormat]string{
-	RawObjectFormatJSON: _RawObjectFormatName[0:4],
-	RawObjectFormatYAML: _RawObjectFormatName[4:8],
+var _ObjectFormatMap = map[ObjectFormat]string{
+	ObjectFormatJSON: _ObjectFormatName[0:4],
+	ObjectFormatYAML: _ObjectFormatName[4:8],
 }
 
 // String implements the Stringer interface.
 func (x ObjectFormat) String() string {
-	if str, ok := _RawObjectFormatMap[x]; ok {
+	if str, ok := _ObjectFormatMap[x]; ok {
 		return str
 	}
 	return fmt.Sprintf("ObjectFormat(%d)", x)
@@ -50,19 +50,19 @@ func (x ObjectFormat) String() string {
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
 func (x ObjectFormat) IsValid() bool {
-	_, ok := _RawObjectFormatMap[x]
+	_, ok := _ObjectFormatMap[x]
 	return ok
 }
 
-var _RawObjectFormatValue = map[string]ObjectFormat{
-	_RawObjectFormatName[0:4]: RawObjectFormatJSON,
-	_RawObjectFormatName[4:8]: RawObjectFormatYAML,
+var _ObjectFormatValue = map[string]ObjectFormat{
+	_ObjectFormatName[0:4]: ObjectFormatJSON,
+	_ObjectFormatName[4:8]: ObjectFormatYAML,
 }
 
-// ParseRawObjectFormat attempts to convert a string to a ObjectFormat.
-func ParseRawObjectFormat(name string) (ObjectFormat, error) {
-	if x, ok := _RawObjectFormatValue[name]; ok {
+// ParseObjectFormat attempts to convert a string to a ObjectFormat.
+func ParseObjectFormat(name string) (ObjectFormat, error) {
+	if x, ok := _ObjectFormatValue[name]; ok {
 		return x, nil
 	}
-	return ObjectFormat(0), fmt.Errorf("%s is %w", name, ErrInvalidRawObjectFormat)
+	return ObjectFormat(0), fmt.Errorf("%s is %w", name, ErrInvalidObjectFormat)
 }

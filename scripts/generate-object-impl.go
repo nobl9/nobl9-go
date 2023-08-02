@@ -82,7 +82,7 @@ func main() {
 		errFatal(err.Error())
 	}
 	outputName := filepath.Join(cwd, fmt.Sprintf("%s_object.go", strings.TrimSuffix(filename, ".go")))
-	if err = os.WriteFile(outputName, formatted, 0644); err != nil {
+	if err = os.WriteFile(outputName, formatted, 0600); err != nil {
 		errFatal(err.Error())
 	}
 }
