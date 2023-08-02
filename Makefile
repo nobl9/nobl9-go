@@ -73,7 +73,7 @@ check/trailing:
 
 ## Check markdown files for potential issues with markdownlint.
 check/markdown:
-	$(call _print_check_step,Verifying Mardown files)
+	$(call _print_check_step,Verifying Markdown files)
 	$(call _ensure_installed,yarn,markdownlint)
 	yarn --silent markdownlint '*.md' --disable MD010 # MD010 does not handle code blocks well.
 
