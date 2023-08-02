@@ -79,7 +79,24 @@ func TestDecode(t *testing.T) {
 }
 
 func TestDecodeSingle(t *testing.T) {
+	t.Run("golden path", func(t *testing.T) {
+		project, err := DecodeSingle[v1alpha.Project](readInputFile(t, "single_project.yaml"))
+		require.NoError(t, err)
+		assert.NotZero(t, project)
+		assert.Equal(t, "default", project.GetName())
+	})
 
+	t.Run("multiple objects, return error", func(t *testing.T) {
+		_, err := DecodeSingle[v1alpha.Project](readInputFile(t, "two_projects.yaml"))
+		require.Error(t, err)
+		assert.EqualError(t, err, "unexpected number of objects: 2, expected exactly one")
+	})
+
+	t.Run("invalid type, return error", func(t *testing.T) {
+		_, err := DecodeSingle[v1alpha.Service](readInputFile(t, "single_project.yaml"))
+		require.Error(t, err)
+		assert.EqualError(t, err, "object of type v1alpha.Project is not of type v1alpha.Service")
+	})
 }
 
 func readInputFile(t *testing.T, name string) []byte {

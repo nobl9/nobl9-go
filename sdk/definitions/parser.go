@@ -34,7 +34,7 @@ func DecodeSingle[T manifest.Object](data []byte) (object T, err error) {
 		return object, err
 	}
 	if len(objects) != 1 {
-		return object, fmt.Errorf("unepxected number of objects: %d, expected exactly one", len(objects))
+		return object, fmt.Errorf("unexpected number of objects: %d, expected exactly one", len(objects))
 	}
 	var isOfType bool
 	object, isOfType = objects[0].(T)
