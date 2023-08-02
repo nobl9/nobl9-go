@@ -17,8 +17,7 @@ func (a Agent) GetName() string {
 }
 
 func (a Agent) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(a)
 }
 
 func (a Agent) GetProject() string {

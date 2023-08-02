@@ -17,8 +17,7 @@ func (d DataExport) GetName() string {
 }
 
 func (d DataExport) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(d)
 }
 
 func (d DataExport) GetProject() string {

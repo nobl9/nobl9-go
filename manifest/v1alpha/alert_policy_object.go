@@ -17,8 +17,7 @@ func (a AlertPolicy) GetName() string {
 }
 
 func (a AlertPolicy) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(a)
 }
 
 func (a AlertPolicy) GetProject() string {

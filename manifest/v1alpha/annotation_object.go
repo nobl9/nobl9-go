@@ -17,8 +17,7 @@ func (a Annotation) GetName() string {
 }
 
 func (a Annotation) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(a)
 }
 
 func (a Annotation) GetProject() string {

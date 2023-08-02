@@ -17,8 +17,7 @@ func (u UserGroup) GetName() string {
 }
 
 func (u UserGroup) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(u)
 }
 
 func (u UserGroup) GetOrganization() string {

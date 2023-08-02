@@ -17,8 +17,7 @@ func (r RoleBinding) GetName() string {
 }
 
 func (r RoleBinding) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(r)
 }
 
 func (r RoleBinding) GetOrganization() string {

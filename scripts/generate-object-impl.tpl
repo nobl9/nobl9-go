@@ -19,8 +19,7 @@ func ({{ .Receiver }} {{ .StructName }}) GetName() string {
 }
 
 func ({{ .Receiver }} {{ .StructName }}) Validate() error {
-  //TODO implement me
-  panic("implement me")
+  return validator.Check({{ .Receiver }})
 }
 {{- end }}
 

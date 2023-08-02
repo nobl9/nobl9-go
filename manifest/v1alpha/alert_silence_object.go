@@ -17,8 +17,7 @@ func (a AlertSilence) GetName() string {
 }
 
 func (a AlertSilence) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(a)
 }
 
 func (a AlertSilence) GetProject() string {

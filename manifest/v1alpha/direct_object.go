@@ -17,8 +17,7 @@ func (d Direct) GetName() string {
 }
 
 func (d Direct) Validate() error {
-	//TODO implement me
-	panic("implement me")
+	return validator.Check(d)
 }
 
 func (d Direct) GetProject() string {
