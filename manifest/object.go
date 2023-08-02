@@ -24,8 +24,8 @@ type ProjectScopedObject interface {
 	SetProject(project string) Object
 }
 
-// FilterObjects filters Object slice and returns its subset matching the type constraint.
-func FilterObjects[T Object](objects []Object) []T {
+// FilterByKind filters Object slice and returns its subset matching the type constraint.
+func FilterByKind[T Object](objects []Object) []T {
 	var s []T
 	for i := range objects {
 		v, ok := objects[i].(T)

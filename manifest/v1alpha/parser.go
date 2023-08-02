@@ -66,7 +66,7 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) 
 
 // postParser allows objects to implement their own logic for setting defaults and correcting parsing results.
 type postParser[T manifest.Object] interface {
-	postParse() T
+	postParse() (T, error)
 }
 
 func genericParseObject[T manifest.Object](data []byte, unmarshal unmarshalFunc) (T, error) {
@@ -75,7 +75,11 @@ func genericParseObject[T manifest.Object](data []byte, unmarshal unmarshalFunc)
 		return object, err
 	}
 	if v, ok := any(object).(postParser[T]); ok {
-		object = v.postParse()
+		var err error
+		object, err = v.postParse()
+		if err != nil {
+			return object, err
+		}
 	}
 	return object, nil
 }

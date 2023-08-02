@@ -19,14 +19,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:embed test_data
-var testData embed.FS
+//go:embed test_data/reader
+var readerTestData embed.FS
 var templates *template.Template
 
 func TestMain(m *testing.M) {
 	// Register templates.
 	var err error
-	templates, err = template.ParseFS(testData, "test_data/expected/*.tpl.json")
+	templates, err = template.ParseFS(readerTestData, "test_data/reader/expected/*.tpl.json")
 	if err != nil {
 		panic(err)
 	}
@@ -273,13 +273,13 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		{Name: "annotations", ManifestSrc: tmpDir("more-yaml/even-more-definitions/annotations.yaml")},
 		{Name: "project", ManifestSrc: tmpDir("more-yaml/even-more-definitions/project.json")},
 	}
-	// Prepare expected files located in pkg/definitions/test_data.
+	// Prepare expected files located in ./test_data/reader.
 	allNobl9RelFiles := []expectedMeta{
-		{Name: "slo", ManifestSrc: workingDir("test_data/inputs/slo.yaml")},
-		{Name: "service_and_agent", ManifestSrc: workingDir("test_data/inputs/service_and_agent.yaml")},
-		{Name: "projects_and_direct", ManifestSrc: workingDir("test_data/inputs/projects_and_direct.yml")},
-		{Name: "annotations", ManifestSrc: workingDir("test_data/inputs/annotations.yaml")},
-		{Name: "project", ManifestSrc: workingDir("test_data/inputs/project.json")},
+		{Name: "slo", ManifestSrc: workingDir("test_data/reader/inputs/slo.yaml")},
+		{Name: "service_and_agent", ManifestSrc: workingDir("test_data/reader/inputs/service_and_agent.yaml")},
+		{Name: "projects_and_direct", ManifestSrc: workingDir("test_data/reader/inputs/projects_and_direct.yml")},
+		{Name: "annotations", ManifestSrc: workingDir("test_data/reader/inputs/annotations.yaml")},
+		{Name: "project", ManifestSrc: workingDir("test_data/reader/inputs/project.json")},
 	}
 
 	for name, test := range map[string]struct {
@@ -314,7 +314,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 			Expected: []expectedMeta{{Name: "projects_and_direct", ManifestSrc: tmpDir("more-yaml/projects_and_direct.yml")}},
 		},
 		"read test_data directory files with a relative path": {
-			Sources:  []RawSource{"test_data/inputs"},
+			Sources:  []RawSource{"test_data/reader/inputs"},
 			Expected: allNobl9RelFiles,
 		},
 		"read a single directory by name": {
@@ -329,7 +329,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 			Expected: allNobl9TmpFiles,
 		},
 		"recurse the whole relative FS tree with a wildcard": {
-			Sources:  []RawSource{workingDir("test_data/inputs/**")},
+			Sources:  []RawSource{workingDir("test_data/reader/inputs/**")},
 			Expected: allNobl9RelFiles,
 		},
 		"double wildcard inside the pattern": {
@@ -433,7 +433,7 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 // readTestFile attempts to read the designated file from test_data folder.
 func readTestFile(t *testing.T, filename string) *bytes.Buffer {
 	t.Helper()
-	data, err := testData.ReadFile(filepath.Join("test_data", "inputs", filename))
+	data, err := readerTestData.ReadFile(filepath.Join("test_data", "reader", "inputs", filename))
 	require.NoError(t, err)
 	return bytes.NewBuffer(data)
 }

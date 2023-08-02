@@ -156,11 +156,11 @@ func (g *generator) hasOrganizationAndManifestSource(fields *ast.FieldList) bool
 	return hasOrganization && hasManifestSource
 }
 
-func errFatal(format string, a ...interface{}) {
+func errFatal(f string, a ...interface{}) {
 	if len(a) == 0 {
-		fmt.Fprintln(os.Stderr, format)
+		fmt.Fprintln(os.Stderr, f)
 	} else {
-		fmt.Fprintf(os.Stderr, format+"\n", a...)
+		fmt.Fprintf(os.Stderr, f+"\n", a...)
 	}
 	os.Exit(1)
 }

@@ -1,4 +1,3 @@
-// Package manifest provides
 package v1alpha
 
 import (

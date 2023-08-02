@@ -56,18 +56,14 @@ func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 			if obj == nil {
 				continue
 			}
-			annotated, err := annotateWithManifestSource(obj, rd.ResolvedSource)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, annotated)
+			result = append(result, annotateWithManifestSource(obj, rd.ResolvedSource))
 		}
 	}
 	return result, nil
 }
 
 // annotateWithManifestSource annotates manifest.Object with the manifest definition source.
-func annotateWithManifestSource(object manifest.Object, source string) (manifest.Object, error) {
+func annotateWithManifestSource(object manifest.Object, source string) manifest.Object {
 	switch object.GetVersion() {
 	case "n9/v1alpha":
 		if v, ok := object.(v1alpha.ObjectContext); ok {
@@ -76,7 +72,7 @@ func annotateWithManifestSource(object manifest.Object, source string) (manifest
 			}
 		}
 	}
-	return object, nil
+	return object
 }
 
 func decodeJSON(data []byte) ([]manifest.Object, error) {
@@ -185,6 +181,8 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 }
 
 // isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
+// While a simple list like ["a", "b", "c"] is still a valid JSON,
+// it does not really concern us when processing complex objects.
 func isJSONBuffer(buf []byte) bool {
 	trim := bytes.TrimLeftFunc(buf, unicode.IsSpace)
 	return bytes.HasPrefix(trim, []byte("{"))
@@ -207,6 +205,8 @@ func getJsonIdent(data []byte) ident {
 var yamlArrayIdentRegex = regexp.MustCompile(`^\s*-\s`)
 
 func getYamlIdent(data []byte) ident {
+	// If we encounter square brackets array syntax, well... let's still recognize it's a valid array
+	// but obviously it cannot be a complex object as this syntax won't allow it.
 	if len(data) > 0 && (yamlArrayIdentRegex.Match(data) || data[0] == '[') {
 		return identArray
 	}

@@ -112,11 +112,6 @@ type Validate struct {
 	validate *v.Validate
 }
 
-// Validator provides an abstraction on validator which is used for checking specific struct
-type validator interface {
-	Check(interface{}) error
-}
-
 // NewValidator returns an instance of preconfigured Validator for all available objects
 func NewValidator() *Validate {
 	val := v.New()

@@ -283,7 +283,12 @@ func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object, d
 
 // applyOrDeleteObjects applies or deletes list of objects
 // depending on apiMode parameter.
-func (c *Client) applyOrDeleteObjects(ctx context.Context, objects []manifest.Object, apiMode string, dryRun bool) error {
+func (c *Client) applyOrDeleteObjects(
+	ctx context.Context,
+	objects []manifest.Object,
+	apiMode string,
+	dryRun bool,
+) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)

@@ -15,7 +15,8 @@ const APIVersion = "n9/v1alpha"
 
 // Object defines which manifest.Object are part of the manifest.VersionV1alpha.
 type Object interface {
-	SLO | Project | Service | Agent | Direct | Alert | AlertMethod | AlertSilence | AlertPolicy | Annotation | RoleBinding | UserGroup
+	SLO | Project | Service | Agent | Direct | Alert | AlertMethod |
+		AlertSilence | AlertPolicy | Annotation | RoleBinding | UserGroup
 	manifest.Object
 	ObjectContext
 }
