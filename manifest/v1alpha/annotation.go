@@ -8,14 +8,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go Annotation
 
-type AnnotationsSlice []Annotation
-
-func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
-	clone := make([]Annotation, len(annotations))
-	copy(clone, annotations)
-	return clone
-}
-
 type Annotation struct {
 	APIVersion string             `json:"apiVersion"`
 	Kind       manifest.Kind      `json:"kind"`

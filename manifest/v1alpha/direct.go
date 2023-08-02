@@ -11,14 +11,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go Direct
 
-type DirectsSlice []Direct
-
-func (directs DirectsSlice) Clone() DirectsSlice {
-	clone := make([]Direct, len(directs))
-	copy(clone, directs)
-	return clone
-}
-
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
 	APIVersion string         `json:"apiVersion"`

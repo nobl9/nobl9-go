@@ -6,14 +6,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 const DefaultAlertPolicyLastsForDuration = "0m"
 
-type AlertPoliciesSlice []AlertPolicy
-
-func (alertPolicies AlertPoliciesSlice) Clone() AlertPoliciesSlice {
-	clone := make([]AlertPolicy, len(alertPolicies))
-	copy(clone, alertPolicies)
-	return clone
-}
-
 // AlertPolicy represents a set of conditions that can trigger an alert.
 type AlertPolicy struct {
 	APIVersion string              `json:"apiVersion"`

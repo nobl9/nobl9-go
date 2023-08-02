@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go Service
 
-type ServicesSlice []Service
-
-func (services ServicesSlice) Clone() ServicesSlice {
-	clone := make([]Service, len(services))
-	copy(clone, services)
-	return clone
-}
-
 // Service struct which mapped one to one with kind: service yaml definition
 type Service struct {
 	APIVersion string          `json:"apiVersion"`

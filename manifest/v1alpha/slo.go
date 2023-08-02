@@ -6,14 +6,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go SLO
 
-type SLOsSlice []SLO
-
-func (slos SLOsSlice) Clone() SLOsSlice {
-	clone := make([]SLO, len(slos))
-	copy(clone, slos)
-	return clone
-}
-
 // SLO struct which mapped one to one with kind: slo yaml definition, external usage
 type SLO struct {
 	APIVersion string        `json:"apiVersion"`

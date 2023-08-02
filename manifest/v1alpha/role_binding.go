@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go RoleBinding
 
-type RoleBindingsSlice []RoleBinding
-
-func (roleBindings RoleBindingsSlice) Clone() RoleBindingsSlice {
-	clone := make([]RoleBinding, len(roleBindings))
-	copy(clone, roleBindings)
-	return clone
-}
-
 // RoleBinding represents relation of User and Role
 type RoleBinding struct {
 	APIVersion string              `json:"apiVersion"`

@@ -13,56 +13,6 @@ import (
 // APIVersion is a value of valid apiVersions
 const APIVersion = "n9/v1alpha"
 
-// APIObjects - all Objects available for this version of API
-// Sorted in order of applying
-type APIObjects struct {
-	SLOs          SLOsSlice          `json:"slos,omitempty"`
-	Services      ServicesSlice      `json:"services,omitempty"`
-	Agents        AgentsSlice        `json:"agents,omitempty"`
-	AlertPolicies AlertPoliciesSlice `json:"alertpolicies,omitempty"`
-	AlertSilences AlertSilencesSlice `json:"alertsilences,omitempty"`
-	Alerts        AlertsSlice        `json:"alerts,omitempty"`
-	AlertMethods  AlertMethodsSlice  `json:"alertmethods,omitempty"`
-	Directs       DirectsSlice       `json:"directs,omitempty"`
-	DataExports   DataExportsSlice   `json:"dataexports,omitempty"`
-	Projects      ProjectsSlice      `json:"projects,omitempty"`
-	RoleBindings  RoleBindingsSlice  `json:"rolebindings,omitempty"`
-	Annotations   AnnotationsSlice   `json:"annotations,omitempty"`
-	UserGroups    UserGroupsSlice    `json:"usergroups,omitempty"`
-}
-
-func (o APIObjects) Clone() APIObjects {
-	return APIObjects{
-		SLOs:          o.SLOs.Clone(),
-		Services:      o.Services.Clone(),
-		Agents:        o.Agents.Clone(),
-		AlertPolicies: o.AlertPolicies.Clone(),
-		AlertSilences: o.AlertSilences.Clone(),
-		Alerts:        o.Alerts.Clone(),
-		AlertMethods:  o.AlertMethods.Clone(),
-		Directs:       o.Directs.Clone(),
-		DataExports:   o.DataExports.Clone(),
-		Projects:      o.Projects.Clone(),
-		RoleBindings:  o.RoleBindings.Clone(),
-		Annotations:   o.Annotations.Clone(),
-	}
-}
-
-func (o APIObjects) Len() int {
-	return len(o.SLOs) +
-		len(o.Services) +
-		len(o.Agents) +
-		len(o.AlertPolicies) +
-		len(o.AlertSilences) +
-		len(o.Alerts) +
-		len(o.AlertMethods) +
-		len(o.Directs) +
-		len(o.DataExports) +
-		len(o.Projects) +
-		len(o.RoleBindings) +
-		len(o.Annotations)
-}
-
 // Object defines which manifest.Object are part of the manifest.VersionV1alpha.
 type Object interface {
 	SLO | Project | Service | Agent | Direct | Alert | AlertMethod | AlertSilence | AlertPolicy | Annotation | RoleBinding | UserGroup

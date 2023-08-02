@@ -8,14 +8,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go DataExport
 
-type DataExportsSlice []DataExport
-
-func (dataExports DataExportsSlice) Clone() DataExportsSlice {
-	clone := make([]DataExport, len(dataExports))
-	copy(clone, dataExports)
-	return clone
-}
-
 const (
 	DataExportTypeS3        string = "S3"
 	DataExportTypeSnowflake string = "Snowflake"

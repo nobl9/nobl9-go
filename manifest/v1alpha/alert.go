@@ -18,6 +18,8 @@ type Alert struct {
 	Kind       manifest.Kind `json:"kind"`
 	Metadata   AlertMetadata `json:"metadata"`
 	Spec       AlertSpec     `json:"spec"`
+
+	Organization string `json:"organization"`
 }
 
 type AlertMetadata struct {

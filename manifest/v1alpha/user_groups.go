@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go UserGroup
 
-type UserGroupsSlice []UserGroup
-
-func (u UserGroupsSlice) Clone() UserGroupsSlice {
-	clone := make([]UserGroup, len(u))
-	copy(clone, u)
-	return clone
-}
-
 type UserGroup struct {
 	APIVersion string            `json:"apiVersion"`
 	Kind       manifest.Kind     `json:"kind"`

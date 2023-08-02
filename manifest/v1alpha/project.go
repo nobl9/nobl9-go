@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go Project
 
-type ProjectsSlice []Project
-
-func (projects ProjectsSlice) Clone() ProjectsSlice {
-	clone := make([]Project, len(projects))
-	copy(clone, projects)
-	return clone
-}
-
 // Project struct which mapped one to one with kind: project yaml definition.
 type Project struct {
 	APIVersion string          `json:"apiVersion"`

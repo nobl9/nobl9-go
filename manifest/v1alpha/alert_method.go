@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go AlertMethod
 
-type AlertMethodsSlice []AlertMethod
-
-func (alertMethods AlertMethodsSlice) Clone() AlertMethodsSlice {
-	clone := make([]AlertMethod, len(alertMethods))
-	copy(clone, alertMethods)
-	return clone
-}
-
 // AlertMethod represents the configuration required to send a notification to an external service
 // when an alert is triggered.
 type AlertMethod struct {

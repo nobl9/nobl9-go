@@ -469,5 +469,8 @@ func getResponseServerError(resp *http.Response) error {
 }
 
 func sourceFromRequest(r *http.Request) definitions.RawSource {
+	if r == nil || r.URL == nil {
+		return ""
+	}
 	return fmt.Sprintf("%s %s://%s%s", r.Method, r.URL.Scheme, r.URL.Host, r.URL.Path)
 }

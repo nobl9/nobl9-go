@@ -8,14 +8,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go AlertSilence
 
-type AlertSilencesSlice []AlertSilence
-
-func (alertSilences AlertSilencesSlice) Clone() AlertSilencesSlice {
-	clone := make([]AlertSilence, len(alertSilences))
-	copy(clone, alertSilences)
-	return clone
-}
-
 // AlertSilence represents alerts silencing configuration for given SLO and AlertPolicy.
 type AlertSilence struct {
 	APIVersion string               `json:"apiVersion"`

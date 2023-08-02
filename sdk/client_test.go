@@ -26,7 +26,7 @@ import (
 func TestClient_GetObjects(t *testing.T) {
 	responsePayload := []manifest.Object{
 		v1alpha.Service{
-			APIVersion: "n9/v1alpha",
+			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
 			Metadata: v1alpha.ServiceMetadata{
 				Name:    "service1",
@@ -34,7 +34,7 @@ func TestClient_GetObjects(t *testing.T) {
 			},
 		},
 		v1alpha.Service{
-			APIVersion: "n9/v1alpha",
+			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
 			Metadata: v1alpha.ServiceMetadata{
 				Name:    "service2",
@@ -90,7 +90,7 @@ func TestClient_GetObjects(t *testing.T) {
 func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 	responsePayload := []manifest.Object{
 		v1alpha.UserGroup{
-			APIVersion: "n9/v1alpha",
+			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
 			Metadata: v1alpha.UserGroupMetadata{
 				Name: "service1",
@@ -125,7 +125,7 @@ func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 func TestClient_ApplyObjects(t *testing.T) {
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
-			APIVersion: "n9/v1alpha",
+			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
 			Metadata: v1alpha.ServiceMetadata{
 				Name:    "service1",
@@ -164,7 +164,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 func TestClient_DeleteObjects(t *testing.T) {
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
-			APIVersion: "n9/v1alpha",
+			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
 			Metadata: v1alpha.ServiceMetadata{
 				Name:    "service1",

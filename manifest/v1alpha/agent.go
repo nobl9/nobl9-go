@@ -8,14 +8,6 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go Agent
 
-type AgentsSlice []Agent
-
-func (agents AgentsSlice) Clone() AgentsSlice {
-	clone := make([]Agent, len(agents))
-	copy(clone, agents)
-	return clone
-}
-
 // Agent struct which mapped one to one with kind: Agent yaml definition
 type Agent struct {
 	APIVersion string        `json:"apiVersion"`
@@ -26,6 +18,7 @@ type Agent struct {
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`
+	OktaClientID   string `json:"oktaClientID,omitempty"`
 }
 
 type AgentMetadata struct {
