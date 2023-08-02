@@ -1,5 +1,11 @@
 package manifest
 
+import (
+	"strings"
+
+	"github.com/pkg/errors"
+)
+
 // Object represents a generic Nobl9 object definition.
 // All Nobl9 objects implement this interface.
 type Object interface {
@@ -34,4 +40,16 @@ func FilterByKind[T Object](objects []Object) []T {
 		}
 	}
 	return s
+}
+
+// Validate performs validation of all the provided objects.
+// It aggregates the results into a single error.
+func Validate(objects []Object) error {
+	errs := make([]string, 0)
+	for i := range objects {
+		if err := objects[i].Validate(); err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+	return errors.New(strings.Join(errs, "\n"))
 }
