@@ -974,7 +974,7 @@ func TestAlertConditionOpSupport(t *testing.T) {
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lt"},
+		}: {"lte"},
 		{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
