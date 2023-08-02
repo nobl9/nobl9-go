@@ -4,14 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go Alert
 
-type AlertsSlice []Alert
-
-func (alerts AlertsSlice) Clone() AlertsSlice {
-	clone := make([]Alert, len(alerts))
-	copy(clone, alerts)
-	return clone
-}
-
 // Alert represents triggered alert
 type Alert struct {
 	APIVersion string        `json:"apiVersion"`

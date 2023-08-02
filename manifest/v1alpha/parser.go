@@ -12,7 +12,7 @@ import (
 
 type unmarshalFunc func(data []byte, v interface{}) error
 
-func ParseObject(data []byte, kind manifest.Kind, format manifest.RawObjectFormat) (manifest.Object, error) {
+func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) (manifest.Object, error) {
 	var unmarshal unmarshalFunc
 	switch format {
 	case manifest.RawObjectFormatJSON:

@@ -16,19 +16,8 @@ const APIVersion = "n9/v1alpha"
 // Object defines which manifest.Object are part of the manifest.VersionV1alpha.
 type Object interface {
 	SLO | Project | Service | Agent | Direct | Alert | AlertMethod | AlertSilence | AlertPolicy | Annotation | RoleBinding | UserGroup
-}
-
-// FilterKind filters a slice of manifest.Object and returns a subset of objects
-// with the manifest.Kind defined in the type constraint.
-func FilterKind[T manifest.Object](objects []manifest.Object) []T {
-	var s []T
-	for i := range objects {
-		v, ok := objects[i].(T)
-		if ok {
-			s = append(s, v)
-		}
-	}
-	return s
+	manifest.Object
+	ObjectContext
 }
 
 type ObjectContext interface {
@@ -37,75 +26,6 @@ type ObjectContext interface {
 	GetManifestSource() string
 	SetManifestSource(src string) manifest.Object
 }
-
-// Applying multiple Agents at once can cause timeout for whole sloctl apply command.
-// This is caused by long request to Okta to create client credentials app.
-// The same case is applicable for delete command.
-const allowedAgentsToModify = 1
-
-//
-//// Parse takes care of all Object supported by n9/v1alpha apiVersion
-//func Parse(o ObjectGeneric, parsedObjects *APIObjects, onlyHeaders bool) (err error) {
-//	v := NewValidator()
-//	switch o.Kind {
-//	case manifest.KindSLO:
-//		var slo SLO
-//		slo, err = genericToSLO(o, v, onlyHeaders)
-//		parsedObjects.SLOs = append(parsedObjects.SLOs, slo)
-//	case manifest.KindService:
-//		var service Service
-//		service, err = genericToService(o, v, onlyHeaders)
-//		parsedObjects.Services = append(parsedObjects.Services, service)
-//	case manifest.KindAgent:
-//		var agent Agent
-//		if len(parsedObjects.Agents) >= allowedAgentsToModify {
-//			err = EnhanceError(o, errors.New("only one Agent can be defined in this configuration"))
-//		} else {
-//			agent, err = genericToAgent(o, v, onlyHeaders)
-//			parsedObjects.Agents = append(parsedObjects.Agents, agent)
-//		}
-//	case manifest.KindAlertPolicy:
-//		var alertPolicy AlertPolicy
-//		alertPolicy, err = genericToAlertPolicy(o, v, onlyHeaders)
-//		parsedObjects.AlertPolicies = append(parsedObjects.AlertPolicies, alertPolicy)
-//	case manifest.KindAlertSilence:
-//		var alertSilence AlertSilence
-//		alertSilence, err = genericToAlertSilence(o, v, onlyHeaders)
-//		parsedObjects.AlertSilences = append(parsedObjects.AlertSilences, alertSilence)
-//	case manifest.KindAlertMethod:
-//		var alertMethod AlertMethod
-//		alertMethod, err = genericToAlertMethod(o, v, onlyHeaders)
-//		parsedObjects.AlertMethods = append(parsedObjects.AlertMethods, alertMethod)
-//	case manifest.KindDirect:
-//		var direct Direct
-//		direct, err = genericToDirect(o, v, onlyHeaders)
-//		parsedObjects.Directs = append(parsedObjects.Directs, direct)
-//	case manifest.KindDataExport:
-//		var dataExport DataExport
-//		dataExport, err = genericToDataExport(o, v, onlyHeaders)
-//		parsedObjects.DataExports = append(parsedObjects.DataExports, dataExport)
-//	case manifest.KindProject:
-//		var project Project
-//		project, err = genericToProject(o, v, onlyHeaders)
-//		parsedObjects.Projects = append(parsedObjects.Projects, project)
-//	case manifest.KindRoleBinding:
-//		var roleBinding RoleBinding
-//		roleBinding, err = genericToRoleBinding(o, v)
-//		parsedObjects.RoleBindings = append(parsedObjects.RoleBindings, roleBinding)
-//	case manifest.KindAnnotation:
-//		var annotation Annotation
-//		annotation, err = genericToAnnotation(o, v)
-//		parsedObjects.Annotations = append(parsedObjects.Annotations, annotation)
-//	case manifest.KindUserGroup:
-//		var group UserGroup
-//		group, err = genericToUserGroup(o)
-//		parsedObjects.UserGroups = append(parsedObjects.UserGroups, group)
-//	// catching invalid kinds of objects for this apiVersion
-//	default:
-//		err = UnsupportedKindErr(o)
-//	}
-//	return err
-//}
 
 // CheckObjectsUniqueness performs validation of parsed APIObjects.
 func CheckObjectsUniqueness(objects []manifest.Object) (err error) {

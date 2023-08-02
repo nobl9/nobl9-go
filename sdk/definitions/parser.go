@@ -26,6 +26,24 @@ func Decode(data []byte) ([]manifest.Object, error) {
 	return decodeYAML(data)
 }
 
+// DecodeSingle returns a single, concrete object implementing manifest.Object.
+// It expects exactly one object in the decoded byte slice.
+func DecodeSingle[T manifest.Object](data []byte) (object T, err error) {
+	objects, err := Decode(data)
+	if err != nil {
+		return object, err
+	}
+	if len(objects) != 1 {
+		return object, fmt.Errorf("unepxected number of objects: %d, expected exactly one", len(objects))
+	}
+	var isOfType bool
+	object, isOfType = objects[0].(T)
+	if !isOfType {
+		return object, fmt.Errorf("object of type %T is not of type %T", objects[0], *new(T))
+	}
+	return object, nil
+}
+
 // processRawDefinitions function converts raw definitions to a slice of manifest.Object.
 func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	result := make([]manifest.Object, 0, len(rds))
@@ -134,10 +152,10 @@ func (o *genericObject) UnmarshalYAML(data []byte) error {
 	return o.unmarshalGeneric(data, manifest.RawObjectFormatYAML)
 }
 
-// unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.RawObjectFormat.
+// unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.ObjectFormat.
 // It uses an intermediate decoding step to extract manifest.Version and manifest.Kind from the object.
 // Decoding is then delegated to the parser for specific manifest.Version.
-func (o *genericObject) unmarshalGeneric(data []byte, format manifest.RawObjectFormat) error {
+func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectFormat) error {
 	var object struct {
 		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
 		Kind       manifest.Kind    `json:"kind" yaml:"kind"`

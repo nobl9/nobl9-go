@@ -24,8 +24,14 @@ type ProjectScopedObject interface {
 	SetProject(project string) Object
 }
 
-//go:generate ../bin/go-enum --names
-
-// RawObjectFormat represents the format of Object data representation.
-// ENUM(JSON = 1, YAML)
-type RawObjectFormat int
+// FilterObjects filters Object slice and returns its subset matching the type constraint.
+func FilterObjects[T Object](objects []Object) []T {
+	var s []T
+	for i := range objects {
+		v, ok := objects[i].(T)
+		if ok {
+			s = append(s, v)
+		}
+	}
+	return s
+}
