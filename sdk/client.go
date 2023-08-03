@@ -18,6 +18,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk/definitions"
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
@@ -289,8 +290,10 @@ func (c *Client) applyOrDeleteObjects(
 	apiMode string,
 	dryRun bool,
 ) error {
+	var err error
+	objects, err = c.setOrganizationForObjects(ctx, objects)
 	buf := new(bytes.Buffer)
-	if err := json.NewEncoder(buf).Encode(objects); err != nil {
+	if err = json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
 
@@ -326,6 +329,21 @@ func (c *Client) applyOrDeleteObjects(
 	default:
 		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
 	}
+}
+
+func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
+	// Make sure the organization is available.
+	if err := c.preRequestOnce(ctx); err != nil {
+		return nil, err
+	}
+	for i := range objects {
+		objCtx, ok := objects[i].(v1alpha.ObjectContext)
+		if !ok {
+			continue
+		}
+		objects[i] = objCtx.SetOrganization(c.Credentials.Organization)
+	}
+	return objects, nil
 }
 
 func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {

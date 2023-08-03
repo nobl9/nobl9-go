@@ -123,6 +123,18 @@ func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 }
 
 func TestClient_ApplyObjects(t *testing.T) {
+	expected := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
+			},
+			Organization: "my-org",
+		},
+	}
+
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
 			APIVersion: v1alpha.APIVersion,
@@ -147,7 +159,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
 			require.NoError(t, err)
-			assert.Equal(t, requestPayload, objects)
+			assert.Equal(t, expected, objects)
 		},
 	})
 
@@ -162,6 +174,18 @@ func TestClient_ApplyObjects(t *testing.T) {
 }
 
 func TestClient_DeleteObjects(t *testing.T) {
+	expected := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
+			},
+			Organization: "my-org",
+		},
+	}
+
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
 			APIVersion: v1alpha.APIVersion,
@@ -184,6 +208,9 @@ func TestClient_DeleteObjects(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
+			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			require.NoError(t, err)
+			assert.Equal(t, expected, objects)
 		},
 	})
 
