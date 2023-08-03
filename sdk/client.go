@@ -217,7 +217,7 @@ func (c *Client) GetObjectsWithParams(
 	switch {
 	case resp.StatusCode == http.StatusOK:
 		response.Objects, err = definitions.ReadSources(ctx, definitions.NewReaderSource(resp.Body, ""))
-		if err != nil {
+		if err != nil && !errors.Is(err, definitions.ErrNoDefinitionsFound) {
 			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
 		if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {

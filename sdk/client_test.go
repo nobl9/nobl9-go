@@ -77,6 +77,34 @@ func TestClient_GetObjects(t *testing.T) {
 	assert.Equal(t, responsePayload, objects)
 }
 
+func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
+	responsePayload := make([]manifest.Object, 0)
+
+	client, srv := prepareTestClient(t, endpointConfig{
+		// Define endpoint response.
+		Path: "api/get/service",
+		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
+		},
+	})
+
+	// Start and close the test server.
+	srv.Start()
+	defer srv.Close()
+
+	// Run the API method.
+	objects, err := client.GetObjects(
+		context.Background(),
+		ProjectsWildcard,
+		manifest.KindService,
+		nil,
+		"service1",
+	)
+	// Verify response handling.
+	require.NoError(t, err)
+	require.Len(t, objects, 0)
+}
+
 func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 	responsePayload := []manifest.Object{
 		v1alpha.UserGroup{
@@ -369,7 +397,9 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 			assert.Equal(t, userAgent, r.Header.Get(HeaderUserAgent))
 			assert.Equal(t, "Bearer "+token, r.Header.Get(HeaderAuthorization))
 			// Endpoint specific tests.
-			endpoint.TestRequestFunc(t, r)
+			if endpoint.TestRequestFunc != nil {
+				endpoint.TestRequestFunc(t, r)
+			}
 			// Record response.
 			endpoint.ResponseFunc(t, w)
 		default:

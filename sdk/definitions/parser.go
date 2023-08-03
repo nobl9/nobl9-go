@@ -15,7 +15,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var errNoDefinitionsInInput = errors.New("no definitions in input")
+var ErrNoDefinitionsFound = errors.New("no definitions in input")
 
 // Decode reads objects from the provided bytes slice.
 // It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
@@ -90,7 +90,7 @@ func decodeJSON(data []byte) ([]manifest.Object, error) {
 		res = append(res, object)
 	}
 	if len(res) == 0 {
-		return nil, errNoDefinitionsInInput
+		return nil, ErrNoDefinitionsFound
 	}
 	objects := make([]manifest.Object, 0, len(res))
 	for i := range res {
@@ -124,7 +124,7 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 		}
 	}
 	if len(res) == 0 {
-		return nil, errNoDefinitionsInInput
+		return nil, ErrNoDefinitionsFound
 	}
 	objects := make([]manifest.Object, 0, len(res))
 	for i := range res {
