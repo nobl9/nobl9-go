@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -64,15 +63,6 @@ func TestClient_GetObjects(t *testing.T) {
 	srv.Start()
 	defer srv.Close()
 
-	// Add expected ManifestSource details.
-	expected := make([]manifest.Object, 0, len(responsePayload))
-	for _, obj := range responsePayload {
-		expected = append(
-			expected,
-			obj.(v1alpha.ObjectContext).
-				SetManifestSource(fmt.Sprintf("GET %s/api/get/service", srv.URL)))
-	}
-
 	// Run the API method.
 	objects, err := client.GetObjects(
 		context.Background(),
@@ -84,7 +74,7 @@ func TestClient_GetObjects(t *testing.T) {
 	// Verify response handling.
 	require.NoError(t, err)
 	require.Len(t, objects, 2)
-	assert.Equal(t, expected, objects)
+	assert.Equal(t, responsePayload, objects)
 }
 
 func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
@@ -123,18 +113,6 @@ func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 }
 
 func TestClient_ApplyObjects(t *testing.T) {
-	expected := []manifest.Object{
-		v1alpha.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
-				Name:    "service1",
-				Project: "default",
-			},
-			Organization: "my-org",
-		},
-	}
-
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
 			APIVersion: v1alpha.APIVersion,
@@ -145,6 +123,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 			},
 		},
 	}
+	expected := addOrganization(requestPayload, "my-org")
 
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
@@ -174,18 +153,6 @@ func TestClient_ApplyObjects(t *testing.T) {
 }
 
 func TestClient_DeleteObjects(t *testing.T) {
-	expected := []manifest.Object{
-		v1alpha.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
-				Name:    "service1",
-				Project: "default",
-			},
-			Organization: "my-org",
-		},
-	}
-
 	requestPayload := []manifest.Object{
 		v1alpha.Service{
 			APIVersion: v1alpha.APIVersion,
@@ -196,6 +163,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 			},
 		},
 	}
+	expected := addOrganization(requestPayload, "my-org")
 
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
@@ -323,6 +291,16 @@ type endpointConfig struct {
 	Path            string
 	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
 	TestRequestFunc func(*testing.T, *http.Request)
+}
+
+func addOrganization(objects []manifest.Object, org string) []manifest.Object {
+	result := make([]manifest.Object, 0, len(objects))
+	for _, obj := range objects {
+		if objCtx, ok := obj.(v1alpha.ObjectContext); ok {
+			result = append(result, objCtx.SetOrganization(org))
+		}
+	}
+	return result
 }
 
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {

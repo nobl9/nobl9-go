@@ -216,8 +216,7 @@ func (c *Client) GetObjectsWithParams(
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
-		response.Objects, err = definitions.ReadSources(ctx,
-			definitions.NewReaderSource(resp.Body, sourceFromRequest(resp.Request)))
+		response.Objects, err = definitions.ReadSources(ctx, definitions.NewReaderSource(resp.Body, ""))
 		if err != nil {
 			return response, fmt.Errorf("cannot decode response from API: %w", err)
 		}
@@ -492,11 +491,4 @@ func getResponseServerError(resp *http.Response) error {
 		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
 	}
 	return fmt.Errorf(msg)
-}
-
-func sourceFromRequest(r *http.Request) definitions.RawSource {
-	if r == nil || r.URL == nil {
-		return ""
-	}
-	return fmt.Sprintf("%s %s://%s%s", r.Method, r.URL.Scheme, r.URL.Host, r.URL.Path)
 }
