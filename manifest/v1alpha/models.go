@@ -42,10 +42,10 @@ type MetadataHolder struct {
 // ObjectHeader represents Header which is common for all available Objects
 // Deprecated
 type ObjectHeader struct {
-	APIVersion string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind `json:"kind" validate:"required" example:"kind"`
-	MetadataHolder
-	ObjectInternal
+	APIVersion     string        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
+	Kind           manifest.Kind `json:"kind" validate:"required" example:"kind"`
+	MetadataHolder `json:",inline"`
+	ObjectInternal `json:",inline"`
 }
 
 // StringInterpolation for arguments ("{}-my-{}-string-{}", "xd") returns string xd-my-xd-string-xd
