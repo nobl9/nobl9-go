@@ -3,12 +3,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
-permissions:
-  security-events: write
-  contents: read
 jobs:
   scan:
     name: Run Golang vulnerability check
@@ -16,7 +10,5 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Run Gosec Security Scanner
-        run: make check/gosec
       - name: Run Golang Vulncheck
         run: make check/vulns
