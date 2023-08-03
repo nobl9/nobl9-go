@@ -11,19 +11,13 @@
   <table>
     <tr>
       <td>
-        <a href="https://g.codefresh.io/pipelines/edit/new/builds?id=637756d92efe1069fc7b6308&pipeline=test-build-deploy-production&projects=n9&projectId=612eb09eabad285ab141f509">
-          <img alt="checks" src="https://github.com/nobl9/nobl9-go/actions/workflows/checks.yml/badge.svg?event=push">
-        </a>
+        <img alt="checks" src="https://github.com/nobl9/nobl9-go/actions/workflows/checks.yml/badge.svg?event=push">
       </td>
       <td>
-        <a href="https://g.codefresh.io/pipelines/edit/new/builds?id=62d539e6ebf4778fba608c6f&pipeline=test-build-deploy&projects=n9&projectId=612eb09eabad285ab141f509">
-          <img alt="tests" src="https://github.com/nobl9/nobl9-go/actions/workflows/tests.yml/badge.svg?event=push">
-        </a>
+        <img alt="tests" src="https://github.com/nobl9/nobl9-go/actions/workflows/tests.yml/badge.svg?event=push">
       </td>
       <td>
-        <a href="https://g.codefresh.io/pipelines/edit/new/builds?id=637756502efe103b717b6307&pipeline=test-build-deploy-staging&projects=n9&projectId=612eb09eabad285ab141f509">
-          <img alt="vulnerabilities" src="https://github.com/nobl9/nobl9-go/actions/workflows/vulns.yml/badge.svg?event=push">
-        </a>
+        <img alt="vulnerabilities" src="https://github.com/nobl9/nobl9-go/actions/workflows/vulns.yml/badge.svg?event=push">
       </td>
     </tr>
   </table>
