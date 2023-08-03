@@ -292,6 +292,9 @@ func (c *Client) applyOrDeleteObjects(
 ) error {
 	var err error
 	objects, err = c.setOrganizationForObjects(ctx, objects)
+	if err != nil {
+		return err
+	}
 	buf := new(bytes.Buffer)
 	if err = json.NewEncoder(buf).Encode(objects); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
