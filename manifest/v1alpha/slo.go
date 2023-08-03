@@ -145,7 +145,6 @@ type AnomalyConfigAlertMethod struct {
 }
 
 // postParse implements postParser interface.
-// Apparently some of the linters don't go well with generics...
 // nolint: unparam, unused
 func (s SLO) postParse() (SLO, error) {
 	// to keep BC with the ThousandEyes initial implementation (that did not support passing TestType),
