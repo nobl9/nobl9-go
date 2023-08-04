@@ -56,3 +56,15 @@ func Validate(objects []Object) error {
 	}
 	return errors.New(strings.Join(errs, "\n"))
 }
+
+// SetDefaultProject sets the default project for each object only if the object is
+// ProjectScopedObject, and it does not yet have project assigned to it.
+func SetDefaultProject(objects []Object, project string) []Object {
+	for _, obj := range objects {
+		v, ok := obj.(ProjectScopedObject)
+		if ok && v.GetProject() == "" {
+			obj = v.SetProject(project)
+		}
+	}
+	return objects
+}
