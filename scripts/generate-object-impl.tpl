@@ -4,6 +4,12 @@ package {{ .Package }}
 
 import "github.com/nobl9/nobl9-go/manifest"
 
+// Ensure interfaces are implemented.
+var _ Object = {{ .StructName }}{}
+{{- if .GenerateProjectScopedObject }}
+var _ ProjectScopedObject = {{ .StructName }}{}
+{{- end }}
+
 {{- if .GenerateObject }}
 
 func ({{ .Receiver }} {{ .StructName }}) GetVersion() string {

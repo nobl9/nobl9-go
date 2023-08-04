@@ -4,6 +4,10 @@ package v1alpha
 
 import "github.com/nobl9/nobl9-go/manifest"
 
+// Ensure interfaces are implemented.
+var _ Object = AlertMethod{}
+var _ ProjectScopedObject = AlertMethod{}
+
 func (a AlertMethod) GetVersion() string {
 	return a.APIVersion
 }

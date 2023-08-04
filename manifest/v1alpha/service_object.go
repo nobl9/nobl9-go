@@ -4,6 +4,10 @@ package v1alpha
 
 import "github.com/nobl9/nobl9-go/manifest"
 
+// Ensure interfaces are implemented.
+var _ Object = Service{}
+var _ ProjectScopedObject = Service{}
+
 func (s Service) GetVersion() string {
 	return s.APIVersion
 }

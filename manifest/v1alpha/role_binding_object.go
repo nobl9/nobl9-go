@@ -4,6 +4,9 @@ package v1alpha
 
 import "github.com/nobl9/nobl9-go/manifest"
 
+// Ensure interfaces are implemented.
+var _ Object = RoleBinding{}
+
 func (r RoleBinding) GetVersion() string {
 	return r.APIVersion
 }
