@@ -34,14 +34,14 @@ type ProjectScopedObject interface {
 
 // FilterByKind filters Object slice and returns its subset matching the type constraint.
 func FilterByKind[T Object](objects []Object) []T {
-	var s []T
+	var filtered []T
 	for i := range objects {
 		v, ok := objects[i].(T)
 		if ok {
-			s = append(s, v)
+			filtered = append(filtered, v)
 		}
 	}
-	return s
+	return filtered
 }
 
 // Validate performs validation of all the provided objects.
