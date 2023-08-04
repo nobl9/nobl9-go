@@ -61,7 +61,7 @@ func Validate(objects []Object) error {
 
 // SetDefaultProject sets the default project for each object only if the object is
 // ProjectScopedObject, and it does not yet have project assigned to it.
-func SetDefaultProject[T Object](objects []Object, project string) []Object {
+func SetDefaultProject(objects []Object, project string) []Object {
 	for i := range objects {
 		v, ok := objects[i].(ProjectScopedObject)
 		if ok && v.GetProject() == "" {
