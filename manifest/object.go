@@ -20,9 +20,11 @@ type Object interface {
 }
 
 // ProjectScopedObject an Object which is tied to a specific KindProject.
-// Example of such an object is KindSLO.
-// On the other hand KindRoleBinding is an example of organization scoped Object which is not tied to any KindProject.
+// Example of such an object is v1alpha.SLO.
+// On the other hand v1alpha.RoleBinding is an example of organization
+// scoped Object which is not tied to any KindProject.
 type ProjectScopedObject interface {
+	Object
 	// GetProject returns the name of the project which the ProjectScopedObject belongs to.
 	GetProject() string
 	// SetProject sets the name of the project which the ProjectScopedObject should belong to.
@@ -59,7 +61,7 @@ func Validate(objects []Object) error {
 
 // SetDefaultProject sets the default project for each object only if the object is
 // ProjectScopedObject, and it does not yet have project assigned to it.
-func SetDefaultProject(objects []Object, project string) []Object {
+func SetDefaultProject[T Object](objects []Object, project string) []Object {
 	for _, obj := range objects {
 		v, ok := obj.(ProjectScopedObject)
 		if ok && v.GetProject() == "" {
