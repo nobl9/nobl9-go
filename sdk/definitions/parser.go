@@ -179,7 +179,7 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 	return nil
 }
 
-var jsonBufferRegex = regexp.MustCompile(`(?m)^\s*\[?\s*{`)
+var jsonBufferRegex = regexp.MustCompile(`^\s*\[?\s*{`)
 
 // isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
 // While a simple list like ["a", "b", "c"] is still a valid JSON,
@@ -195,7 +195,7 @@ const (
 	identObject
 )
 
-var jsonArrayIdentRegex = regexp.MustCompile(`(?m)^\s*\[`)
+var jsonArrayIdentRegex = regexp.MustCompile(`^\s*\[`)
 
 func getJsonIdent(data []byte) ident {
 	if jsonArrayIdentRegex.Match(data) {
@@ -204,7 +204,7 @@ func getJsonIdent(data []byte) ident {
 	return identObject
 }
 
-var yamlArrayIdentRegex = regexp.MustCompile(`(?m)^\s*-\s`)
+var yamlArrayIdentRegex = regexp.MustCompile(`^\s*-\s`)
 
 func getYamlIdent(data []byte) ident {
 	// If we encounter square brackets array syntax, well... let's still recognize it's a valid array
