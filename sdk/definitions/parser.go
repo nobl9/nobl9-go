@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"unicode"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
@@ -180,12 +179,13 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 	return nil
 }
 
+var jsonBufferRegex = regexp.MustCompile(`(?m)^\s*\[?\s*{`)
+
 // isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
 // While a simple list like ["a", "b", "c"] is still a valid JSON,
 // it does not really concern us when processing complex objects.
 func isJSONBuffer(buf []byte) bool {
-	trim := bytes.TrimLeftFunc(buf, unicode.IsSpace)
-	return bytes.HasPrefix(trim, []byte("{"))
+	return jsonBufferRegex.Match(buf)
 }
 
 type ident uint8
@@ -195,19 +195,21 @@ const (
 	identObject
 )
 
+var jsonArrayIdentRegex = regexp.MustCompile(`(?m)^\s*\[`)
+
 func getJsonIdent(data []byte) ident {
-	if len(data) > 0 && data[0] == '[' {
+	if jsonArrayIdentRegex.Match(data) {
 		return identArray
 	}
 	return identObject
 }
 
-var yamlArrayIdentRegex = regexp.MustCompile(`^\s*-\s`)
+var yamlArrayIdentRegex = regexp.MustCompile(`(?m)^\s*-\s`)
 
 func getYamlIdent(data []byte) ident {
 	// If we encounter square brackets array syntax, well... let's still recognize it's a valid array
 	// but obviously it cannot be a complex object as this syntax won't allow it.
-	if len(data) > 0 && (yamlArrayIdentRegex.Match(data) || data[0] == '[') {
+	if yamlArrayIdentRegex.Match(data) || jsonArrayIdentRegex.Match(data) {
 		return identArray
 	}
 	return identObject

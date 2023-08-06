@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -19,50 +20,81 @@ func TestDecode(t *testing.T) {
 		Input              string
 		ExpectedObjectsLen int
 		ExpectedNames      []string
+		Format             manifest.ObjectFormat
 	}{
 		{
 			Input:              "list_of_objects.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatYAML,
+		},
+		{
+			Input:              "list_of_objects_whitespace.yaml",
+			ExpectedObjectsLen: 2,
+			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "multiple_documents.yaml",
 			ExpectedObjectsLen: 3,
 			ExpectedNames:      []string{"default0", "default1", "default2"},
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document_with_document_separators.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "compacted_list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "compacted_single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatJSON,
+		},
+		{
+			Input:              "list_of_objects_whitespace.json",
+			ExpectedObjectsLen: 2,
+			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
+			Format:             manifest.ObjectFormatJSON,
 		},
 	} {
 		t.Run(test.Input, func(t *testing.T) {
-			objects, err := Decode(readInputFile(t, test.Input))
+			data := readInputFile(t, test.Input)
+
+			isJSON := isJSONBuffer(data)
+			switch test.Format {
+			case manifest.ObjectFormatJSON:
+				assert.True(t, isJSON, "expected the file contents to be interpreted as JSON")
+			case manifest.ObjectFormatYAML:
+				assert.False(t, isJSON, "expected the file contents to be interpreted as YAML")
+			}
+
+			objects, err := Decode(data)
 			require.NoError(t, err)
 			assert.Len(t, objects, test.ExpectedObjectsLen)
 			assert.IsType(t, v1alpha.Project{}, objects[0])
