@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -53,10 +55,10 @@ func Validate(objects []Object) error {
 			errs = append(errs, err.Error())
 		}
 	}
-	if len(errs) == 0 {
-		return nil
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "\n"))
 	}
-	return errors.New(strings.Join(errs, "\n"))
+	return validateObjectsUniqueness(objects)
 }
 
 // SetDefaultProject sets the default project for each object only if the object is
@@ -69,4 +71,71 @@ func SetDefaultProject(objects []Object, project string) []Object {
 		}
 	}
 	return objects
+}
+
+// validateObjectsUniqueness checks if all objects are uniquely named.
+// The naming
+func validateObjectsUniqueness(objects []Object) (err error) {
+	type uniqueKey struct {
+		Kind    Kind
+		Name    string
+		Project string
+	}
+
+	unique := make(map[uniqueKey]struct{}, len(objects))
+	conflicts := make(map[Kind][]string)
+	for _, obj := range objects {
+		key := uniqueKey{
+			Kind: obj.GetKind(),
+			Name: obj.GetName(),
+		}
+		if v, ok := obj.(ProjectScopedObject); ok {
+			key.Project = v.GetProject()
+		}
+		if _, isConflicting := unique[key]; isConflicting {
+			conflicts[obj.GetKind()] = append(conflicts[obj.GetKind()], uniquenessConflictDetails(obj, obj.GetKind()))
+			continue
+		}
+		unique[key] = struct{}{}
+	}
+	var errs []error
+	if len(conflicts) > 0 {
+		for kind, details := range conflicts {
+			errs = append(errs, fmt.Errorf(
+				`constraint "%s" was violated due to the following conflicts: [%s]`,
+				uniquenessConstraintDetails(kind), strings.Join(details, ", ")))
+		}
+	}
+	if len(errs) > 0 {
+		sort.Slice(errs, func(i, j int) bool { return errs[j].Error() > errs[i].Error() })
+		builder := strings.Builder{}
+		for i, e := range errs {
+			builder.WriteString(e.Error())
+			if i < len(errs)-1 {
+				builder.WriteString("; ")
+			}
+		}
+		return errors.New(builder.String())
+	}
+	return nil
+}
+
+// uniquenessConflictDetails creates a formatted string identifying a single conflict between two objects.
+func uniquenessConflictDetails(object Object, kind Kind) string {
+	switch v := any(object).(type) {
+	case ProjectScopedObject:
+		return fmt.Sprintf(`{"Project": "%s", "%s": "%s"}`, v.GetProject(), kind, object.GetName())
+	default:
+		return fmt.Sprintf(`"%s"`, object.GetName())
+	}
+}
+
+// uniquenessConstraintDetails creates a formatted string specifying the constraint which was broken.
+func uniquenessConstraintDetails(kind Kind) string {
+	switch kind {
+	case KindProject, KindRoleBinding, KindUserGroup:
+		return fmt.Sprintf(`%s.metadata.name has to be unique`, kind)
+	default:
+		return fmt.Sprintf(`%s.metadata.name has to be unique across a single Project`, kind)
+	}
 }

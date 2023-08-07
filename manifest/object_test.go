@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	_ "embed"
+	"strings"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -38,6 +40,9 @@ func TestFilterByKind(t *testing.T) {
 	})
 }
 
+//go:embed test_data/expected_uniqueness_constraint_message.txt
+var expectedUniquenessConstraintMessage string
+
 func TestValidate(t *testing.T) {
 	t.Run("nil objects slice", func(t *testing.T) {
 		err := Validate(nil)
@@ -51,20 +56,58 @@ func TestValidate(t *testing.T) {
 
 	t.Run("no errors", func(t *testing.T) {
 		err := Validate([]Object{
-			customObject{validationError: nil},
-			customObject{validationError: nil},
+			customObject{kind: KindProject, name: "default"},
+			customObject{kind: KindRoleBinding, name: "default"},
 		})
 		assert.NoError(t, err)
 	})
 
 	t.Run("errors", func(t *testing.T) {
 		err := Validate([]Object{
-			customObject{validationError: nil},
+			customObject{},
 			customObject{validationError: errors.New("I failed!")},
 			customObject{validationError: errors.New("I failed too!")},
 		})
 		assert.Error(t, err)
 		assert.EqualError(t, err, "I failed!\nI failed too!")
+	})
+
+	t.Run("uniqueness constraint violated", func(t *testing.T) {
+		err := Validate([]Object{
+			customObject{kind: KindProject, name: "sun"},
+			customObject{kind: KindProject, name: "sun"},
+			customObject{kind: KindProject, name: "moon"},
+			customObject{kind: KindProject, name: "jupiter"},
+			customObject{kind: KindProject, name: "sun"},
+			customObject{kind: KindProject, name: "moon"},
+			customObject{kind: KindRoleBinding, name: "sun"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "sun"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "sun"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "sun"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "jupiter"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "jupiter"},
+				project: "non-default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "moon"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindSLO, name: "moon"},
+				project: "default"},
+			customProjectScopedObject{customObject: customObject{
+				kind: KindService, name: "jupiter"},
+				project: "default"},
+		})
+		assert.Error(t, err)
+		assert.EqualError(t, err, strings.ReplaceAll(expectedUniquenessConstraintMessage, "\n", "; "))
 	})
 }
 
@@ -104,14 +147,16 @@ func TestSetDefaultProject(t *testing.T) {
 }
 
 type customObject struct {
+	kind            Kind
+	name            string
 	validationError error
 }
 
 func (c customObject) GetVersion() string { return "" }
 
-func (c customObject) GetKind() Kind { return 0 }
+func (c customObject) GetKind() Kind { return c.kind }
 
-func (c customObject) GetName() string { return "" }
+func (c customObject) GetName() string { return c.name }
 
 func (c customObject) Validate() error { return c.validationError }
 
