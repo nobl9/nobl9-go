@@ -1005,7 +1005,7 @@ func TestAlertConditionOnlyMeasurementAverageBurnRateIsAllowedToUseAlertingWindo
 	}
 }
 
-func TestAlertConditionOpSupport(t *testing.T) {
+func TestAlertConditionAllowedOptionalOperatorForMeasurementType(t *testing.T) {
 	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
 	validate := NewValidator()
 	for condition, allowedOps := range map[AlertCondition][]string{
@@ -1013,26 +1013,26 @@ func TestAlertConditionOpSupport(t *testing.T) {
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lte"},
+		}: {"lte", ""},
 		{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lt"},
+		}: {"lt", ""},
 		{
 			Measurement: MeasurementBurnedBudget.String(),
 			Value:       30.0,
-		}: {"gte"},
+		}: {"gte", ""},
 		{
 			Measurement:      MeasurementAverageBurnRate.String(),
 			Value:            30.0,
 			LastsForDuration: "5m",
-		}: {"gte"},
+		}: {"gte", ""},
 		{
 			Measurement:    MeasurementAverageBurnRate.String(),
 			Value:          30.0,
 			AlertingWindow: "5m",
-		}: {"gte"},
+		}: {"gte", ""},
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
 			for _, op := range allOps {

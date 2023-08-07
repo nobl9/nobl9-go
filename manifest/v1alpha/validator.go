@@ -2212,22 +2212,21 @@ func alertPolicyConditionAlertingWindowLengthValidation(sl v.StructLevel) {
 func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
-	switch condition.Measurement {
-	case MeasurementTimeToBurnBudget.String():
-		if condition.Operator != LessThan.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnBudgetLessThanRequired", "")
+	measurement, measurementErr := ParseMeasurement(condition.Measurement)
+	if measurementErr != nil {
+		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
+	}
+
+	if condition.Operator != "" {
+		expectedOperator := getAlertPolicyDefaultOperatorForMeasurement(measurement)
+
+		operator, operatorErr := ParseOperator(condition.Operator)
+		if operatorErr != nil {
+			sl.ReportError(condition, "op", "Operator", "invalidOperatorType", "")
 		}
-	case MeasurementBurnedBudget.String():
-		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnedBudgetGreaterThanEqualRequired", "")
-		}
-	case MeasurementAverageBurnRate.String():
-		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnRateGreaterThanEqualRequired", "")
-		}
-	case MeasurementTimeToBurnEntireBudget.String():
-		if condition.Operator != LessThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnEntireBudgetLessThanEqualRequired", "")
+
+		if operator != expectedOperator {
+			sl.ReportError(condition, "op", "Operator", "invalidOperatorTypeForProvidedMeasurement", "")
 		}
 	}
 }
