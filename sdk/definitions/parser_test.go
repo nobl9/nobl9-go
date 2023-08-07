@@ -29,7 +29,13 @@ func TestDecode(t *testing.T) {
 			Format:             manifest.ObjectFormatYAML,
 		},
 		{
-			Input:              "list_of_objects_whitespace.yaml",
+			Input:              "list_of_objects_with_whitespace.yaml",
+			ExpectedObjectsLen: 2,
+			ExpectedNames:      []string{"default0", "default1"},
+			Format:             manifest.ObjectFormatYAML,
+		},
+		{
+			Input:              "list_of_objects_with_comments.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
 			Format:             manifest.ObjectFormatYAML,
@@ -71,7 +77,7 @@ func TestDecode(t *testing.T) {
 			Format:             manifest.ObjectFormatJSON,
 		},
 		{
-			Input:              "list_of_objects_whitespace.json",
+			Input:              "list_of_objects_with_whitespace.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
 			Format:             manifest.ObjectFormatJSON,

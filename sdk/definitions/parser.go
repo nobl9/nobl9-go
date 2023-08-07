@@ -204,7 +204,7 @@ func getJsonIdent(data []byte) ident {
 	return identObject
 }
 
-var yamlArrayIdentRegex = regexp.MustCompile(`^\s*-\s`)
+var yamlArrayIdentRegex = regexp.MustCompile(`(?m)^- `)
 
 func getYamlIdent(data []byte) ident {
 	// If we encounter square brackets array syntax, well... let's still recognize it's a valid array
