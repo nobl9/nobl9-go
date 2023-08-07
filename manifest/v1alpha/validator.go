@@ -2117,21 +2117,22 @@ func isValidAlertPolicyMeasurement(fl v.FieldLevel) bool {
 func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
-	if condition.AlertingWindow != "" {
-		if condition.LastsForDuration != "" {
-			sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
-			sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
-		}
-		if condition.Operator != "" {
-			sl.ReportError(condition, "op", "operator", "onlyOneAlertingWindowOrOperator", "")
-			sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrOperator", "")
-		}
+	alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl)
+	alertPolicyConditionOperatorLimitsValidation(sl)
 
+	if condition.AlertingWindow != "" {
 		alertPolicyConditionWithAlertingWindowMeasurementValidation(sl)
 		alertPolicyConditionAlertingWindowLengthValidation(sl)
 	} else {
 		alertPolicyConditionWithLastsForMeasurementValidation(sl)
-		alertPolicyConditionOperatorLimitsValidation(sl)
+	}
+}
+
+func alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl v.StructLevel) {
+	condition := sl.Current().Interface().(AlertCondition)
+	if condition.LastsForDuration != "" && condition.AlertingWindow != "" {
+		sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
+		sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
 	}
 }
 

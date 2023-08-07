@@ -966,6 +966,45 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
+func TestAlertConditionOnlyMeasurementAverageBurnRateIsAllowedToUseAlertingWindow(t *testing.T) {
+	validate := NewValidator()
+	for condition, isValid := range map[AlertCondition]bool{
+		{
+			Measurement:    MeasurementTimeToBurnEntireBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementTimeToBurnBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThan.String(),
+		}: false,
+		{
+			Measurement:    MeasurementBurnedBudget.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: true,
+	} {
+		t.Run(condition.Measurement, func(t *testing.T) {
+			err := validate.Check(condition)
+			if isValid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
 func TestAlertConditionOpSupport(t *testing.T) {
 	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
 	validate := NewValidator()
@@ -985,8 +1024,14 @@ func TestAlertConditionOpSupport(t *testing.T) {
 			Value:       30.0,
 		}: {"gte"},
 		{
-			Measurement: MeasurementAverageBurnRate.String(),
-			Value:       30.0,
+			Measurement:      MeasurementAverageBurnRate.String(),
+			Value:            30.0,
+			LastsForDuration: "5m",
+		}: {"gte"},
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			Value:          30.0,
+			AlertingWindow: "5m",
 		}: {"gte"},
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
@@ -998,6 +1043,35 @@ func TestAlertConditionOpSupport(t *testing.T) {
 				} else {
 					assert.Error(t, err)
 				}
+			}
+		})
+	}
+}
+
+func TestAlertConditionOnlyAlertingWindowOrLastsForAllowed(t *testing.T) {
+	for name, test := range map[string]struct {
+		LastsForDuration string
+		AlertingWindow   string
+		IsValid          bool
+	}{
+		"both 'alertingWindow' and 'lastsFor' are invalid": {AlertingWindow: "5m", LastsForDuration: "5m", IsValid: false},
+		"only 'alertingWindow' is valid":                   {AlertingWindow: "5m", IsValid: true},
+		"only 'lastsFor' is valid":                         {LastsForDuration: "5m", IsValid: true},
+		"no 'alertingWindow' and no 'lastsFor' is valid":   {IsValid: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			condition := AlertCondition{
+				Measurement:      MeasurementAverageBurnRate.String(),
+				Operator:         "gte",
+				Value:            1.0,
+				AlertingWindow:   test.AlertingWindow,
+				LastsForDuration: test.LastsForDuration,
+			}
+			validationErr := NewValidator().Check(condition)
+			if test.IsValid {
+				assert.NoError(t, validationErr)
+			} else {
+				assert.Error(t, validationErr)
 			}
 		})
 	}
