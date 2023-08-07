@@ -1,6 +1,8 @@
 package v1alpha
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -145,7 +147,7 @@ type AnomalyConfigAlertMethod struct {
 }
 
 // postParse implements postParser interface.
-// nolint: unparam, unused
+// nolint: unused, gocognit
 func (s SLO) postParse() (SLO, error) {
 	// to keep BC with the ThousandEyes initial implementation (that did not support passing TestType),
 	// we default `res.Spec.Indicator.RawMetrics.ThousandEyes.TestType` to a value that, until now, was implicitly assumed
@@ -177,6 +179,12 @@ func (s SLO) postParse() (SLO, error) {
 	// we have to make sure that old contract (with indicator defined directly on the SLO's spec) is also supported
 	if s.Spec.Indicator.RawMetric != nil {
 		for i := range s.Spec.Thresholds {
+			if s.Spec.Thresholds[i].RawMetric != nil {
+				return SLO{}, errors.New(
+					"raw metric definition must be provided on either" +
+						" indicator level ('SLO.spec.indicator.rawMetric') or" +
+						" objective level ('SLO.spec.objectives[*].rawMetric')")
+			}
 			s.Spec.Thresholds[i].RawMetric = &RawMetricSpec{
 				MetricQuery: s.Spec.Indicator.RawMetric,
 			}

@@ -698,7 +698,18 @@ func isBadOverTotalEnabledForDataSource(spec SLOSpec) bool {
 }
 
 func hasOnlyOneRawMetricDefinitionTypeOrNone(spec SLOSpec) bool {
-	return spec.ObjectivesRawMetricsCount() == 0 || !spec.containsIndicatorRawMetric()
+	indicatorHasRawMetric := spec.containsIndicatorRawMetric()
+	if indicatorHasRawMetric {
+		for _, threshold := range spec.Thresholds {
+			if !threshold.HasRawMetricQuery() {
+				continue
+			}
+			if !reflect.DeepEqual(threshold.RawMetric.MetricQuery, spec.Indicator.RawMetric) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func areRawMetricsSetForAllThresholdsOrNone(spec SLOSpec) bool {
