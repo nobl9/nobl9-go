@@ -1058,10 +1058,22 @@ func TestAlertConditionOnlyAlertingWindowOrLastsForAllowed(t *testing.T) {
 		alertingWindow   string
 		isValid          bool
 	}{
-		"both provided 'alertingWindow' and 'lastsFor', invalid": {alertingWindow: "5m", lastsForDuration: "5m", isValid: false},
-		"only 'alertingWindow', valid":                           {alertingWindow: "5m", isValid: true},
-		"only 'lastsFor', valid":                                 {lastsForDuration: "5m", isValid: true},
-		"no 'alertingWindow' and no 'lastsFor', valid":           {isValid: true},
+		"both provided 'alertingWindow' and 'lastsFor', invalid": {
+			alertingWindow:   "5m",
+			lastsForDuration: "5m",
+			isValid:          false,
+		},
+		"only 'alertingWindow', valid": {
+			alertingWindow: "5m",
+			isValid:        true,
+		},
+		"only 'lastsFor', valid": {
+			lastsForDuration: "5m",
+			isValid:          true,
+		},
+		"no 'alertingWindow' and no 'lastsFor', valid": {
+			isValid: true,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			condition := AlertCondition{
