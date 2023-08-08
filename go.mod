@@ -3,7 +3,7 @@ module github.com/nobl9/nobl9-go
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.44.302
+	github.com/aws/aws-sdk-go v1.44.318
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/go-playground/validator/v10 v10.14.1
 	github.com/goccy/go-yaml v1.11.0

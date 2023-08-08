@@ -25,7 +25,7 @@ type thousandEyesConfig struct {
 const (
 	TestTypesIntroducedAgentVersion                 = "v0.33.0"
 	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
-	DNSTestTypeIntroductionAgentVersion             = "v0.67.0-beta04"
+	DNSTestTypeIntroductionAgentVersion             = "v0.68.0-beta01"
 )
 
 // nolint: gochecknoinits
