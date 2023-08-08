@@ -22,14 +22,16 @@ func TestSetAlertPolicyDefaultSetDefaultLastsFor(t *testing.T) {
 			expectedLastsFor:       "",
 		},
 		{
-			desc:                   "when 'alertingWindow' is not defined and 'lastsFor' is empty zero value should be set for `lastsFor`",
+			desc: "when 'alertingWindow' is not defined and 'lastsFor' is empty zero value " +
+				"should be set for `lastsFor`",
 			lastsFor:               "",
 			alertingWindow:         "",
 			expectedAlertingWindow: "",
 			expectedLastsFor:       DefaultAlertPolicyLastsForDuration,
 		},
 		{
-			desc:                   "when 'alertingWindow' is not defined and 'lastsFor' is not empty do not change 'lastsFor'",
+			desc: "when 'alertingWindow' is not defined and 'lastsFor' is not empty " +
+				"do not change 'lastsFor'",
 			lastsFor:               "30m",
 			alertingWindow:         "",
 			expectedAlertingWindow: "",
