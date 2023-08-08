@@ -90,7 +90,7 @@ func setAlertPolicyDefaults(policy *AlertPolicy) error {
 			if err != nil {
 				return err
 			}
-			condition.Operator = getAlertPolicyDefaultOperatorForMeasurement(measurement).String()
+			policy.Spec.Conditions[i].Operator = getAlertPolicyDefaultOperatorForMeasurement(measurement).String()
 		}
 	}
 	return nil
