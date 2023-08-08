@@ -20,6 +20,6 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
-          cache: false
+          check-latest: true
       - name: Run Golang Vulncheck
         run: make check/vulns
