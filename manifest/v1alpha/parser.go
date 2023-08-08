@@ -18,7 +18,15 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) 
 	case manifest.ObjectFormatJSON:
 		unmarshal = json.Unmarshal
 	case manifest.ObjectFormatYAML:
-		unmarshal = yaml.Unmarshal
+		// Workaround for https://github.com/goccy/go-yaml/issues/313.
+		// If the library changes its interpretation of empty pointer fields,
+		// we should switch to native yaml.Unmarshal instead.
+		var err error
+		data, err = yaml.YAMLToJSON(data)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to convert YAML to JSON")
+		}
+		unmarshal = json.Unmarshal
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)
 	}

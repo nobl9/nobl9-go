@@ -55,13 +55,19 @@ func (x ObjectFormat) IsValid() bool {
 }
 
 var _ObjectFormatValue = map[string]ObjectFormat{
-	_ObjectFormatName[0:4]: ObjectFormatJSON,
-	_ObjectFormatName[4:8]: ObjectFormatYAML,
+	_ObjectFormatName[0:4]:                  ObjectFormatJSON,
+	strings.ToLower(_ObjectFormatName[0:4]): ObjectFormatJSON,
+	_ObjectFormatName[4:8]:                  ObjectFormatYAML,
+	strings.ToLower(_ObjectFormatName[4:8]): ObjectFormatYAML,
 }
 
 // ParseObjectFormat attempts to convert a string to a ObjectFormat.
 func ParseObjectFormat(name string) (ObjectFormat, error) {
 	if x, ok := _ObjectFormatValue[name]; ok {
+		return x, nil
+	}
+	// Case insensitive parse, do a separate lookup to prevent unnecessary cost of lowercasing a string if we don't need to.
+	if x, ok := _ObjectFormatValue[strings.ToLower(name)]; ok {
 		return x, nil
 	}
 	return ObjectFormat(0), fmt.Errorf("%s is %w", name, ErrInvalidObjectFormat)
