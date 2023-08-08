@@ -4,8 +4,6 @@ import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go AlertPolicy
 
-const DefaultAlertPolicyLastsForDuration = "0m"
-
 // AlertPolicy represents a set of conditions that can trigger an alert.
 type AlertPolicy struct {
 	APIVersion string              `json:"apiVersion"`
@@ -50,15 +48,4 @@ type AlertCondition struct {
 type AlertPolicyWithSLOs struct {
 	AlertPolicy AlertPolicy `json:"alertPolicy"`
 	SLOs        []SLO       `json:"slos"`
-}
-
-// postParse implements postParser interface.
-// nolint: unparam, unused
-func (a AlertPolicy) postParse() (AlertPolicy, error) {
-	for i, condition := range a.Spec.Conditions {
-		if condition.AlertingWindow == "" && condition.LastsForDuration == "" {
-			a.Spec.Conditions[i].LastsForDuration = DefaultAlertPolicyLastsForDuration
-		}
-	}
-	return a, nil
 }

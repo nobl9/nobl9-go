@@ -1,8 +1,6 @@
 package v1alpha
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -144,63 +142,4 @@ type AnomalyConfigNoData struct {
 type AnomalyConfigAlertMethod struct {
 	Name    string `json:"name" validate:"required,objectName" example:"slack-monitoring-channel"`
 	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
-}
-
-// postParse implements postParser interface.
-// nolint: unused, gocognit
-func (s SLO) postParse() (SLO, error) {
-	// to keep BC with the ThousandEyes initial implementation (that did not support passing TestType),
-	// we default `res.Spec.Indicator.RawMetrics.ThousandEyes.TestType` to a value that, until now, was implicitly assumed
-	if s.Spec.Indicator.RawMetric != nil &&
-		s.Spec.Indicator.RawMetric.ThousandEyes != nil &&
-		s.Spec.Indicator.RawMetric.ThousandEyes.TestType == nil {
-		metricType := ThousandEyesNetLatency
-		s.Spec.Indicator.RawMetric.ThousandEyes.TestType = &metricType
-	}
-
-	for i, threshold := range s.Spec.Thresholds {
-		if threshold.RawMetric != nil &&
-			threshold.RawMetric.MetricQuery != nil &&
-			threshold.RawMetric.MetricQuery.ThousandEyes != nil &&
-			threshold.RawMetric.MetricQuery.ThousandEyes.TestType == nil {
-			metricType := ThousandEyesNetLatency
-			s.Spec.Thresholds[i].RawMetric.MetricQuery.ThousandEyes.TestType = &metricType
-		}
-	}
-
-	if s.Spec.Indicator.MetricSource.Project == "" {
-		s.Spec.Indicator.MetricSource.Project = s.Metadata.Project
-	}
-	if !s.Spec.Indicator.MetricSource.Kind.IsValid() {
-		s.Spec.Indicator.MetricSource.Kind = manifest.KindAgent
-	}
-
-	// we're moving towards the version where raw metrics are defined on each objective, but for now,
-	// we have to make sure that old contract (with indicator defined directly on the SLO's spec) is also supported
-	if s.Spec.Indicator.RawMetric != nil {
-		for i := range s.Spec.Thresholds {
-			if s.Spec.Thresholds[i].RawMetric != nil {
-				return SLO{}, errors.New(
-					"raw metric definition must be provided on either" +
-						" indicator level ('SLO.spec.indicator.rawMetric') or" +
-						" objective level ('SLO.spec.objectives[*].rawMetric')")
-			}
-			s.Spec.Thresholds[i].RawMetric = &RawMetricSpec{
-				MetricQuery: s.Spec.Indicator.RawMetric,
-			}
-		}
-	}
-
-	// AnomalyConfig will be moved into Anomaly Rules in PC-8502.
-	// Set the default value of all alert methods defined in anomaly config to the same project
-	// that is used by SLO.
-	if s.Spec.AnomalyConfig != nil && s.Spec.AnomalyConfig.NoData != nil {
-		for i := 0; i < len(s.Spec.AnomalyConfig.NoData.AlertMethods); i++ {
-			if s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project == "" {
-				s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project = s.Metadata.Project
-			}
-		}
-	}
-
-	return s, nil
 }
