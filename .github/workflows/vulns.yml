@@ -1,4 +1,4 @@
-name: checks
+name: Vulnerabilities
 on:
   push:
     branches:
@@ -6,9 +6,9 @@ on:
   pull_request:
     branches:
       - main
-permissions:
-  security-events: write
-  contents: read
+  schedule:
+    # Run at 8:00 AM every weekday.
+    - cron:  '0 8 * * 1-5'
 jobs:
   scan:
     name: Run Golang vulnerability check
@@ -16,7 +16,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Run Gosec Security Scanner
-        run: make check/gosec
+      - name: Setup Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+          cache: false
       - name: Run Golang Vulncheck
         run: make check/vulns
