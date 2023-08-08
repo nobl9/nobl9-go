@@ -1,54 +1,27 @@
-# nobl9-go
+<!-- markdownlint-disable line-length html -->
+<h1 align="center">
+   <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/32738712/185149468-dc07f5d9-68c0-4922-a006-7baf6a08eaac.png">
+      <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/32738712/185148352-bea80385-c772-4842-8f7b-6838bb08a3f4.png">
+      <img alt="N9" src="https://user-images.githubusercontent.com/32738712/185148352-bea80385-c772-4842-8f7b-6838bb08a3f4.png" width="500" />
+   </picture><br/>
+</h1>
 
-Nobl9 API client in Go, primarily used by the
-[Nobl9](https://github.com/nobl9/terraform-provider-nobl9) provider in Terraform.
+<div align="center">
+  <table>
+    <tr>
+      <td>
+        <img alt="checks" src="https://github.com/nobl9/nobl9-go/actions/workflows/checks.yml/badge.svg?event=push">
+      </td>
+      <td>
+        <img alt="tests" src="https://github.com/nobl9/nobl9-go/actions/workflows/tests.yml/badge.svg?event=push">
+      </td>
+      <td>
+        <img alt="vulnerabilities" src="https://github.com/nobl9/nobl9-go/actions/workflows/vulns.yml/badge.svg?event=push">
+      </td>
+    </tr>
+  </table>
+</div>
+<!-- markdownlint-enable line-length html -->
 
-## Installation
-
-```bash
-go get github.com/nobl9/nobl9-go
-```
-
-## Example usage
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/nobl9/nobl9-go"
-)
-
-func main() {
-	o := nobl9.Service{
-		ObjectHeader: nobl9.ObjectHeader{
-			APIVersion: "n9/v1alpha",
-			Kind:       "Service",
-			MetadataHolder: nobl9.MetadataHolder{
-				Metadata: nobl9.Metadata{
-					Name:        "sdk-test",
-					DisplayName: "SDK test",
-					Project:     "sdk-test",
-				},
-			},
-		},
-		Spec: nobl9.ServiceSpec{
-			Description: "Test service made by SDK",
-		},
-	}
-
-	var p nobl9.Payload
-	p.AddObject(o)
-	c, _ := nobl9.NewClient("https://main.nobl9.dev/api",
-		"nobl9-dev", "test", "nobl9-go",
-		"[CLIENT_ID]", "CLIENT_SECRET",
-		"https://accounts.nobl9.dev", "auseg9kiegWKEtJZC416")
-
-	err := c.ApplyObjects(p.GetObjects())
-	fmt.Println(err)
-}
-
-```
-
-## Contributing
+Nobl9 SDK, WORK IN PROGRESS...
