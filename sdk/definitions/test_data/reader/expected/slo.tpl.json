@@ -10,9 +10,7 @@
       "service": "android-service",
       "indicator": {
         "metricSource": {
-          "name": "lightstep",
-          "kind": "Agent",
-          "project": "lightstep-raw"
+          "name": "lightstep"
         }
       },
       "timeWindows": [
