@@ -81,9 +81,6 @@ check/markdown:
 check/vulns:
 	$(call _print_check_step,Running govulncheck)
 	$(call _ensure_installed,binary,govulncheck)
-	@echo '###'
-	go version
-	@echo '###'
 	$(BIN_DIR)/govulncheck ./...
 
 ## Verify if the auto generated code has been committed.
