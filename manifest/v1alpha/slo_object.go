@@ -5,8 +5,9 @@ package v1alpha
 import "github.com/nobl9/nobl9-go/manifest"
 
 // Ensure interfaces are implemented.
-var _ Object = SLO{}
-var _ ProjectScopedObject = SLO{}
+var _ manifest.Object = SLO{}
+var _ manifest.ProjectScopedObject = SLO{}
+var _ ObjectContext = SLO{}
 
 func (s SLO) GetVersion() string {
 	return s.APIVersion

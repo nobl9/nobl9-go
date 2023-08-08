@@ -5,8 +5,9 @@ package v1alpha
 import "github.com/nobl9/nobl9-go/manifest"
 
 // Ensure interfaces are implemented.
-var _ Object = DataExport{}
-var _ ProjectScopedObject = DataExport{}
+var _ manifest.Object = DataExport{}
+var _ manifest.ProjectScopedObject = DataExport{}
+var _ ObjectContext = DataExport{}
 
 func (d DataExport) GetVersion() string {
 	return d.APIVersion

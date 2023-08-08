@@ -5,8 +5,9 @@ package v1alpha
 import "github.com/nobl9/nobl9-go/manifest"
 
 // Ensure interfaces are implemented.
-var _ Object = Annotation{}
-var _ ProjectScopedObject = Annotation{}
+var _ manifest.Object = Annotation{}
+var _ manifest.ProjectScopedObject = Annotation{}
+var _ ObjectContext = Annotation{}
 
 func (a Annotation) GetVersion() string {
 	return a.APIVersion

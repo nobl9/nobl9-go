@@ -5,9 +5,12 @@ package {{ .Package }}
 import "github.com/nobl9/nobl9-go/manifest"
 
 // Ensure interfaces are implemented.
-var _ Object = {{ .StructName }}{}
+var _ manifest.Object = {{ .StructName }}{}
 {{- if .GenerateProjectScopedObject }}
-var _ ProjectScopedObject = {{ .StructName }}{}
+var _ manifest.ProjectScopedObject = {{ .StructName }}{}
+{{- end }}
+{{- if .GenerateV1alphaObjectContext }}
+var _ ObjectContext = {{ .StructName }}{}
 {{- end }}
 
 {{- if .GenerateObject }}
