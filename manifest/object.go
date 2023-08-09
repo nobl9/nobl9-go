@@ -74,7 +74,8 @@ func SetDefaultProject(objects []Object, project string) []Object {
 }
 
 // validateObjectsUniqueness checks if all objects are uniquely named.
-// The naming
+// The uniqueness key consists of the objects' kind, name and project.
+// Project is only part of the key if Object does not implement ProjectScopedObject.
 func validateObjectsUniqueness(objects []Object) (err error) {
 	type uniqueKey struct {
 		Kind    Kind
