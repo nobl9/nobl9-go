@@ -11,7 +11,7 @@ import (
 const StringInterpolationPlaceholder = "{}"
 
 // ObjectInternal represents part of object which is only for internal usage,
-// not exposed to the client, for internal usage
+// not exposed to the client
 // Deprecated
 type ObjectInternal struct {
 	Organization string `json:"organization,omitempty" example:"nobl9-dev"`
