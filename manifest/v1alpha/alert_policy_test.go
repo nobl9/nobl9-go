@@ -11,6 +11,8 @@ func TestAlertingWindowValidation(t *testing.T) {
 		"5m":             true,
 		"1h":             true,
 		"72h":            true,
+		"1h30m":          true,
+		"1h1m60s":        true,
 		"300s":           true,
 		"300000ms":       true,
 		"300000000000ns": true,
@@ -18,8 +20,10 @@ func TestAlertingWindowValidation(t *testing.T) {
 		"3m":             false,
 		"30s":            false,
 		"90s":            false,
-		"5m30s":          false,
 		"120s":           false,
+		"5m30s":          false,
+		"1h5m5s":         false,
+		"555s":           false,
 	} {
 		condition := AlertCondition{
 			Measurement:    MeasurementAverageBurnRate.String(),
