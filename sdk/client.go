@@ -464,12 +464,12 @@ func (c *Client) createRequest(
 var ErrConcurrencyIssue = errors.New("operation failed due to concurrency issue but can be retried")
 
 func getResponseServerError(resp *http.Response) error {
-	body, _ := io.ReadAll(resp.Body)
-	body = bytes.TrimSpace(body)
-	if string(body) == ErrConcurrencyIssue.Error() {
+	rawBody, _ := io.ReadAll(resp.Body)
+	body := string(bytes.TrimSpace(rawBody))
+	if body == ErrConcurrencyIssue.Error() {
 		return ErrConcurrencyIssue
 	}
-	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), body)
+	msg := fmt.Sprintf("%s error message: %s", http.StatusText(resp.StatusCode), rawBody)
 	traceID := resp.Header.Get(HeaderTraceID)
 	if traceID != "" {
 		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
