@@ -310,15 +310,17 @@ type PublicDynatraceDirectConfig struct {
 
 // CloudWatchDirectConfig represents content of CloudWatch Configuration typical for Direct Object.
 type CloudWatchDirectConfig struct {
-	AccessKeyID     string `json:"accessKeyID"`
-	SecretAccessKey string `json:"secretAccessKey"`
+	AccessKeyID     string `json:"accessKeyID,omitempty"`
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
 // PublicCloudWatchDirectConfig represents content of CloudWatch Configuration typical for Direct Object
 // without secrets.
 type PublicCloudWatchDirectConfig struct {
-	HiddenAccessKeyID     string `json:"accessKeyID"`
-	HiddenSecretAccessKey string `json:"secretAccessKey"`
+	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
+	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
+	HiddenRoleARN         string `json:"roleARN,omitempty"`
 }
 
 // PingdomDirectConfig represents content of Pingdom Configuration typical for Direct Object.
@@ -361,13 +363,15 @@ type RedshiftDirectConfig struct {
 	AccessKeyID     string `json:"accessKeyID"`
 	SecretAccessKey string `json:"secretAccessKey"`
 	SecretARN       string `json:"secretARN"`
+	RoleARN         string `json:"roleARN"`
 }
 
 // PublicRedshiftDirectConfig represents content of Redshift configuration typical for Direct Object without secrets.
 type PublicRedshiftDirectConfig struct {
-	HiddenAccessKeyID     string `json:"accessKeyID"`
-	HiddenSecretAccessKey string `json:"secretAccessKey"`
+	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
+	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
 	SecretARN             string `json:"secretARN"`
+	HiddenRoleARN         string `json:"roleARN,omitempty"`
 }
 
 // SumoLogicDirectConfig represents content of SumoLogic configuration typical for Direct Object.
