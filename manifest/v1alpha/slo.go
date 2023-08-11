@@ -27,13 +27,13 @@ type SLOMetadata struct {
 
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
-	Description     string         `json:"description,omitempty" validate:"description" example:"Total count of server requests"` //nolint:lll
+	Description     string         `json:"description" validate:"description" example:"Total count of server requests"`
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
 	Thresholds      []Threshold    `json:"objectives" validate:"required,dive"`
 	Service         string         `json:"service" validate:"required,objectName" example:"webapp-service"`
 	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
-	AlertPolicies   []string       `json:"alertPolicies,omitempty" validate:"omitempty"`
+	AlertPolicies   []string       `json:"alertPolicies" validate:"omitempty"`
 	Attachments     []Attachment   `json:"attachments,omitempty" validate:"omitempty,max=20,dive"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
 	Composite       *Composite     `json:"composite,omitempty" validate:"omitempty"`
