@@ -1,34 +1,30 @@
 package v1alpha
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-type AlertSilencesSlice []AlertSilence
-
-func (alertSilences AlertSilencesSlice) Clone() AlertSilencesSlice {
-	clone := make([]AlertSilence, len(alertSilences))
-	copy(clone, alertSilences)
-	return clone
-}
+//go:generate go run ../../scripts/generate-object-impl.go AlertSilence
 
 // AlertSilence represents alerts silencing configuration for given SLO and AlertPolicy.
 type AlertSilence struct {
-	manifest.ObjectInternal
-	APIVersion string                        `json:"apiVersion" validate:"required" example:"n9/v1alpha"`
-	Kind       manifest.Kind                 `json:"kind" validate:"required" example:"kind"`
-	Metadata   manifest.AlertSilenceMetadata `json:"metadata"`
-	Spec       AlertSilenceSpec              `json:"spec"`
-	Status     AlertSilenceStatus            `json:"status,omitempty"`
+	APIVersion string               `json:"apiVersion"`
+	Kind       manifest.Kind        `json:"kind"`
+	Metadata   AlertSilenceMetadata `json:"metadata"`
+	Spec       AlertSilenceSpec     `json:"spec"`
+	Status     *AlertSilenceStatus  `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertSilence) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+// AlertSilenceMetadata defines only basic metadata fields - name and project which uniquely identifies
+// object on project level.
+type AlertSilenceMetadata struct {
+	Name    string `json:"name" validate:"required,objectName" example:"name"`
+	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
 }
 
 // AlertSilenceSpec represents content of AlertSilence's Spec.
@@ -84,34 +80,4 @@ type AlertSilenceStatus struct {
 	To        string `json:"to"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
-}
-
-// genericToAlertSilence converts ObjectGeneric to AlertSilence
-func genericToAlertSilence(o manifest.ObjectGeneric, v validator, onlyHeader bool) (AlertSilence, error) {
-	res := AlertSilence{
-		APIVersion: o.ObjectHeader.APIVersion,
-		Kind:       o.ObjectHeader.Kind,
-		Metadata: manifest.AlertSilenceMetadata{
-			Name:    o.Metadata.Name,
-			Project: o.Metadata.Project,
-		},
-		ObjectInternal: manifest.ObjectInternal{
-			Organization: o.ObjectHeader.Organization,
-			ManifestSrc:  o.ObjectHeader.ManifestSrc,
-		},
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec AlertSilenceSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }

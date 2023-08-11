@@ -10,10 +10,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/sdk"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
@@ -22,7 +23,7 @@ type (
 	// - file path  (SourceTypeFile or SourceTypeDirectory)
 	// - glob pattern (SourceTypeGlobPattern)
 	// - URL (SourceTypeURL)
-	// - input provided via io.Reader, like os.Stdin (SourceTypeInput)
+	// - input provided via io.Reader, like os.Stdin (SourceTypeReader)
 	RawSource = string
 
 	// rawDefinition stores both the resolved source and raw resource definition.
@@ -37,16 +38,18 @@ type (
 )
 
 // Read resolves the RawSource(s) it receives and calls ReadSources on the resolved Source(s).
-func Read(ctx context.Context, annotations MetadataAnnotations, rawSources ...RawSource) ([]sdk.AnyJSONObj, error) {
+func Read(ctx context.Context, rawSources ...RawSource) ([]manifest.Object, error) {
 	sources, err := ResolveSources(rawSources...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve all raw sources")
 	}
-	return ReadSources(ctx, annotations, sources...)
+	return ReadSources(ctx, sources...)
 }
 
+const unknownSource = "-"
+
 // ReadSources reads from the provided Source(s) based on the SourceType.
-// For SourceTypeInput it will read directly from Source.Reader,
+// For SourceTypeReader it will read directly from Source.Reader,
 // otherwise it reads from all the Source.Paths. It calculates a sum for
 // each definition read from Source and won't create duplicates. This
 // allows the user to combine Source(s) with possibly overlapping paths.
@@ -55,7 +58,7 @@ func Read(ctx context.Context, annotations MetadataAnnotations, rawSources ...Ra
 // type SourceTypeGlobPattern or SourceTypeDirectory and a file does not
 // contain the required APIVersionRegex, it is skipped. However in case
 // of SourceTypeFile, it will thrown ErrInvalidFile error.
-func ReadSources(ctx context.Context, annotations MetadataAnnotations, sources ...*Source) ([]sdk.AnyJSONObj, error) {
+func ReadSources(ctx context.Context, sources ...*Source) ([]manifest.Object, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})
@@ -65,9 +68,19 @@ func ReadSources(ctx context.Context, annotations MetadataAnnotations, sources .
 		def []byte
 	)
 	for _, src := range sources {
+		if src.Type == SourceTypeReader {
+			switch len(src.Paths) {
+			case 0:
+				src.Paths = []string{unknownSource}
+			case 1:
+				break
+			default:
+				return nil, ErrSourceTypeReaderPath
+			}
+		}
 		for _, path := range src.Paths {
 			switch src.Type {
-			case SourceTypeInput:
+			case SourceTypeReader:
 				def, err = readFromReader(src.Reader)
 			case SourceTypeURL:
 				def, err = readFromURL(ctx, path)
@@ -88,7 +101,7 @@ func ReadSources(ctx context.Context, annotations MetadataAnnotations, sources .
 			appendUniqueDefinition(definitions, path, def)
 		}
 	}
-	return processRawDefinitionsToJSONArray(annotations, definitions)
+	return processRawDefinitions(definitions)
 }
 
 var (
@@ -99,7 +112,8 @@ var (
 		matchingRulesDisclaimer)
 	ErrInvalidFile = errors.Errorf("valid Nobl9 resource definition must match against the following regex: '%s'",
 		APIVersionRegex)
-	ErrInvalidSourceType = errors.New("invalid SourceType provided")
+	ErrInvalidSourceType    = errors.New("invalid SourceType provided")
+	ErrSourceTypeReaderPath = errors.New("SourceTypeReader Source may define at most a single Source.Path")
 
 	matchingRulesDisclaimer = fmt.Sprintf(
 		"valid resource definition file must have one of the extensions: [%s]",
@@ -127,7 +141,7 @@ func readFromReader(in io.Reader) ([]byte, error) {
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.
 var httpClientFactory = func(url string) *http.Client {
-	return retryhttp.NewClient(sdk.Timeout, nil)
+	return retryhttp.NewClient(10*time.Second, nil)
 }
 
 func readFromURL(ctx context.Context, url string) ([]byte, error) {

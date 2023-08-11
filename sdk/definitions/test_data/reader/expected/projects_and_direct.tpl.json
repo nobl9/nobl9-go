@@ -1,0 +1,45 @@
+[
+  {
+    "apiVersion": "n9/v1alpha",
+    "kind": "Direct",
+    "metadata": {
+      "name": "newrelic-direct",
+      "displayName": "Newrelic direct",
+      "project": "newrelic-direct"
+    },
+    "spec": {
+      "description": "direct integration with Newrelic",
+      "sourceOf": [
+        "Metrics",
+        "Services"
+      ],
+      "newRelic": {
+        "accountId": 1437038,
+        "insightsQueryKey": ""
+      }
+    },
+    "manifestSrc": "{{ .ManifestSrc }}"
+  },
+  {
+    "apiVersion": "n9/v1alpha",
+    "kind": "Project",
+    "metadata": {
+      "name": "default"
+    },
+    "spec": {
+      "description": ""
+    },
+    "manifestSrc": "{{ .ManifestSrc }}"
+  },
+  {
+    "apiVersion": "n9/v1alpha",
+    "kind": "Project",
+    "metadata": {
+      "name": "non-default"
+    },
+    "spec": {
+      "description": ""
+    },
+    "manifestSrc": "{{ .ManifestSrc }}"
+  }
+]
