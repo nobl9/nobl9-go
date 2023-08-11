@@ -27,7 +27,7 @@ type SLOMetadata struct {
 
 // SLOSpec represents content of Spec typical for SLO Object
 type SLOSpec struct {
-	Description     string         `json:"description,omitempty" validate:"description" example:"Total count of server requests"` //nolint:lll
+	Description     string         `json:"description" validate:"description" example:"Total count of server requests"`
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
 	Thresholds      []Threshold    `json:"objectives" validate:"required,dive"`
