@@ -1,0 +1,26 @@
+defaultContext = "non-default"
+filesPromptThreshold = 30
+filesPromptEnabled = false
+
+[Contexts]
+  [Contexts.default]
+  	clientId = "default-client-id"
+  	clientSecret = "default-client-secret"
+    accessToken = "default-access-token"
+    project = "default-project"
+    oktaOrgUrl = "https://default-okta-org-url.com"
+    oktaAuthServer = "default-okta-auth-server"
+    timeout = "1m"
+    url = "https://default-url.com"
+    disableOkta = true
+
+  [Contexts.non-default]
+    clientId = "non-default-client-id"
+    clientSecret = "non-default-client-secret"
+    accessToken = "non-default-access-token"
+    project = "non-default-project"
+    oktaOrgUrl = "https://non-default-okta-org-url.com"
+    oktaAuthServer = "non-default-okta-auth-server"
+    url = "https://non-default-url.com"
+    timeout = "2m"
+    disableOkta = false
