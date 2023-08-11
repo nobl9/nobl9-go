@@ -28,6 +28,8 @@ ignorePaths:
   # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
 words:
+  - GOFILE
+  - GOPACKAGE
   - auseg9kiegWKEtJZC416
   - dynatrace
   - endef

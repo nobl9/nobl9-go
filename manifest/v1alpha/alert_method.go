@@ -1,38 +1,33 @@
 package v1alpha
 
-import (
-	"encoding/json"
+import "github.com/nobl9/nobl9-go/manifest"
 
-	"github.com/nobl9/nobl9-go/manifest"
-)
-
-type AlertMethodsSlice []AlertMethod
-
-func (alertMethods AlertMethodsSlice) Clone() AlertMethodsSlice {
-	clone := make([]AlertMethod, len(alertMethods))
-	copy(clone, alertMethods)
-	return clone
-}
+//go:generate go run ../../scripts/generate-object-impl.go AlertMethod
 
 // AlertMethod represents the configuration required to send a notification to an external service
 // when an alert is triggered.
 type AlertMethod struct {
-	manifest.ObjectHeader
-	Spec AlertMethodSpec `json:"spec"`
+	APIVersion string              `json:"apiVersion"`
+	Kind       manifest.Kind       `json:"kind"`
+	Metadata   AlertMethodMetadata `json:"metadata"`
+	Spec       AlertMethodSpec     `json:"spec"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertMethod) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+type AlertMethodMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
 }
 
 // PublicAlertMethod represents the configuration required to send a notification to an external service
 // when an alert is triggered.
 type PublicAlertMethod struct {
-	manifest.ObjectHeader
-	Spec   PublicAlertMethodSpec    `json:"spec"`
-	Status *PublicAlertMethodStatus `json:"status,omitempty"`
+	ObjectHeader `json:",inline"`
+	Spec         PublicAlertMethodSpec    `json:"spec"`
+	Status       *PublicAlertMethodStatus `json:"status,omitempty"`
 }
 
 // PublicAlertMethodStatus represents content of Status optional for PublicAlertMethod Object
@@ -188,27 +183,6 @@ type EmailAlertMethod struct {
 	Subject string `json:"subject,omitempty" validate:"omitempty,max=90,allowedAlertMethodEmailSubjectFields"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Body string `json:"body,omitempty" validate:"omitempty,max=2000,allowedAlertMethodEmailBodyFields"`
-}
-
-// genericToAlertMethod converts ObjectGeneric to ObjectAlertMethod
-func genericToAlertMethod(o manifest.ObjectGeneric, v validator, onlyHeader bool) (AlertMethod, error) {
-	res := AlertMethod{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec AlertMethodSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }
 
 // AlertMethodWithAlertPolicy represents an AlertPolicies assigned to AlertMethod.

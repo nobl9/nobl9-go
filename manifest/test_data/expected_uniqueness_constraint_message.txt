@@ -1,0 +1,2 @@
+constraint "Project.metadata.name has to be unique" was violated due to the following conflicts: ["sun", "sun", "moon"]
+constraint "SLO.metadata.name has to be unique across a single Project" was violated due to the following conflicts: [{"Project": "default", "SLO": "sun"}, {"Project": "default", "SLO": "sun"}, {"Project": "default", "SLO": "moon"}]
