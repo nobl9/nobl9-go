@@ -1,4 +1,6 @@
-defaultContext = "default"
+defaultContext = "my-context"
 
 [Contexts]
-  [Contexts.default]
+  [Contexts.my-context]
+    clientId = "someId"
+    clientSecret = "someSecret"
