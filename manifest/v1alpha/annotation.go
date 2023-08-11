@@ -1,30 +1,27 @@
 package v1alpha
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-type AnnotationsSlice []Annotation
-
-func (annotations AnnotationsSlice) Clone() AnnotationsSlice {
-	clone := make([]Annotation, len(annotations))
-	copy(clone, annotations)
-	return clone
-}
+//go:generate go run ../../scripts/generate-object-impl.go Annotation
 
 type Annotation struct {
-	manifest.ObjectHeader
-	Spec   AnnotationSpec   `json:"spec"`
-	Status AnnotationStatus `json:"status"`
+	APIVersion string             `json:"apiVersion"`
+	Kind       manifest.Kind      `json:"kind"`
+	Metadata   AnnotationMetadata `json:"metadata"`
+	Spec       AnnotationSpec     `json:"spec"`
+	Status     *AnnotationStatus  `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a Annotation) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: a.Metadata.Name, Project: a.Metadata.Project}
+type AnnotationMetadata struct {
+	Name    string `json:"name" validate:"required,objectName"`
+	Project string `json:"project,omitempty" validate:"objectName"`
 }
 
 type AnnotationSpec struct {
@@ -47,24 +44,4 @@ func (a AnnotationSpec) GetParsedStartTime() (time.Time, error) {
 
 func (a AnnotationSpec) GetParsedEndTime() (time.Time, error) {
 	return time.Parse(time.RFC3339, a.EndTime)
-}
-
-// genericToAnnotation converts ObjectGeneric to Annotation object
-func genericToAnnotation(o manifest.ObjectGeneric, v validator) (Annotation, error) {
-	res := Annotation{
-		ObjectHeader: o.ObjectHeader,
-	}
-	var resSpec AnnotationSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-
-	return res, nil
 }

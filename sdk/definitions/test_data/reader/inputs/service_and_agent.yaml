@@ -1,0 +1,21 @@
+---
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: appdynamics
+  project: appdynamics
+spec:
+  appDynamics:
+    url: https://nobl9.saas.appdynamics.com
+  sourceOf:
+    - Metrics
+    - Services
+---
+apiVersion: n9/v1alpha
+kind: Service
+metadata:
+  name: appdynamics-polakpotrafi-service
+  displayName: AppDynamics polakpotrafi Service
+  project: appdynamics
+spec:
+  description: polakpotrafi website

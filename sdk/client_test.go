@@ -18,24 +18,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/definitions"
 )
 
 func TestClient_GetObjects(t *testing.T) {
-	responsePayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	responsePayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service2",
-				"project": "default",
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service2",
+				Project: "default",
 			},
 		},
 	}
@@ -75,13 +77,51 @@ func TestClient_GetObjects(t *testing.T) {
 	assert.Equal(t, responsePayload, objects)
 }
 
-func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
+func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
+	responsePayload := make([]manifest.Object, 0)
+
+	client, srv := prepareTestClient(t, endpointConfig{
+		// Define endpoint response.
+		Path: "api/get/service",
+		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
+		},
+	})
+
+	// Start and close the test server.
+	srv.Start()
+	defer srv.Close()
+
+	// Run the API method.
+	objects, err := client.GetObjects(
+		context.Background(),
+		ProjectsWildcard,
+		manifest.KindService,
+		nil,
+		"service1",
+	)
+	// Verify response handling.
+	require.NoError(t, err)
+	require.Len(t, objects, 0)
+}
+
+func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
+	responsePayload := []manifest.Object{
+		v1alpha.UserGroup{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.UserGroupMetadata{
+				Name: "service1",
+			},
+		},
+	}
+
 	calledTimes := 0
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
 		Path: "api/usrmgmt/groups",
 		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode([]AnyJSONObj{}))
+			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
 		},
 		// Verify request parameters.
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
@@ -101,16 +141,17 @@ func TestClient_GetObjects_GroupsEndpoint(t *testing.T) {
 }
 
 func TestClient_ApplyObjects(t *testing.T) {
-	requestPayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	requestPayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
 	}
+	expected := addOrganization(requestPayload, "my-org")
 
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
@@ -123,9 +164,9 @@ func TestClient_ApplyObjects(t *testing.T) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			var objects []AnyJSONObj
-			require.NoError(t, json.NewDecoder(r.Body).Decode(&objects))
-			assert.Equal(t, requestPayload, objects)
+			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			require.NoError(t, err)
+			assert.Equal(t, expected, objects)
 		},
 	})
 
@@ -140,16 +181,17 @@ func TestClient_ApplyObjects(t *testing.T) {
 }
 
 func TestClient_DeleteObjects(t *testing.T) {
-	requestPayload := []AnyJSONObj{
-		{
-			"apiVersion": "v1alpha",
-			"kind":       "Service",
-			"metadata": map[string]interface{}{
-				"name":    "service1",
-				"project": "default",
+	requestPayload := []manifest.Object{
+		v1alpha.Service{
+			APIVersion: v1alpha.APIVersion,
+			Kind:       manifest.KindService,
+			Metadata: v1alpha.ServiceMetadata{
+				Name:    "service1",
+				Project: "default",
 			},
 		},
 	}
+	expected := addOrganization(requestPayload, "my-org")
 
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
@@ -162,6 +204,9 @@ func TestClient_DeleteObjects(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
+			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			require.NoError(t, err)
+			assert.Equal(t, expected, objects)
 		},
 	})
 
@@ -276,6 +321,16 @@ type endpointConfig struct {
 	TestRequestFunc func(*testing.T, *http.Request)
 }
 
+func addOrganization(objects []manifest.Object, org string) []manifest.Object {
+	result := make([]manifest.Object, 0, len(objects))
+	for _, obj := range objects {
+		if objCtx, ok := obj.(v1alpha.ObjectContext); ok {
+			result = append(result, objCtx.SetOrganization(org))
+		}
+	}
+	return result
+}
+
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {
 	t.Helper()
 	urlScheme = "http"
@@ -342,7 +397,9 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 			assert.Equal(t, userAgent, r.Header.Get(HeaderUserAgent))
 			assert.Equal(t, "Bearer "+token, r.Header.Get(HeaderAuthorization))
 			// Endpoint specific tests.
-			endpoint.TestRequestFunc(t, r)
+			if endpoint.TestRequestFunc != nil {
+				endpoint.TestRequestFunc(t, r)
+			}
 			// Record response.
 			endpoint.ResponseFunc(t, w)
 		default:
