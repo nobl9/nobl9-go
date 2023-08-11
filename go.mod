@@ -3,9 +3,9 @@ module github.com/nobl9/nobl9-go
 go 1.20
 
 require (
-	github.com/aws/aws-sdk-go v1.44.318
+	github.com/aws/aws-sdk-go v1.44.321
 	github.com/bmatcuk/doublestar/v4 v4.6.0
-	github.com/go-playground/validator/v10 v10.14.1
+	github.com/go-playground/validator/v10 v10.15.0
 	github.com/goccy/go-yaml v1.11.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.4
@@ -13,10 +13,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230810033253-352e893a4cad
-	golang.org/x/text v0.11.0
+	golang.org/x/text v0.12.0
 )
 
 require (
