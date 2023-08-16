@@ -100,12 +100,31 @@ check/format:
 	$(call _print_check_step,Checking if files are formatted)
 	./scripts/check-formatting.sh
 
-.PHONY: generate
-## Auto generate code.
-generate:
+.PHONY: generate generate/code generate/diagrams
+## Auto generate files.
+generate: generate/code generate/plantuml
+
+## Generate Golang code.
+generate/code:
 	echo "Generating Go code..."
 	$(call _ensure_installed,binary,go-enum)
 	go generate ./...
+
+PLANTUML_JAR_URL := https://sourceforge.net/projects/plantuml/files/plantuml.jar/download
+PLANTUML_JAR :=  $(BIN_DIR)/plantuml.jar
+DIAGRAMS_PATH ?= .
+
+## Generate PNG diagrams from PlantUML files.
+generate/plantuml: $(PLANTUML_JAR)
+	for path in $$(find $(DIAGRAMS_PATH) -name "*.puml" -type f); do \
+  		echo "Generating PNG file(s) for $$path"; \
+		java -jar $(PLANTUML_JAR) -tpng $$path; \
+  	done
+
+# If the plantuml.jar file isn't already present, download it.
+$(PLANTUML_JAR):
+	echo "Downloading PlantUML JAR..."
+	curl -sSfL $(PLANTUML_JAR_URL) -o $(PLANTUML_JAR)
 
 .PHONY: format format/go format/cspell
 ## Format files.

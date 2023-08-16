@@ -20,25 +20,18 @@ const (
 	defaultRelativeConfigPath = ".config/nobl9/config.toml"
 )
 
-// Config combines the GlobalConfig and ContextConfig of the current, selected context.
+// Config combines the ContextlessConfig and ContextConfig of the current, selected context.
 type Config struct {
-	GlobalConfig
+	ContextlessConfig
 	ContextConfig
 
-	// fileConfig holds onto the config.toml file contents.
-	fileConfig fileConfig
-	// filePath is the path to the config.toml file.
-	filePath string
-	// currentContext is the name of context loaded into Config.ContextConfig.
-	currentContext string
-	// noConfigFile TODO
-	noConfigFile bool
-	// envPrefix defines the prefix for all environment variables.
-	envPrefix string
+	fileConfig     fileConfig
+	options        optionsConfig
+	configDefaults map[string]string
 }
 
-// GlobalConfig stores config not tied to any specific context.
-type GlobalConfig struct {
+// ContextlessConfig stores config not tied to any specific context.
+type ContextlessConfig struct {
 	DefaultContext       string `toml:"defaultContext" env:"DEFAULT_CONTEXT"`
 	FilesPromptThreshold *int   `toml:"filesPromptThreshold,omitempty" env:"FILES_PROMPT_THRESHOLD"`
 	FilesPromptEnabled   *bool  `toml:"filesPromptEnabled,omitempty" env:"FILES_PROMPT_ENABLED"`
@@ -59,28 +52,51 @@ type ContextConfig struct {
 
 // fileConfig contains fully parsed config file.
 type fileConfig struct {
-	GlobalConfig `toml:",inline"`
-	Contexts     map[string]ContextConfig `toml:"contexts"`
+	ContextlessConfig `toml:",inline"`
+	Contexts          map[string]ContextConfig `toml:"contexts"`
+}
+
+// optionsConfig contains options provided through ConfigOption.
+// Some of these options may also be provided though environment variables.
+type optionsConfig struct {
+	// FilePath is the path to the config.toml file.
+	FilePath string `env:"CONFIG_FILE_PATH"`
+	// NoConfigFile
+	NoConfigFile *bool `env:"NO_CONFIG_FILE"`
+	// context is the name of context loaded into Config.ContextConfig.
+	context string
+	// envPrefix defines the prefix for all environment variables.
+	envPrefix    string
+	clientID     string
+	clientSecret string
 }
 
 // ConfigOption conveys extra configuration details for ReadConfig function.
 type ConfigOption func(conf *Config)
 
+// ConfigOptionWithCredentials creates a minimal configuration using provided client id and secret.
+func ConfigOptionWithCredentials(clientID, clientSecret string) ConfigOption {
+	return func(conf *Config) {
+		conf.options.clientID = clientID
+		conf.options.clientSecret = clientSecret
+	}
+}
+
 // ConfigOptionNoConfigFile instructs Config to not try reading config.toml file at all.
 func ConfigOptionNoConfigFile() ConfigOption {
-	return func(conf *Config) { conf.noConfigFile = true }
+	return func(conf *Config) { conf.options.NoConfigFile = ptr(true) }
 }
 
 // ConfigOptionUseContext instructs Config to use the provided context name.
 // It has no effect if ConfigOptionNoConfigFile is provided.
 func ConfigOptionUseContext(context string) ConfigOption {
-	return func(conf *Config) { conf.currentContext = context }
+	return func(conf *Config) { conf.options.context = context }
 }
 
 // ConfigOptionFilePath instructs Config to load config file from the provided path.
 // It has no effect if ConfigOptionNoConfigFile is provided.
 func ConfigOptionFilePath(path string) ConfigOption {
-	return func(conf *Config) { conf.filePath = path }
+	return func(conf *Config) { conf.options.FilePath = path }
 }
 
 // ConfigOptionEnvPrefix instructs Config to lookup environment variables with the provided prefix.
@@ -88,7 +104,7 @@ func ConfigOptionFilePath(path string) ConfigOption {
 //
 //	ConfigOptionEnvPrefix("SLOCTL_") --> looks up SLOCTL_CLIENT_ID env and assigns it to Config.ClientID
 func ConfigOptionEnvPrefix(prefix string) ConfigOption {
-	return func(conf *Config) { conf.envPrefix = prefix }
+	return func(conf *Config) { conf.options.envPrefix = prefix }
 }
 
 var (
@@ -104,53 +120,56 @@ Either set them in configuration file or provide them through env variables.
 
 // ReadConfig TODO
 func ReadConfig(options ...ConfigOption) (*Config, error) {
-	conf := newConfig(options)
+	conf, err := newConfig(options)
+	if err != nil {
+		return nil, err
+	}
 	// Load both file and env configs.
 	fileConfLoaded := false
-	if !conf.noConfigFile {
-		if err := conf.loadConfigFile(); err == nil {
+	if !*conf.options.NoConfigFile {
+		if err = conf.loadConfigFile(); err == nil {
 			fileConfLoaded = true
-			conf.GlobalConfig = conf.fileConfig.GlobalConfig
+			conf.ContextlessConfig = conf.fileConfig.ContextlessConfig
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr,
+			fmt.Fprintf(os.Stderr,
 				"failed to read configuration file, resolving to env variables\nError: %s\n", err.Error())
 		}
 	}
 	// Read global settings from env variables.
-	if err := conf.processEnvVariables(&conf.GlobalConfig); err != nil {
+	if err = conf.processEnvVariables(&conf.ContextlessConfig); err != nil {
 		return nil, err
 	}
-	// Only once we've read both file and env configuration can we resolve the context.
-	conf.setCurrentContext()
 	// Once we know the context to operate on, we can try choosing the right context from file config.
 	if fileConfLoaded {
 		var ok bool
-		if conf.ContextConfig, ok = conf.fileConfig.Contexts[conf.currentContext]; !ok {
+		if conf.ContextConfig, ok = conf.fileConfig.Contexts[conf.GetCurrentContext()]; !ok {
 			return nil, errors.Wrap(ErrConfigContextNotFound, fmt.Sprintf(
 				"context '%s' was not found in config file: %s",
-				conf.currentContext, conf.filePath))
+				conf.GetCurrentContext(), conf.GetFilePath()))
 		}
 	}
 	// Finally read the rest of env variables and overwrite values.
-	if err := conf.processEnvVariables(&conf.ContextConfig); err != nil {
+	if err = conf.processEnvVariables(&conf.ContextConfig); err != nil {
 		return nil, err
 	}
+	// Use credentials provided with ConfigOptionWithCredentials, if provided.
+	conf.setCredentials()
 	// Validate and correct.
 	conf.URL = strings.TrimRight(conf.URL, "/")
 	if conf.ClientID == "" && conf.ClientSecret == "" && conf.AccessToken == "" && !*conf.DisableOkta {
 		return nil, errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
 			"Config file location: %s.\nEnvironment variables: %s, %s",
-			conf.filePath, conf.envPrefix+"CLIENT_ID", conf.envPrefix+"CLIENT_SECRET"))
+			conf.GetFilePath(), conf.options.envPrefix+"CLIENT_ID", conf.options.envPrefix+"CLIENT_SECRET"))
 	}
 	return conf, nil
 }
 
 func (c *Config) Save() error {
 	var err error
-	if c.filePath == "" {
+	if c.GetFilePath() == "" {
 		return errors.New("config file path must be provided")
 	}
-	tmpFile, err := os.CreateTemp(filepath.Dir(c.filePath), filepath.Base(c.filePath))
+	tmpFile, err := os.CreateTemp(filepath.Dir(c.GetFilePath()), filepath.Base(c.GetFilePath()))
 	if err != nil {
 		return err
 	}
@@ -171,7 +190,7 @@ func (c *Config) Save() error {
 		}
 	}()
 
-	if err = toml.NewEncoder(tmpFile).Encode(c.filePath); err != nil {
+	if err = toml.NewEncoder(tmpFile).Encode(c.GetFilePath()); err != nil {
 		return err
 	}
 	if err = tmpFile.Sync(); err != nil {
@@ -181,32 +200,51 @@ func (c *Config) Save() error {
 	if err = tmpFile.Close(); err != nil {
 		return err
 	}
-	return os.Rename(tmpFile.Name(), c.filePath)
+	return os.Rename(tmpFile.Name(), c.GetFilePath())
 }
 
-func newConfig(options []ConfigOption) *Config {
+func newConfig(options []ConfigOption) (*Config, error) {
+	// Default values.
 	conf := &Config{
-		filePath:     getDefaultConfigPath(),
-		noConfigFile: false,
-		envPrefix:    EnvPrefix,
+		options: optionsConfig{
+			envPrefix: EnvPrefix,
+		},
+		configDefaults: map[string]string{
+			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
+			"NO_CONFIG_FILE":         "false",
+			"DEFAULT_CONTEXT":        "default",
+			"FILES_PROMPT_THRESHOLD": "23",
+			"FILES_PROMPT_ENABLED":   "true",
+			"OKTA_ORG_URL":           defaultOktaOrgURL,
+			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
+			"DISABLE_OKTA":           "false",
+			"TIMEOUT":                "1m",
+		},
 	}
 	for _, applyOption := range options {
 		applyOption(conf)
 	}
-	return conf
+	if err := conf.processEnvVariables(&conf.options); err != nil {
+		return nil, err
+	}
+	return conf, nil
 }
 
-func (c *Config) setCurrentContext() {
+func (c *Config) GetCurrentContext() string {
 	// Context override from ConfigOption takes precedence.
-	if c.currentContext != "" {
-		return
+	if c.options.context != "" {
+		return c.options.context
 	}
-	// Set from env/file configuration.
-	c.currentContext = c.GlobalConfig.DefaultContext
+	// Return from env/file configuration.
+	return c.ContextlessConfig.DefaultContext
+}
+
+func (c *Config) GetFilePath() string {
+	return c.options.FilePath
 }
 
 func (c *Config) loadConfigFile() error {
-	if _, err := os.Stat(c.filePath); err != nil {
+	if _, err := os.Stat(c.GetFilePath()); err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
@@ -214,49 +252,48 @@ func (c *Config) loadConfigFile() error {
 			return err
 		}
 	}
-	if _, err := toml.DecodeFile(c.filePath, &c.fileConfig); err != nil {
-		return errors.Wrapf(err, "could not decode config file: %s", c.filePath)
+	if _, err := toml.DecodeFile(c.GetFilePath(), &c.fileConfig); err != nil {
+		return errors.Wrapf(err, "could not decode config file: %s", c.GetFilePath())
 	}
 	return nil
 }
 
+func (c *Config) setCredentials() {
+	if c.options.clientID != "" {
+		c.ClientID = c.options.clientID
+	}
+	if c.options.clientSecret != "" {
+		c.ClientSecret = c.options.clientSecret
+	}
+}
+
 func (c *Config) createDefaultConfig() error {
-	fmt.Println("Creating new config file at " + c.filePath)
-	dir := filepath.Dir(c.filePath)
+	fmt.Println("Creating new config file at " + c.GetFilePath())
+	dir := filepath.Dir(c.GetFilePath())
 	// Create the directory with all it's parents.
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, 0o600); err != nil {
+		if err = os.MkdirAll(dir, 0o700); err != nil {
 			return errors.Wrapf(err, "failed to create a directory path (with parents) for %s", dir)
 		}
 	} else if err != nil {
 		return errors.Wrapf(err, "failed to stat %s directory", dir)
 	}
 	// Create the config file.
-	if _, err := os.Stat(c.filePath); os.IsNotExist(err) {
+	if _, err := os.Stat(c.GetFilePath()); os.IsNotExist(err) {
 		// #nosec G304
-		f, err := os.Create(c.filePath)
+		f, err := os.Create(c.GetFilePath())
 		if err != nil {
-			return errors.Wrapf(err, "failed to create Nobl9 config file under %s", c.filePath)
+			return errors.Wrapf(err, "failed to create Nobl9 config file under %s", c.GetFilePath())
 		}
 		defer func() { _ = f.Close() }()
 		return toml.NewEncoder(f).Encode(fileConfig{
-			GlobalConfig: GlobalConfig{DefaultContext: defaultContext},
-			Contexts:     map[string]ContextConfig{defaultContext: {}},
+			ContextlessConfig: ContextlessConfig{DefaultContext: defaultContext},
+			Contexts:          map[string]ContextConfig{defaultContext: {}},
 		})
 	} else if err != nil {
-		return errors.Wrapf(err, "failed to stat %s file", c.filePath)
+		return errors.Wrapf(err, "failed to stat %s file", c.GetFilePath())
 	}
 	return nil
-}
-
-var configDefaults = map[string]string{
-	"DEFAULT_CONTEXT":        "default",
-	"FILES_PROMPT_THRESHOLD": "23",
-	"FILES_PROMPT_ENABLED":   "true",
-	"OKTA_ORG_URL":           defaultOktaOrgURL,
-	"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
-	"DISABLE_OKTA":           "false",
-	"TIMEOUT":                "1m",
 }
 
 // processEnvVariables takes a struct pointer and scans its fields tags looking for "env"
@@ -284,40 +321,29 @@ func (c *Config) processEnvVariables(iv interface{}) error {
 			}
 			continue
 		}
-
-		// If struct, drill deeper.
+		// We only operate on a top level.
 		if ef.Kind() == reflect.Struct {
-			for ef.CanAddr() {
-				ef = ef.Addr()
-			}
-			if err := c.processEnvVariables(ef.Interface()); err != nil {
-				return fmt.Errorf("%s: %w", tf.Name, err)
-			}
 			continue
 		}
-		// Only now check if the key has been provided.
 		if key == "" {
 			continue
 		}
-
-		val, found := os.LookupEnv(c.envPrefix + key)
+		val, found := os.LookupEnv(c.options.envPrefix + key)
 		// If the field already has a non-zero value and there was no value directly
 		// specified, do not overwrite the existing field. We only want to overwrite
 		// when the env var was provided directly.
 		if !ef.IsZero() && !found {
 			continue
 		}
-
 		// Check for default value.
 		if val == "" {
 			var hasDefault bool
-			val, hasDefault = configDefaults[key]
+			val, hasDefault = c.configDefaults[key]
 			// If the value is empty and we don't have a default, don't do anything.
 			if !hasDefault {
 				continue
 			}
 		}
-
 		// Set value.
 		if err := c.setConfigFieldValue(val, ef); err != nil {
 			return fmt.Errorf("%s(%q): %w", tf.Name, val, err)
@@ -387,7 +413,6 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 		}
 		ef.SetUint(i)
 	}
-
 	return nil
 }
 
@@ -399,3 +424,5 @@ func getDefaultConfigPath() string {
 	}
 	return filepath.Clean(filepath.Join(home, defaultRelativeConfigPath))
 }
+
+func ptr[T any](v T) *T { return &v }
