@@ -142,7 +142,7 @@ func (c *Config) Save() error {
 	if c.GetFilePath() == "" {
 		return errors.New("config file path must be provided")
 	}
-	return c.save()
+	return c.save(c.GetFilePath())
 }
 
 func (c *Config) read() error {
@@ -204,11 +204,11 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"TIMEOUT":                "1m",
 		},
 	}
-	for _, applyOption := range options {
-		applyOption(conf)
-	}
 	if err := conf.processEnvVariables(&conf.options); err != nil {
 		return nil, err
+	}
+	for _, applyOption := range options {
+		applyOption(conf)
 	}
 	return conf, nil
 }
@@ -392,8 +392,8 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 	return nil
 }
 
-func (c *Config) save() error {
-	tmpFile, err := os.CreateTemp(filepath.Dir(c.GetFilePath()), filepath.Base(c.GetFilePath()))
+func (c *Config) save(path string) error {
+	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path))
 	if err != nil {
 		return err
 	}
@@ -414,7 +414,7 @@ func (c *Config) save() error {
 		}
 	}()
 
-	if err = toml.NewEncoder(tmpFile).Encode(c.GetFilePath()); err != nil {
+	if err = toml.NewEncoder(tmpFile).Encode(path); err != nil {
 		return err
 	}
 	if err = tmpFile.Sync(); err != nil {
@@ -423,7 +423,7 @@ func (c *Config) save() error {
 	if err = tmpFile.Close(); err != nil {
 		return err
 	}
-	return os.Rename(tmpFile.Name(), c.GetFilePath())
+	return os.Rename(tmpFile.Name(), path)
 }
 
 func getDefaultConfigPath() string {

@@ -141,12 +141,23 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 func TestReadConfig_ConfigOption(t *testing.T) {
 	tempDir := t.TempDir()
 	filePath := filepath.Join(tempDir, "new_config.toml")
+	envPrefix := "MY_PREFIX_"
 
-	// Check ConfigOptionEnvPrefix.
-	t.Setenv("MY_PREFIX_TIMEOUT", "10m")
+	// Assert ConfigOption takes precedence over env variable.
+	for k, v := range map[string]string{
+		"DEFAULT_CONTEXT": "env-context",
+		"CLIENT_ID":       "env-id",
+		"CLIENT_SECRET":   "env-secret",
+		"FILE_PATH":       "/etc/env-file",
+		"NO_CONFIG_FILE":  "false",
+		// Ensure ConfigOptionEnvPrefix actually works.
+		"TIMEOUT": "10m",
+	} {
+		t.Setenv(envPrefix+k, v)
+	}
 
 	conf, err := ReadConfig(
-		ConfigOptionEnvPrefix("MY_PREFIX_"),
+		ConfigOptionEnvPrefix(envPrefix),
 		ConfigOptionUseContext("my-context"),
 		ConfigOptionWithCredentials("clientId", "clientSecret"),
 		ConfigOptionFilePath(filePath),
@@ -241,16 +252,15 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 }
 
 func TestReadConfig_EnvVariablesFull(t *testing.T) {
+	tempDir := setupConfigTestData(t)
+	filePath := filepath.Join(tempDir, "full_config_env_override.toml")
 	// So that we don't run into conflicts with existing config.toml.
-	tempDir := t.TempDir()
 	t.Setenv("HOME", tempDir)
 
 	for k, v := range map[string]string{
-		"CONFIG_FILE_PATH":       "/etc/config.toml",
-		"NO_CONFIG_FILE":         "true",
-		"DEFAULT_CONTEXT":        "my-context",
+		"DEFAULT_CONTEXT":        "non-default",
 		"FILES_PROMPT_THRESHOLD": "100",
-		"FILES_PROMPT_ENABLED":   "false",
+		"FILES_PROMPT_ENABLED":   "true",
 		"CLIENT_ID":              "clientId",
 		"CLIENT_SECRET":          "clientSecret",
 		"ACCESS_TOKEN":           "my-token",
@@ -258,23 +268,16 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 		"URL":                    "http://localhost:8081",
 		"OKTA_ORG_URL":           "http://localhost:8080",
 		"OKTA_AUTH_SERVER":       "123",
-		"DISABLE_OKTA":           "true",
-		"TIMEOUT":                "100m",
+		"DISABLE_OKTA":           "false",
+		"TIMEOUT":                "60m",
 	} {
 		t.Setenv(EnvPrefix+k, v)
 	}
 
-	conf, err := ReadConfig()
-	require.NoError(t, err)
-
-	// Check NO_CONFIG_FILE.
-	_, err = os.Stat(conf.GetFilePath())
-	require.True(t, os.IsNotExist(err), "file should not exist")
-
-	assertConfigsAreEqual(t, &Config{
+	expected := Config{
 		ContextlessConfig: ContextlessConfig{
-			DefaultContext:       "my-context",
-			FilesPromptEnabled:   ptr(false),
+			DefaultContext:       "non-default",
+			FilesPromptEnabled:   ptr(true),
 			FilesPromptThreshold: ptr(100),
 		},
 		ContextConfig: ContextConfig{
@@ -285,14 +288,38 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			URL:            "http://localhost:8081",
 			OktaOrgURL:     "http://localhost:8080",
 			OktaAuthServer: "123",
-			DisableOkta:    ptr(true),
-			Timeout:        ptr(100 * time.Minute),
+			DisableOkta:    ptr(false),
+			Timeout:        ptr(60 * time.Minute),
 		},
-		options: optionsConfig{
-			FilePath:     "/etc/config.toml",
-			NoConfigFile: ptr(true),
-		},
-	}, conf)
+	}
+
+	t.Run("with no config file", func(t *testing.T) {
+		t.Setenv(EnvPrefix+"NO_CONFIG_FILE", "true")
+		t.Setenv(EnvPrefix+"CONFIG_FILE_PATH", "/etc/config.toml")
+		conf, err := ReadConfig()
+		require.NoError(t, err)
+
+		// Check NO_CONFIG_FILE.
+		_, err = os.Stat(conf.GetFilePath())
+		require.True(t, os.IsNotExist(err), "file should not exist")
+
+		expected.options.NoConfigFile = ptr(true)
+		expected.options.FilePath = "/etc/config.toml"
+		assertConfigsAreEqual(t, &expected, conf)
+	})
+
+	// Assert environment variables take precedence over file config.
+	t.Run("with config file", func(t *testing.T) {
+		t.Setenv(EnvPrefix+"NO_CONFIG_FILE", "false")
+		t.Setenv(EnvPrefix+"CONFIG_FILE_PATH", filePath)
+
+		conf, err := ReadConfig()
+		require.NoError(t, err)
+
+		expected.options.NoConfigFile = ptr(false)
+		expected.options.FilePath = filePath
+		assertConfigsAreEqual(t, &expected, conf)
+	})
 }
 
 func assertConfigsAreEqual(t *testing.T, c1, c2 *Config) {
