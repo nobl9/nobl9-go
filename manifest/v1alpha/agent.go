@@ -1,26 +1,31 @@
 package v1alpha
 
 import (
-	"encoding/json"
-
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-type AgentsSlice []Agent
-
-func (agents AgentsSlice) Clone() AgentsSlice {
-	clone := make([]Agent, len(agents))
-	copy(clone, agents)
-	return clone
-}
+//go:generate go run ../../scripts/generate-object-impl.go Agent
 
 // Agent struct which mapped one to one with kind: Agent yaml definition
 type Agent struct {
-	manifest.ObjectHeader
-	Spec   AgentSpec   `json:"spec"`
-	Status AgentStatus `json:"status"`
+	APIVersion string        `json:"apiVersion"`
+	Kind       manifest.Kind `json:"kind"`
+	Metadata   AgentMetadata `json:"metadata"`
+	Spec       AgentSpec     `json:"spec"`
+	Status     *AgentStatus  `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
+	OktaClientID   string `json:"oktaClientID,omitempty"`
+}
+
+type AgentMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // AgentSpec represents content of Spec typical for Agent Object
@@ -111,12 +116,6 @@ type AgentStatus struct {
 	LastConnection string `json:"lastConnection,omitempty" example:"2020-08-31T14:26:13Z"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a Agent) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Name: a.Metadata.Name, Project: a.Metadata.Project}
-}
-
 // PrometheusAgentConfig represents content of Prometheus Configuration typical for Agent Object.
 type PrometheusAgentConfig struct {
 	URL    *string `json:"url,omitempty" example:"http://prometheus-service.monitoring:8080"`
@@ -130,7 +129,7 @@ type DatadogAgentConfig struct {
 
 // NewRelicAgentConfig represents content of NewRelic Configuration typical for Agent Object.
 type NewRelicAgentConfig struct {
-	AccountID json.Number `json:"accountId,omitempty" example:"123654"`
+	AccountID int `json:"accountId,omitempty" example:"123654"`
 }
 
 // AmazonPrometheusAgentConfig represents content of Amazon Managed Service Configuration typical for Agent Object.
@@ -228,27 +227,6 @@ type AppDynamicsAgentConfig struct {
 // SplunkAgentConfig represents content of Splunk Configuration typical for Agent Object.
 type SplunkAgentConfig struct {
 	URL string `json:"url,omitempty" example:"https://localhost:8089/servicesNS/admin/"`
-}
-
-// genericToAgent converts ObjectGeneric to ObjectAgent
-func genericToAgent(o manifest.ObjectGeneric, v validator, onlyHeader bool) (Agent, error) {
-	res := Agent{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec AgentSpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition

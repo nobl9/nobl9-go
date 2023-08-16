@@ -6,25 +6,31 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-type DataExportsSlice []DataExport
+//go:generate go run ../../scripts/generate-object-impl.go DataExport
 
-func (dataExports DataExportsSlice) Clone() DataExportsSlice {
-	clone := make([]DataExport, len(dataExports))
-	copy(clone, dataExports)
-	return clone
-}
+const (
+	DataExportTypeS3        string = "S3"
+	DataExportTypeSnowflake string = "Snowflake"
+	DataExportTypeGCS       string = "GCS"
+)
 
 // DataExport struct which mapped one to one with kind: DataExport yaml definition
 type DataExport struct {
-	manifest.ObjectHeader
-	Spec   DataExportSpec   `json:"spec"`
-	Status DataExportStatus `json:"status"`
+	APIVersion string             `json:"apiVersion"`
+	Kind       manifest.Kind      `json:"kind"`
+	Metadata   DataExportMetadata `json:"metadata"`
+	Spec       DataExportSpec     `json:"spec"`
+	Status     *DataExportStatus  `json:"status"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (d DataExport) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: d.Metadata.Project, Name: d.Metadata.Name}
+type DataExportMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // DataExportSpec represents content of DataExport's Spec
@@ -33,11 +39,28 @@ type DataExportSpec struct {
 	Spec       interface{} `json:"spec" validate:"required"`
 }
 
-const (
-	DataExportTypeS3        string = "S3"
-	DataExportTypeSnowflake string = "Snowflake"
-	DataExportTypeGCS       string = "GCS"
-)
+func (d *DataExportSpec) UnmarshalJSON(bytes []byte) error {
+	var genericSpec struct {
+		ExportType string          `json:"exportType" validate:"required,exportType" example:"Snowflake"`
+		Spec       json.RawMessage `json:"spec"`
+	}
+	if err := json.Unmarshal(bytes, &genericSpec); err != nil {
+		return err
+	}
+	d.ExportType = genericSpec.ExportType
+	switch d.ExportType {
+	case DataExportTypeS3, DataExportTypeSnowflake:
+		d.Spec = &S3DataExportSpec{}
+	case DataExportTypeGCS:
+		d.Spec = &GCSDataExportSpec{}
+	}
+	if genericSpec.Spec != nil {
+		if err := json.Unmarshal(genericSpec.Spec, &d.Spec); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 // S3DataExportSpec represents content of Amazon S3 export type spec.
 type S3DataExportSpec struct {
@@ -60,46 +83,4 @@ type DataExportStatus struct {
 type DataExportStatusJob struct {
 	Timestamp string `json:"timestamp,omitempty" example:"2021-02-09T10:43:07Z"`
 	State     string `json:"state" example:"finished"`
-}
-
-// dataExportGeneric represents struct to which every DataExport is parsable.
-// Specific types of DataExport have different structures as Spec.
-type dataExportGeneric struct {
-	ExportType string          `json:"exportType" validate:"required,exportType" example:"Snowflake"`
-	Spec       json.RawMessage `json:"spec"`
-}
-
-// genericToDataExport converts ObjectGeneric to ObjectDataExport
-func genericToDataExport(o manifest.ObjectGeneric, v validator, onlyHeader bool) (DataExport, error) {
-	res := DataExport{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	deg := dataExportGeneric{}
-	if err := json.Unmarshal(o.Spec, &deg); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-
-	resSpec := DataExportSpec{ExportType: deg.ExportType}
-	switch resSpec.ExportType {
-	case DataExportTypeS3, DataExportTypeSnowflake:
-		resSpec.Spec = &S3DataExportSpec{}
-	case DataExportTypeGCS:
-		resSpec.Spec = &GCSDataExportSpec{}
-	}
-	if deg.Spec != nil {
-		if err := json.Unmarshal(deg.Spec, &resSpec.Spec); err != nil {
-			err = manifest.EnhanceError(o, err)
-			return res, err
-		}
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }

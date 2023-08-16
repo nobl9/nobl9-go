@@ -41,6 +41,8 @@ const (
 	GCM
 )
 
+const DatasourceStableChannel = "stable"
+
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {

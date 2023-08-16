@@ -1,6 +1,8 @@
 run:
   timeout: 5m
   modules-download-mode: readonly
+  skip-dirs:
+    - scripts
   skip-dirs-use-default: true
   skip-files:
     - old_sdk.go
@@ -46,6 +48,8 @@ linters-settings:
   gocritic:
     enabled-tags:
       - opinionated
+    disabled-checks:
+      - singleCaseSwitch
   exhaustive:
     # In switch statement treat label default: as being exhaustive.
     default-signifies-exhaustive: true

@@ -75,6 +75,9 @@ const (
 	PingdomTypeTransaction = "transaction"
 )
 
+// HiddenValue can be used as a value of a secret field and is ignored during saving
+const HiddenValue = "[hidden]"
+
 //nolint:golint
 var (
 	ErrAgentTypeChanged          = fmt.Errorf("cannot change agent type")
@@ -109,10 +112,12 @@ type Validate struct {
 	validate *v.Validate
 }
 
-// Validator provides an abstraction on validator which is used for checking specific struct
-type validator interface {
-	Check(interface{}) error
+// Check performs validation, it accepts all possible structs and perform checks based on tags for structs fields
+func (val *Validate) Check(s interface{}) error {
+	return val.validate.Struct(s)
 }
+
+var validator = NewValidator()
 
 // NewValidator returns an instance of preconfigured Validator for all available objects
 func NewValidator() *Validate {
@@ -693,7 +698,18 @@ func isBadOverTotalEnabledForDataSource(spec SLOSpec) bool {
 }
 
 func hasOnlyOneRawMetricDefinitionTypeOrNone(spec SLOSpec) bool {
-	return spec.ObjectivesRawMetricsCount() == 0 || !spec.containsIndicatorRawMetric()
+	indicatorHasRawMetric := spec.containsIndicatorRawMetric()
+	if indicatorHasRawMetric {
+		for _, threshold := range spec.Thresholds {
+			if !threshold.HasRawMetricQuery() {
+				continue
+			}
+			if !reflect.DeepEqual(threshold.RawMetric.MetricQuery, spec.Indicator.RawMetric) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 func areRawMetricsSetForAllThresholdsOrNone(spec SLOSpec) bool {
@@ -1597,12 +1613,12 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	labels := fl.Field().Interface().(manifest.Labels)
+	labels := fl.Field().Interface().(Labels)
 
 	return validateLabels(labels)
 }
 
-func validateLabels(labels manifest.Labels) bool {
+func validateLabels(labels Labels) bool {
 	for key, values := range labels {
 		if !validateLabelKey(key) {
 			return false
@@ -2009,11 +2025,6 @@ func isValidReleaseChannel(releaseChannel ReleaseChannel) bool {
 	return releaseChannel.IsValid() && releaseChannel != ReleaseChannelAlpha
 }
 
-// Check performs validation, it accepts all possible structs and perform checks based on tags for structs fields
-func (val *Validate) Check(s interface{}) error {
-	return val.validate.Struct(s)
-}
-
 func isBudgetingMethod(fl v.FieldLevel) bool {
 	_, err := ParseBudgetingMethod(fl.Field().String())
 	return err == nil
@@ -2237,12 +2248,12 @@ func isValidTimeSliceTargetValue(tsv float64) bool {
 
 func isValidObjectNameWithStringInterpolation(fl v.FieldLevel) bool {
 	toCheck := fl.Field().String()
-	if !strings.Contains(toCheck, manifest.StringInterpolationPlaceholder) {
+	if !strings.Contains(toCheck, StringInterpolationPlaceholder) {
 		return false
 	}
 	// During actual interpolation {} will be replaced with previous validated name,
 	// replace here with test because valid DNS1123Label cannot contain {} and check
-	toCheck = manifest.StringInterpolation(toCheck, "test")
+	toCheck = StringInterpolation(toCheck, "test")
 	return len(IsDNS1123Label(toCheck)) == 0
 }
 

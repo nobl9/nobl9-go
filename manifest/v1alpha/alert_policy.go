@@ -1,29 +1,25 @@
 package v1alpha
 
-import (
-	"encoding/json"
+import "github.com/nobl9/nobl9-go/manifest"
 
-	"github.com/nobl9/nobl9-go/manifest"
-)
-
-type AlertPoliciesSlice []AlertPolicy
-
-func (alertPolicies AlertPoliciesSlice) Clone() AlertPoliciesSlice {
-	clone := make([]AlertPolicy, len(alertPolicies))
-	copy(clone, alertPolicies)
-	return clone
-}
+//go:generate go run ../../scripts/generate-object-impl.go AlertPolicy
 
 // AlertPolicy represents a set of conditions that can trigger an alert.
 type AlertPolicy struct {
-	manifest.ObjectHeader
-	Spec AlertPolicySpec `json:"spec"`
+	APIVersion string              `json:"apiVersion"`
+	Kind       manifest.Kind       `json:"kind"`
+	Metadata   AlertPolicyMetadata `json:"metadata"`
+	Spec       AlertPolicySpec     `json:"spec"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-// getUniqueIdentifiers returns uniqueIdentifiers used to check
-// potential conflicts between simultaneously applied objects.
-func (a AlertPolicy) getUniqueIdentifiers() uniqueIdentifiers {
-	return uniqueIdentifiers{Project: a.Metadata.Project, Name: a.Metadata.Name}
+type AlertPolicyMetadata struct {
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
@@ -52,25 +48,4 @@ type AlertCondition struct {
 type AlertPolicyWithSLOs struct {
 	AlertPolicy AlertPolicy `json:"alertPolicy"`
 	SLOs        []SLO       `json:"slos"`
-}
-
-// genericToAlertPolicy converts ObjectGeneric to ObjectAlertPolicy
-func genericToAlertPolicy(o manifest.ObjectGeneric, v validator, onlyHeader bool) (AlertPolicy, error) {
-	res := AlertPolicy{
-		ObjectHeader: o.ObjectHeader,
-	}
-	if onlyHeader {
-		return res, nil
-	}
-	var resSpec AlertPolicySpec
-	if err := json.Unmarshal(o.Spec, &resSpec); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	res.Spec = resSpec
-	if err := v.Check(res); err != nil {
-		err = manifest.EnhanceError(o, err)
-		return res, err
-	}
-	return res, nil
 }
