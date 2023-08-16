@@ -39,3 +39,18 @@ func ParseMeasurement(value string) (Measurement, error) {
 	}
 	return result, nil
 }
+
+func MapOperatorForMeasurement(measurement Measurement) Operator {
+	switch measurement {
+	case MeasurementBurnedBudget:
+		return GreaterThanEqual
+	case MeasurementAverageBurnRate:
+		return GreaterThanEqual
+	case MeasurementTimeToBurnBudget:
+		return LessThan
+	case MeasurementTimeToBurnEntireBudget:
+		return LessThanEqual
+	default:
+		return 0
+	}
+}

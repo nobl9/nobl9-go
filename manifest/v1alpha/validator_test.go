@@ -1037,7 +1037,7 @@ func TestAlertConditionAllowedOptionalOperatorForMeasurementType(t *testing.T) {
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
 			measurement, _ := ParseMeasurement(condition.Measurement)
-			defaultOperator := getAlertPolicyDefaultOperatorForMeasurement(measurement).String()
+			defaultOperator := MapOperatorForMeasurement(measurement).String()
 			allowedOps := []string{defaultOperator, emptyOperator}
 			for _, op := range allOps {
 				condition.Operator = op

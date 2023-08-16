@@ -72,41 +72,5 @@ func genericToAlertPolicy(o manifest.ObjectGeneric, v validator, onlyHeader bool
 		err = manifest.EnhanceError(o, err)
 		return res, err
 	}
-
-	if err := setAlertPolicyDefaults(&res); err != nil {
-		return res, err
-	}
 	return res, nil
-}
-
-func setAlertPolicyDefaults(policy *AlertPolicy) error {
-	for i, condition := range policy.Spec.Conditions {
-		if condition.AlertingWindow == "" && condition.LastsForDuration == "" {
-			policy.Spec.Conditions[i].LastsForDuration = DefaultAlertPolicyLastsForDuration
-		}
-
-		if condition.Operator == "" {
-			measurement, err := ParseMeasurement(condition.Measurement)
-			if err != nil {
-				return err
-			}
-			policy.Spec.Conditions[i].Operator = getAlertPolicyDefaultOperatorForMeasurement(measurement).String()
-		}
-	}
-	return nil
-}
-
-func getAlertPolicyDefaultOperatorForMeasurement(measurement Measurement) Operator {
-	switch measurement {
-	case MeasurementBurnedBudget:
-		return GreaterThanEqual
-	case MeasurementAverageBurnRate:
-		return GreaterThanEqual
-	case MeasurementTimeToBurnBudget:
-		return LessThan
-	case MeasurementTimeToBurnEntireBudget:
-		return LessThanEqual
-	default:
-		return 0
-	}
 }
