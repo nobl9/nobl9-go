@@ -1,8 +1,6 @@
 // Package v1alpha represents objects available in API n9/v1alpha
 package v1alpha
 
-import "github.com/nobl9/nobl9-go/manifest"
-
 // UsageSummaryMetadata represents metadata part of usageSummary object
 type UsageSummaryMetadata struct {
 	*Tier       `json:"tier,omitempty" validate:"omitempty"`
@@ -59,7 +57,7 @@ type SLOErrorBudgetStatusReport struct {
 }
 
 type SLOErrorBudgetStatus struct {
-	manifest.MetadataHolder
+	MetadataHolder
 	TimeWindow       TimeWindow        `json:"timeWindow"`
 	ThresholdSummary []ThresholdStatus `json:"thresholdSummary"`
 }
