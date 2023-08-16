@@ -964,30 +964,79 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
-func TestAlertConditionOpSupport(t *testing.T) {
-	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
+func TestAlertConditionOnlyMeasurementAverageBurnRateIsAllowedToUseAlertingWindow(t *testing.T) {
 	validate := NewValidator()
-	for condition, allowedOps := range map[AlertCondition][]string{
+	for condition, isValid := range map[AlertCondition]bool{
+		{
+			Measurement:    MeasurementTimeToBurnEntireBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementTimeToBurnBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThan.String(),
+		}: false,
+		{
+			Measurement:    MeasurementBurnedBudget.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: true,
+	} {
+		t.Run(condition.Measurement, func(t *testing.T) {
+			err := validate.Check(condition)
+			if isValid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
+func TestAlertConditionAllowedOptionalOperatorForMeasurementType(t *testing.T) {
+	const emptyOperator = ""
+	allOps := []string{"gt", "lt", "lte", "gte", "noop", ""}
+	validate := NewValidator()
+	for _, condition := range []AlertCondition{
 		{
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lte"},
+		},
 		{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lt"},
+		},
 		{
 			Measurement: MeasurementBurnedBudget.String(),
 			Value:       30.0,
-		}: {"gte"},
+		},
 		{
-			Measurement: MeasurementAverageBurnRate.String(),
-			Value:       30.0,
-		}: {"gte"},
+			Measurement:      MeasurementAverageBurnRate.String(),
+			Value:            30.0,
+			LastsForDuration: "5m",
+		},
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			Value:          30.0,
+			AlertingWindow: "5m",
+		},
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
+			measurement, _ := ParseMeasurement(condition.Measurement)
+			defaultOperator := MapOperatorForMeasurement(measurement).String()
+			allowedOps := []string{defaultOperator, emptyOperator}
 			for _, op := range allOps {
 				condition.Operator = op
 				err := validate.Check(condition)
@@ -996,6 +1045,47 @@ func TestAlertConditionOpSupport(t *testing.T) {
 				} else {
 					assert.Error(t, err)
 				}
+			}
+		})
+	}
+}
+
+func TestAlertConditionOnlyAlertingWindowOrLastsForAllowed(t *testing.T) {
+	for name, test := range map[string]struct {
+		lastsForDuration string
+		alertingWindow   string
+		isValid          bool
+	}{
+		"both provided 'alertingWindow' and 'lastsFor', invalid": {
+			alertingWindow:   "5m",
+			lastsForDuration: "5m",
+			isValid:          false,
+		},
+		"only 'alertingWindow', valid": {
+			alertingWindow: "5m",
+			isValid:        true,
+		},
+		"only 'lastsFor', valid": {
+			lastsForDuration: "5m",
+			isValid:          true,
+		},
+		"no 'alertingWindow' and no 'lastsFor', valid": {
+			isValid: true,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			condition := AlertCondition{
+				Measurement:      MeasurementAverageBurnRate.String(),
+				Operator:         "gte",
+				Value:            1.0,
+				AlertingWindow:   test.alertingWindow,
+				LastsForDuration: test.lastsForDuration,
+			}
+			validationErr := NewValidator().Check(condition)
+			if test.isValid {
+				assert.NoError(t, validationErr)
+			} else {
+				assert.Error(t, validationErr)
 			}
 		})
 	}
