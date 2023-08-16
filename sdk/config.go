@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	EnvPrefix = "N9_"
+	EnvPrefix = "NOBL9_SDK_"
 
 	defaultContext            = "default"
 	defaultRelativeConfigPath = ".config/nobl9/config.toml"
@@ -124,83 +124,66 @@ func ReadConfig(options ...ConfigOption) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err = conf.read(); err != nil {
+		return nil, err
+	}
+	return conf, nil
+}
+
+func (c *Config) GetCurrentContext() string {
+	return c.ContextlessConfig.DefaultContext
+}
+
+func (c *Config) GetFilePath() string {
+	return c.options.FilePath
+}
+
+func (c *Config) Save() error {
+	if c.GetFilePath() == "" {
+		return errors.New("config file path must be provided")
+	}
+	return c.save()
+}
+
+func (c *Config) read() error {
 	// Load both file and env configs.
 	fileConfLoaded := false
-	if !*conf.options.NoConfigFile {
-		if err = conf.loadConfigFile(); err == nil {
+	if !*c.options.NoConfigFile {
+		if err := c.loadConfigFile(); err == nil {
 			fileConfLoaded = true
-			conf.ContextlessConfig = conf.fileConfig.ContextlessConfig
+			c.ContextlessConfig = c.fileConfig.ContextlessConfig
 		} else {
 			fmt.Fprintf(os.Stderr,
 				"failed to read configuration file, resolving to env variables\nError: %s\n", err.Error())
 		}
 	}
 	// Read global settings from env variables.
-	if err = conf.processEnvVariables(&conf.ContextlessConfig); err != nil {
-		return nil, err
+	if err := c.processEnvVariables(&c.ContextlessConfig); err != nil {
+		return err
 	}
+	c.setContextFromConfigOptions()
 	// Once we know the context to operate on, we can try choosing the right context from file config.
 	if fileConfLoaded {
 		var ok bool
-		if conf.ContextConfig, ok = conf.fileConfig.Contexts[conf.GetCurrentContext()]; !ok {
-			return nil, errors.Wrap(ErrConfigContextNotFound, fmt.Sprintf(
+		if c.ContextConfig, ok = c.fileConfig.Contexts[c.GetCurrentContext()]; !ok {
+			return errors.Wrap(ErrConfigContextNotFound, fmt.Sprintf(
 				"context '%s' was not found in config file: %s",
-				conf.GetCurrentContext(), conf.GetFilePath()))
+				c.GetCurrentContext(), c.GetFilePath()))
 		}
 	}
-	// Finally read the rest of env variables and overwrite values.
-	if err = conf.processEnvVariables(&conf.ContextConfig); err != nil {
-		return nil, err
+	// Finally read the context config and overwrite values if set through env vars.
+	if err := c.processEnvVariables(&c.ContextConfig); err != nil {
+		return err
 	}
-	// Use credentials provided with ConfigOptionWithCredentials, if provided.
-	conf.setCredentials()
+	c.setCredentialsFromConfigOptions()
 	// Validate and correct.
-	conf.URL = strings.TrimRight(conf.URL, "/")
-	if conf.ClientID == "" && conf.ClientSecret == "" && conf.AccessToken == "" && !*conf.DisableOkta {
-		return nil, errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
+	c.URL = strings.TrimRight(c.URL, "/")
+	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !*c.DisableOkta {
+		return errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
 			"Config file location: %s.\nEnvironment variables: %s, %s",
-			conf.GetFilePath(), conf.options.envPrefix+"CLIENT_ID", conf.options.envPrefix+"CLIENT_SECRET"))
+			c.GetFilePath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET"))
 	}
-	return conf, nil
-}
-
-func (c *Config) Save() error {
-	var err error
-	if c.GetFilePath() == "" {
-		return errors.New("config file path must be provided")
-	}
-	tmpFile, err := os.CreateTemp(filepath.Dir(c.GetFilePath()), filepath.Base(c.GetFilePath()))
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if closeErr := tmpFile.Close(); closeErr != nil && err == nil {
-			switch v := closeErr.(type) {
-			case *os.PathError:
-				if v.Err != os.ErrClosed {
-					err = closeErr
-				}
-			default:
-				err = closeErr
-			}
-		}
-		if removeErr := os.Remove(tmpFile.Name()); removeErr != nil && err == nil {
-			err = removeErr
-		}
-	}()
-
-	if err = toml.NewEncoder(tmpFile).Encode(c.GetFilePath()); err != nil {
-		return err
-	}
-	if err = tmpFile.Sync(); err != nil {
-		return err
-	}
-	// TODO: we can remove it?
-	if err = tmpFile.Close(); err != nil {
-		return err
-	}
-	return os.Rename(tmpFile.Name(), c.GetFilePath())
+	return nil
 }
 
 func newConfig(options []ConfigOption) (*Config, error) {
@@ -230,19 +213,6 @@ func newConfig(options []ConfigOption) (*Config, error) {
 	return conf, nil
 }
 
-func (c *Config) GetCurrentContext() string {
-	// Context override from ConfigOption takes precedence.
-	if c.options.context != "" {
-		return c.options.context
-	}
-	// Return from env/file configuration.
-	return c.ContextlessConfig.DefaultContext
-}
-
-func (c *Config) GetFilePath() string {
-	return c.options.FilePath
-}
-
 func (c *Config) loadConfigFile() error {
 	if _, err := os.Stat(c.GetFilePath()); err != nil {
 		if !os.IsNotExist(err) {
@@ -258,7 +228,13 @@ func (c *Config) loadConfigFile() error {
 	return nil
 }
 
-func (c *Config) setCredentials() {
+func (c *Config) setContextFromConfigOptions() {
+	if c.options.context != "" {
+		c.DefaultContext = c.options.context
+	}
+}
+
+func (c *Config) setCredentialsFromConfigOptions() {
 	if c.options.clientID != "" {
 		c.ClientID = c.options.clientID
 	}
@@ -414,6 +390,40 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 		ef.SetUint(i)
 	}
 	return nil
+}
+
+func (c *Config) save() error {
+	tmpFile, err := os.CreateTemp(filepath.Dir(c.GetFilePath()), filepath.Base(c.GetFilePath()))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if closeErr := tmpFile.Close(); closeErr != nil && err == nil {
+			switch v := closeErr.(type) {
+			case *os.PathError:
+				if v.Err != os.ErrClosed {
+					err = closeErr
+				}
+			default:
+				err = closeErr
+			}
+		}
+		if removeErr := os.Remove(tmpFile.Name()); removeErr != nil && err == nil {
+			err = removeErr
+		}
+	}()
+
+	if err = toml.NewEncoder(tmpFile).Encode(c.GetFilePath()); err != nil {
+		return err
+	}
+	if err = tmpFile.Sync(); err != nil {
+		return err
+	}
+	if err = tmpFile.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpFile.Name(), c.GetFilePath())
 }
 
 func getDefaultConfigPath() string {
