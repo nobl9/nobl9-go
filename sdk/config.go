@@ -388,6 +388,8 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 			return err
 		}
 		ef.SetUint(i)
+	default:
+		return errors.Errorf("unsupported field reflection kind: %s", tk)
 	}
 	return nil
 }

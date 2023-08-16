@@ -33,6 +33,7 @@ words:
   - auseg9kiegWKEtJZC416
   - dynatrace
   - endef
+  - enduml
   - falsef
   - gobin
   - goimports
@@ -49,13 +50,17 @@ words:
   - nocomments
   - nrql
   - opentsdb
+  - plantuml
   - println
   - promql
+  - puml
   - rollup
   - slis
   - sloctl
   - sloerrorbudgetstatus
   - slos
+  - startuml
+  - tpng
   - truef
   - tsdb
   - usrmgmt

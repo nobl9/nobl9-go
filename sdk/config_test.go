@@ -340,7 +340,7 @@ func setupConfigTestData(t *testing.T) (tempDir string) {
 	return tempDir
 }
 
-func copyEmbeddedFile(t *testing.T, sourceName string, dest string) {
+func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
 	embeddedFile, err := configTestData.Open(filepath.Join(configTestDataPath, sourceName))
 	require.NoError(t, err)
 	defer func() { _ = embeddedFile.Close() }()
