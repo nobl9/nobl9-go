@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -90,19 +91,19 @@ type Client struct {
 }
 
 // DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
-func DefaultClient(clientID, clientSecret, userAgent string) (*Client, error) {
-	authServerURL, err := DefaultOktaAuthServerURL()
+func DefaultClient() (*Client, error) {
+	conf, err := ReadConfig()
 	if err != nil {
 		return nil, err
 	}
-	creds, err := DefaultCredentials(clientID, clientSecret, authServerURL)
+	creds, err := newCredentials(conf.ClientID, conf.ClientSecret, authServerURL)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
 		HTTP:        retryhttp.NewClient(Timeout, creds),
 		Credentials: creds,
-		UserAgent:   userAgent,
+		UserAgent:   getDefaultUserAgent(),
 	}, nil
 }
 
@@ -461,4 +462,12 @@ func getResponseServerError(resp *http.Response) error {
 		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
 	}
 	return fmt.Errorf(msg)
+}
+
+func getDefaultUserAgent() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "sdk"
+	}
+	return info.GoVersion
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"reflect"
 	"sync"
 	"time"
@@ -71,26 +70,31 @@ func agentProfileFromClaims(claims jwt.MapClaims) (accessTokenAgentProfile, erro
 	return profile, err
 }
 
-type JWTParser struct {
+type (
+	getJWTIssuerFunc   = func() string
+	getJWKFetchURLFunc = func() string
+)
+
+type jwtParser struct {
 	HTTP        *http.Client
-	jwkFetchURL string
-	issuer      string
+	jwkFetchURL getJWKFetchURLFunc
+	issuer      getJWTIssuerFunc
 	jwksCache   *cache.Cache
 	jwkSetMu    *sync.Mutex
 }
 
-func NewJWTParser(issuer string, jwkFetchURL *url.URL) (*JWTParser, error) {
-	return &JWTParser{
+func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) (*jwtParser, error) {
+	return &jwtParser{
 		HTTP:        retryhttp.NewClient(jwtKeysRequestTimeout, nil),
 		jwksCache:   cache.New(time.Hour, time.Hour),
 		jwkSetMu:    new(sync.Mutex),
-		jwkFetchURL: jwkFetchURL.String(),
+		jwkFetchURL: jwkFetchURL,
 		issuer:      issuer,
 	}, nil
 }
 
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.
-func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
+func (a *jwtParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 	if token == "" || clientID == "" {
 		return nil, errTokenParseMissingArguments
 	}
@@ -143,7 +147,7 @@ func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 
 var jwksFetchFunction = jwk.Fetch
 
-func (a *JWTParser) getJWKSet(kid string) (jwk.Set, error) {
+func (a *jwtParser) getJWKSet(kid string) (jwk.Set, error) {
 	// There are three scenarios under which a token might not be found in the cache:
 	// 1. Cache is empty right after the startup.
 	// 2. Cache expired.
@@ -161,7 +165,7 @@ func (a *JWTParser) getJWKSet(kid string) (jwk.Set, error) {
 
 	// Fetch doesn't perform retries. Use background context because we don't want client disconnects to interrupt
 	// JWKS cache population process while other clients might be waiting for it.
-	jwkSet, err := jwksFetchFunction(context.Background(), a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
+	jwkSet, err := jwksFetchFunction(context.Background(), a.jwkFetchURL(), jwk.WithHTTPClient(a.HTTP))
 	if err != nil {
 		return nil, err
 	}
@@ -169,13 +173,13 @@ func (a *JWTParser) getJWKSet(kid string) (jwk.Set, error) {
 	return jwkSet, nil
 }
 
-func (a *JWTParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
+func (a *jwtParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
 	claimsJSON := func() string {
 		data, _ := json.Marshal(claims)
 		return string(data)
 	}
 
-	if !claims.VerifyIssuer(a.issuer, true) {
+	if !claims.VerifyIssuer(a.issuer(), true) {
 		return errors.Errorf("issuer claim validation failed, issuer: %s, claims: %v", a.issuer, claimsJSON())
 	}
 	// We're using 'cid' instead of audience ('aud') for some reason ¯\_(ツ)_/¯.

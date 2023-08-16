@@ -2,11 +2,11 @@ package sdk
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -43,8 +43,8 @@ type ContextConfig struct {
 	ClientSecret   string         `toml:"clientSecret" env:"CLIENT_SECRET"`
 	AccessToken    string         `toml:"accessToken,omitempty" env:"ACCESS_TOKEN"`
 	Project        string         `toml:"project,omitempty" env:"PROJECT"`
-	URL            string         `toml:"url,omitempty" env:"URL"`
-	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
+	URL            *url.URL       `toml:"url,omitempty" env:"URL"`
+	OktaOrgURL     *url.URL       `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
 	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
@@ -177,7 +177,7 @@ func (c *Config) read() error {
 	}
 	c.setCredentialsFromConfigOptions()
 	// Validate and correct.
-	c.URL = strings.TrimRight(c.URL, "/")
+	//c.URL = strings.TrimRight(c.URL, "/")
 	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !*c.DisableOkta {
 		return errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
 			"Config file location: %s.\nEnvironment variables: %s, %s",
@@ -198,7 +198,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"DEFAULT_CONTEXT":        "default",
 			"FILES_PROMPT_THRESHOLD": "23",
 			"FILES_PROMPT_ENABLED":   "true",
-			"OKTA_ORG_URL":           defaultOktaOrgURL,
+			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
 			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
 			"DISABLE_OKTA":           "false",
 			"TIMEOUT":                "1m",
@@ -388,8 +388,17 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 			return err
 		}
 		ef.SetUint(i)
+	case reflect.Struct:
+		// Special case url.URL values.
+		if tf.PkgPath() == "net/url" && tf.Name() == "URL" {
+			u, err := url.Parse(v)
+			if err != nil {
+				return err
+			}
+			ef.Set(reflect.ValueOf(*u))
+		}
 	default:
-		return errors.Errorf("unsupported field reflection kind: %s", tk)
+		return errors.Errorf("unsupported reflected field kind: %s", tk)
 	}
 	return nil
 }

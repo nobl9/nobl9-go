@@ -4,6 +4,7 @@ import (
 	"embed"
 	_ "embed"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,7 +30,7 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 		ContextConfig: ContextConfig{
 			ClientID:       "someId",
 			ClientSecret:   "someSecret",
-			OktaOrgURL:     defaultOktaOrgURL,
+			OktaOrgURL:     &defaultOktaOrgURL,
 			OktaAuthServer: defaultOktaAuthServerID,
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(time.Minute),
@@ -77,10 +78,10 @@ func TestReadConfig_FromFullConfigFile(t *testing.T) {
 			ClientSecret:   "non-default-client-secret",
 			AccessToken:    "non-default-access-token",
 			Project:        "non-default-project",
-			OktaOrgURL:     "https://non-default-okta-org-url.com",
+			OktaOrgURL:     &url.URL{Scheme: "https", Host: "non-default-okta-org-url.com"},
 			OktaAuthServer: "non-default-okta-auth-server",
 			Timeout:        ptr(100 * time.Minute),
-			URL:            "https://non-default-url.com",
+			URL:            &url.URL{Scheme: "https", Host: "non-default-url.com"},
 			DisableOkta:    ptr(true),
 		},
 		options: optionsConfig{FilePath: filePath},
@@ -99,7 +100,7 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 		ContextConfig: ContextConfig{
 			ClientID:       "clientId",
 			ClientSecret:   "clientSecret",
-			OktaOrgURL:     defaultOktaOrgURL,
+			OktaOrgURL:     &defaultOktaOrgURL,
 			OktaAuthServer: defaultOktaAuthServerID,
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(time.Minute),
@@ -177,7 +178,7 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		ContextConfig: ContextConfig{
 			ClientID:       "clientId",
 			ClientSecret:   "clientSecret",
-			OktaOrgURL:     defaultOktaOrgURL,
+			OktaOrgURL:     &defaultOktaOrgURL,
 			OktaAuthServer: defaultOktaAuthServerID,
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(10 * time.Minute),
@@ -201,7 +202,7 @@ func TestReadConfig_Defaults(t *testing.T) {
 		ContextConfig: ContextConfig{
 			ClientID:       "clientId",
 			ClientSecret:   "clientSecret",
-			OktaOrgURL:     defaultOktaOrgURL,
+			OktaOrgURL:     &defaultOktaOrgURL,
 			OktaAuthServer: defaultOktaAuthServerID,
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(time.Minute),
@@ -239,7 +240,7 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 		ContextConfig: ContextConfig{
 			ClientID:       "clientId",
 			ClientSecret:   "clientSecret",
-			OktaOrgURL:     defaultOktaOrgURL,
+			OktaOrgURL:     &defaultOktaOrgURL,
 			OktaAuthServer: defaultOktaAuthServerID,
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(time.Minute),
@@ -285,8 +286,8 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			ClientSecret:   "clientSecret",
 			AccessToken:    "my-token",
 			Project:        "my-project",
-			URL:            "http://localhost:8081",
-			OktaOrgURL:     "http://localhost:8080",
+			URL:            &url.URL{Scheme: "http", Host: "localhost:8081"},
+			OktaOrgURL:     &url.URL{Scheme: "http", Host: "localhost:8080"},
 			OktaAuthServer: "123",
 			DisableOkta:    ptr(false),
 			Timeout:        ptr(60 * time.Minute),

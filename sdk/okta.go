@@ -17,45 +17,40 @@ import (
 )
 
 const (
-	defaultOktaOrgURL       = "https://accounts.nobl9.com"
 	defaultOktaAuthServerID = "auseg9kiegWKEtJZC416"
 
-	oktaTokenEndpoint     = "v1/token"
-	oktaKeysEndpoint      = "v1/keys"
+	oktaTokenEndpointPath = "v1/token"
+	oktaKeysEndpointPath  = "v1/keys"
 	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
 )
 
-func DefaultOktaAuthServerURL() (*url.URL, error) {
-	return OktaAuthServerURL(defaultOktaOrgURL, defaultOktaAuthServerID)
+var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
+
+func oktaAuthServerURL(oktaOrgURL *url.URL, oktaAuthServer string) *url.URL {
+	return oktaOrgURL.JoinPath("oauth2", oktaAuthServer)
 }
 
-func OktaAuthServerURL(oktaOrgURL, oktaAuthServer string) (*url.URL, error) {
-	authServerURL, err := url.Parse(oktaOrgURL)
-	if err != nil {
-		return nil, errors.Wrapf(err, "invalid oktaOrgURL: %s", oktaOrgURL)
-	}
-	return authServerURL.JoinPath("oauth2", oktaAuthServer), nil
+func oktaTokenEndpoint(authServerURL *url.URL) *url.URL {
+	return authServerURL.JoinPath(oktaTokenEndpointPath)
 }
 
-func OktaTokenEndpoint(authServerURL *url.URL) *url.URL {
-	return authServerURL.JoinPath(oktaTokenEndpoint)
+func oktaKeysEndpoint(authServerURL *url.URL) *url.URL {
+	return authServerURL.JoinPath(oktaKeysEndpointPath)
 }
 
-func OktaKeysEndpoint(authServerURL *url.URL) *url.URL {
-	return authServerURL.JoinPath(oktaKeysEndpoint)
+type getTokenEndpointFunc = func() string
+
+type oktaClient struct {
+	HTTP             *http.Client
+	getTokenEndpoint getTokenEndpointFunc
 }
 
-type OktaClient struct {
-	HTTP                 *http.Client
-	requestTokenEndpoint string
-}
-
-func NewOktaClient(authServerURL *url.URL) *OktaClient {
-	return &OktaClient{
-		HTTP:                 retryhttp.NewClient(oktaRequestTimeout, nil),
-		requestTokenEndpoint: OktaTokenEndpoint(authServerURL).String(),
+func newOktaClient(getTokenEndpoint getTokenEndpointFunc) *oktaClient {
+	return &oktaClient{
+		HTTP:             retryhttp.NewClient(oktaRequestTimeout, nil),
+		getTokenEndpoint: getTokenEndpoint,
 	}
 }
 
@@ -65,7 +60,7 @@ type oktaTokenResponse struct {
 
 var errMissingClientCredentials = errors.New("client id and client secret must not be empty")
 
-func (okta *OktaClient) RequestAccessToken(
+func (okta *oktaClient) RequestAccessToken(
 	ctx context.Context,
 	clientID, clientSecret string,
 ) (token string, err error) {
@@ -79,7 +74,7 @@ func (okta *OktaClient) RequestAccessToken(
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
-		okta.requestTokenEndpoint,
+		okta.getTokenEndpoint(),
 		strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err
@@ -90,24 +85,24 @@ func (okta *OktaClient) RequestAccessToken(
 	resp, err := okta.HTTP.Do(req)
 	if err != nil {
 		return "", errors.Wrapf(err,
-			"failed to execute POST %s request to IDP", okta.requestTokenEndpoint)
+			"failed to execute POST %s request to IDP", okta.getTokenEndpoint())
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return "", errors.Errorf(
 			"cannot access the token from POST %s, IDP replied with (status: %d): %s",
-			okta.requestTokenEndpoint, resp.StatusCode, string(body))
+			okta.getTokenEndpoint(), resp.StatusCode, string(body))
 	}
 	var tr oktaTokenResponse
 	if err = json.NewDecoder(resp.Body).Decode(&tr); err != nil {
 		return "", errors.Wrapf(err,
-			"cannot decode the token provided by IDP from POST %s", okta.requestTokenEndpoint)
+			"cannot decode the token provided by IDP from POST %s", okta.getTokenEndpoint())
 	}
 	return tr.AccessToken, nil
 }
 
-func (okta *OktaClient) authHeader(clientID, clientSecret string) string {
+func (okta *oktaClient) authHeader(clientID, clientSecret string) string {
 	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(
 		[]byte(fmt.Sprintf("%s:%s", clientID, clientSecret))))
 }

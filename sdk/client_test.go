@@ -456,9 +456,8 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	// Declare the test server, we can provide the handler later on since it's not started yet.
 	srv = httptest.NewUnstartedServer(nil)
 	// Our server url will be our oktaOrgURL.
-	oktaOrgURL := "http://" + srv.Listener.Addr().String()
-	authServerURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
-	require.NoError(t, err)
+	oktaOrgURL := &url.URL{Scheme: "http", Host: srv.Listener.Addr().String()}
+	authServerURL := oktaAuthServerURL(oktaOrgURL, oktaAuthServer)
 
 	// Create a signed token and use the generated public key to create JWK.
 	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -494,13 +493,13 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	// Define the handler for test server.
 	srv.Config = &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path[1:] { // Trim leading '/'
-		case OktaTokenEndpoint(authServerURL).Path:
+		case oktaTokenEndpoint(authServerURL).Path:
 			assert.Equal(t,
 				// Basic base64(clientID:clientSecret)
 				"Basic "+base64.StdEncoding.EncodeToString([]byte(clientID+":"+clientSecret)),
 				r.Header.Get(HeaderAuthorization))
 			require.NoError(t, json.NewEncoder(w).Encode(oktaTokenResponse{AccessToken: token}))
-		case OktaKeysEndpoint(authServerURL).Path:
+		case oktaKeysEndpoint(authServerURL).Path:
 			require.NoError(t, json.NewEncoder(w).Encode(jwks))
 		case endpoint.Path:
 			// Headers we always require.
@@ -520,13 +519,13 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	})}
 
 	// Prepare our client.
-	oktaURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
+	//oktaURL, err := oktaAuthServerURL(oktaOrgURL, oktaAuthServer)
 	require.NoError(t, err)
-	client, err = NewClientBuilder(userAgent).
-		WithDefaultCredentials(clientID, clientSecret).
-		WithOktaAuthServerURL(oktaURL).
-		Build()
-	require.NoError(t, err)
+	//client, err = NewClientBuilder(userAgent).
+	//	WithDefaultCredentials(clientID, clientSecret).
+	//	WithOktaAuthServerURL(oktaURL).
+	//	Build()
+	//require.NoError(t, err)
 
 	return client, srv
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sync"
 	"time"
 
@@ -44,19 +43,24 @@ type accessTokenAgentProfile struct {
 	Project      string `json:"project"`
 }
 
-func DefaultCredentials(clientID, clientSecret string, authServerURL *url.URL) (*Credentials, error) {
-	if clientID == "" || clientSecret == "" || authServerURL == nil {
-		return nil, errors.New("clientID, clientSecret and AuthServerURL must all be provided for DefaultCredentials call")
-	}
-	parser, err := NewJWTParser(authServerURL.String(), OktaKeysEndpoint(authServerURL))
+func newCredentials(config *Config) (*Credentials, error) {
+	parser, err := newJWTParser(
+		func() string {
+			return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
+		},
+		func() string {
+			return oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
+		})
 	if err != nil {
 		return nil, err
 	}
 	return &Credentials{
-		ClientID:      clientID,
-		ClientSecret:  clientSecret,
-		TokenParser:   parser,
-		TokenProvider: NewOktaClient(authServerURL),
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		TokenParser:  parser,
+		TokenProvider: newOktaClient(func() string {
+			return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
+		}),
 	}, nil
 }
 
