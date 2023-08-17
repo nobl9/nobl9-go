@@ -35,9 +35,6 @@ func init() {
 		ReleaseChannelBeta.String():   {},
 		ReleaseChannelAlpha.String():  {},
 	}
-	beta := map[string]struct{}{
-		ReleaseChannelBeta.String(): {},
-	}
 
 	ThousandEyesTestAgentConfig = map[string]thousandEyesConfig{
 		ThousandEyesNetLatency: {
@@ -70,15 +67,15 @@ func init() {
 		},
 		ThousandEyesServerTotalTime: {
 			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: beta,
+			SupportedChannels: all,
 		},
 		ThousandEyesDNSServerResolutionTime: {
 			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: beta,
+			SupportedChannels: all,
 		},
 		ThousandEyesDNSSECValid: {
 			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: beta,
+			SupportedChannels: all,
 		},
 	}
 }
