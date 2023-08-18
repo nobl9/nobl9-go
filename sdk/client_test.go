@@ -1,11 +1,14 @@
 package sdk
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -313,6 +316,114 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, responsePayload, objects)
+}
+
+func TestCreateRequest(t *testing.T) {
+	client, srv := prepareTestClient(t, endpointConfig{})
+
+	// Start and close the test server.
+	srv.Start()
+	defer srv.Close()
+
+	t.Run("all parameters", func(t *testing.T) {
+		values := url.Values{"name": []string{"this"}, "team": []string{"green"}}
+		req, err := client.CreateRequest(
+			context.Background(),
+			http.MethodGet,
+			"/test",
+			"my-project",
+			values,
+			bytes.NewBufferString("foo"),
+		)
+		require.NoError(t, err)
+		assert.Equal(t, "/api/test", req.URL.Path)
+		assert.Equal(t, http.Header{
+			HeaderOrganization: []string{"my-org"},
+			HeaderProject:      []string{"my-project"},
+			HeaderUserAgent:    []string{"sloctl"},
+		}, req.Header)
+		// If client.preRequestOnce was not executed, the host wouldn't have been set.
+		assert.Contains(t, srv.URL, req.URL.Host)
+		assert.Equal(t, values, req.URL.Query())
+		body, err := io.ReadAll(req.Body)
+		require.NoError(t, err)
+		assert.Equal(t, "foo", string(body))
+	})
+
+	t.Run("no body or values", func(t *testing.T) {
+		req, err := client.CreateRequest(
+			context.Background(),
+			http.MethodGet,
+			"/test",
+			"my-project",
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		assert.Empty(t, req.URL.Query())
+		assert.Empty(t, req.Body)
+	})
+
+	t.Run("no project", func(t *testing.T) {
+		req, err := client.CreateRequest(
+			context.Background(),
+			http.MethodGet,
+			"/test",
+			"",
+			nil,
+			nil,
+		)
+		require.NoError(t, err)
+		assert.NotContains(t, req.Header, HeaderProject)
+	})
+}
+
+func TestProcessResponseErrors(t *testing.T) {
+	t.Parallel()
+	c := Client{}
+
+	t.Run("status code smaller than 300, no error", func(t *testing.T) {
+		t.Parallel()
+		for code := 200; code < 300; code++ {
+			require.NoError(t, c.processResponseErrors(&http.Response{StatusCode: code}))
+		}
+	})
+
+	t.Run("status code between 300 and 399", func(t *testing.T) {
+		t.Parallel()
+		for code := 300; code < 400; code++ {
+			err := c.processResponseErrors(&http.Response{
+				StatusCode: code,
+				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
+			require.Error(t, err)
+			require.EqualError(t, err, fmt.Sprintf("bad status code response: %d, body: error!", code))
+		}
+	})
+
+	t.Run("user errors", func(t *testing.T) {
+		t.Parallel()
+		for code := 400; code < 500; code++ {
+			err := c.processResponseErrors(&http.Response{
+				StatusCode: code,
+				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
+			require.Error(t, err)
+			require.EqualError(t, err, "error!")
+		}
+	})
+
+	t.Run("server errors", func(t *testing.T) {
+		t.Parallel()
+		for code := 500; code < 600; code++ {
+			err := c.processResponseErrors(&http.Response{
+				StatusCode: code,
+				Header:     http.Header{HeaderTraceID: []string{"123"}},
+				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
+			require.Error(t, err)
+			require.EqualError(t,
+				err,
+				fmt.Sprintf("%s error message: error! error id: 123", http.StatusText(code)))
+		}
+	})
 }
 
 type endpointConfig struct {
