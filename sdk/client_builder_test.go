@@ -16,7 +16,7 @@ func TestClientBuilder_WithDefaults(t *testing.T) {
 	client, err := NewClientBuilder(config).Build()
 	require.NoError(t, err)
 	assert.NotEmpty(t, client.userAgent)
-	assert.NotEmpty(t, client.http)
+	assert.NotEmpty(t, client.HTTP)
 }
 
 func TestClientBuilder_WithUserAgent(t *testing.T) {
@@ -35,7 +35,7 @@ func TestClientBuilder_WithHTTPClient(t *testing.T) {
 		WithHTTPClient(httpClient).
 		Build()
 	require.NoError(t, err)
-	assert.Equal(t, httpClient, client.http)
+	assert.Equal(t, httpClient, client.HTTP)
 }
 
 //go:embed test_data/client_builder/config.toml

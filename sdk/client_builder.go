@@ -46,8 +46,8 @@ func (b *ClientBuilder) Build() (*Client, error) {
 		b.http = retryhttp.NewClient(b.config.Timeout, creds)
 	}
 	client := &Client{
-		http:        b.http,
-		config:      b.config,
+		HTTP:        b.http,
+		Config:      b.config,
 		credentials: creds,
 		userAgent:   b.userAgent,
 	}

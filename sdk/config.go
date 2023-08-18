@@ -16,37 +16,39 @@ import (
 const (
 	EnvPrefix = "NOBL9_SDK_"
 
-	defaultContext                     = "default"
-	defaultRelativeConfigPath          = ".config/nobl9/config.toml"
-	defaultOktaAuthServerID            = "auseg9kiegWKEtJZC416"
-	defaultDisableOkta                 = false
-	defaultNoConfigFile                = false
-	defaultFilesPromptThreshold        = 23
-	defaultFilesPromptThresholdEnabled = true
-	defaultTimeout                     = 10 * time.Second
+	defaultContext              = "default"
+	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
+	defaultOktaAuthServerID     = "auseg9kiegWKEtJZC416"
+	defaultDisableOkta          = false
+	defaultNoConfigFile         = false
+	defaultFilesPromptThreshold = 23
+	defaultFilesPromptEnabled   = true
+	defaultTimeout              = 10 * time.Second
 )
 
 var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
 // Config combines the ContextlessConfig and ContextConfig of the current, selected context.
 type Config struct {
-	DefaultContext string
-	ClientID       string
-	ClientSecret   string
-	AccessToken    string
-	Project        string
-	URL            *url.URL
-	OktaOrgURL     *url.URL
-	OktaAuthServer string
-	DisableOkta    bool
-	Timeout        time.Duration
+	DefaultContext       string
+	ClientID             string
+	ClientSecret         string
+	AccessToken          string
+	Project              string
+	URL                  *url.URL
+	OktaOrgURL           *url.URL
+	OktaAuthServer       string
+	DisableOkta          bool
+	Timeout              time.Duration
+	FilesPromptThreshold int
+	FilesPromptEnabled   bool
 
 	contextlessConfig ContextlessConfig
 	contextConfig     ContextConfig
 
-	fileConfig     fileConfig
-	options        optionsConfig
-	configDefaults map[string]string
+	fileConfig        fileConfig
+	options           optionsConfig
+	envConfigDefaults map[string]string
 }
 
 // ContextlessConfig stores config not tied to any specific context.
@@ -205,12 +207,12 @@ func newConfig(options []ConfigOption) (*Config, error) {
 		options: optionsConfig{
 			envPrefix: EnvPrefix,
 		},
-		configDefaults: map[string]string{
+		envConfigDefaults: map[string]string{
 			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
 			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
 			"DEFAULT_CONTEXT":        defaultContext,
 			"FILES_PROMPT_THRESHOLD": strconv.Itoa(defaultFilesPromptThreshold),
-			"FILES_PROMPT_ENABLED":   strconv.FormatBool(defaultFilesPromptThresholdEnabled),
+			"FILES_PROMPT_ENABLED":   strconv.FormatBool(defaultFilesPromptEnabled),
 			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
 			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
@@ -235,6 +237,8 @@ func (c *Config) resolveContextlessConfig() error {
 	} else {
 		c.DefaultContext = c.contextlessConfig.DefaultContext
 	}
+	c.FilesPromptEnabled = *c.contextlessConfig.FilesPromptEnabled
+	c.FilesPromptThreshold = *c.contextlessConfig.FilesPromptThreshold
 	return nil
 }
 
@@ -268,12 +272,8 @@ func (c *Config) resolveContextConfig() error {
 		}
 	}
 	c.OktaAuthServer = c.contextConfig.OktaAuthServer
-	if c.contextConfig.Timeout != nil {
-		c.Timeout = *c.contextConfig.Timeout
-	}
-	if c.contextConfig.DisableOkta != nil {
-		c.DisableOkta = *c.contextConfig.DisableOkta
-	}
+	c.Timeout = *c.contextConfig.Timeout
+	c.DisableOkta = *c.contextConfig.DisableOkta
 	return nil
 }
 
@@ -363,7 +363,7 @@ func (c *Config) processEnvVariables(iv interface{}) error {
 		// Check for default value.
 		if val == "" {
 			var hasDefault bool
-			val, hasDefault = c.configDefaults[key]
+			val, hasDefault = c.envConfigDefaults[key]
 			// If the value is empty and we don't have a default, don't do anything.
 			if !hasDefault {
 				continue

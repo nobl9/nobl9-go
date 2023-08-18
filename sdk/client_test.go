@@ -344,7 +344,7 @@ func TestCreateRequest(t *testing.T) {
 			HeaderProject:      []string{"my-project"},
 			HeaderUserAgent:    []string{"sloctl"},
 		}, req.Header)
-		// If client.preRequestOnce was not executed, the host wouldn't have been set.
+		// If client.refreshAccessTokenOnce was not executed, the host wouldn't have been set.
 		assert.Contains(t, srv.URL, req.URL.Host)
 		assert.Equal(t, values, req.URL.Query())
 		body, err := io.ReadAll(req.Body)
@@ -503,7 +503,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		"nbf": time.Now().Add(-time.Hour).Unix(),
 		"m2mProfile": map[string]interface{}{
 			"environment":  authServerURL.Host, // We're using the same server to serve responses for all endpoints.
-			"Organization": organization,
+			"organization": organization,
 			"user":         "test@nobl9.com",
 		},
 	}

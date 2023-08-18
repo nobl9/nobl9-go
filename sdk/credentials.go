@@ -30,14 +30,14 @@ type AccessTokenPostRequestHook = func(token string) error
 // accessTokenM2MProfile stores information specific to an Okta M2M application.
 type accessTokenM2MProfile struct {
 	User         string `json:"user"`
-	Organization string `json:"Organization"`
+	Organization string `json:"organization"`
 	Environment  string `json:"environment"`
 }
 
 // accessTokenAgentProfile stores information specific to an Okta Agent application.
 type accessTokenAgentProfile struct {
 	User         string `json:"user"`
-	Organization string `json:"Organization"`
+	Organization string `json:"organization"`
 	Environment  string `json:"environment"`
 	Name         string `json:"name"`
 	Project      string `json:"project"`
@@ -72,12 +72,10 @@ type credentials struct {
 	// Set after the token is fetched.
 	accessToken string
 	// Extracted from claims.
-	// Organization and Environment, if accessed before the first request
-	// is executed, will be empty as the token was not yet fetched.
-	// To force them to be set earlier you could provide the access token
-	// to credentials or call RefreshAccessToken manually.
-	Organization string
-	Environment  string
+	// organization the token belongs to.
+	organization string
+	// environment extracted from token claims which is the HTTP host of the Client requests.
+	environment string
 	// Claims.
 	m2mProfile   accessTokenM2MProfile
 	agentProfile accessTokenAgentProfile
@@ -92,32 +90,62 @@ type credentials struct {
 	// PostRequestHook is not run in offline mode.
 	PostRequestHook AccessTokenPostRequestHook
 
-	mu sync.Mutex
+	mu   sync.Mutex
+	once sync.Once
+}
+
+// GetEnvironment first ensures a token has been parsed before returning the environment,
+// as it is extracted from the token claims.
+// credentials.environment should no tbe accessed directly, but rather through this method.
+func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
+	if err := c.refreshAccessTokenOnce(ctx); err != nil {
+		return "", err
+	}
+	return c.environment, nil
+}
+
+// GetOrganization first ensures a token has been parsed before returning the organization,
+// as it is extracted from the token claims.
+// credentials.organization should no tbe accessed directly, but rather through this method.
+func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
+	if err := c.refreshAccessTokenOnce(ctx); err != nil {
+		return "", err
+	}
+	return c.organization, nil
+}
+
+func (c *credentials) refreshAccessTokenOnce(ctx context.Context) (err error) {
+	c.once.Do(func() {
+		if _, err = c.refreshAccessToken(ctx); err != nil {
+			return
+		}
+	})
+	return err
 }
 
 // It's important for this to be clean client, request middleware in Go is kinda clunky
-// and requires chaining multiple http clients, timeouts and retries should be handled
+// and requires chaining multiple HTTP clients, timeouts and retries should be handled
 // by the predecessors of this one.
 var cleanCredentialsHTTPClient = &http.Client{}
 
 // RoundTrip is responsible for making sure the access token is set and also update it
 // if the expiry is imminent. It also sets the HeaderOrganization.
-// It will wrap any errors returned from RefreshAccessToken
+// It will wrap any errors returned from refreshAccessToken
 // in retryhttp.NonRetryableError to ensure the request is not retried by the wrapping client.
 func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
-	tokenUpdated, err := c.RefreshAccessToken(req.Context())
+	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
 		return nil, retryhttp.NonRetryableError{Err: err}
 	}
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
-		c.SetAuthorizationHeader(req)
+		c.setAuthorizationHeader(req)
 	}
 	return cleanCredentialsHTTPClient.Do(req)
 }
 
-// SetAuthorizationHeader sets an authorization header which should be included
+// setAuthorizationHeader sets an authorization header which should be included
 // if access token was set in request to the resource server.
-func (c *credentials) SetAuthorizationHeader(r *http.Request) {
+func (c *credentials) setAuthorizationHeader(r *http.Request) {
 	if c.accessToken == "" {
 		return
 	}
@@ -139,10 +167,10 @@ func (c *credentials) SetAccessToken(token string) error {
 	return c.setNewToken(token, false)
 }
 
-// RefreshAccessToken checks the accessToken expiry with an offset to detect if the token
+// refreshAccessToken checks the accessToken expiry with an offset to detect if the token
 // is soon to be expired. If so, it wll request a new token and update the credentials state.
 // If the token was not yet set, it will request a new one all the same.
-func (c *credentials) RefreshAccessToken(ctx context.Context) (updated bool, err error) {
+func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
 		return
 	}
@@ -212,11 +240,11 @@ func (c *credentials) setNewToken(token string, withHook bool) error {
 	c.accessToken = token
 	switch tokenTyp {
 	case tokenTypeM2M:
-		c.Organization = m2mProfile.Organization
-		c.Environment = m2mProfile.Environment
+		c.organization = m2mProfile.Organization
+		c.environment = m2mProfile.Environment
 	case tokenTypeAgent:
-		c.Organization = agentProfile.Organization
-		c.Environment = agentProfile.Environment
+		c.organization = agentProfile.Organization
+		c.environment = agentProfile.Environment
 	}
 	c.tokenType = tokenTyp
 	c.m2mProfile = m2mProfile

@@ -78,20 +78,12 @@ type M2MAppCredentials struct {
 
 // Client represents API high level client.
 type Client struct {
-	http        *http.Client
-	config      *Config
+	Config *Config
+	HTTP   *http.Client
+
 	credentials *credentials
 	userAgent   string
-	apiURL      *url.URL
 	once        sync.Once
-}
-
-func (c *Client) GetOrganization() string {
-	return c.credentials.Organization
-}
-
-func (c *Client) GetAPIURL() url.URL {
-	return *c.apiURL
 }
 
 // DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
@@ -105,8 +97,8 @@ func DefaultClient() (*Client, error) {
 		return nil, err
 	}
 	client := &Client{
-		http:        retryhttp.NewClient(config.Timeout, creds),
-		config:      config,
+		HTTP:        retryhttp.NewClient(config.Timeout, creds),
+		Config:      config,
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
 	}
@@ -117,50 +109,12 @@ func DefaultClient() (*Client, error) {
 }
 
 func (c *Client) loadConfig() error {
-	if c.config.URL == nil {
-		c.apiURL = c.config.URL
-	}
-	if c.config.AccessToken != "" {
-		if err := c.credentials.SetAccessToken(c.config.AccessToken); err != nil {
+	if c.Config.AccessToken != "" {
+		if err := c.credentials.SetAccessToken(c.Config.AccessToken); err != nil {
 			return err
-		}
-		if c.apiURL == nil {
-			c.setApiUrlFromM2MProfile()
 		}
 	}
 	return nil
-}
-
-// preRequestOnce runs exactly one time, before we execute the first request.
-// It first makes sure the token is up-to-date by calling credentials.RefreshAccessToken.
-// We need to make sure the Client.apiURL is set, and it has to be done, before
-// any http.Request is constructed. If the API URL was set using SetApiURL we won't
-// extract the URL from the token.
-func (c *Client) preRequestOnce(ctx context.Context) (err error) {
-	c.once.Do(func() {
-		if _, err = c.credentials.RefreshAccessToken(ctx); err != nil {
-			return
-		}
-		// The only use case for API URL override are debugging/dev needs.
-		// Only set the API URL if it was not overridden.
-		if c.apiURL == nil {
-			c.setApiUrlFromM2MProfile()
-		}
-	})
-	return err
-}
-
-// urlScheme is exported into var purely for testing purposes.
-// While it's possible to run https test server, it is much easier to go without TLS.
-var urlScheme = "https"
-
-// setApiUrlFromM2MProfile sets Client.apiURL using environment from JWT claims.
-func (c *Client) setApiUrlFromM2MProfile() {
-	c.apiURL = &url.URL{
-		Scheme: urlScheme,
-		Host:   c.credentials.Environment,
-		Path:   "api",
-	}
 }
 
 const (
@@ -205,7 +159,7 @@ func (c *Client) GetObjectsWithParams(
 		return response, err
 	}
 
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return response, errors.Wrap(err, "failed to execute request")
 	}
@@ -297,7 +251,7 @@ func (c *Client) applyOrDeleteObjects(
 	if err != nil {
 		return err
 	}
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
@@ -306,16 +260,16 @@ func (c *Client) applyOrDeleteObjects(
 }
 
 func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
-	// Make sure the Organization is available.
-	if err := c.preRequestOnce(ctx); err != nil {
-		return nil, err
+	org, err := c.credentials.GetOrganization(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed get organization")
 	}
 	for i := range objects {
 		objCtx, ok := objects[i].(v1alpha.ObjectContext)
 		if !ok {
 			continue
 		}
-		objects[i] = objCtx.SetOrganization(c.credentials.Organization)
+		objects[i] = objCtx.SetOrganization(org)
 	}
 	return objects, nil
 }
@@ -325,7 +279,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to execute request")
 	}
@@ -366,7 +320,7 @@ func (c *Client) DeleteObjectsByName(
 	if err != nil {
 		return err
 	}
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
@@ -389,7 +343,7 @@ func (c *Client) GetAgentCredentials(
 	if err != nil {
 		return creds, err
 	}
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return creds, errors.Wrap(err, "failed to execute request")
 	}
@@ -411,15 +365,20 @@ func (c *Client) CreateRequest(
 	q url.Values,
 	body io.Reader,
 ) (*http.Request, error) {
-	if err := c.preRequestOnce(ctx); err != nil {
+	apiURL, err := c.getAPIURL(ctx)
+	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, method, c.apiURL.JoinPath(endpoint).String(), body)
+	req, err := http.NewRequestWithContext(ctx, method, apiURL.JoinPath(endpoint).String(), body)
 	if err != nil {
 		return nil, err
 	}
 	// Mandatory headers for all API requests.
-	req.Header.Set(HeaderOrganization, c.credentials.Organization)
+	org, err := c.credentials.GetOrganization(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed get organization")
+	}
+	req.Header.Set(HeaderOrganization, org)
 	req.Header.Set(HeaderUserAgent, c.userAgent)
 	// Optional headers.
 	if project != "" {
@@ -429,6 +388,27 @@ func (c *Client) CreateRequest(
 	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	req.URL.RawQuery = q.Encode()
 	return req, nil
+}
+
+// urlScheme is exported into var purely for testing purposes.
+// While it's possible to run https test server, it is much easier to go without TLS.
+var urlScheme = "https"
+
+// getAPIURL bye default uses environment from JWT claims as a host.
+// If Config.URL was provided it is used instead.
+func (c *Client) getAPIURL(ctx context.Context) (*url.URL, error) {
+	if c.Config.URL != nil {
+		return c.Config.URL, nil
+	}
+	env, err := c.credentials.GetEnvironment(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get environment")
+	}
+	return &url.URL{
+		Scheme: urlScheme,
+		Host:   env,
+		Path:   "api",
+	}, nil
 }
 
 func (c *Client) processResponseErrors(resp *http.Response) error {

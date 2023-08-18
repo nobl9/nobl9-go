@@ -168,7 +168,7 @@ func TestJWTParser_Parse(t *testing.T) {
 			"nbf": time.Now().Add(-time.Hour).Unix(),
 			"m2mProfile": map[string]interface{}{
 				"environment":  "dev.nobl9.com",
-				"Organization": "my-org",
+				"organization": "my-org",
 				"user":         "test@nobl9.com",
 			},
 		}
@@ -264,7 +264,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 func TestM2MProfileFromClaims(t *testing.T) {
 	m2mProfile := map[string]interface{}{
 		"user":         "test@nobl9.com",
-		"Organization": "my-org",
+		"organization": "my-org",
 		"environment":  "dev.nobl9.com",
 	}
 	for _, claims := range []jwt.MapClaims{
@@ -288,7 +288,7 @@ func TestM2MProfileFromClaims(t *testing.T) {
 func TestAgentProfileFromClaims(t *testing.T) {
 	agentProfile := map[string]interface{}{
 		"user":         "test@nobl9.com",
-		"Organization": "my-org",
+		"organization": "my-org",
 		"environment":  "dev.nobl9.com",
 		"name":         "my-agent",
 		"project":      "default",

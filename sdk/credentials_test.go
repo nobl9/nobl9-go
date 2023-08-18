@@ -18,14 +18,14 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 	t.Run("access token is not set, do not set the header", func(t *testing.T) {
 		creds := &credentials{accessToken: ""}
 		req := &http.Request{}
-		creds.SetAuthorizationHeader(req)
+		creds.setAuthorizationHeader(req)
 		assert.Empty(t, req.Header)
 	})
 
 	t.Run("set the header", func(t *testing.T) {
 		creds := &credentials{accessToken: "123"}
 		req := &http.Request{}
-		creds.SetAuthorizationHeader(req)
+		creds.setAuthorizationHeader(req)
 		require.Contains(t, req.Header, HeaderAuthorization)
 		assert.Equal(t, "Bearer 123", req.Header.Get(HeaderAuthorization))
 	})
@@ -34,7 +34,7 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("don't run in offline mode", func(t *testing.T) {
 		creds := &credentials{config: &Config{DisableOkta: true}}
-		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
+		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.False(t, tokenUpdated)
 	})
@@ -68,7 +68,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				tokenProvider: tokenProvider,
 				tokenParser:   tokenParser,
 			}
-			_, err := creds.RefreshAccessToken(context.Background())
+			_, err := creds.refreshAccessToken(context.Background())
 			require.NoError(t, err)
 			expectedCalledTimes := 0
 			if test.TokenFetched {
@@ -88,7 +88,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				"m2mProfile": map[string]interface{}{
 					"user":         "test@user.com",
 					"environment":  "app.nobl9.com",
-					"Organization": "my-org",
+					"organization": "my-org",
 				},
 			},
 		}
@@ -102,7 +102,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			tokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
+		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.True(t, tokenUpdated, "accessToken must be updated")
 		assert.True(t, hookCalled, "PostRequestHook must be called")
@@ -111,8 +111,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 		assert.Equal(t, "access-token", creds.accessToken)
-		assert.Equal(t, "app.nobl9.com", creds.Environment)
-		assert.Equal(t, "my-org", creds.Organization)
+		assert.Equal(t, "app.nobl9.com", creds.environment)
+		assert.Equal(t, "my-org", creds.organization)
 		assert.Equal(t, tokenTypeM2M, creds.tokenType)
 		assert.Equal(t, accessTokenM2MProfile{
 			User:         "test@user.com",
@@ -131,7 +131,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				"agentProfile": map[string]interface{}{
 					"user":         "test@user.com",
 					"environment":  "app.nobl9.com",
-					"Organization": "my-org",
+					"organization": "my-org",
 					"name":         "my-agent",
 					"project":      "default",
 				},
@@ -147,7 +147,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			tokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
+		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.True(t, tokenUpdated, "accessToken must be updated")
 		assert.True(t, hookCalled, "PostRequestHook must be called")
@@ -156,8 +156,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 		assert.Equal(t, "access-token", creds.accessToken)
-		assert.Equal(t, "app.nobl9.com", creds.Environment)
-		assert.Equal(t, "my-org", creds.Organization)
+		assert.Equal(t, "app.nobl9.com", creds.environment)
+		assert.Equal(t, "my-org", creds.organization)
 		assert.Equal(t, tokenTypeAgent, creds.tokenType)
 		assert.Equal(t, accessTokenAgentProfile{
 			User:         "test@user.com",
@@ -176,7 +176,7 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 			"m2mProfile": map[string]interface{}{
 				"user":         "test@user.com",
 				"environment":  "app.nobl9.com",
-				"Organization": "my-org",
+				"organization": "my-org",
 			},
 		},
 	}
@@ -191,8 +191,8 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	assert.Equal(t, "access-token", tokenParser.calledWithToken)
 	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
 	assert.Equal(t, "access-token", creds.accessToken)
-	assert.Equal(t, "app.nobl9.com", creds.Environment)
-	assert.Equal(t, "my-org", creds.Organization)
+	assert.Equal(t, "app.nobl9.com", creds.environment)
+	assert.Equal(t, "my-org", creds.organization)
 	assert.Equal(t, tokenTypeM2M, creds.tokenType)
 	assert.Equal(t, accessTokenM2MProfile{
 		User:         "test@user.com",
