@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -22,11 +22,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk/definitions"
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
-)
-
-// Timeout use for every request
-const (
-	Timeout = 10 * time.Second
 )
 
 // DefaultProject is a value of the default project.
@@ -83,66 +78,67 @@ type M2MAppCredentials struct {
 
 // Client represents API high level client.
 type Client struct {
-	HTTP        *http.Client
-	Credentials *Credentials
-	UserAgent   string
+	http        *http.Client
+	config      *Config
+	credentials *credentials
+	userAgent   string
 	apiURL      *url.URL
 	once        sync.Once
 }
 
-// DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
-func DefaultClient() (*Client, error) {
-	conf, err := ReadConfig()
-	if err != nil {
-		return nil, err
-	}
-	creds, err := newCredentials(conf.ClientID, conf.ClientSecret, authServerURL)
-	if err != nil {
-		return nil, err
-	}
-	return &Client{
-		HTTP:        retryhttp.NewClient(Timeout, creds),
-		Credentials: creds,
-		UserAgent:   getDefaultUserAgent(),
-	}, nil
+func (c *Client) GetOrganization() string {
+	return c.credentials.Organization
 }
 
-// SetAccessToken provisions an initial token for the Client to use.
-// It should be used before executing the first request with the Client,
-// as the Client, before executing request, will fetch a new token if none was provided.
-func (c *Client) SetAccessToken(token string) error {
-	if err := c.Credentials.SetAccessToken(token); err != nil {
-		return err
-	}
-	if c.apiURL == nil {
-		c.setApiUrlFromM2MProfile()
-	}
-	return nil
-}
-
-// SetApiURL allows to override the API URL otherwise inferred from access token.
-func (c *Client) SetApiURL(u string) error {
-	up, err := url.Parse(u)
-	if err != nil {
-		return err
-	}
-	c.apiURL = up
-	return nil
-}
-
-// GetApiURL retrieves the API URL of the configured Client instance.
-func (c *Client) GetApiURL() url.URL {
+func (c *Client) GetAPIURL() url.URL {
 	return *c.apiURL
 }
 
+// DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
+func DefaultClient() (*Client, error) {
+	config, err := ReadConfig()
+	if err != nil {
+		return nil, err
+	}
+	creds, err := newCredentials(config)
+	if err != nil {
+		return nil, err
+	}
+	client := &Client{
+		http:        retryhttp.NewClient(config.Timeout, creds),
+		config:      config,
+		credentials: creds,
+		userAgent:   getDefaultUserAgent(),
+	}
+	if err = client.loadConfig(); err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func (c *Client) loadConfig() error {
+	if c.config.URL == nil {
+		c.apiURL = c.config.URL
+	}
+	if c.config.AccessToken != "" {
+		if err := c.credentials.SetAccessToken(c.config.AccessToken); err != nil {
+			return err
+		}
+		if c.apiURL == nil {
+			c.setApiUrlFromM2MProfile()
+		}
+	}
+	return nil
+}
+
 // preRequestOnce runs exactly one time, before we execute the first request.
-// It first makes sure the token is up-to-date by calling Credentials.RefreshAccessToken.
+// It first makes sure the token is up-to-date by calling credentials.RefreshAccessToken.
 // We need to make sure the Client.apiURL is set, and it has to be done, before
 // any http.Request is constructed. If the API URL was set using SetApiURL we won't
 // extract the URL from the token.
 func (c *Client) preRequestOnce(ctx context.Context) (err error) {
 	c.once.Do(func() {
-		if _, err = c.Credentials.RefreshAccessToken(ctx); err != nil {
+		if _, err = c.credentials.RefreshAccessToken(ctx); err != nil {
 			return
 		}
 		// The only use case for API URL override are debugging/dev needs.
@@ -162,7 +158,7 @@ var urlScheme = "https"
 func (c *Client) setApiUrlFromM2MProfile() {
 	c.apiURL = &url.URL{
 		Scheme: urlScheme,
-		Host:   c.Credentials.Environment,
+		Host:   c.credentials.Environment,
 		Path:   "api",
 	}
 }
@@ -208,7 +204,8 @@ func (c *Client) GetObjectsWithParams(
 	if err != nil {
 		return response, err
 	}
-	resp, err := c.HTTP.Do(req)
+
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return response, errors.Wrap(err, "failed to execute request")
 	}
@@ -300,7 +297,7 @@ func (c *Client) applyOrDeleteObjects(
 	if err != nil {
 		return err
 	}
-	resp, err := c.HTTP.Do(req)
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
@@ -309,7 +306,7 @@ func (c *Client) applyOrDeleteObjects(
 }
 
 func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
-	// Make sure the organization is available.
+	// Make sure the Organization is available.
 	if err := c.preRequestOnce(ctx); err != nil {
 		return nil, err
 	}
@@ -318,7 +315,7 @@ func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manife
 		if !ok {
 			continue
 		}
-		objects[i] = objCtx.SetOrganization(c.Credentials.Organization)
+		objects[i] = objCtx.SetOrganization(c.credentials.Organization)
 	}
 	return objects, nil
 }
@@ -328,7 +325,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.HTTP.Do(req)
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to execute request")
 	}
@@ -369,7 +366,7 @@ func (c *Client) DeleteObjectsByName(
 	if err != nil {
 		return err
 	}
-	resp, err := c.HTTP.Do(req)
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute request")
 	}
@@ -377,7 +374,7 @@ func (c *Client) DeleteObjectsByName(
 	return c.processResponseErrors(resp)
 }
 
-// GetAgentCredentials gets agent credentials from Okta.
+// GetAgentCredentials retrieves manifest.KindAgent credentials.
 func (c *Client) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
@@ -392,7 +389,7 @@ func (c *Client) GetAgentCredentials(
 	if err != nil {
 		return creds, err
 	}
-	resp, err := c.HTTP.Do(req)
+	resp, err := c.http.Do(req)
 	if err != nil {
 		return creds, errors.Wrap(err, "failed to execute request")
 	}
@@ -422,8 +419,8 @@ func (c *Client) CreateRequest(
 		return nil, err
 	}
 	// Mandatory headers for all API requests.
-	req.Header.Set(HeaderOrganization, c.Credentials.Organization)
-	req.Header.Set(HeaderUserAgent, c.UserAgent)
+	req.Header.Set(HeaderOrganization, c.credentials.Organization)
+	req.Header.Set(HeaderUserAgent, c.userAgent)
 	// Optional headers.
 	if project != "" {
 		req.Header.Set(HeaderProject, project)
@@ -469,5 +466,12 @@ func getDefaultUserAgent() string {
 	if !ok {
 		return "sdk"
 	}
-	return info.GoVersion
+	var sdkVersion string
+	for _, dep := range info.Deps {
+		if dep.Path == "github.com/nobl9/nobl9-go" {
+			sdkVersion = dep.Version
+			break
+		}
+	}
+	return fmt.Sprintf("sdk/%s (%s %s %s)", sdkVersion, runtime.GOOS, runtime.GOARCH, info.GoVersion)
 }

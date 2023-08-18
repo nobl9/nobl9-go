@@ -16,14 +16,14 @@ import (
 
 func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 	t.Run("access token is not set, do not set the header", func(t *testing.T) {
-		creds := &Credentials{AccessToken: ""}
+		creds := &credentials{accessToken: ""}
 		req := &http.Request{}
 		creds.SetAuthorizationHeader(req)
 		assert.Empty(t, req.Header)
 	})
 
 	t.Run("set the header", func(t *testing.T) {
-		creds := &Credentials{AccessToken: "123"}
+		creds := &credentials{accessToken: "123"}
 		req := &http.Request{}
 		creds.SetAuthorizationHeader(req)
 		require.Contains(t, req.Header, HeaderAuthorization)
@@ -33,7 +33,7 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 
 func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("don't run in offline mode", func(t *testing.T) {
-		creds := &Credentials{offlineMode: true}
+		creds := &credentials{config: &Config{DisableOkta: true}}
 		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.False(t, tokenUpdated)
@@ -62,10 +62,11 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
-			creds := &Credentials{
+			creds := &credentials{
+				config:        &Config{DisableOkta: false},
 				claims:        test.Claims,
-				TokenProvider: tokenProvider,
-				TokenParser:   tokenParser,
+				tokenProvider: tokenProvider,
+				tokenParser:   tokenParser,
 			}
 			_, err := creds.RefreshAccessToken(context.Background())
 			require.NoError(t, err)
@@ -87,27 +88,29 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				"m2mProfile": map[string]interface{}{
 					"user":         "test@user.com",
 					"environment":  "app.nobl9.com",
-					"organization": "my-org",
+					"Organization": "my-org",
 				},
 			},
 		}
 		hookCalled := false
-		creds := &Credentials{
-			ClientID:        "client-id",
-			ClientSecret:    "my-secret",
-			TokenProvider:   tokenProvider,
-			TokenParser:     tokenParser,
+		creds := &credentials{
+			config: &Config{
+				ClientID:     "client-id",
+				ClientSecret: "my-secret",
+			},
+			tokenProvider:   tokenProvider,
+			tokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
 		require.NoError(t, err)
-		assert.True(t, tokenUpdated, "AccessToken must be updated")
+		assert.True(t, tokenUpdated, "accessToken must be updated")
 		assert.True(t, hookCalled, "PostRequestHook must be called")
 		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
 		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
-		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, "access-token", creds.accessToken)
 		assert.Equal(t, "app.nobl9.com", creds.Environment)
 		assert.Equal(t, "my-org", creds.Organization)
 		assert.Equal(t, tokenTypeM2M, creds.tokenType)
@@ -128,29 +131,31 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				"agentProfile": map[string]interface{}{
 					"user":         "test@user.com",
 					"environment":  "app.nobl9.com",
-					"organization": "my-org",
+					"Organization": "my-org",
 					"name":         "my-agent",
 					"project":      "default",
 				},
 			},
 		}
 		hookCalled := false
-		creds := &Credentials{
-			ClientID:        "client-id",
-			ClientSecret:    "my-secret",
-			TokenProvider:   tokenProvider,
-			TokenParser:     tokenParser,
+		creds := &credentials{
+			config: &Config{
+				ClientID:     "client-id",
+				ClientSecret: "my-secret",
+			},
+			tokenProvider:   tokenProvider,
+			tokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		tokenUpdated, err := creds.RefreshAccessToken(context.Background())
 		require.NoError(t, err)
-		assert.True(t, tokenUpdated, "AccessToken must be updated")
+		assert.True(t, tokenUpdated, "accessToken must be updated")
 		assert.True(t, hookCalled, "PostRequestHook must be called")
 		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
 		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
 		assert.Equal(t, "client-id", tokenParser.calledWithClientID)
-		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, "access-token", creds.accessToken)
 		assert.Equal(t, "app.nobl9.com", creds.Environment)
 		assert.Equal(t, "my-org", creds.Organization)
 		assert.Equal(t, tokenTypeAgent, creds.tokenType)
@@ -171,13 +176,13 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 			"m2mProfile": map[string]interface{}{
 				"user":         "test@user.com",
 				"environment":  "app.nobl9.com",
-				"organization": "my-org",
+				"Organization": "my-org",
 			},
 		},
 	}
-	creds := &Credentials{
-		ClientID:        "client-id",
-		TokenParser:     tokenParser,
+	creds := &credentials{
+		config:          &Config{ClientID: "client-id"},
+		tokenParser:     tokenParser,
 		PostRequestHook: func(token string) error { return errors.New("hook should not be called!") },
 	}
 	err := creds.SetAccessToken("access-token")
@@ -185,7 +190,7 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	assert.Equal(t, 1, tokenParser.calledTimes)
 	assert.Equal(t, "access-token", tokenParser.calledWithToken)
 	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
-	assert.Equal(t, "access-token", creds.AccessToken)
+	assert.Equal(t, "access-token", creds.accessToken)
 	assert.Equal(t, "app.nobl9.com", creds.Environment)
 	assert.Equal(t, "my-org", creds.Organization)
 	assert.Equal(t, tokenTypeM2M, creds.tokenType)
@@ -197,10 +202,10 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	assert.Equal(t, tokenParser.claims, creds.claims)
 
 	t.Run("offline mode", func(t *testing.T) {
-		creds.offlineMode = true
+		creds.config.DisableOkta = true
 		err = creds.SetAccessToken("new-access-token")
 		require.NoError(t, err)
-		assert.Equal(t, "access-token", creds.AccessToken)
+		assert.Equal(t, "access-token", creds.accessToken)
 		assert.Equal(t, 1, tokenParser.calledTimes)
 	})
 }
@@ -209,8 +214,9 @@ func TestCredentials_setNewToken(t *testing.T) {
 	t.Run("don't call hook if parser fails", func(t *testing.T) {
 		parserErr := errors.New("parser failed!")
 		hookCalled := false
-		creds := &Credentials{
-			TokenParser:     &mockTokenParser{err: parserErr},
+		creds := &credentials{
+			config:          &Config{},
+			tokenParser:     &mockTokenParser{err: parserErr},
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		err := creds.setNewToken("", true)
@@ -221,8 +227,9 @@ func TestCredentials_setNewToken(t *testing.T) {
 
 	t.Run("don't call hook If we can't decode m2mProfile", func(t *testing.T) {
 		hookCalled := false
-		creds := &Credentials{
-			TokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
+		creds := &credentials{
+			config:          &Config{},
+			tokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
 			PostRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		err := creds.setNewToken("", true)
@@ -230,31 +237,33 @@ func TestCredentials_setNewToken(t *testing.T) {
 		assert.False(t, hookCalled, "PostRequestHook should not be called")
 	})
 
-	t.Run("don't update Credentials state if hook fails", func(t *testing.T) {
+	t.Run("don't update credentials state if hook fails", func(t *testing.T) {
 		tokenParser := &mockTokenParser{
 			claims: jwt.MapClaims{},
 		}
 		hookErr := errors.New("hook failed!")
-		creds := &Credentials{
-			TokenParser:     tokenParser,
+		creds := &credentials{
+			config:          &Config{},
+			tokenParser:     tokenParser,
 			PostRequestHook: func(token string) error { return hookErr },
 		}
 		err := creds.setNewToken("my-token", true)
 		require.Error(t, err)
 		assert.ErrorIs(t, err, hookErr)
-		assert.Empty(t, creds.AccessToken)
+		assert.Empty(t, creds.accessToken)
 		assert.Empty(t, creds.m2mProfile)
 		assert.Empty(t, creds.claims)
 	})
 }
 
 // nolint: bodyclose
-func TestCredentials_RoundTrip(t *testing.T) {
+func TestClient_RoundTrip(t *testing.T) {
 	t.Run("wrap errors with NonRetryableError", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{err: errors.New("token fetching failed!")}
-		creds := &Credentials{
-			TokenProvider: tokenProvider,
-			TokenParser:   &mockTokenParser{},
+		creds := &credentials{
+			config:        &Config{},
+			tokenProvider: tokenProvider,
+			tokenParser:   &mockTokenParser{},
 		}
 
 		req := &http.Request{}
@@ -265,11 +274,12 @@ func TestCredentials_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("set auth header if not present", func(t *testing.T) {
-		creds := &Credentials{
-			AccessToken:   "my-token",
+		creds := &credentials{
+			config:        &Config{},
+			accessToken:   "my-token",
 			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
-			TokenProvider: &mockTokenProvider{},
-			TokenParser:   &mockTokenParser{},
+			tokenProvider: &mockTokenProvider{},
+			tokenParser:   &mockTokenParser{},
 		}
 
 		req := &http.Request{}
@@ -279,11 +289,12 @@ func TestCredentials_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("update auth header if token was updated", func(t *testing.T) {
-		creds := &Credentials{
-			AccessToken:   "my-old-token",
+		creds := &credentials{
+			config:        &Config{},
+			accessToken:   "my-old-token",
 			claims:        jwt.MapClaims{"exp": float64(time.Now().Unix())}, // expired
-			TokenProvider: &mockTokenProvider{token: "my-new-token"},
-			TokenParser:   &mockTokenParser{},
+			tokenProvider: &mockTokenProvider{token: "my-new-token"},
+			tokenParser:   &mockTokenParser{},
 		}
 
 		req := &http.Request{Header: http.Header{HeaderAuthorization: []string{"Bearer my-old-token"}}}
@@ -293,11 +304,12 @@ func TestCredentials_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("don't update auth header if token was not updated", func(t *testing.T) {
-		creds := &Credentials{
-			AccessToken:   "my-old-token",
+		creds := &credentials{
+			config:        &Config{},
+			accessToken:   "my-old-token",
 			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())}, // not expired
-			TokenProvider: &mockTokenProvider{token: "my-new-token"},
-			TokenParser:   &mockTokenParser{},
+			tokenProvider: &mockTokenProvider{token: "my-new-token"},
+			tokenParser:   &mockTokenParser{},
 		}
 
 		req := &http.Request{Header: http.Header{HeaderAuthorization: []string{"Bearer my-old-token"}}}

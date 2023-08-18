@@ -13,13 +13,13 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
-// AccessTokenParser parses and verifies fetched access token.
-type AccessTokenParser interface {
+// accessTokenParser parses and verifies fetched access token.
+type accessTokenParser interface {
 	Parse(token, clientID string) (jwt.MapClaims, error)
 }
 
-// AccessTokenProvider fetches the access token based on client it and client secret.
-type AccessTokenProvider interface {
+// accessTokenProvider fetches the access token based on client it and client secret.
+type accessTokenProvider interface {
 	RequestAccessToken(ctx context.Context, clientID, clientSecret string) (token string, err error)
 }
 
@@ -30,20 +30,20 @@ type AccessTokenPostRequestHook = func(token string) error
 // accessTokenM2MProfile stores information specific to an Okta M2M application.
 type accessTokenM2MProfile struct {
 	User         string `json:"user"`
-	Organization string `json:"organization"`
+	Organization string `json:"Organization"`
 	Environment  string `json:"environment"`
 }
 
 // accessTokenAgentProfile stores information specific to an Okta Agent application.
 type accessTokenAgentProfile struct {
 	User         string `json:"user"`
-	Organization string `json:"organization"`
+	Organization string `json:"Organization"`
 	Environment  string `json:"environment"`
 	Name         string `json:"name"`
 	Project      string `json:"project"`
 }
 
-func newCredentials(config *Config) (*Credentials, error) {
+func newCredentials(config *Config) (*credentials, error) {
 	parser, err := newJWTParser(
 		func() string {
 			return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
@@ -54,32 +54,28 @@ func newCredentials(config *Config) (*Credentials, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Credentials{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		TokenParser:  parser,
-		TokenProvider: newOktaClient(func() string {
-			return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
+	return &credentials{
+		config:      config,
+		tokenParser: parser,
+		tokenProvider: newOktaClient(func() string {
+			return oktaTokenEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
 		}),
 	}, nil
 }
 
-// Credentials stores and manages IDP app credentials and claims.
+// credentials stores and manages IDP app credentials and claims.
 // It governs access token life cycle, providing means of refreshing it
 // and exposing claims delivered with the token.
 // Currently, the only supported IDP is Okta.
-type Credentials struct {
-	// Required to fetch the token.
-	ClientID     string
-	ClientSecret string
-
+type credentials struct {
+	config *Config
 	// Set after the token is fetched.
-	AccessToken string
+	accessToken string
 	// Extracted from claims.
 	// Organization and Environment, if accessed before the first request
 	// is executed, will be empty as the token was not yet fetched.
 	// To force them to be set earlier you could provide the access token
-	// to Credentials or call Credentials.RefreshAccessToken manually.
+	// to credentials or call RefreshAccessToken manually.
 	Organization string
 	Environment  string
 	// Claims.
@@ -89,83 +85,76 @@ type Credentials struct {
 	claims       jwt.MapClaims
 
 	HTTP *http.Client
-	// TokenParser is used to verify the token and its claims.
-	TokenParser AccessTokenParser
-	// TokenProvider is used to provide an access token.
-	TokenProvider AccessTokenProvider
+	// tokenParser is used to verify the token and its claims.
+	tokenParser accessTokenParser
+	// tokenProvider is used to provide an access token.
+	tokenProvider accessTokenProvider
 	// PostRequestHook is not run in offline mode.
 	PostRequestHook AccessTokenPostRequestHook
 
-	// offlineMode turns Credentials.RefreshAccessToken into a noop.
-	offlineMode bool
-	mu          sync.Mutex
+	mu sync.Mutex
 }
 
 // It's important for this to be clean client, request middleware in Go is kinda clunky
 // and requires chaining multiple http clients, timeouts and retries should be handled
 // by the predecessors of this one.
-var credentialsCleanHTTPClient = &http.Client{}
+var cleanCredentialsHTTPClient = &http.Client{}
 
 // RoundTrip is responsible for making sure the access token is set and also update it
 // if the expiry is imminent. It also sets the HeaderOrganization.
 // It will wrap any errors returned from RefreshAccessToken
 // in retryhttp.NonRetryableError to ensure the request is not retried by the wrapping client.
-func (creds *Credentials) RoundTrip(req *http.Request) (*http.Response, error) {
-	tokenUpdated, err := creds.RefreshAccessToken(req.Context())
+func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
+	tokenUpdated, err := c.RefreshAccessToken(req.Context())
 	if err != nil {
 		return nil, retryhttp.NonRetryableError{Err: err}
 	}
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
-		creds.SetAuthorizationHeader(req)
+		c.SetAuthorizationHeader(req)
 	}
-	return credentialsCleanHTTPClient.Do(req)
-}
-
-// SetOfflineMode turns RefreshAccessToken into a noop.
-func (creds *Credentials) SetOfflineMode() {
-	creds.offlineMode = true
+	return cleanCredentialsHTTPClient.Do(req)
 }
 
 // SetAuthorizationHeader sets an authorization header which should be included
 // if access token was set in request to the resource server.
-func (creds *Credentials) SetAuthorizationHeader(r *http.Request) {
-	if creds.AccessToken == "" {
+func (c *credentials) SetAuthorizationHeader(r *http.Request) {
+	if c.accessToken == "" {
 		return
 	}
 	if r.Header == nil {
 		r.Header = http.Header{}
 	}
-	r.Header.Set(HeaderAuthorization, fmt.Sprintf("Bearer %s", creds.AccessToken))
+	r.Header.Set(HeaderAuthorization, fmt.Sprintf("Bearer %s", c.accessToken))
 }
 
-// SetAccessToken allows setting new access token without using TokenProvider.
+// SetAccessToken allows setting new access token without using tokenProvider.
 // The provided token will be still parsed using setNewToken function.
 // In offline mode this is a noop.
-func (creds *Credentials) SetAccessToken(token string) error {
-	if creds.offlineMode {
+func (c *credentials) SetAccessToken(token string) error {
+	if c.config.DisableOkta {
 		return nil
 	}
-	creds.mu.Lock()
-	defer creds.mu.Unlock()
-	return creds.setNewToken(token, false)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.setNewToken(token, false)
 }
 
-// RefreshAccessToken checks the AccessToken expiry with an offset to detect if the token
-// is soon to be expired. If so, it wll request a new token and update the Credentials state.
+// RefreshAccessToken checks the accessToken expiry with an offset to detect if the token
+// is soon to be expired. If so, it wll request a new token and update the credentials state.
 // If the token was not yet set, it will request a new one all the same.
-func (creds *Credentials) RefreshAccessToken(ctx context.Context) (updated bool, err error) {
-	if creds.offlineMode {
+func (c *credentials) RefreshAccessToken(ctx context.Context) (updated bool, err error) {
+	if c.config.DisableOkta {
 		return
 	}
-	if !creds.shouldRefresh() {
+	if !c.shouldRefresh() {
 		return
 	}
-	creds.mu.Lock()
-	defer creds.mu.Unlock()
-	if !creds.shouldRefresh() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !c.shouldRefresh() {
 		return
 	}
-	if err = creds.requestNewToken(ctx); err == nil {
+	if err = c.requestNewToken(ctx); err == nil {
 		updated = true
 	}
 	return
@@ -175,25 +164,25 @@ func (creds *Credentials) RefreshAccessToken(ctx context.Context) (updated bool,
 // it reaches the API server.
 const tokenExpiryOffset = 2 * time.Minute
 
-// shouldRefresh defines token expiry policy for the JWT managed by Credentials.
-func (creds *Credentials) shouldRefresh() bool {
-	return len(creds.claims) == 0 || !creds.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
+// shouldRefresh defines token expiry policy for the JWT managed by credentials.
+func (c *credentials) shouldRefresh() bool {
+	return len(c.claims) == 0 || !c.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
 }
 
-// requestNewToken uses TokenProvider to fetch the new token and parse it via setNewToken function.
-func (creds *Credentials) requestNewToken(ctx context.Context) (err error) {
-	token, err := creds.TokenProvider.RequestAccessToken(ctx, creds.ClientID, creds.ClientSecret)
+// requestNewToken uses tokenProvider to fetch the new token and parse it via setNewToken function.
+func (c *credentials) requestNewToken(ctx context.Context) (err error) {
+	token, err := c.tokenProvider.RequestAccessToken(ctx, c.config.ClientID, c.config.ClientSecret)
 	if err != nil {
 		return errors.Wrap(err, "error getting new access token from IDP")
 	}
-	return creds.setNewToken(token, true)
+	return c.setNewToken(token, true)
 }
 
-// setNewToken parses and verifies the provided JWT using TokenParser.
+// setNewToken parses and verifies the provided JWT using tokenParser.
 // It will then decode 'm2mProfile' from the extracted claims and set
-// the new values for m2mProfile, AccessToken and claims Credentials fields.
-func (creds *Credentials) setNewToken(token string, withHook bool) error {
-	claims, err := creds.TokenParser.Parse(token, creds.ClientID)
+// the new values for m2mProfile, accessToken and claims credentials fields.
+func (c *credentials) setNewToken(token string, withHook bool) error {
+	claims, err := c.tokenParser.Parse(token, c.config.ClientID)
 	if err != nil {
 		return err
 	}
@@ -214,24 +203,24 @@ func (creds *Credentials) setNewToken(token string, withHook bool) error {
 			return errors.Wrap(err, "failed to decode JWT claims to agent profile object")
 		}
 	}
-	if withHook && creds.PostRequestHook != nil {
-		if err = creds.PostRequestHook(token); err != nil {
+	if withHook && c.PostRequestHook != nil {
+		if err = c.PostRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
 	}
 	// We can now update the token and it's claims.
-	creds.AccessToken = token
+	c.accessToken = token
 	switch tokenTyp {
 	case tokenTypeM2M:
-		creds.Organization = m2mProfile.Organization
-		creds.Environment = m2mProfile.Environment
+		c.Organization = m2mProfile.Organization
+		c.Environment = m2mProfile.Environment
 	case tokenTypeAgent:
-		creds.Organization = agentProfile.Organization
-		creds.Environment = agentProfile.Environment
+		c.Organization = agentProfile.Organization
+		c.Environment = agentProfile.Environment
 	}
-	creds.tokenType = tokenTyp
-	creds.m2mProfile = m2mProfile
-	creds.agentProfile = agentProfile
-	creds.claims = claims
+	c.tokenType = tokenTyp
+	c.m2mProfile = m2mProfile
+	c.agentProfile = agentProfile
+	c.claims = claims
 	return nil
 }

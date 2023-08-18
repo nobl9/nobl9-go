@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testIssuer() string { return "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191" }
+func getTestIssuer() string { return "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191" }
 
 func TestJWTParser_Parse(t *testing.T) {
 	// This is very important! sdk_test.go which runs a full path for it's methods
@@ -29,7 +29,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("invalid token, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		_, err = parser.Parse("fake-token", "123")
@@ -38,7 +38,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("invalid algorithm, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		token, _ := signToken(t, jwt.New(jwt.SigningMethodRS512))
@@ -48,7 +48,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("missing key id header, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		token, _ := signToken(t, jwt.New(jwt.GetSigningMethod(jwtSigningAlgorithm.String())))
@@ -58,7 +58,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("fetch jwk fails, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		jwtToken := jwt.New(jwt.GetSigningMethod(jwtSigningAlgorithm.String()))
@@ -74,7 +74,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("fetch jwk from set cache if present in cache", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		set := jwk.NewSet()
@@ -91,7 +91,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("fetch jwk from set cache only once per multiple goroutines", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		const kid = "my-kid"
@@ -121,7 +121,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("'kid' not found in set, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		JWK := jwk.NewRSAPublicKey()
@@ -141,7 +141,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("golden path", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, func() string { return "" })
+		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 		require.NoError(t, err)
 
 		// Create a signed token and use the generated public key to create JWK.
@@ -161,14 +161,14 @@ func TestJWTParser_Parse(t *testing.T) {
 
 		// Prepare the token.
 		claims := jwt.MapClaims{
-			"iss": testIssuer,
+			"iss": getTestIssuer(),
 			"cid": "123",
 			"exp": time.Now().Add(time.Hour).Unix(),
 			"iat": time.Now().Add(-time.Hour).Unix(),
 			"nbf": time.Now().Add(-time.Hour).Unix(),
 			"m2mProfile": map[string]interface{}{
 				"environment":  "dev.nobl9.com",
-				"organization": "my-org",
+				"Organization": "my-org",
 				"user":         "test@nobl9.com",
 			},
 		}
@@ -186,7 +186,7 @@ func TestJWTParser_Parse(t *testing.T) {
 }
 
 func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
-	parser, err := newJWTParser(testIssuer, func() string { return "" })
+	parser, err := newJWTParser(getTestIssuer, func() string { return "" })
 	require.NoError(t, err)
 
 	// Create a signed token and use the generated public key to create JWK.
@@ -217,14 +217,14 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		"client id does not match claims 'cid'": {
 			ExpectedError: "client id does not match token's 'cid' claim",
 			Claims: map[string]interface{}{
-				"iss": testIssuer,
+				"iss": getTestIssuer(),
 				"cid": "333",
 			},
 		},
 		"expiry": {
 			ExpectedError: "exp (expiry) claim validation failed",
 			Claims: map[string]interface{}{
-				"iss": testIssuer,
+				"iss": getTestIssuer(),
 				"exp": time.Now().Unix(),
 				"cid": "123",
 			},
@@ -232,7 +232,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		"issued at": {
 			ExpectedError: "iat (issued at) claim validation failed",
 			Claims: map[string]interface{}{
-				"iss": testIssuer,
+				"iss": getTestIssuer(),
 				"cid": "123",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iat": time.Now().Add(time.Hour).Unix(),
@@ -241,7 +241,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		"not before": {
 			ExpectedError: "nbf (not before) claim validation failed",
 			Claims: map[string]interface{}{
-				"iss": testIssuer,
+				"iss": getTestIssuer(),
 				"cid": "123",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iat": time.Now().Add(-time.Hour).Unix(),
@@ -264,7 +264,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 func TestM2MProfileFromClaims(t *testing.T) {
 	m2mProfile := map[string]interface{}{
 		"user":         "test@nobl9.com",
-		"organization": "my-org",
+		"Organization": "my-org",
 		"environment":  "dev.nobl9.com",
 	}
 	for _, claims := range []jwt.MapClaims{
@@ -288,7 +288,7 @@ func TestM2MProfileFromClaims(t *testing.T) {
 func TestAgentProfileFromClaims(t *testing.T) {
 	agentProfile := map[string]interface{}{
 		"user":         "test@nobl9.com",
-		"organization": "my-org",
+		"Organization": "my-org",
 		"environment":  "dev.nobl9.com",
 		"name":         "my-agent",
 		"project":      "default",

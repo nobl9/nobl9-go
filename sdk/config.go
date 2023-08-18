@@ -16,14 +16,33 @@ import (
 const (
 	EnvPrefix = "NOBL9_SDK_"
 
-	defaultContext            = "default"
-	defaultRelativeConfigPath = ".config/nobl9/config.toml"
+	defaultContext                     = "default"
+	defaultRelativeConfigPath          = ".config/nobl9/config.toml"
+	defaultOktaAuthServerID            = "auseg9kiegWKEtJZC416"
+	defaultDisableOkta                 = false
+	defaultNoConfigFile                = false
+	defaultFilesPromptThreshold        = 23
+	defaultFilesPromptThresholdEnabled = true
+	defaultTimeout                     = 10 * time.Second
 )
+
+var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
 // Config combines the ContextlessConfig and ContextConfig of the current, selected context.
 type Config struct {
-	ContextlessConfig
-	ContextConfig
+	DefaultContext string
+	ClientID       string
+	ClientSecret   string
+	AccessToken    string
+	Project        string
+	URL            *url.URL
+	OktaOrgURL     *url.URL
+	OktaAuthServer string
+	DisableOkta    bool
+	Timeout        time.Duration
+
+	contextlessConfig ContextlessConfig
+	contextConfig     ContextConfig
 
 	fileConfig     fileConfig
 	options        optionsConfig
@@ -43,8 +62,8 @@ type ContextConfig struct {
 	ClientSecret   string         `toml:"clientSecret" env:"CLIENT_SECRET"`
 	AccessToken    string         `toml:"accessToken,omitempty" env:"ACCESS_TOKEN"`
 	Project        string         `toml:"project,omitempty" env:"PROJECT"`
-	URL            *url.URL       `toml:"url,omitempty" env:"URL"`
-	OktaOrgURL     *url.URL       `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
+	URL            string         `toml:"url,omitempty" env:"URL"`
+	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
 	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
@@ -130,10 +149,6 @@ func ReadConfig(options ...ConfigOption) (*Config, error) {
 	return conf, nil
 }
 
-func (c *Config) GetCurrentContext() string {
-	return c.ContextlessConfig.DefaultContext
-}
-
 func (c *Config) GetFilePath() string {
 	return c.options.FilePath
 }
@@ -151,34 +166,32 @@ func (c *Config) read() error {
 	if !*c.options.NoConfigFile {
 		if err := c.loadConfigFile(); err == nil {
 			fileConfLoaded = true
-			c.ContextlessConfig = c.fileConfig.ContextlessConfig
+			c.contextlessConfig = c.fileConfig.ContextlessConfig
 		} else {
+			// TODO: Make it debug!
 			fmt.Fprintf(os.Stderr,
 				"failed to read configuration file, resolving to env variables\nError: %s\n", err.Error())
 		}
 	}
 	// Read global settings from env variables.
-	if err := c.processEnvVariables(&c.ContextlessConfig); err != nil {
+	if err := c.resolveContextlessConfig(); err != nil {
 		return err
 	}
-	c.setContextFromConfigOptions()
 	// Once we know the context to operate on, we can try choosing the right context from file config.
 	if fileConfLoaded {
 		var ok bool
-		if c.ContextConfig, ok = c.fileConfig.Contexts[c.GetCurrentContext()]; !ok {
+		if c.contextConfig, ok = c.fileConfig.Contexts[c.DefaultContext]; !ok {
 			return errors.Wrap(ErrConfigContextNotFound, fmt.Sprintf(
 				"context '%s' was not found in config file: %s",
-				c.GetCurrentContext(), c.GetFilePath()))
+				c.DefaultContext, c.GetFilePath()))
 		}
 	}
 	// Finally read the context config and overwrite values if set through env vars.
-	if err := c.processEnvVariables(&c.ContextConfig); err != nil {
+	if err := c.resolveContextConfig(); err != nil {
 		return err
 	}
-	c.setCredentialsFromConfigOptions()
-	// Validate and correct.
-	//c.URL = strings.TrimRight(c.URL, "/")
-	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !*c.DisableOkta {
+	// Check if the minimum required setup was performed.
+	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
 		return errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
 			"Config file location: %s.\nEnvironment variables: %s, %s",
 			c.GetFilePath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET"))
@@ -194,14 +207,14 @@ func newConfig(options []ConfigOption) (*Config, error) {
 		},
 		configDefaults: map[string]string{
 			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
-			"NO_CONFIG_FILE":         "false",
-			"DEFAULT_CONTEXT":        "default",
-			"FILES_PROMPT_THRESHOLD": "23",
-			"FILES_PROMPT_ENABLED":   "true",
+			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
+			"DEFAULT_CONTEXT":        defaultContext,
+			"FILES_PROMPT_THRESHOLD": strconv.Itoa(defaultFilesPromptThreshold),
+			"FILES_PROMPT_ENABLED":   strconv.FormatBool(defaultFilesPromptThresholdEnabled),
 			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
 			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
-			"DISABLE_OKTA":           "false",
-			"TIMEOUT":                "1m",
+			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
+			"TIMEOUT":                defaultTimeout.String(),
 		},
 	}
 	if err := conf.processEnvVariables(&conf.options); err != nil {
@@ -211,6 +224,57 @@ func newConfig(options []ConfigOption) (*Config, error) {
 		applyOption(conf)
 	}
 	return conf, nil
+}
+
+func (c *Config) resolveContextlessConfig() error {
+	if err := c.processEnvVariables(&c.contextlessConfig); err != nil {
+		return err
+	}
+	if c.options.context != "" {
+		c.DefaultContext = c.options.context
+	} else {
+		c.DefaultContext = c.contextlessConfig.DefaultContext
+	}
+	return nil
+}
+
+func (c *Config) resolveContextConfig() error {
+	var err error
+	if err = c.processEnvVariables(&c.contextConfig); err != nil {
+		return err
+	}
+	if c.options.clientID != "" {
+		c.ClientID = c.options.clientID
+	} else {
+		c.ClientID = c.contextConfig.ClientID
+	}
+	if c.options.clientSecret != "" {
+		c.ClientSecret = c.options.clientSecret
+	} else {
+		c.ClientSecret = c.contextConfig.ClientSecret
+	}
+	c.AccessToken = c.contextConfig.AccessToken
+	c.Project = c.contextConfig.Project
+	if c.contextConfig.URL != "" {
+		c.URL, err = url.Parse(c.contextConfig.URL)
+		if err != nil {
+			return err
+		}
+	}
+	if c.contextConfig.OktaOrgURL != "" {
+		c.OktaOrgURL, err = url.Parse(c.contextConfig.OktaOrgURL)
+		if err != nil {
+			return err
+		}
+	}
+	c.OktaAuthServer = c.contextConfig.OktaAuthServer
+	if c.contextConfig.Timeout != nil {
+		c.Timeout = *c.contextConfig.Timeout
+	}
+	if c.contextConfig.DisableOkta != nil {
+		c.DisableOkta = *c.contextConfig.DisableOkta
+	}
+	return nil
 }
 
 func (c *Config) loadConfigFile() error {
@@ -226,21 +290,6 @@ func (c *Config) loadConfigFile() error {
 		return errors.Wrapf(err, "could not decode config file: %s", c.GetFilePath())
 	}
 	return nil
-}
-
-func (c *Config) setContextFromConfigOptions() {
-	if c.options.context != "" {
-		c.DefaultContext = c.options.context
-	}
-}
-
-func (c *Config) setCredentialsFromConfigOptions() {
-	if c.options.clientID != "" {
-		c.ClientID = c.options.clientID
-	}
-	if c.options.clientSecret != "" {
-		c.ClientSecret = c.options.clientSecret
-	}
 }
 
 func (c *Config) createDefaultConfig() error {
@@ -388,15 +437,6 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 			return err
 		}
 		ef.SetUint(i)
-	case reflect.Struct:
-		// Special case url.URL values.
-		if tf.PkgPath() == "net/url" && tf.Name() == "URL" {
-			u, err := url.Parse(v)
-			if err != nil {
-				return err
-			}
-			ef.Set(reflect.ValueOf(*u))
-		}
 	default:
 		return errors.Errorf("unsupported reflected field kind: %s", tk)
 	}

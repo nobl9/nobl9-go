@@ -2,6 +2,8 @@ package sdk
 
 import (
 	"net/http"
+
+	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // ClientBuilder allows constructing Client using builder pattern (https://refactoring.guru/design-patterns/builder).
@@ -12,29 +14,20 @@ type ClientBuilder struct {
 }
 
 // NewClientBuilder creates a new ClientBuilder instance.
-// To fully configure the Client you must also supply ClientBuilder with Credentials instance,
-// either by running ClientBuilder.WithDefaultCredentials or ClientBuilder.WithCredentials.
-// Example::
-//
-//	config, err := sdk.ReadConfig()
-//	if err != nil {
-//	  panic(err)
-//	}
-//	client, err := sdk.NewClientBuilder(config).Build()
 func NewClientBuilder(config *Config) *ClientBuilder {
 	return &ClientBuilder{config: config}
 }
 
-// WithUserAgent allows setting a custom name for UserAgent HTTP header in Client requests.
+// WithUserAgent allows setting a custom name for userAgent HTTP header in Client requests.
 func (b *ClientBuilder) WithUserAgent(userAgent string) *ClientBuilder {
 	b.userAgent = userAgent
 	return b
 }
 
 // WithHTTPClient allows supplying a custom http.Client for the client to use.
-// Note that the access token life cycle management is done by Credentials,
+// Note that the access token life cycle management is done by credentials,
 // which become part of default http.Client request middleware chain, making sure
-// the token is up to date before each request.
+// the token is up-to-date before each request.
 func (b *ClientBuilder) WithHTTPClient(client *http.Client) *ClientBuilder {
 	b.http = client
 	return b
@@ -45,9 +38,21 @@ func (b *ClientBuilder) Build() (*Client, error) {
 	if b.userAgent == "" {
 		b.userAgent = getDefaultUserAgent()
 	}
+	creds, err := newCredentials(b.config)
+	if err != nil {
+		return nil, err
+	}
+	if b.http == nil {
+		b.http = retryhttp.NewClient(b.config.Timeout, creds)
+	}
 	client := &Client{
-		HTTP:      b.http,
-		UserAgent: b.userAgent,
+		http:        b.http,
+		config:      b.config,
+		credentials: creds,
+		userAgent:   b.userAgent,
+	}
+	if err = client.loadConfig(); err != nil {
+		return nil, err
 	}
 	return client, nil
 }

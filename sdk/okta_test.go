@@ -28,11 +28,7 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 	})
 
 	t.Run("handle context cancellation", func(t *testing.T) {
-		okta := oktaClient{HTTP: new(http.Client), config: &Config{
-			ContextConfig: ContextConfig{
-				OktaOrgURL: &url.URL{Scheme: "https", Host: "test.com", Path: "api"},
-			},
-		}}
+		okta := oktaClient{HTTP: new(http.Client), getTokenEndpoint: func() string { return "https://test.com/api" }}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		_, err := okta.RequestAccessToken(ctx, "123", "secret")
@@ -56,7 +52,7 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 	defer srv.Close()
 	u, err := url.Parse(srv.URL)
 	require.NoError(t, err)
-	okta := oktaClient{HTTP: new(http.Client), config: &Config{ContextConfig: ContextConfig{OktaOrgURL: u}}}
+	okta := oktaClient{HTTP: new(http.Client), getTokenEndpoint: func() string { return u.String() }}
 
 	t.Run("return error for invalid status codes", func(t *testing.T) {
 		for _, respondWithStatusCode = range []int{401, 409, 500, 300} {

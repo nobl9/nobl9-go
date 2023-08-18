@@ -17,16 +17,12 @@ import (
 )
 
 const (
-	defaultOktaAuthServerID = "auseg9kiegWKEtJZC416"
-
 	oktaTokenEndpointPath = "v1/token"
 	oktaKeysEndpointPath  = "v1/keys"
 	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
 )
-
-var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
 func oktaAuthServerURL(oktaOrgURL *url.URL, oktaAuthServer string) *url.URL {
 	return oktaOrgURL.JoinPath("oauth2", oktaAuthServer)

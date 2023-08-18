@@ -144,7 +144,7 @@ func (g *generator) hasOrganizationAndManifestSource(fields *ast.FieldList) bool
 		if len(field.Names) == 0 {
 			continue
 		}
-		if field.Names[0].Name == "Organization" {
+		if field.Names[0].Name == "organization" {
 			hasOrganization = true
 			continue
 		}

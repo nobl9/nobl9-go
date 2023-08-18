@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -426,6 +428,26 @@ func TestProcessResponseErrors(t *testing.T) {
 	})
 }
 
+// TODO: Once the new tag is released, convert change the simple_module go.mod to point at concrete SDK version.
+func TestDefaultUserAgent(t *testing.T) {
+	getStderrFromExec := func(err error) string {
+		if v, ok := err.(*exec.ExitError); ok {
+			return string(v.Stderr)
+		}
+		return ""
+	}
+	tempDir := t.TempDir()
+	path := filepath.Join(tempDir, "test-binary")
+	// Build binary. This is the only way for debug package to work,
+	// it needs to operate on a binary built from a module.
+	_, err := exec.Command("go", "build", "-o", path, "./test_data/client/simple_module/main.go").Output()
+	require.NoError(t, err, getStderrFromExec(err))
+	// Execute the binary.
+	out, err := exec.Command(path).Output()
+	require.NoError(t, err, getStderrFromExec(err))
+	assert.Contains(t, string(out), "sdk/(devel)")
+}
+
 type endpointConfig struct {
 	Path            string
 	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
@@ -481,7 +503,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		"nbf": time.Now().Add(-time.Hour).Unix(),
 		"m2mProfile": map[string]interface{}{
 			"environment":  authServerURL.Host, // We're using the same server to serve responses for all endpoints.
-			"organization": organization,
+			"Organization": organization,
 			"user":         "test@nobl9.com",
 		},
 	}
@@ -518,14 +540,15 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		}
 	})}
 
-	// Prepare our client.
-	//oktaURL, err := oktaAuthServerURL(oktaOrgURL, oktaAuthServer)
+	// Prepare client.
+	config, err := ReadConfig(
+		ConfigOptionWithCredentials(clientID, clientSecret),
+		ConfigOptionNoConfigFile())
 	require.NoError(t, err)
-	//client, err = NewClientBuilder(userAgent).
-	//	WithDefaultCredentials(clientID, clientSecret).
-	//	WithOktaAuthServerURL(oktaURL).
-	//	Build()
-	//require.NoError(t, err)
+	config.OktaOrgURL = oktaOrgURL
+	config.OktaAuthServer = oktaAuthServer
+	client, err = NewClientBuilder(config).WithUserAgent(userAgent).Build()
+	require.NoError(t, err)
 
 	return client, srv
 }
