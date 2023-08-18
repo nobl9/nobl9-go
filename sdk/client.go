@@ -338,7 +338,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 
 	var jsonMap map[string]interface{}
 	if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to decode response body")
 	}
 	const field = "awsExternalID"
 	externalID, ok := jsonMap[field]
@@ -400,7 +400,7 @@ func (c *Client) GetAgentCredentials(
 		return creds, err
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
-		return creds, err
+		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
 }
