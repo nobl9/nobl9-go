@@ -46,7 +46,7 @@ type Config struct {
 	contextlessConfig ContextlessConfig
 	contextConfig     ContextConfig
 
-	fileConfig        fileConfig
+	fileConfig        FileConfig
 	options           optionsConfig
 	envConfigDefaults map[string]string
 }
@@ -71,8 +71,8 @@ type ContextConfig struct {
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
 }
 
-// fileConfig contains fully parsed config file.
-type fileConfig struct {
+// FileConfig contains fully parsed config file.
+type FileConfig struct {
 	ContextlessConfig `toml:",inline"`
 	Contexts          map[string]ContextConfig `toml:"contexts"`
 }
@@ -153,6 +153,14 @@ func ReadConfig(options ...ConfigOption) (*Config, error) {
 
 func (c *Config) GetFilePath() string {
 	return c.options.FilePath
+}
+
+func (c *Config) GetFileConfig() FileConfig {
+	return c.fileConfig
+}
+
+func (c *Config) SetFileConfig(fileConfig FileConfig) {
+	c.fileConfig = fileConfig
 }
 
 func (c *Config) Save() error {
@@ -311,7 +319,7 @@ func (c *Config) createDefaultConfig() error {
 			return errors.Wrapf(err, "failed to create Nobl9 config file under %s", c.GetFilePath())
 		}
 		defer func() { _ = f.Close() }()
-		return toml.NewEncoder(f).Encode(fileConfig{
+		return toml.NewEncoder(f).Encode(FileConfig{
 			ContextlessConfig: ContextlessConfig{DefaultContext: defaultContext},
 			Contexts:          map[string]ContextConfig{defaultContext: {}},
 		})
@@ -465,7 +473,7 @@ func (c *Config) save(path string) error {
 		}
 	}()
 
-	if err = toml.NewEncoder(tmpFile).Encode(path); err != nil {
+	if err = toml.NewEncoder(tmpFile).Encode(c.fileConfig); err != nil {
 		return err
 	}
 	if err = tmpFile.Sync(); err != nil {
