@@ -172,6 +172,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("allowedWebhookTemplateFields", isValidWebhookTemplate)
 	_ = val.RegisterValidation("allowedAlertMethodEmailSubjectFields", isValidAlertMethodEmailSubject)
 	_ = val.RegisterValidation("allowedAlertMethodEmailBodyFields", isValidAlertMethodEmailBody)
+	_ = val.RegisterValidation("durationMinutePrecision", isDurationMinutePrecision)
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
 	_ = val.RegisterValidation("nonNegativeDuration", isNonNegativeDuration)
@@ -2052,6 +2053,14 @@ func isValidDatadogAPIUrl(validateURL string) bool {
 	return false
 }
 
+func isDurationMinutePrecision(fl v.FieldLevel) bool {
+	duration, err := time.ParseDuration(fl.Field().String())
+	if err != nil {
+		return false
+	}
+	return int64(duration.Seconds())%int64(time.Minute.Seconds()) == 0
+}
+
 func isValidDuration(fl v.FieldLevel) bool {
 	duration := fl.Field().String()
 	_, err := time.ParseDuration(duration)
@@ -2128,21 +2137,22 @@ func isValidAlertPolicyMeasurement(fl v.FieldLevel) bool {
 func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
-	if condition.AlertingWindow != "" {
-		if condition.LastsForDuration != "" {
-			sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
-			sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
-		}
-		if condition.Operator != "" {
-			sl.ReportError(condition, "op", "operator", "onlyOneAlertingWindowOrOperator", "")
-			sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrOperator", "")
-		}
+	alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl)
+	alertPolicyConditionOperatorLimitsValidation(sl)
 
+	if condition.AlertingWindow != "" {
 		alertPolicyConditionWithAlertingWindowMeasurementValidation(sl)
 		alertPolicyConditionAlertingWindowLengthValidation(sl)
 	} else {
 		alertPolicyConditionWithLastsForMeasurementValidation(sl)
-		alertPolicyConditionOperatorLimitsValidation(sl)
+	}
+}
+
+func alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl v.StructLevel) {
+	condition := sl.Current().Interface().(AlertCondition)
+	if condition.LastsForDuration != "" && condition.AlertingWindow != "" {
+		sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
+		sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
 	}
 }
 
@@ -2222,22 +2232,24 @@ func alertPolicyConditionAlertingWindowLengthValidation(sl v.StructLevel) {
 func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
-	switch condition.Measurement {
-	case MeasurementTimeToBurnBudget.String():
-		if condition.Operator != LessThan.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnBudgetLessThanRequired", "")
+	measurement, measurementErr := ParseMeasurement(condition.Measurement)
+	if measurementErr != nil {
+		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
+	}
+
+	if condition.Operator != "" {
+		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
+		if err != nil {
+			sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
 		}
-	case MeasurementBurnedBudget.String():
-		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnedBudgetGreaterThanEqualRequired", "")
+
+		operator, operatorErr := ParseOperator(condition.Operator)
+		if operatorErr != nil {
+			sl.ReportError(condition, "op", "Operator", "invalidOperatorType", "")
 		}
-	case MeasurementAverageBurnRate.String():
-		if condition.Operator != GreaterThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorBurnRateGreaterThanEqualRequired", "")
-		}
-	case MeasurementTimeToBurnEntireBudget.String():
-		if condition.Operator != LessThanEqual.String() {
-			sl.ReportError(condition, "op", "Operator", "valueOperatorForTimeToBurnEntireBudgetLessThanEqualRequired", "")
+
+		if operator != expectedOperator {
+			sl.ReportError(condition, "op", "Operator", "invalidOperatorTypeForProvidedMeasurement", "")
 		}
 	}
 }
