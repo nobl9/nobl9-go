@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 )
 
@@ -53,7 +52,6 @@ type Config struct {
 	currentContext    string
 	contextlessConfig ContextlessConfig
 	contextConfig     ContextConfig
-
 	fileConfig        *FileConfig
 	options           optionsConfig
 	envConfigDefaults map[string]string
@@ -75,14 +73,6 @@ type ContextConfig struct {
 	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
-}
-
-// FileConfig contains fully parsed config file.
-type FileConfig struct {
-	ContextlessConfig `toml:",inline"`
-	Contexts          map[string]ContextConfig `toml:"contexts"`
-
-	filePath string
 }
 
 // ConfigOption conveys extra configuration details for ReadConfig function.
@@ -136,6 +126,13 @@ type optionsConfig struct {
 	clientSecret string
 }
 
+func (o optionsConfig) IsNoFileConfig() bool {
+	if o.NoConfigFile == nil {
+		return false
+	}
+	return *o.NoConfigFile
+}
+
 var (
 	ErrConfigNoContextFoundInFile = errors.New(`
 No context was set in the current configuration file.
@@ -151,6 +148,7 @@ func (c *Config) GetCurrentContext() string {
 	return c.currentContext
 }
 
+// GetFileConfig returns a copy of FileConfig.
 func (c *Config) GetFileConfig() FileConfig {
 	return *c.fileConfig
 }
@@ -158,7 +156,7 @@ func (c *Config) GetFileConfig() FileConfig {
 func (c *Config) read() error {
 	// Load both file and env configs.
 	fileConfLoaded := false
-	if !*c.options.NoConfigFile {
+	if !c.options.IsNoFileConfig() {
 		if err := c.fileConfig.Load(c.options.FilePath); err == nil {
 			fileConfLoaded = true
 			c.contextlessConfig = c.fileConfig.ContextlessConfig
@@ -268,11 +266,11 @@ func (c *Config) resolveContextConfig() error {
 }
 
 func (c *Config) saveAccessToken(token string) error {
-	if token == "" || *c.options.NoConfigFile {
+	if token == "" || c.options.IsNoFileConfig() {
 		return nil
 	}
-	context := c.fileConfig.Contexts[c.currentContext]
-	if context.AccessToken == token {
+	context, ok := c.fileConfig.Contexts[c.currentContext]
+	if !ok || context.AccessToken == token {
 		return nil
 	}
 	context.AccessToken = token
@@ -398,93 +396,6 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 		ef.SetUint(i)
 	default:
 		return errors.Errorf("unsupported reflected field kind: %s", tk)
-	}
-	return nil
-}
-
-func (f *FileConfig) GetPath() string {
-	return f.filePath
-}
-
-func (f *FileConfig) Load(path string) error {
-	f.filePath = path
-	if _, err := os.Stat(path); err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-		if err = createDefaultConfigFile(path); err != nil {
-			return err
-		}
-	}
-	if _, err := toml.DecodeFile(path, &f); err != nil {
-		return errors.Wrapf(err, "could not decode config file: %s", path)
-	}
-	return nil
-}
-
-func (f *FileConfig) Save(path string) (err error) {
-	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path))
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if closeErr := tmpFile.Close(); closeErr != nil && err == nil {
-			switch v := closeErr.(type) {
-			case *os.PathError:
-				if v.Err != os.ErrClosed {
-					err = closeErr
-				}
-			default:
-				err = closeErr
-			}
-		}
-		if removeErr := os.Remove(tmpFile.Name()); removeErr != nil && err == nil {
-			err = removeErr
-		}
-	}()
-
-	if err = toml.NewEncoder(tmpFile).Encode(f); err != nil {
-		return err
-	}
-	if err = tmpFile.Sync(); err != nil {
-		return err
-	}
-	if err = tmpFile.Close(); err != nil {
-		return err
-	}
-	if err = os.Rename(tmpFile.Name(), path); err != nil {
-		return err
-	}
-	f.filePath = path
-	return nil
-}
-
-func createDefaultConfigFile(path string) error {
-	fmt.Println("Creating new config file at " + path)
-	dir := filepath.Dir(path)
-	// Create the directory with all it's parents.
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, 0o700); err != nil {
-			return errors.Wrapf(err, "failed to create a directory path (with parents) for %s", dir)
-		}
-	} else if err != nil {
-		return errors.Wrapf(err, "failed to stat %s directory", dir)
-	}
-	// Create the config file.
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		// #nosec G304
-		f, err := os.Create(path)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create Nobl9 config file under %s", path)
-		}
-		defer func() { _ = f.Close() }()
-		return toml.NewEncoder(f).Encode(FileConfig{
-			ContextlessConfig: ContextlessConfig{DefaultContext: defaultContext},
-			Contexts:          map[string]ContextConfig{defaultContext: {}},
-		})
-	} else if err != nil {
-		return errors.Wrapf(err, "failed to stat %s file", path)
 	}
 	return nil
 }

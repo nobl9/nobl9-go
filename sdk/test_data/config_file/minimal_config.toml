@@ -1,0 +1,9 @@
+defaultContext = "default"
+
+[Contexts]
+  [Contexts.default]
+    clientId = "default-id"
+    clientSecret = "default-secret"
+  [Contexts.non-default]
+    clientId = "non-default-id"
+    clientSecret = "non-default-secret"

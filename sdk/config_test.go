@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -91,16 +92,14 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 
 	t.Run("custom config file", func(t *testing.T) {
 		filePath := filepath.Join(tempDir, "new_config.toml")
-		_, err := os.Stat(filePath)
-		require.True(t, os.IsNotExist(err), "config file should not exist")
+		require.NoFileExists(t, filePath)
 
 		conf, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionFilePath(filePath))
 		require.NoError(t, err)
 
-		_, err = os.Stat(filePath)
-		require.NoError(t, err)
+		require.FileExists(t, conf.fileConfig.GetPath())
 		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
@@ -108,14 +107,12 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 	t.Run("default config file", func(t *testing.T) {
 		filePath := filepath.Join(tempDir, defaultRelativeConfigPath)
 		t.Setenv("HOME", tempDir)
-		_, err := os.Stat(filePath)
-		require.True(t, os.IsNotExist(err), "config file should not exist")
+		require.NoFileExists(t, filePath)
 
 		conf, err := ReadConfig(ConfigOptionWithCredentials("clientId", "clientSecret"))
 		require.NoError(t, err)
 
-		_, err = os.Stat(filePath)
-		require.NoError(t, err)
+		require.FileExists(t, filePath)
 		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
@@ -148,8 +145,7 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check ConfigOptionNoConfigFile.
-	_, err = os.Stat(filePath)
-	require.True(t, os.IsNotExist(err), "file should not exist")
+	require.NoFileExists(t, filePath)
 
 	assertConfigsAreEqual(t, &Config{
 		ClientID:       "clientId",
@@ -196,8 +192,7 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check NO_CONFIG_FILE.
-	_, err = os.Stat(conf.fileConfig.GetPath())
-	require.True(t, os.IsNotExist(err), "file should not exist")
+	require.NoFileExists(t, conf.fileConfig.GetPath())
 
 	assertConfigsAreEqual(t, &Config{
 		ClientID:       "clientId",
@@ -252,8 +247,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check NO_CONFIG_FILE.
-		_, err = os.Stat(conf.fileConfig.GetPath())
-		require.True(t, os.IsNotExist(err), "file should not exist")
+		require.NoFileExists(t, conf.fileConfig.GetPath())
 
 		assertConfigsAreEqual(t, &expected, conf)
 	})
@@ -272,7 +266,72 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 }
 
 func TestSaveAccessToken(t *testing.T) {
-	// TODO
+	tempDir := t.TempDir()
+
+	for name, test := range map[string]struct {
+		Config *Config
+		Token  string
+	}{
+		"empty config": {
+			Config: &Config{
+				currentContext: "default",
+				fileConfig: &FileConfig{Contexts: map[string]ContextConfig{
+					"default": {AccessToken: "secret"},
+				}},
+			},
+			Token: "",
+		},
+		"no config file": {
+			Config: &Config{
+				currentContext: "default",
+				fileConfig: &FileConfig{Contexts: map[string]ContextConfig{
+					"default": {AccessToken: "old"},
+				}},
+				options: optionsConfig{NoConfigFile: ptr(true)},
+			},
+			Token: "new",
+		},
+		"context not found": {
+			Config: &Config{
+				currentContext: "default",
+				fileConfig: &FileConfig{Contexts: map[string]ContextConfig{
+					"non-default": {AccessToken: "old"},
+				}},
+			},
+			Token: "new",
+		},
+		"token was not updated": {
+			Config: &Config{
+				currentContext: "default",
+				fileConfig: &FileConfig{Contexts: map[string]ContextConfig{
+					"default": {AccessToken: "new"},
+				}},
+			},
+			Token: "new",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			test.Config.fileConfig.filePath = filepath.Join(tempDir, strings.ReplaceAll(name, " ", "-"))
+			require.NoError(t, test.Config.saveAccessToken(test.Token))
+			assert.NoFileExists(t, test.Config.fileConfig.GetPath())
+		})
+	}
+
+	t.Run("golden path", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "golden-path.toml")
+		copyEmbeddedFile(t, "minimal_config.toml", filePath)
+
+		oldConf, err := ReadConfig(ConfigOptionFilePath(filePath))
+		require.NoError(t, oldConf.saveAccessToken("new"))
+
+		newConf, err := ReadConfig(ConfigOptionFilePath(filePath))
+		require.NoError(t, err)
+
+		assert.NotEqual(t, oldConf.AccessToken, newConf.AccessToken)
+		assert.Equal(t, "new", newConf.AccessToken)
+		oldConf.AccessToken = "new"
+		assertConfigsAreEqual(t, oldConf, newConf)
+	})
 }
 
 func assertConfigsAreEqual(t *testing.T, c1, c2 *Config) {
