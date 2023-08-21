@@ -83,6 +83,7 @@ var (
 	ErrAgentTypeChanged          = fmt.Errorf("cannot change agent type")
 	ErrDirectTypeChanged         = fmt.Errorf("cannot change direct type")
 	ErrDirectSecretRequired      = fmt.Errorf("direct secrets cannot be empty")
+	ErrDirectLogsForceDisabled   = fmt.Errorf("direct log collection is temporary disabled")
 	ErrAlertMethodSecretRequired = fmt.Errorf("alert method secrets cannot be empty")
 	ErrAlertMethodTypeChanged    = fmt.Errorf("cannot change alert method type")
 )
