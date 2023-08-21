@@ -20,8 +20,8 @@ var ThousandEyesTestAgentConfig thousandEyesConfigs
 type thousandEyesConfigs []thousandEyesConfig
 
 type thousandEyesConfig struct {
-	TestType          string
-	SupportedChannels map[string]string
+	TestType           string
+	ChannelsToVersions map[string]string
 }
 
 // GetFor returns first matching config for given criteria along with flag indicating if config exists
@@ -30,7 +30,7 @@ func (all thousandEyesConfigs) GetFor(testType, channel string) (thousandEyesCon
 		if t.TestType != testType {
 			continue
 		}
-		if _, ok := t.SupportedChannels[channel]; !ok {
+		if _, ok := t.ChannelsToVersions[channel]; !ok {
 			continue
 		}
 		return t, true
@@ -57,50 +57,50 @@ func init() {
 
 	ThousandEyesTestAgentConfig = []thousandEyesConfig{
 		{
-			TestType:          ThousandEyesNetLatency,
-			SupportedChannels: all(TestTypesIntroducedAgentVersion),
+			TestType:           ThousandEyesNetLatency,
+			ChannelsToVersions: all(TestTypesIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesNetLoss,
-			SupportedChannels: all(TestTypesIntroducedAgentVersion),
+			TestType:           ThousandEyesNetLoss,
+			ChannelsToVersions: all(TestTypesIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesWebPageLoad,
-			SupportedChannels: all(TestTypesIntroducedAgentVersion),
+			TestType:           ThousandEyesWebPageLoad,
+			ChannelsToVersions: all(TestTypesIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesWebDOMLoad,
-			SupportedChannels: all(TestTypesIntroducedAgentVersion),
+			TestType:           ThousandEyesWebDOMLoad,
+			ChannelsToVersions: all(TestTypesIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesHTTPResponseTime,
-			SupportedChannels: all(TestTypesIntroducedAgentVersion),
+			TestType:           ThousandEyesHTTPResponseTime,
+			ChannelsToVersions: all(TestTypesIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesServerAvailability,
-			SupportedChannels: all(AvailabilityAndThroughputIntroducedAgentVersion),
+			TestType:           ThousandEyesServerAvailability,
+			ChannelsToVersions: all(AvailabilityAndThroughputIntroducedAgentVersion),
 		},
 		{
-			TestType:          ThousandEyesServerThroughput,
-			SupportedChannels: all(AvailabilityAndThroughputIntroducedAgentVersion),
+			TestType:           ThousandEyesServerThroughput,
+			ChannelsToVersions: all(AvailabilityAndThroughputIntroducedAgentVersion),
 		},
 		{
 			TestType: ThousandEyesServerTotalTime,
-			SupportedChannels: map[string]string{
+			ChannelsToVersions: map[string]string{
 				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
 				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
 			},
 		},
 		{
 			TestType: ThousandEyesDNSServerResolutionTime,
-			SupportedChannels: map[string]string{
+			ChannelsToVersions: map[string]string{
 				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
 				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
 			},
 		},
 		{
 			TestType: ThousandEyesDNSSECValid,
-			SupportedChannels: map[string]string{
+			ChannelsToVersions: map[string]string{
 				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
 				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
 			},
