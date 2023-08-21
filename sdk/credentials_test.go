@@ -79,6 +79,49 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		})
 	}
 
+	for name, test := range map[string]struct {
+		ClientID     string
+		ClientSecret string
+		CalledTimes  int
+	}{
+		"clientID changed": {
+			ClientID:     "new-id",
+			ClientSecret: "old-secret",
+			CalledTimes:  1,
+		},
+		"clientSecret changed": {
+			ClientID:     "old-secret",
+			ClientSecret: "new-secret",
+			CalledTimes:  1,
+		},
+		"credentials did not change": {
+			ClientID:     "old-id",
+			ClientSecret: "old-secret",
+			CalledTimes:  0,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			tokenProvider := &mockTokenProvider{}
+			tokenParser := &mockTokenParser{}
+			creds := &credentials{
+				config: &Config{
+					ClientID:     test.ClientID,
+					ClientSecret: test.ClientSecret,
+					DisableOkta:  false,
+				},
+				claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
+				tokenProvider: tokenProvider,
+				tokenParser:   tokenParser,
+				clientID:      "old-id",
+				clientSecret:  "old-secret",
+			}
+			_, err := creds.refreshAccessToken(context.Background())
+			require.NoError(t, err)
+			assert.Equal(t, test.CalledTimes, tokenProvider.calledTimes)
+			assert.Equal(t, test.CalledTimes, tokenParser.calledTimes)
+		})
+	}
+
 	t.Run("golden path, m2m token", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{
 			token: "access-token",
@@ -317,6 +360,60 @@ func TestClient_RoundTrip(t *testing.T) {
 		require.Contains(t, req.Header, HeaderAuthorization)
 		assert.Equal(t, "Bearer my-old-token", req.Header.Get(HeaderAuthorization))
 	})
+}
+
+func TestCredentials_GetEnvironment(t *testing.T) {
+	tokenProvider := &mockTokenProvider{}
+	creds := &credentials{
+		config:        &Config{},
+		tokenProvider: tokenProvider,
+		tokenParser: &mockTokenParser{
+			claims: jwt.MapClaims{
+				jwtTokenClaimM2MProfile: accessTokenM2MProfile{
+					Environment: "my-env",
+				},
+				"exp": float64(time.Now().Add(time.Hour).Unix()),
+			},
+		},
+	}
+
+	env, err := creds.GetEnvironment(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, tokenProvider.calledTimes)
+	assert.Equal(t, "my-env", env)
+
+	// Make sure token is not requested again.
+	env, err = creds.GetEnvironment(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, tokenProvider.calledTimes)
+	assert.Equal(t, "my-env", env)
+}
+
+func TestCredentials_GetOrganization(t *testing.T) {
+	tokenProvider := &mockTokenProvider{}
+	creds := &credentials{
+		config:        &Config{},
+		tokenProvider: tokenProvider,
+		tokenParser: &mockTokenParser{
+			claims: jwt.MapClaims{
+				jwtTokenClaimM2MProfile: accessTokenM2MProfile{
+					Organization: "my-org",
+				},
+				"exp": float64(time.Now().Add(time.Hour).Unix()),
+			},
+		},
+	}
+
+	org, err := creds.GetOrganization(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, tokenProvider.calledTimes)
+	assert.Equal(t, "my-org", org)
+
+	// Make sure token is not requested again.
+	org, err = creds.GetOrganization(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, tokenProvider.calledTimes)
+	assert.Equal(t, "my-org", org)
 }
 
 type mockTokenProvider struct {

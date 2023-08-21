@@ -383,7 +383,13 @@ func (c *Client) CreateRequest(
 	return req, nil
 }
 
-// SetUserAgent will set HeaderR
+// GetOrganization returns the organization read from JWT token claims.
+// If the token has not been yet fetched, it will
+func (c *Client) GetOrganization(ctx context.Context) (string, error) {
+	return c.credentials.GetOrganization(ctx)
+}
+
+// SetUserAgent will set HeaderUserAgent to the provided value.
 func (c *Client) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
 }

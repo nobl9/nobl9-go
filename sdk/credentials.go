@@ -87,15 +87,19 @@ type credentials struct {
 	// postRequestHook is not run in offline mode.
 	postRequestHook accessTokenPostRequestHook
 
-	mu   sync.Mutex
-	once sync.Once
+	// These are independent of Config.ClientID and Config.ClientSecret.
+	// They are set just before the token is fetched.
+	clientID     string
+	clientSecret string
+
+	mu sync.Mutex
 }
 
 // GetEnvironment first ensures a token has been parsed before returning the environment,
 // as it is extracted from the token claims.
 // credentials.environment should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
-	if err := c.refreshAccessTokenOnce(ctx); err != nil {
+	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", err
 	}
 	return c.environment, nil
@@ -105,19 +109,10 @@ func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 // as it is extracted from the token claims.
 // credentials.organization should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
-	if err := c.refreshAccessTokenOnce(ctx); err != nil {
+	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", err
 	}
 	return c.organization, nil
-}
-
-func (c *credentials) refreshAccessTokenOnce(ctx context.Context) (err error) {
-	c.once.Do(func() {
-		if _, err = c.refreshAccessToken(ctx); err != nil {
-			return
-		}
-	})
-	return err
 }
 
 // It's important for this to be clean client, request middleware in Go is kinda clunky
@@ -189,13 +184,19 @@ func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err
 // it reaches the API server.
 const tokenExpiryOffset = 2 * time.Minute
 
-// shouldRefresh defines token expiry policy for the JWT managed by credentials.
+// shouldRefresh defines token expiry policy for the JWT managed by credentials
+// or if the config.ClientID or config.ClientSecret have been updated.
 func (c *credentials) shouldRefresh() bool {
-	return len(c.claims) == 0 || !c.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true)
+	return len(c.claims) == 0 ||
+		!c.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true) ||
+		c.clientID != c.config.ClientID ||
+		c.clientSecret != c.config.ClientSecret
 }
 
 // requestNewToken uses tokenProvider to fetch the new token and parse it via setNewToken function.
 func (c *credentials) requestNewToken(ctx context.Context) (err error) {
+	c.clientID = c.config.ClientID
+	c.clientSecret = c.config.ClientSecret
 	token, err := c.tokenProvider.RequestAccessToken(ctx, c.config.ClientID, c.config.ClientSecret)
 	if err != nil {
 		return errors.Wrap(err, "error getting new access token from IDP")
