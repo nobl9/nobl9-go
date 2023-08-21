@@ -13,20 +13,22 @@ const (
 	ThousandEyesDNSSECValid             = "dns-dnssec-valid"
 )
 
+const (
+	TestTypesIntroducedAgentVersion                 = "v0.33.0"
+	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
+	DNSTestTypeIntroductionBetaAgentVersion         = "v0.68.0-beta01"
+	DNSTestTypeIntroductionStableAgentVersion       = "v0.67.1"
+)
+
 // ThousandEyesTestAgentConfig for each test type holds minimum agent version and supported release channels
 // nolint:gochecknoglobals
 var ThousandEyesTestAgentConfig thousandEyesConfigs
 
 type thousandEyesConfigs []thousandEyesConfig
 
-type thousandEyesConfig struct {
-	TestType           string
-	ChannelsToVersions map[string]string
-}
-
 // GetFor returns first matching config for given criteria along with flag indicating if config exists
-func (all thousandEyesConfigs) GetFor(testType, channel string) (thousandEyesConfig, bool) {
-	for _, t := range all {
+func (configs thousandEyesConfigs) GetFor(testType, channel string) (thousandEyesConfig, bool) {
+	for _, t := range configs {
 		if t.TestType != testType {
 			continue
 		}
@@ -38,12 +40,10 @@ func (all thousandEyesConfigs) GetFor(testType, channel string) (thousandEyesCon
 	return thousandEyesConfig{}, false
 }
 
-const (
-	TestTypesIntroducedAgentVersion                 = "v0.33.0"
-	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
-	DNSTestTypeIntroductionBetaAgentVersion         = "v0.68.0-beta01"
-	DNSTestTypeIntroductionStableAgentVersion       = "v0.67.1"
-)
+type thousandEyesConfig struct {
+	TestType           string
+	ChannelsToVersions map[string]string
+}
 
 // nolint: gochecknoinits
 func init() {
