@@ -15,72 +15,95 @@ const (
 
 // ThousandEyesTestAgentConfig for each test type holds minimum agent version and supported release channels
 // nolint:gochecknoglobals
-var ThousandEyesTestAgentConfig map[string]thousandEyesConfig
+var ThousandEyesTestAgentConfig thousandEyesConfigs
+
+type thousandEyesConfigs []thousandEyesConfig
 
 type thousandEyesConfig struct {
-	MinimumAgent      string
-	SupportedChannels map[string]struct{}
+	TestType          string
+	SupportedChannels map[string]string
+}
+
+// GetFor returns first matching config for given criteria along with flag indicating if config exists
+func (all thousandEyesConfigs) GetFor(testType, channel string) (thousandEyesConfig, bool) {
+	for _, t := range all {
+		if t.TestType != testType {
+			continue
+		}
+		if _, ok := t.SupportedChannels[channel]; !ok {
+			continue
+		}
+		return t, true
+	}
+	return thousandEyesConfig{}, false
 }
 
 const (
 	TestTypesIntroducedAgentVersion                 = "v0.33.0"
 	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
-	DNSTestTypeIntroductionAgentVersion             = "v0.68.0-beta01"
+	DNSTestTypeIntroductionBetaAgentVersion         = "v0.68.0-beta01"
+	DNSTestTypeIntroductionStableAgentVersion       = "v0.67.1"
 )
 
 // nolint: gochecknoinits
 func init() {
-	all := map[string]struct{}{
-		ReleaseChannelStable.String(): {},
-		ReleaseChannelBeta.String():   {},
-		ReleaseChannelAlpha.String():  {},
+	all := func(ver string) map[string]string {
+		return map[string]string{
+			ReleaseChannelStable.String(): ver,
+			ReleaseChannelBeta.String():   ver,
+			ReleaseChannelAlpha.String():  ver,
+		}
 	}
 
-	betaAndStable := map[string]struct{}{
-		ReleaseChannelStable.String(): {},
-		ReleaseChannelBeta.String():   {},
-	}
-
-	ThousandEyesTestAgentConfig = map[string]thousandEyesConfig{
-		ThousandEyesNetLatency: {
-			MinimumAgent:      TestTypesIntroducedAgentVersion,
-			SupportedChannels: all,
+	ThousandEyesTestAgentConfig = []thousandEyesConfig{
+		{
+			TestType:          ThousandEyesNetLatency,
+			SupportedChannels: all(TestTypesIntroducedAgentVersion),
 		},
-		ThousandEyesNetLoss: {
-			MinimumAgent:      TestTypesIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesNetLoss,
+			SupportedChannels: all(TestTypesIntroducedAgentVersion),
 		},
-		ThousandEyesWebPageLoad: {
-			MinimumAgent:      TestTypesIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesWebPageLoad,
+			SupportedChannels: all(TestTypesIntroducedAgentVersion),
 		},
-		ThousandEyesWebDOMLoad: {
-			MinimumAgent:      TestTypesIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesWebDOMLoad,
+			SupportedChannels: all(TestTypesIntroducedAgentVersion),
 		},
-		ThousandEyesHTTPResponseTime: {
-			MinimumAgent:      TestTypesIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesHTTPResponseTime,
+			SupportedChannels: all(TestTypesIntroducedAgentVersion),
 		},
-		ThousandEyesServerAvailability: {
-			MinimumAgent:      AvailabilityAndThroughputIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesServerAvailability,
+			SupportedChannels: all(AvailabilityAndThroughputIntroducedAgentVersion),
 		},
-		ThousandEyesServerThroughput: {
-			MinimumAgent:      AvailabilityAndThroughputIntroducedAgentVersion,
-			SupportedChannels: all,
+		{
+			TestType:          ThousandEyesServerThroughput,
+			SupportedChannels: all(AvailabilityAndThroughputIntroducedAgentVersion),
 		},
-		ThousandEyesServerTotalTime: {
-			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: betaAndStable,
+		{
+			TestType: ThousandEyesServerTotalTime,
+			SupportedChannels: map[string]string{
+				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
+				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
+			},
 		},
-		ThousandEyesDNSServerResolutionTime: {
-			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: betaAndStable,
+		{
+			TestType: ThousandEyesDNSServerResolutionTime,
+			SupportedChannels: map[string]string{
+				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
+				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
+			},
 		},
-		ThousandEyesDNSSECValid: {
-			MinimumAgent:      DNSTestTypeIntroductionAgentVersion,
-			SupportedChannels: betaAndStable,
+		{
+			TestType: ThousandEyesDNSSECValid,
+			SupportedChannels: map[string]string{
+				ReleaseChannelStable.String(): DNSTestTypeIntroductionStableAgentVersion,
+				ReleaseChannelBeta.String():   DNSTestTypeIntroductionBetaAgentVersion,
+			},
 		},
 	}
 }
