@@ -147,37 +147,32 @@ func (c *credentials) setAuthorizationHeader(r *http.Request) {
 	r.Header.Set(HeaderAuthorization, fmt.Sprintf("Bearer %s", c.accessToken))
 }
 
-// SetAccessToken allows setting new access token without using tokenProvider.
-// The provided token will be still parsed using setNewToken function.
-// In offline mode this is a noop.
-func (c *credentials) SetAccessToken(token string) error {
-	if c.config.DisableOkta {
-		return nil
-	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.setNewToken(token, false)
-}
-
 // refreshAccessToken checks the accessToken expiry with an offset to detect if the token
 // is soon to be expired. If so, it wll request a new token and update the credentials state.
 // If the token was not yet set, it will request a new one all the same.
 func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
-		return
+		return false, nil
 	}
 	if !c.shouldRefresh() {
-		return
+		return false, nil
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.shouldRefresh() {
-		return
+		return false, nil
 	}
-	if err = c.requestNewToken(ctx); err == nil {
-		updated = true
+	// Special case when we provide access token via Config.
+	if c.config.AccessToken != "" && c.accessToken == "" {
+		// If we didn't succeed, simply try refreshing the token.
+		if err = c.setNewToken(c.config.AccessToken); err == nil {
+			return false, nil
+		}
 	}
-	return
+	if err = c.requestNewToken(ctx); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // tokenExpiryOffset is added to the current time reading to make sure the token won't expiry before
@@ -201,13 +196,13 @@ func (c *credentials) requestNewToken(ctx context.Context) (err error) {
 	if err != nil {
 		return errors.Wrap(err, "error getting new access token from IDP")
 	}
-	return c.setNewToken(token, true)
+	return c.setNewToken(token)
 }
 
 // setNewToken parses and verifies the provided JWT using tokenParser.
 // It will then decode 'm2mProfile' from the extracted claims and set
 // the new values for m2mProfile, accessToken and claims credentials fields.
-func (c *credentials) setNewToken(token string, withHook bool) error {
+func (c *credentials) setNewToken(token string) error {
 	claims, err := c.tokenParser.Parse(token, c.config.ClientID)
 	if err != nil {
 		return err
@@ -229,7 +224,7 @@ func (c *credentials) setNewToken(token string, withHook bool) error {
 			return errors.Wrap(err, "failed to decode JWT claims to agent profile object")
 		}
 	}
-	if withHook && c.postRequestHook != nil {
+	if c.postRequestHook != nil {
 		if err = c.postRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}

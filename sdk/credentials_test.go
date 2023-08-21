@@ -122,6 +122,85 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		})
 	}
 
+	t.Run("parse token when Config.AccessToken is set", func(t *testing.T) {
+		tokenProvider := &mockTokenProvider{}
+		tokenParser := &mockTokenParser{}
+		creds := &credentials{
+			config:        &Config{AccessToken: "token"},
+			tokenProvider: tokenProvider,
+			tokenParser:   tokenParser,
+		}
+		_, err := creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+	})
+
+	t.Run("do not parse token when Config.AccessToken is set, but token was already fetched", func(t *testing.T) {
+		tokenProvider := &mockTokenProvider{}
+		tokenParser := &mockTokenParser{}
+		creds := &credentials{
+			config:        &Config{AccessToken: "token"},
+			tokenProvider: tokenProvider,
+			tokenParser:   tokenParser,
+			accessToken:   "already fetched",
+		}
+		_, err := creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 1, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+	})
+
+	t.Run("set new access token", func(t *testing.T) {
+		tokenParser := &mockTokenParser{
+			claims: jwt.MapClaims{
+				"m2mProfile": map[string]interface{}{
+					"user":         "test@user.com",
+					"environment":  "app.nobl9.com",
+					"organization": "my-org",
+				},
+			},
+		}
+		tokenProvider := &mockTokenProvider{}
+		creds := &credentials{
+			config:        &Config{AccessToken: "token"},
+			tokenParser:   tokenParser,
+			tokenProvider: tokenProvider,
+		}
+		updated, err := creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.False(t, updated)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+		assert.Equal(t, "token", tokenParser.calledWithToken)
+		assert.Equal(t, "token", creds.accessToken)
+		assert.Equal(t, "app.nobl9.com", creds.environment)
+		assert.Equal(t, "my-org", creds.organization)
+		assert.Equal(t, tokenTypeM2M, creds.tokenType)
+		assert.Equal(t, accessTokenM2MProfile{
+			User:         "test@user.com",
+			Environment:  "app.nobl9.com",
+			Organization: "my-org",
+		}, creds.m2mProfile)
+		assert.Equal(t, tokenParser.claims, creds.claims)
+	})
+
+	t.Run("try setting new access token", func(t *testing.T) {
+		tokenParser := &mockTokenParser{err: errors.New("token error")}
+		tokenProvider := &mockTokenProvider{}
+		creds := &credentials{
+			config:        &Config{AccessToken: "token"},
+			tokenParser:   tokenParser,
+			tokenProvider: tokenProvider,
+		}
+		// Provider will always drop the error, but at least we make sure,
+		// the provider is called once parser fails for the first time.
+		_, err := creds.refreshAccessToken(context.Background())
+		require.Error(t, err)
+		assert.Equal(t, 1, tokenProvider.calledTimes)
+		assert.Equal(t, 2, tokenParser.calledTimes)
+	})
+
 	t.Run("golden path, m2m token", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{
 			token: "access-token",
@@ -213,46 +292,6 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	})
 }
 
-func TestCredentials_SetAccessToken(t *testing.T) {
-	tokenParser := &mockTokenParser{
-		claims: jwt.MapClaims{
-			"m2mProfile": map[string]interface{}{
-				"user":         "test@user.com",
-				"environment":  "app.nobl9.com",
-				"organization": "my-org",
-			},
-		},
-	}
-	creds := &credentials{
-		config:          &Config{ClientID: "client-id"},
-		tokenParser:     tokenParser,
-		postRequestHook: func(token string) error { return errors.New("hook should not be called!") },
-	}
-	err := creds.SetAccessToken("access-token")
-	require.NoError(t, err)
-	assert.Equal(t, 1, tokenParser.calledTimes)
-	assert.Equal(t, "access-token", tokenParser.calledWithToken)
-	assert.Equal(t, "client-id", tokenParser.calledWithClientID)
-	assert.Equal(t, "access-token", creds.accessToken)
-	assert.Equal(t, "app.nobl9.com", creds.environment)
-	assert.Equal(t, "my-org", creds.organization)
-	assert.Equal(t, tokenTypeM2M, creds.tokenType)
-	assert.Equal(t, accessTokenM2MProfile{
-		User:         "test@user.com",
-		Environment:  "app.nobl9.com",
-		Organization: "my-org",
-	}, creds.m2mProfile)
-	assert.Equal(t, tokenParser.claims, creds.claims)
-
-	t.Run("offline mode", func(t *testing.T) {
-		creds.config.DisableOkta = true
-		err = creds.SetAccessToken("new-access-token")
-		require.NoError(t, err)
-		assert.Equal(t, "access-token", creds.accessToken)
-		assert.Equal(t, 1, tokenParser.calledTimes)
-	})
-}
-
 func TestCredentials_setNewToken(t *testing.T) {
 	t.Run("don't call hook if parser fails", func(t *testing.T) {
 		parserErr := errors.New("parser failed!")
@@ -262,7 +301,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			tokenParser:     &mockTokenParser{err: parserErr},
 			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		err := creds.setNewToken("", true)
+		err := creds.setNewToken("")
 		require.Error(t, err)
 		assert.Equal(t, parserErr, err)
 		assert.False(t, hookCalled, "postRequestHook should not be called")
@@ -275,7 +314,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			tokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
 			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
-		err := creds.setNewToken("", true)
+		err := creds.setNewToken("")
 		assert.Error(t, err)
 		assert.False(t, hookCalled, "postRequestHook should not be called")
 	})
@@ -290,7 +329,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			tokenParser:     tokenParser,
 			postRequestHook: func(token string) error { return hookErr },
 		}
-		err := creds.setNewToken("my-token", true)
+		err := creds.setNewToken("my-token")
 		require.Error(t, err)
 		assert.ErrorIs(t, err, hookErr)
 		assert.Empty(t, creds.accessToken)

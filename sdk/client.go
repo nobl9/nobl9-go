@@ -90,11 +90,11 @@ func DefaultClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClient(config)
+	return NewClient(config), nil
 }
 
 // NewClient TODO.
-func NewClient(config *Config) (*Client, error) {
+func NewClient(config *Config) *Client {
 	creds := newCredentials(config)
 	client := &Client{
 		HTTP:        retryhttp.NewClient(config.Timeout, creds),
@@ -102,12 +102,7 @@ func NewClient(config *Config) (*Client, error) {
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
 	}
-	if client.Config.AccessToken != "" {
-		if err := client.credentials.SetAccessToken(config.AccessToken); err != nil {
-			return nil, err
-		}
-	}
-	return client, nil
+	return client
 }
 
 const (
