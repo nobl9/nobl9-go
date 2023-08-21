@@ -15,12 +15,14 @@ import (
 const (
 	EnvPrefix = "NOBL9_SDK_"
 
-	defaultContext            = "default"
-	defaultRelativeConfigPath = ".config/nobl9/config.toml"
-	defaultOktaAuthServerID   = "auseg9kiegWKEtJZC416"
-	defaultDisableOkta        = false
-	defaultNoConfigFile       = false
-	defaultTimeout            = 10 * time.Second
+	defaultContext              = "default"
+	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
+	defaultOktaAuthServerID     = "auseg9kiegWKEtJZC416"
+	defaultDisableOkta          = false
+	defaultNoConfigFile         = false
+	defaultTimeout              = 10 * time.Second
+	defaultFilesPromptEnabled   = true
+	defaultFilesPromptThreshold = 23
 )
 
 var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
@@ -39,15 +41,17 @@ func ReadConfig(options ...ConfigOption) (*Config, error) {
 
 // Config combines the ContextlessConfig and ContextConfig of the current, selected context.
 type Config struct {
-	ClientID       string
-	ClientSecret   string
-	AccessToken    string
-	Project        string
-	URL            *url.URL
-	OktaOrgURL     *url.URL
-	OktaAuthServer string
-	DisableOkta    bool
-	Timeout        time.Duration
+	ClientID             string
+	ClientSecret         string
+	AccessToken          string
+	Project              string
+	URL                  *url.URL
+	OktaOrgURL           *url.URL
+	OktaAuthServer       string
+	DisableOkta          bool
+	Timeout              time.Duration
+	FilesPromptEnabled   bool
+	FilesPromptThreshold int
 
 	currentContext    string
 	contextlessConfig ContextlessConfig
@@ -60,6 +64,9 @@ type Config struct {
 // ContextlessConfig stores config not tied to any specific context.
 type ContextlessConfig struct {
 	DefaultContext string `toml:"defaultContext" env:"DEFAULT_CONTEXT"`
+	// Sloctl exclusive.
+	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
+	FilesPromptThreshold *int  `toml:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
 }
 
 // ContextConfig stores context specific config.
@@ -135,12 +142,12 @@ func (o optionsConfig) IsNoFileConfig() bool {
 
 var (
 	ErrConfigNoContextFoundInFile = errors.New(`
-No context was set in the current configuration file.
-At least one context must be provided and set as default.
-`)
+	No context was set in the current configuration file.
+	At least one context must be provided and set as default.
+	`)
 	ErrConfigNoCredentialsFound = errors.New(`
-Both client id and client secret must be provided.
-Either set them in configuration file or provide them through env variables.
+	Both client id and client secret must be provided.
+	Either set them in configuration file or provide them through env variables.
 `)
 )
 
@@ -200,13 +207,15 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			envPrefix: EnvPrefix,
 		},
 		envConfigDefaults: map[string]string{
-			"CONFIG_FILE_PATH": getDefaultConfigPath(),
-			"NO_CONFIG_FILE":   strconv.FormatBool(defaultNoConfigFile),
-			"DEFAULT_CONTEXT":  defaultContext,
-			"OKTA_ORG_URL":     defaultOktaOrgURL.String(),
-			"OKTA_AUTH_SERVER": defaultOktaAuthServerID,
-			"DISABLE_OKTA":     strconv.FormatBool(defaultDisableOkta),
-			"TIMEOUT":          defaultTimeout.String(),
+			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
+			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
+			"DEFAULT_CONTEXT":        defaultContext,
+			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
+			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
+			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
+			"TIMEOUT":                defaultTimeout.String(),
+			"FILES_PROMPT_ENABLED":   strconv.FormatBool(defaultFilesPromptEnabled),
+			"FILES_PROMPT_THRESHOLD": strconv.Itoa(defaultFilesPromptThreshold),
 		},
 	}
 	if err := conf.processEnvVariables(&conf.options); err != nil {
@@ -226,6 +235,12 @@ func (c *Config) resolveContextlessConfig() error {
 		c.currentContext = c.options.context
 	} else {
 		c.currentContext = c.contextlessConfig.DefaultContext
+	}
+	if c.contextlessConfig.FilesPromptEnabled != nil {
+		c.FilesPromptEnabled = *c.contextlessConfig.FilesPromptEnabled
+	}
+	if c.contextlessConfig.FilesPromptThreshold != nil {
+		c.FilesPromptThreshold = *c.contextlessConfig.FilesPromptThreshold
 	}
 	return nil
 }

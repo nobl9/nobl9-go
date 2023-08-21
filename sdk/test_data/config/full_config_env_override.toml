@@ -1,6 +1,6 @@
 defaultContext = "default"
-  filesPromptThreshold = 30
-  filesPromptEnabled = false
+filesPromptThreshold = 30
+filesPromptEnabled = false
 
 [Contexts]
   [Contexts.default]
