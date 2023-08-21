@@ -322,6 +322,7 @@ func TestSaveAccessToken(t *testing.T) {
 		copyEmbeddedFile(t, "minimal_config.toml", filePath)
 
 		oldConf, err := ReadConfig(ConfigOptionFilePath(filePath))
+		require.NoError(t, err)
 		require.NoError(t, oldConf.saveAccessToken("new"))
 
 		newConf, err := ReadConfig(ConfigOptionFilePath(filePath))

@@ -14,7 +14,6 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/pkg/errors"
 
@@ -83,7 +82,6 @@ type Client struct {
 
 	credentials *credentials
 	userAgent   string
-	once        sync.Once
 }
 
 // DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
@@ -97,10 +95,7 @@ func DefaultClient() (*Client, error) {
 
 // NewClient TODO.
 func NewClient(config *Config) (*Client, error) {
-	creds, err := newCredentials(config)
-	if err != nil {
-		return nil, err
-	}
+	creds := newCredentials(config)
 	client := &Client{
 		HTTP:        retryhttp.NewClient(config.Timeout, creds),
 		Config:      config,
@@ -108,7 +103,7 @@ func NewClient(config *Config) (*Client, error) {
 		userAgent:   getDefaultUserAgent(),
 	}
 	if client.Config.AccessToken != "" {
-		if err = client.credentials.SetAccessToken(config.AccessToken); err != nil {
+		if err := client.credentials.SetAccessToken(config.AccessToken); err != nil {
 			return nil, err
 		}
 	}

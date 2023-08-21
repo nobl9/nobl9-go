@@ -29,37 +29,33 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("invalid token, return error", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
-		_, err = parser.Parse("fake-token", "123")
+		_, err := parser.Parse("fake-token", "123")
 		require.Error(t, err)
 		assert.IsType(t, &jwt.ValidationError{}, err)
 	})
 
 	t.Run("invalid algorithm, return error", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		token, _ := signToken(t, jwt.New(jwt.SigningMethodRS512))
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		assert.Equal(t, "expecting JWT header field 'RS256' to contain 'alg' algorithm, was: 'RS512'", err.Error())
 	})
 
 	t.Run("missing key id header, return error", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		token, _ := signToken(t, jwt.New(jwt.GetSigningMethod(jwtSigningAlgorithm.String())))
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		assert.Equal(t, "expecting JWT header to contain 'kid' field as a string, was: ''", err.Error())
 	})
 
 	t.Run("fetch jwk fails, return error", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		jwtToken := jwt.New(jwt.GetSigningMethod(jwtSigningAlgorithm.String()))
 		jwtToken.Header[jwk.KeyIDKey] = "123"
@@ -68,14 +64,13 @@ func TestJWTParser_Parse(t *testing.T) {
 		jwksFetchFunction = func(ctx context.Context, urlstring string, options ...jwk.FetchOption) (jwk.Set, error) {
 			return nil, expectedErr
 		}
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		assert.Equal(t, expectedErr, err)
 	})
 
 	t.Run("fetch jwk from set cache if present in cache", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		set := jwk.NewSet()
 		parser.jwksCache.Set("my-kid", set, time.Hour)
@@ -91,8 +86,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("fetch jwk from set cache only once per multiple goroutines", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		const kid = "my-kid"
 		JWK := jwk.NewRSAPublicKey()
@@ -121,8 +115,7 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("'kid' not found in set, return error", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		JWK := jwk.NewRSAPublicKey()
 		require.NoError(t, JWK.Set(jwk.KeyIDKey, "my-kid"))
@@ -135,14 +128,13 @@ func TestJWTParser_Parse(t *testing.T) {
 		jwtToken := jwt.New(jwt.GetSigningMethod(jwtSigningAlgorithm.String()))
 		jwtToken.Header[jwk.KeyIDKey] = "other-kid"
 		token, _ := signToken(t, jwtToken)
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		assert.EqualError(t, err, "jwk not found for kid: other-kid (key id)")
 	})
 
 	t.Run("golden path", func(t *testing.T) {
-		parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-		require.NoError(t, err)
+		parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 		// Create a signed token and use the generated public key to create JWK.
 		rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -186,8 +178,7 @@ func TestJWTParser_Parse(t *testing.T) {
 }
 
 func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
-	parser, err := newJWTParser(getTestIssuer, func() string { return "" })
-	require.NoError(t, err)
+	parser := newJWTParser(getTestIssuer, func() string { return "" })
 
 	// Create a signed token and use the generated public key to create JWK.
 	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)

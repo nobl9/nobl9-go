@@ -83,14 +83,14 @@ type jwtParser struct {
 	jwkSetMu       *sync.Mutex
 }
 
-func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) (*jwtParser, error) {
+func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) *jwtParser {
 	return &jwtParser{
 		HTTP:           retryhttp.NewClient(jwtKeysRequestTimeout, nil),
 		jwksCache:      cache.New(time.Hour, time.Hour),
 		jwkSetMu:       new(sync.Mutex),
 		getJWKFetchURL: jwkFetchURL,
 		getIssuer:      issuer,
-	}, nil
+	}
 }
 
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.

@@ -43,25 +43,21 @@ type accessTokenAgentProfile struct {
 	Project      string `json:"project"`
 }
 
-func newCredentials(config *Config) (*credentials, error) {
-	parser, err := newJWTParser(
-		func() string {
-			return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
-		},
-		func() string {
-			return oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
-		})
-	if err != nil {
-		return nil, err
-	}
+func newCredentials(config *Config) *credentials {
 	return &credentials{
-		config:      config,
-		tokenParser: parser,
+		config: config,
+		tokenParser: newJWTParser(
+			func() string {
+				return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
+			},
+			func() string {
+				return oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
+			}),
 		tokenProvider: newOktaClient(func() string {
 			return oktaTokenEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
 		}),
 		postRequestHook: config.saveAccessToken,
-	}, nil
+	}
 }
 
 // credentials stores and manages IDP app credentials and claims.
