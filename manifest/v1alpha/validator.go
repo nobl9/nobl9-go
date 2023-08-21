@@ -2238,7 +2238,10 @@ func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
 	}
 
 	if condition.Operator != "" {
-		expectedOperator := MapOperatorForMeasurement(measurement)
+		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
+		if err != nil {
+			sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
+		}
 
 		operator, operatorErr := ParseOperator(condition.Operator)
 		if operatorErr != nil {
