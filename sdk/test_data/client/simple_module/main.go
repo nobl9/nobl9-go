@@ -22,12 +22,11 @@ func main() {
 		panic(err)
 	}
 	rt := &mockRoundTripper{}
-	client, err := sdk.NewClientBuilder(config).
-		WithHTTPClient(&http.Client{Transport: rt}).
-		Build()
+	client, err := sdk.NewClient(config)
 	if err != nil {
 		panic(err)
 	}
+	client.HTTP = &http.Client{Transport: rt}
 	if err = client.ApplyObjects(context.Background(), []manifest.Object{}, false); err != nil {
 		panic(err)
 	}

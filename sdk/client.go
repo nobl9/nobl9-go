@@ -92,6 +92,11 @@ func DefaultClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	return NewClient(config)
+}
+
+// NewClient TODO.
+func NewClient(config *Config) (*Client, error) {
 	creds, err := newCredentials(config)
 	if err != nil {
 		return nil, err
@@ -102,19 +107,12 @@ func DefaultClient() (*Client, error) {
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
 	}
-	if err = client.loadConfig(); err != nil {
-		return nil, err
-	}
-	return client, nil
-}
-
-func (c *Client) loadConfig() error {
-	if c.Config.AccessToken != "" {
-		if err := c.credentials.SetAccessToken(c.Config.AccessToken); err != nil {
-			return err
+	if client.Config.AccessToken != "" {
+		if err = client.credentials.SetAccessToken(config.AccessToken); err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return client, nil
 }
 
 const (
@@ -388,6 +386,11 @@ func (c *Client) CreateRequest(
 	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	req.URL.RawQuery = q.Encode()
 	return req, nil
+}
+
+// SetUserAgent will set HeaderR
+func (c *Client) SetUserAgent(userAgent string) {
+	c.userAgent = userAgent
 }
 
 // urlScheme is exported into var purely for testing purposes.

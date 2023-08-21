@@ -547,8 +547,9 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	require.NoError(t, err)
 	config.OktaOrgURL = oktaOrgURL
 	config.OktaAuthServer = oktaAuthServer
-	client, err = NewClientBuilder(config).WithUserAgent(userAgent).Build()
+	client, err = NewClient(config)
 	require.NoError(t, err)
+	client.SetUserAgent(userAgent)
 
 	return client, srv
 }
