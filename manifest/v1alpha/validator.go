@@ -172,6 +172,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("allowedWebhookTemplateFields", isValidWebhookTemplate)
 	_ = val.RegisterValidation("allowedAlertMethodEmailSubjectFields", isValidAlertMethodEmailSubject)
 	_ = val.RegisterValidation("allowedAlertMethodEmailBodyFields", isValidAlertMethodEmailBody)
+	_ = val.RegisterValidation("durationMinutePrecision", isDurationMinutePrecision)
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
 	_ = val.RegisterValidation("nonNegativeDuration", isNonNegativeDuration)
@@ -2050,6 +2051,14 @@ func isValidDatadogAPIUrl(validateURL string) bool {
 		}
 	}
 	return false
+}
+
+func isDurationMinutePrecision(fl v.FieldLevel) bool {
+	duration, err := time.ParseDuration(fl.Field().String())
+	if err != nil {
+		return false
+	}
+	return int64(duration.Seconds())%int64(time.Minute.Seconds()) == 0
 }
 
 func isValidDuration(fl v.FieldLevel) bool {
