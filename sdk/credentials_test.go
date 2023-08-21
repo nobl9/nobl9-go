@@ -100,12 +100,12 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			},
 			tokenProvider:   tokenProvider,
 			tokenParser:     tokenParser,
-			PostRequestHook: func(token string) error { hookCalled = true; return nil },
+			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.True(t, tokenUpdated, "accessToken must be updated")
-		assert.True(t, hookCalled, "PostRequestHook must be called")
+		assert.True(t, hookCalled, "postRequestHook must be called")
 		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
 		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
@@ -145,12 +145,12 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			},
 			tokenProvider:   tokenProvider,
 			tokenParser:     tokenParser,
-			PostRequestHook: func(token string) error { hookCalled = true; return nil },
+			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.True(t, tokenUpdated, "accessToken must be updated")
-		assert.True(t, hookCalled, "PostRequestHook must be called")
+		assert.True(t, hookCalled, "postRequestHook must be called")
 		assert.Equal(t, "my-secret", tokenProvider.calledWithClientSecret)
 		assert.Equal(t, "client-id", tokenProvider.calledWithClientID)
 		assert.Equal(t, "access-token", tokenParser.calledWithToken)
@@ -183,7 +183,7 @@ func TestCredentials_SetAccessToken(t *testing.T) {
 	creds := &credentials{
 		config:          &Config{ClientID: "client-id"},
 		tokenParser:     tokenParser,
-		PostRequestHook: func(token string) error { return errors.New("hook should not be called!") },
+		postRequestHook: func(token string) error { return errors.New("hook should not be called!") },
 	}
 	err := creds.SetAccessToken("access-token")
 	require.NoError(t, err)
@@ -217,12 +217,12 @@ func TestCredentials_setNewToken(t *testing.T) {
 		creds := &credentials{
 			config:          &Config{},
 			tokenParser:     &mockTokenParser{err: parserErr},
-			PostRequestHook: func(token string) error { hookCalled = true; return nil },
+			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		err := creds.setNewToken("", true)
 		require.Error(t, err)
 		assert.Equal(t, parserErr, err)
-		assert.False(t, hookCalled, "PostRequestHook should not be called")
+		assert.False(t, hookCalled, "postRequestHook should not be called")
 	})
 
 	t.Run("don't call hook If we can't decode m2mProfile", func(t *testing.T) {
@@ -230,11 +230,11 @@ func TestCredentials_setNewToken(t *testing.T) {
 		creds := &credentials{
 			config:          &Config{},
 			tokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
-			PostRequestHook: func(token string) error { hookCalled = true; return nil },
+			postRequestHook: func(token string) error { hookCalled = true; return nil },
 		}
 		err := creds.setNewToken("", true)
 		assert.Error(t, err)
-		assert.False(t, hookCalled, "PostRequestHook should not be called")
+		assert.False(t, hookCalled, "postRequestHook should not be called")
 	})
 
 	t.Run("don't update credentials state if hook fails", func(t *testing.T) {
@@ -245,7 +245,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 		creds := &credentials{
 			config:          &Config{},
 			tokenParser:     tokenParser,
-			PostRequestHook: func(token string) error { return hookErr },
+			postRequestHook: func(token string) error { return hookErr },
 		}
 		err := creds.setNewToken("my-token", true)
 		require.Error(t, err)

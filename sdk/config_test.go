@@ -22,14 +22,13 @@ const configTestDataPath = "test_data/config"
 func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 	tempDir := setupConfigTestData(t)
 	expected := &Config{
-		DefaultContext:       "my-context",
-		ClientID:             "someId",
-		ClientSecret:         "someSecret",
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
-		Timeout:              defaultTimeout,
-		FilesPromptEnabled:   defaultFilesPromptEnabled,
-		FilesPromptThreshold: defaultFilesPromptThreshold,
+		ClientID:       "someId",
+		ClientSecret:   "someSecret",
+		OktaOrgURL:     &defaultOktaOrgURL,
+		OktaAuthServer: defaultOktaAuthServerID,
+		Timeout:        defaultTimeout,
+		currentContext: "my-context",
+		fileConfig:     new(FileConfig),
 	}
 
 	t.Run("custom config file", func(t *testing.T) {
@@ -38,7 +37,7 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 		conf, err := ReadConfig(ConfigOptionFilePath(filePath))
 		require.NoError(t, err)
 
-		expected.options.FilePath = filePath
+		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
 
@@ -50,7 +49,7 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 		conf, err := ReadConfig()
 		require.NoError(t, err)
 
-		expected.options.FilePath = filePath
+		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
 }
@@ -63,19 +62,17 @@ func TestReadConfig_FromFullConfigFile(t *testing.T) {
 	require.NoError(t, err)
 
 	assertConfigsAreEqual(t, &Config{
-		DefaultContext:       "non-default",
-		ClientID:             "non-default-client-id",
-		ClientSecret:         "non-default-client-secret",
-		AccessToken:          "non-default-access-token",
-		Project:              "non-default-project",
-		OktaOrgURL:           &url.URL{Scheme: "https", Host: "non-default-okta-org-url.com"},
-		OktaAuthServer:       "non-default-okta-auth-server",
-		Timeout:              100 * time.Minute,
-		URL:                  &url.URL{Scheme: "https", Host: "non-default-url.com"},
-		DisableOkta:          true,
-		FilesPromptEnabled:   false,
-		FilesPromptThreshold: 30,
-		options:              optionsConfig{FilePath: filePath},
+		ClientID:       "non-default-client-id",
+		ClientSecret:   "non-default-client-secret",
+		AccessToken:    "non-default-access-token",
+		Project:        "non-default-project",
+		OktaOrgURL:     &url.URL{Scheme: "https", Host: "non-default-okta-org-url.com"},
+		OktaAuthServer: "non-default-okta-auth-server",
+		Timeout:        100 * time.Minute,
+		URL:            &url.URL{Scheme: "https", Host: "non-default-url.com"},
+		DisableOkta:    true,
+		currentContext: "non-default",
+		fileConfig:     &FileConfig{filePath: filePath},
 	}, conf)
 }
 
@@ -83,14 +80,13 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 	tempDir := t.TempDir()
 
 	expected := &Config{
-		DefaultContext:       defaultContext,
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
-		Timeout:              10 * time.Second,
-		FilesPromptEnabled:   defaultFilesPromptEnabled,
-		FilesPromptThreshold: defaultFilesPromptThreshold,
+		ClientID:       "clientId",
+		ClientSecret:   "clientSecret",
+		OktaOrgURL:     &defaultOktaOrgURL,
+		OktaAuthServer: defaultOktaAuthServerID,
+		Timeout:        10 * time.Second,
+		currentContext: defaultContext,
+		fileConfig:     new(FileConfig),
 	}
 
 	t.Run("custom config file", func(t *testing.T) {
@@ -105,7 +101,7 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 
 		_, err = os.Stat(filePath)
 		require.NoError(t, err)
-		expected.options.FilePath = filePath
+		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
 
@@ -120,7 +116,7 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 
 		_, err = os.Stat(filePath)
 		require.NoError(t, err)
-		expected.options.FilePath = filePath
+		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, expected, conf)
 	})
 }
@@ -156,15 +152,13 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 	require.True(t, os.IsNotExist(err), "file should not exist")
 
 	assertConfigsAreEqual(t, &Config{
-		DefaultContext:       "my-context",
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
-		Timeout:              10 * time.Minute,
-		FilesPromptEnabled:   defaultFilesPromptEnabled,
-		FilesPromptThreshold: defaultFilesPromptThreshold,
-		options:              optionsConfig{FilePath: filePath},
+		ClientID:       "clientId",
+		ClientSecret:   "clientSecret",
+		OktaOrgURL:     &defaultOktaOrgURL,
+		OktaAuthServer: defaultOktaAuthServerID,
+		Timeout:        10 * time.Minute,
+		currentContext: "my-context",
+		fileConfig:     new(FileConfig),
 	}, conf)
 }
 
@@ -175,15 +169,13 @@ func TestReadConfig_Defaults(t *testing.T) {
 	require.NoError(t, err)
 
 	assertConfigsAreEqual(t, &Config{
-		DefaultContext:       defaultContext,
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
-		Timeout:              defaultTimeout,
-		FilesPromptEnabled:   defaultFilesPromptEnabled,
-		FilesPromptThreshold: defaultFilesPromptThreshold,
-		options:              optionsConfig{FilePath: getDefaultConfigPath()},
+		ClientID:       "clientId",
+		ClientSecret:   "clientSecret",
+		OktaOrgURL:     &defaultOktaOrgURL,
+		OktaAuthServer: defaultOktaAuthServerID,
+		Timeout:        defaultTimeout,
+		currentContext: defaultContext,
+		fileConfig:     &FileConfig{filePath: ""},
 	}, conf)
 }
 
@@ -204,22 +196,17 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check NO_CONFIG_FILE.
-	_, err = os.Stat(conf.GetFilePath())
+	_, err = os.Stat(conf.fileConfig.GetPath())
 	require.True(t, os.IsNotExist(err), "file should not exist")
 
 	assertConfigsAreEqual(t, &Config{
-		DefaultContext:       defaultContext,
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
-		Timeout:              defaultTimeout,
-		FilesPromptEnabled:   defaultFilesPromptEnabled,
-		FilesPromptThreshold: defaultFilesPromptThreshold,
-		options: optionsConfig{
-			FilePath:     getDefaultConfigPath(),
-			NoConfigFile: ptr(true),
-		},
+		ClientID:       "clientId",
+		ClientSecret:   "clientSecret",
+		OktaOrgURL:     &defaultOktaOrgURL,
+		OktaAuthServer: defaultOktaAuthServerID,
+		Timeout:        defaultTimeout,
+		currentContext: defaultContext,
+		fileConfig:     new(FileConfig),
 	}, conf)
 }
 
@@ -230,35 +217,32 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 	t.Setenv("HOME", tempDir)
 
 	for k, v := range map[string]string{
-		"DEFAULT_CONTEXT":        "non-default",
-		"FILES_PROMPT_THRESHOLD": "100",
-		"FILES_PROMPT_ENABLED":   "true",
-		"CLIENT_ID":              "clientId",
-		"CLIENT_SECRET":          "clientSecret",
-		"ACCESS_TOKEN":           "my-token",
-		"PROJECT":                "my-project",
-		"URL":                    "http://localhost:8081",
-		"OKTA_ORG_URL":           "http://localhost:8080",
-		"OKTA_AUTH_SERVER":       "123",
-		"DISABLE_OKTA":           "false",
-		"TIMEOUT":                "60m",
+		"DEFAULT_CONTEXT":  "non-default",
+		"CLIENT_ID":        "clientId",
+		"CLIENT_SECRET":    "clientSecret",
+		"ACCESS_TOKEN":     "my-token",
+		"PROJECT":          "my-project",
+		"URL":              "http://localhost:8081",
+		"OKTA_ORG_URL":     "http://localhost:8080",
+		"OKTA_AUTH_SERVER": "123",
+		"DISABLE_OKTA":     "false",
+		"TIMEOUT":          "60m",
 	} {
 		t.Setenv(EnvPrefix+k, v)
 	}
 
 	expected := Config{
-		DefaultContext:       "non-default",
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		AccessToken:          "my-token",
-		Project:              "my-project",
-		URL:                  &url.URL{Scheme: "http", Host: "localhost:8081"},
-		OktaOrgURL:           &url.URL{Scheme: "http", Host: "localhost:8080"},
-		OktaAuthServer:       "123",
-		DisableOkta:          false,
-		Timeout:              60 * time.Minute,
-		FilesPromptEnabled:   true,
-		FilesPromptThreshold: 100,
+		ClientID:       "clientId",
+		ClientSecret:   "clientSecret",
+		AccessToken:    "my-token",
+		Project:        "my-project",
+		URL:            &url.URL{Scheme: "http", Host: "localhost:8081"},
+		OktaOrgURL:     &url.URL{Scheme: "http", Host: "localhost:8080"},
+		OktaAuthServer: "123",
+		DisableOkta:    false,
+		Timeout:        60 * time.Minute,
+		currentContext: "non-default",
+		fileConfig:     new(FileConfig),
 	}
 
 	t.Run("with no config file", func(t *testing.T) {
@@ -268,11 +252,9 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 		require.NoError(t, err)
 
 		// Check NO_CONFIG_FILE.
-		_, err = os.Stat(conf.GetFilePath())
+		_, err = os.Stat(conf.fileConfig.GetPath())
 		require.True(t, os.IsNotExist(err), "file should not exist")
 
-		expected.options.NoConfigFile = ptr(true)
-		expected.options.FilePath = "/etc/config.toml"
 		assertConfigsAreEqual(t, &expected, conf)
 	})
 
@@ -284,16 +266,20 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 		conf, err := ReadConfig()
 		require.NoError(t, err)
 
-		expected.options.NoConfigFile = ptr(false)
-		expected.options.FilePath = filePath
+		expected.fileConfig.filePath = filePath
 		assertConfigsAreEqual(t, &expected, conf)
 	})
+}
+
+func TestSaveAccessToken(t *testing.T) {
+	// TODO
 }
 
 func assertConfigsAreEqual(t *testing.T, c1, c2 *Config) {
 	t.Helper()
 	assert.EqualExportedValues(t, *c1, *c2)
-	assert.Equal(t, c1.GetFilePath(), c2.GetFilePath(), "file path differs")
+	assert.Equal(t, c1.GetCurrentContext(), c2.GetCurrentContext())
+	assert.Equal(t, c1.fileConfig.GetPath(), c2.fileConfig.GetPath(), "file path differs")
 }
 
 func setupConfigTestData(t *testing.T) (tempDir string) {

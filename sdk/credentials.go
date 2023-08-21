@@ -23,9 +23,9 @@ type accessTokenProvider interface {
 	RequestAccessToken(ctx context.Context, clientID, clientSecret string) (token string, err error)
 }
 
-// AccessTokenPostRequestHook is run whenever a new token request finishes successfully.
+// accessTokenPostRequestHook is run whenever a new token request finishes successfully.
 // It can be used, for example, to update persistent access token storage.
-type AccessTokenPostRequestHook = func(token string) error
+type accessTokenPostRequestHook = func(token string) error
 
 // accessTokenM2MProfile stores information specific to an Okta M2M application.
 type accessTokenM2MProfile struct {
@@ -60,6 +60,7 @@ func newCredentials(config *Config) (*credentials, error) {
 		tokenProvider: newOktaClient(func() string {
 			return oktaTokenEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
 		}),
+		postRequestHook: config.saveAccessToken,
 	}, nil
 }
 
@@ -87,8 +88,8 @@ type credentials struct {
 	tokenParser accessTokenParser
 	// tokenProvider is used to provide an access token.
 	tokenProvider accessTokenProvider
-	// PostRequestHook is not run in offline mode.
-	PostRequestHook AccessTokenPostRequestHook
+	// postRequestHook is not run in offline mode.
+	postRequestHook accessTokenPostRequestHook
 
 	mu   sync.Mutex
 	once sync.Once
@@ -231,8 +232,8 @@ func (c *credentials) setNewToken(token string, withHook bool) error {
 			return errors.Wrap(err, "failed to decode JWT claims to agent profile object")
 		}
 	}
-	if withHook && c.PostRequestHook != nil {
-		if err = c.PostRequestHook(token); err != nil {
+	if withHook && c.postRequestHook != nil {
+		if err = c.postRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
 		}
 	}
