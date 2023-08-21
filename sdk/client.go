@@ -36,12 +36,12 @@ const ProjectsWildcard = "*"
 
 // HTTP headers keys used across app
 const (
-	HeaderOrganization      = "organization"
-	HeaderProject           = "project"
+	HeaderOrganization      = "Organization"
+	HeaderProject           = "Project"
 	HeaderAuthorization     = "Authorization"
 	HeaderUserAgent         = "User-Agent"
 	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
-	HeaderTraceID           = "trace-id"
+	HeaderTraceID           = "Trace-Id"
 )
 
 // HTTP GET query keys used across app
@@ -203,49 +203,37 @@ func (c *Client) GetObjectsWithParams(
 	q url.Values,
 ) (response Response, err error) {
 	response = Response{TruncatedMax: -1}
-	req, err := c.createRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(kind), project, q, nil)
+	req, err := c.CreateRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(kind), project, q, nil)
 	if err != nil {
 		return response, err
 	}
-
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return response, fmt.Errorf("cannot perform a request to API: %w", err)
+		return response, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		response.Objects, err = definitions.ReadSources(ctx, definitions.NewReaderSource(resp.Body, ""))
-		if err != nil && !errors.Is(err, definitions.ErrNoDefinitionsFound) {
-			return response, fmt.Errorf("cannot decode response from API: %w", err)
-		}
-		if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {
-			return response, nil
-		}
-		truncatedValue := resp.Header.Get(HeaderTruncatedLimitMax)
-		truncatedMax, err := strconv.Atoi(truncatedValue)
-		if err != nil {
-			return response, fmt.Errorf(
-				"'%s' header value: '%s' is not a valid integer",
-				HeaderTruncatedLimitMax,
-				truncatedValue,
-			)
-		}
-		response.TruncatedMax = truncatedMax
-		return response, nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return response, fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return response, getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return response, fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+	if err = c.processResponseErrors(resp); err != nil {
+		return response, err
 	}
+
+	response.Objects, err = definitions.ReadSources(ctx, definitions.NewReaderSource(resp.Body, ""))
+	if err != nil && !errors.Is(err, definitions.ErrNoDefinitionsFound) {
+		return response, fmt.Errorf("cannot decode response from API: %w", err)
+	}
+	if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {
+		return response, nil
+	}
+	truncatedValue := resp.Header.Get(HeaderTruncatedLimitMax)
+	truncatedMax, err := strconv.Atoi(truncatedValue)
+	if err != nil {
+		return response, fmt.Errorf(
+			"'%s' header value: '%s' is not a valid integer",
+			HeaderTruncatedLimitMax,
+			truncatedValue,
+		)
+	}
+	response.TruncatedMax = truncatedMax
+	return response, nil
 }
 
 func (c *Client) resolveGetObjectEndpoint(kind manifest.Kind) string {
@@ -307,30 +295,16 @@ func (c *Client) applyOrDeleteObjects(
 		method = http.MethodDelete
 	}
 	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
-	req, err := c.createRequest(ctx, method, apiMode, "", q, buf)
+	req, err := c.CreateRequest(ctx, method, apiMode, "", q, buf)
 	if err != nil {
 		return err
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("cannot perform a request to API: %w", err)
+		return errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		return nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusConflict,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
-	default:
-		return fmt.Errorf("request finished with unexpected status code: %d", resp.StatusCode)
-	}
+	return c.processResponseErrors(resp)
 }
 
 func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
@@ -349,39 +323,33 @@ func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manife
 }
 
 func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
-	req, err := c.createRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
+	req, err := c.CreateRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
 	if err != nil {
 		return "", err
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("cannot perform a request to API: %w", err)
+		return "", errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		jsonMap := make(map[string]interface{})
-		if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
-			return "", fmt.Errorf("cannot decode response from API: %w", err)
-		}
-		const field = "awsExternalID"
-		externalID, ok := jsonMap[field]
-		if !ok {
-			return "", fmt.Errorf("missing field: %s", field)
-		}
-		externalIDString, ok := externalID.(string)
-		if !ok {
-			return "", fmt.Errorf("field: %s is not a string", field)
-		}
-		return externalIDString, nil
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return "", getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return "", fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
+	if err = c.processResponseErrors(resp); err != nil {
+		return "", err
 	}
+
+	var jsonMap map[string]interface{}
+	if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
+		return "", errors.Wrap(err, "failed to decode response body")
+	}
+	const field = "awsExternalID"
+	externalID, ok := jsonMap[field]
+	if !ok {
+		return "", fmt.Errorf("missing field: %s", field)
+	}
+	externalIDString, ok := externalID.(string)
+	if !ok {
+		return "", fmt.Errorf("field: %s is not a string", field)
+	}
+	return externalIDString, nil
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
@@ -396,34 +364,16 @@ func (c *Client) DeleteObjectsByName(
 		QueryKeyName:   names,
 		QueryKeyDryRun: []string{strconv.FormatBool(dryRun)},
 	}
-	req, err := c.createRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.ToLower()), project, q, nil)
+	req, err := c.CreateRequest(ctx, http.MethodDelete, path.Join(apiDelete, kind.ToLower()), project, q, nil)
 	if err != nil {
 		return err
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("cannot perform a request to API: %w", err)
+		return errors.Wrap(err, "failed to execute request")
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	switch {
-	case resp.StatusCode == http.StatusOK:
-		return nil
-	case resp.StatusCode == http.StatusBadRequest,
-		resp.StatusCode == http.StatusConflict,
-		resp.StatusCode == http.StatusUnprocessableEntity,
-		resp.StatusCode == http.StatusForbidden:
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("%s", bytes.TrimSpace(body))
-	case resp.StatusCode >= http.StatusInternalServerError:
-		return getResponseServerError(resp)
-	default:
-		body, _ := io.ReadAll(resp.Body)
-		msg := strings.TrimSpace(string(body))
-		return fmt.Errorf("request finished with status code: %d and message: %s", resp.StatusCode, msg)
-	}
+	defer func() { _ = resp.Body.Close() }()
+	return c.processResponseErrors(resp)
 }
 
 // GetAgentCredentials gets agent credentials from Okta.
@@ -431,7 +381,7 @@ func (c *Client) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
 ) (creds M2MAppCredentials, err error) {
-	req, err := c.createRequest(
+	req, err := c.CreateRequest(
 		ctx,
 		http.MethodGet,
 		"/internal/agent/clientcreds",
@@ -446,18 +396,18 @@ func (c *Client) GetAgentCredentials(
 		return creds, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if resp.StatusCode != http.StatusOK {
-		rawErr, _ := io.ReadAll(resp.Body)
-		return creds, fmt.Errorf("bad status code response: %d, error: %s", resp.StatusCode, string(rawErr))
+	if err = c.processResponseErrors(resp); err != nil {
+		return creds, err
 	}
-
 	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
 		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
 }
 
-func (c *Client) createRequest(
+// CreateRequest creates a new http.Request pointing at the Nobl9 API URL.
+// It also adds all the mandatory headers to the request and encodes query parameters.
+func (c *Client) CreateRequest(
 	ctx context.Context,
 	method, endpoint, project string,
 	q url.Values,
@@ -474,13 +424,27 @@ func (c *Client) createRequest(
 	req.Header.Set(HeaderOrganization, c.Credentials.Organization)
 	req.Header.Set(HeaderUserAgent, c.UserAgent)
 	// Optional headers.
-	if len(project) > 0 {
+	if project != "" {
 		req.Header.Set(HeaderProject, project)
 	}
 	// Add query parameters to request, to pass array, convention of repeated entries is used.
 	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
 	req.URL.RawQuery = q.Encode()
 	return req, nil
+}
+
+func (c *Client) processResponseErrors(resp *http.Response) error {
+	switch {
+	case resp.StatusCode >= 300 && resp.StatusCode < 400:
+		rawErr, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("bad status code response: %d, body: %s", resp.StatusCode, string(rawErr))
+	case resp.StatusCode >= 400 && resp.StatusCode < 500:
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("%s", bytes.TrimSpace(body))
+	case resp.StatusCode >= 500:
+		return getResponseServerError(resp)
+	}
+	return nil
 }
 
 var ErrConcurrencyIssue = errors.New("operation failed due to concurrency issue but can be retried")
