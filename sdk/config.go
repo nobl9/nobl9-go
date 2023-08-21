@@ -210,6 +210,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
 			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
 			"DEFAULT_CONTEXT":        defaultContext,
+			"PROJECT":                DefaultProject,
 			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
 			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),

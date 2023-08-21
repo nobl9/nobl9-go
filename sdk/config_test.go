@@ -25,6 +25,7 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 	expected := &Config{
 		ClientID:             "someId",
 		ClientSecret:         "someSecret",
+		Project:              DefaultProject,
 		OktaOrgURL:           &defaultOktaOrgURL,
 		OktaAuthServer:       defaultOktaAuthServerID,
 		Timeout:              defaultTimeout,
@@ -87,6 +88,7 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 	expected := &Config{
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
+		Project:              DefaultProject,
 		OktaOrgURL:           &defaultOktaOrgURL,
 		OktaAuthServer:       defaultOktaAuthServerID,
 		Timeout:              10 * time.Second,
@@ -156,6 +158,7 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 	assertConfigsAreEqual(t, &Config{
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
+		Project:              DefaultProject,
 		OktaOrgURL:           &defaultOktaOrgURL,
 		OktaAuthServer:       defaultOktaAuthServerID,
 		Timeout:              10 * time.Minute,
@@ -175,6 +178,7 @@ func TestReadConfig_Defaults(t *testing.T) {
 	assertConfigsAreEqual(t, &Config{
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
+		Project:              DefaultProject,
 		OktaOrgURL:           &defaultOktaOrgURL,
 		OktaAuthServer:       defaultOktaAuthServerID,
 		Timeout:              defaultTimeout,
@@ -207,6 +211,7 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 	assertConfigsAreEqual(t, &Config{
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
+		Project:              DefaultProject,
 		OktaOrgURL:           &defaultOktaOrgURL,
 		OktaAuthServer:       defaultOktaAuthServerID,
 		Timeout:              defaultTimeout,
