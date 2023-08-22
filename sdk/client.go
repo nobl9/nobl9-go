@@ -90,11 +90,11 @@ func DefaultClient() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClient(config), nil
+	return NewClient(config)
 }
 
 // NewClient creates a new Client instance with provided Config.
-func NewClient(config *Config) *Client {
+func NewClient(config *Config) (*Client, error) {
 	creds := newCredentials(config)
 	client := &Client{
 		HTTP:        retryhttp.NewClient(config.Timeout, creds),
@@ -102,7 +102,10 @@ func NewClient(config *Config) *Client {
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
 	}
-	return client
+	if err := client.Config.Verify(); err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 const (

@@ -165,6 +165,15 @@ func (c *Config) GetFileConfig() FileConfig {
 	return *c.fileConfig
 }
 
+// Verify checks if Config fulfills the minimum requirements.
+func (c *Config) Verify() error {
+	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
+		return errors.Errorf(errFmtCredentialsNotFound,
+			c.fileConfig.GetPath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET")
+	}
+	return nil
+}
+
 func (c *Config) read() error {
 	// Load both file and env configs.
 	fileConfLoaded := false
@@ -190,15 +199,7 @@ func (c *Config) read() error {
 		}
 	}
 	// Finally read the context config and overwrite values if set through env vars.
-	if err := c.resolveContextConfig(); err != nil {
-		return err
-	}
-	// Check if the minimum required setup was performed.
-	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
-		return errors.Errorf(errFmtCredentialsNotFound,
-			c.fileConfig.GetPath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET")
-	}
-	return nil
+	return c.resolveContextConfig()
 }
 
 func newConfig(options []ConfigOption) (*Config, error) {

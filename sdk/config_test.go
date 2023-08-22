@@ -371,12 +371,26 @@ func TestReadConfig_Errors(t *testing.T) {
 		require.Error(t, err)
 		assert.EqualError(t, err, fmt.Sprintf(errFmtConfigNoContextFoundInFile, "non-existent", filePath))
 	})
+}
 
-	t.Run("no credentials", func(t *testing.T) {
-		_, err := ReadConfig(
+func TestReadConfig_Verify(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
+		config, err := ReadConfig(
 			ConfigOptionEnvPrefix(""),
 			ConfigOptionUseContext("non-existent"),
 			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+		config.DisableOkta = true
+		assert.NoError(t, config.Verify())
+	})
+
+	t.Run("no credentials", func(t *testing.T) {
+		config, err := ReadConfig(
+			ConfigOptionEnvPrefix(""),
+			ConfigOptionUseContext("non-existent"),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+		err = config.Verify()
 		require.Error(t, err)
 		assert.EqualError(t, err, fmt.Sprintf(errFmtCredentialsNotFound, "", "CLIENT_ID", "CLIENT_SECRET"))
 	})
