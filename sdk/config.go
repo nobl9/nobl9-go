@@ -149,6 +149,7 @@ func (o optionsConfig) IsNoFileConfig() bool {
 var (
 	errFmtConfigNoContextFoundInFile = `Context '%s' was set in the '%s' configuration file.
 At least one context must be provided and set as default.`
+	// #nosec G101
 	errFmtCredentialsNotFound = `Both client id and client secret must be provided.
 Either set them in '%s' configuration file or provide them through env variables:
  - %s
