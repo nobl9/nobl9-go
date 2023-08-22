@@ -27,7 +27,13 @@ const (
 
 var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
-// ReadConfig TODO
+// ReadConfig reads the configuration from either (with precedence from top to bottom):
+// - provided ConfigOption
+// - environment variables
+// - config file
+// - default values where applicable
+//
+// Detailed flow can be found in config_activity.png (generated from config_activity.puml).
 func ReadConfig(options ...ConfigOption) (*Config, error) {
 	conf, err := newConfig(options)
 	if err != nil {
@@ -141,14 +147,12 @@ func (o optionsConfig) IsNoFileConfig() bool {
 }
 
 var (
-	ErrConfigNoContextFoundInFile = errors.New(`
-	No context was set in the current configuration file.
-	At least one context must be provided and set as default.
-	`)
-	ErrConfigNoCredentialsFound = errors.New(`
-	Both client id and client secret must be provided.
-	Either set them in configuration file or provide them through env variables.
-`)
+	errFmtConfigNoContextFoundInFile = `Context '%s' was set in the '%s' configuration file.
+At least one context must be provided and set as default.`
+	errFmtCredentialsNotFound = `Both client id and client secret must be provided.
+Either set them in '%s' configuration file or provide them through env variables:
+ - %s
+ - %s`
 )
 
 func (c *Config) GetCurrentContext() string {
@@ -181,9 +185,7 @@ func (c *Config) read() error {
 	if fileConfLoaded {
 		var ok bool
 		if c.contextConfig, ok = c.fileConfig.Contexts[c.GetCurrentContext()]; !ok {
-			return errors.Wrap(ErrConfigNoContextFoundInFile, fmt.Sprintf(
-				"context '%s' was not found in config file: %s",
-				c.GetCurrentContext(), c.fileConfig.GetPath()))
+			return errors.Errorf(errFmtConfigNoContextFoundInFile, c.GetCurrentContext(), c.fileConfig.GetPath())
 		}
 	}
 	// Finally read the context config and overwrite values if set through env vars.
@@ -192,9 +194,8 @@ func (c *Config) read() error {
 	}
 	// Check if the minimum required setup was performed.
 	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
-		return errors.Wrap(ErrConfigNoCredentialsFound, fmt.Sprintf(
-			"Config file location: %s.\nEnvironment variables: %s, %s",
-			c.fileConfig.GetPath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET"))
+		return errors.Errorf(errFmtCredentialsNotFound,
+			c.fileConfig.GetPath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET")
 	}
 	return nil
 }

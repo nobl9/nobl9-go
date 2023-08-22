@@ -3,6 +3,7 @@ package sdk
 import (
 	"embed"
 	_ "embed"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -353,6 +354,29 @@ func TestSaveAccessToken(t *testing.T) {
 		assert.Equal(t, "new", newConf.AccessToken)
 		oldConf.AccessToken = "new"
 		assertConfigsAreEqual(t, oldConf, newConf)
+	})
+}
+
+func TestReadConfig_Errors(t *testing.T) {
+	t.Run("invalid context", func(t *testing.T) {
+		tempDir := t.TempDir()
+		filePath := filepath.Join(tempDir, "minimal.toml")
+		copyEmbeddedFile(t, "minimal_config.toml", filePath)
+
+		_, err := ReadConfig(
+			ConfigOptionUseContext("non-existent"),
+			ConfigOptionFilePath(filePath))
+		require.Error(t, err)
+		assert.EqualError(t, err, fmt.Sprintf(errFmtConfigNoContextFoundInFile, "non-existent", filePath))
+	})
+
+	t.Run("no credentials", func(t *testing.T) {
+		_, err := ReadConfig(
+			ConfigOptionEnvPrefix(""),
+			ConfigOptionUseContext("non-existent"),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, fmt.Sprintf(errFmtCredentialsNotFound, "", "CLIENT_ID", "CLIENT_SECRET"))
 	})
 }
 
