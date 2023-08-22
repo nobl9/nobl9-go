@@ -84,7 +84,7 @@ type Client struct {
 	userAgent   string
 }
 
-// DefaultClient returns fully configured instance of API Client with default auth chain and HTTP client.
+// DefaultClient returns fully configured instance of Client with default Config and HTTP client.
 func DefaultClient() (*Client, error) {
 	config, err := ReadConfig()
 	if err != nil {
@@ -93,7 +93,7 @@ func DefaultClient() (*Client, error) {
 	return NewClient(config), nil
 }
 
-// NewClient TODO.
+// NewClient creates a new Client instance with provided Config.
 func NewClient(config *Config) *Client {
 	creds := newCredentials(config)
 	client := &Client{
@@ -393,7 +393,7 @@ func (c *Client) SetUserAgent(userAgent string) {
 // While it's possible to run https test server, it is much easier to go without TLS.
 var urlScheme = "https"
 
-// getAPIURL bye default uses environment from JWT claims as a host.
+// getAPIURL by default uses environment from JWT claims as a host.
 // If Config.URL was provided it is used instead.
 func (c *Client) getAPIURL(ctx context.Context) (*url.URL, error) {
 	if c.Config.URL != nil {

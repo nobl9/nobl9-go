@@ -148,7 +148,7 @@ func (c *credentials) setAuthorizationHeader(r *http.Request) {
 }
 
 // refreshAccessToken checks the accessToken expiry with an offset to detect if the token
-// is soon to be expired. If so, it wll request a new token and update the credentials state.
+// is soon to be expired. If so, it will request a new token and update the credentials state.
 // If the token was not yet set, it will request a new one all the same.
 func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
