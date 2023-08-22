@@ -147,7 +147,7 @@ func (o optionsConfig) IsNoFileConfig() bool {
 }
 
 var (
-	errFmtConfigNoContextFoundInFile = `Context '%s' was set in the '%s' configuration file.
+	errFmtConfigNoContextFoundInFile = `Context '%s' was not set in the '%s' configuration file.
 At least one context must be provided and set as default.`
 	// #nosec G101
 	errFmtCredentialsNotFound = `Both client id and client secret must be provided.
@@ -221,17 +221,17 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"FILES_PROMPT_THRESHOLD": strconv.Itoa(defaultFilesPromptThreshold),
 		},
 	}
-	if err := conf.processEnvVariables(&conf.options); err != nil {
-		return nil, err
-	}
 	for _, applyOption := range options {
 		applyOption(conf)
+	}
+	if err := conf.processEnvVariables(&conf.options, false); err != nil {
+		return nil, err
 	}
 	return conf, nil
 }
 
 func (c *Config) resolveContextlessConfig() error {
-	if err := c.processEnvVariables(&c.contextlessConfig); err != nil {
+	if err := c.processEnvVariables(&c.contextlessConfig, true); err != nil {
 		return err
 	}
 	if c.options.context != "" {
@@ -250,7 +250,7 @@ func (c *Config) resolveContextlessConfig() error {
 
 func (c *Config) resolveContextConfig() error {
 	var err error
-	if err = c.processEnvVariables(&c.contextConfig); err != nil {
+	if err = c.processEnvVariables(&c.contextConfig, true); err != nil {
 		return err
 	}
 	if c.options.clientID != "" {
@@ -299,7 +299,7 @@ func (c *Config) saveAccessToken(token string) error {
 // processEnvVariables takes a struct pointer and scans its fields tags looking for "env"
 // tag which should contain the environment variable name of the given struct field.
 // Example:
-func (c *Config) processEnvVariables(iv interface{}) error {
+func (c *Config) processEnvVariables(iv interface{}, overwrite bool) error {
 	v := reflect.ValueOf(iv)
 	if v.Kind() != reflect.Ptr {
 		return errors.New("input must be a pointer")
@@ -330,16 +330,16 @@ func (c *Config) processEnvVariables(iv interface{}) error {
 		}
 		val, found := os.LookupEnv(c.options.envPrefix + key)
 		// If the field already has a non-zero value and there was no value directly
-		// specified, do not overwrite the existing field. We only want to overwrite
-		// when the env var was provided directly.
-		if !ef.IsZero() && !found {
+		// specified or 'overwrite' arg was set to false, do not overwrite the existing field.
+		// We only want to overwrite when the env var was provided directly.
+		if !ef.IsZero() && (!found || !overwrite) {
 			continue
 		}
 		// Check for default value.
 		if val == "" {
 			var hasDefault bool
 			val, hasDefault = c.envConfigDefaults[key]
-			// If the value is empty and we don't have a default, don't do anything.
+			// If the value is empty, and we don't have a default, don't do anything.
 			if !hasDefault {
 				continue
 			}

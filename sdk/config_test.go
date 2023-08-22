@@ -229,62 +229,64 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 	// So that we don't run into conflicts with existing config.toml.
 	t.Setenv("HOME", tempDir)
 
-	for k, v := range map[string]string{
-		"DEFAULT_CONTEXT":        "non-default",
-		"CLIENT_ID":              "clientId",
-		"CLIENT_SECRET":          "clientSecret",
-		"ACCESS_TOKEN":           "my-token",
-		"PROJECT":                "my-project",
-		"URL":                    "http://localhost:8081",
-		"OKTA_ORG_URL":           "http://localhost:8080",
-		"OKTA_AUTH_SERVER":       "123",
-		"DISABLE_OKTA":           "false",
-		"TIMEOUT":                "60m",
-		"FILES_PROMPT_ENABLED":   "false",
-		"FILES_PROMPT_THRESHOLD": "30",
-	} {
-		t.Setenv(EnvPrefix+k, v)
+	for _, envPrefix := range []string{EnvPrefix, "MY_PREFIX_", ""} {
+		for k, v := range map[string]string{
+			"DEFAULT_CONTEXT":        "non-default",
+			"CLIENT_ID":              "clientId",
+			"CLIENT_SECRET":          "clientSecret",
+			"ACCESS_TOKEN":           "my-token",
+			"PROJECT":                "my-project",
+			"URL":                    "http://localhost:8081",
+			"OKTA_ORG_URL":           "http://localhost:8080",
+			"OKTA_AUTH_SERVER":       "123",
+			"DISABLE_OKTA":           "false",
+			"TIMEOUT":                "60m",
+			"FILES_PROMPT_ENABLED":   "false",
+			"FILES_PROMPT_THRESHOLD": "30",
+		} {
+			t.Setenv(envPrefix+k, v)
+		}
+
+		expected := Config{
+			ClientID:             "clientId",
+			ClientSecret:         "clientSecret",
+			AccessToken:          "my-token",
+			Project:              "my-project",
+			URL:                  &url.URL{Scheme: "http", Host: "localhost:8081"},
+			OktaOrgURL:           &url.URL{Scheme: "http", Host: "localhost:8080"},
+			OktaAuthServer:       "123",
+			DisableOkta:          false,
+			Timeout:              60 * time.Minute,
+			FilesPromptEnabled:   false,
+			FilesPromptThreshold: 30,
+			currentContext:       "non-default",
+			fileConfig:           new(FileConfig),
+		}
+
+		t.Run("with no config file", func(t *testing.T) {
+			t.Setenv(envPrefix+"NO_CONFIG_FILE", "true")
+			t.Setenv(envPrefix+"CONFIG_FILE_PATH", "/etc/config.toml")
+			conf, err := ReadConfig(ConfigOptionEnvPrefix(envPrefix))
+			require.NoError(t, err)
+
+			// Check NO_CONFIG_FILE.
+			require.NoFileExists(t, conf.fileConfig.GetPath())
+
+			assertConfigsAreEqual(t, &expected, conf)
+		})
+
+		// Assert environment variables take precedence over file config.
+		t.Run("with config file", func(t *testing.T) {
+			t.Setenv(envPrefix+"NO_CONFIG_FILE", "false")
+			t.Setenv(envPrefix+"CONFIG_FILE_PATH", filePath)
+
+			conf, err := ReadConfig(ConfigOptionEnvPrefix(envPrefix))
+			require.NoError(t, err)
+
+			expected.fileConfig.filePath = filePath
+			assertConfigsAreEqual(t, &expected, conf)
+		})
 	}
-
-	expected := Config{
-		ClientID:             "clientId",
-		ClientSecret:         "clientSecret",
-		AccessToken:          "my-token",
-		Project:              "my-project",
-		URL:                  &url.URL{Scheme: "http", Host: "localhost:8081"},
-		OktaOrgURL:           &url.URL{Scheme: "http", Host: "localhost:8080"},
-		OktaAuthServer:       "123",
-		DisableOkta:          false,
-		Timeout:              60 * time.Minute,
-		FilesPromptEnabled:   false,
-		FilesPromptThreshold: 30,
-		currentContext:       "non-default",
-		fileConfig:           new(FileConfig),
-	}
-
-	t.Run("with no config file", func(t *testing.T) {
-		t.Setenv(EnvPrefix+"NO_CONFIG_FILE", "true")
-		t.Setenv(EnvPrefix+"CONFIG_FILE_PATH", "/etc/config.toml")
-		conf, err := ReadConfig()
-		require.NoError(t, err)
-
-		// Check NO_CONFIG_FILE.
-		require.NoFileExists(t, conf.fileConfig.GetPath())
-
-		assertConfigsAreEqual(t, &expected, conf)
-	})
-
-	// Assert environment variables take precedence over file config.
-	t.Run("with config file", func(t *testing.T) {
-		t.Setenv(EnvPrefix+"NO_CONFIG_FILE", "false")
-		t.Setenv(EnvPrefix+"CONFIG_FILE_PATH", filePath)
-
-		conf, err := ReadConfig()
-		require.NoError(t, err)
-
-		expected.fileConfig.filePath = filePath
-		assertConfigsAreEqual(t, &expected, conf)
-	})
 }
 
 func TestSaveAccessToken(t *testing.T) {
