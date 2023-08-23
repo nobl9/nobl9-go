@@ -27,6 +27,15 @@ const (
 
 var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
+// GetDefaultConfigPath returns the default path to Nobl9 configuration file, config.toml.
+func GetDefaultConfigPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to fetch user home directory")
+	}
+	return filepath.Clean(filepath.Join(home, defaultRelativeConfigPath)), nil
+}
+
 // ReadConfig reads the configuration from either (with precedence from top to bottom):
 // - provided ConfigOption
 // - environment variables
@@ -203,6 +212,10 @@ func (c *Config) read() error {
 }
 
 func newConfig(options []ConfigOption) (*Config, error) {
+	defaultConfigPath, err := GetDefaultConfigPath()
+	if err != nil {
+		return nil, err
+	}
 	// Default values.
 	conf := &Config{
 		fileConfig: new(FileConfig),
@@ -210,7 +223,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			envPrefix: EnvPrefix,
 		},
 		envConfigDefaults: map[string]string{
-			"CONFIG_FILE_PATH":       getDefaultConfigPath(),
+			"CONFIG_FILE_PATH":       defaultConfigPath,
 			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
 			"DEFAULT_CONTEXT":        defaultContext,
 			"PROJECT":                DefaultProject,
@@ -417,15 +430,6 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 		return errors.Errorf("unsupported reflected field kind: %s", tk)
 	}
 	return nil
-}
-
-func getDefaultConfigPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	return filepath.Clean(filepath.Join(home, defaultRelativeConfigPath))
 }
 
 func ptr[T any](v T) *T { return &v }
