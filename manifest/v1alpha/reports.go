@@ -59,11 +59,11 @@ type SLOErrorBudgetStatusReport struct {
 type SLOErrorBudgetStatus struct {
 	MetadataHolder
 	TimeWindow       TimeWindow        `json:"timeWindow"`
-	ThresholdSummary []ThresholdStatus `json:"thresholdSummary"`
+	ThresholdSummary []ObjectiveStatus `json:"thresholdSummary"`
 }
 
-type ThresholdStatus struct {
-	Threshold
+type ObjectiveStatus struct {
+	Objective
 	Status struct {
 		BurnedBudget
 	} `json:"status"`

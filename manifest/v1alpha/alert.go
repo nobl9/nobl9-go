@@ -25,7 +25,7 @@ type AlertSpec struct {
 	AlertPolicy         Metadata         `json:"alertPolicy"`
 	SLO                 Metadata         `json:"slo"`
 	Service             Metadata         `json:"service"`
-	Threshold           AlertThreshold   `json:"objective"`
+	Objective           AlertObjective   `json:"objective"`
 	Severity            string           `json:"severity" validate:"required,severity" example:"High"`
 	Status              string           `json:"status" example:"Resolved"`
 	TriggeredMetricTime string           `json:"triggeredMetricTime"`
@@ -36,7 +36,7 @@ type AlertSpec struct {
 	Conditions          []AlertCondition `json:"conditions"`
 }
 
-type AlertThreshold struct {
+type AlertObjective struct {
 	Value       float64 `json:"value" example:"100"`
 	Name        string  `json:"name" validate:"omitempty"`
 	DisplayName string  `json:"displayName" validate:"omitempty"`
