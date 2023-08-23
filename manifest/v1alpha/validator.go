@@ -152,7 +152,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
-	val.RegisterStructValidation(timeTravelStructDatesValidation, TimeTravel{})
+	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
