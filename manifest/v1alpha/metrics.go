@@ -11,7 +11,7 @@ type CountMetricsSpec struct {
 	TotalMetric *MetricSpec `json:"total" validate:"required"`
 }
 
-// RawMetricSpec represents integration with a metric source for a particular threshold
+// RawMetricSpec represents integration with a metric source for a particular objective.
 type RawMetricSpec struct {
 	MetricQuery *MetricSpec `json:"query" validate:"required"`
 }
@@ -236,7 +236,7 @@ func (slo *SLOSpec) HasRawMetric() bool {
 	if slo.containsIndicatorRawMetric() {
 		return true
 	}
-	for _, t := range slo.Thresholds {
+	for _, t := range slo.Objectives {
 		if t.HasRawMetricQuery() {
 			return true
 		}
@@ -250,7 +250,7 @@ func (slo *SLOSpec) RawMetrics() []*MetricSpec {
 		return []*MetricSpec{slo.Indicator.RawMetric}
 	}
 	rawMetrics := make([]*MetricSpec, 0, slo.ObjectivesRawMetricsCount())
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.RawMetric != nil {
 			rawMetrics = append(rawMetrics, thresh.RawMetric.MetricQuery)
 		}
@@ -258,15 +258,15 @@ func (slo *SLOSpec) RawMetrics() []*MetricSpec {
 	return rawMetrics
 }
 
-// HasRawMetricQuery returns true if Threshold has raw metric with query set.
-func (t *Threshold) HasRawMetricQuery() bool {
+// HasRawMetricQuery returns true if Objective has raw metric with query set.
+func (t *Objective) HasRawMetricQuery() bool {
 	return t.RawMetric != nil && t.RawMetric.MetricQuery != nil
 }
 
-// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's thresholds.
+// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
 func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.HasRawMetricQuery() {
 			count++
 		}
@@ -276,7 +276,7 @@ func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 
 // HasCountMetrics returns true if SLOSpec has count metrics.
 func (slo *SLOSpec) HasCountMetrics() bool {
-	for _, t := range slo.Thresholds {
+	for _, t := range slo.Objectives {
 		if t.HasCountMetrics() {
 			return true
 		}
@@ -284,15 +284,15 @@ func (slo *SLOSpec) HasCountMetrics() bool {
 	return false
 }
 
-// HasCountMetrics returns true if Threshold has count metrics.
-func (t *Threshold) HasCountMetrics() bool {
+// HasCountMetrics returns true if Objective has count metrics.
+func (t *Objective) HasCountMetrics() bool {
 	return t.CountMetrics != nil
 }
 
-// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.CountMetrics != nil {
 			if thresh.CountMetrics.GoodMetric != nil {
 				count++
@@ -308,11 +308,11 @@ func (slo *SLOSpec) CountMetricsCount() int {
 	return count
 }
 
-// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetrics() []*MetricSpec {
 	countMetrics := make([]*MetricSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.CountMetrics == nil {
 			continue
 		}
@@ -332,11 +332,11 @@ func (slo *SLOSpec) CountMetrics() []*MetricSpec {
 	return countMetrics
 }
 
-// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 	countMetrics := make([]*CountMetricsSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.CountMetrics == nil {
 			continue
 		}
@@ -349,7 +349,7 @@ func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 }
 
 func (slo *SLOSpec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
-	for _, thresh := range slo.Thresholds {
+	for _, thresh := range slo.Objectives {
 		if thresh.CountMetrics == nil {
 			continue
 		}

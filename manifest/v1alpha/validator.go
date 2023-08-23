@@ -401,7 +401,7 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 
 	if !hasExactlyOneMetricType(sloSpec) {
 		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetric", "exactlyOneMetricType", "")
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "exactlyOneMetricType", "")
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "exactlyOneMetricType", "")
 	}
 
 	if !hasOnlyOneRawMetricDefinitionTypeOrNone(sloSpec) {
@@ -409,7 +409,7 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 			sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "multipleRawMetricDefinitionTypes", "",
 		)
 		sl.ReportError(
-			sloSpec.Thresholds, "objectives", "Thresholds", "multipleRawMetricDefinitionTypes", "",
+			sloSpec.Objectives, "objectives", "Objectives", "multipleRawMetricDefinitionTypes", "",
 		)
 	}
 
@@ -427,28 +427,28 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "allMetricsOfTheSameType", "")
 	}
 
-	if !areRawMetricsSetForAllThresholdsOrNone(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "rawMetricsSetForAllObjectivesOrNone", "")
+	if !areRawMetricsSetForAllObjectivesOrNone(sloSpec) {
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "rawMetricsSetForAllObjectivesOrNone", "")
 	}
-	if !areCountMetricsSetForAllThresholdsOrNone(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "countMetricsSetForAllObjectivesOrNone", "")
+	if !areCountMetricsSetForAllObjectivesOrNone(sloSpec) {
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "countMetricsSetForAllObjectivesOrNone", "")
 	}
 	if !isBadOverTotalEnabledForDataSource(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "badOverTotalEnabledForDataSource", "")
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "badOverTotalEnabledForDataSource", "")
 	}
 	// if !doAllObjectivesHaveUniqueNames(sloSpec) {
-	// 	sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
+	// 	sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
 	// }
-	// TODO: Replace doAllThresholdsHaveUniqueValues with doAllObjectivesHaveUniqueNames when dropping value uniqueness
-	if !doAllThresholdsHaveUniqueValues(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
+	// TODO: Replace doAllObjectivesHaveUniqueValues with doAllObjectivesHaveUniqueNames when dropping value uniqueness
+	if !doAllObjectivesHaveUniqueValues(sloSpec) {
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
 	}
 	if !areTimeSliceTargetsRequiredAndSet(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "timeSliceTargetRequiredForTimeslices", "")
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "timeSliceTargetRequiredForTimeslices", "")
 	}
 
-	if !isValidThresholdOperatorForRawMetric(sloSpec) {
-		sl.ReportError(sloSpec.Thresholds, "objectives", "Thresholds", "validThresholdOperatorForRawMetric", "")
+	if !isValidObjectiveOperatorForRawMetric(sloSpec) {
+		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "validObjectiveOperatorForRawMetric", "")
 	}
 
 	if sloSpec.Composite != nil {
@@ -486,9 +486,9 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 func sloSpecStructLevelAppDynamicsValidation(sl v.StructLevel, sloSpec SLOSpec) {
 	if !haveCountMetricsTheSameAppDynamicsApplicationNames(sloSpec) {
 		sl.ReportError(
-			sloSpec.Thresholds,
+			sloSpec.Objectives,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"countMetricsHaveTheSameAppDynamicsApplicationNames",
 			"",
 		)
@@ -498,9 +498,9 @@ func sloSpecStructLevelAppDynamicsValidation(sl v.StructLevel, sloSpec SLOSpec) 
 func sloSpecStructLevelLightstepValidation(sl v.StructLevel, sloSpec SLOSpec) {
 	if !haveCountMetricsTheSameLightstepStreamID(sloSpec) {
 		sl.ReportError(
-			sloSpec.Thresholds,
+			sloSpec.Objectives,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"countMetricsHaveTheSameLightstepStreamID",
 			"",
 		)
@@ -517,7 +517,7 @@ func sloSpecStructLevelLightstepValidation(sl v.StructLevel, sloSpec SLOSpec) {
 			)
 		} else {
 			sl.ReportError(
-				sloSpec.Thresholds,
+				sloSpec.Objectives,
 				"objectives[].rawMetric.query",
 				"RawMetric",
 				"validLightstepTypeOfDataForRawMetric",
@@ -528,18 +528,18 @@ func sloSpecStructLevelLightstepValidation(sl v.StructLevel, sloSpec SLOSpec) {
 
 	if !isValidLightstepTypeOfDataForCountMetrics(sloSpec) {
 		sl.ReportError(
-			sloSpec.Thresholds,
+			sloSpec.Objectives,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"validLightstepTypeOfDataForCountMetrics",
 			"",
 		)
 	}
 	if !areLightstepCountMetricsNonIncremental(sloSpec) {
 		sl.ReportError(
-			sloSpec.Thresholds,
+			sloSpec.Objectives,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"lightstepCountMetricsAreNonIncremental",
 			"",
 		)
@@ -551,7 +551,7 @@ func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec SLOSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"pingdomCountMetricsGoodTotalHaveDifferentCheckID",
 			"",
 		)
@@ -568,7 +568,7 @@ func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec SLOSpec) {
 			)
 		} else {
 			sl.ReportError(
-				sloSpec.Thresholds,
+				sloSpec.Objectives,
 				"objectives[].rawMetric.query",
 				"RawMetric",
 				"validPingdomCheckTypeForRawMetric",
@@ -581,7 +581,7 @@ func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec SLOSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"pingdomMetricsHaveDifferentCheckType",
 			"",
 		)
@@ -591,7 +591,7 @@ func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec SLOSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"pingdomCountMetricsIncorrectStatusForCheckType",
 			"",
 		)
@@ -608,7 +608,7 @@ func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec SLOSpec) {
 			)
 		} else {
 			sl.ReportError(
-				sloSpec.Thresholds,
+				sloSpec.Objectives,
 				"objectives[].rawMetric.query",
 				"RawMetric",
 				"pingdomCorrectCheckTypeForRawMetrics",
@@ -623,7 +623,7 @@ func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec SLOSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"sumoLogicCountMetricsEqualQuantization",
 			"",
 		)
@@ -633,7 +633,7 @@ func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec SLOSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
-			"Thresholds",
+			"Objectives",
 			"sumoLogicCountMetricsEqualTimeslice",
 			"",
 		)
@@ -686,10 +686,10 @@ func sloSpecStructLevelAnomalyConfigValidation(sl v.StructLevel, sloSpec SLOSpec
 
 func isBadOverTotalEnabledForDataSource(spec SLOSpec) bool {
 	if spec.HasCountMetrics() {
-		for _, threshold := range spec.Thresholds {
-			if threshold.CountMetrics != nil {
-				if threshold.CountMetrics.BadMetric != nil &&
-					!isBadOverTotalEnabledForDataSourceType(threshold) {
+		for _, objectives := range spec.Objectives {
+			if objectives.CountMetrics != nil {
+				if objectives.CountMetrics.BadMetric != nil &&
+					!isBadOverTotalEnabledForDataSourceType(objectives) {
 					return false
 				}
 			}
@@ -701,11 +701,11 @@ func isBadOverTotalEnabledForDataSource(spec SLOSpec) bool {
 func hasOnlyOneRawMetricDefinitionTypeOrNone(spec SLOSpec) bool {
 	indicatorHasRawMetric := spec.containsIndicatorRawMetric()
 	if indicatorHasRawMetric {
-		for _, threshold := range spec.Thresholds {
-			if !threshold.HasRawMetricQuery() {
+		for _, objective := range spec.Objectives {
+			if !objective.HasRawMetricQuery() {
 				continue
 			}
-			if !reflect.DeepEqual(threshold.RawMetric.MetricQuery, spec.Indicator.RawMetric) {
+			if !reflect.DeepEqual(objective.RawMetric.MetricQuery, spec.Indicator.RawMetric) {
 				return false
 			}
 		}
@@ -713,35 +713,35 @@ func hasOnlyOneRawMetricDefinitionTypeOrNone(spec SLOSpec) bool {
 	return true
 }
 
-func areRawMetricsSetForAllThresholdsOrNone(spec SLOSpec) bool {
+func areRawMetricsSetForAllObjectivesOrNone(spec SLOSpec) bool {
 	if spec.containsIndicatorRawMetric() {
 		return true
 	}
 	count := spec.ObjectivesRawMetricsCount()
-	return count == 0 || count == len(spec.Thresholds)
+	return count == 0 || count == len(spec.Objectives)
 }
 
-func doAllThresholdsHaveUniqueValues(spec SLOSpec) bool {
+func doAllObjectivesHaveUniqueValues(spec SLOSpec) bool {
 	values := make(map[float64]struct{})
-	for _, objective := range spec.Thresholds {
+	for _, objective := range spec.Objectives {
 		values[objective.Value] = struct{}{}
 	}
-	return len(values) == len(spec.Thresholds)
+	return len(values) == len(spec.Objectives)
 }
 
 func areLightstepCountMetricsNonIncremental(sloSpec SLOSpec) bool {
 	if !sloSpec.HasCountMetrics() {
 		return true
 	}
-	for _, threshold := range sloSpec.Thresholds {
-		if threshold.CountMetrics == nil {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if (threshold.CountMetrics.GoodMetric == nil || threshold.CountMetrics.GoodMetric.Lightstep == nil) &&
-			(threshold.CountMetrics.TotalMetric == nil || threshold.CountMetrics.TotalMetric.Lightstep == nil) {
+		if (objective.CountMetrics.GoodMetric == nil || objective.CountMetrics.GoodMetric.Lightstep == nil) &&
+			(objective.CountMetrics.TotalMetric == nil || objective.CountMetrics.TotalMetric.Lightstep == nil) {
 			continue
 		}
-		if threshold.CountMetrics.Incremental == nil || !*threshold.CountMetrics.Incremental {
+		if objective.CountMetrics.Incremental == nil || !*objective.CountMetrics.Incremental {
 			continue
 		}
 		return false
@@ -803,10 +803,10 @@ func isValidLightstepTypeOfDataForRawMetric(sloSpec SLOSpec) bool {
 }
 
 func areTimeSliceTargetsRequiredAndSet(sloSpec SLOSpec) bool {
-	for _, threshold := range sloSpec.Thresholds {
+	for _, objective := range sloSpec.Objectives {
 		if sloSpec.BudgetingMethod == BudgetingMethodTimeslices.String() &&
-			!(threshold.TimeSliceTarget != nil && isValidTimeSliceTargetValue(*threshold.TimeSliceTarget)) ||
-			sloSpec.BudgetingMethod == BudgetingMethodOccurrences.String() && threshold.TimeSliceTarget != nil {
+			!(objective.TimeSliceTarget != nil && isValidTimeSliceTargetValue(*objective.TimeSliceTarget)) ||
+			sloSpec.BudgetingMethod == BudgetingMethodOccurrences.String() && objective.TimeSliceTarget != nil {
 			return false
 		}
 	}
@@ -1002,12 +1002,12 @@ func hasExactlyOneMetricType(sloSpec SLOSpec) bool {
 }
 
 func doesNotHaveCountMetricsThousandEyes(sloSpec SLOSpec) bool {
-	for _, threshold := range sloSpec.Thresholds {
-		if threshold.CountMetrics == nil {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if (threshold.CountMetrics.TotalMetric != nil && threshold.CountMetrics.TotalMetric.ThousandEyes != nil) ||
-			(threshold.CountMetrics.GoodMetric != nil && threshold.CountMetrics.GoodMetric.ThousandEyes != nil) {
+		if (objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.ThousandEyes != nil) ||
+			(objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.ThousandEyes != nil) {
 			return false
 		}
 	}
@@ -1218,15 +1218,15 @@ func haveCountMetricsTheSameLightstepStreamID(sloSpec SLOSpec) bool {
 }
 
 func havePingdomCountMetricsGoodTotalTheSameCheckID(sloSpec SLOSpec) bool {
-	for _, threshold := range sloSpec.Thresholds {
-		if threshold.CountMetrics == nil {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if threshold.CountMetrics.TotalMetric != nil && threshold.CountMetrics.TotalMetric.Pingdom != nil &&
-			threshold.CountMetrics.GoodMetric != nil && threshold.CountMetrics.GoodMetric.Pingdom != nil &&
-			threshold.CountMetrics.GoodMetric.Pingdom.CheckID != nil &&
-			threshold.CountMetrics.TotalMetric.Pingdom.CheckID != nil &&
-			*threshold.CountMetrics.GoodMetric.Pingdom.CheckID != *threshold.CountMetrics.TotalMetric.Pingdom.CheckID {
+		if objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.Pingdom != nil &&
+			objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.Pingdom != nil &&
+			objective.CountMetrics.GoodMetric.Pingdom.CheckID != nil &&
+			objective.CountMetrics.TotalMetric.Pingdom.CheckID != nil &&
+			*objective.CountMetrics.GoodMetric.Pingdom.CheckID != *objective.CountMetrics.TotalMetric.Pingdom.CheckID {
 			return false
 		}
 	}
@@ -1255,19 +1255,19 @@ func havePingdomRawMetricCheckTypeUptime(sloSpec SLOSpec) bool {
 
 func havePingdomMetricsTheSameCheckType(sloSpec SLOSpec) bool {
 	types := make(map[string]bool)
-	for _, threshold := range sloSpec.Thresholds {
-		if threshold.CountMetrics == nil {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if threshold.CountMetrics.TotalMetric != nil && threshold.CountMetrics.TotalMetric.Pingdom != nil &&
-			threshold.CountMetrics.TotalMetric.Pingdom.CheckType != nil &&
-			pingdomCheckTypeValid(*threshold.CountMetrics.TotalMetric.Pingdom.CheckType) {
-			types[*threshold.CountMetrics.TotalMetric.Pingdom.CheckType] = true
+		if objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.Pingdom != nil &&
+			objective.CountMetrics.TotalMetric.Pingdom.CheckType != nil &&
+			pingdomCheckTypeValid(*objective.CountMetrics.TotalMetric.Pingdom.CheckType) {
+			types[*objective.CountMetrics.TotalMetric.Pingdom.CheckType] = true
 		}
-		if threshold.CountMetrics.GoodMetric != nil && threshold.CountMetrics.GoodMetric.Pingdom != nil &&
-			threshold.CountMetrics.GoodMetric.Pingdom.CheckType != nil &&
-			pingdomCheckTypeValid(*threshold.CountMetrics.GoodMetric.Pingdom.CheckType) {
-			types[*threshold.CountMetrics.GoodMetric.Pingdom.CheckType] = true
+		if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.Pingdom != nil &&
+			objective.CountMetrics.GoodMetric.Pingdom.CheckType != nil &&
+			pingdomCheckTypeValid(*objective.CountMetrics.GoodMetric.Pingdom.CheckType) {
+			types[*objective.CountMetrics.GoodMetric.Pingdom.CheckType] = true
 		}
 	}
 	return len(types) < 2
@@ -1309,8 +1309,8 @@ func havePingdomCorrectStatusForCountMetricsCheckType(sloSpec SLOSpec) bool {
 }
 
 func areSumoLogicQuantizationValuesEqual(sloSpec SLOSpec) bool {
-	for _, threshold := range sloSpec.Thresholds {
-		countMetrics := threshold.CountMetrics
+	for _, objective := range sloSpec.Objectives {
+		countMetrics := objective.CountMetrics
 		if countMetrics == nil {
 			continue
 		}
@@ -1331,8 +1331,8 @@ func areSumoLogicQuantizationValuesEqual(sloSpec SLOSpec) bool {
 }
 
 func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
-	for _, threshold := range sloSpec.Thresholds {
-		countMetrics := threshold.CountMetrics
+	for _, objective := range sloSpec.Objectives {
+		countMetrics := objective.CountMetrics
 		if countMetrics == nil {
 			continue
 		}
@@ -1366,7 +1366,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
-func isBadOverTotalEnabledForDataSourceType(thresh Threshold) bool {
+func isBadOverTotalEnabledForDataSourceType(thresh Objective) bool {
 	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
 	if thresh.CountMetrics != nil {
 		if thresh.CountMetrics.BadMetric == nil {
@@ -1377,10 +1377,10 @@ func isBadOverTotalEnabledForDataSourceType(thresh Threshold) bool {
 	return true
 }
 
-func areCountMetricsSetForAllThresholdsOrNone(sloSpec SLOSpec) bool {
+func areCountMetricsSetForAllObjectivesOrNone(sloSpec SLOSpec) bool {
 	count := sloSpec.CountMetricsCount()
-	const countMetricsPerThreshold int = 2
-	return count == 0 || count == len(sloSpec.Thresholds)*countMetricsPerThreshold
+	const countMetricsPerObjective int = 2
+	return count == 0 || count == len(sloSpec.Objectives)*countMetricsPerObjective
 }
 
 func isTimeWindowTypeUnambiguous(timeWindow TimeWindow) bool {
@@ -2114,15 +2114,15 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 	return true
 }
 
-func isValidThresholdOperatorForRawMetric(sloSpec SLOSpec) bool {
+func isValidObjectiveOperatorForRawMetric(sloSpec SLOSpec) bool {
 	if !sloSpec.HasRawMetric() {
 		return true
 	}
-	for _, threshold := range sloSpec.Thresholds {
-		if threshold.Operator == nil {
+	for _, objective := range sloSpec.Objectives {
+		if objective.Operator == nil {
 			return false
 		}
-		if _, err := ParseOperator(*threshold.Operator); err != nil {
+		if _, err := ParseOperator(*objective.Operator); err != nil {
 			return false
 		}
 	}

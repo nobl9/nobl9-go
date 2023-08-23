@@ -10,7 +10,7 @@ type SLOTimeSeries struct {
 }
 
 type ThresholdTimeSeries struct {
-	ThresholdBase
+	ObjectiveBase
 	InstantaneousBurnRateTimeSeries
 	Status ThresholdTimeSeriesStatus `json:"status"`
 	QueryValidationStatus
@@ -114,7 +114,7 @@ type TimeWindowHistoryReport struct {
 }
 
 type ThresholdHistoryReport struct {
-	ThresholdBase
+	ObjectiveBase
 	BurnDownTimeSeries
 }
 

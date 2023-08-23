@@ -63,7 +63,7 @@ type SLOErrorBudgetStatus struct {
 }
 
 type ThresholdStatus struct {
-	Threshold
+	Objective
 	Status struct {
 		BurnedBudget
 	} `json:"status"`

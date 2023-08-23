@@ -30,7 +30,7 @@ type SLOSpec struct {
 	Description     string         `json:"description" validate:"description" example:"Total count of server requests"`
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
-	Thresholds      []Threshold    `json:"objectives" validate:"required,dive"`
+	Objectives      []Objective    `json:"objectives" validate:"required,dive"`
 	Service         string         `json:"service" validate:"required,objectName" example:"webapp-service"`
 	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
 	AlertPolicies   []string       `json:"alertPolicies" validate:"omitempty"`
@@ -73,21 +73,21 @@ type Attachment struct {
 	DisplayName *string `json:"displayName,omitempty" validate:"max=63"`
 }
 
-// ThresholdBase base structure representing a threshold
-type ThresholdBase struct {
+// ObjectiveBase base structure representing an objective.
+type ObjectiveBase struct {
 	DisplayName string  `json:"displayName" validate:"omitempty,min=0,max=63" example:"Good"`
 	Value       float64 `json:"value" validate:"numeric" example:"100"`
 	Name        string  `json:"name" validate:"omitempty,objectName"`
 	NameChanged bool    `json:"-"`
 }
 
-// Threshold represents single threshold for SLO, for internal usage
-type Threshold struct {
-	ThresholdBase `json:",inline"`
+// Objective represents single objective for SLO, for internal usage
+type Objective struct {
+	ObjectiveBase `json:",inline"`
 	// <!-- Go struct field and type names renaming budgetTarget to target has been postponed after GA as requested
 	// in PC-1240. -->
 	BudgetTarget *float64 `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
-	// <!-- Go struct field and type names renaming thresholds to objectives has been postponed after GA as requested
+	// <!-- Go struct field and type names renaming objectives to objectives has been postponed after GA as requested
 	// in PC-1240. -->
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty" example:"0.9"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
