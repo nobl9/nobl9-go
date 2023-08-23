@@ -253,7 +253,7 @@ func (c *Client) applyOrDeleteObjects(
 func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
 	org, err := c.credentials.GetOrganization(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed get organization")
+		return nil, err
 	}
 	for i := range objects {
 		objCtx, ok := objects[i].(v1alpha.ObjectContext)
@@ -367,7 +367,7 @@ func (c *Client) CreateRequest(
 	// Mandatory headers for all API requests.
 	org, err := c.credentials.GetOrganization(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed get organization")
+		return nil, err
 	}
 	req.Header.Set(HeaderOrganization, org)
 	req.Header.Set(HeaderUserAgent, c.userAgent)
@@ -404,7 +404,7 @@ func (c *Client) getAPIURL(ctx context.Context) (*url.URL, error) {
 	}
 	env, err := c.credentials.GetEnvironment(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get environment")
+		return nil, err
 	}
 	return &url.URL{
 		Scheme: urlScheme,

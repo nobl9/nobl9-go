@@ -100,7 +100,7 @@ type credentials struct {
 // credentials.environment should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to get environment")
 	}
 	return c.environment, nil
 }
@@ -110,7 +110,7 @@ func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 // credentials.organization should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to get organization")
 	}
 	return c.organization, nil
 }
