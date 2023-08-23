@@ -11,7 +11,7 @@ type CountMetricsSpec struct {
 	TotalMetric *MetricSpec `json:"total" validate:"required"`
 }
 
-// RawMetricSpec represents integration with a metric source for a particular threshold
+// RawMetricSpec represents integration with a metric source for a particular objective.
 type RawMetricSpec struct {
 	MetricQuery *MetricSpec `json:"query" validate:"required"`
 }
@@ -236,8 +236,8 @@ func (slo *SLOSpec) HasRawMetric() bool {
 	if slo.containsIndicatorRawMetric() {
 		return true
 	}
-	for _, t := range slo.Thresholds {
-		if t.HasRawMetricQuery() {
+	for _, objective := range slo.Objectives {
+		if objective.HasRawMetricQuery() {
 			return true
 		}
 	}
@@ -250,24 +250,24 @@ func (slo *SLOSpec) RawMetrics() []*MetricSpec {
 		return []*MetricSpec{slo.Indicator.RawMetric}
 	}
 	rawMetrics := make([]*MetricSpec, 0, slo.ObjectivesRawMetricsCount())
-	for _, thresh := range slo.Thresholds {
-		if thresh.RawMetric != nil {
-			rawMetrics = append(rawMetrics, thresh.RawMetric.MetricQuery)
+	for _, objective := range slo.Objectives {
+		if objective.RawMetric != nil {
+			rawMetrics = append(rawMetrics, objective.RawMetric.MetricQuery)
 		}
 	}
 	return rawMetrics
 }
 
-// HasRawMetricQuery returns true if Threshold has raw metric with query set.
-func (t *Threshold) HasRawMetricQuery() bool {
-	return t.RawMetric != nil && t.RawMetric.MetricQuery != nil
+// HasRawMetricQuery returns true if Objective has raw metric with query set.
+func (o *Objective) HasRawMetricQuery() bool {
+	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
 }
 
-// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's thresholds.
+// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
 func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
-		if thresh.HasRawMetricQuery() {
+	for _, objective := range slo.Objectives {
+		if objective.HasRawMetricQuery() {
 			count++
 		}
 	}
@@ -276,31 +276,31 @@ func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 
 // HasCountMetrics returns true if SLOSpec has count metrics.
 func (slo *SLOSpec) HasCountMetrics() bool {
-	for _, t := range slo.Thresholds {
-		if t.HasCountMetrics() {
+	for _, objective := range slo.Objectives {
+		if objective.HasCountMetrics() {
 			return true
 		}
 	}
 	return false
 }
 
-// HasCountMetrics returns true if Threshold has count metrics.
-func (t *Threshold) HasCountMetrics() bool {
-	return t.CountMetrics != nil
+// HasCountMetrics returns true if Objective has count metrics.
+func (o *Objective) HasCountMetrics() bool {
+	return o.CountMetrics != nil
 }
 
-// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics != nil {
-			if thresh.CountMetrics.GoodMetric != nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics != nil {
+			if objective.CountMetrics.GoodMetric != nil {
 				count++
 			}
-			if thresh.CountMetrics.TotalMetric != nil {
+			if objective.CountMetrics.TotalMetric != nil {
 				count++
 			}
-			if thresh.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(thresh) {
+			if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
 				count++
 			}
 		}
@@ -308,40 +308,40 @@ func (slo *SLOSpec) CountMetricsCount() int {
 	return count
 }
 
-// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetrics() []*MetricSpec {
 	countMetrics := make([]*MetricSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil {
-			countMetrics[i] = thresh.CountMetrics.GoodMetric
+		if objective.CountMetrics.GoodMetric != nil {
+			countMetrics[i] = objective.CountMetrics.GoodMetric
 			i++
 		}
-		if thresh.CountMetrics.TotalMetric != nil {
-			countMetrics[i] = thresh.CountMetrics.TotalMetric
+		if objective.CountMetrics.TotalMetric != nil {
+			countMetrics[i] = objective.CountMetrics.TotalMetric
 			i++
 		}
-		if thresh.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(thresh) {
-			countMetrics[i] = thresh.CountMetrics.BadMetric
+		if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
+			countMetrics[i] = objective.CountMetrics.BadMetric
 			i++
 		}
 	}
 	return countMetrics
 }
 
-// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 	countMetrics := make([]*CountMetricsSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil && thresh.CountMetrics.TotalMetric != nil {
-			countMetrics[i] = thresh.CountMetrics
+		if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.TotalMetric != nil {
+			countMetrics[i] = objective.CountMetrics
 			i++
 		}
 	}
@@ -349,15 +349,15 @@ func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 }
 
 func (slo *SLOSpec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil {
-			good = append(good, thresh.CountMetrics.GoodMetric)
+		if objective.CountMetrics.GoodMetric != nil {
+			good = append(good, objective.CountMetrics.GoodMetric)
 		}
-		if thresh.CountMetrics.TotalMetric != nil {
-			total = append(total, thresh.CountMetrics.TotalMetric)
+		if objective.CountMetrics.TotalMetric != nil {
+			total = append(total, objective.CountMetrics.TotalMetric)
 		}
 	}
 	return
