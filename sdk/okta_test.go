@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -17,7 +18,7 @@ import (
 
 func TestOktaClient_RequestAccessToken(t *testing.T) {
 	t.Run("return error if client id or client secret are missing", func(t *testing.T) {
-		okta := OktaClient{}
+		okta := oktaClient{}
 		_, err := okta.RequestAccessToken(context.Background(), "123", "")
 		require.Error(t, err)
 		assert.Equal(t, errMissingClientCredentials, err)
@@ -27,7 +28,7 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 	})
 
 	t.Run("handle context cancellation", func(t *testing.T) {
-		okta := OktaClient{HTTP: new(http.Client), requestTokenEndpoint: "https://test.com/api"}
+		okta := oktaClient{HTTP: new(http.Client), getTokenEndpoint: func() string { return "https://test.com/api" }}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		_, err := okta.RequestAccessToken(ctx, "123", "secret")
@@ -49,7 +50,9 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 		w.WriteHeader(respondWithStatusCode)
 	}))
 	defer srv.Close()
-	okta := OktaClient{HTTP: new(http.Client), requestTokenEndpoint: srv.URL}
+	u, err := url.Parse(srv.URL)
+	require.NoError(t, err)
+	okta := oktaClient{HTTP: new(http.Client), getTokenEndpoint: func() string { return u.String() }}
 
 	t.Run("return error for invalid status codes", func(t *testing.T) {
 		for _, respondWithStatusCode = range []int{401, 409, 500, 300} {
