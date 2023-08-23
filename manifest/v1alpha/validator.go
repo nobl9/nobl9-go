@@ -1366,13 +1366,13 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
-func isBadOverTotalEnabledForDataSourceType(thresh Objective) bool {
+func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
 	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
-	if thresh.CountMetrics != nil {
-		if thresh.CountMetrics.BadMetric == nil {
+	if objective.CountMetrics != nil {
+		if objective.CountMetrics.BadMetric == nil {
 			return false
 		}
-		return slices.Contains(enabledDataSources, thresh.CountMetrics.BadMetric.DataSourceType())
+		return slices.Contains(enabledDataSources, objective.CountMetrics.BadMetric.DataSourceType())
 	}
 	return true
 }
