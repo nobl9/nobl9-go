@@ -86,9 +86,7 @@ type Objective struct {
 	ObjectiveBase `json:",inline"`
 	// <!-- Go struct field and type names renaming budgetTarget to target has been postponed after GA as requested
 	// in PC-1240. -->
-	BudgetTarget *float64 `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
-	// <!-- Go struct field and type names renaming objectives to objectives has been postponed after GA as requested
-	// in PC-1240. -->
+	BudgetTarget    *float64          `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty" example:"0.9"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
