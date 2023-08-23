@@ -236,8 +236,8 @@ func (slo *SLOSpec) HasRawMetric() bool {
 	if slo.containsIndicatorRawMetric() {
 		return true
 	}
-	for _, t := range slo.Objectives {
-		if t.HasRawMetricQuery() {
+	for _, objective := range slo.Objectives {
+		if objective.HasRawMetricQuery() {
 			return true
 		}
 	}
@@ -276,8 +276,8 @@ func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 
 // HasCountMetrics returns true if SLOSpec has count metrics.
 func (slo *SLOSpec) HasCountMetrics() bool {
-	for _, t := range slo.Objectives {
-		if t.HasCountMetrics() {
+	for _, objective := range slo.Objectives {
+		if objective.HasCountMetrics() {
 			return true
 		}
 	}
