@@ -23,6 +23,7 @@ func (f *FileConfig) GetPath() string {
 }
 
 // Load reads the config file from the provided path.
+// If the file does not exist, it will create a default configuration file.
 func (f *FileConfig) Load(path string) error {
 	f.filePath = path
 	if _, err := os.Stat(path); err != nil {

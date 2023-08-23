@@ -382,7 +382,6 @@ func (c *Client) CreateRequest(
 }
 
 // GetOrganization returns the organization read from JWT token claims.
-// If the token has not been yet fetched, it will
 func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
