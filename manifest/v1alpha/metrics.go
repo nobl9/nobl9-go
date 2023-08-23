@@ -259,8 +259,8 @@ func (slo *SLOSpec) RawMetrics() []*MetricSpec {
 }
 
 // HasRawMetricQuery returns true if Objective has raw metric with query set.
-func (t *Objective) HasRawMetricQuery() bool {
-	return t.RawMetric != nil && t.RawMetric.MetricQuery != nil
+func (o *Objective) HasRawMetricQuery() bool {
+	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
 }
 
 // ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
@@ -285,8 +285,8 @@ func (slo *SLOSpec) HasCountMetrics() bool {
 }
 
 // HasCountMetrics returns true if Objective has count metrics.
-func (t *Objective) HasCountMetrics() bool {
-	return t.CountMetrics != nil
+func (o *Objective) HasCountMetrics() bool {
+	return o.CountMetrics != nil
 }
 
 // CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
