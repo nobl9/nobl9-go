@@ -41,7 +41,7 @@ type SLOSpec struct {
 }
 
 type SLOStatus struct {
-	TimeTravelStatus *TimeTravelStatus `json:"timeTravel,omitempty"`
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 
 // Calendar struct represents calendar time window
