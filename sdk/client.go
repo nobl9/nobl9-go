@@ -19,8 +19,6 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/sdk/definitions"
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // DefaultProject is a value of the default project.
@@ -97,7 +95,7 @@ func DefaultClient() (*Client, error) {
 func NewClient(config *Config) (*Client, error) {
 	creds := newCredentials(config)
 	client := &Client{
-		HTTP:        retryhttp.NewClient(config.Timeout, creds),
+		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
@@ -159,8 +157,8 @@ func (c *Client) GetObjectsWithParams(
 		return response, err
 	}
 
-	response.Objects, err = definitions.ReadSources(ctx, definitions.NewReaderSource(resp.Body, ""))
-	if err != nil && !errors.Is(err, definitions.ErrNoDefinitionsFound) {
+	response.Objects, err = ReadObjectsFromSources(ctx, NewObjectSourceReader(resp.Body, ""))
+	if err != nil && !errors.Is(err, ErrNoDefinitionsFound) {
 		return response, fmt.Errorf("cannot decode response from API: %w", err)
 	}
 	if _, exists := resp.Header[HeaderTruncatedLimitMax]; !exists {

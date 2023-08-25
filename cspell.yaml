@@ -16,7 +16,7 @@ ignoreRegExpList:
   - /nolint.*/g
   - /nosec.*/g
 ignorePaths:
-  - sdk/definitions/test_data
+  - sdk/test_data
   - .golangci.yml
   - "**/*.lock"
   - "**/go.mod"

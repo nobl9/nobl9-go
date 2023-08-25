@@ -1,4 +1,4 @@
-package definitions
+package sdk
 
 import (
 	"embed"
@@ -100,7 +100,7 @@ func TestDecode(t *testing.T) {
 				assert.False(t, isJSON, "expected the file contents to be interpreted as YAML")
 			}
 
-			objects, err := Decode(data)
+			objects, err := DecodeObjects(data)
 			require.NoError(t, err)
 			assert.Len(t, objects, test.ExpectedObjectsLen)
 			assert.IsType(t, v1alpha.Project{}, objects[0])
@@ -118,20 +118,20 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeSingle(t *testing.T) {
 	t.Run("golden path", func(t *testing.T) {
-		project, err := DecodeSingle[v1alpha.Project](readInputFile(t, "single_project.yaml"))
+		project, err := DecodeObject[v1alpha.Project](readInputFile(t, "single_project.yaml"))
 		require.NoError(t, err)
 		assert.NotZero(t, project)
 		assert.Equal(t, "default", project.GetName())
 	})
 
 	t.Run("multiple objects, return error", func(t *testing.T) {
-		_, err := DecodeSingle[v1alpha.Project](readInputFile(t, "two_projects.yaml"))
+		_, err := DecodeObject[v1alpha.Project](readInputFile(t, "two_projects.yaml"))
 		require.Error(t, err)
 		assert.EqualError(t, err, "unexpected number of objects: 2, expected exactly one")
 	})
 
 	t.Run("invalid type, return error", func(t *testing.T) {
-		_, err := DecodeSingle[v1alpha.Service](readInputFile(t, "single_project.yaml"))
+		_, err := DecodeObject[v1alpha.Service](readInputFile(t, "single_project.yaml"))
 		require.Error(t, err)
 		assert.EqualError(t, err, "object of type v1alpha.Project is not of type v1alpha.Service")
 	})

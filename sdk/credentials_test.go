@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 func TestCredentials_SetAuthorizationHeader(t *testing.T) {
@@ -340,7 +338,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 
 // nolint: bodyclose
 func TestClient_RoundTrip(t *testing.T) {
-	t.Run("wrap errors with NonRetryableError", func(t *testing.T) {
+	t.Run("wrap errors with httpNonRetryableError", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{err: errors.New("token fetching failed!")}
 		creds := &credentials{
 			config:        &Config{},
@@ -351,8 +349,8 @@ func TestClient_RoundTrip(t *testing.T) {
 		req := &http.Request{}
 		_, err := creds.RoundTrip(req)
 		require.Error(t, err)
-		_, isNonRetryableError := err.(retryhttp.NonRetryableError)
-		assert.True(t, isNonRetryableError, "err is of type NonRetryableError")
+		_, isNonRetryableError := err.(httpNonRetryableError)
+		assert.True(t, isNonRetryableError, "err is of type httpNonRetryableError")
 	})
 
 	t.Run("set auth header if not present", func(t *testing.T) {

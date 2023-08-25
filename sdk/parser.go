@@ -1,4 +1,4 @@
-package definitions
+package sdk
 
 import (
 	"bufio"
@@ -16,19 +16,19 @@ import (
 
 var ErrNoDefinitionsFound = errors.New("no definitions in input")
 
-// Decode reads objects from the provided bytes slice.
+// DecodeObjects reads objects from the provided bytes slice.
 // It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
-func Decode(data []byte) ([]manifest.Object, error) {
+func DecodeObjects(data []byte) ([]manifest.Object, error) {
 	if isJSONBuffer(data) {
 		return decodeJSON(data)
 	}
 	return decodeYAML(data)
 }
 
-// DecodeSingle returns a single, concrete object implementing manifest.Object.
+// DecodeObject returns a single, concrete object implementing manifest.Object.
 // It expects exactly one object in the decoded byte slice.
-func DecodeSingle[T manifest.Object](data []byte) (object T, err error) {
-	objects, err := Decode(data)
+func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
+	objects, err := DecodeObjects(data)
 	if err != nil {
 		return object, err
 	}
@@ -47,7 +47,7 @@ func DecodeSingle[T manifest.Object](data []byte) (object T, err error) {
 func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	result := make([]manifest.Object, 0, len(rds))
 	for _, rd := range rds {
-		objects, err := Decode(rd.Definition)
+		objects, err := DecodeObjects(rd.Definition)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
 		}

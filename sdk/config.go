@@ -196,7 +196,7 @@ func (c *Config) read() error {
 				"failed to read configuration file, resolving to env variables\nError: %s\n", err.Error())
 		}
 	}
-	// Read global settings from env variables.
+	// ReadObjects global settings from env variables.
 	if err := c.resolveContextlessConfig(); err != nil {
 		return err
 	}

@@ -24,7 +24,6 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/sdk/definitions"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -169,7 +168,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},
@@ -209,7 +208,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},
