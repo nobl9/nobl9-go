@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 const (
@@ -45,7 +43,7 @@ type oktaClient struct {
 
 func newOktaClient(getTokenEndpoint getTokenEndpointFunc) *oktaClient {
 	return &oktaClient{
-		HTTP:             retryhttp.NewClient(oktaRequestTimeout, nil),
+		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, nil),
 		getTokenEndpoint: getTokenEndpoint,
 	}
 }

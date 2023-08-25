@@ -1,4 +1,4 @@
-package definitions
+package sdk
 
 import (
 	"context"
@@ -15,16 +15,17 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
+const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
+
 type (
-	// RawSource may be interpreted as (with interpretation):
-	// - file path  (SourceTypeFile or SourceTypeDirectory)
-	// - glob pattern (SourceTypeGlobPattern)
-	// - URL (SourceTypeURL)
-	// - input provided via io.Reader, like os.Stdin (SourceTypeReader)
-	RawSource = string
+	// RawObjectSource may be interpreted as (with interpretation):
+	// - file path  (ObjectSourceTypeFile or ObjectSourceTypeDirectory)
+	// - glob pattern (ObjectSourceTypeGlobPattern)
+	// - URL (ObjectSourceTypeURL)
+	// - input provided via io.Reader, like os.Stdin (ObjectSourceTypeReader)
+	RawObjectSource = string
 
 	// rawDefinition stores both the resolved source and raw resource definition.
 	rawDefinition struct {
@@ -37,28 +38,29 @@ type (
 	rawDefinitions = map[ /* raw definition hash */ string]rawDefinition
 )
 
-// Read resolves the RawSource(s) it receives and calls ReadSources on the resolved Source(s).
-func Read(ctx context.Context, rawSources ...RawSource) ([]manifest.Object, error) {
-	sources, err := ResolveSources(rawSources...)
+// ReadObjects resolves the RawObjectSource(s) it receives and calls
+// ReadObjectsFromSources on the resolved ObjectSource(s).
+func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]manifest.Object, error) {
+	sources, err := ResolveObjectSources(rawSources...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve all raw sources")
 	}
-	return ReadSources(ctx, sources...)
+	return ReadObjectsFromSources(ctx, sources...)
 }
 
 const unknownSource = "-"
 
-// ReadSources reads from the provided Source(s) based on the SourceType.
-// For SourceTypeReader it will read directly from Source.Reader,
-// otherwise it reads from all the Source.Paths. It calculates a sum for
-// each definition read from Source and won't create duplicates. This
-// allows the user to combine Source(s) with possibly overlapping paths.
+// ReadObjectsFromSources reads from the provided ObjectSource(s) based on the
+// ObjectSourceType. For ObjectSourceTypeReader it will read directly from ObjectSource.Reader,
+// otherwise it reads from all the ObjectSource.Paths. It calculates a sum for
+// each definition read from ObjectSource and won't create duplicates. This
+// allows the user to combine ObjectSource(s) with possibly overlapping paths.
 // If the same exact definition is identified with multiple sources, it
-// will choose the first Source path it encounters. If the Source is of
-// type SourceTypeGlobPattern or SourceTypeDirectory and a file does not
+// will choose the first ObjectSource path it encounters. If the ObjectSource is of
+// type ObjectSourceTypeGlobPattern or ObjectSourceTypeDirectory and a file does not
 // contain the required APIVersionRegex, it is skipped. However in case
-// of SourceTypeFile, it will thrown ErrInvalidFile error.
-func ReadSources(ctx context.Context, sources ...*Source) ([]manifest.Object, error) {
+// of ObjectSourceTypeFile, it will thrown ErrInvalidFile error.
+func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]manifest.Object, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})
@@ -68,7 +70,7 @@ func ReadSources(ctx context.Context, sources ...*Source) ([]manifest.Object, er
 		def []byte
 	)
 	for _, src := range sources {
-		if src.Type == SourceTypeReader {
+		if src.Type == ObjectSourceTypeReader {
 			switch len(src.Paths) {
 			case 0:
 				src.Paths = []string{unknownSource}
@@ -80,17 +82,17 @@ func ReadSources(ctx context.Context, sources ...*Source) ([]manifest.Object, er
 		}
 		for _, path := range src.Paths {
 			switch src.Type {
-			case SourceTypeReader:
+			case ObjectSourceTypeReader:
 				def, err = readFromReader(src.Reader)
-			case SourceTypeURL:
+			case ObjectSourceTypeURL:
 				def, err = readFromURL(ctx, path)
-			case SourceTypeDirectory, SourceTypeGlobPattern:
+			case ObjectSourceTypeDirectory, ObjectSourceTypeGlobPattern:
 				def, err = readFromFile(path)
 				// We only want to fail on the regex check when a single file is supplied.
 				if errors.Is(err, ErrInvalidFile) {
 					continue
 				}
-			case SourceTypeFile:
+			case ObjectSourceTypeFile:
 				def, err = readFromFile(path)
 			default:
 				err = ErrInvalidSourceType
@@ -112,8 +114,9 @@ var (
 		matchingRulesDisclaimer)
 	ErrInvalidFile = errors.Errorf("valid Nobl9 resource definition must match against the following regex: '%s'",
 		APIVersionRegex)
-	ErrInvalidSourceType    = errors.New("invalid SourceType provided")
-	ErrSourceTypeReaderPath = errors.New("SourceTypeReader Source may define at most a single Source.Path")
+	ErrInvalidSourceType    = errors.New("invalid ObjectSourceType provided")
+	ErrSourceTypeReaderPath = errors.New(
+		"ObjectSourceTypeReader ObjectSource may define at most a single ObjectSource.Path")
 
 	matchingRulesDisclaimer = fmt.Sprintf(
 		"valid resource definition file must have one of the extensions: [%s]",
@@ -141,7 +144,7 @@ func readFromReader(in io.Reader) ([]byte, error) {
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.
 var httpClientFactory = func(url string) *http.Client {
-	return retryhttp.NewClient(10*time.Second, nil)
+	return newRetryableHTTPClient(10*time.Second, nil)
 }
 
 func readFromURL(ctx context.Context, url string) ([]byte, error) {
@@ -160,8 +163,6 @@ func readFromURL(ctx context.Context, url string) ([]byte, error) {
 	}
 	return io.ReadAll(resp.Body)
 }
-
-const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
 
 var apiVersionRegex = regexp.MustCompile(APIVersionRegex)
 

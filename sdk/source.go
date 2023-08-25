@@ -1,4 +1,4 @@
-package definitions
+package sdk
 
 import (
 	"fmt"
@@ -11,12 +11,13 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-// ResolveSources calls ResolveSource on all supplied RawSource(s) and aggregates the resolved Source(s).
+// ResolveObjectSources calls ResolveObjectSource on all supplied RawObjectSource(s)
+// and aggregates the resolved ObjectSource(s).
 // It fails fast on the first encountered error.
-func ResolveSources(rawSources ...RawSource) ([]*Source, error) {
-	sources := make([]*Source, 0, len(rawSources))
+func ResolveObjectSources(rawSources ...RawObjectSource) ([]*ObjectSource, error) {
+	sources := make([]*ObjectSource, 0, len(rawSources))
 	for _, raw := range rawSources {
-		src, err := ResolveSource(raw)
+		src, err := ResolveObjectSource(raw)
 		if err != nil {
 			return nil, err
 		}
@@ -25,17 +26,18 @@ func ResolveSources(rawSources ...RawSource) ([]*Source, error) {
 	return sources, nil
 }
 
-// ResolveSource attempts to resolve a single RawSource producing a Source instance read to be passed to ReadSources.
-// It interprets the provided URI and associates it with a specific SourceType.
-// If you wish to create a SourceTypeReader Source you should use a separate method: NewReaderSource.
-func ResolveSource(rawSource RawSource) (src *Source, err error) {
-	src = &Source{Raw: rawSource}
+// ResolveObjectSource attempts to resolve a single RawObjectSource producing a ObjectSource
+// instance read to be passed to ReadObjectsFromSources.
+// It interprets the provided URI and associates it with a specific ObjectSourceType.
+// If you wish to create a ObjectSourceTypeReader ObjectSource you should use a separate method: NewObjectSourceReader.
+func ResolveObjectSource(rawSource RawObjectSource) (src *ObjectSource, err error) {
+	src = &ObjectSource{Raw: rawSource}
 	switch {
 	case hasURLSchema(rawSource):
-		src.Type = SourceTypeURL
+		src.Type = ObjectSourceTypeURL
 		src.Paths = []string{rawSource}
 	case hasGlobMeta(rawSource):
-		src.Type = SourceTypeGlobPattern
+		src.Type = ObjectSourceTypeGlobPattern
 		src.Paths, err = resolveGlobPattern(rawSource)
 	default:
 		src.Type, src.Paths, err = resolveFSPath(rawSource)
@@ -43,43 +45,46 @@ func ResolveSource(rawSource RawSource) (src *Source, err error) {
 	return src, err
 }
 
-// NewReaderSource creates a special instance of Source with SourceTypeReader.
-// ReadSources will process the Source by reading form the provided io.Reader.
-func NewReaderSource(r io.Reader, source RawSource) *Source {
-	return &Source{
-		Type:   SourceTypeReader,
+// NewObjectSourceReader creates a special instance of ObjectSource with ObjectSourceTypeReader.
+// ReadObjectsFromSources will process the ObjectSource by reading form the provided io.Reader.
+func NewObjectSourceReader(r io.Reader, source RawObjectSource) *ObjectSource {
+	return &ObjectSource{
+		Type:   ObjectSourceTypeReader,
 		Paths:  []string{source},
 		Reader: r,
 		Raw:    source,
 	}
 }
 
-// Source represents a single resource definition source.
-type Source struct {
-	// Type defines how the Source should be read when passed to ReadSources.
-	Type SourceType
-	// Paths lists all resolved URIs the Source points at.
+// ObjectSource represents a single resource definition source.
+type ObjectSource struct {
+	// Type defines how the ObjectSource should be read when passed to ReadObjectsFromSources.
+	Type ObjectSourceType
+	// Paths lists all resolved URIs the ObjectSource points at.
 	Paths []string
-	// Reader may be optionally provided with SourceTypeReader for ReadSources to read from the io.Reader.
+	// Reader may be optionally provided with ObjectSourceTypeReader for ReadObjectsFromSources to read from the io.Reader.
 	Reader io.Reader
-	// Raw is the original, unresolved RawSource, an example might be a relative path
+	// Raw is the original, unresolved RawObjectSource, an example might be a relative path
 	// which was resolved to its absolute form.
-	Raw RawSource
+	Raw RawObjectSource
 }
 
-type SourceType int
-
-const (
-	SourceTypeFile SourceType = iota
-	SourceTypeDirectory
-	SourceTypeGlobPattern
-	SourceTypeURL
-	SourceTypeReader
-)
-
-func (s Source) String() string {
-	return fmt.Sprintf("{SourceType: %s, Raw: %s}", s.Type, s.Raw)
+// String implements fmt.Stringer interface.
+func (o ObjectSource) String() string {
+	return fmt.Sprintf("{ObjectSourceType: %s, Raw: %s}", o.Type, o.Raw)
 }
+
+//go:generate ../bin/go-enum --names
+
+// ObjectSourceType represents the origin (where does it come from) of manifest.Object definition.
+/* ENUM(
+File = 1
+Directory
+GlobPattern
+URL
+Reader
+)*/
+type ObjectSourceType int
 
 var supportedFileExtensions = []string{".yaml", ".yml", ".json"}
 
@@ -93,7 +98,7 @@ func GetSupportedFileExtensions() []string {
 // resolveFSPath we'll recognize if the provided path points to a single file
 // or a directory. If it's a directory it will resolve paths of all its
 // immediate children (1st level) and will not recurse it's structure.
-func resolveFSPath(path string) (typ SourceType, paths []string, err error) {
+func resolveFSPath(path string) (typ ObjectSourceType, paths []string, err error) {
 	path, err = filepath.Abs(filepath.Clean(path))
 	if err != nil {
 		return -1, nil, err
@@ -119,9 +124,9 @@ func resolveFSPath(path string) (typ SourceType, paths []string, err error) {
 		if len(paths) == 0 {
 			return -1, nil, ErrNoFilesInPath
 		}
-		typ = SourceTypeDirectory
+		typ = ObjectSourceTypeDirectory
 	default:
-		typ = SourceTypeFile
+		typ = ObjectSourceTypeFile
 		paths = []string{path}
 	}
 	return typ, paths, nil
@@ -170,7 +175,7 @@ func resolveGlobPattern(path string) (paths []string, err error) {
 		if !hasSupportedFileExtension(paths[i]) {
 			continue
 		}
-		// To keep it platform independent we need to make sure the RawSource
+		// To keep it platform independent we need to make sure the RawObjectSource
 		// has the correct path separators. If we used doublestar.Glob we
 		// replaced Windows path separator with '/', so we need to roll it back.
 		filteredPaths = append(filteredPaths, filepath.FromSlash(paths[i]))

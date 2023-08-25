@@ -9,8 +9,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 // accessTokenParser parses and verifies fetched access token.
@@ -123,11 +121,11 @@ var cleanCredentialsHTTPClient = &http.Client{}
 // RoundTrip is responsible for making sure the access token is set and also update it
 // if the expiry is imminent. It also sets the HeaderOrganization.
 // It will wrap any errors returned from refreshAccessToken
-// in retryhttp.NonRetryableError to ensure the request is not retried by the wrapping client.
+// in retryhttp.httpNonRetryableError to ensure the request is not retried by the wrapping client.
 func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
-		return nil, retryhttp.NonRetryableError{Err: err}
+		return nil, httpNonRetryableError{Err: err}
 	}
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
 		c.setAuthorizationHeader(req)
