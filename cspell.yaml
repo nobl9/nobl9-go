@@ -16,7 +16,7 @@ ignoreRegExpList:
   - /nolint.*/g
   - /nosec.*/g
 ignorePaths:
-  - sdk/definitions/test_data
+  - sdk/test_data
   - .golangci.yml
   - "**/*.lock"
   - "**/go.mod"
@@ -31,8 +31,10 @@ words:
   - GOFILE
   - GOPACKAGE
   - auseg9kiegWKEtJZC416
+  - devel
   - dynatrace
   - endef
+  - enduml
   - falsef
   - gobin
   - goimports
@@ -49,13 +51,17 @@ words:
   - nocomments
   - nrql
   - opentsdb
+  - plantuml
   - println
   - promql
+  - puml
   - rollup
   - slis
   - sloctl
   - sloerrorbudgetstatus
   - slos
+  - startuml
+  - tpng
   - truef
   - tsdb
   - usrmgmt

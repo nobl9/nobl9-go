@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -22,7 +24,6 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/sdk/definitions"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -167,7 +168,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},
@@ -207,7 +208,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := definitions.ReadSources(context.Background(), definitions.NewReaderSource(r.Body, ""))
+			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},
@@ -342,7 +343,7 @@ func TestCreateRequest(t *testing.T) {
 			HeaderProject:      []string{"my-project"},
 			HeaderUserAgent:    []string{"sloctl"},
 		}, req.Header)
-		// If client.preRequestOnce was not executed, the host wouldn't have been set.
+		// If client.refreshAccessTokenOnce was not executed, the host wouldn't have been set.
 		assert.Contains(t, srv.URL, req.URL.Host)
 		assert.Equal(t, values, req.URL.Query())
 		body, err := io.ReadAll(req.Body)
@@ -426,6 +427,26 @@ func TestProcessResponseErrors(t *testing.T) {
 	})
 }
 
+// TODO: Once the new tag is released, convert change the simple_module go.mod to point at concrete SDK version.
+func TestDefaultUserAgent(t *testing.T) {
+	getStderrFromExec := func(err error) string {
+		if v, ok := err.(*exec.ExitError); ok {
+			return string(v.Stderr)
+		}
+		return ""
+	}
+	tempDir := t.TempDir()
+	path := filepath.Join(tempDir, "test-binary")
+	// Build binary. This is the only way for debug package to work,
+	// it needs to operate on a binary built from a module.
+	_, err := exec.Command("go", "build", "-o", path, "./test_data/client/simple_module/main.go").Output()
+	require.NoError(t, err, getStderrFromExec(err))
+	// Execute the binary.
+	out, err := exec.Command(path).Output()
+	require.NoError(t, err, getStderrFromExec(err))
+	assert.Contains(t, string(out), "sdk/(devel)")
+}
+
 type endpointConfig struct {
 	Path            string
 	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
@@ -456,9 +477,8 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	// Declare the test server, we can provide the handler later on since it's not started yet.
 	srv = httptest.NewUnstartedServer(nil)
 	// Our server url will be our oktaOrgURL.
-	oktaOrgURL := "http://" + srv.Listener.Addr().String()
-	authServerURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
-	require.NoError(t, err)
+	oktaOrgURL := &url.URL{Scheme: "http", Host: srv.Listener.Addr().String()}
+	authServerURL := oktaAuthServerURL(oktaOrgURL, oktaAuthServer)
 
 	// Create a signed token and use the generated public key to create JWK.
 	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
@@ -494,13 +514,13 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	// Define the handler for test server.
 	srv.Config = &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path[1:] { // Trim leading '/'
-		case OktaTokenEndpoint(authServerURL).Path:
+		case oktaTokenEndpoint(authServerURL).Path:
 			assert.Equal(t,
 				// Basic base64(clientID:clientSecret)
 				"Basic "+base64.StdEncoding.EncodeToString([]byte(clientID+":"+clientSecret)),
 				r.Header.Get(HeaderAuthorization))
 			require.NoError(t, json.NewEncoder(w).Encode(oktaTokenResponse{AccessToken: token}))
-		case OktaKeysEndpoint(authServerURL).Path:
+		case oktaKeysEndpoint(authServerURL).Path:
 			require.NoError(t, json.NewEncoder(w).Encode(jwks))
 		case endpoint.Path:
 			// Headers we always require.
@@ -519,14 +539,16 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		}
 	})}
 
-	// Prepare our client.
-	oktaURL, err := OktaAuthServerURL(oktaOrgURL, oktaAuthServer)
+	// Prepare client.
+	config, err := ReadConfig(
+		ConfigOptionWithCredentials(clientID, clientSecret),
+		ConfigOptionNoConfigFile())
 	require.NoError(t, err)
-	client, err = NewClientBuilder(userAgent).
-		WithDefaultCredentials(clientID, clientSecret).
-		WithOktaAuthServerURL(oktaURL).
-		Build()
+	config.OktaOrgURL = oktaOrgURL
+	config.OktaAuthServer = oktaAuthServer
+	client, err = NewClient(config)
 	require.NoError(t, err)
+	client.SetUserAgent(userAgent)
 
 	return client, srv
 }

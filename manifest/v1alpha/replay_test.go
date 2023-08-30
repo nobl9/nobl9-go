@@ -9,24 +9,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTimeTravelStructDatesValidation(t *testing.T) {
+func TestReplayStructDatesValidation(t *testing.T) {
 	t.Parallel()
 
 	validate := v.New()
-	validate.RegisterStructValidation(timeTravelStructDatesValidation, TimeTravel{})
+	validate.RegisterStructValidation(replayStructDatesValidation, Replay{})
 
 	tests := []struct {
-		name       string
-		timeTravel TimeTravel
-		isValid    bool
-		errorTags  map[string][]string
+		name      string
+		replay    Replay
+		isValid   bool
+		errorTags map[string][]string
 	}{
 		{
 			name: "correct struct",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: 30,
 				},
@@ -35,10 +35,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing slo",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: 30,
 				},
@@ -50,10 +50,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing project",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: 30,
 				},
@@ -65,10 +65,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing durationUnit",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Value: 30,
 				},
 			},
@@ -79,10 +79,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing durationValue",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit: "Day",
 				},
 			},
@@ -93,10 +93,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "invalid durationUnit",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Test",
 					Value: 30,
 				},
@@ -108,10 +108,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "invalid durationValue",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: -30,
 				},
@@ -123,10 +123,10 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "maximum duration exceeded",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: 31,
 				},
@@ -138,7 +138,7 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing duration",
-			timeTravel: TimeTravel{
+			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
 			},
@@ -155,7 +155,7 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validate.Struct(tc.timeTravel)
+			err := validate.Struct(tc.replay)
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
@@ -176,22 +176,22 @@ func TestTimeTravelStructDatesValidation(t *testing.T) {
 	}
 }
 
-func TestParseJSONToTimeTravelStruct(t *testing.T) {
+func TestParseJSONToReplayStruct(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name      string
 		inputJSON string
-		want      TimeTravel
+		want      Replay
 		wantErr   bool
 	}{
 		{
 			name:      "pass valid json",
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Day", "value": 20}}`,
-			want: TimeTravel{
+			want: Replay{
 				Project: "default",
 				Slo:     "annotation-test",
-				Duration: TimeTravelDuration{
+				Duration: ReplayDuration{
 					Unit:  "Day",
 					Value: 20,
 				},
@@ -201,19 +201,19 @@ func TestParseJSONToTimeTravelStruct(t *testing.T) {
 		{
 			name:      "pass invalid json",
 			inputJSON: `}`,
-			want:      TimeTravel{},
+			want:      Replay{},
 			wantErr:   true,
 		},
 		{
 			name:      "pass invalid values",
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Days", "value": 20}}`,
-			want:      TimeTravel{},
+			want:      Replay{},
 			wantErr:   true,
 		},
 		{
 			name:      "pass empty object",
 			inputJSON: `{}`,
-			want:      TimeTravel{},
+			want:      Replay{},
 			wantErr:   true,
 		},
 	}
@@ -224,7 +224,7 @@ func TestParseJSONToTimeTravelStruct(t *testing.T) {
 			t.Parallel()
 
 			reader := strings.NewReader(tc.inputJSON)
-			got, err := ParseJSONToTimeTravelStruct(reader)
+			got, err := ParseJSONToReplayStruct(reader)
 
 			assert.Equal(t, tc.wantErr, err != nil)
 			assert.Equal(t, tc.want, got)
@@ -248,32 +248,32 @@ func TestCheckPeriodUnit(t *testing.T) {
 		{
 			name:    "Invalid duration unit",
 			unit:    "Days",
-			wantErr: ErrInvalidTimeTravelDurationUnit,
+			wantErr: ErrInvalidReplayDurationUnit,
 		},
 	}
 	for _, tt := range tests {
 		tc := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			if err := ValidateTimeTravelDurationUnit(tc.unit); err != tc.wantErr {
-				t.Errorf("ValidateTimeTravelDurationUnit() error = %v, wantErr %v", err, tc.wantErr)
+			if err := ValidateReplayDurationUnit(tc.unit); err != tc.wantErr {
+				t.Errorf("ValidateReplayDurationUnit() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}
 }
 
-func TestConvertTimeTravelDurationToDuration(t *testing.T) {
+func TestConvertReplayDurationToDuration(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name         string
-		duration     TimeTravelDuration
+		duration     ReplayDuration
 		wantErr      error
 		wantDuration time.Duration
 	}{
 		{
 			name: "30 minutes",
-			duration: TimeTravelDuration{
+			duration: ReplayDuration{
 				Unit:  DurationUnitMinute,
 				Value: 30,
 			},
@@ -282,7 +282,7 @@ func TestConvertTimeTravelDurationToDuration(t *testing.T) {
 		},
 		{
 			name: "15 days",
-			duration: TimeTravelDuration{
+			duration: ReplayDuration{
 				Unit:  DurationUnitDay,
 				Value: 15,
 			},
@@ -291,7 +291,7 @@ func TestConvertTimeTravelDurationToDuration(t *testing.T) {
 		},
 		{
 			name: "5 hours",
-			duration: TimeTravelDuration{
+			duration: ReplayDuration{
 				Unit:  DurationUnitHour,
 				Value: 5,
 			},
@@ -300,11 +300,11 @@ func TestConvertTimeTravelDurationToDuration(t *testing.T) {
 		},
 		{
 			name: "invalid time unit",
-			duration: TimeTravelDuration{
+			duration: ReplayDuration{
 				Unit:  "TEST",
 				Value: 30,
 			},
-			wantErr:      ErrInvalidTimeTravelDurationUnit,
+			wantErr:      ErrInvalidReplayDurationUnit,
 			wantDuration: 0,
 		},
 	}

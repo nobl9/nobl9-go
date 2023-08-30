@@ -1,4 +1,4 @@
-package retryhttp
+package sdk
 
 import (
 	"context"
@@ -21,21 +21,21 @@ var (
 	}
 )
 
-// NonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
-type NonRetryableError struct{ Err error }
+// httpNonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
+type httpNonRetryableError struct{ Err error }
 
-func (n NonRetryableError) Error() string { return n.Err.Error() }
+func (n httpNonRetryableError) Error() string { return n.Err.Error() }
 
-// NewClient returns http.Client with preconfigured retry feature.
-func NewClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
+// newRetryableHTTPClient returns http.Client with preconfigured retry feature.
+func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
-	rc.Logger = noopLogger{}
+	rc.Logger = httpNoopLogger{}
 	rc.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	rc.HTTPClient = &http.Client{Timeout: timeout, Transport: rt}
 	rc.RetryMax = 4
 	rc.RetryWaitMax = 30 * time.Second
 	rc.RetryWaitMin = 1 * time.Second
-	rc.CheckRetry = checkRetry
+	rc.CheckRetry = httpCheckRetry
 	rc.RequestLogHook = func(l retryablehttp.Logger, req *http.Request, c int) {
 		if c > 0 {
 			log.Info().Msgf("%s %s request failed. Retrying.", req.Method, req.URL.Path)
@@ -44,16 +44,16 @@ func NewClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	return rc.StandardClient()
 }
 
-func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+func httpCheckRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	// Do not retry on context.Canceled or context.DeadlineExceeded.
 	if ctx.Err() != nil {
 		return false, ctx.Err()
 	}
 	// Don't propagate other errors.
-	return shouldRetryPolicy(resp, err), nil
+	return httpShouldRetryPolicy(resp, err), nil
 }
 
-func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
+func httpShouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 	if retryErr != nil {
 		if v, isUrlError := retryErr.(*url.Error); isUrlError {
 			// Don't retry if the error was due to too many redirects.
@@ -73,7 +73,7 @@ func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 			// Don't retry if the error is not retryable.
 			// This error type is returned by from round trippers to inform the retryable client which calls them,
 			// that the error should be permanent.
-			if _, isNotRetryable := v.Err.(NonRetryableError); isNotRetryable {
+			if _, isNotRetryable := v.Err.(httpNonRetryableError); isNotRetryable {
 				return false
 			}
 		}
@@ -88,9 +88,9 @@ func shouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 	return false
 }
 
-type noopLogger struct{}
+type httpNoopLogger struct{}
 
 // Printf is empty, because we only want to fulfill `retryablehttp.Logger` interface.
 // `retryablehttp.Client.Logger` makes extensive use of the logger yielding way too much info.
 // We silence the logger and print the info where needed.
-func (l noopLogger) Printf(string, ...interface{}) {}
+func (l httpNoopLogger) Printf(string, ...interface{}) {}
