@@ -78,7 +78,11 @@ func (s *SLIAnalysis) AllMetricSpecs() []*MetricSpec {
 		metrics = append(metrics, s.MetricSpec.RawMetric)
 	}
 	if s.MetricSpec.CountMetrics != nil {
-		metrics = append(metrics, s.MetricSpec.CountMetrics.GoodMetric)
+		if s.MetricSpec.CountMetrics.GoodMetric != nil {
+			metrics = append(metrics, s.MetricSpec.CountMetrics.GoodMetric)
+		} else if s.MetricSpec.CountMetrics.BadMetric != nil {
+			metrics = append(metrics, s.MetricSpec.CountMetrics.BadMetric)
+		}
 		metrics = append(metrics, s.MetricSpec.CountMetrics.TotalMetric)
 	}
 	return metrics
