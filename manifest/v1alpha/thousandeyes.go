@@ -17,7 +17,7 @@ const (
 	TestTypesIntroducedAgentVersion                 = "v0.33.0"
 	AvailabilityAndThroughputIntroducedAgentVersion = "v0.52.0"
 	DNSTestTypeIntroductionBetaAgentVersion         = "v0.68.0-beta01"
-	DNSTestTypeIntroductionStableAgentVersion       = "v0.67.1"
+	DNSTestTypeIntroductionStableAgentVersion       = "v0.67.2"
 )
 
 // ThousandEyesTestAgentConfig for each test type holds minimum agent version and supported release channels
