@@ -115,6 +115,7 @@ type RedshiftDirectConfig struct {
 	AccessKeyID     string `json:"accessKeyID,omitempty" example:"secret"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty" example:"secret"`
 	SecretARN       string `json:"secretARN,omitempty"`
+	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
 // SplunkDirectConfig represents content of Splunk configuration typical for Direct Object.
