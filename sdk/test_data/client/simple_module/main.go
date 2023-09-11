@@ -18,6 +18,7 @@ func main() {
 		sdk.ConfigOptionWithCredentials("clientId", "clientSecret"),
 		sdk.ConfigOptionNoConfigFile())
 	config.DisableOkta = true
+	config.Organization = "organization"
 	if err != nil {
 		panic(err)
 	}
