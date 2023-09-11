@@ -39,6 +39,7 @@ const (
 	Instana
 	InfluxDB
 	GCM
+	AzureMonitor
 )
 
 const DatasourceStableChannel = "stable"
@@ -122,6 +123,7 @@ var agentTypeToName = map[DataSourceType]string{
 	Instana:             "Instana",
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
+	AzureMonitor:        "AzureMonitor",
 }
 
 func (dst DataSourceType) String() string {
@@ -357,6 +359,7 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	CloudWatch.String():       {Value: ptr(15), Unit: HRDDay},
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -488,6 +491,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		},
 		ThousandEyes.String(): {
 			Value: ptr(1),
+			Unit:  QDDMinute,
+		},
+		AzureMonitor.String(): {
+			Value: ptr(2),
 			Unit:  QDDMinute,
 		},
 	}
