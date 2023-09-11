@@ -64,6 +64,7 @@ type Config struct {
 	OktaOrgURL           *url.URL
 	OktaAuthServer       string
 	DisableOkta          bool
+	Organization         string
 	Timeout              time.Duration
 	FilesPromptEnabled   bool
 	FilesPromptThreshold int

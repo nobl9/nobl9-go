@@ -150,6 +150,10 @@ func (c *credentials) setAuthorizationHeader(r *http.Request) {
 // If the token was not yet set, it will request a new one all the same.
 func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
+		c.organization = c.config.Organization
+		if c.organization == "" {
+			return false, errors.New("organization is not set")
+		}
 		return false, nil
 	}
 	if !c.shouldRefresh() {
