@@ -108,7 +108,6 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return GCM, nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor, nil
-
 	}
 	return 0, errors.New("unknown agent type")
 }
