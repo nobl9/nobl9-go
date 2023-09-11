@@ -494,7 +494,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 			Unit:  QDDMinute,
 		},
 		AzureMonitor.String(): {
-			Value: ptr(4),
+			Value: ptr(5),
 			Unit:  QDDMinute,
 		},
 	}
