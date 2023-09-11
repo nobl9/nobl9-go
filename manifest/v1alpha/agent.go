@@ -235,7 +235,7 @@ type SplunkAgentConfig struct {
 
 // AzureMonitorAgentConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorAgentConfig struct {
-	TenantID string `json:"tenantId" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+	TenantID string `json:"tenantId" validate:"required" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
