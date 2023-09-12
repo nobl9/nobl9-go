@@ -96,7 +96,7 @@ type ContextConfig struct {
 	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
 	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
-	Organization   string         `toml:"organization" env:"ORGANIZATION"`
+	Organization   string         `toml:"organization,omitempty" env:"ORGANIZATION"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
 }
 
