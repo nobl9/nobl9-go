@@ -19,6 +19,7 @@ const (
 	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
 	defaultOktaAuthServerID     = "auseg9kiegWKEtJZC416"
 	defaultDisableOkta          = false
+	defaultOrganization         = ""
 	defaultNoConfigFile         = false
 	defaultTimeout              = 10 * time.Second
 	defaultFilesPromptEnabled   = true
@@ -64,6 +65,7 @@ type Config struct {
 	OktaOrgURL           *url.URL
 	OktaAuthServer       string
 	DisableOkta          bool
+	Organization         string
 	Timeout              time.Duration
 	FilesPromptEnabled   bool
 	FilesPromptThreshold int
@@ -94,6 +96,7 @@ type ContextConfig struct {
 	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
 	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
+	Organization   string         `toml:"organization,omitempty" env:"ORGANIZATION"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
 }
 
@@ -230,6 +233,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
 			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
+			"ORGANIZATION":           defaultOrganization,
 			"TIMEOUT":                defaultTimeout.String(),
 			"FILES_PROMPT_ENABLED":   strconv.FormatBool(defaultFilesPromptEnabled),
 			"FILES_PROMPT_THRESHOLD": strconv.Itoa(defaultFilesPromptThreshold),
@@ -294,6 +298,7 @@ func (c *Config) resolveContextConfig() error {
 	c.OktaAuthServer = c.contextConfig.OktaAuthServer
 	c.Timeout = *c.contextConfig.Timeout
 	c.DisableOkta = *c.contextConfig.DisableOkta
+	c.Organization = c.contextConfig.Organization
 	return nil
 }
 
