@@ -40,6 +40,7 @@ type MetricSpec struct {
 	Instana             *InstanaMetric             `json:"instana,omitempty"`
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
+	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -220,6 +221,21 @@ type OpenTSDBMetric struct {
 // GrafanaLokiMetric represents metric from GrafanaLokiMetric.
 type GrafanaLokiMetric struct {
 	Logql *string `json:"logql" validate:"required"`
+}
+
+// AzureMonitorMetric represents metric from AzureMonitor
+type AzureMonitorMetric struct {
+	ResourceID  string                        `json:"resourceId" validate:"required"`
+	MetricName  string                        `json:"metricName" validate:"required"`
+	Aggregation string                        `json:"aggregation" validate:"required,oneof=Average Min Max Count Sum"` //nolint:lll
+	Dimensions  []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
+	Namespace   string                        `json:"namespace" validate:"required"`
+}
+
+// AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
+type AzureMonitorMetricDimension struct {
+	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
+	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
 }
 
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {

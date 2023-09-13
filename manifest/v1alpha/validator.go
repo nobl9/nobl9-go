@@ -281,17 +281,19 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		if !fl.Field().CanInterface() {
 			return false
 		}
-		dimension, ok := fl.Field().Index(i).Interface().(CloudWatchMetricDimension)
-		if !ok {
+		switch dimension := fl.Field().Index(i).Interface().(type) {
+		case CloudWatchMetricDimension:
+		case AzureMonitorMetricDimension:
+			if dimension.Name == nil {
+				continue
+			}
+			if _, used := usedNames[*dimension.Name]; used {
+				return false
+			}
+			usedNames[*dimension.Name] = struct{}{}
+		default:
 			return false
 		}
-		if dimension.Name == nil {
-			continue
-		}
-		if _, used := usedNames[*dimension.Name]; used {
-			return false
-		}
-		usedNames[*dimension.Name] = struct{}{}
 	}
 	return true
 }
@@ -1379,7 +1381,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor}
 	if objective.CountMetrics != nil {
 		if objective.CountMetrics.BadMetric == nil {
 			return false
