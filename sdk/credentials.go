@@ -107,6 +107,10 @@ func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 // as it is extracted from the token claims.
 // credentials.organization should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
+	if c.config.DisableOkta {
+		return c.config.Organization, nil
+	}
+
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get organization")
 	}
@@ -150,10 +154,6 @@ func (c *credentials) setAuthorizationHeader(r *http.Request) {
 // If the token was not yet set, it will request a new one all the same.
 func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
-		c.organization = c.config.Organization
-		if c.organization == "" {
-			return false, errors.New("organization is not set")
-		}
 		return false, nil
 	}
 	if !c.shouldRefresh() {
