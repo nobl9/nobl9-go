@@ -434,6 +434,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return InfluxDB
 	case m.GCM != nil:
 		return GCM
+	case m.AzureMonitor != nil:
+		return AzureMonitor
 	default:
 		return 0
 	}
@@ -498,6 +500,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.InfluxDB
 	case GCM:
 		return m.GCM
+	case AzureMonitor:
+		return m.AzureMonitor
 	default:
 		return nil
 	}
