@@ -227,7 +227,7 @@ type GrafanaLokiMetric struct {
 type AzureMonitorMetric struct {
 	ResourceID  string                        `json:"resourceId" validate:"required"`
 	MetricName  string                        `json:"metricName" validate:"required"`
-	Aggregation string                        `json:"aggregation" validate:"required,oneof=Average Min Max Count Sum"` //nolint:lll
+	Aggregation string                        `json:"aggregation" validate:"required,oneof=Avg Min Max Count Sum"` //nolint:lll
 	Dimensions  []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
 	Namespace   string                        `json:"namespace" validate:"required"`
 }
