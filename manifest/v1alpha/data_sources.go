@@ -363,13 +363,14 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
-	Datadog.String():     {Value: ptr(30), Unit: HRDDay},
-	NewRelic.String():    {Value: ptr(30), Unit: HRDDay},
-	Splunk.String():      {Value: ptr(30), Unit: HRDDay},
-	Lightstep.String():   {Value: ptr(30), Unit: HRDDay},
-	CloudWatch.String():  {Value: ptr(15), Unit: HRDDay},
-	Dynatrace.String():   {Value: ptr(28), Unit: HRDDay},
-	AppDynamics.String(): {Value: ptr(30), Unit: HRDDay},
+	Datadog.String():      {Value: ptr(30), Unit: HRDDay},
+	NewRelic.String():     {Value: ptr(30), Unit: HRDDay},
+	Splunk.String():       {Value: ptr(30), Unit: HRDDay},
+	Lightstep.String():    {Value: ptr(30), Unit: HRDDay},
+	CloudWatch.String():   {Value: ptr(15), Unit: HRDDay},
+	Dynatrace.String():    {Value: ptr(28), Unit: HRDDay},
+	AppDynamics.String():  {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor.String(): {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
