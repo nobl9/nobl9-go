@@ -281,19 +281,23 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		if !fl.Field().CanInterface() {
 			return false
 		}
+		var name string
 		switch dimension := fl.Field().Index(i).Interface().(type) {
 		case CloudWatchMetricDimension:
+			if dimension.Name != nil {
+				name = *dimension.Name
+			}
 		case AzureMonitorMetricDimension:
-			if dimension.Name == nil {
-				continue
+			if dimension.Name != nil {
+				name = *dimension.Name
 			}
-			if _, used := usedNames[*dimension.Name]; used {
-				return false
-			}
-			usedNames[*dimension.Name] = struct{}{}
 		default:
 			return false
 		}
+		if _, used := usedNames[name]; used {
+			return false
+		}
+		usedNames[name] = struct{}{}
 	}
 	return true
 }
