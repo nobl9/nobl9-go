@@ -229,7 +229,7 @@ type AzureMonitorMetric struct {
 	MetricName      string                        `json:"metricName" validate:"required"`
 	Aggregation     string                        `json:"aggregation" validate:"required,oneof=Avg Min Max Count Sum"` //nolint:lll
 	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
-	MetricNamespace string                        `json:"metricNamespace" validate:"required"`
+	MetricNamespace string                        `json:"metricNamespace,omitempty"`
 }
 
 // AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
