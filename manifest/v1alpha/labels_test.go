@@ -3,123 +3,110 @@ package v1alpha
 import (
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
+// nolint: lll
 func TestValidateLabels(t *testing.T) {
-	testCases := []struct {
-		desc    string
-		labels  Labels
-		isValid bool
+	for name, test := range map[string]struct {
+		desc   string
+		Labels Labels
+		Error  error
 	}{
-		{
-			desc: "valid: simple strings",
-			labels: map[string][]string{
+		"valid: simple strings": {
+			Labels: map[string][]string{
 				"net":     {"vast", "infinite"},
 				"project": {"nobl9"},
 			},
-			isValid: true,
 		},
-		{
-			desc: "invalid: empty label key",
-			labels: map[string][]string{
+		"invalid: empty label key": {
+			Labels: map[string][]string{
 				"": {"vast", "infinite"},
 			},
-			isValid: false,
+			Error: errors.New("label key '' length must be between 1 and 63"),
 		},
-		{
-			desc: "valid: one empty label value",
-			labels: map[string][]string{
+		"valid: one empty label value": {
+			Labels: map[string][]string{
 				"net": {""},
 			},
-			isValid: true,
 		},
-		{
-			desc: "invalid: two empty label values (because duplicates)",
-			labels: map[string][]string{
+		"invalid: label value duplicates": {
+			Labels: map[string][]string{
+				"net": {"same", "same", "same"},
+			},
+			Error: errors.New("label value 'same' for key 'net' already exists, duplicates are not allowed"),
+		},
+		"invalid: two empty label values (because duplicates)": {
+			Labels: map[string][]string{
 				"net": {"", ""},
 			},
-			isValid: false,
+			Error: errors.New("label value '' for key 'net' already exists, duplicates are not allowed"),
 		},
-		{
-			desc: "valid: no label values for a given key",
-			labels: map[string][]string{
+		"valid: no label values for a given key": {
+			Labels: map[string][]string{
 				"net": {},
 			},
-			isValid: true,
 		},
-		{
-			desc: "valid: no label values for a given key",
-			labels: map[string][]string{
-				"net": {},
-			},
-			isValid: true,
-		},
-		{
-			desc: "invalid: label key is too long (over 63 chars)",
-			labels: map[string][]string{
+		"invalid: label key is too long": {
+			Labels: map[string][]string{
 				"netnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnet": {},
 			},
-			isValid: false,
+			Error: errors.New("label key 'netnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnet' length must be between 1 and 63"),
 		},
-		{
-			desc: "invalid: label key starts with non letter",
-			labels: map[string][]string{
+		"invalid: label key starts with non letter": {
+			Labels: map[string][]string{
 				"9net": {},
 			},
-			isValid: false,
+			Error: errors.New("label key '9net' does not match the regex: ^\\p{L}([_\\-0-9\\p{L}]*[0-9\\p{L}])?$"),
 		},
-		{
-			desc: "invalid: label key ends with non alphanumeric char",
-			labels: map[string][]string{
+		"invalid: label key ends with non alphanumeric char": {
+			Labels: map[string][]string{
 				"net_": {},
 			},
-			isValid: false,
+			Error: errors.New("label key 'net_' does not match the regex: ^\\p{L}([_\\-0-9\\p{L}]*[0-9\\p{L}])?$"),
 		},
-		{
-			desc: "invalid: label key contains uppercase character",
-			labels: map[string][]string{
+		"invalid: label key contains uppercase character": {
+			Labels: map[string][]string{
 				"nEt": {},
 			},
-			isValid: false,
+			Error: errors.New("label key 'nEt' must not have upper case letters"),
 		},
-		{
-			desc: "invalid: label value is to long (over 200 chars)",
-			labels: map[string][]string{
+		"invalid: label value is to long (over 200 chars)": {
+			Labels: map[string][]string{
 				"net": {`
 					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
 					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
 					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
 				`},
 			},
-			isValid: false,
+			Error: errors.New("label value '\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t' length for key 'net' must be between 1 and 200"),
 		},
-		{
-			desc: "valid: label value with uppercase characters",
-			labels: map[string][]string{
+		"valid: label value with uppercase characters": {
+			Labels: map[string][]string{
 				"net": {"THE NET is vast AND INFINITE"},
 			},
-			isValid: true,
 		},
-		{
-			desc: "valid: label value with uppercase characters",
-			labels: map[string][]string{
+		"valid: label value with DNS compliant name": {
+			Labels: map[string][]string{
 				"net": {"the-net-is-vast-and-infinite"},
 			},
-			isValid: true,
 		},
-		{
-			desc: "valid: any unicode with rune count 1-200",
-			labels: map[string][]string{
+		"valid: any unicode with rune count 1-200": {
+			Labels: map[string][]string{
 				"net": {"\uE005[\\\uE006\uE007"},
 			},
-			isValid: true,
 		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			err := tC.labels.Validate()
-			assert.Equal(t, tC.isValid, err == nil)
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := test.Labels.Validate()
+			if test.Error == nil {
+				assert.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				assert.EqualError(t, err, test.Error.Error())
+			}
 		})
 	}
 }

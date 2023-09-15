@@ -14,6 +14,7 @@ type (
 	LabelValue = string
 )
 
+// Validate checks if the Labels keys and values are valid.
 func (l Labels) Validate() error {
 	for key, values := range l {
 		if err := l.validateKey(key); err != nil {
