@@ -5,6 +5,6 @@ metadata:
   displayName: cloudWatch-agent
   project: default
 spec:
-  cloudwatch: {}
+  cloudWatch: {}
   sourceOf:
     - Metrics

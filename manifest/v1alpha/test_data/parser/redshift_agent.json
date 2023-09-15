@@ -7,7 +7,7 @@
     "project": "default"
   },
   "spec": {
-    "cloudwatch": {},
+    "redshift": {},
     "sourceOf": [
       "Metrics"
     ]
