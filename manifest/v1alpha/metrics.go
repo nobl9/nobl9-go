@@ -40,6 +40,7 @@ type MetricSpec struct {
 	Instana             *InstanaMetric             `json:"instana,omitempty"`
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
+	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -220,6 +221,21 @@ type OpenTSDBMetric struct {
 // GrafanaLokiMetric represents metric from GrafanaLokiMetric.
 type GrafanaLokiMetric struct {
 	Logql *string `json:"logql" validate:"required"`
+}
+
+// AzureMonitorMetric represents metric from AzureMonitor
+type AzureMonitorMetric struct {
+	ResourceID      string                        `json:"resourceId" validate:"required"`
+	MetricName      string                        `json:"metricName" validate:"required"`
+	Aggregation     string                        `json:"aggregation" validate:"required,oneof=Avg Min Max Count Sum"` //nolint:lll
+	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
+	MetricNamespace string                        `json:"metricNamespace,omitempty"`
+}
+
+// AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
+type AzureMonitorMetricDimension struct {
+	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
+	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
 }
 
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
@@ -418,6 +434,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return InfluxDB
 	case m.GCM != nil:
 		return GCM
+	case m.AzureMonitor != nil:
+		return AzureMonitor
 	default:
 		return 0
 	}
@@ -482,6 +500,20 @@ func (m *MetricSpec) Query() interface{} {
 		return m.InfluxDB
 	case GCM:
 		return m.GCM
+	case AzureMonitor:
+		// To be clean, entire metric spec is copied so that original value is not mutated.
+		var azureMonitorCopy AzureMonitorMetric
+		azureMonitorCopy = *m.AzureMonitor
+		// Dimension list is optional. This is done so that during upsert empty slice and nil slice are treated equally.
+		if azureMonitorCopy.Dimensions == nil {
+			azureMonitorCopy.Dimensions = []AzureMonitorMetricDimension{}
+		}
+		// Dimensions are sorted so that metric_query = '...':jsonb comparison was insensitive to the order in slice.
+		// It assumes that all dimensions' names are unique (ensured by validation).
+		sort.Slice(azureMonitorCopy.Dimensions, func(i, j int) bool {
+			return *azureMonitorCopy.Dimensions[i].Name < *azureMonitorCopy.Dimensions[j].Name
+		})
+		return azureMonitorCopy
 	default:
 		return nil
 	}

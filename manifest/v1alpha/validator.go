@@ -281,17 +281,19 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		if !fl.Field().CanInterface() {
 			return false
 		}
-		dimension, ok := fl.Field().Index(i).Interface().(CloudWatchMetricDimension)
-		if !ok {
+		switch dimension := fl.Field().Index(i).Interface().(type) {
+		case CloudWatchMetricDimension:
+		case AzureMonitorMetricDimension:
+			if dimension.Name == nil {
+				continue
+			}
+			if _, used := usedNames[*dimension.Name]; used {
+				return false
+			}
+			usedNames[*dimension.Name] = struct{}{}
+		default:
 			return false
 		}
-		if dimension.Name == nil {
-			continue
-		}
-		if _, used := usedNames[*dimension.Name]; used {
-			return false
-		}
-		usedNames[*dimension.Name] = struct{}{}
 	}
 	return true
 }
@@ -1052,6 +1054,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		instanaCount             int
 		influxDBCount            int
 		gcmCount                 int
+		azureMonitorCount        int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1123,6 +1126,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.GCM != nil {
 			gcmCount++
 		}
+		if metric.AzureMonitor != nil {
+			azureMonitorCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1188,6 +1194,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if gcmCount > 0 {
+		metricCount++
+	}
+	if azureMonitorCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1379,7 +1388,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor}
 	if objective.CountMetrics != nil {
 		if objective.CountMetrics.BadMetric == nil {
 			return false
@@ -1879,6 +1888,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.GCM != nil {
 		metricTypesCount++
 	}
+	if ms.AzureMonitor != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1902,6 +1914,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "instana", "Instana", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
