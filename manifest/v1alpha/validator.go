@@ -1628,65 +1628,7 @@ func validateURLDynatrace(validateURL string) bool {
 func areLabelsValid(fl v.FieldLevel) bool {
 	labels := fl.Field().Interface().(Labels)
 
-	return validateLabels(labels)
-}
-
-func validateLabels(labels Labels) bool {
-	for key, values := range labels {
-		if !validateLabelKey(key) {
-			return false
-		}
-		if duplicates(values) {
-			return false
-		}
-		for _, val := range values {
-			// Validate only if len(val) > 0, in case where we have only key labels, there is always empty val string
-			// and this is not an error
-			if len(val) > 0 && !validateLabelValue(val) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func validateLabelKey(value string) bool {
-	const maxLabelKeyLength = 63
-	if len(value) > maxLabelKeyLength || len(value) < 1 {
-		return false
-	}
-
-	if !labelKeyRegexp.MatchString(value) {
-		return false
-	}
-	return !hasUpperCaseLettersRegexp.MatchString(value)
-}
-
-func validateLabelValue(value string) bool {
-	const (
-		minLabelValueLength = 1
-		maxLabelValueLength = 200
-	)
-
-	return utf8.RuneCountInString(value) >= minLabelValueLength && utf8.RuneCountInString(value) <= maxLabelValueLength
-}
-
-func duplicates(list []string) bool {
-	duplicateFrequency := make(map[string]int)
-
-	for _, item := range list {
-		_, exist := duplicateFrequency[item]
-
-		if exist {
-			duplicateFrequency[item]++
-		} else {
-			duplicateFrequency[item] = 1
-		}
-		if duplicateFrequency[item] > 1 {
-			return true
-		}
-	}
-	return false
+	return labels.Validate()
 }
 
 func isHTTPS(fl v.FieldLevel) bool {
