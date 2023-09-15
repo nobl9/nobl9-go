@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -153,6 +154,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
 	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
+	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
@@ -3330,5 +3332,32 @@ func validateSumoLogicN9Fields(sl v.StructLevel, metric SumoLogicMetric) {
 
 	if matched, _ := regexp.MatchString(`(?m).*\bby\b.*`, *metric.Query); !matched {
 		sl.ReportError(metric.Query, "query", "Query", "aggregation function is required", "")
+	}
+}
+
+func validateAzureMonitorMetricsConfiguration(sl v.StructLevel) {
+	metric, ok := sl.Current().Interface().(AzureMonitorMetric)
+	if !ok {
+		sl.ReportError(metric, "", "", "structConversion", "")
+		return
+	}
+
+	isValidAzureMonitorAggregation(sl, metric)
+}
+
+func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric) {
+	availableAggregations := map[string]struct{}{
+		"Avg":   {},
+		"Min":   {},
+		"Max":   {},
+		"Count": {},
+		"Sum":   {},
+	}
+	if _, ok := availableAggregations[metric.Aggregation]; !ok {
+		msg := fmt.Sprintf(
+			"aggregation [%s] is invalid, use one of: [%s]",
+			metric.Aggregation, strings.Join(maps.Keys(availableAggregations), "|"),
+		)
+		sl.ReportError(metric.Aggregation, "aggregation", "Aggregation", msg, "")
 	}
 }
