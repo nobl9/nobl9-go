@@ -847,6 +847,18 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
+func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
+	slo := SLOSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
+			TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
+		}}},
+	}
+
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}
+
 func TestAlertConditionOnlyMeasurementAverageBurnRateIsAllowedToUseAlertingWindow(t *testing.T) {
 	validate := NewValidator()
 	for condition, isValid := range map[AlertCondition]bool{
