@@ -118,7 +118,8 @@ func TestValidateLabels(t *testing.T) {
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
-			assert.Equal(t, tC.isValid, tC.labels.Validate())
+			err := tC.labels.Validate()
+			assert.Equal(t, tC.isValid, err == nil)
 		})
 	}
 }
