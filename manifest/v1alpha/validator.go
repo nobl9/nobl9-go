@@ -91,8 +91,6 @@ var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
 	cloudWatchStatRegex             = buildCloudWatchStatRegex()
-	labelKeyRegexp                  = regexp.MustCompile(`^[\p{L}]([\_\-0-9\p{L}]*[0-9\p{L}])?$`)
-	hasUpperCaseLettersRegexp       = regexp.MustCompile(`[A-Z]+`)
 	validInstanaLatencyAggregations = map[string]struct{}{
 		"sum": {}, "mean": {}, "min": {}, "max": {}, "p25": {},
 		"p50": {}, "p75": {}, "p90": {}, "p95": {}, "p98": {}, "p99": {},
