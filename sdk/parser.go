@@ -19,10 +19,40 @@ var ErrNoDefinitionsFound = errors.New("no definitions in input")
 // DecodeObjects reads objects from the provided bytes slice.
 // It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
 func DecodeObjects(data []byte) ([]manifest.Object, error) {
-	if isJSONBuffer(data) {
-		return decodeJSON(data)
+	genericObjects, err := DecodeObjectsGeneric[genericObject](data)
+	if err != nil {
+		return nil, err
 	}
-	return decodeYAML(data)
+	res := make([]manifest.Object, 0, len(genericObjects))
+	for _, obj := range genericObjects {
+		res = append(res, obj.Object)
+	}
+	return res, nil
+}
+
+// decodedObject is a type constraint for possible raw object definition decoding results.
+type decodedObject interface {
+	genericObject | map[string]interface{} | []byte
+}
+
+// DecodeObjectsGeneric is the generic version of DecodeObjects.
+// It provides more flexibility, since the objects can be decoded to a generic
+// map[string]interface representation or left in a raw, byte slice form.
+func DecodeObjectsGeneric[T decodedObject](data []byte) ([]T, error) {
+	var decoder func([]byte) ([]T, error)
+	if isJSONBuffer(data) {
+		decoder = decodeJSON[T]
+	} else {
+		decoder = decodeYAML[T]
+	}
+	objects, err := decoder(data)
+	if err != nil {
+		return nil, err
+	}
+	if len(objects) == 0 {
+		return nil, ErrNoDefinitionsFound
+	}
+	return objects, nil
 }
 
 // DecodeObject returns a single, concrete object implementing manifest.Object.
@@ -44,64 +74,44 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 }
 
 // processRawDefinitions function converts raw definitions to a slice of manifest.Object.
-func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
-	result := make([]manifest.Object, 0, len(rds))
-	for _, rd := range rds {
-		objects, err := DecodeObjects(rd.Definition)
+func processRawDefinitions(defs []RawObjectDefinition) ([]manifest.Object, error) {
+	result := make([]manifest.Object, 0, len(defs))
+	for _, d := range defs {
+		objects, err := DecodeObjects(d.Definition)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
+			return nil, fmt.Errorf("%s: %w", d.ResolvedSource, err)
 		}
 		for _, obj := range objects {
 			if obj == nil {
 				continue
 			}
-			result = append(result, annotateWithManifestSource(obj, rd.ResolvedSource))
+			result = append(result, d.AnnotateWithManifestSource(obj))
 		}
 	}
 	return result, nil
 }
 
-// annotateWithManifestSource annotates manifest.Object with the manifest definition source.
-func annotateWithManifestSource(object manifest.Object, source string) manifest.Object {
-	switch object.GetVersion() {
-	case "n9/v1alpha":
-		if v, ok := object.(v1alpha.ObjectContext); ok {
-			if v.GetManifestSource() == "" && source != "" {
-				object = v.SetManifestSource(source)
-			}
-		}
-	}
-	return object
-}
-
-func decodeJSON(data []byte) ([]manifest.Object, error) {
-	var res []genericObject
+func decodeJSON[T decodedObject](data []byte) ([]T, error) {
+	var objects []T
 	switch getJsonIdent(data) {
 	case identArray:
-		if err := json.Unmarshal(data, &res); err != nil {
+		if err := json.Unmarshal(data, &objects); err != nil {
 			return nil, err
 		}
 	case identObject:
-		var object genericObject
+		var object T
 		if err := json.Unmarshal(data, &object); err != nil {
 			return nil, err
 		}
-		res = append(res, object)
-	}
-	if len(res) == 0 {
-		return nil, ErrNoDefinitionsFound
-	}
-	objects := make([]manifest.Object, 0, len(res))
-	for i := range res {
-		objects = append(objects, res[i].Object)
+		objects = append(objects, object)
 	}
 	return objects, nil
 }
 
-func decodeYAML(data []byte) ([]manifest.Object, error) {
+func decodeYAML[T decodedObject](data []byte) ([]T, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(data))
 	scanner.Split(splitYAMLDocument)
-	var res []genericObject
+	var objects []T
 	for scanner.Scan() {
 		doc := scanner.Bytes()
 		if len(bytes.TrimSpace(doc)) == 0 {
@@ -109,25 +119,18 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 		}
 		switch getYamlIdent(doc) {
 		case identArray:
-			var a []genericObject
+			var a []T
 			if err := yaml.Unmarshal(doc, &a); err != nil {
 				return nil, err
 			}
-			res = append(res, a...)
+			objects = append(objects, a...)
 		case identObject:
-			var object genericObject
+			var object T
 			if err := yaml.Unmarshal(doc, &object); err != nil {
 				return nil, err
 			}
-			res = append(res, object)
+			objects = append(objects, object)
 		}
-	}
-	if len(res) == 0 {
-		return nil, ErrNoDefinitionsFound
-	}
-	objects := make([]manifest.Object, 0, len(res))
-	for i := range res {
-		objects = append(objects, res[i].Object)
 	}
 	return objects, nil
 }

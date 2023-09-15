@@ -15,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
@@ -27,15 +28,16 @@ type (
 	// - input provided via io.Reader, like os.Stdin (ObjectSourceTypeReader)
 	RawObjectSource = string
 
-	// rawDefinition stores both the resolved source and raw resource definition.
-	rawDefinition struct {
-		// ResolvedSource
+	// RawObjectDefinition stores both the resolved source and raw resource definition.
+	RawObjectDefinition struct {
+		// ResolvedSource is the source of the manifest.Object definition.
 		ResolvedSource string
-		Definition     []byte
+		// Definition is the manifest.Object raw, preprocessed definition.
+		Definition []byte
 	}
-	// rawDefinitions simulates a set, map of unique resource definitions.
+	// rawDefinitionsSet simulates a set, map of unique resource definitions.
 	// Uniqueness is calculated on all bytes via SHA256 sum.
-	rawDefinitions = map[ /* raw definition hash */ string]rawDefinition
+	rawDefinitionsSet = map[ /* raw definition hash */ string]RawObjectDefinition
 )
 
 // ReadObjects resolves the RawObjectSource(s) it receives and calls
@@ -58,13 +60,23 @@ const unknownSource = "-"
 // If the same exact definition is identified with multiple sources, it
 // will choose the first ObjectSource path it encounters. If the ObjectSource is of
 // type ObjectSourceTypeGlobPattern or ObjectSourceTypeDirectory and a file does not
-// contain the required APIVersionRegex, it is skipped. However in case
-// of ObjectSourceTypeFile, it will thrown ErrInvalidFile error.
+// contain the required APIVersionRegex, it is skipped. However, in case
+// of ObjectSourceTypeFile, it will throw ErrInvalidFile error.
 func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]manifest.Object, error) {
+	definitions, err := ReadRawObjectsFromSources(ctx, sources...)
+	if err != nil {
+		return nil, err
+	}
+	return processRawDefinitions(definitions)
+}
+
+// ReadRawObjectsFromSources provides low-level alternative to ReadObjectsFromSources.
+// It will only read raw definitions and will not convert them to manifest.Object models.
+func ReadRawObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]RawObjectDefinition, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})
-	definitions := make(rawDefinitions, len(sources))
+	definitionsMap := make(rawDefinitionsSet, len(sources))
 	var (
 		err error
 		def []byte
@@ -100,10 +112,14 @@ func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]ma
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to read resource definitions from '%s'", src)
 			}
-			appendUniqueDefinition(definitions, path, def)
+			appendUniqueDefinition(definitionsMap, path, def)
 		}
 	}
-	return processRawDefinitions(definitions)
+	definitions := make([]RawObjectDefinition, 0, len(definitionsMap))
+	for _, rd := range definitionsMap {
+		definitions = append(definitions, rd)
+	}
+	return definitions, nil
 }
 
 var (
@@ -123,13 +139,13 @@ var (
 		strings.Join(supportedFileExtensions, ","))
 )
 
-func appendUniqueDefinition(defs rawDefinitions, src string, def []byte) {
+func appendUniqueDefinition(defs rawDefinitionsSet, src string, def []byte) {
 	sum := sha256.Sum256(def)
 	hash := string(sum[:])
 	if _, srcExists := defs[hash]; srcExists {
 		return
 	}
-	defs[hash] = rawDefinition{ResolvedSource: src, Definition: def}
+	defs[hash] = RawObjectDefinition{ResolvedSource: src, Definition: def}
 }
 
 func readFromReader(in io.Reader) ([]byte, error) {
@@ -180,4 +196,17 @@ func readFromFile(fp string) ([]byte, error) {
 		return nil, ErrInvalidFile
 	}
 	return data, nil
+}
+
+// AnnotateWithManifestSource annotates manifest.Object with the manifest definition source.
+func (r RawObjectDefinition) AnnotateWithManifestSource(object manifest.Object) manifest.Object {
+	switch object.GetVersion() {
+	case "n9/v1alpha":
+		if v, ok := object.(v1alpha.ObjectContext); ok {
+			if v.GetManifestSource() == "" && r.ResolvedSource != "" {
+				object = v.SetManifestSource(r.ResolvedSource)
+			}
+		}
+	}
+	return object
 }
