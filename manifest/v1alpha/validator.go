@@ -1059,6 +1059,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		influxDBCount            int
 		gcmCount                 int
 		azureMonitorCount        int
+		openTelemetryCount       int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1133,6 +1134,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
+		if metric.OpenTelemetry != nil {
+			openTelemetryCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1203,6 +1207,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 	if azureMonitorCount > 0 {
 		metricCount++
 	}
+  if openTelemetryCount > 0 {
+    metricCount++
+  }
 	// exactly one exists
 	return metricCount == 1
 }
@@ -1835,6 +1842,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		metricTypesCount++
 	}
 	if ms.AzureMonitor != nil {
+		metricTypesCount++
+	}
+	if ms.OpenTelemetry != nil {
 		metricTypesCount++
 	}
 	if metricTypesCount != expectedCountOfMetricTypes {
@@ -3203,7 +3213,7 @@ func validateSumoLogicMetricsConfiguration(sl v.StructLevel, sumoLogicMetric Sum
 		sl.ReportError(sumoLogicMetric.Quantization, "quantization", "Quantization", msg, "")
 	}
 
-	var availableRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
+	availableRollups := []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
 	isRollupValid := false
 	rollup := *sumoLogicMetric.Rollup
 	for _, availableRollup := range availableRollups {

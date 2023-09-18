@@ -56,6 +56,7 @@ type AgentSpec struct {
 	InfluxDB                *InfluxDBAgentConfig            `json:"influxdb,omitempty"`
 	AzureMonitor            *AzureMonitorAgentConfig        `json:"azureMonitor,omitempty"`
 	GCM                     *GCMAgentConfig                 `json:"gcm,omitempty"`
+	OpenTelemetry           *OpenTelemetryAgentConfig       `json:"openTelemetry,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval        `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                     `json:"queryDelay,omitempty"`
 }
@@ -108,6 +109,8 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return GCM, nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor, nil
+	case spec.OpenTelemetry != nil:
+		return OpenTelemetry, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -143,8 +146,7 @@ type AmazonPrometheusAgentConfig struct {
 
 // RedshiftAgentConfig represents content of Redshift configuration typical for Agent Object
 // Since the agent does not require additional configuration this is just a marker struct.
-type RedshiftAgentConfig struct {
-}
+type RedshiftAgentConfig struct{}
 
 // OpenTSDBAgentConfig represents content of OpenTSDB Configuration typical for Agent Object.
 type OpenTSDBAgentConfig struct {
@@ -183,8 +185,7 @@ type PingdomAgentConfig struct {
 
 // GCMAgentConfig represents content of GCM configuration.
 // Since the agent does not require additional configuration this is just a marker struct.
-type GCMAgentConfig struct {
-}
+type GCMAgentConfig struct{}
 
 // DynatraceAgentConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceAgentConfig struct {
@@ -203,8 +204,7 @@ type GraphiteAgentConfig struct {
 
 // BigQueryAgentConfig represents content of BigQuery configuration.
 // Since the agent does not require additional configuration this is just a marker struct.
-type BigQueryAgentConfig struct {
-}
+type BigQueryAgentConfig struct{}
 
 // ThousandEyesAgentConfig represents content of ThousandEyes Configuration typical for Agent Object.
 type ThousandEyesAgentConfig struct {
@@ -236,6 +236,11 @@ type SplunkAgentConfig struct {
 type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
 }
+
+// OTelAgentConfig does not include any configuration.
+// The OTel collector pushing telemetry to Nobl9 defines
+// all the rules for processing, gathering and exporting the metrics.
+type OpenTelemetryAgentConfig struct{}
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
 type AgentWithSLOs struct {

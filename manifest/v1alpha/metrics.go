@@ -41,6 +41,7 @@ type MetricSpec struct {
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
+	OpenTelemetry       *PrometheusMetric          `json:"openTelemetry,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -436,6 +437,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return GCM
 	case m.AzureMonitor != nil:
 		return AzureMonitor
+	case m.OpenTelemetry != nil:
+		return OpenTelemetry
 	default:
 		return 0
 	}
@@ -514,6 +517,8 @@ func (m *MetricSpec) Query() interface{} {
 			return *azureMonitorCopy.Dimensions[i].Name < *azureMonitorCopy.Dimensions[j].Name
 		})
 		return azureMonitorCopy
+	case OpenTelemetry:
+		return m.Prometheus
 	default:
 		return nil
 	}

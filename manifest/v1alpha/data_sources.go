@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	OpenTelemetry
 )
 
 const DatasourceStableChannel = "stable"
@@ -124,6 +125,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	OpenTelemetry:       "OpenTelemetry",
 }
 
 func (dst DataSourceType) String() string {
@@ -160,10 +162,12 @@ type CollectionJitterDuration struct {
 	Unit  CollectionJitterDurationUnit `json:"unit" validate:"required"`
 }
 
-type HistoricalRetrievalDurationUnit string
-type QueryDelayDurationUnit string
-type QueryIntervalDurationUnit string
-type CollectionJitterDurationUnit string
+type (
+	HistoricalRetrievalDurationUnit string
+	QueryDelayDurationUnit          string
+	QueryIntervalDurationUnit       string
+	CollectionJitterDurationUnit    string
+)
 
 const (
 	HRDDay         HistoricalRetrievalDurationUnit = "Day"
@@ -360,6 +364,7 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
 	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
+	OpenTelemetry.String():    {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -496,6 +501,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzureMonitor.String(): {
 			Value: ptr(5),
 			Unit:  QDDMinute,
+		},
+		OpenTelemetry.String(): {
+			Value: ptr(0),
+			Unit:  QDDSecond,
 		},
 	}
 }
