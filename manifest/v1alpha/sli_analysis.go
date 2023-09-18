@@ -11,6 +11,7 @@ type SLIAnalysis struct {
 	Metadata        AnalysisMetadata     `json:"metadata"`
 	MetricSpec      AnalysisMetricSpec   `json:"metricSpec"`
 	CalculationSpec *AnalysisCalculation `json:"calculationSpec,omitempty"`
+	AlertPolicy     AlertPolicy          `json:"alertPolicy,omit"`
 	Period          AnalysisPeriod       `json:"period"`
 	Status          string               `json:"status"`
 	CreatedAt       string               `json:"createdAt"`
