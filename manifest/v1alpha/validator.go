@@ -1207,9 +1207,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 	if azureMonitorCount > 0 {
 		metricCount++
 	}
-  if openTelemetryCount > 0 {
-    metricCount++
-  }
+	if openTelemetryCount > 0 {
+		metricCount++
+	}
 	// exactly one exists
 	return metricCount == 1
 }
@@ -1744,6 +1744,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.OpenTelemetry != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -1768,6 +1771,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "openTelemetry", "OpenTelemetry", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -1871,6 +1875,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "openTelemetry", "OpenTelemetry", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
