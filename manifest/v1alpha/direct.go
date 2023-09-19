@@ -183,6 +183,18 @@ type AnomalySpec struct {
 	Status       string  `json:"status" example:"Detected"`
 	DetectedTime string  `json:"detectedTime"`
 	ResolvedTime *string `json:"resolvedTime,omitempty"`
+
+	ObjectiveRef AnomalyObjectiveRef `json:"objectiveRef,omitempty"`
+	DirectRef    AnomalyDirectRef    `json:"directRef,omitempty"`
+}
+
+type AnomalyObjectiveRef struct {
+	Value       float64 `json:"value" example:"100"`
+	Name        string  `json:"name" validate:"omitempty"`
+	DisplayName string  `json:"displayName" validate:"omitempty"`
+}
+
+type AnomalyDirectRef struct {
 }
 
 // DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object.
