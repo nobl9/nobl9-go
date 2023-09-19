@@ -159,8 +159,30 @@ type DirectStatus struct {
 	Anomalies  []Anomaly `json:"anomalies"`
 }
 
+// TODO go back to this struct after hackathon
+// TODO move out of direct package
 type Anomaly struct {
+	APIVersion string          `json:"apiVersion"`
+	Kind       manifest.Kind   `json:"kind"`
+	Metadata   AnomalyMetadata `json:"metadata"`
+	Spec       AnomalySpec     `json:"spec"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
+
+	// TODO move to spec
 	Type string `json:"type" example:"rate-limits"`
+}
+
+type AnomalyMetadata struct {
+	Name    string `json:"name" validate:"required,objectName"`
+	Project string `json:"project,omitempty" validate:"objectName"`
+}
+
+type AnomalySpec struct {
+	Status       string  `json:"status" example:"Detected"`
+	DetectedTime string  `json:"detectedTime"`
+	ResolvedTime *string `json:"resolvedTime,omitempty"`
 }
 
 // DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object.
