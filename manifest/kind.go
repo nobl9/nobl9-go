@@ -19,6 +19,7 @@ DataExport
 RoleBinding
 Annotation
 UserGroup
+Anomaly
 )*/
 type Kind int
 

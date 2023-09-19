@@ -38,11 +38,13 @@ const (
 	KindAnnotation
 	// KindUserGroup is a Kind of type UserGroup.
 	KindUserGroup
+	// KindAnomaly is a Kind of type Anomaly.
+	KindAnomaly
 )
 
 var ErrInvalidKind = fmt.Errorf("not a valid Kind, try [%s]", strings.Join(_KindNames, ", "))
 
-const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodDirectDataExportRoleBindingAnnotationUserGroup"
+const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodDirectDataExportRoleBindingAnnotationUserGroupAnomaly"
 
 var _KindNames = []string{
 	_KindName[0:3],
@@ -58,6 +60,7 @@ var _KindNames = []string{
 	_KindName[77:88],
 	_KindName[88:98],
 	_KindName[98:107],
+	_KindName[107:114],
 }
 
 // KindNames returns a list of possible string values of Kind.
@@ -83,6 +86,7 @@ func KindValues() []Kind {
 		KindRoleBinding,
 		KindAnnotation,
 		KindUserGroup,
+		KindAnomaly,
 	}
 }
 
@@ -100,6 +104,7 @@ var _KindMap = map[Kind]string{
 	KindRoleBinding:  _KindName[77:88],
 	KindAnnotation:   _KindName[88:98],
 	KindUserGroup:    _KindName[98:107],
+	KindAnomaly:      _KindName[107:114],
 }
 
 // String implements the Stringer interface.
@@ -118,32 +123,34 @@ func (x Kind) IsValid() bool {
 }
 
 var _KindValue = map[string]Kind{
-	_KindName[0:3]:                     KindSLO,
-	strings.ToLower(_KindName[0:3]):    KindSLO,
-	_KindName[3:10]:                    KindService,
-	strings.ToLower(_KindName[3:10]):   KindService,
-	_KindName[10:15]:                   KindAgent,
-	strings.ToLower(_KindName[10:15]):  KindAgent,
-	_KindName[15:26]:                   KindAlertPolicy,
-	strings.ToLower(_KindName[15:26]):  KindAlertPolicy,
-	_KindName[26:38]:                   KindAlertSilence,
-	strings.ToLower(_KindName[26:38]):  KindAlertSilence,
-	_KindName[38:43]:                   KindAlert,
-	strings.ToLower(_KindName[38:43]):  KindAlert,
-	_KindName[43:50]:                   KindProject,
-	strings.ToLower(_KindName[43:50]):  KindProject,
-	_KindName[50:61]:                   KindAlertMethod,
-	strings.ToLower(_KindName[50:61]):  KindAlertMethod,
-	_KindName[61:67]:                   KindDirect,
-	strings.ToLower(_KindName[61:67]):  KindDirect,
-	_KindName[67:77]:                   KindDataExport,
-	strings.ToLower(_KindName[67:77]):  KindDataExport,
-	_KindName[77:88]:                   KindRoleBinding,
-	strings.ToLower(_KindName[77:88]):  KindRoleBinding,
-	_KindName[88:98]:                   KindAnnotation,
-	strings.ToLower(_KindName[88:98]):  KindAnnotation,
-	_KindName[98:107]:                  KindUserGroup,
-	strings.ToLower(_KindName[98:107]): KindUserGroup,
+	_KindName[0:3]:                      KindSLO,
+	strings.ToLower(_KindName[0:3]):     KindSLO,
+	_KindName[3:10]:                     KindService,
+	strings.ToLower(_KindName[3:10]):    KindService,
+	_KindName[10:15]:                    KindAgent,
+	strings.ToLower(_KindName[10:15]):   KindAgent,
+	_KindName[15:26]:                    KindAlertPolicy,
+	strings.ToLower(_KindName[15:26]):   KindAlertPolicy,
+	_KindName[26:38]:                    KindAlertSilence,
+	strings.ToLower(_KindName[26:38]):   KindAlertSilence,
+	_KindName[38:43]:                    KindAlert,
+	strings.ToLower(_KindName[38:43]):   KindAlert,
+	_KindName[43:50]:                    KindProject,
+	strings.ToLower(_KindName[43:50]):   KindProject,
+	_KindName[50:61]:                    KindAlertMethod,
+	strings.ToLower(_KindName[50:61]):   KindAlertMethod,
+	_KindName[61:67]:                    KindDirect,
+	strings.ToLower(_KindName[61:67]):   KindDirect,
+	_KindName[67:77]:                    KindDataExport,
+	strings.ToLower(_KindName[67:77]):   KindDataExport,
+	_KindName[77:88]:                    KindRoleBinding,
+	strings.ToLower(_KindName[77:88]):   KindRoleBinding,
+	_KindName[88:98]:                    KindAnnotation,
+	strings.ToLower(_KindName[88:98]):   KindAnnotation,
+	_KindName[98:107]:                   KindUserGroup,
+	strings.ToLower(_KindName[98:107]):  KindUserGroup,
+	_KindName[107:114]:                  KindAnomaly,
+	strings.ToLower(_KindName[107:114]): KindAnomaly,
 }
 
 // ParseKind attempts to convert a string to a Kind.
