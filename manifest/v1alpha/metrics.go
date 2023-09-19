@@ -518,7 +518,7 @@ func (m *MetricSpec) Query() interface{} {
 		})
 		return azureMonitorCopy
 	case OpenTelemetry:
-		return m.Prometheus
+		return m.OpenTelemetry
 	default:
 		return nil
 	}
