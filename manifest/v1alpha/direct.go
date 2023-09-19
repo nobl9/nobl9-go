@@ -155,7 +155,12 @@ type PublicDirectSpec struct {
 
 // DirectStatus represents content of Status optional for Direct Object
 type DirectStatus struct {
-	DirectType string `json:"directType" example:"Datadog"`
+	DirectType string    `json:"directType" example:"Datadog"`
+	Anomalies  []Anomaly `json:"anomalies"`
+}
+
+type Anomaly struct {
+	Type string `json:"type" example:"rate-limits"`
 }
 
 // DatadogDirectConfig represents content of Datadog Configuration typical for Direct Object.
