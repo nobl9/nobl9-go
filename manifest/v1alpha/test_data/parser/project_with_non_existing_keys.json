@@ -1,0 +1,11 @@
+{
+  "apiVersion": "n9/v1alpha",
+  "kind": "Project",
+  "metadata": {
+    "name": "cloudwatch-agent",
+    "horsepower": 100
+  },
+  "spec": {
+    "description": ""
+  }
+}
