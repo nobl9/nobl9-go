@@ -13,7 +13,67 @@ import (
 
 type unmarshalFunc func(v interface{}) error
 
+// UseGenericObjects is a global flag instructing ParseObject to decode
+// raw object into GenericObject instead of a concrete representation.
+var UseGenericObjects = false
+
 func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) (manifest.Object, error) {
+	unmarshal, err := getUnmarshalFunc(data, format)
+	if err != nil {
+		return nil, err
+	}
+
+	var object manifest.Object
+	if UseGenericObjects {
+		object, err = parseGenericObject(unmarshal)
+	} else {
+		object, err = parseObject(kind, unmarshal)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return object, nil
+}
+
+func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, error) {
+	//exhaustive:enforce
+	switch kind {
+	case manifest.KindService:
+		return genericParseObject[Service](unmarshal)
+	case manifest.KindSLO:
+		return genericParseObject[SLO](unmarshal)
+	case manifest.KindProject:
+		return genericParseObject[Project](unmarshal)
+	case manifest.KindAgent:
+		return genericParseObject[Agent](unmarshal)
+	case manifest.KindDirect:
+		return genericParseObject[Direct](unmarshal)
+	case manifest.KindAlert:
+		return genericParseObject[Alert](unmarshal)
+	case manifest.KindAlertMethod:
+		return genericParseObject[AlertMethod](unmarshal)
+	case manifest.KindAlertPolicy:
+		return genericParseObject[AlertPolicy](unmarshal)
+	case manifest.KindAlertSilence:
+		return genericParseObject[AlertSilence](unmarshal)
+	case manifest.KindRoleBinding:
+		return genericParseObject[RoleBinding](unmarshal)
+	case manifest.KindDataExport:
+		return genericParseObject[DataExport](unmarshal)
+	case manifest.KindAnnotation:
+		return genericParseObject[Annotation](unmarshal)
+	case manifest.KindUserGroup:
+		return genericParseObject[UserGroup](unmarshal)
+	default:
+		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
+	}
+}
+
+func parseGenericObject(unmarshal unmarshalFunc) (manifest.Object, error) {
+	return genericParseObject[GenericObject](unmarshal)
+}
+
+func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc, error) {
 	var unmarshal unmarshalFunc
 	switch format {
 	case manifest.ObjectFormatJSON:
@@ -37,46 +97,7 @@ func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) 
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)
 	}
-
-	var (
-		object manifest.Object
-		err    error
-	)
-	//exhaustive:enforce
-	switch kind {
-	case manifest.KindService:
-		object, err = genericParseObject[Service](unmarshal)
-	case manifest.KindSLO:
-		object, err = genericParseObject[SLO](unmarshal)
-	case manifest.KindProject:
-		object, err = genericParseObject[Project](unmarshal)
-	case manifest.KindAgent:
-		object, err = genericParseObject[Agent](unmarshal)
-	case manifest.KindDirect:
-		object, err = genericParseObject[Direct](unmarshal)
-	case manifest.KindAlert:
-		object, err = genericParseObject[Alert](unmarshal)
-	case manifest.KindAlertMethod:
-		object, err = genericParseObject[AlertMethod](unmarshal)
-	case manifest.KindAlertPolicy:
-		object, err = genericParseObject[AlertPolicy](unmarshal)
-	case manifest.KindAlertSilence:
-		object, err = genericParseObject[AlertSilence](unmarshal)
-	case manifest.KindRoleBinding:
-		object, err = genericParseObject[RoleBinding](unmarshal)
-	case manifest.KindDataExport:
-		object, err = genericParseObject[DataExport](unmarshal)
-	case manifest.KindAnnotation:
-		object, err = genericParseObject[Annotation](unmarshal)
-	case manifest.KindUserGroup:
-		object, err = genericParseObject[UserGroup](unmarshal)
-	default:
-		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return object, nil
+	return unmarshal, nil
 }
 
 func genericParseObject[T manifest.Object](unmarshal unmarshalFunc) (T, error) {
