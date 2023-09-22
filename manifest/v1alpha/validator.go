@@ -1946,6 +1946,7 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneDirectTypeRequired", "")
+		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "azureMonitor", "AzureMonitor", "exactlyOneDirectTypeRequired", "")
 	}
 }
