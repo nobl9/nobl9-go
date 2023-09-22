@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	genericFieldKind           = "apiVersion"
-	genericFieldVersion        = "kind"
+	genericFieldVersion        = "apiVersion"
+	genericFieldKind           = "kind"
 	genericFieldMetadata       = "metadata"
 	genericFieldName           = "name"
 	genericFieldProject        = "project"
