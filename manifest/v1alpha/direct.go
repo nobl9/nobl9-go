@@ -396,7 +396,7 @@ type PublicSumoLogicDirectConfig struct {
 // AzureMonitorDirectConfig represents content of AzureMonitor Configuration typical for Direct Object.
 type AzureMonitorDirectConfig struct {
 	TenantID     string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
-	ClientID     string `json:"clientID"`
+	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 }
 
@@ -404,7 +404,7 @@ type AzureMonitorDirectConfig struct {
 // typical for Direct Object without secrets.
 type PublicAzureMonitorDirectConfig struct {
 	TenantID           string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"` //nolint: lll
-	HiddenClientID     string `json:"clientID"`
+	HiddenClientID     string `json:"clientId"`
 	HiddenClientSecret string `json:"clientSecret"`
 }
 
