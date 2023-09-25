@@ -113,7 +113,7 @@ func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 	responsePayload := []manifest.Object{
 		v1alpha.UserGroup{
 			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
+			Kind:       manifest.KindUserGroup,
 			Metadata: v1alpha.UserGroupMetadata{
 				Name: "service1",
 			},

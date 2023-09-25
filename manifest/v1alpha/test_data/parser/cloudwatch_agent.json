@@ -7,7 +7,7 @@
     "project": "default"
   },
   "spec": {
-    "cloudwatch": {},
+    "cloudWatch": {},
     "sourceOf": [
       "Metrics"
     ]
