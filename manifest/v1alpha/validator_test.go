@@ -69,123 +69,6 @@ func TestValidateURLDynatrace(t *testing.T) {
 	}
 }
 
-func TestValidateLabels(t *testing.T) {
-	testCases := []struct {
-		desc    string
-		labels  Labels
-		isValid bool
-	}{
-		{
-			desc: "valid: simple strings",
-			labels: map[string][]string{
-				"net":     {"vast", "infinite"},
-				"project": {"nobl9"},
-			},
-			isValid: true,
-		},
-		{
-			desc: "invalid: empty label key",
-			labels: map[string][]string{
-				"": {"vast", "infinite"},
-			},
-			isValid: false,
-		},
-		{
-			desc: "valid: one empty label value",
-			labels: map[string][]string{
-				"net": {""},
-			},
-			isValid: true,
-		},
-		{
-			desc: "invalid: two empty label values (because duplicates)",
-			labels: map[string][]string{
-				"net": {"", ""},
-			},
-			isValid: false,
-		},
-		{
-			desc: "valid: no label values for a given key",
-			labels: map[string][]string{
-				"net": {},
-			},
-			isValid: true,
-		},
-		{
-			desc: "valid: no label values for a given key",
-			labels: map[string][]string{
-				"net": {},
-			},
-			isValid: true,
-		},
-		{
-			desc: "invalid: label key is too long (over 63 chars)",
-			labels: map[string][]string{
-				"netnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnet": {},
-			},
-			isValid: false,
-		},
-		{
-			desc: "invalid: label key starts with non letter",
-			labels: map[string][]string{
-				"9net": {},
-			},
-			isValid: false,
-		},
-		{
-			desc: "invalid: label key ends with non alphanumeric char",
-			labels: map[string][]string{
-				"net_": {},
-			},
-			isValid: false,
-		},
-		{
-			desc: "invalid: label key contains uppercase character",
-			labels: map[string][]string{
-				"nEt": {},
-			},
-			isValid: false,
-		},
-		{
-			desc: "invalid: label value is to long (over 200 chars)",
-			labels: map[string][]string{
-				"net": {`
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
-				`},
-			},
-			isValid: false,
-		},
-		{
-			desc: "valid: label value with uppercase characters",
-			labels: map[string][]string{
-				"net": {"THE NET is vast AND INFINITE"},
-			},
-			isValid: true,
-		},
-		{
-			desc: "valid: label value with uppercase characters",
-			labels: map[string][]string{
-				"net": {"the-net-is-vast-and-infinite"},
-			},
-			isValid: true,
-		},
-		{
-			desc: "valid: any unicode with rune count 1-200",
-			labels: map[string][]string{
-				"net": {"\uE005[\\\uE006\uE007"},
-			},
-			isValid: true,
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			assert.Equal(t, tC.isValid, validateLabels(tC.labels))
-		})
-	}
-}
-
 func TestValidateHeaderName(t *testing.T) {
 	testCases := []struct {
 		desc       string
@@ -942,7 +825,7 @@ func TestLightstepMetric(t *testing.T) {
 
 func TestIsBadOverTotalEnabledForDataSource_appd(t *testing.T) {
 	slo := SLOSpec{
-		Thresholds: []Threshold{{CountMetrics: &CountMetricsSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
 			BadMetric:   &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
 			TotalMetric: &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
 		}}},
@@ -954,7 +837,7 @@ func TestIsBadOverTotalEnabledForDataSource_appd(t *testing.T) {
 
 func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	slo := SLOSpec{
-		Thresholds: []Threshold{{CountMetrics: &CountMetricsSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
 			BadMetric:   &MetricSpec{CloudWatch: &CloudWatchMetric{}},
 			TotalMetric: &MetricSpec{CloudWatch: &CloudWatchMetric{}},
 		}}},
@@ -964,30 +847,93 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
-func TestAlertConditionOpSupport(t *testing.T) {
-	allOps := []string{"gt", "lt", "lte", "gte", "noop"}
+func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
+	slo := SLOSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
+			TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
+		}}},
+	}
+
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}
+
+func TestAlertConditionOnlyMeasurementAverageBurnRateIsAllowedToUseAlertingWindow(t *testing.T) {
 	validate := NewValidator()
-	for condition, allowedOps := range map[AlertCondition][]string{
+	for condition, isValid := range map[AlertCondition]bool{
+		{
+			Measurement:    MeasurementTimeToBurnEntireBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementTimeToBurnBudget.String(),
+			AlertingWindow: "10m",
+			Value:          "30m",
+			Operator:       LessThan.String(),
+		}: false,
+		{
+			Measurement:    MeasurementBurnedBudget.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: false,
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			AlertingWindow: "10m",
+			Value:          30.0,
+			Operator:       GreaterThanEqual.String(),
+		}: true,
+	} {
+		t.Run(condition.Measurement, func(t *testing.T) {
+			err := validate.Check(condition)
+			if isValid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
+func TestAlertConditionAllowedOptionalOperatorForMeasurementType(t *testing.T) {
+	const emptyOperator = ""
+	allOps := []string{"gt", "lt", "lte", "gte", "noop", ""}
+	validate := NewValidator()
+	for _, condition := range []AlertCondition{
 		{
 			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lte"},
+		},
 		{
 			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
-		}: {"lt"},
+		},
 		{
 			Measurement: MeasurementBurnedBudget.String(),
 			Value:       30.0,
-		}: {"gte"},
+		},
 		{
-			Measurement: MeasurementAverageBurnRate.String(),
-			Value:       30.0,
-		}: {"gte"},
+			Measurement:      MeasurementAverageBurnRate.String(),
+			Value:            30.0,
+			LastsForDuration: "5m",
+		},
+		{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			Value:          30.0,
+			AlertingWindow: "5m",
+		},
 	} {
 		t.Run(condition.Measurement, func(t *testing.T) {
+			measurement, _ := ParseMeasurement(condition.Measurement)
+			defaultOperator, err := GetExpectedOperatorForMeasurement(measurement)
+			assert.NoError(t, err)
+
+			allowedOps := []string{defaultOperator.String(), emptyOperator}
 			for _, op := range allOps {
 				condition.Operator = op
 				err := validate.Check(condition)
@@ -996,6 +942,47 @@ func TestAlertConditionOpSupport(t *testing.T) {
 				} else {
 					assert.Error(t, err)
 				}
+			}
+		})
+	}
+}
+
+func TestAlertConditionOnlyAlertingWindowOrLastsForAllowed(t *testing.T) {
+	for name, test := range map[string]struct {
+		lastsForDuration string
+		alertingWindow   string
+		isValid          bool
+	}{
+		"both provided 'alertingWindow' and 'lastsFor', invalid": {
+			alertingWindow:   "5m",
+			lastsForDuration: "5m",
+			isValid:          false,
+		},
+		"only 'alertingWindow', valid": {
+			alertingWindow: "5m",
+			isValid:        true,
+		},
+		"only 'lastsFor', valid": {
+			lastsForDuration: "5m",
+			isValid:          true,
+		},
+		"no 'alertingWindow' and no 'lastsFor', valid": {
+			isValid: true,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			condition := AlertCondition{
+				Measurement:      MeasurementAverageBurnRate.String(),
+				Operator:         "gte",
+				Value:            1.0,
+				AlertingWindow:   test.alertingWindow,
+				LastsForDuration: test.lastsForDuration,
+			}
+			validationErr := NewValidator().Check(condition)
+			if test.isValid {
+				assert.NoError(t, validationErr)
+			} else {
+				assert.Error(t, validationErr)
 			}
 		})
 	}
@@ -1013,6 +1000,62 @@ func TestIsReleaseChannelValid(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, test.IsValid, isValidReleaseChannel(test.ReleaseChannel))
+		})
+	}
+}
+
+func TestAlertingWindowValidation(t *testing.T) {
+	for testCase, isValid := range map[string]bool{
+		// Valid
+		"5m":             true,
+		"1h":             true,
+		"72h":            true,
+		"1h30m":          true,
+		"1h1m60s":        true,
+		"300s":           true,
+		"0.1h":           true,
+		"300000ms":       true,
+		"300000000000ns": true,
+
+		// Invalid: Too short
+		"30000000000ns": false,
+		"3m":            false,
+		"120s":          false,
+		"555ms":         false,
+		"555ns":         false,
+		"555us":         false,
+		"555µs":         false,
+
+		// Invalid: Too long
+		"555h": false,
+		"555d": false,
+
+		// Invalid: Not supported unit
+		// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (ref. time.ParseDuration)
+		"0.01y": false,
+		"0.5w":  false,
+		"1w":    false,
+
+		// Invalid: Not a minute precision
+		"5m30s":  false,
+		"1h30s":  false,
+		"1h5m5s": false,
+		"0.01h":  false,
+		"555s":   false,
+	} {
+		condition := AlertCondition{
+			Measurement:    MeasurementAverageBurnRate.String(),
+			Value:          1.0,
+			AlertingWindow: testCase,
+		}
+
+		t.Run(testCase, func(t *testing.T) {
+			err := NewValidator().Check(condition)
+			if isValid {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
 		})
 	}
 }

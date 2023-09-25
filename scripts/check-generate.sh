@@ -18,7 +18,7 @@ main() {
 
   CHANGED=$(git -C "$TMP_DIR" diff --name-only "${ENUM_PATH}")
   if [ -n "${CHANGED}" ]; then
-    printf >&2 "There are generated code changes that are not committed:\n%s\n" "$CHANGED"
+    printf >&2 "There are generated changes that are not committed:\n%s\n" "$CHANGED"
     exit 1
   else
     echo "Looks good!"

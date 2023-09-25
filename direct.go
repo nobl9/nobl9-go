@@ -56,8 +56,9 @@ type BigQueryDirectConfig struct {
 
 // CloudWatchDirectConfig represents content of CloudWatch configuration typical for Direct Object.
 type CloudWatchDirectConfig struct {
-	AccessKeyID     string `json:"accessKeyID,omitempty" example:"secret"`
-	SecretAccessKey string `json:"secretAccessKey,omitempty" example:"secret"`
+	AccessKeyID     string `json:"accessKeyID,omitempty"`
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
 // DatadogDirectConfig represents content of Datadog configuration typical for Direct Object.
@@ -114,6 +115,7 @@ type RedshiftDirectConfig struct {
 	AccessKeyID     string `json:"accessKeyID,omitempty" example:"secret"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty" example:"secret"`
 	SecretARN       string `json:"secretARN,omitempty"`
+	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
 // SplunkDirectConfig represents content of Splunk configuration typical for Direct Object.

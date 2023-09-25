@@ -11,7 +11,7 @@ type CountMetricsSpec struct {
 	TotalMetric *MetricSpec `json:"total" validate:"required"`
 }
 
-// RawMetricSpec represents integration with a metric source for a particular threshold
+// RawMetricSpec represents integration with a metric source for a particular objective.
 type RawMetricSpec struct {
 	MetricQuery *MetricSpec `json:"query" validate:"required"`
 }
@@ -40,6 +40,7 @@ type MetricSpec struct {
 	Instana             *InstanaMetric             `json:"instana,omitempty"`
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
+	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -222,6 +223,21 @@ type GrafanaLokiMetric struct {
 	Logql *string `json:"logql" validate:"required"`
 }
 
+// AzureMonitorMetric represents metric from AzureMonitor
+type AzureMonitorMetric struct {
+	ResourceID      string                        `json:"resourceId" validate:"required"`
+	MetricName      string                        `json:"metricName" validate:"required"`
+	Aggregation     string                        `json:"aggregation" validate:"required"`
+	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
+	MetricNamespace string                        `json:"metricNamespace,omitempty"`
+}
+
+// AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
+type AzureMonitorMetricDimension struct {
+	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
+	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
+}
+
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
 	return slo.Indicator.RawMetric != nil
 }
@@ -236,8 +252,8 @@ func (slo *SLOSpec) HasRawMetric() bool {
 	if slo.containsIndicatorRawMetric() {
 		return true
 	}
-	for _, t := range slo.Thresholds {
-		if t.HasRawMetricQuery() {
+	for _, objective := range slo.Objectives {
+		if objective.HasRawMetricQuery() {
 			return true
 		}
 	}
@@ -250,24 +266,24 @@ func (slo *SLOSpec) RawMetrics() []*MetricSpec {
 		return []*MetricSpec{slo.Indicator.RawMetric}
 	}
 	rawMetrics := make([]*MetricSpec, 0, slo.ObjectivesRawMetricsCount())
-	for _, thresh := range slo.Thresholds {
-		if thresh.RawMetric != nil {
-			rawMetrics = append(rawMetrics, thresh.RawMetric.MetricQuery)
+	for _, objective := range slo.Objectives {
+		if objective.RawMetric != nil {
+			rawMetrics = append(rawMetrics, objective.RawMetric.MetricQuery)
 		}
 	}
 	return rawMetrics
 }
 
-// HasRawMetricQuery returns true if Threshold has raw metric with query set.
-func (t *Threshold) HasRawMetricQuery() bool {
-	return t.RawMetric != nil && t.RawMetric.MetricQuery != nil
+// HasRawMetricQuery returns true if Objective has raw metric with query set.
+func (o *Objective) HasRawMetricQuery() bool {
+	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
 }
 
-// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's thresholds.
+// ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
 func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
-		if thresh.HasRawMetricQuery() {
+	for _, objective := range slo.Objectives {
+		if objective.HasRawMetricQuery() {
 			count++
 		}
 	}
@@ -276,31 +292,31 @@ func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 
 // HasCountMetrics returns true if SLOSpec has count metrics.
 func (slo *SLOSpec) HasCountMetrics() bool {
-	for _, t := range slo.Thresholds {
-		if t.HasCountMetrics() {
+	for _, objective := range slo.Objectives {
+		if objective.HasCountMetrics() {
 			return true
 		}
 	}
 	return false
 }
 
-// HasCountMetrics returns true if Threshold has count metrics.
-func (t *Threshold) HasCountMetrics() bool {
-	return t.CountMetrics != nil
+// HasCountMetrics returns true if Objective has count metrics.
+func (o *Objective) HasCountMetrics() bool {
+	return o.CountMetrics != nil
 }
 
-// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricsCount() int {
 	var count int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics != nil {
-			if thresh.CountMetrics.GoodMetric != nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics != nil {
+			if objective.CountMetrics.GoodMetric != nil {
 				count++
 			}
-			if thresh.CountMetrics.TotalMetric != nil {
+			if objective.CountMetrics.TotalMetric != nil {
 				count++
 			}
-			if thresh.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(thresh) {
+			if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
 				count++
 			}
 		}
@@ -308,40 +324,40 @@ func (slo *SLOSpec) CountMetricsCount() int {
 	return count
 }
 
-// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetrics() []*MetricSpec {
 	countMetrics := make([]*MetricSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil {
-			countMetrics[i] = thresh.CountMetrics.GoodMetric
+		if objective.CountMetrics.GoodMetric != nil {
+			countMetrics[i] = objective.CountMetrics.GoodMetric
 			i++
 		}
-		if thresh.CountMetrics.TotalMetric != nil {
-			countMetrics[i] = thresh.CountMetrics.TotalMetric
+		if objective.CountMetrics.TotalMetric != nil {
+			countMetrics[i] = objective.CountMetrics.TotalMetric
 			i++
 		}
-		if thresh.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(thresh) {
-			countMetrics[i] = thresh.CountMetrics.BadMetric
+		if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
+			countMetrics[i] = objective.CountMetrics.BadMetric
 			i++
 		}
 	}
 	return countMetrics
 }
 
-// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's thresholds.
+// CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's objectives.
 func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 	countMetrics := make([]*CountMetricsSpec, slo.CountMetricsCount())
 	var i int
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil && thresh.CountMetrics.TotalMetric != nil {
-			countMetrics[i] = thresh.CountMetrics
+		if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.TotalMetric != nil {
+			countMetrics[i] = objective.CountMetrics
 			i++
 		}
 	}
@@ -349,15 +365,15 @@ func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 }
 
 func (slo *SLOSpec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
-	for _, thresh := range slo.Thresholds {
-		if thresh.CountMetrics == nil {
+	for _, objective := range slo.Objectives {
+		if objective.CountMetrics == nil {
 			continue
 		}
-		if thresh.CountMetrics.GoodMetric != nil {
-			good = append(good, thresh.CountMetrics.GoodMetric)
+		if objective.CountMetrics.GoodMetric != nil {
+			good = append(good, objective.CountMetrics.GoodMetric)
 		}
-		if thresh.CountMetrics.TotalMetric != nil {
-			total = append(total, thresh.CountMetrics.TotalMetric)
+		if objective.CountMetrics.TotalMetric != nil {
+			total = append(total, objective.CountMetrics.TotalMetric)
 		}
 	}
 	return
@@ -418,6 +434,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return InfluxDB
 	case m.GCM != nil:
 		return GCM
+	case m.AzureMonitor != nil:
+		return AzureMonitor
 	default:
 		return 0
 	}
@@ -482,6 +500,20 @@ func (m *MetricSpec) Query() interface{} {
 		return m.InfluxDB
 	case GCM:
 		return m.GCM
+	case AzureMonitor:
+		// To be clean, entire metric spec is copied so that original value is not mutated.
+		var azureMonitorCopy AzureMonitorMetric
+		azureMonitorCopy = *m.AzureMonitor
+		// Dimension list is optional. This is done so that during upsert empty slice and nil slice are treated equally.
+		if azureMonitorCopy.Dimensions == nil {
+			azureMonitorCopy.Dimensions = []AzureMonitorMetricDimension{}
+		}
+		// Dimensions are sorted so that metric_query = '...':jsonb comparison was insensitive to the order in slice.
+		// It assumes that all dimensions' names are unique (ensured by validation).
+		sort.Slice(azureMonitorCopy.Dimensions, func(i, j int) bool {
+			return *azureMonitorCopy.Dimensions[i].Name < *azureMonitorCopy.Dimensions[j].Name
+		})
+		return azureMonitorCopy
 	default:
 		return nil
 	}

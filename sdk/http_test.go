@@ -1,4 +1,4 @@
-package retryhttp
+package sdk
 
 import (
 	"context"
@@ -16,7 +16,7 @@ func TestCheckRetry(t *testing.T) {
 	t.Run("do not retry and drop an error on context cancellation", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		shouldRetry, err := checkRetry(ctx, nil, nil)
+		shouldRetry, err := httpCheckRetry(ctx, nil, nil)
 		require.Error(t, err)
 		assert.Equal(t, err, context.Canceled)
 		assert.False(t, shouldRetry)
@@ -26,13 +26,13 @@ func TestCheckRetry(t *testing.T) {
 		errs := []error{
 			errors.New("stopped after 10 redirects"),
 			x509.UnknownAuthorityError{},
-			NonRetryableError{},
+			httpNonRetryableError{},
 		}
 		for _, vErr := range urlVerificationErrors {
 			errs = append(errs, errors.New(vErr))
 		}
 		for _, err := range errs {
-			shouldRetry, err := checkRetry(context.Background(), nil, &url.Error{Err: err})
+			shouldRetry, err := httpCheckRetry(context.Background(), nil, &url.Error{Err: err})
 			require.NoError(t, err)
 			assert.False(t, shouldRetry)
 		}
@@ -43,7 +43,7 @@ func TestCheckRetry(t *testing.T) {
 			&url.Error{Err: errors.New("stopped!")},
 			errors.New("failed..."),
 		} {
-			shouldRetry, err := checkRetry(context.Background(), nil, err)
+			shouldRetry, err := httpCheckRetry(context.Background(), nil, err)
 			require.NoError(t, err)
 			assert.True(t, shouldRetry)
 		}
@@ -51,7 +51,7 @@ func TestCheckRetry(t *testing.T) {
 
 	t.Run("retry on 500 status codes, except 501", func(t *testing.T) {
 		for i := 500; i < 600; i++ {
-			shouldRetry, err := checkRetry(context.Background(), &http.Response{StatusCode: i}, nil)
+			shouldRetry, err := httpCheckRetry(context.Background(), &http.Response{StatusCode: i}, nil)
 			require.NoError(t, err)
 			if i == 501 {
 				assert.Falsef(t, shouldRetry, "do not retry on %d status code", i)
@@ -63,7 +63,7 @@ func TestCheckRetry(t *testing.T) {
 
 	t.Run("do not retry on other status codes", func(t *testing.T) {
 		for i := 200; i < 500; i++ {
-			shouldRetry, err := checkRetry(context.Background(), &http.Response{StatusCode: i}, nil)
+			shouldRetry, err := httpCheckRetry(context.Background(), &http.Response{StatusCode: i}, nil)
 			require.NoError(t, err)
 			assert.Falsef(t, shouldRetry, "do not retry on %d status code", i)
 		}

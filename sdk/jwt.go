@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"reflect"
 	"sync"
 	"time"
@@ -16,8 +15,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/sdk/retryhttp"
 )
 
 const (
@@ -71,26 +68,31 @@ func agentProfileFromClaims(claims jwt.MapClaims) (accessTokenAgentProfile, erro
 	return profile, err
 }
 
-type JWTParser struct {
-	HTTP        *http.Client
-	jwkFetchURL string
-	issuer      string
-	jwksCache   *cache.Cache
-	jwkSetMu    *sync.Mutex
+type (
+	getJWTIssuerFunc   = func() string
+	getJWKFetchURLFunc = func() string
+)
+
+type jwtParser struct {
+	HTTP           *http.Client
+	getJWKFetchURL getJWKFetchURLFunc
+	getIssuer      getJWTIssuerFunc
+	jwksCache      *cache.Cache
+	jwkSetMu       *sync.Mutex
 }
 
-func NewJWTParser(issuer string, jwkFetchURL *url.URL) (*JWTParser, error) {
-	return &JWTParser{
-		HTTP:        retryhttp.NewClient(jwtKeysRequestTimeout, nil),
-		jwksCache:   cache.New(time.Hour, time.Hour),
-		jwkSetMu:    new(sync.Mutex),
-		jwkFetchURL: jwkFetchURL.String(),
-		issuer:      issuer,
-	}, nil
+func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) *jwtParser {
+	return &jwtParser{
+		HTTP:           newRetryableHTTPClient(jwtKeysRequestTimeout, nil),
+		jwksCache:      cache.New(time.Hour, time.Hour),
+		jwkSetMu:       new(sync.Mutex),
+		getJWKFetchURL: jwkFetchURL,
+		getIssuer:      issuer,
+	}
 }
 
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.
-func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
+func (j *jwtParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 	if token == "" || clientID == "" {
 		return nil, errTokenParseMissingArguments
 	}
@@ -112,7 +114,7 @@ func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 		return nil, errors.Errorf("expecting JWT header to contain '%s' field as a string, was: '%s'",
 			jwk.KeyIDKey, kid)
 	}
-	jwkSet, err := a.getJWKSet(kid)
+	jwkSet, err := j.getJWKSet(kid)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +137,7 @@ func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 	if err = json.Unmarshal(rawClaims, &claims); err != nil {
 		return nil, err
 	}
-	if err = a.verifyClaims(claims, clientID); err != nil {
+	if err = j.verifyClaims(claims, clientID); err != nil {
 		return nil, err
 	}
 	return claims, err
@@ -143,40 +145,40 @@ func (a *JWTParser) Parse(token, clientID string) (jwt.MapClaims, error) {
 
 var jwksFetchFunction = jwk.Fetch
 
-func (a *JWTParser) getJWKSet(kid string) (jwk.Set, error) {
+func (j *jwtParser) getJWKSet(kid string) (jwk.Set, error) {
 	// There are three scenarios under which a token might not be found in the cache:
 	// 1. Cache is empty right after the startup.
 	// 2. Cache expired.
 	// 3. Signing keys have been rotated.
-	if keySet, found := a.jwksCache.Get(kid); found {
+	if keySet, found := j.jwksCache.Get(kid); found {
 		return keySet.(jwk.Set), nil
 	}
 	// Perform only one concurrent request to Okta's jwks endpoint.
-	a.jwkSetMu.Lock()
-	defer a.jwkSetMu.Unlock()
+	j.jwkSetMu.Lock()
+	defer j.jwkSetMu.Unlock()
 	// If a goroutine waited in queue to get the lock there is a chance that another goroutine already did the job.
-	if keySet, found := a.jwksCache.Get(kid); found {
+	if keySet, found := j.jwksCache.Get(kid); found {
 		return keySet.(jwk.Set), nil
 	}
 
 	// Fetch doesn't perform retries. Use background context because we don't want client disconnects to interrupt
 	// JWKS cache population process while other clients might be waiting for it.
-	jwkSet, err := jwksFetchFunction(context.Background(), a.jwkFetchURL, jwk.WithHTTPClient(a.HTTP))
+	jwkSet, err := jwksFetchFunction(context.Background(), j.getJWKFetchURL(), jwk.WithHTTPClient(j.HTTP))
 	if err != nil {
 		return nil, err
 	}
-	a.jwksCache.SetDefault(kid, jwkSet)
+	j.jwksCache.SetDefault(kid, jwkSet)
 	return jwkSet, nil
 }
 
-func (a *JWTParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
+func (j *jwtParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
 	claimsJSON := func() string {
 		data, _ := json.Marshal(claims)
 		return string(data)
 	}
 
-	if !claims.VerifyIssuer(a.issuer, true) {
-		return errors.Errorf("issuer claim validation failed, issuer: %s, claims: %v", a.issuer, claimsJSON())
+	if !claims.VerifyIssuer(j.getIssuer(), true) {
+		return errors.Errorf("issuer claim validation failed, issuer: %s, claims: %v", j.getIssuer(), claimsJSON())
 	}
 	// We're using 'cid' instead of audience ('aud') for some reason ¯\_(ツ)_/¯.
 	if cid, ok := claims[jwtTokenClaimCID].(string); !ok || cid != clientID {
