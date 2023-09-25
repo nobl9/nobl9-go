@@ -107,6 +107,10 @@ func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 // as it is extracted from the token claims.
 // credentials.organization should no tbe accessed directly, but rather through this method.
 func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
+	if c.config.DisableOkta {
+		return c.config.Organization, nil
+	}
+
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get organization")
 	}

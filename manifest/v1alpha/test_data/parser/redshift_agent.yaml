@@ -5,6 +5,6 @@ metadata:
   displayName: redshift-agent
   project: default
 spec:
-  cloudwatch: {}
+  redshift: {}
   sourceOf:
     - Metrics

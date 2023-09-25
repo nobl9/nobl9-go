@@ -34,6 +34,47 @@ func TestParseObject(t *testing.T) {
 	}
 }
 
+func TestParseObject_ErrorOnNonExistingKeys(t *testing.T) {
+	filename := "project_with_non_existing_keys"
+
+	t.Run("json", func(t *testing.T) {
+		jsonData, format := readParserTestFile(t, filename+".json")
+		_, err := ParseObject(jsonData, manifest.KindProject, format)
+		require.Error(t, err)
+		assert.ErrorContains(t, err, "horsepower")
+	})
+
+	t.Run("yaml", func(t *testing.T) {
+		yamlData, format := readParserTestFile(t, filename+".yaml")
+		_, err := ParseObject(yamlData, manifest.KindProject, format)
+		require.Error(t, err)
+		assert.ErrorContains(t, err, "horsepower")
+	})
+}
+
+func TestParseObjectUsingGenericObject(t *testing.T) {
+	UseGenericObjects = true
+	defer func() { UseGenericObjects = false }()
+
+	jsonData, format := readParserTestFile(t, "generic_project.json")
+	jsonObject, err := ParseObject(jsonData, manifest.KindProject, format)
+	require.NoError(t, err)
+
+	yamlData, format := readParserTestFile(t, "generic_project.json")
+	yamlObject, err := ParseObject(yamlData, manifest.KindProject, format)
+	require.NoError(t, err)
+
+	assert.Equal(t, jsonObject, yamlObject)
+	assert.Equal(t, GenericObject{
+		"apiVersion": "n9/v1alpha",
+		"kind":       "Project",
+		"metadata": map[string]interface{}{
+			"name": "default",
+			"fake": "fake",
+		},
+	}, jsonObject)
+}
+
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
 	data, err := parserTestData.ReadFile(filepath.Join("test_data", "parser", filename))

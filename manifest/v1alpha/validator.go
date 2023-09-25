@@ -14,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
+	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -91,8 +92,6 @@ var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
 	cloudWatchStatRegex             = buildCloudWatchStatRegex()
-	labelKeyRegexp                  = regexp.MustCompile(`^[\p{L}]([\_\-0-9\p{L}]*[0-9\p{L}])?$`)
-	hasUpperCaseLettersRegexp       = regexp.MustCompile(`[A-Z]+`)
 	validInstanaLatencyAggregations = map[string]struct{}{
 		"sum": {}, "mean": {}, "min": {}, "max": {}, "p25": {},
 		"p50": {}, "p75": {}, "p90": {}, "p95": {}, "p98": {}, "p99": {},
@@ -153,6 +152,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
 	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
+	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
@@ -281,17 +281,23 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		if !fl.Field().CanInterface() {
 			return false
 		}
-		dimension, ok := fl.Field().Index(i).Interface().(CloudWatchMetricDimension)
-		if !ok {
+		var name string
+		switch dimension := fl.Field().Index(i).Interface().(type) {
+		case CloudWatchMetricDimension:
+			if dimension.Name != nil {
+				name = *dimension.Name
+			}
+		case AzureMonitorMetricDimension:
+			if dimension.Name != nil {
+				name = *dimension.Name
+			}
+		default:
 			return false
 		}
-		if dimension.Name == nil {
-			continue
-		}
-		if _, used := usedNames[*dimension.Name]; used {
+		if _, used := usedNames[name]; used {
 			return false
 		}
-		usedNames[*dimension.Name] = struct{}{}
+		usedNames[name] = struct{}{}
 	}
 	return true
 }
@@ -1052,6 +1058,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		instanaCount             int
 		influxDBCount            int
 		gcmCount                 int
+		azureMonitorCount        int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1123,6 +1130,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.GCM != nil {
 			gcmCount++
 		}
+		if metric.AzureMonitor != nil {
+			azureMonitorCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1188,6 +1198,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if gcmCount > 0 {
+		metricCount++
+	}
+	if azureMonitorCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1379,7 +1392,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics}
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor}
 	if objective.CountMetrics != nil {
 		if objective.CountMetrics.BadMetric == nil {
 			return false
@@ -1628,65 +1641,7 @@ func validateURLDynatrace(validateURL string) bool {
 func areLabelsValid(fl v.FieldLevel) bool {
 	labels := fl.Field().Interface().(Labels)
 
-	return validateLabels(labels)
-}
-
-func validateLabels(labels Labels) bool {
-	for key, values := range labels {
-		if !validateLabelKey(key) {
-			return false
-		}
-		if duplicates(values) {
-			return false
-		}
-		for _, val := range values {
-			// Validate only if len(val) > 0, in case where we have only key labels, there is always empty val string
-			// and this is not an error
-			if len(val) > 0 && !validateLabelValue(val) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func validateLabelKey(value string) bool {
-	const maxLabelKeyLength = 63
-	if len(value) > maxLabelKeyLength || len(value) < 1 {
-		return false
-	}
-
-	if !labelKeyRegexp.MatchString(value) {
-		return false
-	}
-	return !hasUpperCaseLettersRegexp.MatchString(value)
-}
-
-func validateLabelValue(value string) bool {
-	const (
-		minLabelValueLength = 1
-		maxLabelValueLength = 200
-	)
-
-	return utf8.RuneCountInString(value) >= minLabelValueLength && utf8.RuneCountInString(value) <= maxLabelValueLength
-}
-
-func duplicates(list []string) bool {
-	duplicateFrequency := make(map[string]int)
-
-	for _, item := range list {
-		_, exist := duplicateFrequency[item]
-
-		if exist {
-			duplicateFrequency[item]++
-		} else {
-			duplicateFrequency[item] = 1
-		}
-		if duplicateFrequency[item] > 1 {
-			return true
-		}
-	}
-	return false
+	return labels.Validate() == nil
 }
 
 func isHTTPS(fl v.FieldLevel) bool {
@@ -1779,6 +1734,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.GCM != nil {
 		agentTypesCount++
 	}
+	if sa.AzureMonitor != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -1802,6 +1760,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "instana", "Instana", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -1875,6 +1834,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.GCM != nil {
 		metricTypesCount++
 	}
+	if ms.AzureMonitor != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1898,6 +1860,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "instana", "Instana", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
@@ -3309,5 +3272,32 @@ func validateSumoLogicN9Fields(sl v.StructLevel, metric SumoLogicMetric) {
 
 	if matched, _ := regexp.MatchString(`(?m).*\bby\b.*`, *metric.Query); !matched {
 		sl.ReportError(metric.Query, "query", "Query", "aggregation function is required", "")
+	}
+}
+
+func validateAzureMonitorMetricsConfiguration(sl v.StructLevel) {
+	metric, ok := sl.Current().Interface().(AzureMonitorMetric)
+	if !ok {
+		sl.ReportError(metric, "", "", "structConversion", "")
+		return
+	}
+
+	isValidAzureMonitorAggregation(sl, metric)
+}
+
+func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric) {
+	availableAggregations := map[string]struct{}{
+		"Avg":   {},
+		"Min":   {},
+		"Max":   {},
+		"Count": {},
+		"Sum":   {},
+	}
+	if _, ok := availableAggregations[metric.Aggregation]; !ok {
+		msg := fmt.Sprintf(
+			"aggregation [%s] is invalid, use one of: [%s]",
+			metric.Aggregation, strings.Join(maps.Keys(availableAggregations), "|"),
+		)
+		sl.ReportError(metric.Aggregation, "aggregation", "Aggregation", msg, "")
 	}
 }
