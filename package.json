@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "cspell": "6.31.2",
+    "cspell": "6.31.3",
     "license-checker": "25.0.1",
     "markdownlint-cli": "0.35.0",
     "renovate": "36.42.1",
@@ -13,5 +13,5 @@
     "check-trailing-whitespaces": "node ./scripts/check-trailing-whitespaces.js",
     "format-cspell-config": "node ./scripts/format-cspell-config.js"
   },
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@3.6.3"
 }
