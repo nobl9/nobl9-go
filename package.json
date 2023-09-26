@@ -13,5 +13,5 @@
     "check-trailing-whitespaces": "node ./scripts/check-trailing-whitespaces.js",
     "format-cspell-config": "node ./scripts/format-cspell-config.js"
   },
-  "packageManager": "yarn@3.6.1"
+  "packageManager": "yarn@3.6.3"
 }
