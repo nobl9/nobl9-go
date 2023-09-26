@@ -17,6 +17,10 @@ type unmarshalFunc func(v interface{}) error
 // raw object into GenericObject instead of a concrete representation.
 var UseGenericObjects = false
 
+// UseStrictDecodingMode is a global flag instructing ParseObject to
+// disallow unknown fields from decoded object definitions.
+var UseStrictDecodingMode = false
+
 func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) (manifest.Object, error) {
 	unmarshal, err := getUnmarshalFunc(data, format)
 	if err != nil {
@@ -79,7 +83,9 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 	case manifest.ObjectFormatJSON:
 		unmarshal = func(v interface{}) error {
 			dec := json.NewDecoder(bytes.NewReader(data))
-			dec.DisallowUnknownFields()
+			if UseStrictDecodingMode {
+				dec.DisallowUnknownFields()
+			}
 			return dec.Decode(v)
 		}
 	case manifest.ObjectFormatYAML:
@@ -91,8 +97,12 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to convert YAML to JSON")
 		}
+		var opts []yaml.DecodeOption
+		if UseStrictDecodingMode {
+			opts = append(opts, yaml.Strict())
+		}
 		unmarshal = func(v interface{}) error {
-			return yaml.UnmarshalWithOptions(data, v, yaml.Strict())
+			return yaml.UnmarshalWithOptions(data, v, opts...)
 		}
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)

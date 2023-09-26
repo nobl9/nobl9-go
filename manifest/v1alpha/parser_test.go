@@ -36,6 +36,8 @@ func TestParseObject(t *testing.T) {
 
 func TestParseObject_ErrorOnNonExistingKeys(t *testing.T) {
 	filename := "project_with_non_existing_keys"
+	UseStrictDecodingMode = true
+	defer func() { UseStrictDecodingMode = false }()
 
 	t.Run("json", func(t *testing.T) {
 		jsonData, format := readParserTestFile(t, filename+".json")
@@ -49,6 +51,23 @@ func TestParseObject_ErrorOnNonExistingKeys(t *testing.T) {
 		_, err := ParseObject(yamlData, manifest.KindProject, format)
 		require.Error(t, err)
 		assert.ErrorContains(t, err, "horsepower")
+	})
+}
+
+func TestParseObject_NoErrorOnNonExistingKeys(t *testing.T) {
+	filename := "project_with_non_existing_keys"
+	UseStrictDecodingMode = false
+
+	t.Run("json", func(t *testing.T) {
+		jsonData, format := readParserTestFile(t, filename+".json")
+		_, err := ParseObject(jsonData, manifest.KindProject, format)
+		assert.NoError(t, err)
+	})
+
+	t.Run("yaml", func(t *testing.T) {
+		yamlData, format := readParserTestFile(t, filename+".yaml")
+		_, err := ParseObject(yamlData, manifest.KindProject, format)
+		assert.NoError(t, err)
 	})
 }
 
