@@ -2233,22 +2233,17 @@ func isValidTimeSliceTargetValue(tsv float64) bool {
 	return tsv > 0.0 && tsv <= 1.00
 }
 
-// StringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"
-const StringInterpolationPlaceholder = "{}"
-
-// StringInterpolation for arguments ("{}-my-{}-string-{}", "xd") returns string xd-my-xd-string-xd
-func StringInterpolation(withPlaceholder, replacer string) string {
-	return strings.ReplaceAll(withPlaceholder, StringInterpolationPlaceholder, replacer)
-}
+// stringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"
+const stringInterpolationPlaceholder = "{}"
 
 func isValidObjectNameWithStringInterpolation(fl v.FieldLevel) bool {
 	toCheck := fl.Field().String()
-	if !strings.Contains(toCheck, StringInterpolationPlaceholder) {
+	if !strings.Contains(toCheck, stringInterpolationPlaceholder) {
 		return false
 	}
 	// During actual interpolation {} will be replaced with previous validated name,
 	// replace here with test because valid DNS1123Label cannot contain {} and check
-	toCheck = StringInterpolation(toCheck, "test")
+	toCheck = strings.ReplaceAll(toCheck, stringInterpolationPlaceholder, "test")
 	return len(IsDNS1123Label(toCheck)) == 0
 }
 
