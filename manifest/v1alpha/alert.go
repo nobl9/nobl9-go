@@ -22,18 +22,18 @@ type AlertMetadata struct {
 
 // AlertSpec represents content of Alert's Spec
 type AlertSpec struct {
-	AlertPolicy         Metadata         `json:"alertPolicy"`
-	SLO                 Metadata         `json:"slo"`
-	Service             Metadata         `json:"service"`
-	Objective           AlertObjective   `json:"objective"`
-	Severity            string           `json:"severity" validate:"required,severity" example:"High"`
-	Status              string           `json:"status" example:"Resolved"`
-	TriggeredMetricTime string           `json:"triggeredMetricTime"`
-	TriggeredClockTime  string           `json:"triggeredClockTime"`
-	ResolvedClockTime   *string          `json:"resolvedClockTime,omitempty"`
-	ResolvedMetricTime  *string          `json:"resolvedMetricTime,omitempty"`
-	CoolDown            string           `json:"coolDown"`
-	Conditions          []AlertCondition `json:"conditions"`
+	AlertPolicy         AlertPolicyMetadata `json:"alertPolicy"`
+	SLO                 SLOMetadata         `json:"slo"`
+	Service             ServiceMetadata     `json:"service"`
+	Objective           AlertObjective      `json:"objective"`
+	Severity            string              `json:"severity" validate:"required,severity" example:"High"`
+	Status              string              `json:"status" example:"Resolved"`
+	TriggeredMetricTime string              `json:"triggeredMetricTime"`
+	TriggeredClockTime  string              `json:"triggeredClockTime"`
+	ResolvedClockTime   *string             `json:"resolvedClockTime,omitempty"`
+	ResolvedMetricTime  *string             `json:"resolvedMetricTime,omitempty"`
+	CoolDown            string              `json:"coolDown"`
+	Conditions          []AlertCondition    `json:"conditions"`
 }
 
 type AlertObjective struct {
