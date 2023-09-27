@@ -61,6 +61,7 @@ type DirectSpec struct {
 	GCM                     *GCMDirectConfig                 `json:"gcm,omitempty"`
 	Lightstep               *LightstepDirectConfig           `json:"lightstep,omitempty"`
 	Dynatrace               *DynatraceDirectConfig           `json:"dynatrace,omitempty"`
+	AzureMonitor            *AzureMonitorDirectConfig        `json:"azureMonitor,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval         `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                      `json:"queryDelay,omitempty"`
 }
@@ -82,6 +83,7 @@ var allDirectTypes = map[string]struct{}{
 	GCM.String():                 {},
 	Lightstep.String():           {},
 	Dynatrace.String():           {},
+	AzureMonitor.String():        {},
 }
 
 func IsValidDirectType(directType string) bool {
@@ -123,6 +125,8 @@ func (spec DirectSpec) GetType() (string, error) {
 		return Lightstep.String(), nil
 	case spec.Dynatrace != nil:
 		return Dynatrace.String(), nil
+	case spec.AzureMonitor != nil:
+		return AzureMonitor.String(), nil
 	}
 	return "", errors.New("unknown direct type")
 }
@@ -149,6 +153,7 @@ type PublicDirectSpec struct {
 	GCM                     *PublicGCMDirectConfig                 `json:"gcm,omitempty"`
 	Lightstep               *PublicLightstepDirectConfig           `json:"lightstep,omitempty"`
 	Dynatrace               *PublicDynatraceDirectConfig           `json:"dynatrace,omitempty"`
+	AzureMonitor            *PublicAzureMonitorDirectConfig        `json:"azureMonitor,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval               `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                            `json:"queryDelay,omitempty"`
 }
@@ -386,6 +391,21 @@ type PublicSumoLogicDirectConfig struct {
 	HiddenAccessID  string `json:"accessID"`
 	HiddenAccessKey string `json:"accessKey"`
 	URL             string `json:"url"`
+}
+
+// AzureMonitorDirectConfig represents content of AzureMonitor Configuration typical for Direct Object.
+type AzureMonitorDirectConfig struct {
+	TenantID     string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+	ClientID     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+}
+
+// PublicAzureMonitorDirectConfig represents content of AzureMonitor Configuration
+// typical for Direct Object without secrets.
+type PublicAzureMonitorDirectConfig struct {
+	TenantID           string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"` //nolint: lll
+	HiddenClientID     string `json:"clientId"`
+	HiddenClientSecret string `json:"clientSecret"`
 }
 
 // PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
