@@ -1428,7 +1428,6 @@ func haveAzureMonitorCountMetricSpecTheSameResource(sloSpec SLOSpec) bool {
 				}
 			}
 		}
-
 	}
 
 	return true

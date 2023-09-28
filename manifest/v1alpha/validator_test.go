@@ -1061,6 +1061,7 @@ func TestAlertingWindowValidation(t *testing.T) {
 }
 
 func TestAzureMonitorSloSpecValidation(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		desc    string
 		sloSpec SLOSpec
