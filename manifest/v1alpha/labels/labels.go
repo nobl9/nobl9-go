@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/validation"
 )
 
 type (
@@ -16,8 +16,8 @@ type (
 	Value = string
 )
 
-func ValidationRuleLabels() validation.SingleRule[Labels] {
-	return validation.NewSingleRule(func(v Labels) error { return v.Validate() })
+func ValidationRule() validation.SingleRuleFunc[Labels] {
+	return func(v Labels) error { return v.Validate() }
 }
 
 // Validate checks if the Labels keys and values are valid.
