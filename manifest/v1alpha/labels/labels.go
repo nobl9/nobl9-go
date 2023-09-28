@@ -16,7 +16,7 @@ type (
 	Value = string
 )
 
-func ValidationRule() validation.SingleRuleFunc[Labels] {
+func ValidationRule() validation.SingleRule[Labels] {
 	return func(v Labels) error { return v.Validate() }
 }
 
