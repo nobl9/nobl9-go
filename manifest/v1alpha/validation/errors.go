@@ -63,9 +63,10 @@ func (e FieldError) ValueString() string {
 	return limitString(s, 100)
 }
 
-// multiRuleError is a container for transferring multiple errors from MultiRule.
+// multiRuleError is a container for transferring multiple errors reported by MultiRule.
 type multiRuleError []error
 
+// Error is only implemented to satisfy the error interface.
 func (m multiRuleError) Error() string { return "" }
 
 func joinErrors(b *strings.Builder, errs []error, indent string) {

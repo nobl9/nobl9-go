@@ -1,15 +1,20 @@
 package project
 
 import (
-	"fmt"
+	_ "embed"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 )
 
-func TestValidate(t *testing.T) {
+//go:embed test_data/expected_error.txt
+var expectedError string
+
+func TestValidate_AllErrors(t *testing.T) {
 	err := validate(Project{
 		Kind: manifest.KindProject,
 		Metadata: Metadata{
@@ -25,5 +30,5 @@ func TestValidate(t *testing.T) {
 		},
 		ManifestSource: "/home/me/project.yaml",
 	})
-	fmt.Println(err)
+	assert.Equal(t, expectedError, err.Error())
 }

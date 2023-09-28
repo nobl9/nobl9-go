@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 )
 
 //go:generate go run ../../scripts/generate-object-impl.go DataExport
@@ -27,10 +28,10 @@ type DataExport struct {
 }
 
 type DataExportMetadata struct {
-	Name        string `json:"name" validate:"required,objectName"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string `json:"project,omitempty" validate:"objectName"`
-	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string        `json:"name" validate:"required,objectName"`
+	DisplayName string        `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string        `json:"project,omitempty" validate:"objectName"`
+	Labels      labels.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // DataExportSpec represents content of DataExport's Spec

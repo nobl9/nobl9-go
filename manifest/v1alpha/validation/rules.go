@@ -8,7 +8,7 @@ const (
 	ModeCollectErrors
 )
 
-func RulesForObject(objectMetadata ObjectMetadata, validators ...func() *FieldError) ObjectRules {
+func RulesForObject(objectMetadata ObjectMetadata, validators ...func() error) ObjectRules {
 	return ObjectRules{
 		objectMetadata: objectMetadata,
 		validators:     validators,
@@ -17,7 +17,7 @@ func RulesForObject(objectMetadata ObjectMetadata, validators ...func() *FieldEr
 
 type ObjectRules struct {
 	objectMetadata ObjectMetadata
-	validators     []func() *FieldError
+	validators     []func() error
 	mode           Mode
 }
 
@@ -26,7 +26,7 @@ func (r ObjectRules) WithMode(mode Mode) ObjectRules {
 	return r
 }
 
-func (r ObjectRules) Validate() *ObjectError {
+func (r ObjectRules) Validate() error {
 	var errors []error
 	for _, vf := range r.validators {
 		if err := vf(); err != nil {
@@ -55,7 +55,7 @@ type FieldRules[T any] struct {
 	predicates []func() bool
 }
 
-func (r FieldRules[T]) Validate() *FieldError {
+func (r FieldRules[T]) Validate() error {
 	for _, pred := range r.predicates {
 		if pred != nil && !pred() {
 			return nil

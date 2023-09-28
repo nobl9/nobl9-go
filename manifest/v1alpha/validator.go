@@ -20,6 +20,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
@@ -140,6 +141,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(webhookAlertMethodValidation, WebhookAlertMethod{})
 	val.RegisterStructValidation(emailAlertMethodValidation, EmailAlertMethod{})
+	val.RegisterStructValidation(sliAnalysisSpecStructValidation, SLIAnalysis{})
 	val.RegisterStructValidation(countMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 	val.RegisterStructValidation(annotationSpecStructDatesValidation, AnnotationSpec{})
@@ -150,6 +152,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
+	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
@@ -482,7 +485,6 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
-	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
 
 	// AnomalyConfig will be moved into Anomaly Rules in PC-8502
 	sloSpecStructLevelAnomalyConfigValidation(sl, sloSpec)
@@ -660,18 +662,6 @@ func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec SLOSpec) {
 func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec SLOSpec) {
 	if !doesNotHaveCountMetricsThousandEyes(sloSpec) {
 		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "onlyRawMetricsThousandEyes", "")
-	}
-}
-
-func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec SLOSpec) {
-	if !haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"azureMonitorCountMetricsEqualResourceIDAndMetricNamespace",
-			"",
-		)
 	}
 }
 
@@ -1400,38 +1390,6 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 	return true
 }
 
-// haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
-// and metricNamespace as total query
-// nolint: gocognit
-func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec SLOSpec) bool {
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		total := objective.CountMetrics.TotalMetric
-		good := objective.CountMetrics.GoodMetric
-		bad := objective.CountMetrics.BadMetric
-
-		if total != nil && total.AzureMonitor != nil {
-			if good != nil && good.AzureMonitor != nil {
-				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
-					good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-					return false
-				}
-			}
-
-			if bad != nil && bad.AzureMonitor != nil {
-				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
-					bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-					return false
-				}
-			}
-		}
-	}
-
-	return true
-}
-
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
@@ -1682,7 +1640,7 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	lbl := fl.Field().Interface().(Labels)
+	lbl := fl.Field().Interface().(labels.Labels)
 	return lbl.Validate() == nil
 }
 
@@ -2660,6 +2618,15 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func sliAnalysisSpecStructValidation(sl v.StructLevel) {
+	sliAnalysis := sl.Current().Interface().(SLIAnalysis)
+	if (sliAnalysis.MetricSpec.RawMetric == nil && sliAnalysis.MetricSpec.CountMetrics == nil) ||
+		(sliAnalysis.MetricSpec.RawMetric != nil && sliAnalysis.MetricSpec.CountMetrics != nil) {
+		sl.ReportError(sliAnalysis.MetricSpec.RawMetric, "rawMetric", "RawMetric", "exactlyOneMetricType", "")
+		sl.ReportError(sliAnalysis.MetricSpec.CountMetrics, "countMetrics", "CountMetrics", "exactlyOneMetricType", "")
+	}
 }
 
 func countMetricsSpecValidation(sl v.StructLevel) {
