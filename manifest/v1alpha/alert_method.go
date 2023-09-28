@@ -25,9 +25,14 @@ type AlertMethodMetadata struct {
 // PublicAlertMethod represents the configuration required to send a notification to an external service
 // when an alert is triggered.
 type PublicAlertMethod struct {
-	ObjectHeader `json:",inline"`
-	Spec         PublicAlertMethodSpec    `json:"spec"`
-	Status       *PublicAlertMethodStatus `json:"status,omitempty"`
+	APIVersion string                   `json:"apiVersion"`
+	Kind       manifest.Kind            `json:"kind"`
+	Metadata   AlertMethodMetadata      `json:"metadata"`
+	Spec       PublicAlertMethodSpec    `json:"spec"`
+	Status     *PublicAlertMethodStatus `json:"status,omitempty"`
+
+	Organization   string `json:"organization,omitempty"`
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 // PublicAlertMethodStatus represents content of Status optional for PublicAlertMethod Object
