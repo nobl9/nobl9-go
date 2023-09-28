@@ -38,7 +38,8 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 	var isOfType bool
 	object, isOfType = objects[0].(T)
 	if !isOfType {
-		return object, fmt.Errorf("object of type %T is not of type %T", objects[0], *new(T))
+		return object, fmt.Errorf("object of type %s is not of type %s",
+			getObjectTypeStr(objects[0]), getObjectTypeStr(*new(T)))
 	}
 	return object, nil
 }
@@ -246,4 +247,12 @@ func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err 
 	}
 	// Request more data.
 	return 0, nil, nil
+}
+
+func getObjectTypeStr(object manifest.Object) string {
+	version := object.GetVersion()
+	if len(version) > 3 {
+		version = version[3:]
+	}
+	return fmt.Sprintf("%s.%s", version, object.GetKind())
 }
