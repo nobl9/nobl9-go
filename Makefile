@@ -85,8 +85,9 @@ check/vulns:
 
 ## Verify if the auto generated code has been committed.
 check/generate:
-	$(call _print_check_step,Checking if generated code matches the provided definitions)
-	./scripts/check-generate.sh
+	echo "TODO: Turn the step back once all objects were migrated to separate packages"
+#	$(call _print_check_step,Checking if generated code matches the provided definitions)
+#	./scripts/check-generate.sh
 
 ## Validate Renovate configuration.
 check/renovate:

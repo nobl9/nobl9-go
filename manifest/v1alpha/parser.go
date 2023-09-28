@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 )
 
 type unmarshalFunc func(v interface{}) error
@@ -47,7 +48,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindSLO:
 		return genericParseObject[SLO](unmarshal)
 	case manifest.KindProject:
-		return genericParseObject[Project](unmarshal)
+		return genericParseObject[project.Project](unmarshal)
 	case manifest.KindAgent:
 		return genericParseObject[Agent](unmarshal)
 	case manifest.KindDirect:

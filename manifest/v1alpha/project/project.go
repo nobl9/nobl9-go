@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Project
+//go:generate go run ../../../scripts/generate-object-impl.go Project
 
 // Project is the primary grouping primitive for manifest.Object.
 // Most objects are scoped to a certain Project.

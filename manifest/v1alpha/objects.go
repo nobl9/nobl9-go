@@ -3,8 +3,6 @@ package v1alpha
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 )
 
 // APIVersion is a value of valid apiVersions
@@ -18,9 +16,3 @@ type ObjectContext interface {
 	GetManifestSource() string
 	SetManifestSource(src string) manifest.Object
 }
-
-type (
-	Project = project.Project
-
-	Labels = labels.Labels
-)
