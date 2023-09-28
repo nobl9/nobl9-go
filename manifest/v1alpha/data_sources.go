@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Generic
 )
 
 const DatasourceStableChannel = "stable"
@@ -124,6 +125,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Generic:             "Generic",
 }
 
 func (dst DataSourceType) String() string {
