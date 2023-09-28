@@ -1,6 +1,7 @@
 package examples
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -17,11 +19,11 @@ import (
 func GetOfflineEchoClient() *sdk.Client {
 	// Offline server:
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		objects, err := sdk.ReadObjectsFromSources(r.Context(), sdk.NewObjectSourceReader(r.Body, ""))
-		if err != nil {
+		var p []v1alpha.Project
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			panic(err)
 		}
-		data, err := yaml.Marshal(objects[0])
+		data, err := yaml.Marshal(p[0])
 		if err != nil {
 			panic(err)
 		}

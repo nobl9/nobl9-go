@@ -2,9 +2,7 @@
 
 package project
 
-import (
-	"github.com/nobl9/nobl9-go/manifest"
-)
+import "github.com/nobl9/nobl9-go/manifest"
 
 func (p Project) GetVersion() string {
 	return p.APIVersion
