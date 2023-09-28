@@ -484,6 +484,7 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
+	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
 
 	// AnomalyConfig will be moved into Anomaly Rules in PC-8502
 	sloSpecStructLevelAnomalyConfigValidation(sl, sloSpec)
@@ -661,6 +662,18 @@ func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec SLOSpec) {
 func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec SLOSpec) {
 	if !doesNotHaveCountMetricsThousandEyes(sloSpec) {
 		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "onlyRawMetricsThousandEyes", "")
+	}
+}
+
+func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec SLOSpec) {
+	if !haveAzureMonitorCountMetricSpecTheSameResource(sloSpec) {
+		sl.ReportError(
+			sloSpec.CountMetrics,
+			"objectives",
+			"Objectives",
+			"azureMonitorCountMetricsEqualResource",
+			"",
+		)
 	}
 }
 
@@ -1386,6 +1399,38 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 			}
 		}
 	}
+	return true
+}
+
+// haveAzureMonitorCountMetricSpecTheSameResource checks if good/bad query has the same resourceID and metricNamespace
+// as total query
+func haveAzureMonitorCountMetricSpecTheSameResource(sloSpec SLOSpec) bool {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
+			continue
+		}
+		total := objective.CountMetrics.TotalMetric
+		good := objective.CountMetrics.GoodMetric
+		bad := objective.CountMetrics.BadMetric
+
+		if total != nil && total.AzureMonitor != nil {
+			if good != nil && good.AzureMonitor != nil {
+				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
+					good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return false
+				}
+			}
+
+			if bad != nil && bad.AzureMonitor != nil {
+				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
+					bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return false
+				}
+			}
+		}
+
+	}
+
 	return true
 }
 

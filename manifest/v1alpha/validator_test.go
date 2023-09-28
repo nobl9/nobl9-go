@@ -1059,3 +1059,116 @@ func TestAlertingWindowValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestAzureMonitorSloSpecValidation(t *testing.T) {
+	testCases := []struct {
+		desc    string
+		sloSpec SLOSpec
+		isValid bool
+	}{
+		{
+			desc: "different namespace good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different namespace bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different resourceID good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different resourceID bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "the same resourceID and namespace good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+					},
+				}},
+			},
+			isValid: true,
+		}, {
+			desc: "the same resourceID and namespace bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+					},
+				}},
+			},
+			isValid: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
+			isValid := haveAzureMonitorCountMetricSpecTheSameResource(tc.sloSpec)
+			assert.Equal(t, tc.isValid, isValid)
+		})
+	}
+}
