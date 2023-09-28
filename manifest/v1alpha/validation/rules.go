@@ -1,26 +1,42 @@
 package validation
 
-import (
-	"github.com/nobl9/nobl9-go/manifest"
+type Mode uint8
+
+// TODO implement these.
+const (
+	ModeFailFast Mode = iota + 1
+	ModeCollectErrors
 )
 
-func RulesForObject(object manifest.Object, validators ...func() error) ObjectRules {
+func RulesForObject(objectMetadata ObjectMetadata, validators ...func() *FieldError) ObjectRules {
 	return ObjectRules{
-		object:     object,
-		validators: validators,
+		objectMetadata: objectMetadata,
+		validators:     validators,
 	}
 }
 
 type ObjectRules struct {
-	object     manifest.Object
-	validators []func() error
+	objectMetadata ObjectMetadata
+	validators     []func() *FieldError
+	mode           Mode
 }
 
-func (v ObjectRules) Validate() error {
-	for _, vf := range v.validators {
+func (r ObjectRules) WithMode(mode Mode) ObjectRules {
+	r.mode = mode
+	return r
+}
+
+func (r ObjectRules) Validate() *ObjectError {
+	var errors []error
+	for _, vf := range r.validators {
 		if err := vf(); err != nil {
-			// TODO: aggregate
-			return err
+			errors = append(errors, err)
+		}
+	}
+	if len(errors) > 0 {
+		return &ObjectError{
+			Object: r.objectMetadata,
+			Errors: errors,
 		}
 	}
 	return nil
@@ -28,7 +44,7 @@ func (v ObjectRules) Validate() error {
 
 // RulesForField creates a typed FieldRules instance for the field which access is defined through getter function.
 func RulesForField[T any](fieldPath string, getter func() T) FieldRules[T] {
-	return FieldRules[T]{getter: getter}
+	return FieldRules[T]{fieldPath: fieldPath, getter: getter}
 }
 
 // FieldRules is responsible for validating a single struct field.
@@ -39,28 +55,39 @@ type FieldRules[T any] struct {
 	predicates []func() bool
 }
 
-func (v FieldRules[T]) Validate() error {
-	for _, pred := range v.predicates {
+func (r FieldRules[T]) Validate() *FieldError {
+	for _, pred := range r.predicates {
 		if pred != nil && !pred() {
 			return nil
 		}
 	}
-	fv := v.getter()
-	for i := range v.rules {
-		if err := v.rules[i].Validate(fv); err != nil {
-			// TODO aggregate.
-			return err
+	fv := r.getter()
+	var errors []error
+	for i := range r.rules {
+		if err := r.rules[i].Validate(fv); err != nil {
+			if v, ok := err.(multiRuleError); ok {
+				errors = append(errors, v...)
+			} else {
+				errors = append(errors, err)
+			}
+		}
+	}
+	if len(errors) > 0 {
+		return &FieldError{
+			FieldPath:  r.fieldPath,
+			FieldValue: fv,
+			Errors:     errors,
 		}
 	}
 	return nil
 }
 
-func (v FieldRules[T]) If(predicate func() bool) FieldRules[T] {
-	v.predicates = append(v.predicates, predicate)
-	return v
+func (r FieldRules[T]) If(predicate func() bool) FieldRules[T] {
+	r.predicates = append(r.predicates, predicate)
+	return r
 }
 
-func (v FieldRules[T]) With(rules ...Rule[T]) FieldRules[T] {
-	v.rules = append(v.rules, rules...)
-	return v
+func (r FieldRules[T]) With(rules ...Rule[T]) FieldRules[T] {
+	r.rules = append(r.rules, rules...)
+	return r
 }

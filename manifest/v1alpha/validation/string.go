@@ -18,7 +18,7 @@ func StringLength(min, max int) SingleRule[string] {
 		Message: fmt.Sprintf("length must be between %d and %d", min, max),
 		IsValid: func(v string) bool {
 			rc := utf8.RuneCountInString(v)
-			return rc >= min || rc <= max
+			return !(rc <= min || rc >= max)
 		},
 	}
 }

@@ -5,6 +5,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/validation"
 )
 
 type (
@@ -13,6 +15,10 @@ type (
 	Key   = string
 	Value = string
 )
+
+func ValidationRule() validation.SingleRuleFunc[Labels] {
+	return func(v Labels) error { return v.Validate() }
+}
 
 // Validate checks if the Labels keys and values are valid.
 func (l Labels) Validate() error {

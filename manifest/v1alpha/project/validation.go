@@ -6,13 +6,18 @@ import (
 )
 
 func validate(p Project) error {
-	v := validation.RulesForObject(p,
+	v := validation.RulesForObject(
+		validation.ObjectMetadata{
+			Kind:   p.GetKind().String(),
+			Name:   p.GetName(),
+			Source: p.GetManifestSource(),
+		},
 		validation.RulesForField[string](
 			"metadata.name",
 			func() string { return p.Metadata.Name },
 		).
 			// If predicate has been included just for the demonstration.
-			If(func() bool { return p.Spec.Description == "" }).
+			If(func() bool { return p.Spec.Description != "lol" }).
 			With(
 				validation.StringRequired(),
 				validation.StringIsDNSSubdomain()).
@@ -27,7 +32,7 @@ func validate(p Project) error {
 			"metadata.labels",
 			func() labels.Labels { return p.Metadata.Labels },
 		).
-			With(validation.Labels()).
+			With(labels.ValidationRule()).
 			Validate,
 		validation.RulesForField[string](
 			"spec.description",

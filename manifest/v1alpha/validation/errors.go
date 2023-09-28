@@ -1,15 +1,87 @@
 package validation
 
-//type ObjectError struct {
-//}
-//
-//func (e ObjectError) Error() string {
-//
-//}
-//
-//type Error struct {
-//}
-//
-//func (e Error) Error() string {
-//
-//}
+import (
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
+)
+
+type ObjectError struct {
+	Object ObjectMetadata `json:"object"`
+	Errors []error        `json:"errors"`
+}
+
+type ObjectMetadata struct {
+	IsProjectScoped bool
+	Kind            string
+	Name            string
+	Project         string
+	Source          string
+}
+
+func (e *ObjectError) Error() string {
+	b := new(strings.Builder)
+	b.WriteString(fmt.Sprintf("Validation for %s '%s'", e.Object.Kind, e.Object.Name))
+	if e.Object.IsProjectScoped {
+		b.WriteString(" in project '" + e.Object.Project + "'")
+	}
+	b.WriteString(" has failed for the following fields:\n")
+	joinErrors(b, e.Errors, strings.Repeat(" ", 2))
+	if e.Object.Source != "" {
+		b.WriteString("\nManifest source: /home/mh/slo.yaml")
+	}
+	return b.String()
+}
+
+type FieldError struct {
+	FieldPath  string      `json:"fieldPath"`
+	FieldValue interface{} `json:"value"`
+	Errors     []error     `json:"Errors"`
+}
+
+func (e FieldError) Error() string {
+	b := new(strings.Builder)
+	b.WriteString(fmt.Sprintf("'%s' with value '%s':\n", e.FieldPath, e.ValueString()))
+	joinErrors(b, e.Errors, strings.Repeat(" ", 4))
+	return b.String()
+}
+
+func (e FieldError) ValueString() string {
+	ft := reflect.TypeOf(e.FieldValue)
+	if ft.Kind() == reflect.Pointer {
+		ft = ft.Elem()
+	}
+	var s string
+	switch ft.Kind() {
+	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
+		raw, _ := json.Marshal(e.FieldValue)
+		s = string(raw)
+	default:
+		s = fmt.Sprint(e.FieldValue)
+	}
+	return limitString(s, 100)
+}
+
+// multiRuleError is a container for transferring multiple errors from MultiRule.
+type multiRuleError []error
+
+func (m multiRuleError) Error() string { return "" }
+
+func joinErrors(b *strings.Builder, errs []error, indent string) {
+	for i, e := range errs {
+		b.WriteString(indent)
+		b.WriteString("- ")
+		b.WriteString(e.Error())
+		if i < len(errs)-1 {
+			b.WriteString("\n")
+		}
+	}
+}
+
+func limitString(s string, limit int) string {
+	if len(s) > limit {
+		return s[:limit] + "..."
+	}
+	return s
+}

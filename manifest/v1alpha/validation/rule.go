@@ -28,15 +28,17 @@ type MultiRule[T any] struct {
 }
 
 func (r MultiRule[T]) Validate(v T) error {
+	var mErr multiRuleError
 	for i := range r.Rules {
 		if err := r.Rules[i].Validate(v); err != nil {
-			// TODO: aggregate
-			return err
+			mErr = append(mErr, err)
 		}
 	}
-	return nil
+	return mErr
 }
 
+// SingleRuleFunc is a function variant of SingleRule.
+// Instead of defining message and validation check separately it can be used to
 type SingleRuleFunc[T any] func(v T) error
 
 func (r SingleRuleFunc[T]) Validate(v T) error { return r(v) }
