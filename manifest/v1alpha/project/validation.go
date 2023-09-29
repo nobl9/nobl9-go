@@ -20,26 +20,22 @@ func validate(p Project) error {
 			If(func() bool { return p.Spec.Description != "lol" }).
 			With(
 				validation.StringRequired(),
-				validation.StringIsDNSSubdomain()).
-			Validate,
+				validation.StringIsDNSSubdomain()),
 		validation.RulesForField[string](
 			"metadata.displayName",
 			func() string { return p.Metadata.DisplayName },
 		).
-			With(validation.StringLength(0, 63)).
-			Validate,
+			With(validation.StringLength(0, 63)),
 		validation.RulesForField[labels.Labels](
 			"metadata.labels",
 			func() labels.Labels { return p.Metadata.Labels },
 		).
-			With(labels.ValidationRule()).
-			Validate,
+			With(labels.ValidationRule()),
 		validation.RulesForField[string](
 			"spec.description",
 			func() string { return p.Spec.Description },
 		).
-			With(validation.StringDescription()).
-			Validate,
+			With(validation.StringDescription()),
 	)
 	return v.Validate()
 }

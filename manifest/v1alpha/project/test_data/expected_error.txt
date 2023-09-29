@@ -8,4 +8,4 @@ Validation for Project 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PRO
     - label key 'L O L' does not match the regex: ^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$
   - 'spec.description' with value 'llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
     - length must be between 0 and 1050
-Manifest source: /home/mh/slo.yaml
+Manifest source: /home/me/project.yaml
