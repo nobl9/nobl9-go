@@ -1,25 +1,25 @@
 package validation
 
-type Validator interface {
+type fieldRules interface {
 	Validate() error
 }
 
-func RulesForObject(objectMetadata ObjectMetadata, validators ...Validator) ObjectRules {
+func RulesForObject(objectMetadata ObjectMetadata, rules ...fieldRules) ObjectRules {
 	return ObjectRules{
 		objectMetadata: objectMetadata,
-		validators:     validators,
+		fieldRules:     rules,
 	}
 }
 
 type ObjectRules struct {
 	objectMetadata ObjectMetadata
-	validators     []Validator
+	fieldRules     []fieldRules
 }
 
 func (r ObjectRules) Validate() error {
 	var errors []error
-	for _, v := range r.validators {
-		if err := v.Validate(); err != nil {
+	for _, field := range r.fieldRules {
+		if err := field.Validate(); err != nil {
 			errors = append(errors, err)
 		}
 	}

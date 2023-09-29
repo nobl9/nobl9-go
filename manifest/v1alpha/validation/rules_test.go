@@ -30,7 +30,7 @@ func TestRulesForObject(t *testing.T) {
 			},
 			RulesForField[string]("test", func() string { return "test" }).
 				With(SingleRule[string](func(v string) error { return nil })),
-			RulesForField[string]("test.name", func() string { return "value" }).
+			RulesForField[string]("test.name", func() string { return "name" }).
 				With(SingleRule[string](func(v string) error { return err1 })),
 			RulesForField[string]("test.display", func() string { return "display" }).
 				With(SingleRule[string](func(v string) error { return err2 })),
@@ -46,7 +46,7 @@ func TestRulesForObject(t *testing.T) {
 			Errors: []error{
 				&FieldError{
 					FieldPath:  "test.name",
-					FieldValue: "value",
+					FieldValue: "name",
 					Errors:     []error{err1},
 				},
 				&FieldError{
@@ -61,7 +61,7 @@ func TestRulesForObject(t *testing.T) {
 
 func TestRulesForField(t *testing.T) {
 	t.Run("no predicates, no error", func(t *testing.T) {
-		r := RulesForField[string]("test.path", func() string { return "value" }).
+		r := RulesForField[string]("test.path", func() string { return "path" }).
 			With(SingleRule[string](func(v string) error { return nil }))
 		err := r.Validate()
 		assert.NoError(t, err)
@@ -69,13 +69,13 @@ func TestRulesForField(t *testing.T) {
 
 	t.Run("no predicates, validate", func(t *testing.T) {
 		expectedErr := errors.New("ops!")
-		r := RulesForField[string]("test.path", func() string { return "value" }).
+		r := RulesForField[string]("test.path", func() string { return "path" }).
 			With(SingleRule[string](func(v string) error { return expectedErr }))
 		err := r.Validate()
 		require.Error(t, err)
 		assert.Equal(t, FieldError{
 			FieldPath:  "test.path",
-			FieldValue: "value",
+			FieldValue: "path",
 			Errors:     []error{expectedErr},
 		}, *err.(*FieldError))
 	})

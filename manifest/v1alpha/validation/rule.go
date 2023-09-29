@@ -19,5 +19,8 @@ func (r MultiRule[T]) Validate(v T) error {
 			mErr = append(mErr, err)
 		}
 	}
-	return mErr
+	if len(mErr) > 0 {
+		return mErr
+	}
+	return nil
 }
