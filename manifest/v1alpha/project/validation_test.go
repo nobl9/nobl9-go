@@ -22,7 +22,6 @@ func TestValidate_AllErrors(t *testing.T) {
 			DisplayName: strings.Repeat("my-project", 10),
 			Labels: labels.Labels{
 				"L O L": []string{"dip", "dip"},
-				"":      []string{"db"},
 			},
 		},
 		Spec: Spec{
