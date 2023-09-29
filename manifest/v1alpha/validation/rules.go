@@ -1,14 +1,10 @@
 package validation
 
-type Mode uint8
+type Validator interface {
+	Validate() error
+}
 
-// TODO implement these.
-const (
-	ModeFailFast Mode = iota + 1
-	ModeCollectErrors
-)
-
-func RulesForObject(objectMetadata ObjectMetadata, validators ...func() error) ObjectRules {
+func RulesForObject(objectMetadata ObjectMetadata, validators ...Validator) ObjectRules {
 	return ObjectRules{
 		objectMetadata: objectMetadata,
 		validators:     validators,
@@ -17,19 +13,13 @@ func RulesForObject(objectMetadata ObjectMetadata, validators ...func() error) O
 
 type ObjectRules struct {
 	objectMetadata ObjectMetadata
-	validators     []func() error
-	mode           Mode
-}
-
-func (r ObjectRules) WithMode(mode Mode) ObjectRules {
-	r.mode = mode
-	return r
+	validators     []Validator
 }
 
 func (r ObjectRules) Validate() error {
 	var errors []error
-	for _, vf := range r.validators {
-		if err := vf(); err != nil {
+	for _, v := range r.validators {
+		if err := v.Validate(); err != nil {
 			errors = append(errors, err)
 		}
 	}
