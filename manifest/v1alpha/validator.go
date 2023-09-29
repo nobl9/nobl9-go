@@ -666,12 +666,12 @@ func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec SLOSpec)
 }
 
 func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec SLOSpec) {
-	if !haveAzureMonitorCountMetricSpecTheSameResource(sloSpec) {
+	if !haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec) {
 		sl.ReportError(
 			sloSpec.CountMetrics,
 			"objectives",
 			"Objectives",
-			"azureMonitorCountMetricsEqualResource",
+			"azureMonitorCountMetricsEqualResourceIDAndMetricNamespace",
 			"",
 		)
 	}
@@ -1402,9 +1402,9 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 	return true
 }
 
-// haveAzureMonitorCountMetricSpecTheSameResource checks if good/bad query has the same resourceID and metricNamespace
-// as total query
-func haveAzureMonitorCountMetricSpecTheSameResource(sloSpec SLOSpec) bool {
+// haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
+// and metricNamespace as total query
+func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec SLOSpec) bool {
 	for _, objective := range sloSpec.Objectives {
 		if objective.CountMetrics == nil {
 			continue

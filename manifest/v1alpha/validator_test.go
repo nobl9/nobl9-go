@@ -1168,7 +1168,7 @@ func TestAzureMonitorSloSpecValidation(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			isValid := haveAzureMonitorCountMetricSpecTheSameResource(tc.sloSpec)
+			isValid := haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(tc.sloSpec)
 			assert.Equal(t, tc.isValid, isValid)
 		})
 	}
