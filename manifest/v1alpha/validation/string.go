@@ -19,7 +19,7 @@ func StringRequired() SingleRule[string] {
 func StringLength(min, max int) SingleRule[string] {
 	return func(v string) error {
 		rc := utf8.RuneCountInString(v)
-		if rc <= min || rc >= max {
+		if rc < min || rc > max {
 			return errors.Errorf("length must be between %d and %d", min, max)
 		}
 		return nil
@@ -30,7 +30,7 @@ var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 
 func StringIsDNSSubdomain() MultiRule[string] {
 	return MultiRule[string]{
-		StringLength(0, 63),
+		StringLength(1, 63),
 		SingleRule[string](func(v string) error {
 			if !dns1123SubdomainRegexp.MatchString(v) {
 				return errors.New(regexErrorMsg(
