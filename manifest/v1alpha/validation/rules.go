@@ -65,11 +65,7 @@ func (r FieldRules[T]) Validate() error {
 	var errors []error
 	for i := range r.rules {
 		if err := r.rules[i].Validate(fv); err != nil {
-			if v, ok := err.(multiRuleError); ok {
-				errors = append(errors, v...)
-			} else {
-				errors = append(errors, err)
-			}
+			errors = append(errors, err)
 		}
 	}
 	if len(errors) > 0 {

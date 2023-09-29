@@ -20,7 +20,7 @@ type ObjectMetadata struct {
 	Source          string
 }
 
-func (e *ObjectError) Error() string {
+func (e ObjectError) Error() string {
 	b := new(strings.Builder)
 	b.WriteString(fmt.Sprintf("Validation for %s '%s'", e.Object.Kind, e.Object.Name))
 	if e.Object.IsProjectScoped {
@@ -29,7 +29,8 @@ func (e *ObjectError) Error() string {
 	b.WriteString(" has failed for the following fields:\n")
 	joinErrors(b, e.Errors, strings.Repeat(" ", 2))
 	if e.Object.Source != "" {
-		b.WriteString("\nManifest source: /home/mh/slo.yaml")
+		b.WriteString("\nManifest source: ")
+		b.WriteString(e.Object.Source)
 	}
 	return b.String()
 }
@@ -43,7 +44,7 @@ type FieldError struct {
 func (e FieldError) Error() string {
 	b := new(strings.Builder)
 	b.WriteString(fmt.Sprintf("'%s' with value '%s':\n", e.FieldPath, e.ValueString()))
-	joinErrors(b, e.Errors, strings.Repeat(" ", 4))
+	joinErrors(b, e.Errors, strings.Repeat(" ", 2))
 	return b.String()
 }
 
@@ -67,13 +68,23 @@ func (e FieldError) ValueString() string {
 type multiRuleError []error
 
 // Error is only implemented to satisfy the error interface.
-func (m multiRuleError) Error() string { return "" }
+func (m multiRuleError) Error() string {
+	b := new(strings.Builder)
+	joinErrors(b, m, "")
+	return b.String()
+}
+
+const listPoint = "- "
 
 func joinErrors(b *strings.Builder, errs []error, indent string) {
 	for i, e := range errs {
 		b.WriteString(indent)
-		b.WriteString("- ")
-		b.WriteString(e.Error())
+		b.WriteString(listPoint)
+		// Remove the first list point characters if the error contained them.
+		errMsg := strings.TrimLeft(e.Error(), listPoint)
+		// Indent the whole error message.
+		errMsg = strings.ReplaceAll(errMsg, "\n", "\n"+indent)
+		b.WriteString(errMsg)
 		if i < len(errs)-1 {
 			b.WriteString("\n")
 		}
