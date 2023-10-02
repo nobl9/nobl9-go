@@ -1070,6 +1070,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		influxDBCount            int
 		gcmCount                 int
 		azureMonitorCount        int
+		genericCount             int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1144,6 +1145,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
+		if metric.GenericMetric != nil {
+			genericCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1212,6 +1216,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if azureMonitorCount > 0 {
+		metricCount++
+	}
+	if genericCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
