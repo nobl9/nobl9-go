@@ -1145,7 +1145,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
-		if metric.GenericMetric != nil {
+		if metric.Generic != nil {
 			genericCount++
 		}
 	}
@@ -1890,7 +1890,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.AzureMonitor != nil {
 		metricTypesCount++
 	}
-	if ms.GenericMetric != nil {
+	if ms.Generic != nil {
 		metricTypesCount++
 	}
 	if metricTypesCount != expectedCountOfMetricTypes {
@@ -1917,7 +1917,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "genericMetric", "GenericMetric", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "genericMetric", "Generic", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
