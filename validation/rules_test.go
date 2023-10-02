@@ -11,23 +11,17 @@ import (
 func TestRulesForObject(t *testing.T) {
 	t.Run("no errors", func(t *testing.T) {
 		r := RulesForObject(
-			ObjectMetadata{},
 			RulesForField[string]("test", func() string { return "test" }).
 				With(SingleRule[string](func(v string) error { return nil })),
 		)
-		err := r.Validate()
-		assert.NoError(t, err)
+		errs := r.Validate()
+		assert.Empty(t, errs)
 	})
 
 	t.Run("errors", func(t *testing.T) {
 		err1 := errors.New("1")
 		err2 := errors.New("2")
 		r := RulesForObject(
-			ObjectMetadata{
-				Kind:   "Project",
-				Name:   "default",
-				Source: "/home/me/project.yaml",
-			},
 			RulesForField[string]("test", func() string { return "test" }).
 				With(SingleRule[string](func(v string) error { return nil })),
 			RulesForField[string]("test.name", func() string { return "name" }).
@@ -35,27 +29,20 @@ func TestRulesForObject(t *testing.T) {
 			RulesForField[string]("test.display", func() string { return "display" }).
 				With(SingleRule[string](func(v string) error { return err2 })),
 		)
-		err := r.Validate()
-		require.Error(t, err)
-		assert.Equal(t, ObjectError{
-			Object: ObjectMetadata{
-				Kind:   "Project",
-				Name:   "default",
-				Source: "/home/me/project.yaml",
+		errs := r.Validate()
+		require.Len(t, errs, 2)
+		assert.Equal(t, []error{
+			&FieldError{
+				FieldPath:  "test.name",
+				FieldValue: "name",
+				Errors:     []string{err1.Error()},
 			},
-			Errors: []error{
-				&FieldError{
-					FieldPath:  "test.name",
-					FieldValue: "name",
-					Errors:     []error{err1},
-				},
-				&FieldError{
-					FieldPath:  "test.display",
-					FieldValue: "display",
-					Errors:     []error{err2},
-				},
+			&FieldError{
+				FieldPath:  "test.display",
+				FieldValue: "display",
+				Errors:     []string{err2.Error()},
 			},
-		}, *err.(*ObjectError))
+		}, errs)
 	})
 }
 
@@ -76,7 +63,7 @@ func TestRulesForField(t *testing.T) {
 		assert.Equal(t, FieldError{
 			FieldPath:  "test.path",
 			FieldValue: "path",
-			Errors:     []error{expectedErr},
+			Errors:     []string{expectedErr.Error()},
 		}, *err.(*FieldError))
 	})
 
@@ -103,7 +90,7 @@ func TestRulesForField(t *testing.T) {
 		assert.Equal(t, FieldError{
 			FieldPath:  "test.path",
 			FieldValue: "value",
-			Errors:     []error{err1, err2},
+			Errors:     []string{err1.Error(), err2.Error()},
 		}, *err.(*FieldError))
 	})
 }

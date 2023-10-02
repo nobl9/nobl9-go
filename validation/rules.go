@@ -4,32 +4,22 @@ type fieldRules interface {
 	Validate() error
 }
 
-func RulesForObject(objectMetadata ObjectMetadata, rules ...fieldRules) ObjectRules {
-	return ObjectRules{
-		objectMetadata: objectMetadata,
-		fieldRules:     rules,
-	}
+func RulesForObject(rules ...fieldRules) ObjectRules {
+	return ObjectRules{fieldRules: rules}
 }
 
 type ObjectRules struct {
-	objectMetadata ObjectMetadata
-	fieldRules     []fieldRules
+	fieldRules []fieldRules
 }
 
-func (r ObjectRules) Validate() error {
+func (r ObjectRules) Validate() []error {
 	var errors []error
 	for _, field := range r.fieldRules {
 		if err := field.Validate(); err != nil {
 			errors = append(errors, err)
 		}
 	}
-	if len(errors) > 0 {
-		return &ObjectError{
-			Object: r.objectMetadata,
-			Errors: errors,
-		}
-	}
-	return nil
+	return errors
 }
 
 // RulesForField creates a typed FieldRules instance for the field which access is defined through getter function.
@@ -59,11 +49,7 @@ func (r FieldRules[T]) Validate() error {
 		}
 	}
 	if len(errors) > 0 {
-		return &FieldError{
-			FieldPath:  r.fieldPath,
-			FieldValue: fv,
-			Errors:     errors,
-		}
+		return NewFieldError(r.fieldPath, fv, errors)
 	}
 	return nil
 }

@@ -2,22 +2,15 @@ package project
 
 import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/validation"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 func validate(p Project) error {
 	v := validation.RulesForObject(
-		validation.ObjectMetadata{
-			Kind:   p.GetKind().String(),
-			Name:   p.GetName(),
-			Source: p.GetManifestSource(),
-		},
 		validation.RulesForField[string](
 			"metadata.name",
 			func() string { return p.Metadata.Name },
 		).
-			// If predicate has been included just for the demonstration.
-			If(func() bool { return p.Spec.Description != "lol" }).
 			With(
 				validation.StringRequired(),
 				validation.StringIsDNSSubdomain()),
@@ -37,5 +30,8 @@ func validate(p Project) error {
 		).
 			With(validation.StringDescription()),
 	)
-	return v.Validate()
+	if errs := v.Validate(); len(errs) > 0 {
+		return v1alpha.NewObjectError(p, errs)
+	}
+	return nil
 }

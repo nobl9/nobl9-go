@@ -45,35 +45,37 @@ var expectedUniquenessConstraintMessage string
 
 func TestValidate(t *testing.T) {
 	t.Run("nil objects slice", func(t *testing.T) {
-		err := Validate(nil)
-		assert.NoError(t, err)
+		errs := Validate(nil)
+		assert.Empty(t, errs)
 	})
 
 	t.Run("empty objects slice", func(t *testing.T) {
-		err := Validate([]Object{})
-		assert.NoError(t, err)
+		errs := Validate([]Object{})
+		assert.Empty(t, errs)
 	})
 
 	t.Run("no errors", func(t *testing.T) {
-		err := Validate([]Object{
+		errs := Validate([]Object{
 			customObject{kind: KindProject, name: "default"},
 			customObject{kind: KindRoleBinding, name: "default"},
 		})
-		assert.NoError(t, err)
+		assert.Empty(t, errs)
 	})
 
 	t.Run("errors", func(t *testing.T) {
-		err := Validate([]Object{
+		err1 := errors.New("I failed!")
+		err2 := errors.New("I failed too!")
+		errs := Validate([]Object{
 			customObject{},
-			customObject{validationError: errors.New("I failed!")},
-			customObject{validationError: errors.New("I failed too!")},
+			customObject{validationError: err1},
+			customObject{validationError: err2},
 		})
-		assert.Error(t, err)
-		assert.EqualError(t, err, "I failed!\nI failed too!")
+		assert.Len(t, errs, 2)
+		assert.ElementsMatch(t, []error{err1, err2}, errs)
 	})
 
 	t.Run("uniqueness constraint violated", func(t *testing.T) {
-		err := Validate([]Object{
+		errs := Validate([]Object{
 			customObject{kind: KindProject, name: "sun"},
 			customObject{kind: KindProject, name: "sun"},
 			customObject{kind: KindProject, name: "moon"},
@@ -106,8 +108,8 @@ func TestValidate(t *testing.T) {
 				kind: KindService, name: "jupiter"},
 				project: "default"},
 		})
-		assert.Error(t, err)
-		assert.EqualError(t, err, strings.ReplaceAll(expectedUniquenessConstraintMessage, "\n", "; "))
+		assert.Len(t, errs, 1)
+		assert.EqualError(t, errs[0], strings.ReplaceAll(expectedUniquenessConstraintMessage, "\n", "; "))
 	})
 }
 
