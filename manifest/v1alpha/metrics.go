@@ -41,6 +41,7 @@ type MetricSpec struct {
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
+	GenericMetric       *GenericMetric             `json:"generic,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -249,6 +250,10 @@ type AzureMonitorMetric struct {
 type AzureMonitorMetricDimension struct {
 	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
 	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
+}
+
+type GenericMetric struct {
+	Query *string `json:"query" validate:"required"`
 }
 
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
