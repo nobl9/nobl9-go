@@ -1883,6 +1883,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.AzureMonitor != nil {
 		metricTypesCount++
 	}
+	if ms.GenericMetric != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1907,6 +1910,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "genericMetric", "GenericMetric", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
