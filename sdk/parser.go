@@ -12,6 +12,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaParser "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 )
 
 var ErrNoDefinitionsFound = errors.New("no definitions in input")
@@ -168,7 +169,7 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 	}
 	switch object.ApiVersion {
 	case manifest.VersionV1alpha:
-		parsed, err := v1alpha.ParseObject(data, object.Kind, format)
+		parsed, err := v1alphaParser.ParseObject(data, object.Kind, format)
 		if err != nil {
 			return err
 		}

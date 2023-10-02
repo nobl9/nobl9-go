@@ -6,7 +6,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 )
 
@@ -16,7 +16,7 @@ func ExampleProject() {
 		project.Metadata{
 			Name:        "my-project",
 			DisplayName: "My Project",
-			Labels: labels.Labels{
+			Labels: v1alpha.Labels{
 				"team":   []string{"green", "orange"},
 				"region": []string{"eu-central-1"},
 			},

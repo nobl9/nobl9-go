@@ -1,7 +1,7 @@
 package project
 
 import (
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/validation"
 )
 
@@ -26,11 +26,11 @@ func validate(p Project) error {
 			func() string { return p.Metadata.DisplayName },
 		).
 			With(validation.StringLength(0, 63)),
-		validation.RulesForField[labels.Labels](
+		validation.RulesForField[v1alpha.Labels](
 			"metadata.labels",
-			func() labels.Labels { return p.Metadata.Labels },
+			func() v1alpha.Labels { return p.Metadata.Labels },
 		).
-			With(labels.ValidationRule()),
+			With(v1alpha.ValidationRule()),
 		validation.RulesForField[string](
 			"spec.description",
 			func() string { return p.Spec.Description },
