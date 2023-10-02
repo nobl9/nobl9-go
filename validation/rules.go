@@ -4,17 +4,17 @@ type fieldRules interface {
 	Validate() error
 }
 
-func RulesForObject(rules ...fieldRules) ObjectRules {
-	return ObjectRules{fieldRules: rules}
+func RulesForStruct(rules ...fieldRules) StructRules {
+	return StructRules{fieldRules: rules}
 }
 
-type ObjectRules struct {
+type StructRules struct {
 	fieldRules []fieldRules
 }
 
-func (r ObjectRules) Validate() []error {
+func (s StructRules) Validate() []error {
 	var errors []error
-	for _, field := range r.fieldRules {
+	for _, field := range s.fieldRules {
 		if err := field.Validate(); err != nil {
 			errors = append(errors, err)
 		}

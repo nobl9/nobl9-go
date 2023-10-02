@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRulesForObject(t *testing.T) {
+func TestRulesForStruct(t *testing.T) {
 	t.Run("no errors", func(t *testing.T) {
-		r := RulesForObject(
+		r := RulesForStruct(
 			RulesForField[string]("test", func() string { return "test" }).
 				With(SingleRule[string](func(v string) error { return nil })),
 		)
@@ -21,7 +21,7 @@ func TestRulesForObject(t *testing.T) {
 	t.Run("errors", func(t *testing.T) {
 		err1 := errors.New("1")
 		err2 := errors.New("2")
-		r := RulesForObject(
+		r := RulesForStruct(
 			RulesForField[string]("test", func() string { return "test" }).
 				With(SingleRule[string](func(v string) error { return nil })),
 			RulesForField[string]("test.name", func() string { return "name" }).

@@ -6,7 +6,7 @@ import (
 )
 
 func validate(p Project) error {
-	v := validation.RulesForObject(
+	v := validation.RulesForStruct(
 		validation.RulesForField[string](
 			"metadata.name",
 			func() string { return p.Metadata.Name },
