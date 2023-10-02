@@ -1,4 +1,4 @@
-package labels
+package v1alpha
 
 import (
 	"testing"

@@ -2,7 +2,6 @@ package v1alpha
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 )
 
 //go:generate go run ../../scripts/generate-object-impl.go SLO
@@ -20,10 +19,10 @@ type SLO struct {
 }
 
 type SLOMetadata struct {
-	Name        string        `json:"name" validate:"required,objectName"`
-	DisplayName string        `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string        `json:"project,omitempty" validate:"objectName"`
-	Labels      labels.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string `json:"name" validate:"required,objectName"`
+	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string `json:"project,omitempty" validate:"objectName"`
+	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
 // SLOSpec represents content of Spec typical for SLO Object

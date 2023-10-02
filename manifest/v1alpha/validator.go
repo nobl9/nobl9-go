@@ -20,7 +20,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
@@ -1640,7 +1639,7 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	lbl := fl.Field().Interface().(labels.Labels)
+	lbl := fl.Field().Interface().(Labels)
 	return lbl.Validate() == nil
 }
 

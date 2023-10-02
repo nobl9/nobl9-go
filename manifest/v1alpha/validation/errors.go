@@ -13,11 +13,11 @@ type ObjectError struct {
 }
 
 type ObjectMetadata struct {
-	IsProjectScoped bool
-	Kind            string
-	Name            string
-	Project         string
-	Source          string
+	IsProjectScoped bool   `json:"isProjectScoped"`
+	Kind            string `json:"kind"`
+	Name            string `json:"name"`
+	Project         string `json:"project"`
+	Source          string `json:"source"`
 }
 
 func (e ObjectError) Error() string {
@@ -38,7 +38,7 @@ func (e ObjectError) Error() string {
 type FieldError struct {
 	FieldPath  string      `json:"fieldPath"`
 	FieldValue interface{} `json:"value"`
-	Errors     []error     `json:"Errors"`
+	Errors     []error     `json:"errors"`
 }
 
 func (e FieldError) Error() string {

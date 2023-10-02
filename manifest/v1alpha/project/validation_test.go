@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/labels"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 //go:embed test_data/expected_error.txt
@@ -20,7 +20,7 @@ func TestValidate_AllErrors(t *testing.T) {
 		Metadata: Metadata{
 			Name:        strings.Repeat("MY PROJECT", 20),
 			DisplayName: strings.Repeat("my-project", 10),
-			Labels: labels.Labels{
+			Labels: v1alpha.Labels{
 				"L O L": []string{"dip", "dip"},
 			},
 		},
