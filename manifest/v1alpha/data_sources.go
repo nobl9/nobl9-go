@@ -500,6 +500,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 			Value: ptr(5),
 			Unit:  QDDMinute,
 		},
+		Generic.String(): {
+			Value: ptr(0),
+			Unit:  QDDSecond,
+		},
 	}
 }
 
