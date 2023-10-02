@@ -14,7 +14,16 @@ import (
 //go:embed test_data
 var errorsTestData embed.FS
 
-func TestPropertyError(t *testing.T) {
+func TestMultiRuleError(t *testing.T) {
+	err := multiRuleError{
+		errors.New("this is just a test!"),
+		errors.New("another error..."),
+		errors.New("that is just fatal."),
+	}
+	assert.EqualError(t, err, expectedErrorOutput(t, "multi_error.txt"))
+}
+
+func TestFieldError(t *testing.T) {
 	for typ, value := range map[string]interface{}{
 		"string": "default",
 		"slice":  []string{"this", "that"},
@@ -25,131 +34,17 @@ func TestPropertyError(t *testing.T) {
 		}{This: "this", That: "that"},
 	} {
 		t.Run(typ, func(t *testing.T) {
-			err := &PropertyError{
-				PropertyName:  "metadata.name",
-				PropertyValue: propertyValueString(value),
-				Errors: []RuleError{
-					{Message: "what a shame this happened"},
-					{Message: "this is outrageous..."},
-					{Message: "here's another error"},
+			err := FieldError{
+				FieldPath:  "metadata.name",
+				FieldValue: value,
+				Errors: []string{
+					"what a shame this happened",
+					"this is outrageous...",
+					"here's another error",
 				},
 			}
-			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", typ)))
+			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("field_error_%s.txt", typ)))
 		})
-	}
-}
-
-func TestPropertyError_PrependPropertyName(t *testing.T) {
-	for _, test := range []struct {
-		PropertyError *PropertyError
-		InputName     string
-		ExpectedName  string
-	}{
-		{
-			PropertyError: &PropertyError{},
-		},
-		{
-			PropertyError: &PropertyError{PropertyName: "test"},
-			ExpectedName:  "test",
-		},
-		{
-			PropertyError: &PropertyError{},
-			InputName:     "new",
-			ExpectedName:  "new",
-		},
-		{
-			PropertyError: &PropertyError{PropertyName: "original"},
-			InputName:     "added",
-			ExpectedName:  "added.original",
-		},
-	} {
-		test.PropertyError.PrependPropertyName(test.InputName)
-		assert.Equal(t, test.ExpectedName, test.PropertyError.PropertyName)
-	}
-}
-
-func TestRuleError(t *testing.T) {
-	for _, test := range []struct {
-		RuleError    RuleError
-		InputCode    ErrorCode
-		ExpectedCode ErrorCode
-	}{
-		{
-			RuleError: RuleError{Message: "test"},
-		},
-		{
-			RuleError:    RuleError{Message: "test", Code: "code"},
-			ExpectedCode: "code",
-		},
-		{
-			RuleError:    RuleError{Message: "test"},
-			InputCode:    "code",
-			ExpectedCode: "code",
-		},
-		{
-			RuleError:    RuleError{Message: "test", Code: "original"},
-			InputCode:    "added",
-			ExpectedCode: "added:original",
-		},
-	} {
-		result := test.RuleError.AddCode(test.InputCode)
-		assert.Equal(t, test.RuleError.Message, result.Message)
-		assert.Equal(t, test.ExpectedCode, result.Code)
-	}
-}
-
-func TestMultiRuleError(t *testing.T) {
-	err := ruleSetError{
-		errors.New("this is just a test!"),
-		errors.New("another error..."),
-		errors.New("that is just fatal."),
-	}
-	assert.EqualError(t, err, expectedErrorOutput(t, "multi_error.txt"))
-}
-
-func TestHasErrorCode(t *testing.T) {
-	for _, test := range []struct {
-		Error        error
-		Code         ErrorCode
-		HasErrorCode bool
-	}{
-		{
-			Error:        nil,
-			Code:         "code",
-			HasErrorCode: false,
-		},
-		{
-			Error:        errors.New("code"),
-			Code:         "code",
-			HasErrorCode: false,
-		},
-		{
-			Error:        RuleError{Code: "another"},
-			Code:         "code",
-			HasErrorCode: false,
-		},
-		{
-			Error:        RuleError{Code: "another:this"},
-			Code:         "code",
-			HasErrorCode: false,
-		},
-		{
-			Error:        RuleError{Code: "another:code:this"},
-			Code:         "code",
-			HasErrorCode: true,
-		},
-		{
-			Error:        &PropertyError{Errors: []RuleError{{Code: "another"}}},
-			Code:         "code",
-			HasErrorCode: false,
-		},
-		{
-			Error:        &PropertyError{Errors: []RuleError{{Code: "this:another"}, {}, {Code: "another:code:this"}}},
-			Code:         "code",
-			HasErrorCode: true,
-		},
-	} {
-		assert.Equal(t, test.HasErrorCode, HasErrorCode(test.Error, test.Code))
 	}
 }
 

@@ -61,7 +61,7 @@ func (o *ObjectError) MarshalJSON() ([]byte, error) {
 	var errs []json.RawMessage
 	for _, oErr := range o.Errors {
 		switch v := oErr.(type) {
-		case *validation.PropertyError:
+		case validation.FieldError:
 			data, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
@@ -95,7 +95,7 @@ func (o *ObjectError) UnmarshalJSON(bytes []byte) error {
 	o.Object = intermediate.Object
 	for _, rawErr := range intermediate.Errors {
 		if len(rawErr) > 0 && rawErr[0] == '{' {
-			var fErr *validation.PropertyError
+			var fErr validation.FieldError
 			if err := json.Unmarshal(rawErr, &fErr); err != nil {
 				return err
 			}

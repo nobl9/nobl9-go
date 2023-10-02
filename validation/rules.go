@@ -1,101 +1,65 @@
 package validation
 
-import "github.com/pkg/errors"
-
-// RulesFor creates a typed PropertyRules instance for the property which access is defined through getter function.
-func RulesFor[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
-	return PropertyRules[T, S]{getter: getter}
+type fieldRules interface {
+	Validate() error
 }
 
-// GetSelf is a convenience method for extracting 'self' property of a validated value.
-func GetSelf[S any]() PropertyGetter[S, S] {
-	return func(s S) S { return s }
+func RulesForObject(rules ...fieldRules) ObjectRules {
+	return ObjectRules{fieldRules: rules}
 }
 
-type Predicate[S any] func(S) bool
-
-type PropertyGetter[T, S any] func(S) T
-
-// PropertyRules is responsible for validating a single property.
-type PropertyRules[T, S any] struct {
-	name   string
-	getter PropertyGetter[T, S]
-	steps  []interface{}
+type ObjectRules struct {
+	fieldRules []fieldRules
 }
 
-func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
-	r.name = name
-	return r
-}
-
-func (r PropertyRules[T, S]) Validate(st S) []error {
-	var (
-		ruleErrors, allErrors []error
-		propValue             T
-		previousStepFailed    bool
-	)
-loop:
-	for _, step := range r.steps {
-		switch v := step.(type) {
-		case stopOnErrorStep:
-			if previousStepFailed {
-				break loop
-			}
-		case Predicate[S]:
-			if !v(st) {
-				break loop
-			}
-		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
-		case Rule[T]:
-			propValue = r.getter(st)
-			err := v.Validate(propValue)
-			if err != nil {
-				ruleErrors = append(ruleErrors, err)
-			}
-			previousStepFailed = err != nil
-		case Rules[T]:
-			structValue := r.getter(st)
-			errs := v.Validate(structValue)
-			for _, err := range errs {
-				var fErr *PropertyError
-				if ok := errors.As(err, &fErr); ok {
-					fErr.PrependPropertyName(r.name)
-				}
-				allErrors = append(allErrors, err)
-			}
-			previousStepFailed = len(errs) > 0
+func (r ObjectRules) Validate() []error {
+	var errors []error
+	for _, field := range r.fieldRules {
+		if err := field.Validate(); err != nil {
+			errors = append(errors, err)
 		}
 	}
-	if len(ruleErrors) > 0 {
-		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors))
-	}
-	return allErrors
+	return errors
 }
 
-func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {
-	for _, rule := range rules {
-		r.steps = append(r.steps, rule)
+// RulesForField creates a typed FieldRules instance for the field which access is defined through getter function.
+func RulesForField[T any](fieldPath string, getter func() T) FieldRules[T] {
+	return FieldRules[T]{fieldPath: fieldPath, getter: getter}
+}
+
+// FieldRules is responsible for validating a single struct field.
+type FieldRules[T any] struct {
+	fieldPath  string
+	getter     func() T
+	rules      []Rule[T]
+	predicates []func() bool
+}
+
+func (r FieldRules[T]) Validate() error {
+	for _, pred := range r.predicates {
+		if pred != nil && !pred() {
+			return nil
+		}
 	}
+	fv := r.getter()
+	var errors []error
+	for i := range r.rules {
+		if err := r.rules[i].Validate(fv); err != nil {
+			errors = append(errors, err)
+		}
+	}
+	if len(errors) > 0 {
+		return NewFieldError(r.fieldPath, fv, errors)
+	}
+	return nil
+}
+
+func (r FieldRules[T]) If(predicate func() bool) FieldRules[T] {
+	r.predicates = append(r.predicates, predicate)
 	return r
 }
 
-func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] {
-	for _, rule := range rules {
-		r.steps = append(r.steps, rule)
-	}
-	return r
-}
-
-func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	for _, predicate := range predicates {
-		r.steps = append(r.steps, predicate)
-	}
-	return r
-}
-
-type stopOnErrorStep uint8
-
-func (r PropertyRules[T, S]) StopOnError() PropertyRules[T, S] {
-	r.steps = append(r.steps, stopOnErrorStep(0))
+func (r FieldRules[T]) With(rules ...Rule[T]) FieldRules[T] {
+	r.rules = append(r.rules, rules...)
 	return r
 }

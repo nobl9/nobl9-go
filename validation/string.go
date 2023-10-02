@@ -7,22 +7,31 @@ import (
 	"github.com/pkg/errors"
 )
 
+func StringRequired() SingleRule[string] {
+	return func(v string) error {
+		if v == "" {
+			return errors.New("field is required but was empty")
+		}
+		return nil
+	}
+}
+
 func StringLength(min, max int) SingleRule[string] {
-	return NewSingleRule(func(v string) error {
+	return func(v string) error {
 		rc := utf8.RuneCountInString(v)
 		if rc < min || rc > max {
 			return errors.Errorf("length must be between %d and %d", min, max)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringLength)
+	}
 }
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
-func StringIsDNSSubdomain() RuleSet[string] {
-	return NewRuleSet[string](
+func StringIsDNSSubdomain() MultiRule[string] {
+	return MultiRule[string]{
 		StringLength(1, 63),
-		NewSingleRule(func(v string) error {
+		SingleRule[string](func(v string) error {
 			if !dns1123SubdomainRegexp.MatchString(v) {
 				return errors.New(regexErrorMsg(
 					"a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-',"+
@@ -31,12 +40,11 @@ func StringIsDNSSubdomain() RuleSet[string] {
 			}
 			return nil
 		}),
-	).WithErrorCode(ErrorCodeStringIsDNSSubdomain)
+	}
 }
 
 func StringDescription() SingleRule[string] {
-	return StringLength(0, 1050).
-		WithErrorCode(ErrorCodeStringDescription)
+	return StringLength(0, 1050)
 }
 
 func regexErrorMsg(msg, format string, examples ...string) string {

@@ -7,112 +7,65 @@ import (
 	"strings"
 )
 
-func NewPropertyError(propertyName string, propertyValue interface{}, errs []error) *PropertyError {
-	return &PropertyError{
-		PropertyName:  propertyName,
-		PropertyValue: propertyValueString(propertyValue),
-		Errors:        unpackErrors(errs, make([]RuleError, 0, len(errs))),
+func NewFieldError(fieldPath string, fieldValue interface{}, errs []error) *FieldError {
+	errorMessages := make([]string, 0, len(errs))
+	for _, err := range errs {
+		if mErrs, ok := err.(multiRuleError); ok {
+			for _, mErr := range mErrs {
+				errorMessages = append(errorMessages, mErr.Error())
+			}
+		} else {
+			errorMessages = append(errorMessages, err.Error())
+		}
+	}
+	return &FieldError{
+		FieldPath:  fieldPath,
+		FieldValue: fieldValue,
+		Errors:     errorMessages,
 	}
 }
 
-type PropertyError struct {
-	PropertyName  string      `json:"propertyName"`
-	PropertyValue string      `json:"propertyValue"`
-	Errors        []RuleError `json:"errors"`
+type FieldError struct {
+	FieldPath  string      `json:"fieldPath"`
+	FieldValue interface{} `json:"value"`
+	Errors     []string    `json:"errors"`
 }
 
-func (e *PropertyError) Error() string {
+func (e FieldError) Error() string {
 	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
-	if e.PropertyValue != "" {
-		b.WriteString(fmt.Sprintf(" with value '%s'", e.PropertyValue))
-	}
-	b.WriteString(":\n")
-	JoinErrors(b, e.Errors, strings.Repeat(" ", 2))
+	b.WriteString(fmt.Sprintf("'%s' with value '%s':\n", e.FieldPath, e.ValueString()))
+	joinErrorMessages(b, e.Errors, strings.Repeat(" ", 2))
 	return b.String()
 }
 
-const propertyNameSeparator = "."
-
-func (e *PropertyError) PrependPropertyName(name string) {
-	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
-}
-
-type RuleError struct {
-	Message string    `json:"error"`
-	Code    ErrorCode `json:"code,omitempty"`
-}
-
-func (r RuleError) Error() string {
-	return r.Message
-}
-
-const errorCodeSeparator = ":"
-
-func (r RuleError) AddCode(code ErrorCode) RuleError {
-	r.Code = concatStrings(code, r.Code, errorCodeSeparator)
-	return r
-}
-
-func concatStrings(pre, post, sep string) string {
-	if pre == "" {
-		return post
-	}
-	if post == "" {
-		return pre
-	}
-	return pre + sep + post
-}
-
-func HasErrorCode(err error, code ErrorCode) bool {
-	switch v := err.(type) {
-	case RuleError:
-		codes := strings.Split(v.Code, errorCodeSeparator)
-		for i := range codes {
-			if code == codes[i] {
-				return true
-			}
-		}
-	case *PropertyError:
-		for _, e := range v.Errors {
-			if HasErrorCode(e, code) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func propertyValueString(v interface{}) string {
-	ft := reflect.TypeOf(v)
+func (e FieldError) ValueString() string {
+	ft := reflect.TypeOf(e.FieldValue)
 	if ft.Kind() == reflect.Pointer {
 		ft = ft.Elem()
 	}
 	var s string
 	switch ft.Kind() {
 	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
-		if !reflect.ValueOf(v).IsZero() {
-			raw, _ := json.Marshal(v)
-			s = string(raw)
-		}
+		raw, _ := json.Marshal(e.FieldValue)
+		s = string(raw)
 	default:
-		s = fmt.Sprint(v)
+		s = fmt.Sprint(e.FieldValue)
 	}
 	return limitString(s, 100)
 }
 
-// ruleSetError is a container for transferring multiple errors reported by RuleSet.
-// It is intentionally not exported as it is only an intermediate stage before the
-// aggregated errors are flattened.
-type ruleSetError []error
+// multiRuleError is a container for transferring multiple errors reported by MultiRule.
+type multiRuleError []error
 
-func (r ruleSetError) Error() string {
+func (m multiRuleError) Error() string {
 	b := new(strings.Builder)
-	JoinErrors(b, r, "")
+	JoinErrors(b, m, "")
 	return b.String()
 }
 
-func JoinErrors[T error](b *strings.Builder, errs []T, indent string) {
+const listPoint = "- "
+
+func JoinErrors(b *strings.Builder, errs []error, indent string) {
 	for i, err := range errs {
 		buildErrorMessage(b, err.Error(), indent)
 		if i < len(errs)-1 {
@@ -121,11 +74,20 @@ func JoinErrors[T error](b *strings.Builder, errs []T, indent string) {
 	}
 }
 
-const listPoint = "- "
+func joinErrorMessages(b *strings.Builder, msgs []string, indent string) {
+	for i, msg := range msgs {
+		buildErrorMessage(b, msg, indent)
+		if i < len(msgs)-1 {
+			b.WriteString("\n")
+		}
+	}
+}
 
 func buildErrorMessage(b *strings.Builder, errMsg, indent string) {
 	b.WriteString(indent)
 	b.WriteString(listPoint)
+	// Remove the first list point characters if the error contained them.
+	errMsg = strings.TrimLeft(errMsg, listPoint)
 	// Indent the whole error message.
 	errMsg = strings.ReplaceAll(errMsg, "\n", "\n"+indent)
 	b.WriteString(errMsg)
@@ -136,21 +98,4 @@ func limitString(s string, limit int) string {
 		return s[:limit] + "..."
 	}
 	return s
-}
-
-// unpackErrors unpacks error messages recursively scanning ruleSetError if it is detected.
-func unpackErrors(errs []error, ruleErrors []RuleError) []RuleError {
-	for _, err := range errs {
-		switch v := err.(type) {
-		case ruleSetError:
-			ruleErrors = append(ruleErrors, unpackErrors(v, ruleErrors)...)
-		case RuleError:
-			ruleErrors = append(ruleErrors, v)
-		case *RuleError:
-			ruleErrors = append(ruleErrors, *v)
-		default:
-			ruleErrors = append(ruleErrors, RuleError{Message: v.Error()})
-		}
-	}
-	return ruleErrors
 }
