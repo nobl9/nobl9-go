@@ -2739,9 +2739,26 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	case isConfiguration:
 		validateCloudWatchConfiguration(sl, cloudWatchMetric)
 	}
+
+	if !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "regionNotAvailable", "")
+	}
+
 	if !isValidRegion(*cloudWatchMetric.Region, regions) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
 	}
+}
+
+// isValidAWSAccountID checks if the provided string is a valid AWS account ID.
+// An AWS account ID is a 12-digit number, or it can be an empty string.
+func isValidAWSAccountID(accountID string) bool {
+	if len(accountID) == 0 {
+		return true
+	}
+	if match, _ := regexp.MatchString(`^[0-9]{12}$`, accountID); match {
+		return true
+	}
+	return false
 }
 
 func redshiftCountMetricsSpecValidation(sl v.StructLevel) {

@@ -1173,3 +1173,58 @@ func TestAzureMonitorSloSpecValidation(t *testing.T) {
 		})
 	}
 }
+
+func Test_isValidAWSAccountID(t *testing.T) {
+	tests := []struct {
+		name      string
+		accountID string
+		want      bool
+	}{
+		{
+			name:      "allow empty accountID",
+			accountID: "",
+			want:      true,
+		},
+		{
+			name:      "allow proper accountID",
+			accountID: "123456789012",
+			want:      true,
+		},
+		{
+			name:      "deny too short numeric accountID",
+			accountID: "1234",
+			want:      false,
+		},
+		{
+			name:      "deny too long numeric accountID",
+			accountID: "1234567890121",
+			want:      false,
+		},
+		{
+			name:      "deny too short alfa-numeric accountID",
+			accountID: "1234avb",
+			want:      false,
+		},
+		{
+			name:      "deny 12 char alfa-numeric accountID",
+			accountID: "1234avb12345",
+			want:      false,
+		},
+		{
+			name:      "deny 12 char alfa accountID",
+			accountID: "abcerjasdyja",
+			want:      false,
+		},
+		{
+			name:      "deny short char alfa accountID",
+			accountID: "abcasdyja",
+			want:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, isValidAWSAccountID(tt.accountID), "isValidCloudWatchAccountID(%v)", tt.accountID)
+		})
+	}
+}
