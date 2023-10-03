@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
 //go:embed test_data/parser
@@ -132,9 +132,9 @@ func TestDecodeSingle(t *testing.T) {
 	})
 
 	t.Run("invalid type, return error", func(t *testing.T) {
-		_, err := DecodeObject[v1alpha.Service](readInputFile(t, "single_project.yaml"))
+		_, err := DecodeObject[v1alphaService.Service](readInputFile(t, "single_project.yaml"))
 		require.Error(t, err)
-		assert.EqualError(t, err, "object of type project.Project is not of type v1alpha.Service")
+		assert.EqualError(t, err, "object of type project.Project is not of type service.Service")
 	})
 }
 
