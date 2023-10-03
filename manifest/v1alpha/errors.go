@@ -61,7 +61,7 @@ func (o *ObjectError) MarshalJSON() ([]byte, error) {
 	var errs []json.RawMessage
 	for _, oErr := range o.Errors {
 		switch v := oErr.(type) {
-		case validation.FieldError:
+		case validation.FieldError, *validation.FieldError:
 			data, err := json.Marshal(v)
 			if err != nil {
 				return nil, err
