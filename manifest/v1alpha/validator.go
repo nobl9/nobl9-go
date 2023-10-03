@@ -1404,6 +1404,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 
 // haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
 // and metricNamespace as total query
+// nolint: gocognit
 func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec SLOSpec) bool {
 	for _, objective := range sloSpec.Objectives {
 		if objective.CountMetrics == nil {

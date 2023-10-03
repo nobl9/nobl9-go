@@ -7,6 +7,16 @@ import (
 
 //go:generate go run ../../../scripts/generate-object-impl.go Project
 
+// New creates a new Project based on provided Metadata nad Spec.
+func New(metadata Metadata, spec Spec) Project {
+	return Project{
+		APIVersion: manifest.VersionV1alpha.String(),
+		Kind:       manifest.KindProject,
+		Metadata:   metadata,
+		Spec:       spec,
+	}
+}
+
 // Project is the primary grouping primitive for manifest.Object.
 // Most objects are scoped to a certain Project.
 type Project struct {
@@ -17,16 +27,6 @@ type Project struct {
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`
-}
-
-// New creates a new Project based on provided Metadata nad Spec.
-func New(metadata Metadata, spec Spec) Project {
-	return Project{
-		APIVersion: manifest.VersionV1alpha.String(),
-		Kind:       manifest.KindProject,
-		Metadata:   metadata,
-		Spec:       spec,
-	}
 }
 
 // Metadata provides identity information for Project.

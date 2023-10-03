@@ -1,6 +1,8 @@
 package v1alpha
 
-import "github.com/nobl9/nobl9-go/manifest"
+import (
+	"github.com/nobl9/nobl9-go/manifest"
+)
 
 //go:generate go run ../../scripts/generate-object-impl.go Alert
 
@@ -22,9 +24,9 @@ type AlertMetadata struct {
 
 // AlertSpec represents content of Alert's Spec
 type AlertSpec struct {
-	AlertPolicy         AlertPolicyMetadata `json:"alertPolicy"`
-	SLO                 SLOMetadata         `json:"slo"`
-	Service             ServiceMetadata     `json:"service"`
+	AlertPolicy         AlertObjectMetadata `json:"alertPolicy"`
+	SLO                 AlertObjectMetadata `json:"slo"`
+	Service             AlertObjectMetadata `json:"service"`
 	Objective           AlertObjective      `json:"objective"`
 	Severity            string              `json:"severity" validate:"required,severity" example:"High"`
 	Status              string              `json:"status" example:"Resolved"`
@@ -40,4 +42,11 @@ type AlertObjective struct {
 	Value       float64 `json:"value" example:"100"`
 	Name        string  `json:"name" validate:"omitempty"`
 	DisplayName string  `json:"displayName" validate:"omitempty"`
+}
+
+type AlertObjectMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+	Project     string `json:"project,omitempty"`
+	Labels      Labels `json:"labels,omitempty"`
 }
