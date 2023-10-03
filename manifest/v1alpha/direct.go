@@ -407,9 +407,3 @@ type PublicAzureMonitorDirectConfig struct {
 	HiddenClientID     string `json:"clientId"`
 	HiddenClientSecret string `json:"clientSecret"`
 }
-
-// PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
-type PublicDirectWithSLOs struct {
-	Direct PublicDirect `json:"direct"`
-	SLOs   []SLO        `json:"slos"`
-}

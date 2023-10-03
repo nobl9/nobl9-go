@@ -1,32 +1,44 @@
-package v1alpha
+package slo
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 //go:generate go run ../../scripts/generate-object-impl.go SLO
+
+// New creates a new Service based on provided Metadata nad Spec.
+func New(metadata Metadata, spec Spec) SLO {
+	return SLO{
+		APIVersion: manifest.VersionV1alpha.String(),
+		Kind:       manifest.KindSLO,
+		Metadata:   metadata,
+		Spec:       spec,
+	}
+}
 
 // SLO struct which mapped one to one with kind: slo yaml definition, external usage
 type SLO struct {
 	APIVersion string        `json:"apiVersion"`
 	Kind       manifest.Kind `json:"kind"`
-	Metadata   SLOMetadata   `json:"metadata"`
-	Spec       SLOSpec       `json:"spec"`
-	Status     *SLOStatus    `json:"status,omitempty"`
+	Metadata   Metadata      `json:"metadata"`
+	Spec       Spec          `json:"spec"`
+	Status     *Status       `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
-type SLOMetadata struct {
-	Name        string `json:"name" validate:"required,objectName"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string `json:"project,omitempty" validate:"objectName"`
-	Labels      Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+// Metadata provides identity information for SLO.
+type Metadata struct {
+	Name        string         `json:"name" validate:"required,objectName"`
+	DisplayName string         `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
+	Project     string         `json:"project,omitempty" validate:"objectName"`
+	Labels      v1alpha.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
 }
 
-// SLOSpec represents content of Spec typical for SLO Object
-type SLOSpec struct {
+// Spec holds detailed information specific to SLO.
+type Spec struct {
 	Description     string         `json:"description" validate:"description" example:"Total count of server requests"`
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
@@ -40,8 +52,10 @@ type SLOSpec struct {
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty" validate:"omitempty"`
 }
 
-type SLOStatus struct {
-	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+// Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
+// Status is not part of the static object definition.
+type Status struct {
+	ReplayStatus *v1alpha.ReplayStatus `json:"timeTravel,omitempty"`
 }
 
 type ReplayStatus struct {

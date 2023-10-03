@@ -236,9 +236,3 @@ type SplunkAgentConfig struct {
 type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
 }
-
-// AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
-type AgentWithSLOs struct {
-	Agent Agent `json:"agent"`
-	SLOs  []SLO `json:"slos"`
-}

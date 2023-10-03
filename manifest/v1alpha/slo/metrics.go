@@ -1,7 +1,12 @@
-// Package v1alpha represents objects available in API n9/v1alpha
-package v1alpha
+package slo
 
-import "sort"
+import (
+	"sort"
+
+	"golang.org/x/exp/slices"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+)
 
 // CountMetricsSpec represents set of two time series of good and total counts
 type CountMetricsSpec struct {
@@ -251,21 +256,21 @@ type AzureMonitorMetricDimension struct {
 	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
 }
 
-func (slo *SLOSpec) containsIndicatorRawMetric() bool {
-	return slo.Indicator.RawMetric != nil
+func (s *Spec) containsIndicatorRawMetric() bool {
+	return s.Indicator.RawMetric != nil
 }
 
 // IsComposite returns true if SLOSpec contains composite type.
-func (slo *SLOSpec) IsComposite() bool {
-	return slo.Composite != nil
+func (s *Spec) IsComposite() bool {
+	return s.Composite != nil
 }
 
 // HasRawMetric returns true if SLOSpec has raw metric.
-func (slo *SLOSpec) HasRawMetric() bool {
-	if slo.containsIndicatorRawMetric() {
+func (s *Spec) HasRawMetric() bool {
+	if s.containsIndicatorRawMetric() {
 		return true
 	}
-	for _, objective := range slo.Objectives {
+	for _, objective := range s.Objectives {
 		if objective.HasRawMetricQuery() {
 			return true
 		}
@@ -274,12 +279,12 @@ func (slo *SLOSpec) HasRawMetric() bool {
 }
 
 // RawMetrics returns raw metric spec.
-func (slo *SLOSpec) RawMetrics() []*MetricSpec {
-	if slo.containsIndicatorRawMetric() {
-		return []*MetricSpec{slo.Indicator.RawMetric}
+func (s *Spec) RawMetrics() []*MetricSpec {
+	if s.containsIndicatorRawMetric() {
+		return []*MetricSpec{s.Indicator.RawMetric}
 	}
-	rawMetrics := make([]*MetricSpec, 0, slo.ObjectivesRawMetricsCount())
-	for _, objective := range slo.Objectives {
+	rawMetrics := make([]*MetricSpec, 0, s.ObjectivesRawMetricsCount())
+	for _, objective := range s.Objectives {
 		if objective.RawMetric != nil {
 			rawMetrics = append(rawMetrics, objective.RawMetric.MetricQuery)
 		}
@@ -293,9 +298,9 @@ func (o *Objective) HasRawMetricQuery() bool {
 }
 
 // ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
-func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
+func (s *Spec) ObjectivesRawMetricsCount() int {
 	var count int
-	for _, objective := range slo.Objectives {
+	for _, objective := range s.Objectives {
 		if objective.HasRawMetricQuery() {
 			count++
 		}
@@ -304,8 +309,8 @@ func (slo *SLOSpec) ObjectivesRawMetricsCount() int {
 }
 
 // HasCountMetrics returns true if SLOSpec has count metrics.
-func (slo *SLOSpec) HasCountMetrics() bool {
-	for _, objective := range slo.Objectives {
+func (s *Spec) HasCountMetrics() bool {
+	for _, objective := range s.Objectives {
 		if objective.HasCountMetrics() {
 			return true
 		}
@@ -319,9 +324,9 @@ func (o *Objective) HasCountMetrics() bool {
 }
 
 // CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
-func (slo *SLOSpec) CountMetricsCount() int {
+func (s *Spec) CountMetricsCount() int {
 	var count int
-	for _, objective := range slo.Objectives {
+	for _, objective := range s.Objectives {
 		if objective.CountMetrics != nil {
 			if objective.CountMetrics.GoodMetric != nil {
 				count++
@@ -338,10 +343,10 @@ func (slo *SLOSpec) CountMetricsCount() int {
 }
 
 // CountMetrics returns a flat slice of all count metrics defined in this SLOSpec's objectives.
-func (slo *SLOSpec) CountMetrics() []*MetricSpec {
-	countMetrics := make([]*MetricSpec, slo.CountMetricsCount())
+func (s *Spec) CountMetrics() []*MetricSpec {
+	countMetrics := make([]*MetricSpec, s.CountMetricsCount())
 	var i int
-	for _, objective := range slo.Objectives {
+	for _, objective := range s.Objectives {
 		if objective.CountMetrics == nil {
 			continue
 		}
@@ -362,10 +367,10 @@ func (slo *SLOSpec) CountMetrics() []*MetricSpec {
 }
 
 // CountMetricPairs returns a slice of all count metrics defined in this SLOSpec's objectives.
-func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
-	countMetrics := make([]*CountMetricsSpec, slo.CountMetricsCount())
+func (s *Spec) CountMetricPairs() []*CountMetricsSpec {
+	countMetrics := make([]*CountMetricsSpec, s.CountMetricsCount())
 	var i int
-	for _, objective := range slo.Objectives {
+	for _, objective := range s.Objectives {
 		if objective.CountMetrics == nil {
 			continue
 		}
@@ -377,8 +382,8 @@ func (slo *SLOSpec) CountMetricPairs() []*CountMetricsSpec {
 	return countMetrics
 }
 
-func (slo *SLOSpec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
-	for _, objective := range slo.Objectives {
+func (s *Spec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
+	for _, objective := range s.Objectives {
 		if objective.CountMetrics == nil {
 			continue
 		}
@@ -393,62 +398,62 @@ func (slo *SLOSpec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
 }
 
 // AllMetricSpecs returns slice of all metrics defined in SLO regardless of their type.
-func (slo *SLOSpec) AllMetricSpecs() []*MetricSpec {
+func (s *Spec) AllMetricSpecs() []*MetricSpec {
 	var metrics []*MetricSpec
-	metrics = append(metrics, slo.RawMetrics()...)
-	metrics = append(metrics, slo.CountMetrics()...)
+	metrics = append(metrics, s.RawMetrics()...)
+	metrics = append(metrics, s.CountMetrics()...)
 	return metrics
 }
 
 // DataSourceType returns a type of data source.
-func (m *MetricSpec) DataSourceType() DataSourceType {
+func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 	switch {
 	case m.Prometheus != nil:
-		return Prometheus
+		return v1alpha.Prometheus
 	case m.Datadog != nil:
-		return Datadog
+		return v1alpha.Datadog
 	case m.NewRelic != nil:
-		return NewRelic
+		return v1alpha.NewRelic
 	case m.AppDynamics != nil:
-		return AppDynamics
+		return v1alpha.AppDynamics
 	case m.Splunk != nil:
-		return Splunk
+		return v1alpha.Splunk
 	case m.Lightstep != nil:
-		return Lightstep
+		return v1alpha.Lightstep
 	case m.SplunkObservability != nil:
-		return SplunkObservability
+		return v1alpha.SplunkObservability
 	case m.Dynatrace != nil:
-		return Dynatrace
+		return v1alpha.Dynatrace
 	case m.Elasticsearch != nil:
-		return Elasticsearch
+		return v1alpha.Elasticsearch
 	case m.ThousandEyes != nil:
-		return ThousandEyes
+		return v1alpha.ThousandEyes
 	case m.Graphite != nil:
-		return Graphite
+		return v1alpha.Graphite
 	case m.BigQuery != nil:
-		return BigQuery
+		return v1alpha.BigQuery
 	case m.OpenTSDB != nil:
-		return OpenTSDB
+		return v1alpha.OpenTSDB
 	case m.GrafanaLoki != nil:
-		return GrafanaLoki
+		return v1alpha.GrafanaLoki
 	case m.CloudWatch != nil:
-		return CloudWatch
+		return v1alpha.CloudWatch
 	case m.Pingdom != nil:
-		return Pingdom
+		return v1alpha.Pingdom
 	case m.AmazonPrometheus != nil:
-		return AmazonPrometheus
+		return v1alpha.AmazonPrometheus
 	case m.Redshift != nil:
-		return Redshift
+		return v1alpha.Redshift
 	case m.SumoLogic != nil:
-		return SumoLogic
+		return v1alpha.SumoLogic
 	case m.Instana != nil:
-		return Instana
+		return v1alpha.Instana
 	case m.InfluxDB != nil:
-		return InfluxDB
+		return v1alpha.InfluxDB
 	case m.GCM != nil:
-		return GCM
+		return v1alpha.GCM
 	case m.AzureMonitor != nil:
-		return AzureMonitor
+		return v1alpha.AzureMonitor
 	default:
 		return 0
 	}
@@ -457,35 +462,35 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 // Query returns interface containing metric query for this MetricSpec.
 func (m *MetricSpec) Query() interface{} {
 	switch m.DataSourceType() {
-	case Prometheus:
+	case v1alpha.Prometheus:
 		return m.Prometheus
-	case Datadog:
+	case v1alpha.Datadog:
 		return m.Datadog
-	case NewRelic:
+	case v1alpha.NewRelic:
 		return m.NewRelic
-	case AppDynamics:
+	case v1alpha.AppDynamics:
 		return m.AppDynamics
-	case Splunk:
+	case v1alpha.Splunk:
 		return m.Splunk
-	case Lightstep:
+	case v1alpha.Lightstep:
 		return m.Lightstep
-	case SplunkObservability:
+	case v1alpha.SplunkObservability:
 		return m.SplunkObservability
-	case Dynatrace:
+	case v1alpha.Dynatrace:
 		return m.Dynatrace
-	case Elasticsearch:
+	case v1alpha.Elasticsearch:
 		return m.Elasticsearch
-	case ThousandEyes:
+	case v1alpha.ThousandEyes:
 		return m.ThousandEyes
-	case Graphite:
+	case v1alpha.Graphite:
 		return m.Graphite
-	case BigQuery:
+	case v1alpha.BigQuery:
 		return m.BigQuery
-	case OpenTSDB:
+	case v1alpha.OpenTSDB:
 		return m.OpenTSDB
-	case GrafanaLoki:
+	case v1alpha.GrafanaLoki:
 		return m.GrafanaLoki
-	case CloudWatch:
+	case v1alpha.CloudWatch:
 		// To be clean, entire metric spec is copied so that original value is not mutated.
 		var cloudWatchCopy CloudWatchMetric
 		cloudWatchCopy = *m.CloudWatch
@@ -499,21 +504,21 @@ func (m *MetricSpec) Query() interface{} {
 			return *cloudWatchCopy.Dimensions[i].Name < *cloudWatchCopy.Dimensions[j].Name
 		})
 		return cloudWatchCopy
-	case Pingdom:
+	case v1alpha.Pingdom:
 		return m.Pingdom
-	case AmazonPrometheus:
+	case v1alpha.AmazonPrometheus:
 		return m.AmazonPrometheus
-	case Redshift:
+	case v1alpha.Redshift:
 		return m.Redshift
-	case SumoLogic:
+	case v1alpha.SumoLogic:
 		return m.SumoLogic
-	case Instana:
+	case v1alpha.Instana:
 		return m.Instana
-	case InfluxDB:
+	case v1alpha.InfluxDB:
 		return m.InfluxDB
-	case GCM:
+	case v1alpha.GCM:
 		return m.GCM
-	case AzureMonitor:
+	case v1alpha.AzureMonitor:
 		// To be clean, entire metric spec is copied so that original value is not mutated.
 		var azureMonitorCopy AzureMonitorMetric
 		azureMonitorCopy = *m.AzureMonitor
@@ -530,4 +535,17 @@ func (m *MetricSpec) Query() interface{} {
 	default:
 		return nil
 	}
+}
+
+// Support for bad/total metrics will be enabled gradually.
+// CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
+func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
+	enabledDataSources := []v1alpha.DataSourceType{v1alpha.CloudWatch, v1alpha.AppDynamics, v1alpha.AzureMonitor}
+	if objective.CountMetrics != nil {
+		if objective.CountMetrics.BadMetric == nil {
+			return false
+		}
+		return slices.Contains(enabledDataSources, objective.CountMetrics.BadMetric.DataSourceType())
+	}
+	return true
 }
