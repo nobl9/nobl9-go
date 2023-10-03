@@ -23,7 +23,7 @@ func validate(p Project) error {
 			"metadata.labels",
 			func() v1alpha.Labels { return p.Metadata.Labels },
 		).
-			With(v1alpha.ValidationRule()),
+			With(v1alpha.ValidationRuleLabels()),
 		validation.RulesForField[string](
 			"spec.description",
 			func() string { return p.Spec.Description },
