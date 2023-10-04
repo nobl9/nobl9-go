@@ -1,8 +1,6 @@
 package v1alpha
 
-import (
-	"github.com/nobl9/nobl9-go/manifest"
-)
+import "github.com/nobl9/nobl9-go/manifest"
 
 //go:generate go run ../../scripts/generate-object-impl.go Alert
 
