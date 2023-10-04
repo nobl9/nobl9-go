@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
@@ -104,7 +104,7 @@ func TestDecode(t *testing.T) {
 			objects, err := DecodeObjects(data)
 			require.NoError(t, err)
 			assert.Len(t, objects, test.ExpectedObjectsLen)
-			assert.IsType(t, project.Project{}, objects[0])
+			assert.IsType(t, v1alphaProject.Project{}, objects[0])
 
 			objectNames := make([]string, 0, len(objects))
 			for _, object := range objects {
@@ -119,14 +119,14 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeSingle(t *testing.T) {
 	t.Run("golden path", func(t *testing.T) {
-		proj, err := DecodeObject[project.Project](readInputFile(t, "single_project.yaml"))
+		proj, err := DecodeObject[v1alphaProject.Project](readInputFile(t, "single_project.yaml"))
 		require.NoError(t, err)
 		assert.NotZero(t, proj)
 		assert.Equal(t, "default", proj.GetName())
 	})
 
 	t.Run("multiple objects, return error", func(t *testing.T) {
-		_, err := DecodeObject[project.Project](readInputFile(t, "two_projects.yaml"))
+		_, err := DecodeObject[v1alphaProject.Project](readInputFile(t, "two_projects.yaml"))
 		require.Error(t, err)
 		assert.EqualError(t, err, "unexpected number of objects: 2, expected exactly one")
 	})
