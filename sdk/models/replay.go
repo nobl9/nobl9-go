@@ -1,12 +1,13 @@
-package v1alpha
+package models
 
 import (
 	"encoding/json"
 	"io"
 	"time"
 
-	v "github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
@@ -26,8 +27,8 @@ type ReplayDuration struct {
 
 // ReplayWithStatus used for returning Replay data with status.
 type ReplayWithStatus struct {
-	Project string       `json:"project" validate:"required"`
-	Slo     string       `json:"slo" validate:"required"`
+	Project string       `json:"project"`
+	Slo     string       `json:"slo"`
 	Status  ReplayStatus `json:"status"`
 }
 
@@ -61,22 +62,32 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
-func replayStructDatesValidation(sl v.StructLevel) {
-	replay, ok := sl.Current().Interface().(Replay)
-	if !ok {
-		sl.ReportError(replay, "", "", "structConversion", "")
-		return
-	}
+func (r Replay) Validate() error {
+	v := validation.RulesForStruct(
+		validation.RulesForField("project", func() string { return r.Project }).
+			With(validation.StringRequired()),
+		validation.RulesForField("slo", func() string { return r.Slo }).
+			With(validation.StringRequired()),
+		validation.RulesForField("duration", func() ReplayDuration { return r.Duration }).
+			With(durationValidation()),
+		validation.RulesForField("duration.unit", func() string { return r.Duration.Unit }).
+			With(validation.StringRequired()),
+		validation.RulesForField("duration.value", func() int { return r.Duration.Value }).
+			With(validation.NumberGreaterThanOrEqual(0)),
+	)
+	return v.Validate()[0]
+}
 
-	duration, err := replay.Duration.Duration()
-	if errors.Is(err, ErrInvalidReplayDurationUnit) {
-		sl.ReportError(replay.Duration, "unit", "Unit", "invalidDurationUnit", "")
-		return
-	}
-
-	if duration > maximumAllowedReplayDuration {
-		sl.ReportError(replay.Duration, "value", "Value", "maximumDurationExceeded", "")
-		return
+func durationValidation() validation.SingleRule[ReplayDuration] {
+	return func(v ReplayDuration) error {
+		duration, err := v.Duration()
+		if errors.Is(err, ErrInvalidReplayDurationUnit) {
+			return errors.New("")
+		}
+		if duration > maximumAllowedReplayDuration {
+			return errors.New("")
+		}
+		return nil
 	}
 }
 
@@ -86,13 +97,9 @@ func ParseJSONToReplayStruct(data io.Reader) (Replay, error) {
 	if err := json.NewDecoder(data).Decode(&replay); err != nil {
 		return Replay{}, err
 	}
-
-	val := NewValidator()
-
-	if err := val.Check(replay); err != nil {
+	if err := replay.Validate(); err != nil {
 		return Replay{}, err
 	}
-
 	return replay, nil
 }
 
