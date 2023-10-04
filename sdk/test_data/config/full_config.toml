@@ -16,3 +16,4 @@ filesPromptEnabled = false
     timeout = "100m"
     url = "https://non-default-url.com"
     disableOkta = true
+    organization = "non-default-organization"

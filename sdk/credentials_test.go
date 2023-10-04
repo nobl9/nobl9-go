@@ -31,7 +31,7 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 
 func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("don't run in offline mode", func(t *testing.T) {
-		creds := &credentials{config: &Config{DisableOkta: true}}
+		creds := &credentials{config: &Config{DisableOkta: true, Organization: "my-org"}}
 		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.False(t, tokenUpdated)

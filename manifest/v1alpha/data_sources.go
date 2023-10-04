@@ -39,6 +39,7 @@ const (
 	Instana
 	InfluxDB
 	GCM
+	AzureMonitor
 )
 
 const DatasourceStableChannel = "stable"
@@ -122,6 +123,7 @@ var agentTypeToName = map[DataSourceType]string{
 	Instana:             "Instana",
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
+	AzureMonitor:        "AzureMonitor",
 }
 
 func (dst DataSourceType) String() string {
@@ -357,16 +359,18 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	CloudWatch.String():       {Value: ptr(15), Unit: HRDDay},
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
-	Datadog.String():     {Value: ptr(30), Unit: HRDDay},
-	NewRelic.String():    {Value: ptr(30), Unit: HRDDay},
-	Splunk.String():      {Value: ptr(30), Unit: HRDDay},
-	Lightstep.String():   {Value: ptr(30), Unit: HRDDay},
-	CloudWatch.String():  {Value: ptr(15), Unit: HRDDay},
-	Dynatrace.String():   {Value: ptr(28), Unit: HRDDay},
-	AppDynamics.String(): {Value: ptr(30), Unit: HRDDay},
+	Datadog.String():      {Value: ptr(30), Unit: HRDDay},
+	NewRelic.String():     {Value: ptr(30), Unit: HRDDay},
+	Splunk.String():       {Value: ptr(30), Unit: HRDDay},
+	Lightstep.String():    {Value: ptr(30), Unit: HRDDay},
+	CloudWatch.String():   {Value: ptr(15), Unit: HRDDay},
+	Dynatrace.String():    {Value: ptr(28), Unit: HRDDay},
+	AppDynamics.String():  {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor.String(): {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
@@ -488,6 +492,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		},
 		ThousandEyes.String(): {
 			Value: ptr(1),
+			Unit:  QDDMinute,
+		},
+		AzureMonitor.String(): {
+			Value: ptr(5),
 			Unit:  QDDMinute,
 		},
 	}
