@@ -1291,6 +1291,17 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 			},
 		},
 		{
+			name: "empty region will not throw panic",
+			metric: CloudWatchMetric{
+				JSON:      aws.String(`[{"id":"1","period":60}]`),
+				AccountID: aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdMustBeEmpty"},
+				{"Region", "required"},
+			},
+		},
+		{
 			name: "accountId for configuration config is optional",
 			metric: CloudWatchMetric{
 				Namespace:  aws.String("namespace"),

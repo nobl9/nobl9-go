@@ -2747,7 +2747,7 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
 	}
 
-	if !isValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
+	if cloudWatchMetric.Region != nil && !isValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
 	}
 }
