@@ -2731,7 +2731,6 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "exactlyOneConfigType", "")
 		return
 	}
-	regions := AWSRegions()
 
 	switch {
 	case isJSON:
@@ -2740,11 +2739,15 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		validateCloudWatchConfiguration(sl, cloudWatchMetric)
 	}
 
-	if !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
-		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "regionNotAvailable", "")
+	if isJSON && len(*cloudWatchMetric.AccountID) > 0 {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdMustBeEmpty", "")
 	}
 
-	if !isValidRegion(*cloudWatchMetric.Region, regions) {
+	if !isJSON && cloudWatchMetric.AccountID != nil && !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
+	}
+
+	if !isValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
 	}
 }

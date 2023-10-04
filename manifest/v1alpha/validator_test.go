@@ -5,6 +5,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
@@ -1225,6 +1226,116 @@ func Test_isValidAWSAccountID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equalf(t, tt.want, isValidAWSAccountID(tt.accountID), "isValidCloudWatchAccountID(%v)", tt.accountID)
+		})
+	}
+}
+
+func Test_cloudWatchMetricStructValidation(t *testing.T) {
+	validator := v.New()
+	validator.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
+	_ = validator.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
+
+	type fieldError struct {
+		field string
+		tag   string
+	}
+
+	tests := []struct {
+		name          string
+		metric        CloudWatchMetric
+		wantErrorTags []fieldError
+	}{
+		{
+			name: "exact one config type",
+			metric: CloudWatchMetric{
+				SQL:  aws.String("test"),
+				JSON: aws.String("test"),
+			},
+			wantErrorTags: []fieldError{
+				{"Region", "required"},
+				{"stat", "exactlyOneConfigType"},
+				{"sql", "exactlyOneConfigType"},
+				{"json", "exactlyOneConfigType"},
+			},
+		},
+		{
+			name: "invalid region",
+			metric: CloudWatchMetric{
+				SQL:    aws.String("test"),
+				Region: aws.String("test"),
+			},
+			wantErrorTags: []fieldError{
+				{"region", "regionNotAvailable"},
+			},
+		},
+		{
+			name: "invalid accountId",
+			metric: CloudWatchMetric{
+				SQL:       aws.String("test"),
+				Region:    aws.String("us-east-2"),
+				AccountID: aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
+		{
+			name: "accountId for json config must be empty",
+			metric: CloudWatchMetric{
+				JSON:      aws.String(`[{"id":"1","period":60}]`),
+				Region:    aws.String("us-east-2"),
+				AccountID: aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdMustBeEmpty"},
+			},
+		},
+		{
+			name: "accountId for configuration config is optional",
+			metric: CloudWatchMetric{
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
+			name: "accountId for configuration config is validated",
+			metric: CloudWatchMetric{
+				AccountID:  aws.String("1234"),
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validator.Struct(tt.metric)
+			if len(tt.wantErrorTags) == 0 {
+				assert.Nil(t, err)
+				return
+			}
+
+			validationErrors, ok := err.(v.ValidationErrors)
+			if !ok {
+				t.Error("Expected a validation error, but got a different error type")
+			}
+
+			var tags []fieldError
+			for _, err := range validationErrors {
+				tags = append(tags, fieldError{tag: err.Tag(), field: err.Field()})
+			}
+
+			assert.ElementsMatch(t, tags, tt.wantErrorTags)
 		})
 	}
 }
