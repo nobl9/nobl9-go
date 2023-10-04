@@ -6,27 +6,10 @@ import (
 )
 
 var validateProject = validation.RulesForStruct[Project](
-	validation.RulesForField(
-		"metadata.name",
-		func(p Project) string { return p.Metadata.Name },
-	).With(
-		validation.StringRequired(),
-		validation.StringIsDNSSubdomain()),
-	validation.RulesForField(
-		"metadata.displayName",
-		func(p Project) string { return p.Metadata.DisplayName },
-	).With(
-		validation.StringLength(0, 63)),
-	validation.RulesForField(
-		"metadata.labels",
-		func(p Project) v1alpha.Labels { return p.Metadata.Labels },
-	).With(
-		v1alpha.ValidationRuleLabels()),
-	validation.RulesForField(
-		"spec.description",
-		func(p Project) string { return p.Spec.Description },
-	).With(
-		validation.StringDescription()),
+	v1alpha.FieldRuleMetadataName(func(p Project) string { return p.Metadata.Name }),
+	v1alpha.FieldRuleMetadataDisplayName(func(p Project) string { return p.Metadata.DisplayName }),
+	v1alpha.FieldRuleMetadataLabels(func(p Project) v1alpha.Labels { return p.Metadata.Labels }),
+	v1alpha.FieldRuleSpecDescription(func(p Project) string { return p.Spec.Description }),
 ).Validate
 
 func validate(p Project) error {
