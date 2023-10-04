@@ -1,4 +1,4 @@
-package v1alpha
+package parser
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 )
 
 type unmarshalFunc func(v interface{}) error
@@ -43,38 +45,38 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	//exhaustive:enforce
 	switch kind {
 	case manifest.KindService:
-		return genericParseObject[Service](unmarshal)
+		return genericParseObject[v1alpha.Service](unmarshal)
 	case manifest.KindSLO:
-		return genericParseObject[SLO](unmarshal)
+		return genericParseObject[v1alpha.SLO](unmarshal)
 	case manifest.KindProject:
-		return genericParseObject[Project](unmarshal)
+		return genericParseObject[project.Project](unmarshal)
 	case manifest.KindAgent:
-		return genericParseObject[Agent](unmarshal)
+		return genericParseObject[v1alpha.Agent](unmarshal)
 	case manifest.KindDirect:
-		return genericParseObject[Direct](unmarshal)
+		return genericParseObject[v1alpha.Direct](unmarshal)
 	case manifest.KindAlert:
-		return genericParseObject[Alert](unmarshal)
+		return genericParseObject[v1alpha.Alert](unmarshal)
 	case manifest.KindAlertMethod:
-		return genericParseObject[AlertMethod](unmarshal)
+		return genericParseObject[v1alpha.AlertMethod](unmarshal)
 	case manifest.KindAlertPolicy:
-		return genericParseObject[AlertPolicy](unmarshal)
+		return genericParseObject[v1alpha.AlertPolicy](unmarshal)
 	case manifest.KindAlertSilence:
-		return genericParseObject[AlertSilence](unmarshal)
+		return genericParseObject[v1alpha.AlertSilence](unmarshal)
 	case manifest.KindRoleBinding:
-		return genericParseObject[RoleBinding](unmarshal)
+		return genericParseObject[v1alpha.RoleBinding](unmarshal)
 	case manifest.KindDataExport:
-		return genericParseObject[DataExport](unmarshal)
+		return genericParseObject[v1alpha.DataExport](unmarshal)
 	case manifest.KindAnnotation:
-		return genericParseObject[Annotation](unmarshal)
+		return genericParseObject[v1alpha.Annotation](unmarshal)
 	case manifest.KindUserGroup:
-		return genericParseObject[UserGroup](unmarshal)
+		return genericParseObject[v1alpha.UserGroup](unmarshal)
 	default:
 		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}
 }
 
 func parseGenericObject(unmarshal unmarshalFunc) (manifest.Object, error) {
-	return genericParseObject[GenericObject](unmarshal)
+	return genericParseObject[v1alpha.GenericObject](unmarshal)
 }
 
 func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc, error) {

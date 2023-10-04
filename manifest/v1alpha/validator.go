@@ -1683,9 +1683,8 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	labels := fl.Field().Interface().(Labels)
-
-	return labels.Validate() == nil
+	lbl := fl.Field().Interface().(Labels)
+	return lbl.Validate() == nil
 }
 
 func isHTTPS(fl v.FieldLevel) bool {

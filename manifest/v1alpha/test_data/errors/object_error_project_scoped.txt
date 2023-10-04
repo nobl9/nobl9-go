@@ -1,0 +1,6 @@
+Validation for Service 'my-service' in project 'default' has failed for the following fields:
+  - 'metadata.name' with value 'default':
+    - here's an error
+  - 'spec.description' with value 'some long description':
+    - here's another error
+Manifest source: /home/me/service.yaml
