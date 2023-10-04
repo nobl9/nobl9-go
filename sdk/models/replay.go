@@ -15,14 +15,14 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project  string         `json:"project"`
-	Slo      string         `json:"slo"`
+	Project  string         `json:"project" validate:"required"`
+	Slo      string         `json:"slo" validate:"required"`
 	Duration ReplayDuration `json:"duration"`
 }
 
 type ReplayDuration struct {
-	Unit  string `json:"unit"`
-	Value int    `json:"value"`
+	Unit  string `json:"unit" validate:"required"`
+	Value int    `json:"value" validate:"required,gte=0"`
 }
 
 // ReplayWithStatus used for returning Replay data with status.
@@ -62,58 +62,33 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
-var replayValidation = validation.New[Replay](
-	validation.RulesFor(func(r Replay) string { return r.Project }).
-		WithName("project").
-		Rules(validation.Required[string]()),
-	validation.RulesFor(func(r Replay) string { return r.Slo }).
-		WithName("slo").
-		Rules(validation.Required[string]()),
-	validation.RulesFor(func(r Replay) ReplayDuration { return r.Duration }).
-		WithName("duration").
-		Rules(validation.Required[ReplayDuration]()).
-		StopOnError().
-		Include(replayDurationValidation).
-		StopOnError().
-		Rules(replayDurationValidationRule()),
-)
-
-var replayDurationValidation = validation.New[ReplayDuration](
-	validation.RulesFor(func(d ReplayDuration) string { return d.Unit }).
-		WithName("unit").
-		Rules(validation.Required[string]()).
-		StopOnError().
-		Rules(validation.NewSingleRule(ValidateReplayDurationUnit).
-			WithErrorCode(replayDurationUnitValidationErrorCode)),
-	validation.RulesFor(func(d ReplayDuration) int { return d.Value }).
-		WithName("value").
-		Rules(validation.GreaterThan(0)),
-)
-
 func (r Replay) Validate() error {
-	if errs := replayValidation.Validate(r); len(errs) > 0 {
-		return newValidationError(r, errs)
-	}
-	return nil
+	v := validation.RulesForStruct(
+		validation.RulesForField("project", func() string { return r.Project }).
+			With(validation.StringRequired()),
+		validation.RulesForField("slo", func() string { return r.Slo }).
+			With(validation.StringRequired()),
+		validation.RulesForField("duration", func() ReplayDuration { return r.Duration }).
+			With(durationValidation()),
+		validation.RulesForField("duration.unit", func() string { return r.Duration.Unit }).
+			With(validation.StringRequired()),
+		validation.RulesForField("duration.value", func() int { return r.Duration.Value }).
+			With(validation.NumberGreaterThanOrEqual(0)),
+	)
+	return v.Validate()[0]
 }
 
-const (
-	replayDurationValidationErrorCode     = "replay_duration"
-	replayDurationUnitValidationErrorCode = "replay_duration_unit"
-)
-
-func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
-	return validation.NewSingleRule(func(v ReplayDuration) error {
+func durationValidation() validation.SingleRule[ReplayDuration] {
+	return func(v ReplayDuration) error {
 		duration, err := v.Duration()
-		if err != nil {
-			return err
+		if errors.Is(err, ErrInvalidReplayDurationUnit) {
+			return errors.New("")
 		}
 		if duration > maximumAllowedReplayDuration {
-			return errors.Errorf("%s duration must not be greater than %s",
-				duration, maximumAllowedReplayDuration)
+			return errors.New("")
 		}
 		return nil
-	}).WithErrorCode(replayDurationValidationErrorCode)
+	}
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with validation.
@@ -134,8 +109,7 @@ const (
 	DurationUnitDay    = "Day"
 )
 
-var ErrInvalidReplayDurationUnit = errors.Errorf(
-	"invalid duration unit, available units are: %v", allowedDurationUnit)
+var ErrInvalidReplayDurationUnit = errors.New("invalid duration unit")
 
 var allowedDurationUnit = []string{
 	DurationUnitMinute,
@@ -148,6 +122,7 @@ func (d ReplayDuration) Duration() (time.Duration, error) {
 	if err := ValidateReplayDurationUnit(d.Unit); err != nil {
 		return 0, err
 	}
+
 	switch d.Unit {
 	case DurationUnitMinute:
 		return time.Duration(d.Value) * time.Minute, nil
@@ -156,6 +131,7 @@ func (d ReplayDuration) Duration() (time.Duration, error) {
 	case DurationUnitDay:
 		return time.Duration(d.Value) * time.Hour * 24, nil
 	}
+
 	return 0, nil
 }
 
@@ -166,5 +142,6 @@ func ValidateReplayDurationUnit(unit string) error {
 			return nil
 		}
 	}
+
 	return ErrInvalidReplayDurationUnit
 }
