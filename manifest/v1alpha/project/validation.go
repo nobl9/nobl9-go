@@ -7,24 +7,24 @@ import (
 
 func validate(p Project) error {
 	v := validation.RulesForStruct(
-		validation.RulesForField[string](
+		validation.RulesForField(
 			"metadata.name",
 			func() string { return p.Metadata.Name },
 		).
 			With(
 				validation.StringRequired(),
 				validation.StringIsDNSSubdomain()),
-		validation.RulesForField[string](
+		validation.RulesForField(
 			"metadata.displayName",
 			func() string { return p.Metadata.DisplayName },
 		).
 			With(validation.StringLength(0, 63)),
-		validation.RulesForField[v1alpha.Labels](
+		validation.RulesForField(
 			"metadata.labels",
 			func() v1alpha.Labels { return p.Metadata.Labels },
 		).
 			With(v1alpha.ValidationRuleLabels()),
-		validation.RulesForField[string](
+		validation.RulesForField(
 			"spec.description",
 			func() string { return p.Spec.Description },
 		).
