@@ -11,6 +11,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
 type unmarshalFunc func(v interface{}) error
@@ -45,7 +46,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	//exhaustive:enforce
 	switch kind {
 	case manifest.KindService:
-		return genericParseObject[v1alpha.Service](unmarshal)
+		return genericParseObject[service.Service](unmarshal)
 	case manifest.KindSLO:
 		return genericParseObject[v1alpha.SLO](unmarshal)
 	case manifest.KindProject:
