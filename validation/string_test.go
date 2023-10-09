@@ -7,17 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStringRequired(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		err := StringRequired().Validate("test")
-		assert.NoError(t, err)
-	})
-	t.Run("fails", func(t *testing.T) {
-		err := StringRequired().Validate("")
-		assert.Error(t, err)
-	})
-}
-
 func TestStringLength(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := StringLength(0, 20).Validate("test")

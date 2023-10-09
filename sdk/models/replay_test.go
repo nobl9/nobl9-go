@@ -5,21 +5,16 @@ import (
 	"testing"
 	"time"
 
-	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestReplayStructDatesValidation(t *testing.T) {
 	t.Parallel()
 
-	validate := v.New()
-	validate.RegisterStructValidation(replayStructDatesValidation, Replay{})
-
 	tests := []struct {
-		name      string
-		replay    Replay
-		isValid   bool
-		errorTags map[string][]string
+		name    string
+		replay  Replay
+		isValid bool
 	}{
 		{
 			name: "correct struct",
@@ -44,9 +39,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Slo": {"required"},
-			},
 		},
 		{
 			name: "missing project",
@@ -59,9 +51,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Project": {"required"},
-			},
 		},
 		{
 			name: "missing durationUnit",
@@ -73,9 +62,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Unit": {"required", "invalidDurationUnit"},
-			},
 		},
 		{
 			name: "missing durationValue",
@@ -87,9 +73,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"required"},
-			},
 		},
 		{
 			name: "invalid durationUnit",
@@ -102,9 +85,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Unit": {"invalidDurationUnit"},
-			},
 		},
 		{
 			name: "invalid durationValue",
@@ -117,9 +97,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"gte"},
-			},
 		},
 		{
 			name: "maximum duration exceeded",
@@ -132,9 +109,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"maximumDurationExceeded"},
-			},
 		},
 		{
 			name: "missing duration",
@@ -143,10 +117,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				Slo:     "slo",
 			},
 			isValid: false,
-			errorTags: map[string][]string{
-				"Unit":  {"required", "invalidDurationUnit"},
-				"Value": {"required"},
-			},
 		},
 	}
 
@@ -155,22 +125,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validate.Struct(tc.replay)
+			err := tc.replay.Validate()
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
 				assert.Error(t, err)
-
-				// check all error tags
-				tags := map[string][]string{}
-				errors := err.(v.ValidationErrors)
-				for i := range errors {
-					fe := errors[i]
-
-					tags[fe.StructField()] = append(tags[fe.StructField()], fe.Tag())
-				}
-
-				assert.Equal(t, tc.errorTags, tags)
 			}
 		})
 	}

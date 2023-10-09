@@ -19,12 +19,12 @@ var errorsTestData embed.FS
 
 func TestObjectError(t *testing.T) {
 	errs := []error{
-		validation.FieldError{
+		&validation.FieldError{
 			FieldPath:  "metadata.name",
 			FieldValue: "default",
 			Errors:     []string{"here's an error"},
 		},
-		validation.FieldError{
+		&validation.FieldError{
 			FieldPath:  "spec.description",
 			FieldValue: "some long description",
 			Errors:     []string{"here's another error"},
@@ -68,7 +68,7 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 			Project:         "default",
 		},
 		Errors: []error{
-			validation.FieldError{
+			&validation.FieldError{
 				FieldPath:  "metadata.project",
 				FieldValue: "default",
 				Errors:     []string{"nested"},
@@ -90,7 +90,7 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 	assert.Equal(t, expected.Object, actual.Object)
 	assert.Equal(t, expected.Errors[0], actual.Errors[0])
 	assert.Equal(t, expected.Errors[1].Error(), actual.Errors[1].Error())
-	assert.Equal(t, *expected.Errors[2].(*validation.FieldError), actual.Errors[2])
+	assert.Equal(t, expected.Errors[2].(*validation.FieldError), actual.Errors[2])
 }
 
 func expectedErrorOutput(t *testing.T, name string) string {

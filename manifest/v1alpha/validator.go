@@ -151,7 +151,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
-	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)

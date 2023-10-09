@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-var validateService = validation.RulesForStruct[Service](
+var validateService = validation.ForStruct[Service](
 	v1alpha.FieldRuleMetadataName(func(s Service) string { return s.Metadata.Name }),
 	v1alpha.FieldRuleMetadataDisplayName(func(s Service) string { return s.Metadata.DisplayName }),
 	v1alpha.FieldRuleMetadataProject(func(s Service) string { return s.Metadata.Project }),
