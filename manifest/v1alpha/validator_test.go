@@ -1271,9 +1271,12 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 		{
 			name: "invalid accountId",
 			metric: CloudWatchMetric{
-				SQL:       aws.String("test"),
-				Region:    aws.String("us-east-2"),
-				AccountID: aws.String("1234"),
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+				AccountID:  aws.String("1234"),
 			},
 			wantErrorTags: []fieldError{
 				{"accountId", "accountIdInvalid"},
@@ -1324,6 +1327,17 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 			},
 			wantErrorTags: []fieldError{
 				{"accountId", "accountIdInvalid"},
+			},
+		},
+		{
+			name: "accountId for sql not supported",
+			metric: CloudWatchMetric{
+				AccountID: aws.String("1234"),
+				SQL:       aws.String("test sql"),
+				Region:    aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdForSQLNotSupported"},
 			},
 		},
 	}

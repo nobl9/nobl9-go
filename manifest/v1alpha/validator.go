@@ -2743,7 +2743,11 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdMustBeEmpty", "")
 	}
 
-	if !isJSON && cloudWatchMetric.AccountID != nil && !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
+	if isSQL && cloudWatchMetric.AccountID != nil && len(*cloudWatchMetric.AccountID) > 0 {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdForSQLNotSupported", "")
+	}
+
+	if isConfiguration && cloudWatchMetric.AccountID != nil && !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
 		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
 	}
 
