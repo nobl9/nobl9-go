@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NewFieldError(fieldPath string, fieldValue interface{}, errs []error) *FieldError {
-	return &FieldError{
-		FieldPath:  fieldPath,
-		FieldValue: fieldValue,
-		Errors:     unpackErrors(errs, make([]string, 0, len(errs))),
+func NewPropertyError(propertyName string, propertyValue interface{}, errs []error) *PropertyError {
+	return &PropertyError{
+		PropertyName:  propertyName,
+		PropertyValue: propertyValue,
+		Errors:        unpackErrors(errs, make([]string, 0, len(errs))),
 	}
 }
 
@@ -30,15 +30,15 @@ func unpackErrors(errs []error, errorMessages []string) []string {
 	return errorMessages
 }
 
-type FieldError struct {
-	FieldPath  string      `json:"fieldPath"`
-	FieldValue interface{} `json:"value"`
-	Errors     []string    `json:"errors"`
+type PropertyError struct {
+	PropertyName  string      `json:"propertyName"`
+	PropertyValue interface{} `json:"propertyValue"`
+	Errors        []string    `json:"errors"`
 }
 
-func (e *FieldError) Error() string {
+func (e *PropertyError) Error() string {
 	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("'%s'", e.FieldPath))
+	b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
 	if v := e.ValueString(); v != "" {
 		b.WriteString(fmt.Sprintf(" with value '%s'", v))
 	}
@@ -47,30 +47,30 @@ func (e *FieldError) Error() string {
 	return b.String()
 }
 
-func (e *FieldError) ValueString() string {
-	ft := reflect.TypeOf(e.FieldValue)
+func (e *PropertyError) ValueString() string {
+	ft := reflect.TypeOf(e.PropertyValue)
 	if ft.Kind() == reflect.Pointer {
 		ft = ft.Elem()
 	}
 	var s string
 	switch ft.Kind() {
 	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
-		if !reflect.ValueOf(e.FieldValue).IsZero() {
-			raw, _ := json.Marshal(e.FieldValue)
+		if !reflect.ValueOf(e.PropertyValue).IsZero() {
+			raw, _ := json.Marshal(e.PropertyValue)
 			s = string(raw)
 		}
 	default:
-		s = fmt.Sprint(e.FieldValue)
+		s = fmt.Sprint(e.PropertyValue)
 	}
 	return limitString(s, 100)
 }
 
-func (e *FieldError) PrependFieldPath(path string) {
-	if e.FieldPath == "" {
-		e.FieldPath = path
+func (e *PropertyError) PrependPropertyPath(path string) {
+	if e.PropertyName == "" {
+		e.PropertyName = path
 		return
 	}
-	e.FieldPath = path + "." + e.FieldPath
+	e.PropertyName = path + "." + e.PropertyName
 }
 
 // multiRuleError is a container for transferring multiple errors reported by MultiRule.
