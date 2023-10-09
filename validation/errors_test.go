@@ -34,7 +34,7 @@ func TestFieldError(t *testing.T) {
 		}{This: "this", That: "that"},
 	} {
 		t.Run(typ, func(t *testing.T) {
-			err := FieldError{
+			err := &FieldError{
 				FieldPath:  "metadata.name",
 				FieldValue: value,
 				Errors: []string{

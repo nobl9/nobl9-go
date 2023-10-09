@@ -5,24 +5,29 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 func NewFieldError(fieldPath string, fieldValue interface{}, errs []error) *FieldError {
-	errorMessages := make([]string, 0, len(errs))
+	return &FieldError{
+		FieldPath:  fieldPath,
+		FieldValue: fieldValue,
+		Errors:     unpackErrors(errs, make([]string, 0, len(errs))),
+	}
+}
+
+// unpackErrors unpacks error messages recursively scanning multiRuleError if it is detected.
+func unpackErrors(errs []error, errorMessages []string) []string {
 	for _, err := range errs {
-		if mErrs, ok := err.(multiRuleError); ok {
-			for _, mErr := range mErrs {
-				errorMessages = append(errorMessages, mErr.Error())
-			}
+		var mErrs multiRuleError
+		if ok := errors.As(err, &mErrs); ok {
+			errorMessages = append(errorMessages, unpackErrors(mErrs, errorMessages)...)
 		} else {
 			errorMessages = append(errorMessages, err.Error())
 		}
 	}
-	return &FieldError{
-		FieldPath:  fieldPath,
-		FieldValue: fieldValue,
-		Errors:     errorMessages,
-	}
+	return errorMessages
 }
 
 type FieldError struct {
@@ -31,14 +36,18 @@ type FieldError struct {
 	Errors     []string    `json:"errors"`
 }
 
-func (e FieldError) Error() string {
+func (e *FieldError) Error() string {
 	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("'%s' with value '%s':\n", e.FieldPath, e.ValueString()))
+	b.WriteString(fmt.Sprintf("'%s'", e.FieldPath))
+	if v := e.ValueString(); v != "" {
+		b.WriteString(fmt.Sprintf(" with value '%s'", v))
+	}
+	b.WriteString(":\n")
 	joinErrorMessages(b, e.Errors, strings.Repeat(" ", 2))
 	return b.String()
 }
 
-func (e FieldError) ValueString() string {
+func (e *FieldError) ValueString() string {
 	ft := reflect.TypeOf(e.FieldValue)
 	if ft.Kind() == reflect.Pointer {
 		ft = ft.Elem()
@@ -46,12 +55,22 @@ func (e FieldError) ValueString() string {
 	var s string
 	switch ft.Kind() {
 	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
-		raw, _ := json.Marshal(e.FieldValue)
-		s = string(raw)
+		if !reflect.ValueOf(e.FieldValue).IsZero() {
+			raw, _ := json.Marshal(e.FieldValue)
+			s = string(raw)
+		}
 	default:
 		s = fmt.Sprint(e.FieldValue)
 	}
 	return limitString(s, 100)
+}
+
+func (e *FieldError) PrependFieldPath(path string) {
+	if e.FieldPath == "" {
+		e.FieldPath = path
+		return
+	}
+	e.FieldPath = path + "." + e.FieldPath
 }
 
 // multiRuleError is a container for transferring multiple errors reported by MultiRule.

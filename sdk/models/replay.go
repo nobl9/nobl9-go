@@ -2,7 +2,9 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -15,14 +17,14 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project  string         `json:"project" validate:"required"`
-	Slo      string         `json:"slo" validate:"required"`
+	Project  string         `json:"project"`
+	Slo      string         `json:"slo"`
 	Duration ReplayDuration `json:"duration"`
 }
 
 type ReplayDuration struct {
-	Unit  string `json:"unit" validate:"required"`
-	Value int    `json:"value" validate:"required,gte=0"`
+	Unit  string `json:"unit"`
+	Value int    `json:"value"`
 }
 
 // ReplayWithStatus used for returning Replay data with status.
@@ -62,33 +64,53 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
+var replayValidation = validation.ForStruct[Replay](
+	validation.ForField("project", func(r Replay) string { return r.Project }).
+		Rules(validation.Required[string]()),
+	validation.ForField("slo", func(r Replay) string { return r.Slo }).
+		Rules(validation.Required[string]()),
+	validation.ForField("duration", func(r Replay) ReplayDuration { return r.Duration }).
+		Rules(validation.Required[ReplayDuration]()).
+		CascadeMode(validation.CascadeModeStop).
+		Include(replayDurationValidation),
+)
+
+var replayDurationValidation = validation.ForStruct[ReplayDuration](
+	validation.ForStruct[ReplayDuration](
+		validation.ForSelf[ReplayDuration]().
+			Rules(durationValidation()).
+			CascadeMode(validation.CascadeModeStop),
+		validation.ForField("unit", func(d ReplayDuration) string { return d.Unit }).
+			Rules(validation.Required[string]()),
+		validation.ForField("value", func(d ReplayDuration) int { return d.Value }).
+			Rules(validation.NumberGreaterThan(0)),
+	).
+		CascadeMode(validation.CascadeModeContinue),
+)
+
 func (r Replay) Validate() error {
-	v := validation.RulesForStruct(
-		validation.RulesForField("project", func() string { return r.Project }).
-			With(validation.StringRequired()),
-		validation.RulesForField("slo", func() string { return r.Slo }).
-			With(validation.StringRequired()),
-		validation.RulesForField("duration", func() ReplayDuration { return r.Duration }).
-			With(durationValidation()),
-		validation.RulesForField("duration.unit", func() string { return r.Duration.Unit }).
-			With(validation.StringRequired()),
-		validation.RulesForField("duration.value", func() int { return r.Duration.Value }).
-			With(validation.NumberGreaterThanOrEqual(0)),
-	)
-	return v.Validate()[0]
+	errs := replayValidation.Validate(r)
+	if len(errs) == 0 {
+		return nil
+	}
+	b := new(strings.Builder)
+	b.WriteString(fmt.Sprintf("Validation for %T has failed for the following field:\n", r))
+	validation.JoinErrors(b, errs, strings.Repeat(" ", 2))
+	return errors.New(b.String())
 }
 
 func durationValidation() validation.SingleRule[ReplayDuration] {
-	return func(v ReplayDuration) error {
+	return validation.NewSingleRule(func(v ReplayDuration) error {
 		duration, err := v.Duration()
-		if errors.Is(err, ErrInvalidReplayDurationUnit) {
-			return errors.New("")
+		if err != nil {
+			return err
 		}
 		if duration > maximumAllowedReplayDuration {
-			return errors.New("")
+			return errors.Errorf("%s duration must not be greater than %s",
+				duration, maximumAllowedReplayDuration)
 		}
 		return nil
-	}
+	})
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with validation.
@@ -109,7 +131,8 @@ const (
 	DurationUnitDay    = "Day"
 )
 
-var ErrInvalidReplayDurationUnit = errors.New("invalid duration unit")
+var ErrInvalidReplayDurationUnit = errors.Errorf(
+	"invalid duration unit, available units are: %v", allowedDurationUnit)
 
 var allowedDurationUnit = []string{
 	DurationUnitMinute,

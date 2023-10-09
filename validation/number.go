@@ -27,7 +27,7 @@ func NumberLessThanOrEqual[T number](n T) SingleRule[T] {
 }
 
 func numberCondition[T number](op comparisonOperator, n T) SingleRule[T] {
-	return func(v T) error {
+	return NewSingleRule(func(v T) error {
 		var passed bool
 		switch op {
 		case cmpEqual:
@@ -42,10 +42,10 @@ func numberCondition[T number](op comparisonOperator, n T) SingleRule[T] {
 			passed = v <= n
 		}
 		if !passed {
-			return fmt.Errorf("%d should be %s %d", v, op.String(), n)
+			return fmt.Errorf("%v should be %s %v", v, op.String(), n)
 		}
 		return nil
-	}
+	})
 }
 
 type comparisonOperator uint8
