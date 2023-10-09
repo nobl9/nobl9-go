@@ -76,16 +76,13 @@ var replayValidation = validation.ForStruct[Replay](
 )
 
 var replayDurationValidation = validation.ForStruct[ReplayDuration](
-	validation.ForStruct[ReplayDuration](
-		validation.ForSelf[ReplayDuration]().
-			Rules(durationValidation()).
-			CascadeMode(validation.CascadeModeStop),
-		validation.ForField("unit", func(d ReplayDuration) string { return d.Unit }).
-			Rules(validation.Required[string]()),
-		validation.ForField("value", func(d ReplayDuration) int { return d.Value }).
-			Rules(validation.NumberGreaterThan(0)),
-	).
-		CascadeMode(validation.CascadeModeContinue),
+	validation.ForSelf[ReplayDuration]().
+		Rules(durationValidation()).
+		CascadeMode(validation.CascadeModeStop),
+	validation.ForField("unit", func(d ReplayDuration) string { return d.Unit }).
+		Rules(validation.Required[string]()),
+	validation.ForField("value", func(d ReplayDuration) int { return d.Value }).
+		Rules(validation.NumberGreaterThan(0)),
 )
 
 func (r Replay) Validate() error {
