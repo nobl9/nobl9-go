@@ -23,7 +23,7 @@ func TestMultiRuleError(t *testing.T) {
 	assert.EqualError(t, err, expectedErrorOutput(t, "multi_error.txt"))
 }
 
-func TestFieldError(t *testing.T) {
+func TestPropertyError(t *testing.T) {
 	for typ, value := range map[string]interface{}{
 		"string": "default",
 		"slice":  []string{"this", "that"},
@@ -34,16 +34,16 @@ func TestFieldError(t *testing.T) {
 		}{This: "this", That: "that"},
 	} {
 		t.Run(typ, func(t *testing.T) {
-			err := &FieldError{
-				FieldPath:  "metadata.name",
-				FieldValue: value,
+			err := &PropertyError{
+				PropertyName:  "metadata.name",
+				PropertyValue: value,
 				Errors: []string{
 					"what a shame this happened",
 					"this is outrageous...",
 					"here's another error",
 				},
 			}
-			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("field_error_%s.txt", typ)))
+			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", typ)))
 		})
 	}
 }

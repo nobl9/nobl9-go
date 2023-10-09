@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-var validateProject = validation.ForStruct[Project](
+var validateProject = validation.New[Project](
 	v1alpha.FieldRuleMetadataName(func(p Project) string { return p.Metadata.Name }),
 	v1alpha.FieldRuleMetadataDisplayName(func(p Project) string { return p.Metadata.DisplayName }),
 	v1alpha.FieldRuleMetadataLabels(func(p Project) v1alpha.Labels { return p.Metadata.Labels }),

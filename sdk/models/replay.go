@@ -64,25 +64,30 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
-var replayValidation = validation.ForStruct[Replay](
-	validation.ForField("project", func(r Replay) string { return r.Project }).
+var replayValidation = validation.New[Replay](
+	validation.RulesFor(func(r Replay) string { return r.Project }).
+		WithName("project").
 		Rules(validation.Required[string]()),
-	validation.ForField("slo", func(r Replay) string { return r.Slo }).
+	validation.RulesFor(func(r Replay) string { return r.Slo }).
+		WithName("slo").
 		Rules(validation.Required[string]()),
-	validation.ForField("duration", func(r Replay) ReplayDuration { return r.Duration }).
+	validation.RulesFor(func(r Replay) ReplayDuration { return r.Duration }).
+		WithName("duration").
 		Rules(validation.Required[ReplayDuration]()).
 		CascadeMode(validation.CascadeModeStop).
 		Include(replayDurationValidation),
 )
 
-var replayDurationValidation = validation.ForStruct[ReplayDuration](
-	validation.ForSelf[ReplayDuration]().
+var replayDurationValidation = validation.New[ReplayDuration](
+	validation.RulesFor(validation.GetSelf[ReplayDuration]()).
 		Rules(durationValidation()).
 		CascadeMode(validation.CascadeModeStop),
-	validation.ForField("unit", func(d ReplayDuration) string { return d.Unit }).
+	validation.RulesFor(func(d ReplayDuration) string { return d.Unit }).
+		WithName("unit").
 		Rules(validation.Required[string]()),
-	validation.ForField("value", func(d ReplayDuration) int { return d.Value }).
-		Rules(validation.NumberGreaterThan(0)),
+	validation.RulesFor(func(d ReplayDuration) int { return d.Value }).
+		WithName("value").
+		Rules(validation.GreaterThan(0)),
 )
 
 func (r Replay) Validate() error {

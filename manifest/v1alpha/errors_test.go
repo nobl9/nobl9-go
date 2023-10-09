@@ -19,15 +19,15 @@ var errorsTestData embed.FS
 
 func TestObjectError(t *testing.T) {
 	errs := []error{
-		&validation.FieldError{
-			FieldPath:  "metadata.name",
-			FieldValue: "default",
-			Errors:     []string{"here's an error"},
+		&validation.PropertyError{
+			PropertyName:  "metadata.name",
+			PropertyValue: "default",
+			Errors:        []string{"here's an error"},
 		},
-		&validation.FieldError{
-			FieldPath:  "spec.description",
-			FieldValue: "some long description",
-			Errors:     []string{"here's another error"},
+		&validation.PropertyError{
+			PropertyName:  "spec.description",
+			PropertyValue: "some long description",
+			Errors:        []string{"here's another error"},
 		},
 	}
 
@@ -68,15 +68,15 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 			Project:         "default",
 		},
 		Errors: []error{
-			&validation.FieldError{
-				FieldPath:  "metadata.project",
-				FieldValue: "default",
-				Errors:     []string{"nested"},
+			&validation.PropertyError{
+				PropertyName:  "metadata.project",
+				PropertyValue: "default",
+				Errors:        []string{"nested"},
 			},
 			errors.New("some error"),
-			&validation.FieldError{
-				FieldPath:  "metadata.name",
-				FieldValue: "my-project",
+			&validation.PropertyError{
+				PropertyName:  "metadata.name",
+				PropertyValue: "my-project",
 			},
 		},
 	}
@@ -90,7 +90,7 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 	assert.Equal(t, expected.Object, actual.Object)
 	assert.Equal(t, expected.Errors[0], actual.Errors[0])
 	assert.Equal(t, expected.Errors[1].Error(), actual.Errors[1].Error())
-	assert.Equal(t, expected.Errors[2].(*validation.FieldError), actual.Errors[2])
+	assert.Equal(t, expected.Errors[2].(*validation.PropertyError), actual.Errors[2])
 }
 
 func expectedErrorOutput(t *testing.T, name string) string {

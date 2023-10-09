@@ -6,7 +6,7 @@ type Rule[T any] interface {
 	Validate(v T) error
 }
 
-func NewSingleRule[T any](validate func(T) error) SingleRule[T] {
+func NewSingleRule[T any](validate func(v T) error) SingleRule[T] {
 	return SingleRule[T]{validate: validate}
 }
 

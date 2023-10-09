@@ -15,6 +15,6 @@ func TestStringRequired(t *testing.T) {
 	t.Run("fails", func(t *testing.T) {
 		err := Required[any]().Validate("")
 		require.Error(t, err)
-		assert.EqualError(t, err, "field is required but was empty")
+		assert.EqualError(t, err, "property is required but was empty")
 	})
 }

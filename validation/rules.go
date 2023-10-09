@@ -7,79 +7,86 @@ type Rules[S any] interface {
 	Validate(v S) []error
 }
 
-func ForStruct[S any](rules ...Rules[S]) StructRules[S] {
-	return StructRules[S]{rules: rules}
+func New[S any](rules ...Rules[S]) Validator[S] {
+	return Validator[S]{rules: rules}
 }
 
-type StructRules[S any] struct {
+type Validator[S any] struct {
 	rules       []Rules[S]
 	cascadeMode CascadeMode
 }
 
-func (r StructRules[S]) CascadeMode(mode CascadeMode) StructRules[S] {
-	r.cascadeMode = mode
-	return r
+func (v Validator[S]) CascadeMode(mode CascadeMode) Validator[S] {
+	v.cascadeMode = mode
+	return v
 }
 
-func (r StructRules[S]) GetCascadeMode() CascadeMode {
-	return r.cascadeMode
+func (v Validator[S]) GetCascadeMode() CascadeMode {
+	return v.cascadeMode
 }
 
-func (r StructRules[S]) Validate(st S) []error {
+func (v Validator[S]) Validate(st S) []error {
 	var allErrors []error
-	for _, field := range r.rules {
-		if errs := field.Validate(st); len(errs) > 0 {
+	for _, rule := range v.rules {
+		if errs := rule.Validate(st); len(errs) > 0 {
 			allErrors = append(allErrors, errs...)
 		}
 	}
 	return allErrors
 }
 
-// ForField creates a typed FieldRules instance for the field which access is defined through getter function.
-func ForField[T, S any](fieldPath string, getter func(S) T) FieldRules[T, S] {
-	return FieldRules[T, S]{fieldPath: fieldPath, getter: getter}
+// RulesFor creates a typed PropertyRules instance for the property which access is defined through getter function.
+func RulesFor[T, S any](getter PropertyGetter[S, T]) PropertyRules[T, S] {
+	return PropertyRules[T, S]{getter: getter}
 }
 
-// ForSelf creates a typed FieldRules instance for the field which access is defined through getter function.
-func ForSelf[S any]() FieldRules[S, S] {
-	return FieldRules[S, S]{getter: func(s S) S { return s }}
+// GetSelf is a convenience method for extracting 'self' property of a validated value.
+func GetSelf[S any]() PropertyGetter[S, S] {
+	return func(s S) S { return s }
 }
 
 type Predicate[S any] func(S) bool
 
-// FieldRules is responsible for validating a single struct field.
-type FieldRules[T, S any] struct {
-	fieldPath   string
-	getter      func(S) T
-	operations  []interface{}
+type PropertyGetter[S, T any] func(S) T
+
+// PropertyRules is responsible for validating a single property.
+type PropertyRules[T, S any] struct {
+	name        string
+	getter      PropertyGetter[S, T]
+	steps       []interface{}
 	cascadeMode CascadeMode
 }
 
-func (r FieldRules[T, S]) Validate(st S) []error {
+func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
+	r.name = name
+	return r
+}
+
+func (r PropertyRules[T, S]) Validate(st S) []error {
 	var (
 		ruleErrors, allErrors []error
-		fieldValue            T
+		propValue             T
 	)
 loop:
-	for _, op := range r.operations {
-		switch v := op.(type) {
+	for _, step := range r.steps {
+		switch v := step.(type) {
 		case Predicate[S]:
 			if !v(st) {
 				break loop
 			}
-		// Same as Rule[S] as for ForSelf we'd get the same type on T and S.
+		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
-			fieldValue = r.getter(st)
-			if err := v.Validate(fieldValue); err != nil {
+			propValue = r.getter(st)
+			if err := v.Validate(propValue); err != nil {
 				ruleErrors = append(ruleErrors, err)
 			}
 		case Rules[T]:
 			structValue := r.getter(st)
 			errs := v.Validate(structValue)
 			for _, err := range errs {
-				var fErr *FieldError
+				var fErr *PropertyError
 				if ok := errors.As(err, &fErr); ok {
-					fErr.PrependFieldPath(r.fieldPath)
+					fErr.PrependPropertyPath(r.name)
 				}
 				allErrors = append(allErrors, err)
 			}
@@ -89,44 +96,44 @@ loop:
 		}
 	}
 	if len(ruleErrors) > 0 {
-		allErrors = append(allErrors, NewFieldError(r.fieldPath, fieldValue, ruleErrors))
+		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors))
 	}
 	return allErrors
 }
 
-func (r FieldRules[T, S]) Rules(rules ...Rule[T]) FieldRules[T, S] {
+func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {
 	for _, rule := range rules {
-		r.operations = append(r.operations, rule)
+		r.steps = append(r.steps, rule)
 	}
 	return r
 }
 
-func (r FieldRules[T, S]) Self(rules ...Rule[S]) FieldRules[T, S] {
+func (r PropertyRules[T, S]) Self(rules ...Rule[S]) PropertyRules[T, S] {
 	for _, rule := range rules {
-		r.operations = append(r.operations, rule)
+		r.steps = append(r.steps, rule)
 	}
 	return r
 }
 
-func (r FieldRules[T, S]) Include(rules ...StructRules[T]) FieldRules[T, S] {
+func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] {
 	for _, rule := range rules {
-		r.operations = append(r.operations, rule)
+		r.steps = append(r.steps, rule)
 	}
 	return r
 }
 
-func (r FieldRules[T, S]) When(predicates ...Predicate[S]) FieldRules[T, S] {
+func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
 	for _, predicate := range predicates {
-		r.operations = append(r.operations, predicate)
+		r.steps = append(r.steps, predicate)
 	}
 	return r
 }
 
-func (r FieldRules[T, S]) CascadeMode(mode CascadeMode) FieldRules[T, S] {
+func (r PropertyRules[T, S]) CascadeMode(mode CascadeMode) PropertyRules[T, S] {
 	r.cascadeMode = mode
 	return r
 }
 
-func (r FieldRules[T, S]) GetCascadeMode() CascadeMode {
+func (r PropertyRules[T, S]) GetCascadeMode() CascadeMode {
 	return r.cascadeMode
 }
