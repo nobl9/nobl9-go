@@ -41,8 +41,14 @@ type SLOSpec struct {
 }
 
 type SLOStatus struct {
-	// FIXME: v1alpha should not import models, maybe invert it?
-	// ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+}
+
+type ReplayStatus struct {
+	Status    string `json:"status"`
+	Unit      string `json:"unit"`
+	Value     int    `json:"value"`
+	StartTime string `json:"startTime,omitempty"`
 }
 
 // Calendar struct represents calendar time window
