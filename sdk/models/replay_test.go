@@ -1,20 +1,24 @@
 package models
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 func TestReplayStructDatesValidation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name    string
-		replay  Replay
-		isValid bool
+		name      string
+		replay    Replay
+		isValid   bool
+		ErrorCode validation.ErrorCode
 	}{
 		{
 			name: "correct struct",
@@ -38,7 +42,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
 			name: "missing project",
@@ -50,10 +55,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
-			name: "missing durationUnit",
+			name: "missing duration unit",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -61,10 +67,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
-			name: "missing durationValue",
+			name: "missing duration value",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -72,10 +79,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit: "Day",
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeGreaterThan,
 		},
 		{
-			name: "invalid durationUnit",
+			name: "invalid duration unit",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -84,10 +92,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: replayDurationUnitValidationErrorCode,
 		},
 		{
-			name: "invalid durationValue",
+			name: "invalid duration value",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -96,7 +105,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: -30,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeGreaterThan,
 		},
 		{
 			name: "maximum duration exceeded",
@@ -108,7 +118,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 31,
 				},
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: replayDurationValidationErrorCode,
 		},
 		{
 			name: "missing duration",
@@ -116,7 +127,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				Project: "project",
 				Slo:     "slo",
 			},
-			isValid: false,
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 	}
 
@@ -130,6 +142,10 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				assert.Nil(t, err)
 			} else {
 				assert.Error(t, err)
+				for _, e := range err.(ValidationError).Errors {
+					assert.True(t, validation.HasErrorCode(e, tc.ErrorCode))
+				}
+				fmt.Println(err)
 			}
 		})
 	}

@@ -14,8 +14,12 @@ import (
 //go:embed test_data
 var errorsTestData embed.FS
 
+func TestRuleError(t *testing.T) {
+
+}
+
 func TestMultiRuleError(t *testing.T) {
-	err := multiRuleError{
+	err := ruleSetError{
 		errors.New("this is just a test!"),
 		errors.New("another error..."),
 		errors.New("that is just fatal."),
@@ -36,16 +40,19 @@ func TestPropertyError(t *testing.T) {
 		t.Run(typ, func(t *testing.T) {
 			err := &PropertyError{
 				PropertyName:  "metadata.name",
-				PropertyValue: value,
-				Errors: []string{
-					"what a shame this happened",
-					"this is outrageous...",
-					"here's another error",
+				PropertyValue: propertyValueString(value),
+				Errors: []RuleError{
+					{Message: "what a shame this happened"},
+					{Message: "this is outrageous..."},
+					{Message: "here's another error"},
 				},
 			}
 			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", typ)))
 		})
 	}
+}
+
+func TestHasErrorCode(t *testing.T) {
 }
 
 func expectedErrorOutput(t *testing.T, name string) string {

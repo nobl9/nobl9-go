@@ -2,9 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -74,34 +72,37 @@ var replayValidation = validation.New[Replay](
 	validation.RulesFor(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		Rules(validation.Required[ReplayDuration]()).
-		CascadeMode(validation.CascadeModeStop).
-		Include(replayDurationValidation),
+		StopOnError().
+		Include(replayDurationValidation).
+		StopOnError().
+		Rules(replayDurationValidationRule()),
 )
 
 var replayDurationValidation = validation.New[ReplayDuration](
-	validation.RulesFor(validation.GetSelf[ReplayDuration]()).
-		Rules(durationValidation()).
-		CascadeMode(validation.CascadeModeStop),
 	validation.RulesFor(func(d ReplayDuration) string { return d.Unit }).
 		WithName("unit").
-		Rules(validation.Required[string]()),
+		Rules(validation.Required[string]()).
+		StopOnError().
+		Rules(validation.NewSingleRule(ValidateReplayDurationUnit).
+			WithErrorCode(replayDurationUnitValidationErrorCode)),
 	validation.RulesFor(func(d ReplayDuration) int { return d.Value }).
 		WithName("value").
 		Rules(validation.GreaterThan(0)),
 )
 
 func (r Replay) Validate() error {
-	errs := replayValidation.Validate(r)
-	if len(errs) == 0 {
-		return nil
+	if errs := replayValidation.Validate(r); len(errs) > 0 {
+		return newValidationError(r, errs)
 	}
-	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("Validation for %T has failed for the following field:\n", r))
-	validation.JoinErrors(b, errs, strings.Repeat(" ", 2))
-	return errors.New(b.String())
+	return nil
 }
 
-func durationValidation() validation.SingleRule[ReplayDuration] {
+const (
+	replayDurationValidationErrorCode     = "replay_duration"
+	replayDurationUnitValidationErrorCode = "replay_duration_unit"
+)
+
+func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
 	return validation.NewSingleRule(func(v ReplayDuration) error {
 		duration, err := v.Duration()
 		if err != nil {
@@ -112,7 +113,7 @@ func durationValidation() validation.SingleRule[ReplayDuration] {
 				duration, maximumAllowedReplayDuration)
 		}
 		return nil
-	})
+	}).WithErrorCode(replayDurationValidationErrorCode)
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with validation.
@@ -147,7 +148,6 @@ func (d ReplayDuration) Duration() (time.Duration, error) {
 	if err := ValidateReplayDurationUnit(d.Unit); err != nil {
 		return 0, err
 	}
-
 	switch d.Unit {
 	case DurationUnitMinute:
 		return time.Duration(d.Value) * time.Minute, nil
@@ -156,7 +156,6 @@ func (d ReplayDuration) Duration() (time.Duration, error) {
 	case DurationUnitDay:
 		return time.Duration(d.Value) * time.Hour * 24, nil
 	}
-
 	return 0, nil
 }
 
@@ -167,6 +166,5 @@ func ValidateReplayDurationUnit(unit string) error {
 			return nil
 		}
 	}
-
 	return ErrInvalidReplayDurationUnit
 }

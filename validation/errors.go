@@ -5,64 +5,31 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 func NewPropertyError(propertyName string, propertyValue interface{}, errs []error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
-		PropertyValue: propertyValue,
-		Errors:        unpackErrors(errs, make([]string, 0, len(errs))),
+		PropertyValue: propertyValueString(propertyValue),
+		Errors:        unpackErrors(errs, make([]RuleError, 0, len(errs))),
 	}
-}
-
-// unpackErrors unpacks error messages recursively scanning multiRuleError if it is detected.
-func unpackErrors(errs []error, errorMessages []string) []string {
-	for _, err := range errs {
-		var mErrs multiRuleError
-		if ok := errors.As(err, &mErrs); ok {
-			errorMessages = append(errorMessages, unpackErrors(mErrs, errorMessages)...)
-		} else {
-			errorMessages = append(errorMessages, err.Error())
-		}
-	}
-	return errorMessages
 }
 
 type PropertyError struct {
 	PropertyName  string      `json:"propertyName"`
-	PropertyValue interface{} `json:"propertyValue"`
-	Errors        []string    `json:"errors"`
+	PropertyValue string      `json:"propertyValue"`
+	Errors        []RuleError `json:"errors"`
 }
 
 func (e *PropertyError) Error() string {
 	b := new(strings.Builder)
 	b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
-	if v := e.ValueString(); v != "" {
-		b.WriteString(fmt.Sprintf(" with value '%s'", v))
+	if e.PropertyValue != "" {
+		b.WriteString(fmt.Sprintf(" with value '%s'", e.PropertyValue))
 	}
 	b.WriteString(":\n")
-	joinErrorMessages(b, e.Errors, strings.Repeat(" ", 2))
+	JoinErrors(b, e.Errors, strings.Repeat(" ", 2))
 	return b.String()
-}
-
-func (e *PropertyError) ValueString() string {
-	ft := reflect.TypeOf(e.PropertyValue)
-	if ft.Kind() == reflect.Pointer {
-		ft = ft.Elem()
-	}
-	var s string
-	switch ft.Kind() {
-	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
-		if !reflect.ValueOf(e.PropertyValue).IsZero() {
-			raw, _ := json.Marshal(e.PropertyValue)
-			s = string(raw)
-		}
-	default:
-		s = fmt.Sprint(e.PropertyValue)
-	}
-	return limitString(s, 100)
 }
 
 func (e *PropertyError) PrependPropertyPath(path string) {
@@ -73,18 +40,75 @@ func (e *PropertyError) PrependPropertyPath(path string) {
 	e.PropertyName = path + "." + e.PropertyName
 }
 
-// multiRuleError is a container for transferring multiple errors reported by MultiRule.
-type multiRuleError []error
+type RuleError struct {
+	Message string    `json:"error"`
+	Code    ErrorCode `json:"code,omitempty"`
+}
 
-func (m multiRuleError) Error() string {
+func (r RuleError) Error() string {
+	return r.Message
+}
+
+const errorCodeSeparator = ":"
+
+func (r RuleError) AddCode(code ErrorCode) RuleError {
+	if code != "" && r.Code != "" {
+		r.Code = code + errorCodeSeparator + r.Code
+	} else if code != "" && r.Code == "" {
+		r.Code = code
+	}
+	return r
+}
+
+func HasErrorCode(err error, code ErrorCode) bool {
+	switch v := err.(type) {
+	case RuleError:
+		codes := strings.Split(v.Code, errorCodeSeparator)
+		for i := range codes {
+			if code == codes[i] {
+				return true
+			}
+		}
+	case *PropertyError:
+		for _, e := range v.Errors {
+			if HasErrorCode(e, code) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func propertyValueString(v interface{}) string {
+	ft := reflect.TypeOf(v)
+	if ft.Kind() == reflect.Pointer {
+		ft = ft.Elem()
+	}
+	var s string
+	switch ft.Kind() {
+	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
+		if !reflect.ValueOf(v).IsZero() {
+			raw, _ := json.Marshal(v)
+			s = string(raw)
+		}
+	default:
+		s = fmt.Sprint(v)
+	}
+	return limitString(s, 100)
+}
+
+// ruleSetError is a container for transferring multiple errors reported by RuleSet.
+// It is intentionally not exported as it is only an intermediate stage before the
+// aggregated errors are flattened.
+type ruleSetError []error
+
+func (r ruleSetError) Error() string {
 	b := new(strings.Builder)
-	JoinErrors(b, m, "")
+	JoinErrors(b, r, "")
 	return b.String()
 }
 
-const listPoint = "- "
-
-func JoinErrors(b *strings.Builder, errs []error, indent string) {
+func JoinErrors[T error](b *strings.Builder, errs []T, indent string) {
 	for i, err := range errs {
 		buildErrorMessage(b, err.Error(), indent)
 		if i < len(errs)-1 {
@@ -93,20 +117,11 @@ func JoinErrors(b *strings.Builder, errs []error, indent string) {
 	}
 }
 
-func joinErrorMessages(b *strings.Builder, msgs []string, indent string) {
-	for i, msg := range msgs {
-		buildErrorMessage(b, msg, indent)
-		if i < len(msgs)-1 {
-			b.WriteString("\n")
-		}
-	}
-}
+const listPoint = "- "
 
 func buildErrorMessage(b *strings.Builder, errMsg, indent string) {
 	b.WriteString(indent)
 	b.WriteString(listPoint)
-	// Remove the first list point characters if the error contained them.
-	errMsg = strings.TrimLeft(errMsg, listPoint)
 	// Indent the whole error message.
 	errMsg = strings.ReplaceAll(errMsg, "\n", "\n"+indent)
 	b.WriteString(errMsg)
@@ -117,4 +132,21 @@ func limitString(s string, limit int) string {
 		return s[:limit] + "..."
 	}
 	return s
+}
+
+// unpackErrors unpacks error messages recursively scanning ruleSetError if it is detected.
+func unpackErrors(errs []error, ruleErrors []RuleError) []RuleError {
+	for _, err := range errs {
+		switch v := err.(type) {
+		case ruleSetError:
+			ruleErrors = append(ruleErrors, unpackErrors(v, ruleErrors)...)
+		case RuleError:
+			ruleErrors = append(ruleErrors, v)
+		case *RuleError:
+			ruleErrors = append(ruleErrors, *v)
+		default:
+			ruleErrors = append(ruleErrors, RuleError{Message: v.Error()})
+		}
+	}
+	return ruleErrors
 }

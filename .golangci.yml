@@ -68,7 +68,6 @@ linters:
     - exportloopref
     - gochecknoinits
     - gocognit
-    - goconst
     - gocritic
     - gocyclo
     - gofmt

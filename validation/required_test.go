@@ -16,5 +16,6 @@ func TestStringRequired(t *testing.T) {
 		err := Required[any]().Validate("")
 		require.Error(t, err)
 		assert.EqualError(t, err, "property is required but was empty")
+		assert.True(t, HasErrorCode(err, ErrorCodeRequired))
 	})
 }

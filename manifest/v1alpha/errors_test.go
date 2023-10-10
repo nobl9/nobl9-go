@@ -22,12 +22,12 @@ func TestObjectError(t *testing.T) {
 		&validation.PropertyError{
 			PropertyName:  "metadata.name",
 			PropertyValue: "default",
-			Errors:        []string{"here's an error"},
+			Errors:        []validation.RuleError{{Message: "here's an error"}},
 		},
 		&validation.PropertyError{
 			PropertyName:  "spec.description",
 			PropertyValue: "some long description",
-			Errors:        []string{"here's another error"},
+			Errors:        []validation.RuleError{{Message: "here's another error"}},
 		},
 	}
 
@@ -71,7 +71,7 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 			&validation.PropertyError{
 				PropertyName:  "metadata.project",
 				PropertyValue: "default",
-				Errors:        []string{"nested"},
+				Errors:        []validation.RuleError{{Message: "nested"}},
 			},
 			errors.New("some error"),
 			&validation.PropertyError{

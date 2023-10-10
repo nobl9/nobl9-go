@@ -1,8 +1,9 @@
 package validation
 
+import "github.com/pkg/errors"
+
 // Rule is the interface for all validation rules.
 type Rule[T any] interface {
-	CascadeModeGetter
 	Validate(v T) error
 }
 
@@ -11,52 +12,54 @@ func NewSingleRule[T any](validate func(v T) error) SingleRule[T] {
 }
 
 type SingleRule[T any] struct {
-	validate    func(v T) error
-	cascadeMode CascadeMode
+	validate  func(v T) error
+	errorCode ErrorCode
 }
 
-func (r SingleRule[T]) Validate(v T) error { return r.validate(v) }
+func (r SingleRule[T]) Validate(v T) error {
+	if err := r.validate(v); err != nil {
+		return RuleError{Message: err.Error(), Code: r.errorCode}
+	}
+	return nil
+}
 
-func (r SingleRule[T]) CascadeMode(mode CascadeMode) SingleRule[T] {
-	r.cascadeMode = mode
+func (r SingleRule[T]) WithErrorCode(code ErrorCode) SingleRule[T] {
+	r.errorCode = code
 	return r
 }
 
-func (r SingleRule[T]) GetCascadeMode() CascadeMode {
-	return r.cascadeMode
+func NewRuleSet[T any](rules ...Rule[T]) RuleSet[T] {
+	return RuleSet[T]{rules: rules}
 }
 
-func NewMultiRule[T any](rules ...Rule[T]) MultiRule[T] {
-	return MultiRule[T]{rules: rules}
+// RuleSet allows defining Rule which aggregates multiple sub-rules.
+type RuleSet[T any] struct {
+	rules     []Rule[T]
+	errorCode ErrorCode
 }
 
-// MultiRule allows defining Rule which aggregates multiple sub-rules.
-type MultiRule[T any] struct {
-	rules       []Rule[T]
-	cascadeMode CascadeMode
-}
-
-func (r MultiRule[T]) CascadeMode(mode CascadeMode) MultiRule[T] {
-	r.cascadeMode = mode
-	return r
-}
-
-func (r MultiRule[T]) GetCascadeMode() CascadeMode {
-	return r.cascadeMode
-}
-
-func (r MultiRule[T]) Validate(v T) error {
-	var mErr multiRuleError
+func (r RuleSet[T]) Validate(v T) error {
+	var errs ruleSetError
 	for i := range r.rules {
 		if err := r.rules[i].Validate(v); err != nil {
-			mErr = append(mErr, err)
-			if r.rules[i].GetCascadeMode() == CascadeModeStop {
-				break
+			var ruleErr RuleError
+			if errors.As(err, &ruleErr) {
+				errs = append(errs, ruleErr.AddCode(r.errorCode))
+			} else {
+				errs = append(errs, RuleError{
+					Message: err.Error(),
+					Code:    r.errorCode,
+				})
 			}
 		}
 	}
-	if len(mErr) > 0 {
-		return mErr
+	if len(errs) > 0 {
+		return errs
 	}
 	return nil
+}
+
+func (r RuleSet[T]) WithErrorCode(code ErrorCode) RuleSet[T] {
+	r.errorCode = code
+	return r
 }

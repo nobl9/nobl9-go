@@ -8,49 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNew(t *testing.T) {
-	t.Run("no errors", func(t *testing.T) {
-		r := New[mockStruct](
-			RulesFor[string](func(m mockStruct) string { return "test" }).
-				WithName("test").
-				Rules(NewSingleRule(func(v string) error { return nil })),
-		)
-		errs := r.Validate(mockStruct{})
-		assert.Empty(t, errs)
-	})
+func TestPropertyRules(t *testing.T) {
+	type mockStruct struct {
+		Field string
+	}
 
-	t.Run("errors", func(t *testing.T) {
-		err1 := errors.New("1")
-		err2 := errors.New("2")
-		r := New[mockStruct](
-			RulesFor(func(m mockStruct) string { return "test" }).
-				WithName("test").
-				Rules(NewSingleRule(func(v string) error { return nil })),
-			RulesFor(func(m mockStruct) string { return "name" }).
-				WithName("test.name").
-				Rules(NewSingleRule(func(v string) error { return err1 })),
-			RulesFor(func(m mockStruct) string { return "display" }).
-				WithName("test.display").
-				Rules(NewSingleRule(func(v string) error { return err2 })),
-		)
-		errs := r.Validate(mockStruct{})
-		require.Len(t, errs, 2)
-		assert.Equal(t, []error{
-			&PropertyError{
-				PropertyName:  "test.name",
-				PropertyValue: "name",
-				Errors:        []string{err1.Error()},
-			},
-			&PropertyError{
-				PropertyName:  "test.display",
-				PropertyValue: "display",
-				Errors:        []string{err2.Error()},
-			},
-		}, errs)
-	})
-}
-
-func TestRulesFor(t *testing.T) {
 	t.Run("no predicates, no error", func(t *testing.T) {
 		r := RulesFor(func(m mockStruct) string { return "path" }).
 			WithName("test.path").
@@ -69,7 +31,7 @@ func TestRulesFor(t *testing.T) {
 		assert.Equal(t, PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "path",
-			Errors:        []string{expectedErr.Error()},
+			Errors:        []RuleError{{Message: expectedErr.Error()}},
 		}, *errs[0].(*PropertyError))
 	})
 
@@ -98,11 +60,67 @@ func TestRulesFor(t *testing.T) {
 		assert.Equal(t, PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "value",
-			Errors:        []string{err1.Error(), err2.Error()},
+			Errors: []RuleError{
+				{Message: err1.Error()},
+				{Message: err2.Error()},
+			},
 		}, *errs[0].(*PropertyError))
 	})
-}
 
-type mockStruct struct {
-	Field string
+	t.Run("stop on error", func(t *testing.T) {
+		err := errors.New("oh no!")
+		r := RulesFor(func(m mockStruct) string { return "value" }).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v string) error { return err })).
+			StopOnError().
+			Rules(NewSingleRule(func(v string) error { return errors.New("no") }))
+		errs := r.Validate(mockStruct{})
+		require.Len(t, errs, 1)
+		assert.Equal(t, PropertyError{
+			PropertyName:  "test.path",
+			PropertyValue: "value",
+			Errors:        []RuleError{{Message: err.Error()}},
+		}, *errs[0].(*PropertyError))
+	})
+
+	t.Run("include validator", func(t *testing.T) {
+		err1 := errors.New("oh no!")
+		err2 := errors.New("included")
+		r := RulesFor(func(m mockStruct) mockStruct { return m }).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v mockStruct) error { return err1 })).
+			Include(New[mockStruct](
+				RulesFor(func(s mockStruct) string { return "value" }).
+					WithName("included").
+					Rules(NewSingleRule(func(v string) error { return err2 })),
+			))
+		errs := r.Validate(mockStruct{})
+		require.Len(t, errs, 2)
+		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName: "test.path",
+				Errors:       []RuleError{{Message: err1.Error()}},
+			},
+			{
+				PropertyName:  "test.path.included",
+				PropertyValue: "value",
+				Errors:        []RuleError{{Message: err2.Error()}},
+			},
+		}, errs)
+	})
+
+	t.Run("get self", func(t *testing.T) {
+		err := errors.New("self error")
+		r := RulesFor(GetSelf[mockStruct]()).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v mockStruct) error { return err }))
+		object := mockStruct{Field: "this"}
+		errs := r.Validate(object)
+		require.Len(t, errs, 1)
+		assert.Equal(t, PropertyError{
+			PropertyName:  "test.path",
+			PropertyValue: propertyValueString(object),
+			Errors:        []RuleError{{Message: err.Error()}},
+		}, *errs[0].(*PropertyError))
+	})
 }

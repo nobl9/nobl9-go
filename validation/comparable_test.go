@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestEqual(t *testing.T) {
+func TestEqualTo(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := EqualTo(1.1).Validate(1.1)
 		assert.NoError(t, err)
@@ -17,10 +17,11 @@ func TestEqual(t *testing.T) {
 		err := EqualTo(1.1).Validate(1.3)
 		require.Error(t, err)
 		assert.EqualError(t, err, "1.3 should be equal to 1.1")
+		assert.True(t, HasErrorCode(err, ErrorCodeEqualTo))
 	})
 }
 
-func TestNotEqual(t *testing.T) {
+func TestNotEqualTo(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := NotEqualTo(1.1).Validate(1.3)
 		assert.NoError(t, err)
@@ -29,6 +30,7 @@ func TestNotEqual(t *testing.T) {
 		err := NotEqualTo(1.1).Validate(1.1)
 		require.Error(t, err)
 		assert.EqualError(t, err, "1.1 should be not equal to 1.1")
+		assert.True(t, HasErrorCode(err, ErrorCodeNotEqualTo))
 	})
 }
 
@@ -42,6 +44,7 @@ func TestGreaterThan(t *testing.T) {
 			err := GreaterThan(n).Validate(v)
 			require.Error(t, err)
 			assert.EqualError(t, err, fmt.Sprintf("%v should be greater than %v", v, n))
+			assert.True(t, HasErrorCode(err, ErrorCodeGreaterThan))
 		}
 	})
 }
@@ -57,6 +60,7 @@ func TestGreaterThanOrEqual(t *testing.T) {
 		err := GreaterThanOrEqualTo(4).Validate(2)
 		require.Error(t, err)
 		assert.EqualError(t, err, "2 should be greater than or equal to 4")
+		assert.True(t, HasErrorCode(err, ErrorCodeGreaterThanOrEqualTo))
 	})
 }
 
@@ -70,6 +74,7 @@ func TestLessThan(t *testing.T) {
 			err := LessThan(n).Validate(v)
 			require.Error(t, err)
 			assert.EqualError(t, err, fmt.Sprintf("%v should be less than %v", v, n))
+			assert.True(t, HasErrorCode(err, ErrorCodeLessThan))
 		}
 	})
 }
@@ -85,5 +90,6 @@ func TestLessThanOrEqual(t *testing.T) {
 		err := LessThanOrEqualTo(2).Validate(4)
 		require.Error(t, err)
 		assert.EqualError(t, err, "4 should be less than or equal to 2")
+		assert.True(t, HasErrorCode(err, ErrorCodeLessThanOrEqualTo))
 	})
 }
