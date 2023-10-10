@@ -1404,6 +1404,7 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 
 // haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
 // and metricNamespace as total query
+// nolint: gocognit
 func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec SLOSpec) bool {
 	for _, objective := range sloSpec.Objectives {
 		if objective.CountMetrics == nil {
@@ -1683,9 +1684,8 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	labels := fl.Field().Interface().(Labels)
-
-	return labels.Validate() == nil
+	lbl := fl.Field().Interface().(Labels)
+	return lbl.Validate() == nil
 }
 
 func isHTTPS(fl v.FieldLevel) bool {

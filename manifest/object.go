@@ -48,17 +48,20 @@ func FilterByKind[T Object](objects []Object) []T {
 
 // Validate performs validation of all the provided objects.
 // It aggregates the results into a single error.
-func Validate(objects []Object) error {
-	errs := make([]string, 0)
+func Validate(objects []Object) []error {
+	errs := make([]error, 0)
 	for i := range objects {
 		if err := objects[i].Validate(); err != nil {
-			errs = append(errs, err.Error())
+			errs = append(errs, err)
 		}
 	}
 	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, "\n"))
+		return errs
 	}
-	return validateObjectsUniqueness(objects)
+	if err := validateObjectsUniqueness(objects); err != nil {
+		return []error{err}
+	}
+	return nil
 }
 
 // SetDefaultProject sets the default project for each object only if the object is
