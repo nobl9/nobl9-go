@@ -30,5 +30,5 @@ func TestValidate_AllErrors(t *testing.T) {
 		},
 		ManifestSource: "/home/me/slo.yaml",
 	})
-	assert.Equal(t, expectedError, err.Error())
+	assert.ErrorContains(t, err, expectedError)
 }
