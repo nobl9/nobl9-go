@@ -32,12 +32,10 @@ func (e *PropertyError) Error() string {
 	return b.String()
 }
 
-func (e *PropertyError) PrependPropertyPath(path string) {
-	if e.PropertyName == "" {
-		e.PropertyName = path
-		return
-	}
-	e.PropertyName = path + "." + e.PropertyName
+const propertyNameSeparator = "."
+
+func (e *PropertyError) PrependPropertyName(name string) {
+	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
 }
 
 type RuleError struct {
@@ -52,12 +50,18 @@ func (r RuleError) Error() string {
 const errorCodeSeparator = ":"
 
 func (r RuleError) AddCode(code ErrorCode) RuleError {
-	if code != "" && r.Code != "" {
-		r.Code = code + errorCodeSeparator + r.Code
-	} else if code != "" && r.Code == "" {
-		r.Code = code
-	}
+	r.Code = concatStrings(code, r.Code, errorCodeSeparator)
 	return r
+}
+
+func concatStrings(pre, post, sep string) string {
+	if pre == "" {
+		return post
+	}
+	if post == "" {
+		return pre
+	}
+	return pre + sep + post
 }
 
 func HasErrorCode(err error, code ErrorCode) bool {

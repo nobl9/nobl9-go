@@ -39,6 +39,35 @@ func TestPropertyError(t *testing.T) {
 	}
 }
 
+func TestPropertyError_PrependPropertyName(t *testing.T) {
+	for _, test := range []struct {
+		PropertyError *PropertyError
+		InputName     string
+		ExpectedName  string
+	}{
+		{
+			PropertyError: &PropertyError{},
+		},
+		{
+			PropertyError: &PropertyError{PropertyName: "test"},
+			ExpectedName:  "test",
+		},
+		{
+			PropertyError: &PropertyError{},
+			InputName:     "new",
+			ExpectedName:  "new",
+		},
+		{
+			PropertyError: &PropertyError{PropertyName: "original"},
+			InputName:     "added",
+			ExpectedName:  "added.original",
+		},
+	} {
+		test.PropertyError.PrependPropertyName(test.InputName)
+		assert.Equal(t, test.ExpectedName, test.PropertyError.PropertyName)
+	}
+}
+
 func TestRuleError(t *testing.T) {
 	for _, test := range []struct {
 		RuleError    RuleError
