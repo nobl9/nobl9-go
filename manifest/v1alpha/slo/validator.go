@@ -131,7 +131,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
 	_ = val.RegisterValidation("minDateTime", isMinDateTime)
 	_ = val.RegisterValidation("timeZone", isTimeZoneValid)
-	_ = val.RegisterValidation("budgetingMethod", isBudgetingMethod)
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("objectName", isValidObjectName)
@@ -1597,11 +1596,6 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
 	}
-}
-
-func isBudgetingMethod(fl v.FieldLevel) bool {
-	_, err := ParseBudgetingMethod(fl.Field().String())
-	return err == nil
 }
 
 func isSite(fl v.FieldLevel) bool {

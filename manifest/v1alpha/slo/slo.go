@@ -31,25 +31,25 @@ type SLO struct {
 
 // Metadata provides identity information for SLO.
 type Metadata struct {
-	Name        string         `json:"name" validate:"required,objectName"`
-	DisplayName string         `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string         `json:"project,omitempty" validate:"objectName"`
-	Labels      v1alpha.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string         `json:"name"`
+	DisplayName string         `json:"displayName,omitempty"`
+	Project     string         `json:"project,omitempty"`
+	Labels      v1alpha.Labels `json:"labels,omitempty"`
 }
 
 // Spec holds detailed information specific to SLO.
 type Spec struct {
-	Description     string         `json:"description" validate:"description" example:"Total count of server requests"`
+	Description     string         `json:"description"`
 	Indicator       Indicator      `json:"indicator"`
-	BudgetingMethod string         `json:"budgetingMethod" validate:"required,budgetingMethod" example:"Occurrences"`
+	BudgetingMethod string         `json:"budgetingMethod"`
 	Objectives      []Objective    `json:"objectives" validate:"required,dive"`
 	Service         string         `json:"service" validate:"required,objectName" example:"webapp-service"`
 	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
-	AlertPolicies   []string       `json:"alertPolicies" validate:"omitempty"`
-	Attachments     []Attachment   `json:"attachments,omitempty" validate:"omitempty,max=20,dive"`
+	AlertPolicies   []string       `json:"alertPolicies"`
+	Attachments     []Attachment   `json:"attachments,omitempty" validate:"max=20,dive"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
-	Composite       *Composite     `json:"composite,omitempty" validate:"omitempty"`
-	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty" validate:"omitempty"`
+	Composite       *Composite     `json:"composite,omitempty"`
+	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.

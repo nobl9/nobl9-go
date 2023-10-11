@@ -6,8 +6,11 @@ import (
 )
 
 var sloValidation = validation.New[SLO](
-	v1alpha.FieldRuleSpecDescription(func(s SLO) string { return s.Spec.Description }),
-	validation.RulesFor(func(s SLO) Metadata { return s.Metadata }).Include(sloMetadataValidation),
+	validation.RulesFor(func(s SLO) Metadata { return s.Metadata }).
+		Include(sloMetadataValidation),
+	validation.RulesFor(func(s SLO) Spec { return s.Spec }).
+		WithName("spec").
+		Include(sloSpecValidation),
 )
 
 var sloMetadataValidation = validation.New[Metadata](
@@ -15,6 +18,20 @@ var sloMetadataValidation = validation.New[Metadata](
 	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
+)
+
+var sloSpecValidation = validation.New[Spec](
+	validation.RulesFor(func(s Spec) string { return s.Description }).
+		WithName("description").
+		Rules(validation.StringDescription()),
+	validation.RulesFor(func(s Spec) string { return s.BudgetingMethod }).
+		WithName("budgetingMethod").
+		Rules(validation.Required[string]()).
+		StopOnError().
+		Rules(validation.NewSingleRule(func(v string) error {
+			_, err := ParseBudgetingMethod(v)
+			return err
+		})),
 )
 
 func validate(s SLO) error {
