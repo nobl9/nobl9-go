@@ -65,13 +65,6 @@ type ReplayStatus struct {
 	StartTime string `json:"startTime,omitempty"`
 }
 
-type ReplayStatus struct {
-	Status    string `json:"status"`
-	Unit      string `json:"unit"`
-	Value     int    `json:"value"`
-	StartTime string `json:"startTime,omitempty"`
-}
-
 // Calendar struct represents calendar time window
 type Calendar struct {
 	StartTime string `json:"startTime" validate:"required,dateWithTime,minDateTime" example:"2020-01-21 12:30:00"`

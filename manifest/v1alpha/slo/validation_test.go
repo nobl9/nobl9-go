@@ -17,22 +17,20 @@ import (
 var expectedMetadataError string
 
 func TestValidate_Metadata(t *testing.T) {
-	err := validate(SLO{
-		Kind: manifest.KindSLO,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY SLO", 20),
-			DisplayName: strings.Repeat("my-slo", 10),
-			Project:     strings.Repeat("MY PROJECT", 20),
-			Labels: v1alpha.Labels{
-				"L O L": []string{"dip", "dip"},
-			},
+	slo := validSLO()
+	slo.Metadata = Metadata{
+		Name:        strings.Repeat("MY SLO", 20),
+		DisplayName: strings.Repeat("my-slo", 10),
+		Project:     strings.Repeat("MY PROJECT", 20),
+		Labels: v1alpha.Labels{
+			"L O L": []string{"dip", "dip"},
 		},
-		Spec: Spec{
-			Description: strings.Repeat("l", 2000),
-		},
-		ManifestSource: "/home/me/slo.yaml",
-	})
-	assert.ErrorContains(t, err, expectedMetadataError)
+	}
+	slo.Spec.Description = strings.Repeat("l", 2000)
+	slo.ManifestSource = "/home/me/slo.yaml"
+	err := validate(slo)
+	require.Error(t, err)
+	assert.EqualError(t, err, expectedMetadataError)
 }
 
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {

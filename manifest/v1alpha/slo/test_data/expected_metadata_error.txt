@@ -1,6 +1,4 @@
 Validation for SLO 'MY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLO' in project 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT' has failed for the following fields:
-  - 'spec.description' with value 'llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
-    - length must be between 0 and 1050
   - 'metadata.name' with value 'MY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY S...':
     - length must be between 1 and 63
     - a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc', regex used for validation is '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
@@ -9,4 +7,6 @@ Validation for SLO 'MY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLOMY SLO
     - a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc', regex used for validation is '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
   - 'metadata.labels' with value '{"L O L":["dip","dip"]}':
     - label key 'L O L' does not match the regex: ^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$
+  - 'spec.description' with value 'llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
+    - length must be between 0 and 1050
 Manifest source: /home/me/slo.yaml
