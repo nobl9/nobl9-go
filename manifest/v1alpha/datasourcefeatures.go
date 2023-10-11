@@ -10,6 +10,6 @@ type DataSourceFeature struct {
 
 type DataSourceFeatures map[FeatureName]DataSourceFeature
 
-func (f DataSourceFeatures) appendFeature(name string, feature DataSourceFeature) {
+func (f DataSourceFeatures) AppendFeature(name string, feature DataSourceFeature) {
 	f[FeatureName(name)] = feature
 }
