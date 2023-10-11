@@ -59,7 +59,7 @@ loop:
 			for _, err := range errs {
 				var fErr *PropertyError
 				if ok := errors.As(err, &fErr); ok {
-					fErr.PrependPropertyPath(r.name)
+					fErr.PrependPropertyName(r.name)
 				}
 				allErrors = append(allErrors, err)
 			}
