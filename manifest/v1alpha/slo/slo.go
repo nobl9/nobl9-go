@@ -55,7 +55,7 @@ type Spec struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	ReplayStatus *v1alpha.ReplayStatus `json:"timeTravel,omitempty"`
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 
 type ReplayStatus struct {
