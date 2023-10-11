@@ -6,10 +6,15 @@ import (
 )
 
 var sloValidation = validation.New[SLO](
-	v1alpha.FieldRuleMetadataName(func(s SLO) string { return s.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(s SLO) string { return s.Metadata.DisplayName }),
-	v1alpha.FieldRuleMetadataLabels(func(s SLO) v1alpha.Labels { return s.Metadata.Labels }),
 	v1alpha.FieldRuleSpecDescription(func(s SLO) string { return s.Spec.Description }),
+	validation.RulesFor(func(s SLO) Metadata { return s.Metadata }).Include(sloMetadataValidation),
+)
+
+var sloMetadataValidation = validation.New[Metadata](
+	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
+	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
+	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
+	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
 func validate(s SLO) error {

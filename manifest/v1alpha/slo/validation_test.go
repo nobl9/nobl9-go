@@ -16,10 +16,11 @@ var expectedError string
 
 func TestValidate_AllErrors(t *testing.T) {
 	err := validate(SLO{
-		Kind: manifest.KindProject,
+		Kind: manifest.KindSLO,
 		Metadata: Metadata{
-			Name:        strings.Repeat("MY PROJECT", 20),
-			DisplayName: strings.Repeat("my-project", 10),
+			Name:        strings.Repeat("MY SLO", 20),
+			DisplayName: strings.Repeat("my-slo", 10),
+			Project:     strings.Repeat("MY PROJECT", 20),
 			Labels: v1alpha.Labels{
 				"L O L": []string{"dip", "dip"},
 			},
@@ -27,7 +28,7 @@ func TestValidate_AllErrors(t *testing.T) {
 		Spec: Spec{
 			Description: strings.Repeat("l", 2000),
 		},
-		ManifestSource: "/home/me/project.yaml",
+		ManifestSource: "/home/me/slo.yaml",
 	})
 	assert.Equal(t, expectedError, err.Error())
 }
