@@ -17,7 +17,7 @@ type (
 )
 
 func ValidationRuleLabels() validation.SingleRule[Labels] {
-	return func(v Labels) error { return v.Validate() }
+	return validation.NewSingleRule(func(v Labels) error { return v.Validate() })
 }
 
 // Validate checks if the Labels keys and values are valid.

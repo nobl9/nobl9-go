@@ -1,25 +1,24 @@
-package v1alpha
+package models
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 func TestReplayStructDatesValidation(t *testing.T) {
 	t.Parallel()
 
-	validate := v.New()
-	validate.RegisterStructValidation(replayStructDatesValidation, Replay{})
-
 	tests := []struct {
 		name      string
 		replay    Replay
 		isValid   bool
-		errorTags map[string][]string
+		ErrorCode validation.ErrorCode
 	}{
 		{
 			name: "correct struct",
@@ -43,10 +42,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Slo": {"required"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
 			name: "missing project",
@@ -58,13 +55,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Project": {"required"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
-			name: "missing durationUnit",
+			name: "missing duration unit",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -72,13 +67,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Unit": {"required", "invalidDurationUnit"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 		{
-			name: "missing durationValue",
+			name: "missing duration value",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -86,13 +79,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit: "Day",
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"required"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeGreaterThan,
 		},
 		{
-			name: "invalid durationUnit",
+			name: "invalid duration unit",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -101,13 +92,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Unit": {"invalidDurationUnit"},
-			},
+			isValid:   false,
+			ErrorCode: replayDurationUnitValidationErrorCode,
 		},
 		{
-			name: "invalid durationValue",
+			name: "invalid duration value",
 			replay: Replay{
 				Project: "project",
 				Slo:     "slo",
@@ -116,10 +105,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: -30,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"gte"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeGreaterThan,
 		},
 		{
 			name: "maximum duration exceeded",
@@ -131,10 +118,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 31,
 				},
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Value": {"maximumDurationExceeded"},
-			},
+			isValid:   false,
+			ErrorCode: replayDurationValidationErrorCode,
 		},
 		{
 			name: "missing duration",
@@ -142,11 +127,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				Project: "project",
 				Slo:     "slo",
 			},
-			isValid: false,
-			errorTags: map[string][]string{
-				"Unit":  {"required", "invalidDurationUnit"},
-				"Value": {"required"},
-			},
+			isValid:   false,
+			ErrorCode: validation.ErrorCodeRequired,
 		},
 	}
 
@@ -155,22 +137,15 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := validate.Struct(tc.replay)
+			err := tc.replay.Validate()
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
 				assert.Error(t, err)
-
-				// check all error tags
-				tags := map[string][]string{}
-				errors := err.(v.ValidationErrors)
-				for i := range errors {
-					fe := errors[i]
-
-					tags[fe.StructField()] = append(tags[fe.StructField()], fe.Tag())
+				for _, e := range err.(ValidationError).Errors {
+					assert.True(t, validation.HasErrorCode(e, tc.ErrorCode))
 				}
-
-				assert.Equal(t, tc.errorTags, tags)
+				fmt.Println(err)
 			}
 		})
 	}

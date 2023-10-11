@@ -140,7 +140,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(webhookAlertMethodValidation, WebhookAlertMethod{})
 	val.RegisterStructValidation(emailAlertMethodValidation, EmailAlertMethod{})
-	val.RegisterStructValidation(sliAnalysisSpecStructValidation, SLIAnalysis{})
 	val.RegisterStructValidation(countMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 	val.RegisterStructValidation(annotationSpecStructDatesValidation, AnnotationSpec{})
@@ -151,7 +150,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
-	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
@@ -2662,15 +2660,6 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 	}
 
 	return true
-}
-
-func sliAnalysisSpecStructValidation(sl v.StructLevel) {
-	sliAnalysis := sl.Current().Interface().(SLIAnalysis)
-	if (sliAnalysis.MetricSpec.RawMetric == nil && sliAnalysis.MetricSpec.CountMetrics == nil) ||
-		(sliAnalysis.MetricSpec.RawMetric != nil && sliAnalysis.MetricSpec.CountMetrics != nil) {
-		sl.ReportError(sliAnalysis.MetricSpec.RawMetric, "rawMetric", "RawMetric", "exactlyOneMetricType", "")
-		sl.ReportError(sliAnalysis.MetricSpec.CountMetrics, "countMetrics", "CountMetrics", "exactlyOneMetricType", "")
-	}
 }
 
 func countMetricsSpecValidation(sl v.StructLevel) {
