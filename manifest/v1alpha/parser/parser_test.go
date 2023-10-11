@@ -1,4 +1,4 @@
-package v1alpha
+package parser
 
 import (
 	"embed"
@@ -10,9 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/parser
+//go:embed test_data
 var parserTestData embed.FS
 
 func TestParseObject(t *testing.T) {
@@ -84,7 +85,7 @@ func TestParseObjectUsingGenericObject(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, jsonObject, yamlObject)
-	assert.Equal(t, GenericObject{
+	assert.Equal(t, v1alpha.GenericObject{
 		"apiVersion": "n9/v1alpha",
 		"kind":       "Project",
 		"metadata": map[string]interface{}{
@@ -96,7 +97,7 @@ func TestParseObjectUsingGenericObject(t *testing.T) {
 
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
-	data, err := parserTestData.ReadFile(filepath.Join("test_data", "parser", filename))
+	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))
 	require.NoError(t, err)
 	format, err := manifest.ParseObjectFormat(filepath.Ext(filename)[1:])
 	require.NoError(t, err)

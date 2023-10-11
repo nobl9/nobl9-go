@@ -24,22 +24,23 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
 func TestClient_GetObjects(t *testing.T) {
 	responsePayload := []manifest.Object{
-		v1alpha.Service{
+		v1alphaService.Service{
 			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
+			Metadata: v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
 		},
-		v1alpha.Service{
+		v1alphaService.Service{
 			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
+			Metadata: v1alphaService.Metadata{
 				Name:    "service2",
 				Project: "default",
 			},
@@ -146,10 +147,10 @@ func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 
 func TestClient_ApplyObjects(t *testing.T) {
 	requestPayload := []manifest.Object{
-		v1alpha.Service{
+		v1alphaService.Service{
 			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
+			Metadata: v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
@@ -186,10 +187,10 @@ func TestClient_ApplyObjects(t *testing.T) {
 
 func TestClient_DeleteObjects(t *testing.T) {
 	requestPayload := []manifest.Object{
-		v1alpha.Service{
+		v1alphaService.Service{
 			APIVersion: v1alpha.APIVersion,
 			Kind:       manifest.KindService,
-			Metadata: v1alpha.ServiceMetadata{
+			Metadata: v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
