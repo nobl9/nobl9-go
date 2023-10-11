@@ -11,10 +11,10 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/expected_error.txt
+//go:embed test_data/expected_metadata_error.txt
 var expectedError string
 
-func TestValidate_AllErrors(t *testing.T) {
+func TestValidate_Metadata(t *testing.T) {
 	err := validate(SLO{
 		Kind: manifest.KindSLO,
 		Metadata: Metadata{
