@@ -4,9 +4,8 @@ type FeatureName string
 
 type DataSourceFeature struct {
 	Supported           bool   `json:"supported"`
-	MinimumAgentVersion string `json:"minimumAgentVersion"`
+	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
+	ReleaseChannel      string `json:"releaseChannel,omitempty"`
 }
 
-type DataSourceFeatures struct {
-	Features map[FeatureName]DataSourceFeature `json:"features"`
-}
+type DataSourceFeatures map[FeatureName]DataSourceFeature
