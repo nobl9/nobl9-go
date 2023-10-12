@@ -7,29 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStringRequired(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		err := StringRequired().Validate("test")
-		assert.NoError(t, err)
-	})
-	t.Run("fails", func(t *testing.T) {
-		err := StringRequired().Validate("")
-		assert.Error(t, err)
-	})
-}
-
 func TestStringLength(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := StringLength(0, 20).Validate("test")
 		assert.NoError(t, err)
 	})
-	t.Run("fails, upper bound", func(t *testing.T) {
-		err := StringLength(0, 2).Validate("test")
-		assert.Error(t, err)
-	})
-	t.Run("fails, lower bound", func(t *testing.T) {
-		err := StringLength(10, 20).Validate("test")
-		assert.Error(t, err)
+	t.Run("fails", func(t *testing.T) {
+		for min, max := range map[int]int{
+			0:  2,
+			10: 20,
+		} {
+			err := StringLength(min, max).Validate("test")
+			assert.Error(t, err)
+			assert.True(t, HasErrorCode(err, ErrorCodeStringLength))
+		}
 	})
 }
 
@@ -60,6 +51,9 @@ func TestStringIsDNSSubdomain(t *testing.T) {
 		} {
 			err := StringIsDNSSubdomain().Validate(input)
 			assert.Error(t, err)
+			for _, e := range err.(ruleSetError) {
+				assert.True(t, HasErrorCode(e, ErrorCodeStringIsDNSSubdomain))
+			}
 		}
 	})
 }
@@ -72,5 +66,6 @@ func TestStringDescription(t *testing.T) {
 	t.Run("fails", func(t *testing.T) {
 		err := StringDescription().Validate(strings.Repeat("l", 1051))
 		assert.Error(t, err)
+		assert.True(t, HasErrorCode(err, ErrorCodeStringDescription))
 	})
 }
