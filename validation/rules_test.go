@@ -10,7 +10,8 @@ import (
 
 func TestPropertyRules(t *testing.T) {
 	type mockStruct struct {
-		Field string
+		Field  string
+		Fields []string
 	}
 
 	t.Run("no predicates, no error", func(t *testing.T) {
@@ -86,13 +87,15 @@ func TestPropertyRules(t *testing.T) {
 	t.Run("include validator", func(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("included")
+		err3 := errors.New("included again")
 		r := RulesFor(func(m mockStruct) mockStruct { return m }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v mockStruct) error { return err1 })).
 			Include(New[mockStruct](
 				RulesFor(func(s mockStruct) string { return "value" }).
 					WithName("included").
-					Rules(NewSingleRule(func(v string) error { return err2 })),
+					Rules(NewSingleRule(func(v string) error { return err2 })).
+					Rules(NewSingleRule(func(v string) error { return err3 })),
 			))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 2)
@@ -104,7 +107,10 @@ func TestPropertyRules(t *testing.T) {
 			{
 				PropertyName:  "test.path.included",
 				PropertyValue: "value",
-				Errors:        []RuleError{{Message: err2.Error()}},
+				Errors: []RuleError{
+					{Message: err2.Error()},
+					{Message: err3.Error()},
+				},
 			},
 		}, errs)
 	})

@@ -73,23 +73,17 @@ loop:
 }
 
 func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {
-	for _, rule := range rules {
-		r.steps = append(r.steps, rule)
-	}
+	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
 func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] {
-	for _, rule := range rules {
-		r.steps = append(r.steps, rule)
-	}
+	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
 func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	for _, predicate := range predicates {
-		r.steps = append(r.steps, predicate)
-	}
+	r.steps = appendSteps(r.steps, predicates)
 	return r
 }
 
@@ -98,4 +92,11 @@ type stopOnErrorStep uint8
 func (r PropertyRules[T, S]) StopOnError() PropertyRules[T, S] {
 	r.steps = append(r.steps, stopOnErrorStep(0))
 	return r
+}
+
+func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
+	for _, step := range steps {
+		slice = append(slice, step)
+	}
+	return slice
 }

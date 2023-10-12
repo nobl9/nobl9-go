@@ -32,6 +32,14 @@ var sloSpecValidation = validation.New[Spec](
 			_, err := ParseBudgetingMethod(v)
 			return err
 		})),
+	validation.RulesFor(func(s Spec) string { return s.Service }).
+		WithName("service").
+		Rules(validation.Required[string]()).
+		StopOnError().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.RulesForEach(func(s Spec) []string { return s.AlertPolicies }).
+		WithName("alertPolicies").
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 func validate(s SLO) error {
