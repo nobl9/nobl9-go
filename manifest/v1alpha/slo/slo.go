@@ -43,7 +43,7 @@ type Spec struct {
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod"`
 	Objectives      []Objective    `json:"objectives" validate:"required,dive"`
-	Service         string         `json:"service" validate:"required,objectName" example:"webapp-service"`
+	Service         string         `json:"service"`
 	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
 	AlertPolicies   []string       `json:"alertPolicies"`
 	Attachments     []Attachment   `json:"attachments,omitempty" validate:"max=20,dive"`

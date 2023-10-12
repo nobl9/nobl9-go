@@ -49,17 +49,65 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = ""
 		err := validate(slo)
-		assertContainsErrors(t, err, validation.ErrorCodeRequired)
+		assertContainsErrors(t, err, expectedError{
+			Prop: "spec.budgetingMethod",
+			Code: validation.ErrorCodeRequired,
+		})
 	})
 	t.Run("invalid method", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, "'invalid' is not a valid budgeting method")
+		assertContainsErrors(t, err, expectedError{
+			Prop:    "spec.budgetingMethod",
+			Message: "'invalid' is not a valid budgeting method",
+		})
 	})
 }
 
-func assertContainsErrors(t *testing.T, err error, expectedErrors ...string) {
+func TestValidate_Spec_Service(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Service = "my-service"
+		err := validate(slo)
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Service = "MY SERVICE"
+		err := validate(slo)
+		assertContainsErrors(t, err, expectedError{
+			Prop: "spec.service",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		})
+	})
+}
+
+func TestValidate_Spec_AlertPolicies(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.AlertPolicies = []string{"my-policy"}
+		err := validate(slo)
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.AlertPolicies = []string{"my-policy", "MY POLICY", "ok-policy"}
+		err := validate(slo)
+		assertContainsErrors(t, err, expectedError{
+			Prop: "spec.alertPolicies[1]",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		})
+	})
+}
+
+type expectedError struct {
+	Prop    string
+	Code    string
+	Message string
+}
+
+func assertContainsErrors(t *testing.T, err error, expectedErrors ...expectedError) {
 	t.Helper()
 	require.Error(t, err)
 	var objErr *v1alpha.ObjectError
@@ -68,14 +116,18 @@ func assertContainsErrors(t *testing.T, err error, expectedErrors ...string) {
 		objErr.Errors,
 		len(expectedErrors),
 		"v1alpha.ObjectError contains a different number of errors than expected")
-	for _, expectedErr := range expectedErrors {
+	for _, expected := range expectedErrors {
 		found := false
-		for _, ruleErr := range objErr.Errors {
-			if strings.Contains(ruleErr.Error(), expectedErr) || validation.HasErrorCode(ruleErr, expectedErr) {
+		for _, actual := range objErr.Errors {
+			var propErr *validation.PropertyError
+			require.ErrorAs(t, actual, &propErr)
+			if propErr.PropertyName == expected.Prop &&
+				(strings.Contains(actual.Error(), expected.Message) ||
+					validation.HasErrorCode(actual, expected.Code)) {
 				found = true
 			}
 		}
-		require.Truef(t, found, "expected '%s' error was not found", expectedErr)
+		require.Truef(t, found, "expected '%v' error was not found", expected)
 	}
 }
 
