@@ -43,6 +43,7 @@ var specValidation = validation.New[Spec](
 	validation.RulesForEach(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
+		StopOnError().
 		IncludeForEach(attachmentValidation),
 )
 

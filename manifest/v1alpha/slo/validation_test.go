@@ -101,6 +101,66 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Attachments(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, attachments := range [][]Attachment{
+			{},
+			{{URL: "https://my-url.com"}},
+			{{URL: "https://my-url.com"}, {URL: "http://insecure-url.pl", DisplayName: ptr("Dashboard")}},
+		} {
+			slo := validSLO()
+			slo.Spec.Attachments = attachments
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails, too many attachments", func(t *testing.T) {
+		slo := validSLO()
+		var attachments []Attachment
+		for i := 0; i < 21; i++ {
+			attachments = append(attachments, Attachment{})
+		}
+		slo.Spec.Attachments = attachments
+		err := validate(slo)
+		assertContainsErrors(t, err, expectedError{
+			Prop: "spec.attachments",
+			Code: validation.ErrorCodeSliceLength,
+		})
+	})
+	t.Run("fails, invalid attachment", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Attachments = []Attachment{{URL: "https://valid.com"}, {URL: ""}}
+		err := validate(slo)
+		assertContainsErrors(t, err, expectedError{
+			Prop: "spec.attachments[1].url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("fails, invalid attachment", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Attachments = []Attachment{
+			{URL: "https://this.com"},
+			{URL: ".com"},
+			{URL: "", DisplayName: ptr(strings.Repeat("l", 64))},
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err,
+			expectedError{
+				Prop: "spec.attachments[1].url",
+				Code: validation.ErrorCodeStringURL,
+			},
+			expectedError{
+				Prop: "spec.attachments[2].displayName",
+				Code: validation.ErrorCodeStringLength,
+			},
+			expectedError{
+				Prop: "spec.attachments[2].url",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
 type expectedError struct {
 	Prop    string
 	Code    string
@@ -121,9 +181,11 @@ func assertContainsErrors(t *testing.T, err error, expectedErrors ...expectedErr
 		for _, actual := range objErr.Errors {
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
-			if propErr.PropertyName == expected.Prop &&
-				(strings.Contains(actual.Error(), expected.Message) ||
-					validation.HasErrorCode(actual, expected.Code)) {
+			if propErr.PropertyName != expected.Prop {
+				continue
+			}
+			if expected.Message != "" && strings.Contains(actual.Error(), expected.Message) ||
+				validation.HasErrorCode(actual, expected.Code) {
 				found = true
 			}
 		}

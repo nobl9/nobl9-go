@@ -52,17 +52,15 @@ type Spec struct {
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
-// Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
-// Status is not part of the static object definition.
-type Status struct {
-	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
-}
+// TimeWindow represents content of time window
+type TimeWindow struct {
+	Unit      string    `json:"unit" validate:"required,timeUnit" example:"Week"`
+	Count     int       `json:"count" validate:"required,gt=0" example:"1"`
+	IsRolling bool      `json:"isRolling" example:"true"`
+	Calendar  *Calendar `json:"calendar,omitempty"`
 
-type ReplayStatus struct {
-	Status    string `json:"status"`
-	Unit      string `json:"unit"`
-	Value     int    `json:"value"`
-	StartTime string `json:"startTime,omitempty"`
+	// Period is only returned in `/get/slo` requests it is ignored for `/apply`
+	Period *Period `json:"period,omitempty"`
 }
 
 // Calendar struct represents calendar time window
@@ -75,17 +73,6 @@ type Calendar struct {
 type Period struct {
 	Begin string `json:"begin"`
 	End   string `json:"end"`
-}
-
-// TimeWindow represents content of time window
-type TimeWindow struct {
-	Unit      string    `json:"unit" validate:"required,timeUnit" example:"Week"`
-	Count     int       `json:"count" validate:"required,gt=0" example:"1"`
-	IsRolling bool      `json:"isRolling" example:"true"`
-	Calendar  *Calendar `json:"calendar,omitempty"`
-
-	// Period is only returned in `/get/slo` requests it is ignored for `/apply`
-	Period *Period `json:"period,omitempty"`
 }
 
 // Attachment represents user defined URL attached to SLO
@@ -161,4 +148,17 @@ type AnomalyConfigNoData struct {
 type AnomalyConfigAlertMethod struct {
 	Name    string `json:"name" validate:"required,objectName" example:"slack-monitoring-channel"`
 	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
+}
+
+// Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
+// Status is not part of the static object definition.
+type Status struct {
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+}
+
+type ReplayStatus struct {
+	Status    string `json:"status"`
+	Unit      string `json:"unit"`
+	Value     int    `json:"value"`
+	StartTime string `json:"startTime,omitempty"`
 }
