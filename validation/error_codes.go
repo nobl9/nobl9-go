@@ -16,4 +16,5 @@ const (
 	ErrorCodeStringLength         ErrorCode = "string_length"
 	ErrorCodeSliceLength          ErrorCode = "slice_length"
 	ErrorCodeMapLength            ErrorCode = "map_length"
+	ErrorCodeOneOf                ErrorCode = "one_of"
 )
