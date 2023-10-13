@@ -45,6 +45,10 @@ var specValidation = validation.New[Spec](
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
 		StopOnError().
 		IncludeForEach(attachmentValidation),
+	validation.RulesFor(func(s Spec) Composite { return *s.Composite }).
+		WithName("composite").
+		When(func(s Spec) bool { return s.Composite != nil }).
+		Include(compositeValidation),
 )
 
 var attachmentValidation = validation.New[Attachment](
@@ -57,6 +61,25 @@ var attachmentValidation = validation.New[Attachment](
 		WithName("displayName").
 		When(func(a Attachment) bool { return a.DisplayName != nil }).
 		Rules(validation.StringLength(0, 63)),
+)
+
+var compositeValidation = validation.New[Composite](
+	validation.RulesFor(func(c Composite) float64 { return c.BudgetTarget }).
+		WithName("target").
+		Rules(validation.GreaterThan(0.0), validation.LessThan(1.0)),
+	validation.RulesFor(func(c Composite) CompositeBurnRateCondition { return *c.BurnRateCondition }).
+		WithName("burnRateCondition").
+		When(func(c Composite) bool { return c.BurnRateCondition != nil }).
+		Include(validation.New[CompositeBurnRateCondition](
+			validation.RulesFor(func(b CompositeBurnRateCondition) float64 { return b.Value }).
+				WithName("value").
+				Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1000.0)),
+			validation.RulesFor(func(b CompositeBurnRateCondition) string { return b.Operator }).
+				WithName("op").
+				Rules(validation.Required[string]()).
+				StopOnError().
+				Rules(validation.OneOf("gt")),
+		)),
 )
 
 func validate(s SLO) error {

@@ -129,15 +129,6 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 	})
 	t.Run("fails, invalid attachment", func(t *testing.T) {
 		slo := validSLO()
-		slo.Spec.Attachments = []Attachment{{URL: "https://valid.com"}, {URL: ""}}
-		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop: "spec.attachments[1].url",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
-	t.Run("fails, invalid attachment", func(t *testing.T) {
-		slo := validSLO()
 		slo.Spec.Attachments = []Attachment{
 			{URL: "https://this.com"},
 			{URL: ".com"},
@@ -158,6 +149,94 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			},
 		)
+	})
+}
+
+func TestValidate_Spec_Composite(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, composite := range []*Composite{
+			nil,
+			{
+				BudgetTarget: 0.001,
+			},
+			{
+				BudgetTarget:      0.9999,
+				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+			},
+		} {
+			slo := validSLO()
+			slo.Spec.Composite = composite
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Composite     *Composite
+			ExpectedError expectedError
+		}{
+			"target too small": {
+				Composite: &Composite{BudgetTarget: 0},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.target",
+					Code: validation.ErrorCodeGreaterThan,
+				},
+			},
+			"target too large": {
+				Composite: &Composite{BudgetTarget: 1.0},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.target",
+					Code: validation.ErrorCodeLessThan,
+				},
+			},
+			"burn rate value too small": {
+				Composite: &Composite{
+					BudgetTarget:      0.9,
+					BurnRateCondition: &CompositeBurnRateCondition{Value: -1, Operator: "gt"},
+				},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.burnRateCondition.value",
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
+				},
+			},
+			"burn rate value too large": {
+				Composite: &Composite{
+					BudgetTarget:      0.9,
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 1001, Operator: "gt"},
+				},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.burnRateCondition.value",
+					Code: validation.ErrorCodeLessThanOrEqualTo,
+				},
+			},
+			"missing operator": {
+				Composite: &Composite{
+					BudgetTarget:      0.9,
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 10},
+				},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.burnRateCondition.op",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			"invalid operator": {
+				Composite: &Composite{
+					BudgetTarget:      0.9,
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "lte"},
+				},
+				ExpectedError: expectedError{
+					Prop: "spec.composite.burnRateCondition.op",
+					Code: validation.ErrorCodeOneOf,
+				},
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Composite = test.Composite
+				err := validate(slo)
+				assertContainsErrors(t, err, test.ExpectedError)
+			})
+		}
 	})
 }
 

@@ -115,7 +115,7 @@ type MetricSourceSpec struct {
 
 // Composite represents configuration for Composite SLO.
 type Composite struct {
-	BudgetTarget      float64                     `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
+	BudgetTarget      float64                     `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`
 }
 
