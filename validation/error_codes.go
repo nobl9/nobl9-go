@@ -14,7 +14,13 @@ const (
 	ErrorCodeStringIsDNSSubdomain ErrorCode = "string_is_dns_subdomain"
 	ErrorCodeStringURL            ErrorCode = "string_url"
 	ErrorCodeStringLength         ErrorCode = "string_length"
+	ErrorCodeStringMinLength      ErrorCode = "string_max_length"
+	ErrorCodeStringMaxLength      ErrorCode = "string_min_length"
 	ErrorCodeSliceLength          ErrorCode = "slice_length"
+	ErrorCodeSliceMinLength       ErrorCode = "slice_min_length"
+	ErrorCodeSliceMaxLength       ErrorCode = "slice_max_length"
 	ErrorCodeMapLength            ErrorCode = "map_length"
+	ErrorCodeMapMinLength         ErrorCode = "map_min_length"
+	ErrorCodeMapMaxLength         ErrorCode = "map_max_length"
 	ErrorCodeOneOf                ErrorCode = "one_of"
 )
