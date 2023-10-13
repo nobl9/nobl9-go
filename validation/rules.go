@@ -23,11 +23,6 @@ type PropertyRules[T, S any] struct {
 	steps  []interface{}
 }
 
-func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
-	r.name = name
-	return r
-}
-
 func (r PropertyRules[T, S]) Validate(st S) []error {
 	var (
 		ruleErrors, allErrors []error
@@ -70,6 +65,11 @@ loop:
 		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors))
 	}
 	return allErrors
+}
+
+func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
+	r.name = name
+	return r
 }
 
 func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {

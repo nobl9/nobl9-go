@@ -12,29 +12,20 @@ func RulesForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[
 	return PropertyRulesForEach[T, S]{getter: getter}
 }
 
-// PropertyRules is responsible for validating a single property.
+// PropertyRulesForEach is responsible for validating a single property.
 type PropertyRulesForEach[T, S any] struct {
 	name   string
 	getter PropertyGetter[[]T, S]
 	steps  []interface{}
 }
 
-func (r PropertyRulesForEach[T, S]) WithName(name string) PropertyRulesForEach[T, S] {
-	r.name = name
-	return r
-}
-
-type forEachElementError struct {
-	PropValue interface{}
-	Errors    []error
-}
-
 func (r PropertyRulesForEach[T, S]) Validate(st S) []error {
 	var (
-		allErrors          []error
-		previousStepFailed bool
+		allErrors, sliceErrors []error
+		propValue              []T
+		previousStepFailed     bool
 	)
-	ruleErrors := make(map[int]forEachElementError, 0)
+	forEachErrors := make(map[int]forEachElementError)
 loop:
 	for _, step := range r.steps {
 		switch v := step.(type) {
@@ -48,17 +39,24 @@ loop:
 			}
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
-			errorEncounterd := false
+			errorEncountered := false
 			for i, element := range r.getter(st) {
 				err := v.Validate(element)
 				if err != nil {
-					errs := ruleErrors[i].Errors
+					errs := forEachErrors[i].Errors
 					errs = append(errs, err)
-					ruleErrors[i] = forEachElementError{Errors: errs, PropValue: element}
-					errorEncounterd = true
+					forEachErrors[i] = forEachElementError{Errors: errs, PropValue: element}
+					errorEncountered = true
 				}
 			}
-			previousStepFailed = errorEncounterd
+			previousStepFailed = errorEncountered
+		case Rule[[]T]:
+			propValue = r.getter(st)
+			err := v.Validate(propValue)
+			if err != nil {
+				sliceErrors = append(sliceErrors, err)
+			}
+			previousStepFailed = err != nil
 		case Rules[T]:
 			for i, element := range r.getter(st) {
 				errs := v.Validate(element)
@@ -73,7 +71,10 @@ loop:
 			}
 		}
 	}
-	for i, element := range ruleErrors {
+	if len(sliceErrors) > 0 {
+		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors))
+	}
+	for i, element := range forEachErrors {
 		allErrors = append(allErrors, NewPropertyError(
 			fmt.Sprintf(sliceElementNameFmt, r.name, i),
 			element.PropValue,
@@ -82,9 +83,24 @@ loop:
 	return allErrors
 }
 
+type forEachElementError struct {
+	PropValue interface{}
+	Errors    []error
+}
+
 const sliceElementNameFmt = "%s[%d]"
 
-func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[T]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForEach[T, S]) WithName(name string) PropertyRulesForEach[T, S] {
+	r.name = name
+	return r
+}
+
+func (r PropertyRulesForEach[T, S]) RulesForEach(rules ...Rule[T]) PropertyRulesForEach[T, S] {
+	r.steps = appendSteps(r.steps, rules)
+	return r
+}
+
+func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }

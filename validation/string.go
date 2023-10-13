@@ -2,20 +2,9 @@ package validation
 
 import (
 	"regexp"
-	"unicode/utf8"
 
 	"github.com/pkg/errors"
 )
-
-func StringLength(min, max int) SingleRule[string] {
-	return NewSingleRule(func(v string) error {
-		rc := utf8.RuneCountInString(v)
-		if rc < min || rc > max {
-			return errors.Errorf("length must be between %d and %d", min, max)
-		}
-		return nil
-	}).WithErrorCode(ErrorCodeStringLength)
-}
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 

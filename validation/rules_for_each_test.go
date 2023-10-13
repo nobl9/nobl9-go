@@ -16,7 +16,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	t.Run("no predicates, no error", func(t *testing.T) {
 		r := RulesForEach(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v string) error { return nil }))
+			RulesForEach(NewSingleRule(func(v string) error { return nil }))
 		errs := r.Validate(mockStruct{})
 		assert.Empty(t, errs)
 	})
@@ -25,7 +25,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		expectedErr := errors.New("ops!")
 		r := RulesForEach(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v string) error { return expectedErr }))
+			RulesForEach(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, PropertyError{
@@ -41,7 +41,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 			When(func(mockStruct) bool { return true }).
 			When(func(mockStruct) bool { return true }).
 			When(func(st mockStruct) bool { return len(st.Fields) == 0 }).
-			Rules(NewSingleRule(func(v string) error { return errors.New("ops!") }))
+			RulesForEach(NewSingleRule(func(v string) error { return errors.New("ops!") }))
 		errs := r.Validate(mockStruct{Fields: []string{"something"}})
 		assert.Empty(t, errs)
 	})
@@ -49,15 +49,29 @@ func TestPropertyRulesForEach(t *testing.T) {
 	t.Run("multiple rules", func(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("another error...")
-		r := RulesForEach(func(m mockStruct) []string { return m.Fields }).
-			WithName("test.path").
-			Rules(
-				NewSingleRule(func(v string) error { return err1 }),
-				NewSingleRule(func(v string) error { return err2 }),
-			)
+		err3 := errors.New("rule error")
+		err4 := errors.New("rule error again")
+		r :=
+			RulesForEach(func(m mockStruct) []string { return m.Fields }).
+				WithName("test.path").
+				Rules(NewSingleRule(func(v []string) error { return err3 })).
+				RulesForEach(
+					NewSingleRule(func(v string) error { return err1 }),
+					NewSingleRule(func(v string) error { return err2 }),
+				).
+				Rules(NewSingleRule(func(v []string) error { return err4 }))
+
 		errs := r.Validate(mockStruct{Fields: []string{"1", "2"}})
-		require.Len(t, errs, 2)
+		require.Len(t, errs, 3)
 		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName:  "test.path",
+				PropertyValue: `["1","2"]`,
+				Errors: []RuleError{
+					{Message: err3.Error()},
+					{Message: err4.Error()},
+				},
+			},
 			{
 				PropertyName:  "test.path[0]",
 				PropertyValue: "1",
@@ -81,9 +95,9 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err := errors.New("oh no!")
 		r := RulesForEach(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v string) error { return err })).
+			RulesForEach(NewSingleRule(func(v string) error { return err })).
 			StopOnError().
-			Rules(NewSingleRule(func(v string) error { return errors.New("no") }))
+			RulesForEach(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, PropertyError{
@@ -99,7 +113,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err3 := errors.New("included again")
 		r := RulesForEach(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v string) error { return err1 })).
+			RulesForEach(NewSingleRule(func(v string) error { return err1 })).
 			Include(New[string](
 				RulesFor(func(s string) string { return "nested" }).
 					WithName("included").

@@ -39,7 +39,10 @@ var sloSpecValidation = validation.New[Spec](
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.RulesForEach(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
-		Rules(validation.StringIsDNSSubdomain()),
+		RulesForEach(validation.StringIsDNSSubdomain()),
+	validation.RulesForEach(func(s Spec) []Attachment { return s.Attachments }).
+		WithName("attachments").
+		RulesForEach(),
 )
 
 func validate(s SLO) error {
