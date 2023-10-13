@@ -23,4 +23,5 @@ const (
 	ErrorCodeMapMinLength         ErrorCode = "map_min_length"
 	ErrorCodeMapMaxLength         ErrorCode = "map_max_length"
 	ErrorCodeOneOf                ErrorCode = "one_of"
+	ErrorCodeSliceUnique          ErrorCode = "slice_unique"
 )

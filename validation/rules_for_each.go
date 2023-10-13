@@ -19,6 +19,8 @@ type PropertyRulesForEach[T, S any] struct {
 	steps  []interface{}
 }
 
+// Validate executes each of the steps sequentially and aggregates the encountered errors.
+// nolint: prealloc, gocognit
 func (r PropertyRulesForEach[T, S]) Validate(st S) []error {
 	var (
 		allErrors, sliceErrors []error

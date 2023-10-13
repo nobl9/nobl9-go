@@ -140,14 +140,14 @@ type AnomalyConfig struct {
 
 // AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
 type AnomalyConfigNoData struct {
-	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods" validate:"required"`
+	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods"`
 }
 
 // AnomalyConfigAlertMethod represents a single alert method used in AnomalyConfig
 // defined by name and project.
 type AnomalyConfigAlertMethod struct {
-	Name    string `json:"name" validate:"required,objectName" example:"slack-monitoring-channel"`
-	Project string `json:"project,omitempty" validate:"objectName" example:"default"`
+	Name    string `json:"name"`
+	Project string `json:"project,omitempty"`
 }
 
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.

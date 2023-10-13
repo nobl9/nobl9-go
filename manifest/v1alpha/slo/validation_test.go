@@ -49,18 +49,18 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = ""
 		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop: "spec.budgetingMethod",
-			Code: validation.ErrorCodeRequired,
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec.budgetingMethod",
+			Codes: []string{validation.ErrorCodeRequired},
 		})
 	})
 	t.Run("invalid method", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop:    "spec.budgetingMethod",
-			Message: "'invalid' is not a valid budgeting method",
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:     "spec.budgetingMethod",
+			Messages: []string{"'invalid' is not a valid budgeting method"},
 		})
 	})
 }
@@ -76,9 +76,9 @@ func TestValidate_Spec_Service(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Service = "MY SERVICE"
 		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop: "spec.service",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec.service",
+			Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
 		})
 	})
 }
@@ -94,9 +94,9 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.AlertPolicies = []string{"my-policy", "MY POLICY", "ok-policy"}
 		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop: "spec.alertPolicies[1]",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec.alertPolicies[1]",
+			Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
 		})
 	})
 }
@@ -122,9 +122,9 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		}
 		slo.Spec.Attachments = attachments
 		err := validate(slo)
-		assertContainsErrors(t, err, expectedError{
-			Prop: "spec.attachments",
-			Code: validation.ErrorCodeSliceLength,
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec.attachments",
+			Codes: []string{validation.ErrorCodeSliceLength},
 		})
 	})
 	t.Run("fails, invalid attachment", func(t *testing.T) {
@@ -135,18 +135,18 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 			{URL: "", DisplayName: ptr(strings.Repeat("l", 64))},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err,
+		assertContainsErrors(t, err, 3,
 			expectedError{
-				Prop: "spec.attachments[1].url",
-				Code: validation.ErrorCodeStringURL,
+				Prop:  "spec.attachments[1].url",
+				Codes: []string{validation.ErrorCodeStringURL},
 			},
 			expectedError{
-				Prop: "spec.attachments[2].displayName",
-				Code: validation.ErrorCodeStringLength,
+				Prop:  "spec.attachments[2].displayName",
+				Codes: []string{validation.ErrorCodeStringLength},
 			},
 			expectedError{
-				Prop: "spec.attachments[2].url",
-				Code: validation.ErrorCodeRequired,
+				Prop:  "spec.attachments[2].url",
+				Codes: []string{validation.ErrorCodeRequired},
 			},
 		)
 	})
@@ -178,15 +178,15 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			"target too small": {
 				Composite: &Composite{BudgetTarget: 0},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.target",
-					Code: validation.ErrorCodeGreaterThan,
+					Prop:  "spec.composite.target",
+					Codes: []string{validation.ErrorCodeGreaterThan},
 				},
 			},
 			"target too large": {
 				Composite: &Composite{BudgetTarget: 1.0},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.target",
-					Code: validation.ErrorCodeLessThan,
+					Prop:  "spec.composite.target",
+					Codes: []string{validation.ErrorCodeLessThan},
 				},
 			},
 			"burn rate value too small": {
@@ -195,8 +195,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: -1, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.burnRateCondition.value",
-					Code: validation.ErrorCodeGreaterThanOrEqualTo,
+					Prop:  "spec.composite.burnRateCondition.value",
+					Codes: []string{validation.ErrorCodeGreaterThanOrEqualTo},
 				},
 			},
 			"burn rate value too large": {
@@ -205,8 +205,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1001, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.burnRateCondition.value",
-					Code: validation.ErrorCodeLessThanOrEqualTo,
+					Prop:  "spec.composite.burnRateCondition.value",
+					Codes: []string{validation.ErrorCodeLessThanOrEqualTo},
 				},
 			},
 			"missing operator": {
@@ -215,8 +215,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10},
 				},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.burnRateCondition.op",
-					Code: validation.ErrorCodeRequired,
+					Prop:  "spec.composite.burnRateCondition.op",
+					Codes: []string{validation.ErrorCodeRequired},
 				},
 			},
 			"invalid operator": {
@@ -225,8 +225,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "lte"},
 				},
 				ExpectedError: expectedError{
-					Prop: "spec.composite.burnRateCondition.op",
-					Code: validation.ErrorCodeOneOf,
+					Prop:  "spec.composite.burnRateCondition.op",
+					Codes: []string{validation.ErrorCodeOneOf},
 				},
 			},
 		} {
@@ -234,38 +234,157 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				slo := validSLO()
 				slo.Spec.Composite = test.Composite
 				err := validate(slo)
-				assertContainsErrors(t, err, test.ExpectedError)
+				assertContainsErrors(t, err, 1, test.ExpectedError)
+			})
+		}
+	})
+}
+
+func TestValidate_Spec_AnomalyConfig(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, config := range []*AnomalyConfig{
+			nil,
+			{NoData: nil},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name: "my-name",
+			}}}},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name:    "my-name",
+				Project: "default",
+			}}}},
+		} {
+			slo := validSLO()
+			slo.Spec.AnomalyConfig = config
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Config              *AnomalyConfig
+			ExpectedErrors      []expectedError
+			ExpectedErrorsCount int
+		}{
+			"no alert methods": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods",
+						Codes: []string{validation.ErrorCodeSliceMinLength},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid name and project": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{
+					{
+						Name:    "",
+						Project: "this-project",
+					},
+					{
+						Name:    "MY NAME",
+						Project: "THIS PROJECT",
+					},
+					{
+						Name: "MY NAME",
+					},
+				}}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods[0].name",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods[1].name",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods[1].project",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods[2].name",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+				},
+				ExpectedErrorsCount: 4,
+			},
+			"not unique alert methods": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{
+					{
+						Name:    "my-name",
+						Project: "default",
+					},
+					{
+						Name:    "my-name",
+						Project: "", // Will be filled with default.
+					},
+				}}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.anomalyConfig.noData.alertMethods",
+						Codes: []string{validation.ErrorCodeSliceUnique},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.AnomalyConfig = test.Config
+				err := validate(slo)
+				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})
 		}
 	})
 }
 
 type expectedError struct {
-	Prop    string
-	Code    string
-	Message string
+	Prop     string
+	Codes    []string
+	Messages []string
 }
 
-func assertContainsErrors(t *testing.T, err error, expectedErrors ...expectedError) {
+func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expectedErrors ...expectedError) {
 	t.Helper()
+	// Convert to ObjectError.
 	require.Error(t, err)
 	var objErr *v1alpha.ObjectError
 	require.ErrorAs(t, err, &objErr)
-	require.Len(t,
-		objErr.Errors,
-		len(expectedErrors),
-		"v1alpha.ObjectError contains a different number of errors than expected")
+	// Count errors.
+	actualErrorsCount := 0
+	for _, actual := range objErr.Errors {
+		var propErr *validation.PropertyError
+		require.ErrorAs(t, actual, &propErr)
+		actualErrorsCount += len(propErr.Errors)
+	}
+	require.Equalf(t,
+		expectedErrorsCount,
+		actualErrorsCount,
+		"%T contains a different number of errors than expected", err)
+	// Find and match expected errors.
 	for _, expected := range expectedErrors {
 		found := false
+	searchErrors:
 		for _, actual := range objErr.Errors {
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
 				continue
 			}
-			if expected.Message != "" && strings.Contains(actual.Error(), expected.Message) ||
-				validation.HasErrorCode(actual, expected.Code) {
-				found = true
+			for _, actualRuleErr := range propErr.Errors {
+				for _, expectedMessage := range expected.Messages {
+					if expectedMessage == actualRuleErr.Message {
+						found = true
+						break searchErrors
+					}
+				}
+				for _, expectedCode := range expected.Codes {
+					if expectedCode == actualRuleErr.Code {
+						found = true
+						break searchErrors
+					}
+				}
 			}
 		}
 		require.Truef(t, found, "expected '%v' error was not found", expected)

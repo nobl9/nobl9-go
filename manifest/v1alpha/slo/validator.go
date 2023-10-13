@@ -105,6 +105,7 @@ func (val *Validate) Check(s interface{}) error {
 	return val.validate.Struct(s)
 }
 
+// nolint: unused
 var validator = NewValidator()
 
 // NewValidator returns an instance of preconfigured Validator for all available objects
@@ -333,9 +334,6 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-
-	// AnomalyConfig will be moved into Anomaly Rules in PC-8502
-	sloSpecStructLevelAnomalyConfigValidation(sl, sloSpec)
 }
 
 func isBurnRateSetForCompositeWithOccurrences(spec Spec) bool {
@@ -522,44 +520,6 @@ func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
 			"azureMonitorCountMetricsEqualResourceIDAndMetricNamespace",
 			"",
 		)
-	}
-}
-
-func sloSpecStructLevelAnomalyConfigValidation(sl v.StructLevel, sloSpec Spec) {
-	sloProject := sl.Parent().Interface().(SLO).Metadata.Project
-
-	if sloSpec.AnomalyConfig != nil {
-		if sloSpec.AnomalyConfig.NoData == nil {
-			return
-		}
-
-		if len(sloSpec.AnomalyConfig.NoData.AlertMethods) == 0 {
-			sl.ReportError(
-				sloSpec.AnomalyConfig.NoData,
-				"anomalyConfig.noData.alertMethods",
-				"AlertMethods",
-				"expectedNotEmptyAlertMethodList",
-				"",
-			)
-		}
-
-		nameToProjectMap := make(map[string]string, len(sloSpec.AnomalyConfig.NoData.AlertMethods))
-		for _, alertMethod := range sloSpec.AnomalyConfig.NoData.AlertMethods {
-			project := alertMethod.Project
-			if project == "" {
-				project = sloProject
-			}
-			if nameToProjectMap[alertMethod.Name] == project {
-				sl.ReportError(
-					sloSpec.AnomalyConfig.NoData.AlertMethods,
-					"anomalyConfig.noData.alertMethods",
-					"AlertMethods",
-					fmt.Sprintf("duplicateAlertMethhod(name=%s,project=%s)", alertMethod.Name, project),
-					"",
-				)
-			}
-			nameToProjectMap[alertMethod.Name] = project
-		}
 	}
 }
 

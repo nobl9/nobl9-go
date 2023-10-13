@@ -143,7 +143,7 @@ func unpackErrors(errs []error, ruleErrors []RuleError) []RuleError {
 	for _, err := range errs {
 		switch v := err.(type) {
 		case ruleSetError:
-			ruleErrors = append(ruleErrors, unpackErrors(v, ruleErrors)...)
+			ruleErrors = unpackErrors(v, ruleErrors)
 		case RuleError:
 			ruleErrors = append(ruleErrors, v)
 		case *RuleError:
