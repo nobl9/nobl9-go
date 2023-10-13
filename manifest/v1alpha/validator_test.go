@@ -1305,6 +1305,14 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 			},
 		},
 		{
+			name: "AccountId must be empty for JSON",
+			metric: CloudWatchMetric{
+				JSON:   aws.String(`[{"id":"1","period":60}]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
 			name: "accountId for configuration config is optional",
 			metric: CloudWatchMetric{
 				Namespace:  aws.String("namespace"),

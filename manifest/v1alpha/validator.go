@@ -2728,7 +2728,7 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		validateCloudWatchConfiguration(sl, cloudWatchMetric)
 	}
 
-	if isJSON && len(*cloudWatchMetric.AccountID) > 0 {
+	if isJSON && cloudWatchMetric.AccountID != nil && len(*cloudWatchMetric.AccountID) > 0 {
 		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdMustBeEmpty", "")
 	}
 
