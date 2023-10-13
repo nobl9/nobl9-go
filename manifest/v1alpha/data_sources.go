@@ -160,10 +160,16 @@ type CollectionJitterDuration struct {
 	Unit  CollectionJitterDurationUnit `json:"unit" validate:"required"`
 }
 
+type TimeoutDuration struct {
+	Value *int                `json:"value" validate:"required,min=0,max=3600"`
+	Unit  TimeoutDurationUnit `json:"unit" validate:"required"`
+}
+
 type HistoricalRetrievalDurationUnit string
 type QueryDelayDurationUnit string
 type QueryIntervalDurationUnit string
 type CollectionJitterDurationUnit string
+type TimeoutDurationUnit string
 
 const (
 	HRDDay         HistoricalRetrievalDurationUnit = "Day"
@@ -181,6 +187,8 @@ const (
 	CJDSecond      CollectionJitterDurationUnit    = "Second"
 	CJDMinuteAlias                                 = "M"
 	CJDSecondAlias                                 = "S"
+	TSecond        TimeoutDurationUnit             = "Second"
+	TSecondAlias                                   = "S"
 )
 
 const (
@@ -273,6 +281,18 @@ func (qidu QueryIntervalDurationUnit) String() string {
 	return ""
 }
 
+func (td TimeoutDurationUnit) IsValid() bool {
+	return td == TSecond
+}
+
+func (td TimeoutDurationUnit) String() string {
+	switch td {
+	case TSecond:
+		return string(TSecond)
+	}
+	return ""
+}
+
 func QueryDelayDurationUnitFromString(unit string) (QueryDelayDurationUnit, error) {
 	switch cases.Title(language.Und).String(unit) {
 	case QDDMinute.String(), QDDMinuteAlias:
@@ -312,6 +332,10 @@ func (cjd CollectionJitterDuration) String() string {
 		return fmt.Sprintf("%dm", *cjd.Value)
 	}
 	return fmt.Sprintf("%ds", *cjd.Value)
+}
+
+func (td TimeoutDuration) String() string {
+	return fmt.Sprintf("%ds", *td.Value)
 }
 
 func (qdd QueryDelayDuration) BiggerThanMax() bool {
