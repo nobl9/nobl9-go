@@ -161,7 +161,7 @@ type CollectionJitterDuration struct {
 }
 
 type TimeoutDuration struct {
-	Value *int                `json:"value" validate:"required,min=0,max=3600"`
+	Value *int                `json:"value" validate:"required,min=0,max=86400"`
 	Unit  TimeoutDurationUnit `json:"unit" validate:"required"`
 }
 
