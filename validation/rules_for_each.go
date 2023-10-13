@@ -105,7 +105,7 @@ func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForEa
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) Include(rules ...Validator[T]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForEach[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForEach[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }

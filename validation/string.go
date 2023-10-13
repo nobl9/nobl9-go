@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"net/url"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -26,6 +27,22 @@ func StringIsDNSSubdomain() RuleSet[string] {
 func StringDescription() SingleRule[string] {
 	return StringLength(0, 1050).
 		WithErrorCode(ErrorCodeStringDescription)
+}
+
+func StringIsURL() SingleRule[string] {
+	return NewSingleRule(func(v string) error {
+		u, err := url.Parse(v)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse URL")
+		}
+		if u.Scheme == "" {
+			return errors.New("valid URL must have a scheme (e.g. https://)")
+		}
+		if u.Host == "" && u.Fragment == "" && u.Opaque == "" {
+			return errors.New("valid URL must contain either host, fragment or opaque data")
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringURL)
 }
 
 func regexErrorMsg(msg, format string, examples ...string) string {

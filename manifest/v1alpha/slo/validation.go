@@ -7,20 +7,20 @@ import (
 
 var sloValidation = validation.New[SLO](
 	validation.RulesFor(func(s SLO) Metadata { return s.Metadata }).
-		Include(sloMetadataValidation),
+		Include(metadataValidation),
 	validation.RulesFor(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
-		Include(sloSpecValidation),
+		Include(specValidation),
 )
 
-var sloMetadataValidation = validation.New[Metadata](
+var metadataValidation = validation.New[Metadata](
 	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
-var sloSpecValidation = validation.New[Spec](
+var specValidation = validation.New[Spec](
 	validation.RulesFor(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
@@ -42,7 +42,20 @@ var sloSpecValidation = validation.New[Spec](
 		RulesForEach(validation.StringIsDNSSubdomain()),
 	validation.RulesForEach(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
-		RulesForEach(),
+		Rules(validation.SliceLength[[]Attachment](0, 20)).
+		IncludeForEach(attachmentValidation),
+)
+
+var attachmentValidation = validation.New[Attachment](
+	validation.RulesFor(func(a Attachment) string { return a.URL }).
+		WithName("url").
+		Rules(validation.Required[string]()).
+		StopOnError().
+		Rules(validation.StringIsURL()),
+	validation.RulesFor(func(a Attachment) string { return *a.DisplayName }).
+		WithName("displayName").
+		When(func(a Attachment) bool { return a.DisplayName != nil }).
+		Rules(validation.StringLength(0, 63)),
 )
 
 func validate(s SLO) error {

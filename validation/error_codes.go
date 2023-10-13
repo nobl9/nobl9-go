@@ -12,6 +12,7 @@ const (
 	ErrorCodeLessThanOrEqualTo    ErrorCode = "less_than_or_equal_to"
 	ErrorCodeStringDescription    ErrorCode = "string_description"
 	ErrorCodeStringIsDNSSubdomain ErrorCode = "string_is_dns_subdomain"
+	ErrorCodeStringURL            ErrorCode = "string_url"
 	ErrorCodeStringLength         ErrorCode = "string_length"
 	ErrorCodeSliceLength          ErrorCode = "slice_length"
 	ErrorCodeMapLength            ErrorCode = "map_length"

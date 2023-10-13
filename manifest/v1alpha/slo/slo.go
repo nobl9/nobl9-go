@@ -46,7 +46,7 @@ type Spec struct {
 	Service         string         `json:"service"`
 	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
 	AlertPolicies   []string       `json:"alertPolicies"`
-	Attachments     []Attachment   `json:"attachments,omitempty" validate:"max=20,dive"`
+	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
@@ -91,7 +91,7 @@ type TimeWindow struct {
 // Attachment represents user defined URL attached to SLO
 type Attachment struct {
 	URL         string  `json:"url" validate:"required,url"`
-	DisplayName *string `json:"displayName,omitempty" validate:"max=63"`
+	DisplayName *string `json:"displayName,omitempty"`
 }
 
 // ObjectiveBase base structure representing an objective.

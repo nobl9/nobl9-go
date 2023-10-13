@@ -46,7 +46,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		assert.Empty(t, errs)
 	})
 
-	t.Run("multiple rules", func(t *testing.T) {
+	t.Run("multiple rules and for each rules", func(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("another error...")
 		err3 := errors.New("rule error")
@@ -107,14 +107,14 @@ func TestPropertyRulesForEach(t *testing.T) {
 		}, *errs[0].(*PropertyError))
 	})
 
-	t.Run("include validator", func(t *testing.T) {
+	t.Run("include for each validator", func(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("included")
 		err3 := errors.New("included again")
 		r := RulesForEach(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return err1 })).
-			Include(New[string](
+			IncludeForEach(New[string](
 				RulesFor(func(s string) string { return "nested" }).
 					WithName("included").
 					Rules(
