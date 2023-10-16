@@ -2999,7 +2999,7 @@ func queryDelayDurationValidation(sl v.StructLevel) {
 		return
 	}
 
-	if !duration.Unit.IsValid() {
+	if !duration.IsValid() {
 		sl.ReportError(
 			duration.Unit,
 			"unit",

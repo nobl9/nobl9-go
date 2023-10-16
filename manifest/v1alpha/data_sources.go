@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 type DataSourceType int
@@ -146,54 +147,38 @@ type HistoricalRetrievalDuration struct {
 }
 
 type QueryDelayDuration struct {
-	Value *int                   `json:"value" validate:"required,min=0,max=86400"`
-	Unit  QueryDelayDurationUnit `json:"unit" validate:"required"`
+	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
 }
 
 type QueryIntervalDuration struct {
-	Value *int                      `json:"value" validate:"required,min=0,max=86400"`
-	Unit  QueryIntervalDurationUnit `json:"unit" validate:"required"`
+	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
 }
 
 type CollectionJitterDuration struct {
-	Value *int                         `json:"value" validate:"required,min=0,max=86400"`
-	Unit  CollectionJitterDurationUnit `json:"unit" validate:"required"`
+	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
 }
 
 type TimeoutDuration struct {
-	Value *int                `json:"value" validate:"required,min=0,max=86400"`
-	Unit  TimeoutDurationUnit `json:"unit" validate:"required"`
+	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
 }
 
 type HistoricalRetrievalDurationUnit string
-type QueryDelayDurationUnit string
-type QueryIntervalDurationUnit string
-type CollectionJitterDurationUnit string
-type TimeoutDurationUnit string
 
 const (
-	HRDDay         HistoricalRetrievalDurationUnit = "Day"
-	HRDHour        HistoricalRetrievalDurationUnit = "Hour"
-	HRDMinute      HistoricalRetrievalDurationUnit = "Minute"
-	QDDMinute      QueryDelayDurationUnit          = "Minute"
-	QDDSecond      QueryDelayDurationUnit          = "Second"
-	QDDMinuteAlias                                 = "M"
-	QDDSecondAlias                                 = "S"
-	QIDMinute      QueryIntervalDurationUnit       = "Minute"
-	QIDSecond      QueryIntervalDurationUnit       = "Second"
-	QIDMinuteAlias                                 = "M"
-	QIDSecondAlias                                 = "S"
-	CJDMinute      CollectionJitterDurationUnit    = "Minute"
-	CJDSecond      CollectionJitterDurationUnit    = "Second"
-	CJDMinuteAlias                                 = "M"
-	CJDSecondAlias                                 = "S"
-	TSecond        TimeoutDurationUnit             = "Second"
-	TSecondAlias                                   = "S"
+	HRDDay    HistoricalRetrievalDurationUnit = "Day"
+	HRDHour   HistoricalRetrievalDurationUnit = "Hour"
+	HRDMinute HistoricalRetrievalDurationUnit = "Minute"
 )
 
 const (
 	maxQueryDelayDuration     = 1440
-	maxQueryDelayDurationUnit = QDDMinute
+	maxQueryDelayDurationUnit = twindow.Minute
+	SecondAlias               = "S"
+	MinuteAlias               = "M"
 )
 
 const MinimalSupportedQueryDelayAgentVersion = "v0.65.0-beta09"
@@ -253,89 +238,32 @@ func (d HistoricalRetrievalDuration) duration() time.Duration {
 	return time.Duration(0)
 }
 
-func (qddu QueryDelayDurationUnit) IsValid() bool {
-	return qddu == QDDMinute || qddu == QDDSecond
+func (qdd QueryDelayDuration) IsValid() bool {
+	return isMinuteOrSecond(qdd.Unit)
 }
 
-func (qddu QueryDelayDurationUnit) String() string {
-	switch qddu {
-	case QDDMinute:
-		return "Minute"
-	case QDDSecond:
-		return "Second"
-	}
-	return ""
+func (qid QueryIntervalDuration) IsValid() bool {
+	return isMinuteOrSecond(qid.Unit)
 }
 
-func (qidu QueryIntervalDurationUnit) IsValid() bool {
-	return qidu == QIDMinute || qidu == QIDSecond
-}
-
-func (qidu QueryIntervalDurationUnit) String() string {
-	switch qidu {
-	case QIDMinute:
-		return string(QIDMinute)
-	case QIDSecond:
-		return string(QIDSecond)
-	}
-	return ""
-}
-
-func (td TimeoutDurationUnit) IsValid() bool {
-	return td == TSecond
-}
-
-func (td TimeoutDurationUnit) String() string {
-	switch td {
-	case TSecond:
-		return string(TSecond)
-	}
-	return ""
-}
-
-func QueryDelayDurationUnitFromString(unit string) (QueryDelayDurationUnit, error) {
-	switch cases.Title(language.Und).String(unit) {
-	case QDDMinute.String(), QDDMinuteAlias:
-		return QDDMinute, nil
-	case QDDSecond.String(), QDDSecondAlias:
-		return QDDSecond, nil
-	}
-	return "", errors.Errorf("'%s' is not a valid QueryDelayDurationUnit", unit)
-}
-
-func QueryIntervalDurationUnitFromString(unit string) (QueryIntervalDurationUnit, error) {
-	switch cases.Title(language.Und).String(unit) {
-	case QIDMinute.String(), QIDMinuteAlias:
-		return QIDMinute, nil
-	case QIDSecond.String(), QIDSecondAlias:
-		return QIDSecond, nil
-	}
-	return "", errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
+func (td TimeoutDuration) IsValid() bool {
+	return td.Unit == twindow.Second
 }
 
 func (qdd QueryDelayDuration) String() string {
-	if qdd.Unit == QDDMinute {
-		return fmt.Sprintf("%dm", *qdd.Value)
-	}
-	return fmt.Sprintf("%ds", *qdd.Value)
+	return fmt.Sprintf("%d%s", *qdd.Value, formatTimeUnit(qdd.Unit))
 }
 
 func (qid QueryIntervalDuration) String() string {
-	if qid.Unit == QIDMinute {
-		return fmt.Sprintf("%dm", *qid.Value)
-	}
-	return fmt.Sprintf("%ds", *qid.Value)
+	return fmt.Sprintf("%d%s", *qid.Value, formatTimeUnit(qid.Unit))
 }
 
 func (cjd CollectionJitterDuration) String() string {
-	if cjd.Unit == CJDMinute {
-		return fmt.Sprintf("%dm", *cjd.Value)
-	}
-	return fmt.Sprintf("%ds", *cjd.Value)
+	return fmt.Sprintf("%d%s", *cjd.Value, formatTimeUnit(cjd.Unit))
 }
 
 func (td TimeoutDuration) String() string {
-	return fmt.Sprintf("%ds", *td.Value)
+	return fmt.Sprintf("%d%s", *td.Value, formatTimeUnit(td.Unit))
 }
 
 func (qdd QueryDelayDuration) BiggerThanMax() bool {
@@ -361,15 +289,46 @@ func (qdd QueryDelayDuration) Duration() time.Duration {
 	}
 
 	value := time.Duration(*qdd.Value)
+	return value * qdd.Duration()
+}
 
-	switch qdd.Unit {
-	case QDDSecond:
-		return value * time.Second
-	case QDDMinute:
-		return value * time.Minute
+func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
+	switch cases.Title(language.Und).String(unit) {
+	case twindow.Minute.String(), MinuteAlias:
+		return twindow.Minute, nil
+	case twindow.Second.String(), SecondAlias:
+		return twindow.Second, nil
 	}
+	return twindow.Second, errors.Errorf("'%s' is not a valid QueryDelayDurationUnit", unit)
+}
 
-	return time.Duration(0)
+func QueryIntervalDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
+	switch cases.Title(language.Und).String(unit) {
+	case twindow.Minute.String(), MinuteAlias:
+		return twindow.Minute, nil
+	case twindow.Second.String(), SecondAlias:
+		return twindow.Second, nil
+	}
+	return twindow.Second, errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
+}
+
+func formatTimeUnit(unit twindow.TimeUnitEnum) string {
+	switch unit {
+	case twindow.Second:
+		return "s"
+	case twindow.Minute:
+		return "m"
+	case twindow.Hour:
+		return "h"
+	case twindow.Day:
+		return "d"
+	default:
+		return "UNDEFINED"
+	}
+}
+
+func isMinuteOrSecond(unit twindow.TimeUnitEnum) bool {
+	return unit == twindow.Second || unit == twindow.Minute
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -432,95 +391,95 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 	return QueryDelayDefaults{
 		AmazonPrometheus.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  twindow.Second,
 		},
 		Prometheus.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  twindow.Second,
 		},
 		AppDynamics.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		BigQuery.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  twindow.Second,
 		},
 		CloudWatch.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Datadog.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Dynatrace.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Elasticsearch.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		GCM.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		GrafanaLoki.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Graphite.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		InfluxDB.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Instana.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Lightstep.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		NewRelic.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		OpenTSDB.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Pingdom.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		Redshift.String(): {
 			Value: ptr(30),
-			Unit:  QDDSecond,
+			Unit:  twindow.Second,
 		},
 		Splunk.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		SplunkObservability.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		SumoLogic.String(): {
 			Value: ptr(4),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		ThousandEyes.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 		AzureMonitor.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  twindow.Minute,
 		},
 	}
 }
