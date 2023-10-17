@@ -15,7 +15,7 @@ func TestOneOf(t *testing.T) {
 	t.Run("fails", func(t *testing.T) {
 		err := OneOf("this", "that").Validate("those")
 		require.Error(t, err)
-		assert.EqualError(t, err, "must be one of: [this, that]")
+		assert.EqualError(t, err, "must be one of [this, that]")
 		assert.True(t, HasErrorCode(err, ErrorCodeOneOf))
 	})
 }

@@ -2,6 +2,7 @@ package slo
 
 import (
 	_ "embed"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -332,6 +333,253 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				slo := validSLO()
 				slo.Spec.AnomalyConfig = test.Config
+				err := validate(slo)
+				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+			})
+		}
+	})
+}
+
+// nolint: lll
+func TestValidate_Spec_TimeWindows(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, tw := range [][]TimeWindow{
+			{TimeWindow{
+				Unit:      "Day",
+				Count:     1,
+				IsRolling: true,
+			}},
+			{TimeWindow{
+				Unit:      "Month",
+				Count:     1,
+				IsRolling: false,
+				Calendar: &Calendar{
+					StartTime: "2022-01-21 12:30:00",
+					TimeZone:  "America/New_York",
+				},
+			}},
+		} {
+			slo := validSLO()
+			slo.Spec.TimeWindows = tw
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			TimeWindows         []TimeWindow
+			ExpectedErrors      []expectedError
+			ExpectedErrorsCount int
+		}{
+			"no time windows": {
+				TimeWindows: []TimeWindow{},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.timeWindows",
+						Codes: []string{validation.ErrorCodeSliceLength},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"too many time windows": {
+				TimeWindows: []TimeWindow{{}, {}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.timeWindows",
+						Codes: []string{validation.ErrorCodeSliceLength},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"missing unit and count": {
+				TimeWindows: []TimeWindow{{
+					Unit:  "",
+					Count: 0,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.timeWindows[0].unit",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+					{
+						Prop:  "spec.timeWindows[0].count",
+						Codes: []string{validation.ErrorCodeGreaterThan},
+					},
+				},
+				ExpectedErrorsCount: 2,
+			},
+			"invalid unit": {
+				TimeWindows: []TimeWindow{{
+					Unit:  "dayz",
+					Count: 1,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.timeWindows[0].unit",
+						Codes: []string{validation.ErrorCodeOneOf},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid calendar - missing fields": {
+				TimeWindows: []TimeWindow{{
+					Unit:     "Day",
+					Count:    1,
+					Calendar: &Calendar{},
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.timeWindows[0].calendar.startTime",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+					{
+						Prop:  "spec.timeWindows[0].calendar.timeZone",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+				},
+				ExpectedErrorsCount: 2,
+			},
+			"invalid calendar - invalid fields": {
+				TimeWindows: []TimeWindow{{
+					Unit:  "Day",
+					Count: 1,
+					Calendar: &Calendar{
+						StartTime: "asd",
+						TimeZone:  "asd",
+					},
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:     "spec.timeWindows[0].calendar.startTime",
+						Messages: []string{`error parsing date: parsing time "asd" as "2006-01-02 15:04:05": cannot parse "asd" as "2006"`},
+					},
+					{
+						Prop:     "spec.timeWindows[0].calendar.timeZone",
+						Messages: []string{"not a valid time zone: unknown time zone asd"},
+					},
+				},
+				ExpectedErrorsCount: 2,
+			},
+			"isRolling and calendar are both set": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Day",
+					Count:     1,
+					IsRolling: true,
+					Calendar: &Calendar{
+						StartTime: "2022-01-21 12:30:00",
+						TimeZone:  "America/New_York",
+					},
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:     "spec.timeWindows[0]",
+						Messages: []string{"if 'isRolling' property is true, 'calendar' property must be omitted"},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"isRolling and calendar are both not set": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Day",
+					Count:     1,
+					IsRolling: false,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:     "spec.timeWindows[0]",
+						Messages: []string{"if 'isRolling' property is false or not set, 'calendar' property must be provided"},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid rolling time window unit": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Year",
+					Count:     1,
+					IsRolling: true,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:     "spec.timeWindows[0]",
+						Messages: []string{"invalid time window unit for Rolling window type: must be one of [Minute, Hour, Day]"},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid calendar time window unit": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Second",
+					Count:     1,
+					IsRolling: false,
+					Calendar: &Calendar{
+						StartTime: "2022-01-21 12:30:00",
+						TimeZone:  "America/New_York",
+					},
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:     "spec.timeWindows[0]",
+						Messages: []string{"invalid time window unit for Calendar window type: must be one of [Day, Week, Month, Quarter, Year]"},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"rolling time window size is less than defined min": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Minute",
+					Count:     4,
+					IsRolling: true,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop: "spec.timeWindows[0]",
+						Messages: []string{fmt.Sprintf(
+							"rolling time window size must be greater than or equal to %s",
+							minimumRollingTimeWindowSize)},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"rolling time window size is greater than defined max": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Day",
+					Count:     32,
+					IsRolling: true,
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop: "spec.timeWindows[0]",
+						Messages: []string{fmt.Sprintf(
+							"rolling time window size must be less than or equal to %s",
+							maximumRollingTimeWindowSize)},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"calendar time window size is greater than defined max": {
+				TimeWindows: []TimeWindow{{
+					Unit:      "Year",
+					Count:     2,
+					IsRolling: false,
+					Calendar: &Calendar{
+						StartTime: "2022-01-21 12:30:00",
+						TimeZone:  "America/New_York",
+					},
+				}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop: "spec.timeWindows[0]",
+						Messages: []string{fmt.Sprintf(
+							"calendar time window size must be less than %s",
+							maximumCalendarTimeWindowSize)},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.TimeWindows = test.TimeWindows
 				err := validate(slo)
 				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})

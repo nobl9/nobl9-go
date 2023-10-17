@@ -53,6 +53,13 @@ var specValidation = validation.New[Spec](
 		WithName("anomalyConfig").
 		When(func(s Spec) bool { return s.AnomalyConfig != nil }).
 		Include(anomalyConfigValidation),
+	validation.RulesForEach(func(s Spec) []TimeWindow { return s.TimeWindows }).
+		WithName("timeWindows").
+		Rules(validation.SliceLength[[]TimeWindow](1, 1)).
+		StopOnError().
+		IncludeForEach(timeWindowsValidation).
+		StopOnError().
+		RulesForEach(timeWindowValidationRule()),
 )
 
 var attachmentValidation = validation.New[Attachment](

@@ -14,7 +14,7 @@ func OneOf[T comparable](values ...T) SingleRule[T] {
 				return nil
 			}
 		}
-		return errors.New("must be one of: " + prettyStringList(values...))
+		return errors.New("must be one of " + prettyStringList(values...))
 	}).WithErrorCode(ErrorCodeOneOf)
 }
 

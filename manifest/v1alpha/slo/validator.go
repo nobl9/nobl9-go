@@ -47,20 +47,6 @@ const (
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
 )
 
-// Values used to validate time window size
-const (
-	minimumRollingTimeWindowSize           = 5 * time.Minute
-	maximumRollingTimeWindowSizeDaysNumber = 31
-	// 31 days converted to hours, because time.Hour is the biggest unit of time.Duration type.
-	maximumRollingTimeWindowSize = time.Duration(maximumRollingTimeWindowSizeDaysNumber) *
-		time.Duration(twindow.HoursInDay) *
-		time.Hour
-	maximumCalendarTimeWindowSizeDaysNumber = 366
-	maximumCalendarTimeWindowSize           = time.Duration(maximumCalendarTimeWindowSizeDaysNumber) *
-		time.Duration(twindow.HoursInDay) *
-		time.Hour
-)
-
 const (
 	LightstepMetricDataType     = "metric"
 	LightstepLatencyDataType    = "latency"
@@ -120,7 +106,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(timeWindowStructLevelValidation, TimeWindow{})
 	val.RegisterStructValidation(sloSpecStructLevelValidation, Spec{})
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
 	val.RegisterStructValidation(countMetricsSpecValidation, CountMetricsSpec{})
@@ -1246,113 +1231,6 @@ func areCountMetricsSetForAllObjectivesOrNone(sloSpec Spec) bool {
 	count := sloSpec.CountMetricsCount()
 	const countMetricsPerObjective int = 2
 	return count == 0 || count == len(sloSpec.Objectives)*countMetricsPerObjective
-}
-
-func isTimeWindowTypeUnambiguous(timeWindow TimeWindow) bool {
-	return (timeWindow.isCalendar() && !timeWindow.IsRolling) || (!timeWindow.isCalendar() && timeWindow.IsRolling)
-}
-
-func isTimeUnitValidForTimeWindowType(timeWindow TimeWindow, timeUnit string) bool {
-	timeWindowType := GetTimeWindowType(timeWindow)
-
-	switch timeWindowType {
-	case twindow.Rolling:
-		return twindow.IsRollingWindowTimeUnit(timeUnit)
-	case twindow.Calendar:
-		return twindow.IsCalendarAlignedTimeUnit(timeUnit)
-	}
-	return false
-}
-
-func timeWindowStructLevelValidation(sl v.StructLevel) {
-	timeWindow := sl.Current().Interface().(TimeWindow)
-
-	if !isTimeWindowTypeUnambiguous(timeWindow) {
-		sl.ReportError(timeWindow, "timeWindow", "TimeWindow", "ambiguousTimeWindowType", "")
-	}
-
-	if !isTimeUnitValidForTimeWindowType(timeWindow, timeWindow.Unit) {
-		sl.ReportError(timeWindow, "timeWindow", "TimeWindow", "validWindowTypeForTimeUnitRequired", "")
-	}
-	windowSizeValidation(timeWindow, sl)
-}
-
-func windowSizeValidation(timeWindow TimeWindow, sl v.StructLevel) {
-	switch GetTimeWindowType(timeWindow) {
-	case twindow.Rolling:
-		rollingWindowSizeValidation(timeWindow, sl)
-	case twindow.Calendar:
-		calendarWindowSizeValidation(timeWindow, sl)
-	}
-}
-
-func rollingWindowSizeValidation(timeWindow TimeWindow, sl v.StructLevel) {
-	rollingWindowTimeUnitEnum := twindow.GetTimeUnitEnum(twindow.Rolling, timeWindow.Unit)
-	var timeWindowSize time.Duration
-	switch rollingWindowTimeUnitEnum {
-	case twindow.Minute:
-		timeWindowSize = time.Duration(timeWindow.Count) * time.Minute
-	case twindow.Hour:
-		timeWindowSize = time.Duration(timeWindow.Count) * time.Hour
-	case twindow.Day:
-		timeWindowSize = time.Duration(timeWindow.Count) * time.Duration(twindow.HoursInDay) * time.Hour
-	default:
-		sl.ReportError(timeWindow, "timeWindow", "TimeWindow", "validWindowTypeForTimeUnitRequired", "")
-		return
-	}
-	switch {
-	case timeWindowSize > maximumRollingTimeWindowSize:
-		sl.ReportError(
-			timeWindow,
-			"timeWindow",
-			"TimeWindow",
-			"rollingTimeWindowSizeLessThanOrEqualsTo31DaysRequired",
-			"",
-		)
-	case timeWindowSize < minimumRollingTimeWindowSize:
-		sl.ReportError(
-			timeWindow,
-			"timeWindow",
-			"TimeWindow",
-			"rollingTimeWindowSizeGreaterThanOrEqualTo5MinutesRequired",
-			"",
-		)
-	}
-}
-
-// nolint: gomnd
-func calendarWindowSizeValidation(timeWindow TimeWindow, sl v.StructLevel) {
-	var timeWindowSize time.Duration
-	if isTimeUnitValidForTimeWindowType(timeWindow, timeWindow.Unit) {
-		tw, _ := twindow.NewCalendarTimeWindow(
-			twindow.MustParseTimeUnit(timeWindow.Unit),
-			uint32(timeWindow.Count),
-			time.UTC,
-			time.Now().UTC(),
-		)
-		timeWindowSize = tw.GetTimePeriod(time.Now().UTC()).Duration()
-		if timeWindowSize > maximumCalendarTimeWindowSize {
-			sl.ReportError(
-				timeWindow,
-				"timeWindow",
-				"TimeWindow",
-				"calendarTimeWindowSizeLessThan1YearRequired",
-				"",
-			)
-		}
-	}
-}
-
-// GetTimeWindowType function returns value of TimeWindowTypeEnum for given time window
-func GetTimeWindowType(timeWindow TimeWindow) twindow.TimeWindowTypeEnum {
-	if timeWindow.isCalendar() {
-		return twindow.Calendar
-	}
-	return twindow.Rolling
-}
-
-func (tw *TimeWindow) isCalendar() bool {
-	return tw.Calendar != nil
 }
 
 func isTimeUnitValid(fl v.FieldLevel) bool {
