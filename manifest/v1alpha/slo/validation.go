@@ -1,6 +1,7 @@
 package slo
 
 import (
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -60,6 +61,17 @@ var specValidation = validation.New[Spec](
 		IncludeForEach(timeWindowsValidation).
 		StopOnError().
 		RulesForEach(timeWindowValidationRule()),
+	validation.RulesFor(func(s Spec) Indicator { return s.Indicator }).
+		WithName("indicator").
+		Rules(validation.Required[Indicator]()).
+		StopOnError().
+		Include(indicatorValidation),
+	validation.RulesForEach(func(s Spec) []Objective { return s.Objectives }).
+		WithName("objectives").
+		Rules(validation.SliceMinLength[[]Objective](1)).
+		StopOnError().
+		// TODO
+		IncludeForEach(),
 )
 
 var attachmentValidation = validation.New[Attachment](
@@ -116,6 +128,31 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 						Rules(validation.StringIsDNSSubdomain()),
 				)),
 		)),
+)
+
+var indicatorValidation = validation.New[Indicator](
+	validation.RulesFor(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
+		WithName("metricSource").
+		Include(validation.New[MetricSourceSpec](
+			validation.RulesFor(func(m MetricSourceSpec) string { return m.Name }).
+				WithName("name").
+				Rules(validation.Required[string]()).
+				StopOnError().
+				Rules(validation.StringIsDNSSubdomain()),
+			validation.RulesFor(func(m MetricSourceSpec) string { return m.Project }).
+				WithName("project").
+				WhenNotEmpty().
+				Rules(validation.StringIsDNSSubdomain()),
+			validation.RulesFor(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
+				WithName("kind").
+				WhenNotEmpty().
+				Rules(validation.OneOf(manifest.KindAgent, manifest.KindDirect)),
+		)),
+	validation.RulesFor(func(i Indicator) MetricSpec { return *i.RawMetric }).
+		WithName("rawMetric").
+		When(func(i Indicator) bool { return i.RawMetric != nil }).
+		// TODO
+		Include(),
 )
 
 func validate(s SLO) error {

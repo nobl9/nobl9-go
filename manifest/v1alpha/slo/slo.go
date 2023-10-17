@@ -78,8 +78,8 @@ func (tw TimeWindow) isCalendar() bool {
 
 // Calendar struct represents calendar time window
 type Calendar struct {
-	StartTime string `json:"startTime" validate:"required,dateWithTime,minDateTime" example:"2020-01-21 12:30:00"`
-	TimeZone  string `json:"timeZone" validate:"required,timeZone" example:"America/New_York"`
+	StartTime string `json:"startTime"`
+	TimeZone  string `json:"timeZone"`
 }
 
 // Period represents period of time
@@ -90,7 +90,7 @@ type Period struct {
 
 // Attachment represents user defined URL attached to SLO
 type Attachment struct {
-	URL         string  `json:"url" validate:"required,url"`
+	URL         string  `json:"url"`
 	DisplayName *string `json:"displayName,omitempty"`
 }
 
@@ -116,14 +116,14 @@ type Objective struct {
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
 type Indicator struct {
-	MetricSource MetricSourceSpec `json:"metricSource" validate:"required"`
+	MetricSource MetricSourceSpec `json:"metricSource"`
 	RawMetric    *MetricSpec      `json:"rawMetric,omitempty"`
 }
 
 type MetricSourceSpec struct {
-	Project string        `json:"project,omitempty" validate:"omitempty,objectName" example:"default"`
-	Name    string        `json:"name" validate:"required,objectName" example:"prometheus-source"`
-	Kind    manifest.Kind `json:"kind,omitempty" validate:"omitempty,metricSourceKind" example:"Agent"`
+	Name    string        `json:"name"`
+	Project string        `json:"project,omitempty"`
+	Kind    manifest.Kind `json:"kind,omitempty"`
 }
 
 // Composite represents configuration for Composite SLO.

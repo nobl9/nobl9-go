@@ -587,6 +587,94 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Indicator(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, ind := range []Indicator{
+			{
+				MetricSource: MetricSourceSpec{Name: "name-only"},
+			},
+			{
+				MetricSource: MetricSourceSpec{
+					Name:    "name",
+					Project: "default",
+					Kind:    manifest.KindAgent,
+				},
+			},
+			{
+				MetricSource: MetricSourceSpec{
+					Name:    "name",
+					Project: "default",
+					Kind:    manifest.KindDirect,
+				},
+			},
+		} {
+			slo := validSLO()
+			slo.Spec.Indicator = ind
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Indicator           Indicator
+			ExpectedErrors      []expectedError
+			ExpectedErrorsCount int
+		}{
+			"empty indicator": {
+				Indicator: Indicator{},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.indicator",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"empty metric source name": {
+				Indicator: Indicator{MetricSource: MetricSourceSpec{Name: "", Project: "default"}},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.indicator.metricSource.name",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid metric source": {
+				Indicator: Indicator{
+					MetricSource: MetricSourceSpec{
+						Name:    "MY NAME",
+						Project: "MY PROJECT",
+						Kind:    manifest.KindSLO,
+					},
+				},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.indicator.metricSource.name",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+					{
+						Prop:  "spec.indicator.metricSource.project",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+					{
+						Prop:  "spec.indicator.metricSource.kind",
+						Codes: []string{validation.ErrorCodeOneOf},
+					},
+				},
+				ExpectedErrorsCount: 3,
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Indicator = test.Indicator
+				err := validate(slo)
+				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+			})
+		}
+	})
+}
+
 type expectedError struct {
 	Prop     string
 	Codes    []string

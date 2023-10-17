@@ -8,9 +8,13 @@ import (
 
 func Required[T any]() Rule[T] {
 	return NewSingleRule(func(v T) error {
-		if reflect.ValueOf(v).IsZero() {
+		if isEmpty(v) {
 			return errors.New("property is required but was empty")
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeRequired)
+}
+
+func isEmpty(v interface{}) bool {
+	return reflect.ValueOf(v).IsZero()
 }

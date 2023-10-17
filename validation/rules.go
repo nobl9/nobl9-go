@@ -18,9 +18,10 @@ type PropertyGetter[T, S any] func(S) T
 
 // PropertyRules is responsible for validating a single property.
 type PropertyRules[T, S any] struct {
-	name   string
-	getter PropertyGetter[T, S]
-	steps  []interface{}
+	name      string
+	getter    PropertyGetter[T, S]
+	steps     []interface{}
+	omitempty bool
 }
 
 func (r PropertyRules[T, S]) Validate(st S) []error {
@@ -43,6 +44,9 @@ loop:
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
 			propValue = r.getter(st)
+			if r.omitempty && isEmpty(propValue) {
+				break loop
+			}
 			err := v.Validate(propValue)
 			if err != nil {
 				ruleErrors = append(ruleErrors, err)
@@ -85,6 +89,10 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
 	r.steps = appendSteps(r.steps, predicates)
 	return r
+}
+
+func (r PropertyRules[T, S]) WhenNotEmpty() PropertyRules[T, S] {
+	return r.When(func(s S) bool { return !isEmpty(!isEmpty(r.getter(s))) })
 }
 
 type stopOnErrorStep uint8

@@ -17,9 +17,7 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 // Regular expressions for validating URL. It is from https://github.com/asaskevich/govalidator.
@@ -113,10 +111,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(sumoLogicStructValidation, SumoLogicMetric{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
-	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
-	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
-	_ = val.RegisterValidation("minDateTime", isMinDateTime)
-	_ = val.RegisterValidation("timeZone", isTimeZoneValid)
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("objectName", isValidObjectName)
@@ -139,7 +133,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("s3BucketName", isValidS3BucketName)
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
-	_ = val.RegisterValidation("metricSourceKind", isValidMetricSourceKind)
 	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
 	_ = val.RegisterValidation("bigQueryRequiredColumns", isValidBigQueryQuery)
 	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
@@ -1233,43 +1226,6 @@ func areCountMetricsSetForAllObjectivesOrNone(sloSpec Spec) bool {
 	return count == 0 || count == len(sloSpec.Objectives)*countMetricsPerObjective
 }
 
-func isTimeUnitValid(fl v.FieldLevel) bool {
-	return twindow.IsTimeUnit(fl.Field().String())
-}
-
-func isTimeZoneValid(fl v.FieldLevel) bool {
-	if fl.Field().String() != "" {
-		_, err := time.LoadLocation(fl.Field().String())
-		if err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-func isDateWithTimeValid(fl v.FieldLevel) bool {
-	if fl.Field().String() != "" {
-		t, err := time.Parse(twindow.IsoDateTimeOnlyLayout, fl.Field().String())
-		// Nanoseconds (thus milliseconds too) in time struct are forbidden to be set.
-		if err != nil || t.Nanosecond() != 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func isMinDateTime(fl v.FieldLevel) bool {
-	if fl.Field().String() != "" {
-		date, err := twindow.ParseStartDate(fl.Field().String())
-		if err != nil {
-			return false
-		}
-		minStartDate := twindow.GetMinStartDate()
-		return date.After(minStartDate) || date.Equal(minStartDate)
-	}
-	return true
-}
-
 func isValidURL(fl v.FieldLevel) bool {
 	return validateURL(fl.Field().String())
 }
@@ -1576,19 +1532,6 @@ func isNotEmpty(fl v.FieldLevel) bool {
 func isValidRoleARN(fl v.FieldLevel) bool {
 	validRoleARNRegex := regexp.MustCompile(RoleARNRegex)
 	return validRoleARNRegex.MatchString(fl.Field().String())
-}
-
-func isValidMetricSourceKind(fl v.FieldLevel) bool {
-	switch fl.Field().Kind() {
-	case reflect.Int:
-		kind := manifest.Kind(fl.Field().Int())
-		if !kind.IsValid() {
-			return false
-		}
-		return kind == manifest.KindAgent || kind == manifest.KindDirect
-	default:
-		return false
-	}
 }
 
 func isValidMetricPathGraphite(fl v.FieldLevel) bool {
