@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// RulesForEach creates a typed PropertyRules instance for a slice property
+// ForEach creates a typed PropertyRules instance for a slice property
 // which access is defined through getter function.
-func RulesForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[T, S] {
+func ForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[T, S] {
 	return PropertyRulesForEach[T, S]{getter: getter}
 }
 

@@ -63,29 +63,27 @@ const (
 )
 
 var replayValidation = validation.New[Replay](
-	validation.RulesFor(func(r Replay) string { return r.Project }).
+	validation.For(func(r Replay) string { return r.Project }).
 		WithName("project").
-		Rules(validation.Required[string]()),
-	validation.RulesFor(func(r Replay) string { return r.Slo }).
+		Required(),
+	validation.For(func(r Replay) string { return r.Slo }).
 		WithName("slo").
-		Rules(validation.Required[string]()),
-	validation.RulesFor(func(r Replay) ReplayDuration { return r.Duration }).
+		Required(),
+	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
-		Rules(validation.Required[ReplayDuration]()).
-		StopOnError().
+		Required().
 		Include(replayDurationValidation).
 		StopOnError().
 		Rules(replayDurationValidationRule()),
 )
 
 var replayDurationValidation = validation.New[ReplayDuration](
-	validation.RulesFor(func(d ReplayDuration) string { return d.Unit }).
+	validation.For(func(d ReplayDuration) string { return d.Unit }).
 		WithName("unit").
-		Rules(validation.Required[string]()).
-		StopOnError().
+		Required().
 		Rules(validation.NewSingleRule(ValidateReplayDurationUnit).
 			WithErrorCode(replayDurationUnitValidationErrorCode)),
-	validation.RulesFor(func(d ReplayDuration) int { return d.Value }).
+	validation.For(func(d ReplayDuration) int { return d.Value }).
 		WithName("value").
 		Rules(validation.GreaterThan(0)),
 )

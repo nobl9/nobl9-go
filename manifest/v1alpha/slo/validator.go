@@ -113,7 +113,6 @@ func NewValidator() *Validate {
 
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
-	_ = val.RegisterValidation("objectName", isValidObjectName)
 	_ = val.RegisterValidation("description", isValidDescription)
 	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
 	_ = val.RegisterValidation("opsgenieApiKey", isValidOpsgenieAPIKey)
@@ -220,12 +219,6 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		usedNames[name] = struct{}{}
 	}
 	return true
-}
-
-// isValidObjectName maintains convention for naming objects from
-// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-func isValidObjectName(fl v.FieldLevel) bool {
-	return len(IsDNS1123Label(fl.Field().String())) == 0
 }
 
 // nolint: lll
@@ -541,7 +534,7 @@ func areRawMetricsSetForAllObjectivesOrNone(spec Spec) bool {
 func doAllObjectivesHaveUniqueValues(spec Spec) bool {
 	values := make(map[float64]struct{})
 	for _, objective := range spec.Objectives {
-		values[objective.Value] = struct{}{}
+		values[*objective.Value] = struct{}{}
 	}
 	return len(values) == len(spec.Objectives)
 }

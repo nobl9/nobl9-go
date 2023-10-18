@@ -158,10 +158,10 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		for _, composite := range []*Composite{
 			nil,
 			{
-				BudgetTarget: 0.001,
+				BudgetTarget: ptr(0.001),
 			},
 			{
-				BudgetTarget:      0.9999,
+				BudgetTarget:      ptr(0.9999),
 				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 			},
 		} {
@@ -176,15 +176,25 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			Composite     *Composite
 			ExpectedError expectedError
 		}{
+			"target required": {
+				Composite: &Composite{
+					BudgetTarget:      nil,
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+				},
+				ExpectedError: expectedError{
+					Prop:  "spec.composite.target",
+					Codes: []string{validation.ErrorCodeRequired},
+				},
+			},
 			"target too small": {
-				Composite: &Composite{BudgetTarget: 0},
+				Composite: &Composite{BudgetTarget: ptr(0.)},
 				ExpectedError: expectedError{
 					Prop:  "spec.composite.target",
 					Codes: []string{validation.ErrorCodeGreaterThan},
 				},
 			},
 			"target too large": {
-				Composite: &Composite{BudgetTarget: 1.0},
+				Composite: &Composite{BudgetTarget: ptr(1.0)},
 				ExpectedError: expectedError{
 					Prop:  "spec.composite.target",
 					Codes: []string{validation.ErrorCodeLessThan},
@@ -192,7 +202,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			},
 			"burn rate value too small": {
 				Composite: &Composite{
-					BudgetTarget:      0.9,
+					BudgetTarget:      ptr(0.9),
 					BurnRateCondition: &CompositeBurnRateCondition{Value: -1, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
@@ -202,7 +212,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			},
 			"burn rate value too large": {
 				Composite: &Composite{
-					BudgetTarget:      0.9,
+					BudgetTarget:      ptr(0.9),
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1001, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
@@ -212,7 +222,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			},
 			"missing operator": {
 				Composite: &Composite{
-					BudgetTarget:      0.9,
+					BudgetTarget:      ptr(0.9),
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10},
 				},
 				ExpectedError: expectedError{
@@ -222,7 +232,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			},
 			"invalid operator": {
 				Composite: &Composite{
-					BudgetTarget:      0.9,
+					BudgetTarget:      ptr(0.9),
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "lte"},
 				},
 				ExpectedError: expectedError{
@@ -267,7 +277,9 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			ExpectedErrorsCount int
 		}{
 			"no alert methods": {
-				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{}},
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: make([]AnomalyConfigAlertMethod, 0),
+				}},
 				ExpectedErrors: []expectedError{
 					{
 						Prop:  "spec.anomalyConfig.noData.alertMethods",
@@ -393,8 +405,9 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 			},
 			"missing unit and count": {
 				TimeWindows: []TimeWindow{{
-					Unit:  "",
-					Count: 0,
+					Unit:      "",
+					Count:     0,
+					IsRolling: true,
 				}},
 				ExpectedErrors: []expectedError{
 					{
@@ -675,6 +688,84 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Objectives(t *testing.T) {
+	t.Skip()
+	t.Run("passes", func(t *testing.T) {
+		for _, objectives := range [][]Objective{
+			{{
+				ObjectiveBase: ObjectiveBase{
+					Name:        "name",
+					DisplayName: strings.Repeat("l", 63),
+				},
+				BudgetTarget: ptr(0.9),
+			}},
+		} {
+			slo := validSLO()
+			slo.Spec.Objectives = objectives
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Objectives          []Objective
+			ExpectedErrors      []expectedError
+			ExpectedErrorsCount int
+		}{
+			"not enough objectives": {
+				Objectives: []Objective{},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.objectives",
+						Codes: []string{validation.ErrorCodeSliceMinLength},
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"objective base errors": {
+				Objectives: []Objective{
+					{
+						ObjectiveBase: ObjectiveBase{
+							DisplayName: strings.Repeat("l", 64),
+							Value:       ptr(0.),
+							Name:        "MY NAME",
+						},
+					},
+					{
+						ObjectiveBase: ObjectiveBase{Name: ""},
+					},
+				},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.objectives[0].displayName",
+						Codes: []string{validation.ErrorCodeStringMaxLength},
+					},
+					{
+						Prop:  "spec.objectives[0].name",
+						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+					},
+					{
+						Prop:  "spec.objectives[1].value",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+					{
+						Prop:  "spec.objectives[1].name",
+						Codes: []string{validation.ErrorCodeRequired},
+					},
+				},
+				ExpectedErrorsCount: 2,
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = test.Objectives
+				err := validate(slo)
+				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+			})
+		}
+	})
+}
+
 type expectedError struct {
 	Prop     string
 	Codes    []string
@@ -759,10 +850,9 @@ func validSLO() SLO {
 			Objectives: []Objective{
 				{
 					ObjectiveBase: ObjectiveBase{
-						DisplayName: "",
-						Value:       0,
-						Name:        "",
-						NameChanged: false,
+						DisplayName: "Good",
+						Value:       ptr(120.),
+						Name:        "good",
 					},
 					BudgetTarget: ptr(0.9),
 					CountMetrics: &CountMetricsSpec{

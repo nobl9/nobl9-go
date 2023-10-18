@@ -7,9 +7,9 @@ import (
 )
 
 var sloValidation = validation.New[SLO](
-	validation.RulesFor(func(s SLO) Metadata { return s.Metadata }).
+	validation.For(func(s SLO) Metadata { return s.Metadata }).
 		Include(metadataValidation),
-	validation.RulesFor(func(s SLO) Spec { return s.Spec }).
+	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
 		Include(specValidation),
 )
@@ -22,137 +22,152 @@ var metadataValidation = validation.New[Metadata](
 )
 
 var specValidation = validation.New[Spec](
-	validation.RulesFor(func(s Spec) string { return s.Description }).
+	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
-	validation.RulesFor(func(s Spec) string { return s.BudgetingMethod }).
+	validation.For(func(s Spec) string { return s.BudgetingMethod }).
 		WithName("budgetingMethod").
-		Rules(validation.Required[string]()).
-		StopOnError().
+		Required().
 		Rules(validation.NewSingleRule(func(v string) error {
 			_, err := ParseBudgetingMethod(v)
 			return err
 		})),
-	validation.RulesFor(func(s Spec) string { return s.Service }).
+	validation.For(func(s Spec) string { return s.Service }).
 		WithName("service").
-		Rules(validation.Required[string]()).
-		StopOnError().
+		Required().
 		Rules(validation.StringIsDNSSubdomain()),
-	validation.RulesForEach(func(s Spec) []string { return s.AlertPolicies }).
+	validation.ForEach(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
 		RulesForEach(validation.StringIsDNSSubdomain()),
-	validation.RulesForEach(func(s Spec) []Attachment { return s.Attachments }).
+	validation.ForEach(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
 		StopOnError().
 		IncludeForEach(attachmentValidation),
-	validation.RulesFor(func(s Spec) Composite { return *s.Composite }).
+	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
-		When(func(s Spec) bool { return s.Composite != nil }).
 		Include(compositeValidation),
-	validation.RulesFor(func(s Spec) AnomalyConfig { return *s.AnomalyConfig }).
+	validation.ForPointer(func(s Spec) *AnomalyConfig { return s.AnomalyConfig }).
 		WithName("anomalyConfig").
-		When(func(s Spec) bool { return s.AnomalyConfig != nil }).
 		Include(anomalyConfigValidation),
-	validation.RulesForEach(func(s Spec) []TimeWindow { return s.TimeWindows }).
+	validation.ForEach(func(s Spec) []TimeWindow { return s.TimeWindows }).
 		WithName("timeWindows").
 		Rules(validation.SliceLength[[]TimeWindow](1, 1)).
 		StopOnError().
 		IncludeForEach(timeWindowsValidation).
 		StopOnError().
 		RulesForEach(timeWindowValidationRule()),
-	validation.RulesFor(func(s Spec) Indicator { return s.Indicator }).
+	validation.For(func(s Spec) Indicator { return s.Indicator }).
 		WithName("indicator").
-		Rules(validation.Required[Indicator]()).
-		StopOnError().
+		Required().
 		Include(indicatorValidation),
-	validation.RulesForEach(func(s Spec) []Objective { return s.Objectives }).
+	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		StopOnError().
-		// TODO
-		IncludeForEach(),
+		IncludeForEach(objectiveValidation),
 )
 
 var attachmentValidation = validation.New[Attachment](
-	validation.RulesFor(func(a Attachment) string { return a.URL }).
+	validation.For(func(a Attachment) string { return a.URL }).
 		WithName("url").
-		Rules(validation.Required[string]()).
-		StopOnError().
+		Required().
 		Rules(validation.StringIsURL()),
-	validation.RulesFor(func(a Attachment) string { return *a.DisplayName }).
+	validation.ForPointer(func(a Attachment) *string { return a.DisplayName }).
 		WithName("displayName").
-		When(func(a Attachment) bool { return a.DisplayName != nil }).
 		Rules(validation.StringLength(0, 63)),
 )
 
 var compositeValidation = validation.New[Composite](
-	validation.RulesFor(func(c Composite) float64 { return c.BudgetTarget }).
+	validation.ForPointer(func(c Composite) *float64 { return c.BudgetTarget }).
 		WithName("target").
+		Required().
 		Rules(validation.GreaterThan(0.0), validation.LessThan(1.0)),
-	validation.RulesFor(func(c Composite) CompositeBurnRateCondition { return *c.BurnRateCondition }).
+	validation.ForPointer(func(c Composite) *CompositeBurnRateCondition { return c.BurnRateCondition }).
 		WithName("burnRateCondition").
-		When(func(c Composite) bool { return c.BurnRateCondition != nil }).
 		Include(validation.New[CompositeBurnRateCondition](
-			validation.RulesFor(func(b CompositeBurnRateCondition) float64 { return b.Value }).
+			validation.For(func(b CompositeBurnRateCondition) float64 { return b.Value }).
 				WithName("value").
 				Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1000.0)),
-			validation.RulesFor(func(b CompositeBurnRateCondition) string { return b.Operator }).
+			validation.For(func(b CompositeBurnRateCondition) string { return b.Operator }).
 				WithName("op").
-				Rules(validation.Required[string]()).
-				StopOnError().
+				Required().
 				Rules(validation.OneOf("gt")),
 		)),
 )
 
 var anomalyConfigValidation = validation.New[AnomalyConfig](
-	validation.RulesFor(func(a AnomalyConfig) AnomalyConfigNoData { return *a.NoData }).
+	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
-		When(func(c AnomalyConfig) bool { return c.NoData != nil }).
 		Include(validation.New[AnomalyConfigNoData](
-			validation.RulesForEach(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
+			validation.ForEach(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
 				Rules(validation.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
 				StopOnError().
 				Rules(validation.SliceUnique(validation.SelfHashFunc[AnomalyConfigAlertMethod]())).
 				StopOnError().
 				IncludeForEach(validation.New[AnomalyConfigAlertMethod](
-					validation.RulesFor(func(a AnomalyConfigAlertMethod) string { return a.Name }).
+					validation.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
-						Rules(validation.Required[string]()).
-						StopOnError().
+						Required().
 						Rules(validation.StringIsDNSSubdomain()),
-					validation.RulesFor(func(a AnomalyConfigAlertMethod) string { return a.Project }).
+					validation.For(func(a AnomalyConfigAlertMethod) string { return a.Project }).
 						WithName("project").
-						When(func(a AnomalyConfigAlertMethod) bool { return a.Project != "" }).
 						Rules(validation.StringIsDNSSubdomain()),
 				)),
 		)),
 )
 
 var indicatorValidation = validation.New[Indicator](
-	validation.RulesFor(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
+	validation.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
 		WithName("metricSource").
 		Include(validation.New[MetricSourceSpec](
-			validation.RulesFor(func(m MetricSourceSpec) string { return m.Name }).
+			validation.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
-				Rules(validation.Required[string]()).
-				StopOnError().
+				Required().
 				Rules(validation.StringIsDNSSubdomain()),
-			validation.RulesFor(func(m MetricSourceSpec) string { return m.Project }).
+			validation.For(func(m MetricSourceSpec) string { return m.Project }).
 				WithName("project").
-				WhenNotEmpty().
+				Omitempty().
 				Rules(validation.StringIsDNSSubdomain()),
-			validation.RulesFor(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
+			validation.For(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
 				WithName("kind").
-				WhenNotEmpty().
+				Omitempty().
 				Rules(validation.OneOf(manifest.KindAgent, manifest.KindDirect)),
 		)),
-	validation.RulesFor(func(i Indicator) MetricSpec { return *i.RawMetric }).
+	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
 		WithName("rawMetric").
-		When(func(i Indicator) bool { return i.RawMetric != nil }).
 		// TODO
 		Include(),
+)
+
+var objectiveValidation = validation.New[Objective](
+	validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
+		Include(objectiveBaseValidation),
+	validation.ForPointer(func(o Objective) *float64 { return o.BudgetTarget }).
+		WithName("target").
+		Required().
+		Rules(validation.GreaterThan(0.0), validation.LessThan(1.0)),
+	validation.ForPointer(func(o Objective) *float64 { return o.TimeSliceTarget }).
+		WithName("timeSliceTarget"),
+	validation.ForPointer(func(o Objective) *string { return o.Operator }).
+		WithName("op"),
+	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
+		WithName("countMetrics"),
+	validation.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
+		WithName("rawMetric"),
+)
+
+var objectiveBaseValidation = validation.New[ObjectiveBase](
+	validation.For(func(o ObjectiveBase) string { return o.Name }).
+		WithName("name").
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(o ObjectiveBase) string { return o.DisplayName }).
+		WithName("displayName").
+		Rules(validation.StringMaxLength(63)),
+	validation.ForPointer(func(o ObjectiveBase) *float64 { return o.Value }).
+		WithName("value").
+		Required(),
 )
 
 func validate(s SLO) error {

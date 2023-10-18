@@ -17,27 +17,23 @@ const (
 )
 
 var timeWindowsValidation = validation.New[TimeWindow](
-	validation.RulesFor(func(t TimeWindow) string { return t.Unit }).
+	validation.For(func(t TimeWindow) string { return t.Unit }).
 		WithName("unit").
-		Rules(validation.Required[string]()).
-		StopOnError().
+		Required().
 		Rules(twindow.ValidationRuleTimeUnit()),
-	validation.RulesFor(func(t TimeWindow) int { return t.Count }).
+	validation.For(func(t TimeWindow) int { return t.Count }).
 		WithName("count").
 		Rules(validation.GreaterThan(0)),
-	validation.RulesFor(func(t TimeWindow) Calendar { return *t.Calendar }).
+	validation.ForPointer(func(t TimeWindow) *Calendar { return t.Calendar }).
 		WithName("calendar").
-		When(func(t TimeWindow) bool { return t.Calendar != nil }).
 		Include(validation.New[Calendar](
-			validation.RulesFor(func(c Calendar) string { return c.StartTime }).
+			validation.For(func(c Calendar) string { return c.StartTime }).
 				WithName("startTime").
-				Rules(validation.Required[string]()).
-				StopOnError().
+				Required().
 				Rules(calendarStartTimeValidationRule()),
-			validation.RulesFor(func(c Calendar) string { return c.TimeZone }).
+			validation.For(func(c Calendar) string { return c.TimeZone }).
 				WithName("timeZone").
-				Rules(validation.Required[string]()).
-				StopOnError().
+				Required().
 				Rules(validation.NewSingleRule(func(v string) error {
 					if _, err := time.LoadLocation(v); err != nil {
 						return errors.Wrap(err, "not a valid time zone")

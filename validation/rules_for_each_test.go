@@ -14,7 +14,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	}
 
 	t.Run("no predicates, no error", func(t *testing.T) {
-		r := RulesForEach(func(m mockStruct) []string { return []string{"path"} }).
+		r := ForEach(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return nil }))
 		errs := r.Validate(mockStruct{})
@@ -23,7 +23,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 
 	t.Run("no predicates, validate", func(t *testing.T) {
 		expectedErr := errors.New("ops!")
-		r := RulesForEach(func(m mockStruct) []string { return []string{"path"} }).
+		r := ForEach(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
@@ -36,7 +36,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	})
 
 	t.Run("predicate matches, don't validate", func(t *testing.T) {
-		r := RulesForEach(func(m mockStruct) []string { return []string{"value"} }).
+		r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
 			When(func(mockStruct) bool { return true }).
 			When(func(mockStruct) bool { return true }).
@@ -52,7 +52,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err3 := errors.New("rule error")
 		err4 := errors.New("rule error again")
 		r :=
-			RulesForEach(func(m mockStruct) []string { return m.Fields }).
+			ForEach(func(m mockStruct) []string { return m.Fields }).
 				WithName("test.path").
 				Rules(NewSingleRule(func(v []string) error { return err3 })).
 				RulesForEach(
@@ -93,7 +93,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 
 	t.Run("stop on error", func(t *testing.T) {
 		err := errors.New("oh no!")
-		r := RulesForEach(func(m mockStruct) []string { return []string{"value"} }).
+		r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return err })).
 			StopOnError().
@@ -111,11 +111,11 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("included")
 		err3 := errors.New("included again")
-		r := RulesForEach(func(m mockStruct) []string { return m.Fields }).
+		r := ForEach(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return err1 })).
 			IncludeForEach(New[string](
-				RulesFor(func(s string) string { return "nested" }).
+				For(func(s string) string { return "nested" }).
 					WithName("included").
 					Rules(
 						NewSingleRule(func(v string) error { return err2 }),

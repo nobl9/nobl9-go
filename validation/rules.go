@@ -1,10 +1,29 @@
 package validation
 
-import "github.com/pkg/errors"
+import (
+	"reflect"
 
-// RulesFor creates a typed PropertyRules instance for the property which access is defined through getter function.
-func RulesFor[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
-	return PropertyRules[T, S]{getter: getter}
+	"github.com/pkg/errors"
+)
+
+// For creates a typed PropertyRules instance for the property which access is defined through getter function.
+func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
+	return PropertyRules[T, S]{getter: func(s S) (v T, isEmpty bool) { return getter(s), false }}
+}
+
+// ForPointer accepts a getter function returning a pointer and wraps its call in order to
+// safely extract the value under the pointer or return a zero value for a give type T.
+// If required is set to true, the nil pointer value will result in an error and the
+// validation will not proceed.
+func ForPointer[T, S any](getter PropertyGetter[*T, S]) PropertyRules[T, S] {
+	return PropertyRules[T, S]{getter: func(s S) (indirect T, isEmpty bool) {
+		ptr := getter(s)
+		if ptr != nil {
+			return *ptr, false
+		}
+		zv := *new(T)
+		return zv, true
+	}, isPointer: true}
 }
 
 // GetSelf is a convenience method for extracting 'self' property of a validated value.
@@ -16,20 +35,31 @@ type Predicate[S any] func(S) bool
 
 type PropertyGetter[T, S any] func(S) T
 
+type optionalPropertyGetter[T, S any] func(S) (v T, isEmpty bool)
+
 // PropertyRules is responsible for validating a single property.
 type PropertyRules[T, S any] struct {
 	name      string
-	getter    PropertyGetter[T, S]
+	getter    optionalPropertyGetter[T, S]
 	steps     []interface{}
+	required  bool
 	omitempty bool
+	isPointer bool
 }
 
 func (r PropertyRules[T, S]) Validate(st S) []error {
 	var (
 		ruleErrors, allErrors []error
-		propValue             T
 		previousStepFailed    bool
 	)
+	propValue, isEmpty := r.getter(st)
+	isEmpty = isEmpty || (!r.isPointer && isEmptyFunc(propValue))
+	if r.required && isEmpty {
+		return []error{NewPropertyError(r.name, propValue, []error{newRequiredError()})}
+	}
+	if isEmpty && (r.omitempty || r.isPointer) {
+		return nil
+	}
 loop:
 	for _, step := range r.steps {
 		switch v := step.(type) {
@@ -43,18 +73,13 @@ loop:
 			}
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
-			propValue = r.getter(st)
-			if r.omitempty && isEmpty(propValue) {
-				break loop
-			}
 			err := v.Validate(propValue)
 			if err != nil {
 				ruleErrors = append(ruleErrors, err)
 			}
 			previousStepFailed = err != nil
 		case Rules[T]:
-			structValue := r.getter(st)
-			errs := v.Validate(structValue)
+			errs := v.Validate(propValue)
 			for _, err := range errs {
 				var fErr *PropertyError
 				if ok := errors.As(err, &fErr); ok {
@@ -91,8 +116,14 @@ func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S
 	return r
 }
 
-func (r PropertyRules[T, S]) WhenNotEmpty() PropertyRules[T, S] {
-	return r.When(func(s S) bool { return !isEmpty(!isEmpty(r.getter(s))) })
+func (r PropertyRules[T, S]) Required() PropertyRules[T, S] {
+	r.required = true
+	return r
+}
+
+func (r PropertyRules[T, S]) Omitempty() PropertyRules[T, S] {
+	r.omitempty = true
+	return r
 }
 
 type stopOnErrorStep uint8
@@ -107,4 +138,17 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 		slice = append(slice, step)
 	}
 	return slice
+}
+
+func newRequiredError() RuleError {
+	return RuleError{
+		Message: "property is required but was empty",
+		Code:    ErrorCodeRequired,
+	}
+}
+
+// isEmptyFunc checks only the types which it makes sense for.
+// It's hard to consider 0 an empty value for anything really.
+func isEmptyFunc(v interface{}) bool {
+	return reflect.ValueOf(v).IsZero()
 }

@@ -43,9 +43,9 @@ type Spec struct {
 	Description     string         `json:"description"`
 	Indicator       Indicator      `json:"indicator"`
 	BudgetingMethod string         `json:"budgetingMethod"`
-	Objectives      []Objective    `json:"objectives" validate:"required,dive"`
+	Objectives      []Objective    `json:"objectives"`
 	Service         string         `json:"service"`
-	TimeWindows     []TimeWindow   `json:"timeWindows" validate:"required,len=1,dive"`
+	TimeWindows     []TimeWindow   `json:"timeWindows"`
 	AlertPolicies   []string       `json:"alertPolicies"`
 	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
@@ -96,10 +96,10 @@ type Attachment struct {
 
 // ObjectiveBase base structure representing an objective.
 type ObjectiveBase struct {
-	DisplayName string  `json:"displayName" validate:"omitempty,min=0,max=63" example:"Good"`
-	Value       float64 `json:"value" validate:"numeric" example:"100"`
-	Name        string  `json:"name" validate:"omitempty,objectName"`
-	NameChanged bool    `json:"-"`
+	DisplayName string   `json:"displayName"`
+	Value       *float64 `json:"value"`
+	Name        string   `json:"name"`
+	NameChanged bool     `json:"-"`
 }
 
 // Objective represents single objective for SLO, for internal usage
@@ -107,11 +107,11 @@ type Objective struct {
 	ObjectiveBase `json:",inline"`
 	// <!-- Go struct field and type names renaming budgetTarget to target has been postponed after GA as requested
 	// in PC-1240. -->
-	BudgetTarget    *float64          `json:"target" validate:"required,numeric,gte=0,lt=1" example:"0.9"`
-	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty" example:"0.9"`
+	BudgetTarget    *float64          `json:"target"`
+	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	Operator        *string           `json:"op,omitempty" example:"lte"`
+	Operator        *string           `json:"op,omitempty"`
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
@@ -128,7 +128,7 @@ type MetricSourceSpec struct {
 
 // Composite represents configuration for Composite SLO.
 type Composite struct {
-	BudgetTarget      float64                     `json:"target"`
+	BudgetTarget      *float64                    `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`
 }
 
@@ -141,8 +141,8 @@ type CompositeVersion struct {
 
 // CompositeBurnRateCondition represents configuration for Composite SLO  with occurrences budgeting method.
 type CompositeBurnRateCondition struct {
-	Value    float64 `json:"value" validate:"numeric,gte=0,lte=1000" example:"2"`
-	Operator string  `json:"op" validate:"required,oneof=gt" example:"gt"`
+	Value    float64 `json:"value"`
+	Operator string  `json:"op"`
 }
 
 // AnomalyConfig represents relationship between anomaly type and selected notification methods.

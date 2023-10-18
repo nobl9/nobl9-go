@@ -15,7 +15,7 @@ func TestValidator(t *testing.T) {
 
 	t.Run("no errors", func(t *testing.T) {
 		r := New[mockStruct](
-			RulesFor[string](func(m mockStruct) string { return "test" }).
+			For[string](func(m mockStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return nil })),
 		)
@@ -27,13 +27,13 @@ func TestValidator(t *testing.T) {
 		err1 := errors.New("1")
 		err2 := errors.New("2")
 		r := New[mockStruct](
-			RulesFor(func(m mockStruct) string { return "test" }).
+			For(func(m mockStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return nil })),
-			RulesFor(func(m mockStruct) string { return "name" }).
+			For(func(m mockStruct) string { return "name" }).
 				WithName("test.name").
 				Rules(NewSingleRule(func(v string) error { return err1 })),
-			RulesFor(func(m mockStruct) string { return "display" }).
+			For(func(m mockStruct) string { return "display" }).
 				WithName("test.display").
 				Rules(NewSingleRule(func(v string) error { return err2 })),
 		)

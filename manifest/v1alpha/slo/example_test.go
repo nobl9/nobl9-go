@@ -35,18 +35,17 @@ func ExampleSLO() {
 			Service:         "prometheus",
 			Indicator: slo.Indicator{
 				MetricSource: slo.MetricSourceSpec{
-					Project: "default",
 					Name:    "prometheus",
+					Project: "default",
 					Kind:    manifest.KindAgent,
 				},
 			},
 			Objectives: []slo.Objective{
 				{
 					ObjectiveBase: slo.ObjectiveBase{
-						DisplayName: "",
-						Value:       0,
-						Name:        "",
-						NameChanged: false,
+						DisplayName: "Good",
+						Value:       ptr(0.),
+						Name:        "good",
 					},
 					BudgetTarget: ptr(0.9),
 					CountMetrics: &slo.CountMetricsSpec{
@@ -99,14 +98,14 @@ func ExampleSLO() {
 	//   description: Example slo
 	//   indicator:
 	//     metricSource:
-	//       project: default
 	//       name: prometheus
+	//       project: default
 	//       kind: Agent
 	//   budgetingMethod: Occurrences
 	//   objectives:
-	//   - displayName: ""
+	//   - displayName: Good
 	//     value: 0.0
-	//     name: ""
+	//     name: good
 	//     target: 0.9
 	//     countMetrics:
 	//       incremental: false
