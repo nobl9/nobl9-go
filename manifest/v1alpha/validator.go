@@ -3100,6 +3100,9 @@ func validateCloudWatchJSONQuery(sl v.StructLevel, cloudWatchMetric CloudWatchMe
 		if metricData.ReturnData != nil && !*metricData.ReturnData {
 			returnedValues--
 		}
+		if metricData.AccountId != nil && metricData.Expression != nil {
+			sl.ReportError(cloudWatchMetric.AccountID, "json", "JSON", "accountIdForSQLNotSupported", "")
+		}
 		if metricData.MetricStat != nil {
 			if metricData.MetricStat.Period == nil {
 				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "requiredPeriod", "")
@@ -3112,6 +3115,9 @@ func validateCloudWatchJSONQuery(sl v.StructLevel, cloudWatchMetric CloudWatchMe
 			} else if *metricData.Period != queryPeriod {
 				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "invalidPeriodValue", "")
 			}
+		}
+		if metricData.AccountId != nil && !isValidAWSAccountID(*metricData.AccountId) {
+			sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
 		}
 	}
 	if returnedValues != 1 {

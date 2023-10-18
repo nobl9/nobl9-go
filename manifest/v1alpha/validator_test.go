@@ -1348,6 +1348,72 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 				{"accountId", "accountIdForSQLNotSupported"},
 			},
 		},
+		{
+			name: "accountId for json with sql is not supported",
+			metric: CloudWatchMetric{
+				JSON:   aws.String(`[{"Id": "m1","AccountId":"123456789012", "Expression": "SQL TEST","Period": 60}]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"json", "accountIdForSQLNotSupported"},
+			},
+		},
+		{
+			name: "accountId for supported json query",
+			metric: CloudWatchMetric{
+				JSON: aws.String(`[
+					{
+						"Id": "m1",
+						"AccountId": "123456789012",
+						"MetricStat": {
+							"Metric": {
+								"Namespace": "AWS/ApplicationELB",
+								"MetricName": "HTTPCode_Target_2XX_Count",
+								"Dimensions": [
+									{
+										"Name": "LoadBalancer",
+										"Value": "app/main-default-appingress-350b/904311bedb964754"
+									}
+								]
+							},
+							"Period": 60,
+							"Stat": "SampleCount"
+						}
+					}
+				]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
+			name: "validate accountId in json query",
+			metric: CloudWatchMetric{
+				JSON: aws.String(`[
+					{
+						"Id": "m1",
+						"AccountId": "12345678",
+						"MetricStat": {
+							"Metric": {
+								"Namespace": "AWS/ApplicationELB",
+								"MetricName": "HTTPCode_Target_2XX_Count",
+								"Dimensions": [
+									{
+										"Name": "LoadBalancer",
+										"Value": "app/main-default-appingress-350b/904311bedb964754"
+									}
+								]
+							},
+							"Period": 60,
+							"Stat": "SampleCount"
+						}
+					}
+				]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
