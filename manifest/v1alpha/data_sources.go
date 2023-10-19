@@ -55,7 +55,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	QueryDelayDuration
+	Duration
 }
 
 type SourceOf int
@@ -146,24 +146,46 @@ type HistoricalRetrievalDuration struct {
 	Unit  HistoricalRetrievalDurationUnit `json:"unit" validate:"required"`
 }
 
-type QueryDelayDuration struct {
-	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
+type FormattedDuration struct {
+	Value int    `json:"value" validate:"required,min=0,max=86400"`
+	Unit  string `json:"unit" validate:"required"`
 }
 
-type QueryIntervalDuration struct {
-	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
+type Duration struct {
+	Value     *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit      twindow.TimeUnitEnum `json:"unit" validate:"required"`
+	validator func(Duration) bool
 }
 
-type CollectionJitterDuration struct {
-	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
+func GetFormattedDuration(duration Duration) FormattedDuration {
+	value := 0
+	if duration.Value != nil {
+		value = *duration.Value
+	}
+	return FormattedDuration{
+		Unit:  duration.Unit.String(),
+		Value: value,
+	}
 }
 
-type TimeoutDuration struct {
-	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
+func NewQueryDelayDuration(value int, unit twindow.TimeUnitEnum) Duration {
+	return Duration{
+		Value: &value,
+		Unit:  unit,
+		validator: func(duration Duration) bool {
+			return isMinuteOrSecond(duration.Unit)
+		},
+	}
+}
+
+func NewTimeoutDuration(value int, unit twindow.TimeUnitEnum) Duration {
+	return Duration{
+		Value: &value,
+		Unit:  unit,
+		validator: func(duration Duration) bool {
+			return duration.Unit == twindow.Second
+		},
+	}
 }
 
 type HistoricalRetrievalDurationUnit string
@@ -238,58 +260,38 @@ func (d HistoricalRetrievalDuration) duration() time.Duration {
 	return time.Duration(0)
 }
 
-func (qdd QueryDelayDuration) IsValid() bool {
-	return isMinuteOrSecond(qdd.Unit)
+func (d Duration) IsValid() bool {
+	return d.validator(d)
 }
 
-func (qid QueryIntervalDuration) IsValid() bool {
-	return isMinuteOrSecond(qid.Unit)
+func (d Duration) String() string {
+	return fmt.Sprintf("%d%s", d.Value, formatTimeUnit(d.Unit))
 }
 
-func (td TimeoutDuration) IsValid() bool {
-	return td.Unit == twindow.Second
-}
-
-func (qdd QueryDelayDuration) String() string {
-	return fmt.Sprintf("%d%s", *qdd.Value, formatTimeUnit(qdd.Unit))
-}
-
-func (qid QueryIntervalDuration) String() string {
-	return fmt.Sprintf("%d%s", *qid.Value, formatTimeUnit(qid.Unit))
-}
-
-func (cjd CollectionJitterDuration) String() string {
-	return fmt.Sprintf("%d%s", *cjd.Value, formatTimeUnit(cjd.Unit))
-}
-
-func (td TimeoutDuration) String() string {
-	return fmt.Sprintf("%d%s", *td.Value, formatTimeUnit(td.Unit))
-}
-
-func (qdd QueryDelayDuration) BiggerThanMax() bool {
+func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 	maxQueryDelayDurationInt := maxQueryDelayDuration
-	max := QueryDelayDuration{
+	max := Duration{
 		Value: &maxQueryDelayDurationInt,
 		Unit:  maxQueryDelayDurationUnit,
 	}
-	return qdd.Duration() > max.Duration()
+	return duration.Duration() > max.Duration()
 }
 
-func (qdd QueryDelayDuration) LesserThan(b QueryDelayDuration) bool {
-	return qdd.Duration() < b.Duration()
+func (d Duration) LesserThan(b Duration) bool {
+	return d.Duration() < d.Duration()
 }
 
-func (qdd QueryDelayDuration) IsZero() bool {
-	return qdd.Value == nil || *qdd.Value == 0
+func (d Duration) IsZero() bool {
+	return d.Value == nil || *d.Value == 0
 }
 
-func (qdd QueryDelayDuration) Duration() time.Duration {
-	if qdd.Value == nil {
+func (d Duration) Duration() time.Duration {
+	if d.Value == nil {
 		return time.Duration(0)
 	}
 
-	value := time.Duration(*qdd.Value)
-	return value * qdd.Duration()
+	value := time.Duration(*d.Value)
+	return value * d.Unit.Duration()
 }
 
 func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
@@ -372,7 +374,7 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (Historica
 		errors.Errorf("historical data retrieval is not supported for %s %s", typeName, kind)
 }
 
-type QueryDelayDefaults map[string]QueryDelayDuration
+type QueryDelayDefaults map[string]Duration
 
 func (q QueryDelayDefaults) GetByName(name string) string {
 	return q[name].String()

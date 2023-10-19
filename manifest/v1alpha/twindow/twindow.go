@@ -440,6 +440,15 @@ func MustParseTimeUnit(timeUnit string) TimeUnitEnum {
 	return result
 }
 
+// ParseTimeUnit parses passed time unit
+func ParseTimeUnit(timeUnit string) (TimeUnitEnum, error) {
+	result, ok := timeUnits[timeUnit]
+	if !ok {
+		return Second, fmt.Errorf("'%s' is not valid time unit", timeUnit)
+	}
+	return result, nil
+}
+
 func GetMinStartDate() time.Time {
 	return time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
 }

@@ -131,7 +131,7 @@ func NewValidator() *Validate {
 	})
 
 	val.RegisterStructValidation(timeWindowStructLevelValidation, TimeWindow{})
-	val.RegisterStructValidation(queryDelayDurationValidation, QueryDelayDuration{})
+	val.RegisterStructValidation(queryDelayDurationValidation, QueryDelay{})
 	val.RegisterStructValidation(agentSpecStructLevelValidation, AgentSpec{})
 	val.RegisterStructValidation(sloSpecStructLevelValidation, SLOSpec{})
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
@@ -1605,7 +1605,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 	}
 	if sa.QueryDelay != nil {
 		agentDefault := GetQueryDelayDefaults()[at.String()]
-		if sa.QueryDelay.QueryDelayDuration.LesserThan(agentDefault) {
+		if sa.QueryDelay.LesserThan(agentDefault) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -1614,7 +1614,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if sa.QueryDelay.QueryDelayDuration.BiggerThanMax() {
+		if IsBiggerThanMaxQueryDelayDuration(sa.QueryDelay.Duration) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -2002,7 +2002,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 
 	if sd.QueryDelay != nil {
 		directDefault := GetQueryDelayDefaults()[dt]
-		if sd.QueryDelay.QueryDelayDuration.LesserThan(directDefault) {
+		if sd.QueryDelay.Duration.LesserThan(directDefault) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
@@ -2011,7 +2011,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if sd.QueryDelay.QueryDelayDuration.BiggerThanMax() {
+		if IsBiggerThanMaxQueryDelayDuration(sd.QueryDelay.Duration) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
@@ -2993,7 +2993,7 @@ func historicalDataRetrievalDurationValidation(sl v.StructLevel) {
 }
 
 func queryDelayDurationValidation(sl v.StructLevel) {
-	duration, ok := sl.Current().Interface().(QueryDelayDuration)
+	duration, ok := sl.Current().Interface().(Duration)
 	if !ok {
 		sl.ReportError(duration, "", "", "structConversion", "")
 		return
