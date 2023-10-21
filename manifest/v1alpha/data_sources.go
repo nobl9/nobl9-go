@@ -42,6 +42,8 @@ const (
 	AzureMonitor
 )
 
+// For each DataSourceType generate a map entry, key is the DataSourceType, value is the corresponding slo.MetricSpec.
+
 const DatasourceStableChannel = "stable"
 
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring

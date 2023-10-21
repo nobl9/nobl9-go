@@ -3,6 +3,7 @@ package slo
 import (
 	_ "embed"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -689,15 +690,16 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 }
 
 func TestValidate_Spec_Objectives(t *testing.T) {
-	t.Skip()
 	t.Run("passes", func(t *testing.T) {
 		for _, objectives := range [][]Objective{
 			{{
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
+					Value:       ptr(9.2),
 					DisplayName: strings.Repeat("l", 63),
 				},
 				BudgetTarget: ptr(0.9),
+				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 			}},
 		} {
 			slo := validSLO()
@@ -720,7 +722,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						Codes: []string{validation.ErrorCodeSliceMinLength},
 					},
 				},
-				ExpectedErrorsCount: 1,
+				ExpectedErrorsCount: 2,
 			},
 			"objective base errors": {
 				Objectives: []Objective{
@@ -730,9 +732,17 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 							Value:       ptr(0.),
 							Name:        "MY NAME",
 						},
+						BudgetTarget: ptr(2.0),
+						RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 					},
 					{
 						ObjectiveBase: ObjectiveBase{Name: ""},
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					},
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(0.)},
+						BudgetTarget:  ptr(-1.0),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 					},
 				},
 				ExpectedErrors: []expectedError{
@@ -745,12 +755,41 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
 					},
 					{
+						Prop:  "spec.objectives[0].target",
+						Codes: []string{validation.ErrorCodeLessThan},
+					},
+					{
 						Prop:  "spec.objectives[1].value",
 						Codes: []string{validation.ErrorCodeRequired},
 					},
 					{
-						Prop:  "spec.objectives[1].name",
+						Prop:  "spec.objectives[1].target",
 						Codes: []string{validation.ErrorCodeRequired},
+					},
+					{
+						Prop:  "spec.objectives[2].target",
+						Codes: []string{validation.ErrorCodeGreaterThanOrEqualTo},
+					},
+				},
+				ExpectedErrorsCount: 6,
+			},
+			"all objectives have unique values": {
+				Objectives: []Objective{
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(10.)},
+						BudgetTarget:  ptr(0.9),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					},
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(10.)},
+						BudgetTarget:  ptr(0.8),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					},
+				},
+				ExpectedErrors: []expectedError{
+					{
+						Prop:  "spec.objectives",
+						Codes: []string{validation.ErrorCodeSliceUnique},
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -763,6 +802,161 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				assertContainsErrors(t, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})
 		}
+	})
+}
+
+func TestValidate_Spec(t *testing.T) {
+	metricSpec := &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("sum")}}
+	t.Run("exactly one metric type - both provided", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			TotalMetric: metricSpec,
+			GoodMetric:  metricSpec,
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec",
+			Codes: []string{errCodeExactlyOneMetricType},
+		})
+	})
+	t.Run("exactly one metric type - both missing", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].RawMetric = nil
+		slo.Spec.Objectives[0].CountMetrics = nil
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec",
+			Codes: []string{errCodeExactlyOneMetricType},
+		})
+	})
+}
+
+func TestValidate_Spec_RawMetrics(t *testing.T) {
+	t.Run("exactly one metric spec type", func(t *testing.T) {
+		for name, metrics := range map[string][]*MetricSpec{
+			"single objective": {
+				{
+					Prometheus: validMetricSpec(v1alpha.Prometheus).Prometheus,
+					Lightstep:  validMetricSpec(v1alpha.Lightstep).Lightstep,
+				},
+			},
+			"two objectives": {
+				validMetricSpec(v1alpha.Prometheus),
+				validMetricSpec(v1alpha.Lightstep),
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = nil
+				for i, m := range metrics {
+					slo.Spec.Objectives = append(slo.Spec.Objectives, Objective{
+						ObjectiveBase: ObjectiveBase{Value: ptr(10.), Name: strconv.Itoa(i)},
+						BudgetTarget:  ptr(0.9),
+						RawMetric:     &RawMetricSpec{MetricQuery: m},
+					})
+				}
+				err := validate(slo)
+				assertContainsErrors(t, err, 1, expectedError{
+					Prop:  "spec",
+					Codes: []string{errCodeExactlyOneMetricSpecType},
+				})
+			})
+		}
+	})
+}
+
+func TestValidate_Spec_CountMetrics(t *testing.T) {
+	t.Run("exactly one metric spec type", func(t *testing.T) {
+		for name, metrics := range map[string][]*CountMetricsSpec{
+			"single objective - total": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: &MetricSpec{
+						Prometheus: validMetricSpec(v1alpha.Prometheus).Prometheus,
+						Dynatrace:  validMetricSpec(v1alpha.Dynatrace).Dynatrace,
+					},
+					GoodMetric: validMetricSpec(v1alpha.Prometheus),
+				},
+			},
+			"single objective - good": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					GoodMetric: &MetricSpec{
+						Prometheus: validMetricSpec(v1alpha.Prometheus).Prometheus,
+						Dynatrace:  validMetricSpec(v1alpha.Dynatrace).Dynatrace,
+					},
+				},
+			},
+			"single objective - bad": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.CloudWatch),
+					BadMetric: &MetricSpec{
+						CloudWatch:   validMetricSpec(v1alpha.CloudWatch).CloudWatch,
+						AzureMonitor: validMetricSpec(v1alpha.AzureMonitor).AzureMonitor,
+					},
+				},
+			},
+			"single objective - good/total": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					GoodMetric:  validMetricSpec(v1alpha.Dynatrace),
+				},
+			},
+			"single objective - bad/total": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
+				},
+			},
+			"two objectives - mix": {
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+				},
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
+				},
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = nil
+				for i, m := range metrics {
+					slo.Spec.Objectives = append(slo.Spec.Objectives, Objective{
+						ObjectiveBase: ObjectiveBase{Value: ptr(10.), Name: strconv.Itoa(i)},
+						BudgetTarget:  ptr(0.9),
+						CountMetrics:  m,
+					})
+				}
+				err := validate(slo)
+				assertContainsErrors(t, err, 1, expectedError{
+					Prop:  "spec",
+					Codes: []string{errCodeExactlyOneMetricSpecType},
+				})
+			})
+		}
+	})
+	t.Run("bad over total disabled", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			TotalMetric: validMetricSpec(v1alpha.Prometheus),
+			BadMetric:   validMetricSpec(v1alpha.Prometheus),
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:  "spec.objectives[0].countMetrics.bad",
+			Codes: []string{errCodeBadOverTotalDisabled},
+		})
 	})
 }
 
@@ -857,16 +1051,8 @@ func validSLO() SLO {
 					BudgetTarget: ptr(0.9),
 					CountMetrics: &CountMetricsSpec{
 						Incremental: ptr(false),
-						GoodMetric: &MetricSpec{
-							Prometheus: &PrometheusMetric{
-								PromQL: ptr(`sum(rate(prometheus_http_requests_total{code=~"^2.*"}[1h]))`),
-							},
-						},
-						TotalMetric: &MetricSpec{
-							Prometheus: &PrometheusMetric{
-								PromQL: ptr(`sum(rate(prometheus_http_requests_total[1h]))`),
-							},
-						},
+						TotalMetric: validMetricSpec(v1alpha.Prometheus),
+						GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 					},
 				},
 			},
@@ -879,6 +1065,223 @@ func validSLO() SLO {
 			},
 		},
 	)
+}
+
+func validMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
+	ms := validMetricSpecs[typ]
+	return &ms
+}
+
+var validMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
+	v1alpha.Prometheus: {Prometheus: &PrometheusMetric{
+		PromQL: ptr(`sum(rate(prometheus_http_req`),
+	}},
+	v1alpha.Datadog: {Datadog: &DatadogMetric{
+		Query: ptr(`avg:trace.http.request.duration{*}`),
+	}},
+	v1alpha.NewRelic: {NewRelic: &NewRelicMetric{
+		NRQL: ptr(`SELECT average(duration*1000) FROM Transaction WHERE app Name='production' TIMESERIES`),
+	}},
+	v1alpha.AppDynamics: {AppDynamics: &AppDynamicsMetric{
+		ApplicationName: ptr("my-app"),
+		MetricPath:      ptr(`End User Experience|App|Slow Requests`),
+	}},
+	v1alpha.Splunk: {Splunk: &SplunkMetric{
+		Query: ptr(`
+search index=svc-events source=udp:5072 sourcetype=syslog status<400 |
+bucket _time span=1m |
+stats avg(response_time) as n9value by _time |
+rename _time as n9time |
+fields n9time n9value`),
+	}},
+	v1alpha.Lightstep: {Lightstep: &LightstepMetric{
+		TypeOfData: ptr(LightstepMetricDataType),
+		UQL:        ptr(`metric cpu.utilization | rate | group_by [], mean`),
+	}},
+	v1alpha.SplunkObservability: {SplunkObservability: &SplunkObservabilityMetric{
+		Program: ptr(`data('demo.trans.count', filter=filter('demo_datacenter', 'Tokyo'), rollup='rate').mean().publish()`),
+	}},
+	v1alpha.Dynatrace: {Dynatrace: &DynatraceMetric{
+		MetricSelector: ptr(`
+builtin:synthetic.http.duration.geo
+:filter(and(
+  in("dt.entity.http_check",entitySelector("type(http_check),entityName(~"API Sample~")")),
+  in("dt.entity.synthetic_location",entitySelector("type(synthetic_location),entityName(~"N. California~")"))))
+:splitBy("dt.entity.http_check","dt.entity.synthetic_location")
+:avg:auto:sort(value(avg,descending))
+:limit(20)`),
+	}},
+	v1alpha.ThousandEyes: {ThousandEyes: &ThousandEyesMetric{
+		TestID:   ptr(int64(2024796)),
+		TestType: ptr("net-latency"),
+	}},
+	v1alpha.Graphite: {Graphite: &GraphiteMetric{
+		MetricPath: ptr("stats.response.200"),
+	}},
+	v1alpha.BigQuery: {BigQuery: &BigQueryMetric{
+		ProjectID: "svc-256112",
+		Location:  "EU",
+		Query:     "SELECT http_code AS n9value, created AS n9date FROM `bdwtest-256112.metrics.http_response` WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)",
+	}},
+	v1alpha.Elasticsearch: {Elasticsearch: &ElasticsearchMetric{
+		Index: ptr("apm-7.13.3-transaction"),
+		Query: ptr(`
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "service.name": "weloveourpets_xyz"
+          }
+        },
+        {
+          "match": {
+            "transaction.result": "HTTP 2xx"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "{{.BeginTime}}",
+              "lte": "{{.EndTime}}"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "resolution": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "{{.Resolution}}",
+        "min_doc_count": 0,
+        "extended_bounds": {
+          "min": "{{.BeginTime}}",
+          "max": "{{.EndTime}}"
+        }
+      },
+      "aggs": {
+        "n9-val": {
+          "avg": {
+            "field": "transaction.duration.us"
+          }
+        }
+      }
+    }
+  }
+}
+`),
+	}},
+	v1alpha.OpenTSDB: {OpenTSDB: &OpenTSDBMetric{
+		Query: ptr(`m=avg:{{.N9RESOLUTION}}-avg:main_kafka_prometheus_go_memstats_alloc_bytes`),
+	}},
+	v1alpha.GrafanaLoki: {GrafanaLoki: &GrafanaLokiMetric{
+		Logql: ptr(`
+sum(sum_over_time({topic="error-budgets-out", consumergroup="alerts", cluster="main"} |=
+"kafka_consumergroup_lag" |
+logfmt |
+kafka_consumergroup_lag!="" |
+line_format "{{.kafka_consumergroup_lag}}" |
+unwrap kafka_consumergroup_lag [1m]))`),
+	}},
+	v1alpha.CloudWatch: {CloudWatch: &CloudWatchMetric{
+		Region:     ptr("eu-central-1"),
+		Namespace:  ptr("AWS/Prometheus"),
+		MetricName: ptr("CPUUtilization"),
+		Stat:       ptr("Average"),
+		Dimensions: []CloudWatchMetricDimension{
+			{
+				Name:  ptr("DBInstanceIdentifier"),
+				Value: ptr("my-db-instance"),
+			},
+		},
+	}},
+	v1alpha.Pingdom: {Pingdom: &PingdomMetric{
+		CheckID:   ptr("8745322"),
+		CheckType: ptr("uptime"),
+		Status:    ptr("up"),
+	}},
+	v1alpha.AmazonPrometheus: {AmazonPrometheus: &AmazonPrometheusMetric{
+		PromQL: ptr("sum(rate(prometheus_http_requests_total[1h]))"),
+	}},
+	v1alpha.Redshift: {Redshift: &RedshiftMetric{
+		Region:       ptr("eu-central-1"),
+		ClusterID:    ptr("my-redshift-cluster"),
+		DatabaseName: ptr("my-database"),
+		Query:        ptr("SELECT value as n9value, timestamp as n9date FROM sinusoid WHERE timestamp BETWEEN :n9date_from AND :n9date_to"),
+	}},
+	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
+		Type:         ptr("metrics"),
+		Query:        ptr("kube_node_status_condition | min"),
+		Quantization: ptr("1m"),
+		Rollup:       ptr("Min"),
+	}},
+	v1alpha.Instana: {Instana: &InstanaMetric{
+		MetricType: instanaMetricTypeApplication,
+		Application: &InstanaApplicationMetricType{
+			MetricID:    "latency",
+			Aggregation: "p99",
+			GroupBy: InstanaApplicationMetricGroupBy{
+				Tag:       "endpoint.name",
+				TagEntity: "DESTINATION",
+			},
+			APIQuery: `
+{
+  "type": "EXPRESSION",
+  "logicalOperator": "AND",
+  "elements": [
+    {
+      "type": "TAG_FILTER",
+      "name": "service.name",
+      "operator": "EQUALS",
+      "entity": "DESTINATION",
+      "value": "master"
+    },
+    {
+      "type": "TAG_FILTER",
+      "name": "call.type",
+      "operator": "EQUALS",
+      "entity": "NOT_APPLICABLE",
+      "value": "HTTP"
+    }
+  ]
+}
+`,
+		},
+	}},
+	v1alpha.InfluxDB: {InfluxDB: &InfluxDBMetric{
+		Query: ptr(`
+from(bucket: "integrations")
+  |> range(start: time(v: params.n9time_start), stop: time(v: params.n9time_stop))
+  |> aggregateWindow(every: 15s, fn: mean, createEmpty: false)
+  |> filter(fn: (r) => r["_measurement"] == "internal_write")
+  |> filter(fn: (r) => r["_field"] == "write_time_ns")
+`),
+	}},
+	v1alpha.GCM: {GCM: &GCMMetric{
+		Query: `
+fetch consumed_api
+  | metric 'serviceruntime.googleapis.com/api/request_count'
+  | filter
+      (resource.service == 'monitoring.googleapis.com')
+      && (metric.response_code == '200')
+  | align rate(1m)
+  | every 1m
+  | group_by [resource.service],
+      [value_request_count_aggregate: aggregate(value.request_count)]
+`,
+		ProjectID: "svc-256112",
+	}},
+	v1alpha.AzureMonitor: {AzureMonitor: &AzureMonitorMetric{
+		ResourceID:  "/subscriptions/9c26f90e/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
+		MetricName:  "HttpResponseTime",
+		Aggregation: "Avg",
+	}},
 }
 
 func ptr[T any](v T) *T { return &v }

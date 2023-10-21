@@ -3,8 +3,6 @@ package slo
 import (
 	"sort"
 
-	"golang.org/x/exp/slices"
-
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -97,6 +95,14 @@ type AppDynamicsMetric struct {
 type SplunkMetric struct {
 	Query *string `json:"query" validate:"required,notEmpty,splunkQueryValid"`
 }
+
+const (
+	LightstepMetricDataType     = "metric"
+	LightstepLatencyDataType    = "latency"
+	LightstepErrorRateDataType  = "error_rate"
+	LightstepTotalCountDataType = "total"
+	LightstepGoodCountDataType  = "good"
+)
 
 // LightstepMetric represents metric from Lightstep
 type LightstepMetric struct {
@@ -334,7 +340,7 @@ func (s *Spec) CountMetricsCount() int {
 			if objective.CountMetrics.TotalMetric != nil {
 				count++
 			}
-			if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
+			if objective.CountMetrics.BadMetric != nil {
 				count++
 			}
 		}
@@ -358,7 +364,7 @@ func (s *Spec) CountMetrics() []*MetricSpec {
 			countMetrics[i] = objective.CountMetrics.TotalMetric
 			i++
 		}
-		if objective.CountMetrics.BadMetric != nil && isBadOverTotalEnabledForDataSourceType(objective) {
+		if objective.CountMetrics.BadMetric != nil {
 			countMetrics[i] = objective.CountMetrics.BadMetric
 			i++
 		}
@@ -535,17 +541,4 @@ func (m *MetricSpec) Query() interface{} {
 	default:
 		return nil
 	}
-}
-
-// Support for bad/total metrics will be enabled gradually.
-// CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
-func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []v1alpha.DataSourceType{v1alpha.CloudWatch, v1alpha.AppDynamics, v1alpha.AzureMonitor}
-	if objective.CountMetrics != nil {
-		if objective.CountMetrics.BadMetric == nil {
-			return false
-		}
-		return slices.Contains(enabledDataSources, objective.CountMetrics.BadMetric.DataSourceType())
-	}
-	return true
 }

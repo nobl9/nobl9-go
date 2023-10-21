@@ -102,6 +102,27 @@ func (r PropertyRulesForEach[T, S]) RulesForEach(rules ...Rule[T]) PropertyRules
 	return r
 }
 
+type RulesForEachContainer[T, S any] struct {
+	prop        PropertyRulesForEach[T, S]
+	predicate   Predicate[S]
+	stopOnError bool
+}
+
+func (r RulesForEachContainer[T, S]) When(predicate Predicate[S]) RulesForEachContainer[T, S] {
+	r.predicate = predicate
+	return r
+}
+
+func (r RulesForEachContainer[T, S]) StopOnError() RulesForEachContainer[T, S] {
+	r.stopOnError = true
+	return r
+}
+
+func (r PropertyRulesForEach[T, S]) With(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
+	r.steps = appendSteps(r.steps, rules)
+	return r
+}
+
 func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r

@@ -46,14 +46,6 @@ const (
 )
 
 const (
-	LightstepMetricDataType     = "metric"
-	LightstepLatencyDataType    = "latency"
-	LightstepErrorRateDataType  = "error_rate"
-	LightstepTotalCountDataType = "total"
-	LightstepGoodCountDataType  = "good"
-)
-
-const (
 	PingdomTypeUptime      = "uptime"
 	PingdomTypeTransaction = "transaction"
 )
@@ -225,43 +217,6 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	if !hasExactlyOneMetricType(sloSpec) {
-		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetric", "exactlyOneMetricType", "")
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "exactlyOneMetricType", "")
-	}
-
-	if !hasOnlyOneRawMetricDefinitionTypeOrNone(sloSpec) {
-		sl.ReportError(
-			sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "multipleRawMetricDefinitionTypes", "",
-		)
-		sl.ReportError(
-			sloSpec.Objectives, "objectives", "Objectives", "multipleRawMetricDefinitionTypes", "",
-		)
-	}
-
-	if !isBadOverTotalEnabledForDataSource(sloSpec) {
-		sl.ReportError(
-			sloSpec.Indicator.MetricSource,
-			"indicator.metricSource",
-			"MetricSource",
-			"isBadOverTotalEnabledForDataSource",
-			"",
-		)
-	}
-
-	if !areAllMetricSpecsOfTheSameType(sloSpec) {
-		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "allMetricsOfTheSameType", "")
-	}
-
-	if !areRawMetricsSetForAllObjectivesOrNone(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "rawMetricsSetForAllObjectivesOrNone", "")
-	}
-	if !areCountMetricsSetForAllObjectivesOrNone(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "countMetricsSetForAllObjectivesOrNone", "")
-	}
-	if !isBadOverTotalEnabledForDataSource(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "badOverTotalEnabledForDataSource", "")
-	}
 	// if !doAllObjectivesHaveUniqueNames(sloSpec) {
 	// 	sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
 	// }
@@ -492,43 +447,6 @@ func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
 			"",
 		)
 	}
-}
-
-func isBadOverTotalEnabledForDataSource(spec Spec) bool {
-	if spec.HasCountMetrics() {
-		for _, objectives := range spec.Objectives {
-			if objectives.CountMetrics != nil {
-				if objectives.CountMetrics.BadMetric != nil &&
-					!isBadOverTotalEnabledForDataSourceType(objectives) {
-					return false
-				}
-			}
-		}
-	}
-	return true
-}
-
-func hasOnlyOneRawMetricDefinitionTypeOrNone(spec Spec) bool {
-	indicatorHasRawMetric := spec.containsIndicatorRawMetric()
-	if indicatorHasRawMetric {
-		for _, objective := range spec.Objectives {
-			if !objective.HasRawMetricQuery() {
-				continue
-			}
-			if !reflect.DeepEqual(objective.RawMetric.MetricQuery, spec.Indicator.RawMetric) {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func areRawMetricsSetForAllObjectivesOrNone(spec Spec) bool {
-	if spec.containsIndicatorRawMetric() {
-		return true
-	}
-	count := spec.ObjectivesRawMetricsCount()
-	return count == 0 || count == len(spec.Objectives)
 }
 
 func doAllObjectivesHaveUniqueValues(spec Spec) bool {
@@ -807,10 +725,6 @@ func instanaMetricTypeApplicationValidation(application *InstanaApplicationMetri
 		cases.Title(language.Und).String(aggregation), "wrongAggregationValueForMetricID", "")
 }
 
-func hasExactlyOneMetricType(sloSpec Spec) bool {
-	return sloSpec.HasRawMetric() != sloSpec.HasCountMetrics()
-}
-
 func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 	for _, objective := range sloSpec.Objectives {
 		if objective.CountMetrics == nil {
@@ -822,181 +736,6 @@ func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 		}
 	}
 	return true
-}
-
-//nolint:gocognit,gocyclo
-func areAllMetricSpecsOfTheSameType(sloSpec Spec) bool {
-	var (
-		metricCount              int
-		prometheusCount          int
-		datadogCount             int
-		newRelicCount            int
-		appDynamicsCount         int
-		splunkCount              int
-		lightstepCount           int
-		splunkObservabilityCount int
-		dynatraceCount           int
-		elasticsearchCount       int
-		bigQueryCount            int
-		thousandEyesCount        int
-		graphiteCount            int
-		openTSDBCount            int
-		grafanaLokiCount         int
-		cloudWatchCount          int
-		pingdomCount             int
-		amazonPrometheusCount    int
-		redshiftCount            int
-		sumoLogicCount           int
-		instanaCount             int
-		influxDBCount            int
-		gcmCount                 int
-		azureMonitorCount        int
-	)
-	for _, metric := range sloSpec.AllMetricSpecs() {
-		if metric == nil {
-			continue
-		}
-		if metric.Prometheus != nil {
-			prometheusCount++
-		}
-		if metric.Datadog != nil {
-			datadogCount++
-		}
-		if metric.NewRelic != nil {
-			newRelicCount++
-		}
-		if metric.AppDynamics != nil {
-			appDynamicsCount++
-		}
-		if metric.Splunk != nil {
-			splunkCount++
-		}
-		if metric.Lightstep != nil {
-			lightstepCount++
-		}
-		if metric.SplunkObservability != nil {
-			splunkObservabilityCount++
-		}
-		if metric.ThousandEyes != nil {
-			thousandEyesCount++
-		}
-		if metric.Dynatrace != nil {
-			dynatraceCount++
-		}
-		if metric.Elasticsearch != nil {
-			elasticsearchCount++
-		}
-		if metric.Graphite != nil {
-			graphiteCount++
-		}
-		if metric.BigQuery != nil {
-			bigQueryCount++
-		}
-		if metric.OpenTSDB != nil {
-			openTSDBCount++
-		}
-		if metric.GrafanaLoki != nil {
-			grafanaLokiCount++
-		}
-		if metric.CloudWatch != nil {
-			cloudWatchCount++
-		}
-		if metric.Pingdom != nil {
-			pingdomCount++
-		}
-		if metric.AmazonPrometheus != nil {
-			amazonPrometheusCount++
-		}
-		if metric.Redshift != nil {
-			redshiftCount++
-		}
-		if metric.SumoLogic != nil {
-			sumoLogicCount++
-		}
-		if metric.Instana != nil {
-			instanaCount++
-		}
-		if metric.InfluxDB != nil {
-			influxDBCount++
-		}
-		if metric.GCM != nil {
-			gcmCount++
-		}
-		if metric.AzureMonitor != nil {
-			azureMonitorCount++
-		}
-	}
-	if prometheusCount > 0 {
-		metricCount++
-	}
-	if datadogCount > 0 {
-		metricCount++
-	}
-	if newRelicCount > 0 {
-		metricCount++
-	}
-	if appDynamicsCount > 0 {
-		metricCount++
-	}
-	if splunkCount > 0 {
-		metricCount++
-	}
-	if lightstepCount > 0 {
-		metricCount++
-	}
-	if splunkObservabilityCount > 0 {
-		metricCount++
-	}
-	if thousandEyesCount > 0 {
-		metricCount++
-	}
-	if dynatraceCount > 0 {
-		metricCount++
-	}
-	if elasticsearchCount > 0 {
-		metricCount++
-	}
-	if graphiteCount > 0 {
-		metricCount++
-	}
-	if bigQueryCount > 0 {
-		metricCount++
-	}
-	if openTSDBCount > 0 {
-		metricCount++
-	}
-	if grafanaLokiCount > 0 {
-		metricCount++
-	}
-	if cloudWatchCount > 0 {
-		metricCount++
-	}
-	if pingdomCount > 0 {
-		metricCount++
-	}
-	if amazonPrometheusCount > 0 {
-		metricCount++
-	}
-	if redshiftCount > 0 {
-		metricCount++
-	}
-	if instanaCount > 0 {
-		metricCount++
-	}
-	if sumoLogicCount > 0 {
-		metricCount++
-	}
-	if influxDBCount > 0 {
-		metricCount++
-	}
-	if gcmCount > 0 {
-		metricCount++
-	}
-	if azureMonitorCount > 0 {
-		metricCount++
-	}
-	// exactly one exists
-	return metricCount == 1
 }
 
 func haveCountMetricsTheSameAppDynamicsApplicationNames(sloSpec Spec) bool {
@@ -1211,12 +950,6 @@ func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec 
 	}
 
 	return true
-}
-
-func areCountMetricsSetForAllObjectivesOrNone(sloSpec Spec) bool {
-	count := sloSpec.CountMetricsCount()
-	const countMetricsPerObjective int = 2
-	return count == 0 || count == len(sloSpec.Objectives)*countMetricsPerObjective
 }
 
 func isValidURL(fl v.FieldLevel) bool {

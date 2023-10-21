@@ -22,6 +22,8 @@ var metadataValidation = validation.New[Metadata](
 )
 
 var specValidation = validation.New[Spec](
+	validation.For(validation.GetSelf[Spec]()).
+		Include(specMetricsValidation),
 	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
@@ -65,6 +67,12 @@ var specValidation = validation.New[Spec](
 		WithName("objectives").
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		StopOnError().
+		Rules(validation.SliceUnique(func(v Objective) float64 {
+			if v.Value == nil {
+				return 0
+			}
+			return *v.Value
+		})).
 		IncludeForEach(objectiveValidation),
 )
 
@@ -147,23 +155,27 @@ var objectiveValidation = validation.New[Objective](
 	validation.ForPointer(func(o Objective) *float64 { return o.BudgetTarget }).
 		WithName("target").
 		Required().
-		Rules(validation.GreaterThan(0.0), validation.LessThan(1.0)),
+		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThan(1.0)),
 	validation.ForPointer(func(o Objective) *float64 { return o.TimeSliceTarget }).
 		WithName("timeSliceTarget"),
 	validation.ForPointer(func(o Objective) *string { return o.Operator }).
 		WithName("op"),
 	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
-		WithName("countMetrics"),
+		WithName("countMetrics").
+		Include(countMetricsValidation),
 	validation.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
-		WithName("rawMetric"),
+		WithName("rawMetric").
+		Include(rawMetricValidation),
 )
 
 var objectiveBaseValidation = validation.New[ObjectiveBase](
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
+		Omitempty().
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
+		Omitempty().
 		Rules(validation.StringMaxLength(63)),
 	validation.ForPointer(func(o ObjectiveBase) *float64 { return o.Value }).
 		WithName("value").
