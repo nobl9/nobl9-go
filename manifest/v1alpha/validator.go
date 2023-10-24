@@ -1779,6 +1779,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.Honeycomb != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -1803,6 +1806,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneAgentTypeRequired", "")
 	}
 }
 

@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Honeycomb
 )
 
 const DatasourceStableChannel = "stable"
@@ -124,6 +125,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Honeycomb:           "Honeycomb",
 }
 
 func (dst DataSourceType) String() string {
@@ -360,6 +362,8 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
 	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
+	// FIXME PC-10656: Is this the right value?
+	Honeycomb.String(): {Value: ptr(7), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -496,6 +500,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		},
 		AzureMonitor.String(): {
 			Value: ptr(5),
+			Unit:  QDDMinute,
+		},
+		Honeycomb.String(): {
+			Value: ptr(7),
 			Unit:  QDDMinute,
 		},
 	}

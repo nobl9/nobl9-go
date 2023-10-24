@@ -55,6 +55,7 @@ type AgentSpec struct {
 	Instana                 *InstanaAgentConfig             `json:"instana,omitempty"`
 	InfluxDB                *InfluxDBAgentConfig            `json:"influxdb,omitempty"`
 	AzureMonitor            *AzureMonitorAgentConfig        `json:"azureMonitor,omitempty"`
+	Honeycomb               *HoneycombAgentConfig           `json:"honeycomb,omitempty"`
 	GCM                     *GCMAgentConfig                 `json:"gcm,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval        `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                     `json:"queryDelay,omitempty"`
@@ -108,6 +109,8 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return GCM, nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor, nil
+	case spec.Honeycomb != nil:
+		return Honeycomb, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -235,6 +238,12 @@ type SplunkAgentConfig struct {
 // AzureMonitorAgentConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+}
+
+// FIXME PC-10656: Resolve omitempty&required situation.
+// HoneycombAgentConfig represents content of Honeycomb Configuration typical for Agent Object.
+type HoneycombAgentConfig struct {
+	APIKey string `json:"apiKey,omitempty" validate:"required" example:"01234567890abcdef01234567890abcdef"`
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
