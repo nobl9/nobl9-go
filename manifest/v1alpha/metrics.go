@@ -120,6 +120,7 @@ type ElasticsearchMetric struct {
 
 // CloudWatchMetric represents metric from CloudWatch.
 type CloudWatchMetric struct {
+	AccountID  *string                     `json:"accountId,omitempty"`
 	Region     *string                     `json:"region" validate:"required,max=255"`
 	Namespace  *string                     `json:"namespace,omitempty"`
 	MetricName *string                     `json:"metricName,omitempty"`
