@@ -1122,7 +1122,10 @@ builtin:synthetic.http.duration.geo
 	v1alpha.BigQuery: {BigQuery: &BigQueryMetric{
 		ProjectID: "svc-256112",
 		Location:  "EU",
-		Query:     "SELECT http_code AS n9value, created AS n9date FROM `bdwtest-256112.metrics.http_response` WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)",
+		Query: `
+SELECT http_code AS n9value, created AS n9date 
+FROM 'bdwtest-256112.metrics.http_response'
+WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
 	}},
 	v1alpha.Elasticsearch: {Elasticsearch: &ElasticsearchMetric{
 		Index: ptr("apm-7.13.3-transaction"),
@@ -1214,7 +1217,8 @@ unwrap kafka_consumergroup_lag [1m]))`),
 		Region:       ptr("eu-central-1"),
 		ClusterID:    ptr("my-redshift-cluster"),
 		DatabaseName: ptr("my-database"),
-		Query:        ptr("SELECT value as n9value, timestamp as n9date FROM sinusoid WHERE timestamp BETWEEN :n9date_from AND :n9date_to"),
+		Query: ptr("SELECT value as n9value, timestamp as n9date FROM sinusoid" +
+			" WHERE timestamp BETWEEN :n9date_from AND :n9date_to"),
 	}},
 	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
 		Type:         ptr("metrics"),

@@ -762,26 +762,3 @@ func TestAzureMonitorSloSpecValidation(t *testing.T) {
 		})
 	}
 }
-
-var spec = Spec{
-	Objectives: []Objective{
-		{
-			CountMetrics: &CountMetricsSpec{
-				GoodMetric:  &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-				TotalMetric: &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-			},
-		},
-		{
-			CountMetrics: &CountMetricsSpec{
-				GoodMetric:  &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-				TotalMetric: &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-			},
-		},
-		{
-			CountMetrics: &CountMetricsSpec{
-				GoodMetric:  &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-				TotalMetric: &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("this")}},
-			},
-		},
-	},
-}

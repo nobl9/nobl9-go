@@ -58,7 +58,7 @@ loop:
 				sliceErrors = append(sliceErrors, err)
 			}
 			previousStepFailed = err != nil
-		case Validator[T]:
+		case validatorI[T]:
 			errorEncountered := false
 			for i, element := range r.getter(st) {
 				err := v.Validate(element)

@@ -77,7 +77,7 @@ loop:
 				ruleErrors = append(ruleErrors, err)
 			}
 			previousStepFailed = err != nil
-		case Validator[T]:
+		case validatorI[T]:
 			err := v.Validate(propValue)
 			if err != nil {
 				for _, e := range err.Errors {

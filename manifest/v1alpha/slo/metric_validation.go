@@ -69,6 +69,7 @@ var exactlyOneMetricSpecTypeValidationRule = validation.NewSingleRule(func(v Spe
 	return validateExactlyOneMetricSpecType(v.CountMetrics()...)
 }).WithErrorCode(errCodeExactlyOneMetricSpecType)
 
+// nolint: gocognit, gocyclo
 func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 	var onlyType v1alpha.DataSourceType
 	typesMatch := func(typ v1alpha.DataSourceType) error {

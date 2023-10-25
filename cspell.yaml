@@ -27,6 +27,7 @@ ignorePaths:
   - bin/**
   # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
+  - manifest/v1alpha/slo/validation_test.go
 words:
   - GOFILE
   - GOPACKAGE

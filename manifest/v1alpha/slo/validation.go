@@ -145,7 +145,6 @@ var indicatorValidation = validation.New[Indicator](
 		)),
 	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
 		WithName("rawMetric").
-		// TODO
 		Include(),
 )
 
