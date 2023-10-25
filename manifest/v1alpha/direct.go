@@ -413,18 +413,14 @@ type PublicAzureMonitorDirectConfig struct {
 	HiddenClientSecret string `json:"clientSecret"`
 }
 
-// FIXME PC-10659: Resolve omitempty&required situation.
-// TODO PC-10659: what to put in this struct?
 // HoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombDirectConfig struct {
-	APIKey string `json:"apiKey,omitempty" validate:"required" example:"01234567890abcdef01234567890abcdef"`
+	APIKey string `json:"apiKey,omitempty" validate:"required" example:"lwPoPt20Gmdi4dwTdW9dTR"`
 }
 
-// FIXME PC-10659: Resolve omitempty&required situation.
-// TODO PC-10659: what to put in this struct?
 // PublicHoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.
 type PublicHoneycombDirectConfig struct {
-	HiddenAPIKey string `json:"apiKey,omitempty" validate:"required" example:"01234567890abcdef01234567890abcdef"`
+	HiddenAPIKey string `json:"apiKey,omitempty" validate:"required" example:"lwPoPt20Gmdi4dwTdW9dTR"`
 }
 
 // PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
