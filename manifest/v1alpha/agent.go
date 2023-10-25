@@ -240,10 +240,9 @@ type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
 }
 
-// FIXME PC-10656: Resolve omitempty&required situation.
 // HoneycombAgentConfig represents content of Honeycomb Configuration typical for Agent Object.
 type HoneycombAgentConfig struct {
-	APIKey string `json:"apiKey,omitempty" validate:"required" example:"01234567890abcdef01234567890abcdef"`
+	APIKey string `json:"apiKey,omitempty" validate:"required" example:"lwPoPt20Gmdi4dwTdW9dTR"`
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition

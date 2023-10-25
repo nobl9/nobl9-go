@@ -362,8 +362,7 @@ var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
 	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
-	// FIXME PC-10656: Is this the right value?
-	Honeycomb.String(): {Value: ptr(7), Unit: HRDDay},
+	Honeycomb.String():        {Value: ptr(7), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -505,7 +504,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 			Unit:  QDDMinute,
 		},
 		Honeycomb.String(): {
-			Value: ptr(7),
+			Value: ptr(5),
 			Unit:  QDDMinute,
 		},
 	}
