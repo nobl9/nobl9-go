@@ -17,7 +17,7 @@ type PropertyRulesForEach[T, S any] struct {
 	steps  []interface{}
 }
 
-// Validate executes each of the steps sequentially and aggregates the encountered errors.
+// Validate executes each of the rules sequentially and aggregates the encountered errors.
 // nolint: prealloc, gocognit
 func (r PropertyRulesForEach[T, S]) Validate(st S) PropertyErrors {
 	var (
@@ -106,39 +106,18 @@ func (r PropertyRulesForEach[T, S]) RulesForEach(rules ...Rule[T]) PropertyRules
 	return r
 }
 
-type RulesForEachContainer[T, S any] struct {
-	prop        PropertyRulesForEach[T, S]
-	predicate   Predicate[S]
-	stopOnError bool
-}
-
-func (r RulesForEachContainer[T, S]) When(predicate Predicate[S]) RulesForEachContainer[T, S] {
-	r.predicate = predicate
-	return r
-}
-
-func (r RulesForEachContainer[T, S]) StopOnError() RulesForEachContainer[T, S] {
-	r.stopOnError = true
-	return r
-}
-
-func (r PropertyRulesForEach[T, S]) With(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
-	r.steps = appendSteps(r.steps, rules)
-	return r
-}
-
 func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForEach[T, S] {
-	r.steps = appendSteps(r.steps, rules)
+func (r PropertyRulesForEach[T, S]) When(predicate Predicate[S]) PropertyRulesForEach[T, S] {
+	r.steps = append(r.steps, predicate)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) When(predicates ...Predicate[S]) PropertyRulesForEach[T, S] {
-	r.steps = appendSteps(r.steps, predicates)
+func (r PropertyRulesForEach[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForEach[T, S] {
+	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 

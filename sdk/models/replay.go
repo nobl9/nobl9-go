@@ -89,7 +89,11 @@ var replayDurationValidation = validation.New[ReplayDuration](
 )
 
 func (r Replay) Validate() error {
-	return replayValidation.Validate(r)
+	// Explicitly return an error as the interface is initialized with the type otherwise.
+	if err := replayValidation.Validate(r); err != nil {
+		return err
+	}
+	return nil
 }
 
 const (

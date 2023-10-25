@@ -730,7 +730,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 					{
 						ObjectiveBase: ObjectiveBase{
 							DisplayName: strings.Repeat("l", 64),
-							Value:       ptr(0.),
+							Value:       ptr(2.),
 							Name:        "MY NAME",
 						},
 						BudgetTarget: ptr(2.0),
@@ -741,7 +741,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 					},
 					{
-						ObjectiveBase: ObjectiveBase{Value: ptr(0.)},
+						ObjectiveBase: ObjectiveBase{Value: ptr(1.)},
 						BudgetTarget:  ptr(-1.0),
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 					},
@@ -793,7 +793,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						Codes: []string{validation.ErrorCodeSliceUnique},
 					},
 				},
-				ExpectedErrorsCount: 2,
+				ExpectedErrorsCount: 1,
 			},
 		} {
 			t.Run(name, func(t *testing.T) {
@@ -853,7 +853,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 				slo.Spec.Objectives = nil
 				for i, m := range metrics {
 					slo.Spec.Objectives = append(slo.Spec.Objectives, Objective{
-						ObjectiveBase: ObjectiveBase{Value: ptr(10.), Name: strconv.Itoa(i)},
+						ObjectiveBase: ObjectiveBase{Value: ptr(10. + float64(i)), Name: strconv.Itoa(i)},
 						BudgetTarget:  ptr(0.9),
 						RawMetric:     &RawMetricSpec{MetricQuery: m},
 					})
@@ -933,7 +933,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				slo.Spec.Objectives = nil
 				for i, m := range metrics {
 					slo.Spec.Objectives = append(slo.Spec.Objectives, Objective{
-						ObjectiveBase: ObjectiveBase{Value: ptr(10.), Name: strconv.Itoa(i)},
+						ObjectiveBase: ObjectiveBase{Value: ptr(10. + float64(i)), Name: strconv.Itoa(i)},
 						BudgetTarget:  ptr(0.9),
 						CountMetrics:  m,
 					})

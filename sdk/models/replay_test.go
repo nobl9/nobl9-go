@@ -199,7 +199,11 @@ func TestParseJSONToReplayStruct(t *testing.T) {
 			reader := strings.NewReader(tc.inputJSON)
 			got, err := ParseJSONToReplayStruct(reader)
 
-			assert.Equal(t, tc.wantErr, err != nil)
+			if tc.wantErr {
+				assert.NotEmpty(t, err)
+			} else {
+				assert.Empty(t, err)
+			}
 			assert.Equal(t, tc.want, got)
 		})
 	}
