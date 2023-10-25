@@ -28,11 +28,11 @@ func TestPropertyRulesForEach(t *testing.T) {
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path[0]",
 			PropertyValue: "path",
 			Errors:        []RuleError{{Message: expectedErr.Error()}},
-		}, *errs[0].(*PropertyError))
+		}, errs[0])
 	})
 
 	t.Run("predicate matches, don't validate", func(t *testing.T) {
@@ -92,19 +92,19 @@ func TestPropertyRulesForEach(t *testing.T) {
 	})
 
 	t.Run("stop on error", func(t *testing.T) {
-		err := errors.New("oh no!")
+		expectedErr := errors.New("oh no!")
 		r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
-			RulesForEach(NewSingleRule(func(v string) error { return err })).
+			RulesForEach(NewSingleRule(func(v string) error { return expectedErr })).
 			StopOnError().
 			RulesForEach(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path[0]",
 			PropertyValue: "value",
-			Errors:        []RuleError{{Message: err.Error()}},
-		}, *errs[0].(*PropertyError))
+			Errors:        []RuleError{{Message: expectedErr.Error()}},
+		}, errs[0])
 	})
 
 	t.Run("include for each validator", func(t *testing.T) {

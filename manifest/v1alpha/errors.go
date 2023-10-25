@@ -1,23 +1,27 @@
 package v1alpha
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-func NewObjectError(object manifest.Object, errs []error) error {
+func ValidateObject[T manifest.Object](validator validation.Validator[T], s T) error {
+	if err := validator.Validate(s); err != nil {
+		return NewObjectError(s, err)
+	}
+	return nil
+}
+
+func NewObjectError(object manifest.Object, err *validation.ValidatorError) error {
 	oErr := &ObjectError{
 		Object: ObjectMetadata{
 			Kind: object.GetKind(),
 			Name: object.GetName(),
 		},
-		Errors: errs,
+		Errors: err.Errors,
 	}
 	if v, ok := object.(ObjectContext); ok {
 		oErr.Object.Source = v.GetManifestSource()
@@ -30,8 +34,8 @@ func NewObjectError(object manifest.Object, errs []error) error {
 }
 
 type ObjectError struct {
-	Object ObjectMetadata `json:"object"`
-	Errors []error        `json:"errors"`
+	Object ObjectMetadata            `json:"object"`
+	Errors validation.PropertyErrors `json:"errors"`
 }
 
 type ObjectMetadata struct {
@@ -55,58 +59,4 @@ func (o *ObjectError) Error() string {
 		b.WriteString(o.Object.Source)
 	}
 	return b.String()
-}
-
-func (o *ObjectError) MarshalJSON() ([]byte, error) {
-	var errs []json.RawMessage
-	for _, oErr := range o.Errors {
-		switch v := oErr.(type) {
-		case *validation.PropertyError:
-			data, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			errs = append(errs, data)
-		default:
-			data, err := json.Marshal(oErr.Error())
-			if err != nil {
-				return nil, err
-			}
-			errs = append(errs, data)
-		}
-	}
-	return json.Marshal(struct {
-		Object ObjectMetadata    `json:"object"`
-		Errors []json.RawMessage `json:"errors"`
-	}{
-		Object: o.Object,
-		Errors: errs,
-	})
-}
-
-func (o *ObjectError) UnmarshalJSON(bytes []byte) error {
-	var intermediate struct {
-		Object ObjectMetadata    `json:"object"`
-		Errors []json.RawMessage `json:"errors"`
-	}
-	if err := json.Unmarshal(bytes, &intermediate); err != nil {
-		return err
-	}
-	o.Object = intermediate.Object
-	for _, rawErr := range intermediate.Errors {
-		if len(rawErr) > 0 && rawErr[0] == '{' {
-			var fErr *validation.PropertyError
-			if err := json.Unmarshal(rawErr, &fErr); err != nil {
-				return err
-			}
-			o.Errors = append(o.Errors, fErr)
-		} else {
-			var stringErr string
-			if err := json.Unmarshal(rawErr, &stringErr); err != nil {
-				return err
-			}
-			o.Errors = append(o.Errors, errors.New(stringErr))
-		}
-	}
-	return nil
 }

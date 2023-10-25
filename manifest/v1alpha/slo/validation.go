@@ -190,8 +190,5 @@ func validate(s SLO) error {
 			}
 		}
 	}
-	if errs := sloValidation.Validate(s); len(errs) > 0 {
-		return v1alpha.NewObjectError(s, errs)
-	}
-	return nil
+	return v1alpha.ValidateObject(sloValidation, s)
 }

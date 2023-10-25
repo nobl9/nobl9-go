@@ -33,6 +33,7 @@ func TestValidate_Metadata(t *testing.T) {
 	err := validate(slo)
 	require.Error(t, err)
 	assert.EqualError(t, err, expectedMetadataError)
+	fmt.Println(err)
 }
 
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {

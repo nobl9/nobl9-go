@@ -7,11 +7,46 @@ import (
 	"strings"
 )
 
-func NewPropertyError(propertyName string, propertyValue interface{}, errs []error) *PropertyError {
+func NewValidatorError(errs PropertyErrors) *ValidatorError {
+	return &ValidatorError{Errors: errs}
+}
+
+type ValidatorError struct {
+	Errors PropertyErrors `json:"errors"`
+	Name   string         `json:"name"`
+}
+
+type PropertyErrors []*PropertyError
+
+func (e PropertyErrors) Error() string {
+	b := strings.Builder{}
+	JoinErrors(&b, e, "")
+	return b.String()
+}
+
+func (e *ValidatorError) WithName(name string) *ValidatorError {
+	e.Name = name
+	return e
+}
+
+const ValidatorErrorFmt = "Validation for %s has failed for the following properties:\n"
+
+func (e *ValidatorError) Error() string {
+	b := strings.Builder{}
+	indent := ""
+	if e.Name != "" {
+		b.WriteString(fmt.Sprintf(ValidatorErrorFmt, e.Name))
+		indent = strings.Repeat(" ", 2)
+	}
+	JoinErrors(&b, e.Errors, indent)
+	return b.String()
+}
+
+func NewPropertyError(propertyName string, propertyValue interface{}, errs ...error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
 		PropertyValue: propertyValueString(propertyValue),
-		Errors:        unpackErrors(errs, make([]RuleError, 0, len(errs))),
+		Errors:        unpackRuleErrors(errs, make([]RuleError, 0, len(errs))),
 	}
 }
 
@@ -23,12 +58,16 @@ type PropertyError struct {
 
 func (e *PropertyError) Error() string {
 	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
-	if e.PropertyValue != "" {
-		b.WriteString(fmt.Sprintf(" with value '%s'", e.PropertyValue))
+	indent := ""
+	if e.PropertyName != "" {
+		b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
+		if e.PropertyValue != "" {
+			b.WriteString(fmt.Sprintf(" with value '%s'", e.PropertyValue))
+		}
+		b.WriteString(":\n")
+		indent = strings.Repeat(" ", 2)
 	}
-	b.WriteString(":\n")
-	JoinErrors(b, e.Errors, strings.Repeat(" ", 2))
+	JoinErrors(b, e.Errors, indent)
 	return b.String()
 }
 
@@ -66,6 +105,20 @@ func concatStrings(pre, post, sep string) string {
 
 func HasErrorCode(err error, code ErrorCode) bool {
 	switch v := err.(type) {
+	case PropertyErrors:
+		for _, e := range v {
+			if HasErrorCode(e, code) {
+				return true
+			}
+		}
+		return false
+	case *ValidatorError:
+		for _, e := range v.Errors {
+			if HasErrorCode(e, code) {
+				return true
+			}
+		}
+		return false
 	case RuleError:
 		codes := strings.Split(v.Code, errorCodeSeparator)
 		for i := range codes {
@@ -84,6 +137,9 @@ func HasErrorCode(err error, code ErrorCode) bool {
 }
 
 func propertyValueString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
 	ft := reflect.TypeOf(v)
 	if ft.Kind() == reflect.Pointer {
 		ft = ft.Elem()
@@ -138,12 +194,12 @@ func limitString(s string, limit int) string {
 	return s
 }
 
-// unpackErrors unpacks error messages recursively scanning ruleSetError if it is detected.
-func unpackErrors(errs []error, ruleErrors []RuleError) []RuleError {
+// unpackRuleErrors unpacks error messages recursively scanning ruleSetError if it is detected.
+func unpackRuleErrors(errs []error, ruleErrors []RuleError) []RuleError {
 	for _, err := range errs {
 		switch v := err.(type) {
 		case ruleSetError:
-			ruleErrors = unpackErrors(v, ruleErrors)
+			ruleErrors = unpackRuleErrors(v, ruleErrors)
 		case RuleError:
 			ruleErrors = append(ruleErrors, v)
 		case *RuleError:

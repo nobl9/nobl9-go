@@ -13,8 +13,5 @@ var projectValidation = validation.New[Project](
 )
 
 func validate(p Project) error {
-	if errs := projectValidation.Validate(p); len(errs) > 0 {
-		return v1alpha.NewObjectError(p, errs)
-	}
-	return nil
+	return v1alpha.ValidateObject(projectValidation, p)
 }

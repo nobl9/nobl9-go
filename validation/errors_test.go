@@ -15,14 +15,14 @@ import (
 var errorsTestData embed.FS
 
 func TestNewPropertyError(t *testing.T) {
-	err := NewPropertyError("name", "value", []error{
+	err := NewPropertyError("name", "value",
 		RuleError{Message: "top", Code: "1"},
 		ruleSetError{
 			RuleError{Message: "rule1", Code: "2"},
 			RuleError{Message: "rule2", Code: "3"},
 		},
 		RuleError{Message: "top", Code: "4"},
-	})
+	)
 	assert.Equal(t, &PropertyError{
 		PropertyName:  "name",
 		PropertyValue: "value",

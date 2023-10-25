@@ -14,8 +14,5 @@ var serviceValidation = validation.New[Service](
 )
 
 func validate(s Service) error {
-	if errs := serviceValidation.Validate(s); len(errs) > 0 {
-		return v1alpha.NewObjectError(s, errs)
-	}
-	return nil
+	return v1alpha.ValidateObject(serviceValidation, s)
 }

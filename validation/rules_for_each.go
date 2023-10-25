@@ -2,8 +2,6 @@ package validation
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 // ForEach creates a typed PropertyRules instance for a slice property
@@ -21,11 +19,12 @@ type PropertyRulesForEach[T, S any] struct {
 
 // Validate executes each of the steps sequentially and aggregates the encountered errors.
 // nolint: prealloc, gocognit
-func (r PropertyRulesForEach[T, S]) Validate(st S) []error {
+func (r PropertyRulesForEach[T, S]) Validate(st S) PropertyErrors {
 	var (
-		allErrors, sliceErrors []error
-		propValue              []T
-		previousStepFailed     bool
+		allErrors          PropertyErrors
+		sliceErrors        []error
+		propValue          []T
+		previousStepFailed bool
 	)
 	forEachErrors := make(map[int]forEachElementError)
 loop:
@@ -44,12 +43,12 @@ loop:
 			errorEncountered := false
 			for i, element := range r.getter(st) {
 				err := v.Validate(element)
-				if err != nil {
-					errs := forEachErrors[i].Errors
-					errs = append(errs, err)
-					forEachErrors[i] = forEachElementError{Errors: errs, PropValue: element}
-					errorEncountered = true
+				if err == nil {
+					continue
 				}
+				errorEncountered = true
+				fErrs := forEachErrors[i].Errors
+				forEachErrors[i] = forEachElementError{Errors: append(fErrs, err), PropValue: element}
 			}
 			previousStepFailed = errorEncountered
 		case Rule[[]T]:
@@ -59,30 +58,35 @@ loop:
 				sliceErrors = append(sliceErrors, err)
 			}
 			previousStepFailed = err != nil
-		case Rules[T]:
+		case Validator[T]:
+			errorEncountered := false
 			for i, element := range r.getter(st) {
-				errs := v.Validate(element)
-				for _, err := range errs {
-					var fErr *PropertyError
-					if ok := errors.As(err, &fErr); ok {
-						fErr.PrependPropertyName(fmt.Sprintf(sliceElementNameFmt, r.name, i))
-					}
-					allErrors = append(allErrors, err)
+				err := v.Validate(element)
+				if err == nil {
+					continue
 				}
-				previousStepFailed = len(errs) > 0
+				errorEncountered = true
+				for _, e := range err.Errors {
+					e.PrependPropertyName(fmt.Sprintf(sliceElementNameFmt, r.name, i))
+					allErrors = append(allErrors, e)
+				}
 			}
+			previousStepFailed = errorEncountered
 		}
 	}
 	if len(sliceErrors) > 0 {
-		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors))
+		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors...))
 	}
 	for i, element := range forEachErrors {
 		allErrors = append(allErrors, NewPropertyError(
 			fmt.Sprintf(sliceElementNameFmt, r.name, i),
 			element.PropValue,
-			element.Errors))
+			element.Errors...))
 	}
-	return allErrors
+	if len(allErrors) > 0 {
+		return allErrors
+	}
+	return nil
 }
 
 type forEachElementError struct {

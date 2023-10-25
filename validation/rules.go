@@ -2,8 +2,6 @@ package validation
 
 import (
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
 // For creates a typed PropertyRules instance for the property which access is defined through getter function.
@@ -47,15 +45,16 @@ type PropertyRules[T, S any] struct {
 	isPointer bool
 }
 
-func (r PropertyRules[T, S]) Validate(st S) []error {
+func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	var (
-		ruleErrors, allErrors []error
-		previousStepFailed    bool
+		ruleErrors         []error
+		allErrors          PropertyErrors
+		previousStepFailed bool
 	)
 	propValue, isEmpty := r.getter(st)
 	isEmpty = isEmpty || (!r.isPointer && isEmptyFunc(propValue))
 	if r.required && isEmpty {
-		return []error{NewPropertyError(r.name, propValue, []error{newRequiredError()})}
+		return PropertyErrors{NewPropertyError(r.name, propValue, newRequiredError())}
 	}
 	if isEmpty && (r.omitempty || r.isPointer) {
 		return nil
@@ -78,22 +77,24 @@ loop:
 				ruleErrors = append(ruleErrors, err)
 			}
 			previousStepFailed = err != nil
-		case Rules[T]:
-			errs := v.Validate(propValue)
-			for _, err := range errs {
-				var fErr *PropertyError
-				if ok := errors.As(err, &fErr); ok {
-					fErr.PrependPropertyName(r.name)
+		case Validator[T]:
+			err := v.Validate(propValue)
+			if err != nil {
+				for _, e := range err.Errors {
+					e.PrependPropertyName(r.name)
+					allErrors = append(allErrors, e)
 				}
-				allErrors = append(allErrors, err)
 			}
-			previousStepFailed = len(errs) > 0
+			previousStepFailed = err != nil
 		}
 	}
 	if len(ruleErrors) > 0 {
-		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors))
+		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors...))
 	}
-	return allErrors
+	if len(allErrors) > 0 {
+		return allErrors
+	}
+	return nil
 }
 
 func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {

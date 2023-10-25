@@ -89,10 +89,7 @@ var replayDurationValidation = validation.New[ReplayDuration](
 )
 
 func (r Replay) Validate() error {
-	if errs := replayValidation.Validate(r); len(errs) > 0 {
-		return newValidationError(r, errs)
-	}
-	return nil
+	return replayValidation.Validate(r)
 }
 
 const (

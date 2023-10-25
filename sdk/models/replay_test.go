@@ -142,10 +142,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				assert.Nil(t, err)
 			} else {
 				require.Error(t, err)
-				require.IsType(t, ValidationError{}, err)
-				for _, e := range err.(ValidationError).Errors {
-					assert.True(t, validation.HasErrorCode(e, tc.ErrorCode))
-				}
+				require.IsType(t, &validation.ValidatorError{}, err)
+				assert.True(t, validation.HasErrorCode(err, tc.ErrorCode))
 			}
 		})
 	}

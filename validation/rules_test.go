@@ -18,8 +18,8 @@ func TestPropertyRules(t *testing.T) {
 		r := For(func(m mockStruct) string { return "path" }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v string) error { return nil }))
-		errs := r.Validate(mockStruct{})
-		assert.Empty(t, errs)
+		err := r.Validate(mockStruct{})
+		assert.Empty(t, err)
 	})
 
 	t.Run("no predicates, validate", func(t *testing.T) {
@@ -29,11 +29,11 @@ func TestPropertyRules(t *testing.T) {
 			Rules(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "path",
 			Errors:        []RuleError{{Message: expectedErr.Error()}},
-		}, *errs[0].(*PropertyError))
+		}, errs[0])
 	})
 
 	t.Run("predicate matches, don't validate", func(t *testing.T) {
@@ -43,8 +43,8 @@ func TestPropertyRules(t *testing.T) {
 			When(func(mockStruct) bool { return true }).
 			When(func(st mockStruct) bool { return st.Field == "" }).
 			Rules(NewSingleRule(func(v string) error { return errors.New("ops!") }))
-		errs := r.Validate(mockStruct{Field: "something"})
-		assert.Empty(t, errs)
+		err := r.Validate(mockStruct{Field: "something"})
+		assert.Empty(t, err)
 	})
 
 	t.Run("multiple rules", func(t *testing.T) {
@@ -58,30 +58,30 @@ func TestPropertyRules(t *testing.T) {
 			Rules(NewSingleRule(func(v string) error { return err2 }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "value",
 			Errors: []RuleError{
 				{Message: err1.Error()},
 				{Message: err2.Error()},
 			},
-		}, *errs[0].(*PropertyError))
+		}, errs[0])
 	})
 
 	t.Run("stop on error", func(t *testing.T) {
-		err := errors.New("oh no!")
+		expectedErr := errors.New("oh no!")
 		r := For(func(m mockStruct) string { return "value" }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v string) error { return err })).
+			Rules(NewSingleRule(func(v string) error { return expectedErr })).
 			StopOnError().
 			Rules(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "value",
-			Errors:        []RuleError{{Message: err.Error()}},
-		}, *errs[0].(*PropertyError))
+			Errors:        []RuleError{{Message: expectedErr.Error()}},
+		}, errs[0])
 	})
 
 	t.Run("include validator", func(t *testing.T) {
@@ -116,18 +116,18 @@ func TestPropertyRules(t *testing.T) {
 	})
 
 	t.Run("get self", func(t *testing.T) {
-		err := errors.New("self error")
+		expectedErrs := errors.New("self error")
 		r := For(GetSelf[mockStruct]()).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v mockStruct) error { return err }))
+			Rules(NewSingleRule(func(v mockStruct) error { return expectedErrs }))
 		object := mockStruct{Field: "this"}
 		errs := r.Validate(object)
 		require.Len(t, errs, 1)
-		assert.Equal(t, PropertyError{
+		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: propertyValueString(object),
-			Errors:        []RuleError{{Message: err.Error()}},
-		}, *errs[0].(*PropertyError))
+			Errors:        []RuleError{{Message: expectedErrs.Error()}},
+		}, errs[0])
 	})
 }
 
@@ -153,17 +153,17 @@ func TestRequiredAndOmitempty(t *testing.T) {
 			Rules(StringMinLength(10))
 
 		t.Run("implicit omitempty", func(t *testing.T) {
-			errs := rules.Validate(nil)
-			assert.Len(t, errs, 0)
+			err := rules.Validate(nil)
+			assert.Empty(t, err)
 		})
 		t.Run("explicit omitempty", func(t *testing.T) {
-			errs := rules.Omitempty().Validate(nil)
-			assert.Len(t, errs, 0)
+			err := rules.Omitempty().Validate(nil)
+			assert.Empty(t, err)
 		})
 		t.Run("required", func(t *testing.T) {
 			errs := rules.Required().Validate(nil)
 			assert.Len(t, errs, 1)
-			assert.True(t, HasErrorCode(errs[0], ErrorCodeRequired))
+			assert.True(t, HasErrorCode(errs, ErrorCodeRequired))
 		})
 	})
 
@@ -174,17 +174,17 @@ func TestRequiredAndOmitempty(t *testing.T) {
 		t.Run("validate", func(t *testing.T) {
 			errs := rules.Validate(ptr(""))
 			assert.Len(t, errs, 1)
-			assert.True(t, HasErrorCode(errs[0], ErrorCodeStringMinLength))
+			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
 		})
 		t.Run("omitempty", func(t *testing.T) {
 			errs := rules.Omitempty().Validate(ptr(""))
 			assert.Len(t, errs, 1)
-			assert.True(t, HasErrorCode(errs[0], ErrorCodeStringMinLength))
+			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
 		})
 		t.Run("required", func(t *testing.T) {
 			errs := rules.Required().Validate(ptr(""))
 			assert.Len(t, errs, 1)
-			assert.True(t, HasErrorCode(errs[0], ErrorCodeStringMinLength))
+			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
 		})
 	})
 }

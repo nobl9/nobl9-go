@@ -37,9 +37,9 @@ func TestValidator(t *testing.T) {
 				WithName("test.display").
 				Rules(NewSingleRule(func(v string) error { return err2 })),
 		)
-		errs := r.Validate(mockStruct{})
-		require.Len(t, errs, 2)
-		assert.Equal(t, []error{
+		err := r.Validate(mockStruct{})
+		require.Len(t, err.Errors, 2)
+		assert.Equal(t, &ValidatorError{Errors: PropertyErrors{
 			&PropertyError{
 				PropertyName:  "test.name",
 				PropertyValue: "name",
@@ -50,6 +50,6 @@ func TestValidator(t *testing.T) {
 				PropertyValue: "display",
 				Errors:        []RuleError{{Message: err2.Error()}},
 			},
-		}, errs)
+		}}, err)
 	})
 }
