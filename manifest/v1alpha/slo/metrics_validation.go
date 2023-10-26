@@ -35,7 +35,7 @@ var specMetricsValidation = validation.New[Spec](
 
 var countMetricsValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
-		Rules(),
+		Rules(appDynamicsCountMetricsLevelValidationRule),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
@@ -52,10 +52,17 @@ var countMetricsValidation = validation.New[CountMetricsSpec](
 		Include(metricsSpecValidation),
 )
 
-var rawMetricValidation = validation.New[RawMetricSpec]()
+var rawMetricValidation = validation.New[RawMetricSpec](
+	validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
+		WithName("query").
+		Required().
+		Include(metricsSpecValidation),
+)
 
 var metricsSpecValidation = validation.New[MetricSpec](
-	validation.For(validation.GetSelf[MetricSpec]()),
+	validation.ForPointer(func(m MetricSpec) *AppDynamicsMetric { return m.AppDynamics }).
+		WithName("appDynamics").
+		Include(appDynamicsValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -215,9 +222,9 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 	return nil
 }
 
-var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(v Spec) error {
-	for i, objective := range v.Objectives {
-		switch v.BudgetingMethod {
+var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(s Spec) error {
+	for i, objective := range s.Objectives {
+		switch s.BudgetingMethod {
 		case BudgetingMethodTimeslices.String():
 			if objective.TimeSliceTarget == nil {
 				return validation.NewPropertyError(
@@ -242,11 +249,11 @@ var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(v Spec)
 	return nil
 }).WithErrorCode(errCodeTimeSliceTarget)
 
-var objectiveOperatorRequiredForRawMetricValidationRule = validation.NewSingleRule[Spec](func(sloSpec Spec) error {
-	if !sloSpec.HasRawMetric() {
+var objectiveOperatorRequiredForRawMetricValidationRule = validation.NewSingleRule[Spec](func(s Spec) error {
+	if !s.HasRawMetric() {
 		return nil
 	}
-	for i, objective := range sloSpec.Objectives {
+	for i, objective := range s.Objectives {
 		if objective.Operator == nil {
 			return validation.NewPropertyError(
 				"op",

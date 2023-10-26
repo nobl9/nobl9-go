@@ -2,6 +2,7 @@ package slo
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -881,15 +882,28 @@ func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 	}
 }
 
+func TestValidate_Spec_Objectives_CountMetric(t *testing.T) {
+	t.Run("appDynamics applicationName mismatch", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validMetricSpec(v1alpha.AppDynamics)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validMetricSpec(v1alpha.AppDynamics)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics.ApplicationName = ptr("different")
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: validation.ErrorCodeNotEqualTo,
+		})
+	})
+}
+
 func TestValidate_Spec(t *testing.T) {
-	metricSpec := &MetricSpec{Prometheus: &PrometheusMetric{PromQL: ptr("sum")}}
 	t.Run("exactly one metric type - both provided", func(t *testing.T) {
 		slo := validSLO()
-		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)}
 		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
 			Incremental: ptr(true),
-			TotalMetric: metricSpec,
-			GoodMetric:  metricSpec,
+			TotalMetric: validMetricSpec(v1alpha.Prometheus),
+			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 		}
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
@@ -908,12 +922,8 @@ func TestValidate_Spec(t *testing.T) {
 		})
 	})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
-		slo := validSLO()
+		slo := validRawMetricSLO(v1alpha.Prometheus)
 		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
-		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
-		slo.Spec.Objectives[0].CountMetrics = nil
-		slo.Spec.Objectives[0].TimeSliceTarget = nil
-		slo.Spec.Objectives[0].Operator = ptr(v1alpha.GreaterThan.String())
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
 			Prop: "spec.objectives[0].timeSliceTarget",
@@ -921,12 +931,9 @@ func TestValidate_Spec(t *testing.T) {
 		})
 	})
 	t.Run("invalid time slice target for budgeting method", func(t *testing.T) {
-		slo := validSLO()
+		slo := validRawMetricSLO(v1alpha.Prometheus)
 		slo.Spec.BudgetingMethod = BudgetingMethodOccurrences.String()
-		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
-		slo.Spec.Objectives[0].CountMetrics = nil
 		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.1)
-		slo.Spec.Objectives[0].Operator = ptr(v1alpha.GreaterThan.String())
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
 			Prop: "spec.objectives[0].timeSliceTarget",
@@ -934,9 +941,7 @@ func TestValidate_Spec(t *testing.T) {
 		})
 	})
 	t.Run("missing operator for raw metric", func(t *testing.T) {
-		slo := validSLO()
-		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
-		slo.Spec.Objectives[0].CountMetrics = nil
+		slo := validRawMetricSLO(v1alpha.Prometheus)
 		slo.Spec.Objectives[0].Operator = nil
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
@@ -977,6 +982,15 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 				})
 			})
 		}
+	})
+	t.Run("query required", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Prometheus)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery = nil
+		err := validate(slo)
+		assertContainsErrors(t, err, 2, expectedError{
+			Prop: "spec.objectives[0].rawMetric.query",
+			Code: validation.ErrorCodeRequired,
+		})
 	})
 }
 
@@ -1073,10 +1087,100 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Metrics_AppDynamics(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, slo := range []SLO{
+			validRawMetricSLO(v1alpha.AppDynamics),
+			validCountMetricSLO(v1alpha.AppDynamics),
+			func() SLO {
+				slo := validRawMetricSLO(v1alpha.AppDynamics)
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.AppDynamics.MetricPath = ptr("App | * | Latency")
+				return slo
+			}(),
+		} {
+			err := validate(slo)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Spec           *AppDynamicsMetric
+			ExpectedErrors []expectedError
+		}{
+			"required fields": {
+				Spec: &AppDynamicsMetric{},
+				ExpectedErrors: []expectedError{
+					{
+						Prop: "applicationName",
+						Code: validation.ErrorCodeRequired,
+					},
+					{
+						Prop: "metricPath",
+						Code: validation.ErrorCodeRequired,
+					},
+				},
+			},
+			"application name non empty": {
+				Spec: &AppDynamicsMetric{
+					ApplicationName: ptr("     "),
+					MetricPath:      ptr("path"),
+				},
+				ExpectedErrors: []expectedError{{
+					Prop: "applicationName",
+					Code: validation.ErrorCodeStringNotEmpty,
+				}},
+			},
+			// TODO: whaaaaaaaat?
+			"metric path wildcard not supported": {
+				Spec: &AppDynamicsMetric{
+					ApplicationName: ptr("name"),
+					MetricPath:      ptr("App | This* | Latency"),
+				},
+				ExpectedErrors: []expectedError{{
+					Prop: "metricPath",
+					Code: errCodeAppDynamicsWildcardNotSupported,
+				}},
+			},
+		} {
+			t.Run("rawMetric "+name, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.AppDynamics)
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.AppDynamics = test.Spec
+				err := validate(slo)
+
+				raw := make([]expectedError, len(test.ExpectedErrors))
+				copy(raw, test.ExpectedErrors)
+				raw = prependPropertyPath(raw, "spec.objectives[0].rawMetric.query.appDynamics")
+				assertContainsErrors(t, err, len(test.ExpectedErrors), raw...)
+			})
+			t.Run("countMetric "+name, func(t *testing.T) {
+				slo := validCountMetricSLO(v1alpha.AppDynamics)
+				slo.Spec.Objectives[0].CountMetrics.TotalMetric.AppDynamics = test.Spec
+				slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics = test.Spec
+				err := validate(slo)
+
+				total := make([]expectedError, len(test.ExpectedErrors))
+				copy(total, test.ExpectedErrors)
+				good := make([]expectedError, len(test.ExpectedErrors))
+				copy(good, test.ExpectedErrors)
+				total = prependPropertyPath(total, "spec.objectives[0].countMetrics.total.appDynamics")
+				good = prependPropertyPath(good, "spec.objectives[0].countMetrics.good.appDynamics")
+				assertContainsErrors(t, err, len(test.ExpectedErrors)*2, append(total, good...)...)
+			})
+		}
+	})
+}
+
 type expectedError struct {
 	Prop    string
 	Code    string
 	Message string
+}
+
+func prependPropertyPath(errs []expectedError, path string) []expectedError {
+	for i := range errs {
+		errs[i].Prop = path + "." + errs[i].Prop
+	}
+	return errs
 }
 
 func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expectedErrors ...expectedError) {
@@ -1119,6 +1223,25 @@ func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expe
 		}
 		require.Truef(t, found, "expected '%v' error was not found", expected)
 	}
+}
+
+func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
+	s := validSLO()
+	s.Spec.Objectives[0].CountMetrics = nil
+	s.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(metricType)}
+	s.Spec.Objectives[0].TimeSliceTarget = nil
+	s.Spec.Objectives[0].Operator = ptr(v1alpha.GreaterThan.String())
+	return s
+}
+
+func validCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
+	s := validSLO()
+	s.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+		Incremental: ptr(true),
+		TotalMetric: validMetricSpec(metricType),
+		GoodMetric:  validMetricSpec(metricType),
+	}
+	return s
 }
 
 func validSLO() SLO {
@@ -1178,7 +1301,10 @@ func validSLO() SLO {
 
 func validMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
 	ms := validMetricSpecs[typ]
-	return &ms
+	var clone MetricSpec
+	data, _ := json.Marshal(ms)
+	_ = json.Unmarshal(data, &clone)
+	return &clone
 }
 
 var validMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{

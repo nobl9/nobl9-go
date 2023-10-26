@@ -3,9 +3,19 @@ package validation
 import (
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 )
+
+func StringNotEmpty() SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		if len(strings.TrimSpace(s)) == 0 {
+			return errors.New("string cannot be empty")
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringNotEmpty)
+}
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 

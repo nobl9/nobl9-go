@@ -7,6 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestStringNotEmpty(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		err := StringNotEmpty().Validate("                s")
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		err := StringNotEmpty().Validate("     ")
+		assert.Error(t, err)
+		assert.True(t, HasErrorCode(err, ErrorCodeStringNotEmpty))
+	})
+}
+
 func TestStringIsDNSSubdomain(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		for _, input := range []string{

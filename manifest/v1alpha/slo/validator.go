@@ -106,7 +106,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("description", isValidDescription)
-	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
 	_ = val.RegisterValidation("opsgenieApiKey", isValidOpsgenieAPIKey)
 	_ = val.RegisterValidation("pagerDutyIntegrationKey", isValidPagerDutyIntegrationKey)
 	_ = val.RegisterValidation("httpsURL", isHTTPS)
@@ -217,24 +216,11 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	sloSpecStructLevelAppDynamicsValidation(sl, sloSpec)
 	sloSpecStructLevelLightstepValidation(sl, sloSpec)
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelAppDynamicsValidation(sl v.StructLevel, sloSpec Spec) {
-	if !haveCountMetricsTheSameAppDynamicsApplicationNames(sloSpec) {
-		sl.ReportError(
-			sloSpec.Objectives,
-			"objectives",
-			"Objectives",
-			"countMetricsHaveTheSameAppDynamicsApplicationNames",
-			"",
-		)
-	}
 }
 
 func sloSpecStructLevelLightstepValidation(sl v.StructLevel, sloSpec Spec) {
@@ -670,22 +656,6 @@ func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 	return true
 }
 
-func haveCountMetricsTheSameAppDynamicsApplicationNames(sloSpec Spec) bool {
-	for _, metricSpec := range sloSpec.CountMetricPairs() {
-		if metricSpec == nil || metricSpec.GoodMetric.AppDynamics == nil || metricSpec.TotalMetric.AppDynamics == nil {
-			continue
-		}
-		if metricSpec.GoodMetric.AppDynamics.ApplicationName == nil ||
-			metricSpec.TotalMetric.AppDynamics.ApplicationName == nil {
-			return false
-		}
-		if *metricSpec.GoodMetric.AppDynamics.ApplicationName != *metricSpec.TotalMetric.AppDynamics.ApplicationName {
-			return false
-		}
-	}
-	return true
-}
-
 func haveCountMetricsTheSameLightstepStreamID(sloSpec Spec) bool {
 	for _, metricSpec := range sloSpec.CountMetricPairs() {
 		if metricSpec == nil || metricSpec.GoodMetric.Lightstep == nil || metricSpec.TotalMetric.Lightstep == nil {
@@ -1108,19 +1078,6 @@ func isNonNegativeDuration(fl v.FieldLevel) bool {
 
 func isValidDescription(fl v.FieldLevel) bool {
 	return utf8.RuneCountInString(fl.Field().String()) <= 1050
-}
-
-func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
-	segments := strings.Split(fl.Field().String(), "|")
-	for _, segment := range segments {
-		// Wildcards like: "App | MyApp* | Latency" are not supported by AppDynamics, only using '*' as an entire path
-		// segment ex: "App | * | Latency".
-		// https://docs.appdynamics.com/display/PRO21/Metric+and+Snapshot+API paragraph "Using Wildcards".
-		if strings.TrimSpace(segment) == "*" {
-			return false
-		}
-	}
-	return true
 }
 
 // stringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"

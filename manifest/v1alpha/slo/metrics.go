@@ -16,7 +16,7 @@ type CountMetricsSpec struct {
 
 // RawMetricSpec represents integration with a metric source for a particular objective.
 type RawMetricSpec struct {
-	MetricQuery *MetricSpec `json:"query" validate:"required"`
+	MetricQuery *MetricSpec `json:"query"`
 }
 
 // MetricSpec defines single time series obtained from data source
@@ -83,12 +83,6 @@ const (
 type ThousandEyesMetric struct {
 	TestID   *int64  `json:"testID" validate:"required,gte=0"`
 	TestType *string `json:"testType" validate:"supportedThousandEyesTestType"`
-}
-
-// AppDynamicsMetric represents metric from AppDynamics
-type AppDynamicsMetric struct {
-	ApplicationName *string `json:"applicationName" validate:"required,notEmpty"`
-	MetricPath      *string `json:"metricPath" validate:"required,unambiguousAppDynamicMetricPath"`
 }
 
 // SplunkMetric represents metric from Splunk
