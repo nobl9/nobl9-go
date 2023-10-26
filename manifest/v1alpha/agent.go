@@ -242,7 +242,7 @@ type AzureMonitorAgentConfig struct {
 
 // HoneycombAgentConfig represents content of Honeycomb Configuration typical for Agent Object.
 type HoneycombAgentConfig struct {
-	APIKey string `json:"apiKey,omitempty" validate:"required" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+	// Honeycomb agent doesn't require any additional parameters.
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
