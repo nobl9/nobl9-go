@@ -10,6 +10,10 @@ func ForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[T, S]
 	return PropertyRulesForEach[T, S]{getter: getter}
 }
 
+func SliceElementName(sliceName string, index int) string {
+	return fmt.Sprintf("%s[%d]", sliceName, index)
+}
+
 // PropertyRulesForEach is responsible for validating a single property.
 type PropertyRulesForEach[T, S any] struct {
 	name   string
@@ -48,14 +52,26 @@ loop:
 				}
 				errorEncountered = true
 				fErrs := forEachErrors[i].Errors
-				forEachErrors[i] = forEachElementError{Errors: append(fErrs, err), PropValue: element}
+				switch ev := err.(type) {
+				case *PropertyError:
+					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
+				default:
+					forEachErrors[i] = forEachElementError{Errors: append(fErrs, err), PropValue: element}
+				}
 			}
 			previousStepFailed = errorEncountered
 		case Rule[[]T]:
 			propValue = r.getter(st)
 			err := v.Validate(propValue)
 			if err != nil {
-				sliceErrors = append(sliceErrors, err)
+				if err != nil {
+					switch ev := err.(type) {
+					case *PropertyError:
+						allErrors = append(allErrors, ev.PrependPropertyName(r.name))
+					default:
+						sliceErrors = append(sliceErrors, err)
+					}
+				}
 			}
 			previousStepFailed = err != nil
 		case validatorI[T]:
@@ -67,8 +83,7 @@ loop:
 				}
 				errorEncountered = true
 				for _, e := range err.Errors {
-					e.PrependPropertyName(fmt.Sprintf(sliceElementNameFmt, r.name, i))
-					allErrors = append(allErrors, e)
+					allErrors = append(allErrors, e.PrependPropertyName(SliceElementName(r.name, i)))
 				}
 			}
 			previousStepFailed = errorEncountered
@@ -79,7 +94,7 @@ loop:
 	}
 	for i, element := range forEachErrors {
 		allErrors = append(allErrors, NewPropertyError(
-			fmt.Sprintf(sliceElementNameFmt, r.name, i),
+			SliceElementName(r.name, i),
 			element.PropValue,
 			element.Errors...))
 	}
@@ -93,8 +108,6 @@ type forEachElementError struct {
 	PropValue interface{}
 	Errors    []error
 }
-
-const sliceElementNameFmt = "%s[%d]"
 
 func (r PropertyRulesForEach[T, S]) WithName(name string) PropertyRulesForEach[T, S] {
 	r.name = name

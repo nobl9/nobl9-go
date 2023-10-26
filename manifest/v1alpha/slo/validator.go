@@ -217,61 +217,12 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	// if !doAllObjectivesHaveUniqueNames(sloSpec) {
-	// 	sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
-	// }
-	// TODO: Replace doAllObjectivesHaveUniqueValues with doAllObjectivesHaveUniqueNames when dropping value uniqueness
-	if !doAllObjectivesHaveUniqueValues(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "valuesForEachObjectiveMustBeUniqueWithinOneSLO", "")
-	}
-	if !areTimeSliceTargetsRequiredAndSet(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "timeSliceTargetRequiredForTimeslices", "")
-	}
-
-	if !isValidObjectiveOperatorForRawMetric(sloSpec) {
-		sl.ReportError(sloSpec.Objectives, "objectives", "Objectives", "validObjectiveOperatorForRawMetric", "")
-	}
-
-	if sloSpec.Composite != nil {
-		if !isBurnRateSetForCompositeWithOccurrences(sloSpec) {
-			sl.ReportError(
-				sloSpec.Composite.BurnRateCondition,
-				"burnRateCondition",
-				"composite",
-				"compositeBurnRateRequiredForOccurrences",
-				"",
-			)
-		}
-
-		if !isValidBudgetingMethodForCompositeWithBurnRate(sloSpec) {
-			sl.ReportError(
-				sloSpec.Composite.BurnRateCondition,
-				"burnRateCondition",
-				"composite",
-				"wrongBudgetingMethodForCompositeWithBurnRate",
-				"",
-			)
-		}
-	}
-
 	sloSpecStructLevelAppDynamicsValidation(sl, sloSpec)
 	sloSpecStructLevelLightstepValidation(sl, sloSpec)
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func isBurnRateSetForCompositeWithOccurrences(spec Spec) bool {
-	return !isBudgetingMethodOccurrences(spec) || spec.Composite.BurnRateCondition != nil
-}
-
-func isValidBudgetingMethodForCompositeWithBurnRate(spec Spec) bool {
-	return spec.Composite.BurnRateCondition == nil || isBudgetingMethodOccurrences(spec)
-}
-
-func isBudgetingMethodOccurrences(sloSpec Spec) bool {
-	return sloSpec.BudgetingMethod == BudgetingMethodOccurrences.String()
 }
 
 func sloSpecStructLevelAppDynamicsValidation(sl v.StructLevel, sloSpec Spec) {
@@ -449,14 +400,6 @@ func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
 	}
 }
 
-func doAllObjectivesHaveUniqueValues(spec Spec) bool {
-	values := make(map[float64]struct{})
-	for _, objective := range spec.Objectives {
-		values[*objective.Value] = struct{}{}
-	}
-	return len(values) == len(spec.Objectives)
-}
-
 func areLightstepCountMetricsNonIncremental(sloSpec Spec) bool {
 	if !sloSpec.HasCountMetrics() {
 		return true
@@ -524,17 +467,6 @@ func isValidLightstepTypeOfDataForRawMetric(sloSpec Spec) bool {
 		if *metric.Lightstep.TypeOfData != LightstepErrorRateDataType &&
 			*metric.Lightstep.TypeOfData != LightstepLatencyDataType &&
 			*metric.Lightstep.TypeOfData != LightstepMetricDataType {
-			return false
-		}
-	}
-	return true
-}
-
-func areTimeSliceTargetsRequiredAndSet(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		if sloSpec.BudgetingMethod == BudgetingMethodTimeslices.String() &&
-			!(objective.TimeSliceTarget != nil && isValidTimeSliceTargetValue(*objective.TimeSliceTarget)) ||
-			sloSpec.BudgetingMethod == BudgetingMethodOccurrences.String() && objective.TimeSliceTarget != nil {
 			return false
 		}
 	}
@@ -1189,25 +1121,6 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 		}
 	}
 	return true
-}
-
-func isValidObjectiveOperatorForRawMetric(sloSpec Spec) bool {
-	if !sloSpec.HasRawMetric() {
-		return true
-	}
-	for _, objective := range sloSpec.Objectives {
-		if objective.Operator == nil {
-			return false
-		}
-		if _, err := v1alpha.ParseOperator(*objective.Operator); err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-func isValidTimeSliceTargetValue(tsv float64) bool {
-	return tsv > 0.0 && tsv <= 1.00
 }
 
 // stringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"

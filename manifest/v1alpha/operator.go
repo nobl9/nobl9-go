@@ -1,6 +1,8 @@
 package v1alpha
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Operator is allowed comparing method for labeling sli
 type Operator int16
@@ -12,29 +14,40 @@ const (
 	GreaterThan
 )
 
-func getOperators() map[string]Operator {
-	return map[string]Operator{
-		"gt":  GreaterThan,
-		"gte": GreaterThanEqual,
-		"lt":  LessThan,
-		"lte": LessThanEqual,
-	}
+var operatorNames = map[string]Operator{
+	"lte": LessThanEqual,
+	"lt":  LessThan,
+	"gte": GreaterThanEqual,
+	"gt":  GreaterThan,
+}
+
+var operatorValues = map[Operator]string{
+	LessThanEqual:    "lte",
+	LessThan:         "lt",
+	GreaterThanEqual: "gte",
+	GreaterThan:      "gt",
 }
 
 func (m Operator) String() string {
-	for key, val := range getOperators() {
-		if val == m {
-			return key
-		}
+	if s, ok := operatorValues[m]; ok {
+		return s
 	}
 	return "Unknown"
 }
 
 // ParseOperator parses string to Operator
 func ParseOperator(value string) (Operator, error) {
-	result, ok := getOperators()[value]
-	if !ok {
-		return result, fmt.Errorf("'%s' is not valid operator", value)
+	if op, ok := operatorNames[value]; ok {
+		return op, nil
 	}
-	return result, nil
+	return 0, fmt.Errorf("'%s' is not valid operator", value)
+}
+
+// OperatorNames returns a list of possible string values of Operator.
+func OperatorNames() []string {
+	names := make([]string, 0, len(operatorNames))
+	for name := range operatorNames {
+		names = append(names, name)
+	}
+	return names
 }

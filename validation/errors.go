@@ -46,14 +46,14 @@ func NewPropertyError(propertyName string, propertyValue interface{}, errs ...er
 	return &PropertyError{
 		PropertyName:  propertyName,
 		PropertyValue: propertyValueString(propertyValue),
-		Errors:        unpackRuleErrors(errs, make([]RuleError, 0, len(errs))),
+		Errors:        unpackRuleErrors(errs, make([]*RuleError, 0, len(errs))),
 	}
 }
 
 type PropertyError struct {
-	PropertyName  string      `json:"propertyName"`
-	PropertyValue string      `json:"propertyValue"`
-	Errors        []RuleError `json:"errors"`
+	PropertyName  string       `json:"propertyName"`
+	PropertyValue string       `json:"propertyValue"`
+	Errors        []*RuleError `json:"errors"`
 }
 
 func (e *PropertyError) Error() string {
@@ -73,8 +73,9 @@ func (e *PropertyError) Error() string {
 
 const propertyNameSeparator = "."
 
-func (e *PropertyError) PrependPropertyName(name string) {
+func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
+	return e
 }
 
 type RuleError struct {
@@ -82,14 +83,14 @@ type RuleError struct {
 	Code    ErrorCode `json:"code,omitempty"`
 }
 
-func (r RuleError) Error() string {
+func (r *RuleError) Error() string {
 	return r.Message
 }
 
-const errorCodeSeparator = ":"
+const ErrorCodeSeparator = ":"
 
-func (r RuleError) AddCode(code ErrorCode) RuleError {
-	r.Code = concatStrings(code, r.Code, errorCodeSeparator)
+func (r *RuleError) AddCode(code ErrorCode) *RuleError {
+	r.Code = concatStrings(code, r.Code, ErrorCodeSeparator)
 	return r
 }
 
@@ -119,8 +120,8 @@ func HasErrorCode(err error, code ErrorCode) bool {
 			}
 		}
 		return false
-	case RuleError:
-		codes := strings.Split(v.Code, errorCodeSeparator)
+	case *RuleError:
+		codes := strings.Split(v.Code, ErrorCodeSeparator)
 		for i := range codes {
 			if code == codes[i] {
 				return true
@@ -140,10 +141,8 @@ func propertyValueString(v interface{}) string {
 	if v == nil {
 		return ""
 	}
-	ft := reflect.TypeOf(v)
-	if ft.Kind() == reflect.Pointer {
-		ft = ft.Elem()
-	}
+	rv := reflect.ValueOf(v)
+	ft := reflect.Indirect(rv)
 	var s string
 	switch ft.Kind() {
 	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
@@ -151,8 +150,10 @@ func propertyValueString(v interface{}) string {
 			raw, _ := json.Marshal(v)
 			s = string(raw)
 		}
+	case reflect.Invalid:
+		s = ""
 	default:
-		s = fmt.Sprint(v)
+		s = fmt.Sprint(ft.Interface())
 	}
 	return limitString(s, 100)
 }
@@ -195,18 +196,23 @@ func limitString(s string, limit int) string {
 }
 
 // unpackRuleErrors unpacks error messages recursively scanning ruleSetError if it is detected.
-func unpackRuleErrors(errs []error, ruleErrors []RuleError) []RuleError {
+func unpackRuleErrors(errs []error, ruleErrors []*RuleError) []*RuleError {
 	for _, err := range errs {
 		switch v := err.(type) {
 		case ruleSetError:
 			ruleErrors = unpackRuleErrors(v, ruleErrors)
-		case RuleError:
-			ruleErrors = append(ruleErrors, v)
 		case *RuleError:
-			ruleErrors = append(ruleErrors, *v)
+			ruleErrors = append(ruleErrors, v)
 		default:
-			ruleErrors = append(ruleErrors, RuleError{Message: v.Error()})
+			ruleErrors = append(ruleErrors, &RuleError{Message: v.Error()})
 		}
 	}
 	return ruleErrors
+}
+
+func NewRequiredError() *RuleError {
+	return &RuleError{
+		Message: "property is required but was empty",
+		Code:    ErrorCodeRequired,
+	}
 }

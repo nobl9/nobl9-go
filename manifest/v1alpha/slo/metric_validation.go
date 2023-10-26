@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -11,6 +13,7 @@ const (
 	errCodeExactlyOneMetricType     = "exactly_one_metric_type"
 	errCodeBadOverTotalDisabled     = "bad_over_total_disabled"
 	errCodeExactlyOneMetricSpecType = "exactly_one_metric_spec_type"
+	errCodeTimeSliceTarget          = "time_slice_target"
 )
 
 var specMetricsValidation = validation.New[Spec](
@@ -24,7 +27,10 @@ var specMetricsValidation = validation.New[Spec](
 		StopOnError().
 		Rules(exactlyOneMetricSpecTypeValidationRule).
 		StopOnError().
-		Rules(),
+		Rules(
+			timeSliceTargetsValidationRule,
+			objectiveOperatorRequiredForRawMetricValidationRule,
+		),
 )
 
 var countMetricsValidation = validation.New[CountMetricsSpec](
@@ -208,3 +214,46 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 	}
 	return nil
 }
+
+var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(v Spec) error {
+	for i, objective := range v.Objectives {
+		switch v.BudgetingMethod {
+		case BudgetingMethodTimeslices.String():
+			if objective.TimeSliceTarget == nil {
+				return validation.NewPropertyError(
+					"timeSliceTarget",
+					objective.TimeSliceTarget, validation.NewRequiredError()).
+					PrependPropertyName(validation.SliceElementName("objectives", i))
+			}
+		case BudgetingMethodOccurrences.String():
+			if objective.TimeSliceTarget != nil {
+				return validation.NewPropertyError(
+					"timeSliceTarget",
+					objective.TimeSliceTarget,
+					&validation.RuleError{
+						Message: fmt.Sprintf(
+							"property may only be used with budgetingMethod == '%s'",
+							BudgetingMethodTimeslices),
+						Code: validation.ErrorCodeForbidden}).
+					PrependPropertyName(validation.SliceElementName("objectives", i))
+			}
+		}
+	}
+	return nil
+}).WithErrorCode(errCodeTimeSliceTarget)
+
+var objectiveOperatorRequiredForRawMetricValidationRule = validation.NewSingleRule[Spec](func(sloSpec Spec) error {
+	if !sloSpec.HasRawMetric() {
+		return nil
+	}
+	for i, objective := range sloSpec.Objectives {
+		if objective.Operator == nil {
+			return validation.NewPropertyError(
+				"op",
+				objective.Operator,
+				validation.NewRequiredError()).
+				PrependPropertyName(validation.SliceElementName("objectives", i))
+		}
+	}
+	return nil
+})

@@ -39,22 +39,19 @@ func TestValidate_Metadata(t *testing.T) {
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validSLO()
-		for _, method := range []string{
-			BudgetingMethodOccurrences.String(),
-			BudgetingMethodTimeslices.String(),
-		} {
-			slo.Spec.BudgetingMethod = method
-			err := validate(slo)
-			assert.NoError(t, err)
-		}
+		slo.Spec.BudgetingMethod = BudgetingMethodOccurrences.String()
+		assert.NoError(t, validate(slo))
+		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
+		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.1)
+		assert.NoError(t, validate(slo))
 	})
 	t.Run("empty method", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = ""
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec.budgetingMethod",
-			Codes: []string{validation.ErrorCodeRequired},
+			Prop: "spec.budgetingMethod",
+			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("invalid method", func(t *testing.T) {
@@ -62,8 +59,8 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo.Spec.BudgetingMethod = "invalid"
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:     "spec.budgetingMethod",
-			Messages: []string{"'invalid' is not a valid budgeting method"},
+			Prop:    "spec.budgetingMethod",
+			Message: "'invalid' is not a valid budgeting method",
 		})
 	})
 }
@@ -80,8 +77,8 @@ func TestValidate_Spec_Service(t *testing.T) {
 		slo.Spec.Service = "MY SERVICE"
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec.service",
-			Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+			Prop: "spec.service",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
 		})
 	})
 }
@@ -98,8 +95,8 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		slo.Spec.AlertPolicies = []string{"my-policy", "MY POLICY", "ok-policy"}
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec.alertPolicies[1]",
-			Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+			Prop: "spec.alertPolicies[1]",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
 		})
 	})
 }
@@ -126,8 +123,8 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = attachments
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec.attachments",
-			Codes: []string{validation.ErrorCodeSliceLength},
+			Prop: "spec.attachments",
+			Code: validation.ErrorCodeSliceLength,
 		})
 	})
 	t.Run("fails, invalid attachment", func(t *testing.T) {
@@ -140,16 +137,16 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		err := validate(slo)
 		assertContainsErrors(t, err, 3,
 			expectedError{
-				Prop:  "spec.attachments[1].url",
-				Codes: []string{validation.ErrorCodeStringURL},
+				Prop: "spec.attachments[1].url",
+				Code: validation.ErrorCodeStringURL,
 			},
 			expectedError{
-				Prop:  "spec.attachments[2].displayName",
-				Codes: []string{validation.ErrorCodeStringLength},
+				Prop: "spec.attachments[2].displayName",
+				Code: validation.ErrorCodeStringLength,
 			},
 			expectedError{
-				Prop:  "spec.attachments[2].url",
-				Codes: []string{validation.ErrorCodeRequired},
+				Prop: "spec.attachments[2].url",
+				Code: validation.ErrorCodeRequired,
 			},
 		)
 	})
@@ -160,7 +157,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		for _, composite := range []*Composite{
 			nil,
 			{
-				BudgetTarget: ptr(0.001),
+				BudgetTarget:      ptr(0.001),
+				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 			},
 			{
 				BudgetTarget:      ptr(0.9999),
@@ -184,22 +182,28 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.target",
-					Codes: []string{validation.ErrorCodeRequired},
+					Prop: "spec.composite.target",
+					Code: validation.ErrorCodeRequired,
 				},
 			},
 			"target too small": {
-				Composite: &Composite{BudgetTarget: ptr(0.)},
+				Composite: &Composite{
+					BudgetTarget:      ptr(0.),
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.target",
-					Codes: []string{validation.ErrorCodeGreaterThan},
+					Prop: "spec.composite.target",
+					Code: validation.ErrorCodeGreaterThan,
 				},
 			},
 			"target too large": {
-				Composite: &Composite{BudgetTarget: ptr(1.0)},
+				Composite: &Composite{
+					BudgetTarget:      ptr(1.0),
+					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.target",
-					Codes: []string{validation.ErrorCodeLessThan},
+					Prop: "spec.composite.target",
+					Code: validation.ErrorCodeLessThan,
 				},
 			},
 			"burn rate value too small": {
@@ -208,8 +212,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: -1, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.burnRateCondition.value",
-					Codes: []string{validation.ErrorCodeGreaterThanOrEqualTo},
+					Prop: "spec.composite.burnRateCondition.value",
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
 			"burn rate value too large": {
@@ -218,8 +222,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1001, Operator: "gt"},
 				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.burnRateCondition.value",
-					Codes: []string{validation.ErrorCodeLessThanOrEqualTo},
+					Prop: "spec.composite.burnRateCondition.value",
+					Code: validation.ErrorCodeLessThanOrEqualTo,
 				},
 			},
 			"missing operator": {
@@ -228,8 +232,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10},
 				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.burnRateCondition.op",
-					Codes: []string{validation.ErrorCodeRequired},
+					Prop: "spec.composite.burnRateCondition.op",
+					Code: validation.ErrorCodeRequired,
 				},
 			},
 			"invalid operator": {
@@ -238,8 +242,8 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "lte"},
 				},
 				ExpectedError: expectedError{
-					Prop:  "spec.composite.burnRateCondition.op",
-					Codes: []string{validation.ErrorCodeOneOf},
+					Prop: "spec.composite.burnRateCondition.op",
+					Code: validation.ErrorCodeOneOf,
 				},
 			},
 		} {
@@ -250,6 +254,33 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				assertContainsErrors(t, err, 1, test.ExpectedError)
 			})
 		}
+	})
+	t.Run("missing burnRateCondition for occurrences", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.BudgetingMethod = BudgetingMethodOccurrences.String()
+		slo.Spec.Composite = &Composite{
+			BudgetTarget:      ptr(0.9),
+			BurnRateCondition: nil,
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.composite.burnRateCondition",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("burnRateCondition forbidden for timeslices", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
+		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.9)
+		slo.Spec.Composite = &Composite{
+			BudgetTarget:      ptr(0.9),
+			BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "gt"},
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.composite.burnRateCondition",
+			Code: validation.ErrorCodeForbidden,
+		})
 	})
 }
 
@@ -284,8 +315,8 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods",
-						Codes: []string{validation.ErrorCodeSliceMinLength},
+						Prop: "spec.anomalyConfig.noData.alertMethods",
+						Code: validation.ErrorCodeSliceMinLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -306,20 +337,20 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods[0].name",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.anomalyConfig.noData.alertMethods[0].name",
+						Code: validation.ErrorCodeRequired,
 					},
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods[1].name",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.anomalyConfig.noData.alertMethods[1].name",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods[1].project",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.anomalyConfig.noData.alertMethods[1].project",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods[2].name",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.anomalyConfig.noData.alertMethods[2].name",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 				},
 				ExpectedErrorsCount: 4,
@@ -337,8 +368,8 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.anomalyConfig.noData.alertMethods",
-						Codes: []string{validation.ErrorCodeSliceUnique},
+						Prop: "spec.anomalyConfig.noData.alertMethods",
+						Code: validation.ErrorCodeSliceUnique,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -389,8 +420,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.timeWindows",
-						Codes: []string{validation.ErrorCodeSliceLength},
+						Prop: "spec.timeWindows",
+						Code: validation.ErrorCodeSliceLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -399,8 +430,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{{}, {}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.timeWindows",
-						Codes: []string{validation.ErrorCodeSliceLength},
+						Prop: "spec.timeWindows",
+						Code: validation.ErrorCodeSliceLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -413,12 +444,12 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.timeWindows[0].unit",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.timeWindows[0].unit",
+						Code: validation.ErrorCodeRequired,
 					},
 					{
-						Prop:  "spec.timeWindows[0].count",
-						Codes: []string{validation.ErrorCodeGreaterThan},
+						Prop: "spec.timeWindows[0].count",
+						Code: validation.ErrorCodeGreaterThan,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -430,8 +461,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.timeWindows[0].unit",
-						Codes: []string{validation.ErrorCodeOneOf},
+						Prop: "spec.timeWindows[0].unit",
+						Code: validation.ErrorCodeOneOf,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -444,12 +475,12 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.timeWindows[0].calendar.startTime",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.timeWindows[0].calendar.startTime",
+						Code: validation.ErrorCodeRequired,
 					},
 					{
-						Prop:  "spec.timeWindows[0].calendar.timeZone",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.timeWindows[0].calendar.timeZone",
+						Code: validation.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -465,12 +496,12 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:     "spec.timeWindows[0].calendar.startTime",
-						Messages: []string{`error parsing date: parsing time "asd" as "2006-01-02 15:04:05": cannot parse "asd" as "2006"`},
+						Prop:    "spec.timeWindows[0].calendar.startTime",
+						Message: `error parsing date: parsing time "asd" as "2006-01-02 15:04:05": cannot parse "asd" as "2006"`,
 					},
 					{
-						Prop:     "spec.timeWindows[0].calendar.timeZone",
-						Messages: []string{"not a valid time zone: unknown time zone asd"},
+						Prop:    "spec.timeWindows[0].calendar.timeZone",
+						Message: "not a valid time zone: unknown time zone asd",
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -487,8 +518,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:     "spec.timeWindows[0]",
-						Messages: []string{"if 'isRolling' property is true, 'calendar' property must be omitted"},
+						Prop:    "spec.timeWindows[0]",
+						Message: "if 'isRolling' property is true, 'calendar' property must be omitted",
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -501,8 +532,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:     "spec.timeWindows[0]",
-						Messages: []string{"if 'isRolling' property is false or not set, 'calendar' property must be provided"},
+						Prop:    "spec.timeWindows[0]",
+						Message: "if 'isRolling' property is false or not set, 'calendar' property must be provided",
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -515,8 +546,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:     "spec.timeWindows[0]",
-						Messages: []string{"invalid time window unit for Rolling window type: must be one of [Minute, Hour, Day]"},
+						Prop:    "spec.timeWindows[0]",
+						Message: "invalid time window unit for Rolling window type: must be one of [Minute, Hour, Day]",
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -533,8 +564,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:     "spec.timeWindows[0]",
-						Messages: []string{"invalid time window unit for Calendar window type: must be one of [Day, Week, Month, Quarter, Year]"},
+						Prop:    "spec.timeWindows[0]",
+						Message: "invalid time window unit for Calendar window type: must be one of [Day, Week, Month, Quarter, Year]",
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -548,9 +579,9 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []expectedError{
 					{
 						Prop: "spec.timeWindows[0]",
-						Messages: []string{fmt.Sprintf(
+						Message: fmt.Sprintf(
 							"rolling time window size must be greater than or equal to %s",
-							minimumRollingTimeWindowSize)},
+							minimumRollingTimeWindowSize),
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -564,9 +595,9 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []expectedError{
 					{
 						Prop: "spec.timeWindows[0]",
-						Messages: []string{fmt.Sprintf(
+						Message: fmt.Sprintf(
 							"rolling time window size must be less than or equal to %s",
-							maximumRollingTimeWindowSize)},
+							maximumRollingTimeWindowSize),
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -584,9 +615,9 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []expectedError{
 					{
 						Prop: "spec.timeWindows[0]",
-						Messages: []string{fmt.Sprintf(
+						Message: fmt.Sprintf(
 							"calendar time window size must be less than %s",
-							maximumCalendarTimeWindowSize)},
+							maximumCalendarTimeWindowSize),
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -639,8 +670,8 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: Indicator{},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.indicator",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.indicator",
+						Code: validation.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -649,8 +680,8 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: Indicator{MetricSource: MetricSourceSpec{Name: "", Project: "default"}},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.indicator.metricSource.name",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.indicator.metricSource.name",
+						Code: validation.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -665,16 +696,16 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.indicator.metricSource.name",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.indicator.metricSource.name",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 					{
-						Prop:  "spec.indicator.metricSource.project",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.indicator.metricSource.project",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 					{
-						Prop:  "spec.indicator.metricSource.kind",
-						Codes: []string{validation.ErrorCodeOneOf},
+						Prop: "spec.indicator.metricSource.kind",
+						Code: validation.ErrorCodeOneOf,
 					},
 				},
 				ExpectedErrorsCount: 3,
@@ -701,6 +732,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				},
 				BudgetTarget: ptr(0.9),
 				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+				Operator:     ptr(v1alpha.GreaterThan.String()),
 			}},
 		} {
 			slo := validSLO()
@@ -719,8 +751,8 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.objectives",
-						Codes: []string{validation.ErrorCodeSliceMinLength},
+						Prop: "spec.objectives",
+						Code: validation.ErrorCodeSliceMinLength,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -735,41 +767,44 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						},
 						BudgetTarget: ptr(2.0),
 						RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:     ptr(v1alpha.GreaterThan.String()),
 					},
 					{
 						ObjectiveBase: ObjectiveBase{Name: ""},
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
 					},
 					{
 						ObjectiveBase: ObjectiveBase{Value: ptr(1.)},
 						BudgetTarget:  ptr(-1.0),
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
 					},
 				},
 				ExpectedErrors: []expectedError{
 					{
-						Prop:  "spec.objectives[0].displayName",
-						Codes: []string{validation.ErrorCodeStringMaxLength},
+						Prop: "spec.objectives[0].displayName",
+						Code: validation.ErrorCodeStringMaxLength,
 					},
 					{
-						Prop:  "spec.objectives[0].name",
-						Codes: []string{validation.ErrorCodeStringIsDNSSubdomain},
+						Prop: "spec.objectives[0].name",
+						Code: validation.ErrorCodeStringIsDNSSubdomain,
 					},
 					{
-						Prop:  "spec.objectives[0].target",
-						Codes: []string{validation.ErrorCodeLessThan},
+						Prop: "spec.objectives[0].target",
+						Code: validation.ErrorCodeLessThan,
 					},
 					{
-						Prop:  "spec.objectives[1].value",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.objectives[1].value",
+						Code: validation.ErrorCodeRequired,
 					},
 					{
-						Prop:  "spec.objectives[1].target",
-						Codes: []string{validation.ErrorCodeRequired},
+						Prop: "spec.objectives[1].target",
+						Code: validation.ErrorCodeRequired,
 					},
 					{
-						Prop:  "spec.objectives[2].target",
-						Codes: []string{validation.ErrorCodeGreaterThanOrEqualTo},
+						Prop: "spec.objectives[2].target",
+						Code: validation.ErrorCodeGreaterThanOrEqualTo,
 					},
 				},
 				ExpectedErrorsCount: 6,
@@ -780,19 +815,32 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 						ObjectiveBase: ObjectiveBase{Value: ptr(10.)},
 						BudgetTarget:  ptr(0.9),
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
 					},
 					{
 						ObjectiveBase: ObjectiveBase{Value: ptr(10.)},
 						BudgetTarget:  ptr(0.8),
 						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
 					},
 				},
-				ExpectedErrors: []expectedError{
-					{
-						Prop:  "spec.objectives",
-						Codes: []string{validation.ErrorCodeSliceUnique},
-					},
-				},
+				ExpectedErrors: []expectedError{{
+					Prop: "spec.objectives",
+					Code: validation.ErrorCodeSliceUnique,
+				}},
+				ExpectedErrorsCount: 1,
+			},
+			"invalid operator": {
+				Objectives: []Objective{{
+					ObjectiveBase: ObjectiveBase{Value: ptr(10.)},
+					BudgetTarget:  ptr(0.9),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr("invalid"),
+				}},
+				ExpectedErrors: []expectedError{{
+					Prop: "spec.objectives[0].op",
+					Code: validation.ErrorCodeOneOf,
+				}},
 				ExpectedErrorsCount: 1,
 			},
 		} {
@@ -804,6 +852,33 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
+	for name, test := range map[string]struct {
+		Code       string
+		InputValue float64
+	}{
+		"timeSliceTarget too low": {
+			Code:       validation.ErrorCodeGreaterThan,
+			InputValue: 0.0,
+		},
+		"timeSliceTarget too high": {
+			Code:       validation.ErrorCodeLessThanOrEqualTo,
+			InputValue: 1.1,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			slo := validSLO()
+			slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
+			slo.Spec.Objectives[0].TimeSliceTarget = ptr(test.InputValue)
+			err := validate(slo)
+			assertContainsErrors(t, err, 1, expectedError{
+				Prop: "spec.objectives[0].timeSliceTarget",
+				Code: test.Code,
+			})
+		})
+	}
 }
 
 func TestValidate_Spec(t *testing.T) {
@@ -818,8 +893,8 @@ func TestValidate_Spec(t *testing.T) {
 		}
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec",
-			Codes: []string{errCodeExactlyOneMetricType},
+			Prop: "spec",
+			Code: errCodeExactlyOneMetricType,
 		})
 	})
 	t.Run("exactly one metric type - both missing", func(t *testing.T) {
@@ -828,8 +903,45 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec",
-			Codes: []string{errCodeExactlyOneMetricType},
+			Prop: "spec",
+			Code: errCodeExactlyOneMetricType,
+		})
+	})
+	t.Run("required time slice target for budgeting method", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
+		slo.Spec.Objectives[0].CountMetrics = nil
+		slo.Spec.Objectives[0].TimeSliceTarget = nil
+		slo.Spec.Objectives[0].Operator = ptr(v1alpha.GreaterThan.String())
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].timeSliceTarget",
+			Code: joinErrorCodes(errCodeTimeSliceTarget, validation.ErrorCodeRequired),
+		})
+	})
+	t.Run("invalid time slice target for budgeting method", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.BudgetingMethod = BudgetingMethodOccurrences.String()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
+		slo.Spec.Objectives[0].CountMetrics = nil
+		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.1)
+		slo.Spec.Objectives[0].Operator = ptr(v1alpha.GreaterThan.String())
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].timeSliceTarget",
+			Code: joinErrorCodes(errCodeTimeSliceTarget, validation.ErrorCodeForbidden),
+		})
+	})
+	t.Run("missing operator for raw metric", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: metricSpec}
+		slo.Spec.Objectives[0].CountMetrics = nil
+		slo.Spec.Objectives[0].Operator = nil
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].op",
+			Code: validation.ErrorCodeRequired,
 		})
 	})
 }
@@ -860,8 +972,8 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				assertContainsErrors(t, err, 1, expectedError{
-					Prop:  "spec",
-					Codes: []string{errCodeExactlyOneMetricSpecType},
+					Prop: "spec",
+					Code: errCodeExactlyOneMetricSpecType,
 				})
 			})
 		}
@@ -940,8 +1052,8 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				assertContainsErrors(t, err, 1, expectedError{
-					Prop:  "spec",
-					Codes: []string{errCodeExactlyOneMetricSpecType},
+					Prop: "spec",
+					Code: errCodeExactlyOneMetricSpecType,
 				})
 			})
 		}
@@ -955,16 +1067,16 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop:  "spec.objectives[0].countMetrics.bad",
-			Codes: []string{errCodeBadOverTotalDisabled},
+			Prop: "spec.objectives[0].countMetrics.bad",
+			Code: joinErrorCodes(errCodeBadOverTotalDisabled, validation.ErrorCodeOneOf),
 		})
 	})
 }
 
 type expectedError struct {
-	Prop     string
-	Codes    []string
-	Messages []string
+	Prop    string
+	Code    string
+	Message string
 }
 
 func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expectedErrors ...expectedError) {
@@ -995,17 +1107,13 @@ func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expe
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
-				for _, expectedMessage := range expected.Messages {
-					if expectedMessage == actualRuleErr.Message {
-						found = true
-						break searchErrors
-					}
+				if expected.Message == actualRuleErr.Message {
+					found = true
+					break searchErrors
 				}
-				for _, expectedCode := range expected.Codes {
-					if expectedCode == actualRuleErr.Code {
-						found = true
-						break searchErrors
-					}
+				if expected.Code == actualRuleErr.Code {
+					found = true
+					break searchErrors
 				}
 			}
 		}
@@ -1290,3 +1398,7 @@ fetch consumed_api
 }
 
 func ptr[T any](v T) *T { return &v }
+
+func joinErrorCodes(codes ...string) string {
+	return strings.Join(codes, validation.ErrorCodeSeparator)
+}

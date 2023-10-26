@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"fmt"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -24,6 +26,10 @@ var metadataValidation = validation.New[Metadata](
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
 		Include(specMetricsValidation),
+	validation.For(validation.GetSelf[Spec]()).
+		WithName("composite").
+		When(func(s Spec) bool { return s.Composite != nil }).
+		Rules(specCompositeValidationRule),
 	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
@@ -104,6 +110,33 @@ var compositeValidation = validation.New[Composite](
 		)),
 )
 
+var specCompositeValidationRule = validation.NewSingleRule(func(s Spec) error {
+	switch s.BudgetingMethod {
+	case BudgetingMethodOccurrences.String():
+		if s.Composite.BurnRateCondition == nil {
+			return validation.NewPropertyError(
+				"burnRateCondition",
+				s.Composite.BurnRateCondition,
+				validation.NewRequiredError(),
+			)
+		}
+	case BudgetingMethodTimeslices.String():
+		if s.Composite.BurnRateCondition != nil {
+			return validation.NewPropertyError(
+				"burnRateCondition",
+				s.Composite.BurnRateCondition,
+				&validation.RuleError{
+					Message: fmt.Sprintf(
+						"burnRateCondition may only be used with budgetingMethod == '%s'",
+						BudgetingMethodOccurrences),
+					Code: validation.ErrorCodeForbidden,
+				},
+			)
+		}
+	}
+	return nil
+})
+
 var anomalyConfigValidation = validation.New[AnomalyConfig](
 	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
@@ -145,6 +178,7 @@ var indicatorValidation = validation.New[Indicator](
 		)),
 	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
 		WithName("rawMetric").
+		// TODO raw metric validation.
 		Include(),
 )
 
@@ -156,9 +190,11 @@ var objectiveValidation = validation.New[Objective](
 		Required().
 		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThan(1.0)),
 	validation.ForPointer(func(o Objective) *float64 { return o.TimeSliceTarget }).
-		WithName("timeSliceTarget"),
+		WithName("timeSliceTarget").
+		Rules(validation.GreaterThan(0.0), validation.LessThanOrEqualTo(1.0)),
 	validation.ForPointer(func(o Objective) *string { return o.Operator }).
-		WithName("op"),
+		WithName("op").
+		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
 		WithName("countMetrics").
 		Include(countMetricsValidation),

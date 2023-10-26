@@ -43,12 +43,12 @@ func TestValidator(t *testing.T) {
 			&PropertyError{
 				PropertyName:  "test.name",
 				PropertyValue: "name",
-				Errors:        []RuleError{{Message: err1.Error()}},
+				Errors:        []*RuleError{{Message: err1.Error()}},
 			},
 			&PropertyError{
 				PropertyName:  "test.display",
 				PropertyValue: "display",
-				Errors:        []RuleError{{Message: err2.Error()}},
+				Errors:        []*RuleError{{Message: err2.Error()}},
 			},
 		}}, err)
 	})

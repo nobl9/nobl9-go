@@ -54,7 +54,7 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	propValue, isEmpty := r.getter(st)
 	isEmpty = isEmpty || (!r.isPointer && isEmptyFunc(propValue))
 	if r.required && isEmpty {
-		return PropertyErrors{NewPropertyError(r.name, propValue, newRequiredError())}
+		return PropertyErrors{NewPropertyError(r.name, propValue, NewRequiredError())}
 	}
 	if isEmpty && (r.omitempty || r.isPointer) {
 		return nil
@@ -74,15 +74,19 @@ loop:
 		case Rule[T]:
 			err := v.Validate(propValue)
 			if err != nil {
-				ruleErrors = append(ruleErrors, err)
+				switch ev := err.(type) {
+				case *PropertyError:
+					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
+				default:
+					ruleErrors = append(ruleErrors, err)
+				}
 			}
 			previousStepFailed = err != nil
 		case validatorI[T]:
 			err := v.Validate(propValue)
 			if err != nil {
 				for _, e := range err.Errors {
-					e.PrependPropertyName(r.name)
-					allErrors = append(allErrors, e)
+					allErrors = append(allErrors, e.PrependPropertyName(r.name))
 				}
 			}
 			previousStepFailed = err != nil
@@ -139,13 +143,6 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 		slice = append(slice, step)
 	}
 	return slice
-}
-
-func newRequiredError() RuleError {
-	return RuleError{
-		Message: "property is required but was empty",
-		Code:    ErrorCodeRequired,
-	}
 }
 
 // isEmptyFunc checks only the types which it makes sense for.

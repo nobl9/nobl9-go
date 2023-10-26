@@ -4,6 +4,7 @@ type ErrorCode = string
 
 const (
 	ErrorCodeRequired             ErrorCode = "required"
+	ErrorCodeForbidden            ErrorCode = "forbidden"
 	ErrorCodeEqualTo              ErrorCode = "equal_to"
 	ErrorCodeNotEqualTo           ErrorCode = "not_equal_to"
 	ErrorCodeGreaterThan          ErrorCode = "greater_than"

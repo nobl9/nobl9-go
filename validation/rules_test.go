@@ -32,7 +32,7 @@ func TestPropertyRules(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "path",
-			Errors:        []RuleError{{Message: expectedErr.Error()}},
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -49,23 +49,34 @@ func TestPropertyRules(t *testing.T) {
 
 	t.Run("multiple rules", func(t *testing.T) {
 		err1 := errors.New("oh no!")
-		err2 := errors.New("ops!")
 		r := For(func(m mockStruct) string { return "value" }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v string) error { return nil })).
 			Rules(NewSingleRule(func(v string) error { return err1 })).
 			Rules(NewSingleRule(func(v string) error { return nil })).
-			Rules(NewSingleRule(func(v string) error { return err2 }))
+			Rules(NewSingleRule(func(v string) error {
+				return NewPropertyError("nested", "nestedValue", &RuleError{
+					Message: "property is required",
+					Code:    ErrorCodeRequired,
+				})
+			}))
 		errs := r.Validate(mockStruct{})
-		require.Len(t, errs, 1)
-		assert.Equal(t, &PropertyError{
-			PropertyName:  "test.path",
-			PropertyValue: "value",
-			Errors: []RuleError{
-				{Message: err1.Error()},
-				{Message: err2.Error()},
+		require.Len(t, errs, 2)
+		assert.ElementsMatch(t, PropertyErrors{
+			&PropertyError{
+				PropertyName:  "test.path",
+				PropertyValue: "value",
+				Errors:        []*RuleError{{Message: err1.Error()}},
 			},
-		}, errs[0])
+			&PropertyError{
+				PropertyName:  "test.path.nested",
+				PropertyValue: "nestedValue",
+				Errors: []*RuleError{{
+					Message: "property is required",
+					Code:    ErrorCodeRequired,
+				}},
+			},
+		}, errs)
 	})
 
 	t.Run("stop on error", func(t *testing.T) {
@@ -80,7 +91,7 @@ func TestPropertyRules(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "value",
-			Errors:        []RuleError{{Message: expectedErr.Error()}},
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -95,22 +106,26 @@ func TestPropertyRules(t *testing.T) {
 				For(func(s mockStruct) string { return "value" }).
 					WithName("included").
 					Rules(NewSingleRule(func(v string) error { return err2 })).
-					Rules(NewSingleRule(func(v string) error { return err3 })),
+					Rules(NewSingleRule(func(v string) error {
+						return NewPropertyError("nested", "nestedValue", err3)
+					})),
 			))
 		errs := r.Validate(mockStruct{})
-		require.Len(t, errs, 2)
-		assert.ElementsMatch(t, []*PropertyError{
+		require.Len(t, errs, 3)
+		assert.ElementsMatch(t, PropertyErrors{
 			{
 				PropertyName: "test.path",
-				Errors:       []RuleError{{Message: err1.Error()}},
+				Errors:       []*RuleError{{Message: err1.Error()}},
 			},
 			{
 				PropertyName:  "test.path.included",
 				PropertyValue: "value",
-				Errors: []RuleError{
-					{Message: err2.Error()},
-					{Message: err3.Error()},
-				},
+				Errors:        []*RuleError{{Message: err2.Error()}},
+			},
+			{
+				PropertyName:  "test.path.included.nested",
+				PropertyValue: "nestedValue",
+				Errors:        []*RuleError{{Message: err3.Error()}},
 			},
 		}, errs)
 	})
@@ -126,7 +141,7 @@ func TestPropertyRules(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: propertyValueString(object),
-			Errors:        []RuleError{{Message: expectedErrs.Error()}},
+			Errors:        []*RuleError{{Message: expectedErrs.Error()}},
 		}, errs[0])
 	})
 }

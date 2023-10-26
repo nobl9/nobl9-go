@@ -1,7 +1,5 @@
 package validation
 
-import "github.com/pkg/errors"
-
 // Rule is the interface for all validation rules.
 type Rule[T any] interface {
 	Validate(v T) error
@@ -18,7 +16,17 @@ type SingleRule[T any] struct {
 
 func (r SingleRule[T]) Validate(v T) error {
 	if err := r.validate(v); err != nil {
-		return RuleError{Message: err.Error(), Code: r.errorCode}
+		switch ev := err.(type) {
+		case *RuleError:
+			return ev.AddCode(r.errorCode)
+		case *PropertyError:
+			for _, e := range ev.Errors {
+				_ = e.AddCode(r.errorCode)
+			}
+			return ev
+		default:
+			return &RuleError{Message: err.Error(), Code: r.errorCode}
+		}
 	}
 	return nil
 }
@@ -42,11 +50,16 @@ func (r RuleSet[T]) Validate(v T) error {
 	var errs ruleSetError
 	for i := range r.rules {
 		if err := r.rules[i].Validate(v); err != nil {
-			var ruleErr RuleError
-			if errors.As(err, &ruleErr) {
-				errs = append(errs, ruleErr.AddCode(r.errorCode))
-			} else {
-				errs = append(errs, RuleError{
+			switch ev := err.(type) {
+			case *RuleError:
+				errs = append(errs, ev.AddCode(r.errorCode))
+			case *PropertyError:
+				for _, e := range ev.Errors {
+					_ = e.AddCode(r.errorCode)
+				}
+				errs = append(errs, ev)
+			default:
+				errs = append(errs, &RuleError{
 					Message: err.Error(),
 					Code:    r.errorCode,
 				})

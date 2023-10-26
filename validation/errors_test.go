@@ -15,24 +15,83 @@ import (
 var errorsTestData embed.FS
 
 func TestNewPropertyError(t *testing.T) {
-	err := NewPropertyError("name", "value",
-		RuleError{Message: "top", Code: "1"},
-		ruleSetError{
-			RuleError{Message: "rule1", Code: "2"},
-			RuleError{Message: "rule2", Code: "3"},
+	t.Run("string value", func(t *testing.T) {
+		err := NewPropertyError("name", "value",
+			&RuleError{Message: "top", Code: "1"},
+			ruleSetError{
+				&RuleError{Message: "rule1", Code: "2"},
+				&RuleError{Message: "rule2", Code: "3"},
+			},
+			&RuleError{Message: "top", Code: "4"},
+		)
+		assert.Equal(t, &PropertyError{
+			PropertyName:  "name",
+			PropertyValue: "value",
+			Errors: []*RuleError{
+				{Message: "top", Code: "1"},
+				{Message: "rule1", Code: "2"},
+				{Message: "rule2", Code: "3"},
+				{Message: "top", Code: "4"},
+			},
+		}, err)
+	})
+	for name, test := range map[string]struct {
+		InputValue    interface{}
+		ExpectedValue string
+	}{
+		"map": {
+			InputValue:    map[string]string{"key": "value"},
+			ExpectedValue: `{"key":"value"}`,
 		},
-		RuleError{Message: "top", Code: "4"},
-	)
-	assert.Equal(t, &PropertyError{
-		PropertyName:  "name",
-		PropertyValue: "value",
-		Errors: []RuleError{
-			{Message: "top", Code: "1"},
-			{Message: "rule1", Code: "2"},
-			{Message: "rule2", Code: "3"},
-			{Message: "top", Code: "4"},
+		"struct": {
+			InputValue: struct {
+				V string `json:"that"`
+			}{
+				V: "this",
+			},
+			ExpectedValue: `{"that":"this"}`,
 		},
-	}, err)
+		"slice": {
+			InputValue:    []string{"value"},
+			ExpectedValue: `["value"]`,
+		},
+		"integer": {
+			InputValue:    0,
+			ExpectedValue: "0",
+		},
+		"float": {
+			InputValue:    10.1,
+			ExpectedValue: "10.1",
+		},
+		"boolean": {
+			InputValue:    false,
+			ExpectedValue: "false",
+		},
+		"pointer": {
+			InputValue:    ptr(10.2),
+			ExpectedValue: "10.2",
+		},
+		"initialized nil": {
+			InputValue:    func() *float64 { return nil }(),
+			ExpectedValue: "",
+		},
+		"nil": {
+			InputValue:    nil,
+			ExpectedValue: "",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := NewPropertyError(
+				"name",
+				test.InputValue,
+				&RuleError{Message: "msg"})
+			assert.Equal(t, &PropertyError{
+				PropertyName:  "name",
+				PropertyValue: test.ExpectedValue,
+				Errors:        []*RuleError{{Message: "msg"}},
+			}, err)
+		})
+	}
 }
 
 func TestPropertyError(t *testing.T) {
@@ -49,7 +108,7 @@ func TestPropertyError(t *testing.T) {
 			err := &PropertyError{
 				PropertyName:  "metadata.name",
 				PropertyValue: propertyValueString(value),
-				Errors: []RuleError{
+				Errors: []*RuleError{
 					{Message: "what a shame this happened"},
 					{Message: "this is outrageous..."},
 					{Message: "here's another error"},
@@ -84,31 +143,30 @@ func TestPropertyError_PrependPropertyName(t *testing.T) {
 			ExpectedName:  "added.original",
 		},
 	} {
-		test.PropertyError.PrependPropertyName(test.InputName)
-		assert.Equal(t, test.ExpectedName, test.PropertyError.PropertyName)
+		assert.Equal(t, test.ExpectedName, test.PropertyError.PrependPropertyName(test.InputName).PropertyName)
 	}
 }
 
 func TestRuleError(t *testing.T) {
 	for _, test := range []struct {
-		RuleError    RuleError
+		RuleError    *RuleError
 		InputCode    ErrorCode
 		ExpectedCode ErrorCode
 	}{
 		{
-			RuleError: RuleError{Message: "test"},
+			RuleError: &RuleError{Message: "test"},
 		},
 		{
-			RuleError:    RuleError{Message: "test", Code: "code"},
+			RuleError:    &RuleError{Message: "test", Code: "code"},
 			ExpectedCode: "code",
 		},
 		{
-			RuleError:    RuleError{Message: "test"},
+			RuleError:    &RuleError{Message: "test"},
 			InputCode:    "code",
 			ExpectedCode: "code",
 		},
 		{
-			RuleError:    RuleError{Message: "test", Code: "original"},
+			RuleError:    &RuleError{Message: "test", Code: "original"},
 			InputCode:    "added",
 			ExpectedCode: "added:original",
 		},
@@ -145,27 +203,27 @@ func TestHasErrorCode(t *testing.T) {
 			HasErrorCode: false,
 		},
 		{
-			Error:        RuleError{Code: "another"},
+			Error:        &RuleError{Code: "another"},
 			Code:         "code",
 			HasErrorCode: false,
 		},
 		{
-			Error:        RuleError{Code: "another:this"},
+			Error:        &RuleError{Code: "another:this"},
 			Code:         "code",
 			HasErrorCode: false,
 		},
 		{
-			Error:        RuleError{Code: "another:code:this"},
+			Error:        &RuleError{Code: "another:code:this"},
 			Code:         "code",
 			HasErrorCode: true,
 		},
 		{
-			Error:        &PropertyError{Errors: []RuleError{{Code: "another"}}},
+			Error:        &PropertyError{Errors: []*RuleError{{Code: "another"}}},
 			Code:         "code",
 			HasErrorCode: false,
 		},
 		{
-			Error:        &PropertyError{Errors: []RuleError{{Code: "this:another"}, {}, {Code: "another:code:this"}}},
+			Error:        &PropertyError{Errors: []*RuleError{{Code: "this:another"}, {}, {Code: "another:code:this"}}},
 			Code:         "code",
 			HasErrorCode: true,
 		},

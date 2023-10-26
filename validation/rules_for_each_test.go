@@ -31,7 +31,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path[0]",
 			PropertyValue: "path",
-			Errors:        []RuleError{{Message: expectedErr.Error()}},
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -51,42 +51,51 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err2 := errors.New("another error...")
 		err3 := errors.New("rule error")
 		err4 := errors.New("rule error again")
-		r :=
-			ForEach(func(m mockStruct) []string { return m.Fields }).
-				WithName("test.path").
-				Rules(NewSingleRule(func(v []string) error { return err3 })).
-				RulesForEach(
-					NewSingleRule(func(v string) error { return err1 }),
-					NewSingleRule(func(v string) error { return err2 }),
-				).
-				Rules(NewSingleRule(func(v []string) error { return err4 }))
+		r := ForEach(func(m mockStruct) []string { return m.Fields }).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v []string) error { return err3 })).
+			RulesForEach(
+				NewSingleRule(func(v string) error { return err1 }),
+				NewSingleRule(func(v string) error {
+					return NewPropertyError("nested", "made-up", err2)
+				}),
+			).
+			Rules(NewSingleRule(func(v []string) error {
+				return NewPropertyError("nested", "nestedValue", err4)
+			}))
 
 		errs := r.Validate(mockStruct{Fields: []string{"1", "2"}})
-		require.Len(t, errs, 3)
+		require.Len(t, errs, 6)
 		assert.ElementsMatch(t, []*PropertyError{
 			{
 				PropertyName:  "test.path",
 				PropertyValue: `["1","2"]`,
-				Errors: []RuleError{
-					{Message: err3.Error()},
-					{Message: err4.Error()},
-				},
+				Errors:        []*RuleError{{Message: err3.Error()}},
+			},
+			{
+				PropertyName:  "test.path.nested",
+				PropertyValue: "nestedValue",
+				Errors:        []*RuleError{{Message: err4.Error()}},
 			},
 			{
 				PropertyName:  "test.path[0]",
 				PropertyValue: "1",
-				Errors: []RuleError{
-					{Message: err1.Error()},
-					{Message: err2.Error()},
-				},
+				Errors:        []*RuleError{{Message: err1.Error()}},
 			},
 			{
 				PropertyName:  "test.path[1]",
 				PropertyValue: "2",
-				Errors: []RuleError{
-					{Message: err1.Error()},
-					{Message: err2.Error()},
-				},
+				Errors:        []*RuleError{{Message: err1.Error()}},
+			},
+			{
+				PropertyName:  "test.path[0].nested",
+				PropertyValue: "made-up",
+				Errors:        []*RuleError{{Message: err2.Error()}},
+			},
+			{
+				PropertyName:  "test.path[1].nested",
+				PropertyValue: "made-up",
+				Errors:        []*RuleError{{Message: err2.Error()}},
 			},
 		}, errs)
 	})
@@ -103,7 +112,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path[0]",
 			PropertyValue: "value",
-			Errors:        []RuleError{{Message: expectedErr.Error()}},
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -128,12 +137,12 @@ func TestPropertyRulesForEach(t *testing.T) {
 			{
 				PropertyName:  "test.path[0]",
 				PropertyValue: "value",
-				Errors:        []RuleError{{Message: err1.Error()}},
+				Errors:        []*RuleError{{Message: err1.Error()}},
 			},
 			{
 				PropertyName:  "test.path[0].included",
 				PropertyValue: "nested",
-				Errors: []RuleError{
+				Errors: []*RuleError{
 					{Message: err2.Error()},
 					{Message: err3.Error()},
 				},
