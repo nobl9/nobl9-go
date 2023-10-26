@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Generic
 )
 
 const DatasourceStableChannel = "stable"
@@ -124,6 +125,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Generic:             "Generic",
 }
 
 func (dst DataSourceType) String() string {
@@ -497,6 +499,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzureMonitor.String(): {
 			Value: ptr(5),
 			Unit:  QDDMinute,
+		},
+		Generic.String(): {
+			Value: ptr(0),
+			Unit:  QDDSecond,
 		},
 	}
 }
