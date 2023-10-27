@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Generic
 	Honeycomb
 )
 
@@ -125,6 +126,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Generic:             "Generic",
 	Honeycomb:           "Honeycomb",
 }
 
@@ -501,6 +503,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzureMonitor.String(): {
 			Value: ptr(5),
 			Unit:  QDDMinute,
+		},
+		Generic.String(): {
+			Value: ptr(0),
+			Unit:  QDDSecond,
 		},
 		Honeycomb.String(): {
 			Value: ptr(5),

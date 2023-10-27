@@ -55,8 +55,9 @@ type AgentSpec struct {
 	Instana                 *InstanaAgentConfig             `json:"instana,omitempty"`
 	InfluxDB                *InfluxDBAgentConfig            `json:"influxdb,omitempty"`
 	AzureMonitor            *AzureMonitorAgentConfig        `json:"azureMonitor,omitempty"`
-	Honeycomb               *HoneycombAgentConfig           `json:"honeycomb,omitempty"`
 	GCM                     *GCMAgentConfig                 `json:"gcm,omitempty"`
+	Generic                 *GenericAgentConfig             `json:"generic,omitempty"`
+	Honeycomb               *HoneycombAgentConfig           `json:"honeycomb,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval        `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                     `json:"queryDelay,omitempty"`
 }
@@ -109,6 +110,8 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return GCM, nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor, nil
+	case spec.Generic != nil:
+		return Generic, nil
 	case spec.Honeycomb != nil:
 		return Honeycomb, nil
 	}
@@ -238,6 +241,10 @@ type SplunkAgentConfig struct {
 // AzureMonitorAgentConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+}
+
+// GenericAgentConfig represents content of Generic Configuration typical for Agent Object.
+type GenericAgentConfig struct {
 }
 
 // HoneycombAgentConfig represents content of Honeycomb Configuration typical for Agent Object.
