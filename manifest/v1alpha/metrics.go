@@ -240,7 +240,7 @@ type GrafanaLokiMetric struct {
 
 // AzureMonitorMetric represents metric from AzureMonitor
 type AzureMonitorMetric struct {
-	ResourceID      string                        `json:"resourceId" validate:"required"`
+	ResourceID      string                        `json:"resourceId" validate:"required,azureResourceID" example:"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm"` //nolint:lll
 	MetricName      string                        `json:"metricName" validate:"required"`
 	Aggregation     string                        `json:"aggregation" validate:"required"`
 	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
