@@ -1070,6 +1070,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		influxDBCount            int
 		gcmCount                 int
 		azureMonitorCount        int
+		genericCount             int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1144,6 +1145,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
+		if metric.Generic != nil {
+			genericCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1212,6 +1216,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if azureMonitorCount > 0 {
+		metricCount++
+	}
+	if genericCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1779,6 +1786,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.Generic != nil {
+		agentTypesCount++
+	}
 	if sa.Honeycomb != nil {
 		agentTypesCount++
 	}
@@ -1806,6 +1816,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneAgentTypeRequired", "")
 	}
 }
@@ -1883,6 +1894,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.AzureMonitor != nil {
 		metricTypesCount++
 	}
+	if ms.Generic != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1907,6 +1921,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "genericMetric", "Generic", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
