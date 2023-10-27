@@ -871,12 +871,12 @@ func TestValidateAzureResourceID(t *testing.T) {
 		},
 		{
 			desc:       "incomplete valid resource id",
-			resourceID: "00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+			resourceID: "00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
 			isValid:    false,
 		},
 		{
 			desc:       "valid resource id",
-			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
 			isValid:    true,
 		},
 	}
