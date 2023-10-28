@@ -178,8 +178,7 @@ var indicatorValidation = validation.New[Indicator](
 		)),
 	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
 		WithName("rawMetric").
-		// TODO raw metric validation.
-		Include(),
+		Include(metricsSpecValidation),
 )
 
 var objectiveValidation = validation.New[Objective](
@@ -200,7 +199,13 @@ var objectiveValidation = validation.New[Objective](
 		Include(countMetricsValidation),
 	validation.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
 		WithName("rawMetric").
-		Include(rawMetricValidation),
+		Include(validation.New[RawMetricSpec](
+			validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
+				WithName("query").
+				Required().
+				Include(metricsSpecValidation).
+				Include(lightstepRawMetricValidation),
+		)),
 )
 
 var objectiveBaseValidation = validation.New[ObjectiveBase](

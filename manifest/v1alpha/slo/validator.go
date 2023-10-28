@@ -216,62 +216,10 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	sloSpecStructLevelLightstepValidation(sl, sloSpec)
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelLightstepValidation(sl v.StructLevel, sloSpec Spec) {
-	if !haveCountMetricsTheSameLightstepStreamID(sloSpec) {
-		sl.ReportError(
-			sloSpec.Objectives,
-			"objectives",
-			"Objectives",
-			"countMetricsHaveTheSameLightstepStreamID",
-			"",
-		)
-	}
-
-	if !isValidLightstepTypeOfDataForRawMetric(sloSpec) {
-		if sloSpec.containsIndicatorRawMetric() {
-			sl.ReportError(
-				sloSpec.Indicator.RawMetric,
-				"indicator.rawMetric",
-				"RawMetric",
-				"validLightstepTypeOfDataForRawMetric",
-				"",
-			)
-		} else {
-			sl.ReportError(
-				sloSpec.Objectives,
-				"objectives[].rawMetric.query",
-				"RawMetric",
-				"validLightstepTypeOfDataForRawMetric",
-				"",
-			)
-		}
-	}
-
-	if !isValidLightstepTypeOfDataForCountMetrics(sloSpec) {
-		sl.ReportError(
-			sloSpec.Objectives,
-			"objectives",
-			"Objectives",
-			"validLightstepTypeOfDataForCountMetrics",
-			"",
-		)
-	}
-	if !areLightstepCountMetricsNonIncremental(sloSpec) {
-		sl.ReportError(
-			sloSpec.Objectives,
-			"objectives",
-			"Objectives",
-			"lightstepCountMetricsAreNonIncremental",
-			"",
-		)
-	}
 }
 
 func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec Spec) {
@@ -386,105 +334,12 @@ func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
 	}
 }
 
-func areLightstepCountMetricsNonIncremental(sloSpec Spec) bool {
-	if !sloSpec.HasCountMetrics() {
-		return true
-	}
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		if (objective.CountMetrics.GoodMetric == nil || objective.CountMetrics.GoodMetric.Lightstep == nil) &&
-			(objective.CountMetrics.TotalMetric == nil || objective.CountMetrics.TotalMetric.Lightstep == nil) {
-			continue
-		}
-		if objective.CountMetrics.Incremental == nil || !*objective.CountMetrics.Incremental {
-			continue
-		}
-		return false
-	}
-	return true
-}
-
-func isValidLightstepTypeOfDataForCountMetrics(sloSpec Spec) bool {
-	if !sloSpec.HasCountMetrics() {
-		return true
-	}
-	goodCounts, totalCounts := sloSpec.GoodTotalCountMetrics()
-	for _, goodCount := range goodCounts {
-		if goodCount.Lightstep == nil {
-			continue
-		}
-		if goodCount.Lightstep.TypeOfData == nil {
-			return false
-		}
-		if *goodCount.Lightstep.TypeOfData != LightstepGoodCountDataType &&
-			*goodCount.Lightstep.TypeOfData != LightstepMetricDataType {
-			return false
-		}
-	}
-	for _, totalCount := range totalCounts {
-		if totalCount.Lightstep == nil {
-			continue
-		}
-		if totalCount.Lightstep.TypeOfData == nil {
-			return false
-		}
-		if *totalCount.Lightstep.TypeOfData != LightstepTotalCountDataType &&
-			*totalCount.Lightstep.TypeOfData != LightstepMetricDataType {
-			return false
-		}
-	}
-	return true
-}
-
-func isValidLightstepTypeOfDataForRawMetric(sloSpec Spec) bool {
-	if !sloSpec.HasRawMetric() {
-		return true
-	}
-	metrics := sloSpec.RawMetrics()
-	for _, metric := range metrics {
-		if metric.Lightstep == nil {
-			continue
-		}
-		if metric.Lightstep.TypeOfData == nil {
-			return false
-		}
-		if *metric.Lightstep.TypeOfData != LightstepErrorRateDataType &&
-			*metric.Lightstep.TypeOfData != LightstepLatencyDataType &&
-			*metric.Lightstep.TypeOfData != LightstepMetricDataType {
-			return false
-		}
-	}
-	return true
-}
-
 func metricSpecStructLevelValidation(sl v.StructLevel) {
 	metricSpec := sl.Current().Interface().(MetricSpec)
 
 	metricTypeValidation(metricSpec, sl)
-	if metricSpec.Lightstep != nil {
-		lightstepMetricValidation(metricSpec.Lightstep, sl)
-	}
 	if metricSpec.Instana != nil {
 		instanaMetricValidation(metricSpec.Instana, sl)
-	}
-}
-
-func lightstepMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.TypeOfData == nil {
-		return
-	}
-
-	switch *metric.TypeOfData {
-	case LightstepLatencyDataType:
-		lightstepLatencyMetricValidation(metric, sl)
-	case LightstepMetricDataType:
-		lightstepUQLMetricValidation(metric, sl)
-	case LightstepGoodCountDataType, LightstepTotalCountDataType:
-		lightstepGoodTotalMetricValidation(metric, sl)
-	case LightstepErrorRateDataType:
-		lightstepErrorRateMetricValidation(metric, sl)
 	}
 }
 
@@ -650,25 +505,6 @@ func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 		}
 		if (objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.ThousandEyes != nil) ||
 			(objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.ThousandEyes != nil) {
-			return false
-		}
-	}
-	return true
-}
-
-func haveCountMetricsTheSameLightstepStreamID(sloSpec Spec) bool {
-	for _, metricSpec := range sloSpec.CountMetricPairs() {
-		if metricSpec == nil || metricSpec.GoodMetric.Lightstep == nil || metricSpec.TotalMetric.Lightstep == nil {
-			continue
-		}
-		if metricSpec.GoodMetric.Lightstep.StreamID == nil && metricSpec.TotalMetric.Lightstep.StreamID == nil {
-			continue
-		}
-		if (metricSpec.GoodMetric.Lightstep.StreamID == nil && metricSpec.TotalMetric.Lightstep.StreamID != nil) ||
-			(metricSpec.GoodMetric.Lightstep.StreamID != nil && metricSpec.TotalMetric.Lightstep.StreamID == nil) {
-			return false
-		}
-		if *metricSpec.GoodMetric.Lightstep.StreamID != *metricSpec.TotalMetric.Lightstep.StreamID {
 			return false
 		}
 	}
