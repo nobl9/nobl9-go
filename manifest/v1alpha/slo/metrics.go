@@ -559,20 +559,33 @@ var countMetricsValidation = validation.New[CountMetricsSpec](
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
 		Required().
-		Include(metricsSpecValidation),
+		Include(metricsSpecValidation).
+		Include(lightstepTotalCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
-		Include(metricsSpecValidation),
+		Include(metricsSpecValidation).
+		Include(lightstepGoodCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
 		Rules(oneOfBadOverTotalValidationRule).
 		Include(metricsSpecValidation),
 )
 
+var rawMetricsValidation = validation.New[RawMetricSpec](
+	validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
+		WithName("query").
+		Required().
+		Include(metricsSpecValidation).
+		Include(lightstepRawMetricValidation),
+)
+
 var metricsSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *AppDynamicsMetric { return m.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
+	validation.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
+		WithName("lightstep").
+		Include(lightstepValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.

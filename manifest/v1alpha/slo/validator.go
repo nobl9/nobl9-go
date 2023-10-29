@@ -343,67 +343,6 @@ func metricSpecStructLevelValidation(sl v.StructLevel) {
 	}
 }
 
-func lightstepLatencyMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.Percentile == nil {
-		sl.ReportError(metric.Percentile, "percentile", "Percentile", "percentileRequired", "")
-	} else if *metric.Percentile <= 0 || *metric.Percentile > 99.99 {
-		sl.ReportError(metric.Percentile, "percentile", "Percentile", "invalidPercentile", "")
-	}
-	if metric.StreamID == nil {
-		sl.ReportError(metric.StreamID, "streamID", "StreamID", "streamIDRequired", "")
-	}
-	if metric.UQL != nil {
-		sl.ReportError(metric.UQL, "uql", "UQL", "uqlNotAllowed", "")
-	}
-}
-
-func lightstepUQLMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.UQL == nil {
-		sl.ReportError(metric.UQL, "uql", "UQL", "uqlRequired", "")
-	} else {
-		if len(*metric.UQL) == 0 {
-			sl.ReportError(metric.UQL, "uql", "UQL", "uqlRequired", "")
-		}
-		// Only UQL `metric` and `spans` inputs type are supported. https://docs.lightstep.com/docs/uql-reference
-		r := regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
-		if r.MatchString(*metric.UQL) {
-			sl.ReportError(metric.UQL, "uql", "UQL", "onlyMetricAndSpansUQLQueriesAllowed", "")
-		}
-	}
-
-	if metric.Percentile != nil {
-		sl.ReportError(metric.Percentile, "percentile", "Percentile", "percentileNotAllowed", "")
-	}
-
-	if metric.StreamID != nil {
-		sl.ReportError(metric.StreamID, "streamID", "StreamID", "streamIDNotAllowed", "")
-	}
-}
-
-func lightstepGoodTotalMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.StreamID == nil {
-		sl.ReportError(metric.StreamID, "streamID", "StreamID", "streamIDRequired", "")
-	}
-	if metric.UQL != nil {
-		sl.ReportError(metric.UQL, "uql", "UQL", "uqlNotAllowed", "")
-	}
-	if metric.Percentile != nil {
-		sl.ReportError(metric.Percentile, "percentile", "Percentile", "percentileNotAllowed", "")
-	}
-}
-
-func lightstepErrorRateMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.StreamID == nil {
-		sl.ReportError(metric.StreamID, "streamID", "StreamID", "streamIDRequired", "")
-	}
-	if metric.Percentile != nil {
-		sl.ReportError(metric.Percentile, "percentile", "Percentile", "percentileNotAllowed", "")
-	}
-	if metric.UQL != nil {
-		sl.ReportError(metric.UQL, "uql", "UQL", "uqlNotAllowed", "")
-	}
-}
-
 const (
 	instanaMetricTypeInfrastructure = "infrastructure"
 	instanaMetricTypeApplication    = "application"

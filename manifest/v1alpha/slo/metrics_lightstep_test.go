@@ -18,11 +18,11 @@ func TestLightstep_CountMetricLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.Incremental = ptr(false)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Lightstep = &LightstepMetric{
 			StreamID:   ptr("streamId"),
-			TypeOfData: nil,
+			TypeOfData: ptr(LightstepTotalCountDataType),
 		}
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Lightstep = &LightstepMetric{
 			StreamID:   ptr("different"),
-			TypeOfData: nil,
+			TypeOfData: ptr(LightstepGoodCountDataType),
 		}
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
@@ -80,7 +80,7 @@ func TestLightstep_TotalMetricLevel(t *testing.T) {
 		}
 	})
 	t.Run("invalid typeOfData", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Lightstep)
+		slo := validCountMetricSLO(v1alpha.Lightstep)
 		for _, typeOfData := range []string{
 			LightstepGoodCountDataType,
 			LightstepErrorRateDataType,
@@ -97,7 +97,7 @@ func TestLightstep_TotalMetricLevel(t *testing.T) {
 
 func TestLightstep_GoodMetricLevel(t *testing.T) {
 	t.Run("valid typeOfData", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Lightstep)
+		slo := validCountMetricSLO(v1alpha.Lightstep)
 		for _, typeOfData := range []string{
 			LightstepGoodCountDataType,
 			LightstepMetricDataType,
@@ -107,7 +107,7 @@ func TestLightstep_GoodMetricLevel(t *testing.T) {
 		}
 	})
 	t.Run("invalid typeOfData", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Lightstep)
+		slo := validCountMetricSLO(v1alpha.Lightstep)
 		for _, typeOfData := range []string{
 			LightstepTotalCountDataType,
 			LightstepErrorRateDataType,

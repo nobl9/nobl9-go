@@ -199,13 +199,7 @@ var objectiveValidation = validation.New[Objective](
 		Include(countMetricsValidation),
 	validation.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
 		WithName("rawMetric").
-		Include(validation.New[RawMetricSpec](
-			validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
-				WithName("query").
-				Required().
-				Include(metricsSpecValidation).
-				Include(lightstepRawMetricValidation),
-		)),
+		Include(rawMetricsValidation),
 )
 
 var objectiveBaseValidation = validation.New[ObjectiveBase](

@@ -1,7 +1,8 @@
 package slo
 
 import (
-	v "github.com/go-playground/validator/v10"
+	"regexp"
+
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/validation"
@@ -44,24 +45,15 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 		c.GoodMetric.Lightstep != nil && c.TotalMetric.Lightstep != nil
 })
 
-func lightstepMetricValidation(metric *LightstepMetric, sl v.StructLevel) {
-	if metric.TypeOfData == nil {
-		return
-	}
-
-	switch *metric.TypeOfData {
-	case LightstepLatencyDataType:
-		lightstepLatencyMetricValidation(metric, sl)
-	case LightstepMetricDataType:
-		lightstepUQLMetricValidation(metric, sl)
-	case LightstepGoodCountDataType, LightstepTotalCountDataType:
-		lightstepGoodTotalMetricValidation(metric, sl)
-	case LightstepErrorRateDataType:
-		lightstepErrorRateMetricValidation(metric, sl)
-	}
+// createLightstepMetricSpecValidation constucts a new MetriSpec level validation for Lightstep.
+func createLightstepMetricSpecValidation(include validation.Validator[LightstepMetric]) validation.Validator[MetricSpec] {
+	return validation.New[MetricSpec](
+		validation.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
+			WithName("lightstep").
+			Include(include))
 }
 
-var lightstepRawMetricValidation = validation.New[LightstepMetric](
+var lightstepRawMetricValidation = createLightstepMetricSpecValidation(validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
@@ -70,45 +62,92 @@ var lightstepRawMetricValidation = validation.New[LightstepMetric](
 			LightstepLatencyDataType,
 			LightstepMetricDataType,
 		)),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
-		WithName("streamId"),
-	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
-		WithName("percentile"),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
-		WithName("uql"),
-)
+))
 
-var lightstepCountMetricValidation = validation.New[LightstepMetric](
-	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
-		WithName("streamId"),
-	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
-		WithName("percentile"),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
-		WithName("uql"),
-)
-
-var lightstepTotalCountMetricValidation = validation.New[LightstepMetric](
+var lightstepTotalCountMetricValidation = createLightstepMetricSpecValidation(validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
 		Rules(validation.OneOf(LightstepTotalCountDataType, LightstepMetricDataType)),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
-		WithName("streamId"),
-	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
-		WithName("percentile"),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
-		WithName("uql"),
-)
+))
 
-var lightstepGoodCountMetricValidation = validation.New[LightstepMetric](
+var lightstepGoodCountMetricValidation = createLightstepMetricSpecValidation(validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
 		Rules(validation.OneOf(LightstepGoodCountDataType, LightstepMetricDataType)),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
-		WithName("streamId"),
-	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
-		WithName("percentile"),
-	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
-		WithName("uql"),
+))
+
+var lightstepValidation = validation.New[LightstepMetric](
+	validation.For(validation.GetSelf[LightstepMetric]()).
+		Include(lightstepLatencyDataTypeValidation).
+		Include(lightstepMetricDataTypeValidation).
+		Include(lightstepGoodAndTotalDataTypeValidation).
+		Include(lightstepErrorRateDataTypeValidation),
 )
+
+var lightstepLatencyDataTypeValidation = validation.New[LightstepMetric](
+	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
+		WithName("streamId").
+		Required(),
+	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
+		WithName("percentile").
+		Required().
+		Rules(validation.GreaterThan(0.0), validation.LessThanOrEqualTo(99.99)),
+	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
+		WithName("uql").
+		Rules(validation.Forbidden[string]()),
+).
+	When(func(m LightstepMetric) bool {
+		return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType
+	})
+
+var ligstepUQLRegex = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
+
+var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
+	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
+		WithName("streamId").
+		Rules(validation.Forbidden[string]()),
+	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
+		WithName("percentile").
+		Rules(validation.Forbidden[float64]()),
+	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
+		WithName("uql").
+		Required().
+		Rules(validation.StringRegexp(ligstepUQLRegex)),
+).
+	When(func(m LightstepMetric) bool {
+		return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType
+	})
+
+var lightstepGoodAndTotalDataTypeValidation = validation.New[LightstepMetric](
+	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
+		WithName("streamId").
+		Required(),
+	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
+		WithName("percentile").
+		Rules(validation.Forbidden[float64]()),
+	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
+		WithName("uql").
+		Rules(validation.Forbidden[string]()),
+).
+	When(func(m LightstepMetric) bool {
+		return m.TypeOfData != nil &&
+			(*m.TypeOfData == LightstepGoodCountDataType ||
+				*m.TypeOfData == LightstepTotalCountDataType)
+	})
+
+var lightstepErrorRateDataTypeValidation = validation.New[LightstepMetric](
+	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
+		WithName("streamId").
+		Required(),
+	validation.ForPointer(func(l LightstepMetric) *float64 { return l.Percentile }).
+		WithName("percentile").
+		Rules(validation.Forbidden[float64]()),
+	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
+		WithName("uql").
+		Rules(validation.Forbidden[string]()),
+).
+	When(func(m LightstepMetric) bool {
+		return m.TypeOfData != nil && *m.TypeOfData == LightstepErrorRateDataType
+	})

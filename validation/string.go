@@ -17,6 +17,15 @@ func StringNotEmpty() SingleRule[string] {
 	}).WithErrorCode(ErrorCodeStringNotEmpty)
 }
 
+func StringRegexp(re *regexp.Regexp) SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		if !re.MatchString(s) {
+			return errors.Errorf("string does not match regular expresion: %s", re)
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringRegexp)
+}
+
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 func StringIsDNSSubdomain() RuleSet[string] {

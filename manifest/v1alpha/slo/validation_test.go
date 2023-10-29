@@ -1140,7 +1140,7 @@ func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
 func validCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
 	s.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
-		Incremental: ptr(true),
+		Incremental: ptr(false),
 		TotalMetric: validMetricSpec(metricType),
 		GoodMetric:  validMetricSpec(metricType),
 	}

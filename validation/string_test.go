@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 
@@ -16,6 +17,19 @@ func TestStringNotEmpty(t *testing.T) {
 		err := StringNotEmpty().Validate("     ")
 		assert.Error(t, err)
 		assert.True(t, HasErrorCode(err, ErrorCodeStringNotEmpty))
+	})
+}
+
+func TestStringRegexp(t *testing.T) {
+  re := regexp.MustCompile("[a-b]+")
+	t.Run("passes", func(t *testing.T) {
+		err := StringRegexp(re).Validate("ab")
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		err := StringRegexp(re).Validate("cd")
+		assert.EqualError(t, err, "string does not match regular expresion: [a-b]+")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringRegexp))
 	})
 }
 
