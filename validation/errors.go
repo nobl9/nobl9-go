@@ -60,9 +60,9 @@ func (e *PropertyError) Error() string {
 	b := new(strings.Builder)
 	indent := ""
 	if e.PropertyName != "" {
-		b.WriteString(fmt.Sprintf("'%s'", e.PropertyName))
+		fmt.Fprintf(b, "'%s'", e.PropertyName)
 		if e.PropertyValue != "" {
-			b.WriteString(fmt.Sprintf(" with value '%s'", e.PropertyValue))
+			fmt.Fprintf(b, " with value '%s'", e.PropertyValue)
 		}
 		b.WriteString(":\n")
 		indent = strings.Repeat(" ", 2)

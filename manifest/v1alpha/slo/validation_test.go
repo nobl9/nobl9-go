@@ -981,6 +981,18 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 }
 
 func TestValidate_Spec_CountMetrics(t *testing.T) {
+	t.Run("bad over total enabled", func(t *testing.T) {
+		for _, typ := range badOverTotalEnabledSources {
+			slo := validSLO()
+			slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+				Incremental: ptr(true),
+				TotalMetric: validMetricSpec(typ),
+				BadMetric:   validMetricSpec(typ),
+			}
+			err := validate(slo)
+			assert.Empty(t, err)
+		}
+	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
 		for name, metrics := range map[string][]*CountMetricsSpec{
 			"single objective - total": {

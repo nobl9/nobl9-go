@@ -200,13 +200,6 @@ type CloudWatchMetricDimension struct {
 	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
 }
 
-// PingdomMetric represents metric from Pingdom.
-type PingdomMetric struct {
-	CheckID   *string `json:"checkId" validate:"required,notBlank,numeric" example:"1234567"`
-	CheckType *string `json:"checkType" validate:"required,pingdomCheckTypeFieldValid" example:"uptime"`
-	Status    *string `json:"status,omitempty" validate:"omitempty,pingdomStatusValid" example:"up,down"`
-}
-
 // GraphiteMetric represents metric from Graphite.
 type GraphiteMetric struct {
 	MetricPath *string `json:"metricPath" validate:"required,metricPathGraphite"`
@@ -526,17 +519,17 @@ func (m *MetricSpec) Query() interface{} {
 }
 
 const (
-	errCodeExactlyOneMetricType     = "exactly_one_metric_type"
-	errCodeBadOverTotalDisabled     = "bad_over_total_disabled"
-	errCodeExactlyOneMetricSpecType = "exactly_one_metric_spec_type"
-	errCodeTimeSliceTarget          = "time_slice_target"
+	errCodeExactlyOneMetricType      = "exactly_one_metric_type"
+	errCodeBadOverTotalDisabled      = "bad_over_total_disabled"
+	errCodeExactlyOneMetricSpecType  = "exactly_one_metric_spec_type"
+	errCodeTimeSliceTarget           = "time_slice_target"
 )
 
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
 		Rules(validation.NewSingleRule(func(v Spec) error {
 			if v.HasRawMetric() == v.HasCountMetrics() {
-				return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetric'")
+				return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
 			}
 			return nil
 		}).WithErrorCode(errCodeExactlyOneMetricType)).
@@ -588,14 +581,16 @@ var metricsSpecValidation = validation.New[MetricSpec](
 		Include(lightstepValidation),
 )
 
+var badOverTotalEnabledSources = []v1alpha.DataSourceType{
+	v1alpha.CloudWatch,
+	v1alpha.AppDynamics,
+	v1alpha.AzureMonitor,
+}
+
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 var oneOfBadOverTotalValidationRule = validation.NewSingleRule(func(v MetricSpec) error {
-	return validation.OneOf(
-		v1alpha.CloudWatch,
-		v1alpha.AppDynamics,
-		v1alpha.AzureMonitor,
-	).Validate(v.DataSourceType())
+	return validation.OneOf(badOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeBadOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = validation.NewSingleRule(func(v Spec) error {

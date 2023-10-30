@@ -64,13 +64,11 @@ loop:
 			propValue = r.getter(st)
 			err := v.Validate(propValue)
 			if err != nil {
-				if err != nil {
-					switch ev := err.(type) {
-					case *PropertyError:
-						allErrors = append(allErrors, ev.PrependPropertyName(r.name))
-					default:
-						sliceErrors = append(sliceErrors, err)
-					}
+				switch ev := err.(type) {
+				case *PropertyError:
+					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
+				default:
+					sliceErrors = append(sliceErrors, err)
 				}
 			}
 			previousStepFailed = err != nil

@@ -45,11 +45,6 @@ const (
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
 )
 
-const (
-	PingdomTypeUptime      = "uptime"
-	PingdomTypeTransaction = "transaction"
-)
-
 // HiddenValue can be used as a value of a secret field and is ignored during saving
 const HiddenValue = "[hidden]"
 
@@ -1172,27 +1167,6 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 }
 
 func countMetricsSpecValidation(sl v.StructLevel) {
-	countMetrics := sl.Current().Interface().(CountMetricsSpec)
-	if countMetrics.TotalMetric == nil {
-		return
-	}
-
-	totalDatasourceMetricType := countMetrics.TotalMetric.DataSourceType()
-
-	if countMetrics.GoodMetric != nil {
-		if countMetrics.GoodMetric.DataSourceType() != totalDatasourceMetricType {
-			sl.ReportError(countMetrics.GoodMetric, "goodMetrics", "GoodMetric", "metricsOfTheSameType", "")
-			reportCountMetricsSpecMessageForTotalMetric(sl, countMetrics)
-		}
-	}
-
-	if countMetrics.BadMetric != nil {
-		if countMetrics.BadMetric.DataSourceType() != totalDatasourceMetricType {
-			sl.ReportError(countMetrics.BadMetric, "badMetrics", "BadMetric", "metricsOfTheSameType", "")
-			reportCountMetricsSpecMessageForTotalMetric(sl, countMetrics)
-		}
-	}
-
 	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
 	instanaCountMetricsSpecValidation(sl)
