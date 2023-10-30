@@ -20,16 +20,29 @@ func TestStringNotEmpty(t *testing.T) {
 	})
 }
 
-func TestStringRegexp(t *testing.T) {
-  re := regexp.MustCompile("[a-b]+")
+func TestStringMatchRegexp(t *testing.T) {
+	re := regexp.MustCompile("[ab]+")
 	t.Run("passes", func(t *testing.T) {
-		err := StringRegexp(re).Validate("ab")
+		err := StringMatchRegexp(re).Validate("ab")
 		assert.NoError(t, err)
 	})
 	t.Run("fails", func(t *testing.T) {
-		err := StringRegexp(re).Validate("cd")
-		assert.EqualError(t, err, "string does not match regular expresion: [a-b]+")
-		assert.True(t, HasErrorCode(err, ErrorCodeStringRegexp))
+		err := StringMatchRegexp(re).Validate("cd")
+		assert.EqualError(t, err, "string does not match regular expresion: [ab]+")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringMatchRegexp))
+	})
+}
+
+func TestStringDenyRegexp(t *testing.T) {
+	re := regexp.MustCompile("[ab]+")
+	t.Run("passes", func(t *testing.T) {
+		err := StringDenyRegexp(re).Validate("cd")
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		err := StringDenyRegexp(re).Validate("ab")
+		assert.EqualError(t, err, "string must not match regular expresion: [ab]+")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringDenyRegexp))
 	})
 }
 

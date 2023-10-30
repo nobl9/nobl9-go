@@ -17,13 +17,22 @@ func StringNotEmpty() SingleRule[string] {
 	}).WithErrorCode(ErrorCodeStringNotEmpty)
 }
 
-func StringRegexp(re *regexp.Regexp) SingleRule[string] {
+func StringMatchRegexp(re *regexp.Regexp) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if !re.MatchString(s) {
 			return errors.Errorf("string does not match regular expresion: %s", re)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringRegexp)
+	}).WithErrorCode(ErrorCodeStringMatchRegexp)
+}
+
+func StringDenyRegexp(re *regexp.Regexp) SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		if re.MatchString(s) {
+			return errors.Errorf("string must not match regular expresion: %s", re)
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringDenyRegexp)
 }
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")

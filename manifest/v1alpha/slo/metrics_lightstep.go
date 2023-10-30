@@ -27,7 +27,7 @@ type LightstepMetric struct {
 var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
 		Rules(validation.NewSingleRule(func(c CountMetricsSpec) error {
-			if c.GoodMetric.Lightstep.StreamID == nil &&
+			if c.GoodMetric.Lightstep.StreamID == nil ||
 				c.TotalMetric.Lightstep.StreamID == nil {
 				return nil
 			}
@@ -45,8 +45,10 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 		c.GoodMetric.Lightstep != nil && c.TotalMetric.Lightstep != nil
 })
 
-// createLightstepMetricSpecValidation constucts a new MetriSpec level validation for Lightstep.
-func createLightstepMetricSpecValidation(include validation.Validator[LightstepMetric]) validation.Validator[MetricSpec] {
+// createLightstepMetricSpecValidation constructs a new MetriSpec level validation for Lightstep.
+func createLightstepMetricSpecValidation(
+	include validation.Validator[LightstepMetric],
+) validation.Validator[MetricSpec] {
 	return validation.New[MetricSpec](
 		validation.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
 			WithName("lightstep").
@@ -102,7 +104,7 @@ var lightstepLatencyDataTypeValidation = validation.New[LightstepMetric](
 		return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType
 	})
 
-var ligstepUQLRegex = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
+var ligstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
 
 var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
@@ -114,7 +116,7 @@ var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
 		WithName("uql").
 		Required().
-		Rules(validation.StringRegexp(ligstepUQLRegex)),
+		Rules(validation.StringDenyRegexp(ligstepUQLRegexp)),
 ).
 	When(func(m LightstepMetric) bool {
 		return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType

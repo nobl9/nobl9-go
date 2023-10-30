@@ -99,7 +99,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			copy(good, test.ExpectedErrors)
 			total = prependPropertyPath(total, "spec.objectives[0].countMetrics.total.appDynamics")
 			good = prependPropertyPath(good, "spec.objectives[0].countMetrics.good.appDynamics")
-			assertContainsErrors(t, err, len(test.ExpectedErrors)*2, append(total, good...)...)
+			assertContainsErrors(t, err, len(test.ExpectedErrors)*2, append(total, good...)...) //nolint: makezero
 		})
 	}
 }

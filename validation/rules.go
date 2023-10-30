@@ -54,7 +54,7 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	propValue, isEmpty := r.getter(st)
 	isEmpty = isEmpty || (!r.isPointer && isEmptyFunc(propValue))
 	if r.required && isEmpty {
-		return PropertyErrors{NewPropertyError(r.name, propValue, NewRequiredError())}
+		return PropertyErrors{NewPropertyError(r.name, nil, NewRequiredError())}
 	}
 	if isEmpty && (r.omitempty || r.isPointer) {
 		return nil

@@ -78,7 +78,7 @@ var specValidation = validation.New[Spec](
 				return 0
 			}
 			return *v.Value
-		})).
+		}, "objectives[*].value must be different for each objective")).
 		IncludeForEach(objectiveValidation),
 )
 
