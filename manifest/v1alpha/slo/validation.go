@@ -178,7 +178,7 @@ var indicatorValidation = validation.New[Indicator](
 		)),
 	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
 		WithName("rawMetric").
-		Include(metricsSpecValidation),
+		Include(metricSpecValidation),
 )
 
 var objectiveValidation = validation.New[Objective](
@@ -196,7 +196,7 @@ var objectiveValidation = validation.New[Objective](
 		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
 		WithName("countMetrics").
-		Include(countMetricsValidation),
+		Include(countMetricsSpecValidation),
 	validation.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
 		WithName("rawMetric").
 		Include(rawMetricsValidation),

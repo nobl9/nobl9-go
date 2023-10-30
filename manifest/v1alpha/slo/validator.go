@@ -93,7 +93,7 @@ func NewValidator() *Validate {
 
 	val.RegisterStructValidation(sloSpecStructLevelValidation, Spec{})
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
-	val.RegisterStructValidation(countMetricsSpecValidation, CountMetricsSpec{})
+	val.RegisterStructValidation(countzMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 	val.RegisterStructValidation(sumoLogicStructValidation, SumoLogicMetric{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
@@ -125,8 +125,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("supportedThousandEyesTestType", supportedThousandEyesTestType)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
-	_ = val.RegisterValidation("pingdomCheckTypeFieldValid", pingdomCheckTypeFieldValid)
-	_ = val.RegisterValidation("pingdomStatusValid", pingdomStatusValid)
 	_ = val.RegisterValidation("redshiftRequiredColumns", isValidRedshiftQuery)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
 	_ = val.RegisterValidation("influxDBRequiredPlaceholders", isValidInfluxDBQuery)
@@ -211,82 +209,9 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelPingdomValidation(sl v.StructLevel, sloSpec Spec) {
-	if !havePingdomCountMetricsGoodTotalTheSameCheckID(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"pingdomCountMetricsGoodTotalHaveDifferentCheckID",
-			"",
-		)
-	}
-
-	if !havePingdomRawMetricCheckTypeUptime(sloSpec) {
-		if sloSpec.containsIndicatorRawMetric() {
-			sl.ReportError(
-				sloSpec.Indicator.RawMetric,
-				"indicator.rawMetric",
-				"RawMetric",
-				"validPingdomCheckTypeForRawMetric",
-				"",
-			)
-		} else {
-			sl.ReportError(
-				sloSpec.Objectives,
-				"objectives[].rawMetric.query",
-				"RawMetric",
-				"validPingdomCheckTypeForRawMetric",
-				"",
-			)
-		}
-	}
-
-	if !havePingdomMetricsTheSameCheckType(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"pingdomMetricsHaveDifferentCheckType",
-			"",
-		)
-	}
-
-	if !havePingdomCorrectStatusForCountMetricsCheckType(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"pingdomCountMetricsIncorrectStatusForCheckType",
-			"",
-		)
-	}
-
-	if !havePingdomCorrectStatusForRawMetrics(sloSpec) {
-		if sloSpec.containsIndicatorRawMetric() {
-			sl.ReportError(
-				sloSpec.Indicator.RawMetric,
-				"indicator.rawMetric",
-				"RawMetric",
-				"pingdomCorrectCheckTypeForRawMetrics",
-				"",
-			)
-		} else {
-			sl.ReportError(
-				sloSpec.Objectives,
-				"objectives[].rawMetric.query",
-				"RawMetric",
-				"pingdomCorrectCheckTypeForRawMetrics",
-				"",
-			)
-		}
-	}
 }
 
 func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec Spec) {
@@ -440,97 +365,6 @@ func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 		if (objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.ThousandEyes != nil) ||
 			(objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.ThousandEyes != nil) {
 			return false
-		}
-	}
-	return true
-}
-
-func havePingdomCountMetricsGoodTotalTheSameCheckID(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		if objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.Pingdom != nil &&
-			objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.Pingdom != nil &&
-			objective.CountMetrics.GoodMetric.Pingdom.CheckID != nil &&
-			objective.CountMetrics.TotalMetric.Pingdom.CheckID != nil &&
-			*objective.CountMetrics.GoodMetric.Pingdom.CheckID != *objective.CountMetrics.TotalMetric.Pingdom.CheckID {
-			return false
-		}
-	}
-	return true
-}
-
-func havePingdomRawMetricCheckTypeUptime(sloSpec Spec) bool {
-	if !sloSpec.HasRawMetric() {
-		return true
-	}
-
-	for _, metricSpec := range sloSpec.RawMetrics() {
-		if metricSpec == nil || metricSpec.Pingdom == nil {
-			continue
-		}
-
-		if metricSpec.Pingdom.CheckType != nil &&
-			pingdomCheckTypeValid(*metricSpec.Pingdom.CheckType) &&
-			*metricSpec.Pingdom.CheckType != PingdomTypeUptime {
-			return false
-		}
-	}
-
-	return true
-}
-
-func havePingdomMetricsTheSameCheckType(sloSpec Spec) bool {
-	types := make(map[string]bool)
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		if objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.Pingdom != nil &&
-			objective.CountMetrics.TotalMetric.Pingdom.CheckType != nil &&
-			pingdomCheckTypeValid(*objective.CountMetrics.TotalMetric.Pingdom.CheckType) {
-			types[*objective.CountMetrics.TotalMetric.Pingdom.CheckType] = true
-		}
-		if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.Pingdom != nil &&
-			objective.CountMetrics.GoodMetric.Pingdom.CheckType != nil &&
-			pingdomCheckTypeValid(*objective.CountMetrics.GoodMetric.Pingdom.CheckType) {
-			types[*objective.CountMetrics.GoodMetric.Pingdom.CheckType] = true
-		}
-	}
-	return len(types) < 2
-}
-
-func havePingdomCorrectStatusForRawMetrics(sloSpec Spec) bool {
-	if !sloSpec.HasRawMetric() {
-		return true
-	}
-
-	for _, metricSpec := range sloSpec.RawMetrics() {
-		if metricSpec.Pingdom != nil &&
-			metricSpec.Pingdom.CheckType != nil &&
-			*metricSpec.Pingdom.CheckType == PingdomTypeTransaction {
-			return metricSpec.Pingdom.Status == nil
-		}
-	}
-
-	return true
-}
-
-func havePingdomCorrectStatusForCountMetricsCheckType(sloSpec Spec) bool {
-	for _, metricSpec := range sloSpec.CountMetrics() {
-		if metricSpec == nil || metricSpec.Pingdom == nil || metricSpec.Pingdom.CheckType == nil {
-			continue
-		}
-		switch *metricSpec.Pingdom.CheckType {
-		case PingdomTypeTransaction:
-			if metricSpec.Pingdom.Status != nil {
-				return false
-			}
-		case PingdomTypeUptime:
-			if metricSpec.Pingdom.Status == nil {
-				return false
-			}
 		}
 	}
 	return true
@@ -1130,43 +964,7 @@ func supportedThousandEyesTestType(fl v.FieldLevel) bool {
 	return false
 }
 
-func pingdomCheckTypeFieldValid(fl v.FieldLevel) bool {
-	return pingdomCheckTypeValid(fl.Field().String())
-}
-
-func pingdomCheckTypeValid(checkType string) bool {
-	switch checkType {
-	case PingdomTypeUptime, PingdomTypeTransaction:
-	default:
-		return false
-	}
-
-	return true
-}
-
-func pingdomStatusValid(fl v.FieldLevel) bool {
-	const (
-		statusUp          = "up"
-		statusDown        = "down"
-		statusUnconfirmed = "unconfirmed"
-		statusUnknown     = "unknown"
-	)
-
-	statusesSeparatedByComma := fl.Field().String()
-
-	statusesCollection := strings.Split(statusesSeparatedByComma, ",")
-	for _, status := range statusesCollection {
-		switch status {
-		case statusUp, statusDown, statusUnconfirmed, statusUnknown:
-		default:
-			return false
-		}
-	}
-
-	return true
-}
-
-func countMetricsSpecValidation(sl v.StructLevel) {
+func countzMetricsSpecValidation(sl v.StructLevel) {
 	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
 	instanaCountMetricsSpecValidation(sl)

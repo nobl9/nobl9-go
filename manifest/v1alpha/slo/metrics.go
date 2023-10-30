@@ -519,10 +519,10 @@ func (m *MetricSpec) Query() interface{} {
 }
 
 const (
-	errCodeExactlyOneMetricType      = "exactly_one_metric_type"
-	errCodeBadOverTotalDisabled      = "bad_over_total_disabled"
-	errCodeExactlyOneMetricSpecType  = "exactly_one_metric_spec_type"
-	errCodeTimeSliceTarget           = "time_slice_target"
+	errCodeExactlyOneMetricType     = "exactly_one_metric_type"
+	errCodeBadOverTotalDisabled     = "bad_over_total_disabled"
+	errCodeExactlyOneMetricSpecType = "exactly_one_metric_spec_type"
+	errCodeTimeSliceTarget          = "time_slice_target"
 )
 
 var specMetricsValidation = validation.New[Spec](
@@ -542,43 +542,56 @@ var specMetricsValidation = validation.New[Spec](
 		),
 )
 
-var countMetricsValidation = validation.New[CountMetricsSpec](
+var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
 		Rules(appDynamicsCountMetricsLevelValidationRule).
-		Include(lightstepCountMetricsLevelValidation),
+		Include(lightstepCountMetricsLevelValidation).
+		Include(pingdomCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
 		Required().
-		Include(metricsSpecValidation).
+		Include(metricSpecValidation).
+		Include(countMetricsValidation).
 		Include(lightstepTotalCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
-		Include(metricsSpecValidation).
+		Include(metricSpecValidation).
+		Include(countMetricsValidation).
 		Include(lightstepGoodCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
 		Rules(oneOfBadOverTotalValidationRule).
-		Include(metricsSpecValidation),
+		Include(countMetricsValidation).
+		Include(metricSpecValidation),
 )
 
 var rawMetricsValidation = validation.New[RawMetricSpec](
 	validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
 		WithName("query").
 		Required().
-		Include(metricsSpecValidation).
-		Include(lightstepRawMetricValidation),
+		Include(metricSpecValidation).
+		Include(lightstepRawMetricValidation).
+		Include(pingdomRawMetricValidation),
 )
 
-var metricsSpecValidation = validation.New[MetricSpec](
+var countMetricsValidation = validation.New[MetricSpec](
+	validation.For(validation.GetSelf[MetricSpec]()).
+		Include(pingdomCountMetricsValidation),
+)
+
+var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *AppDynamicsMetric { return m.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
 	validation.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
 		WithName("lightstep").
 		Include(lightstepValidation),
+	validation.ForPointer(func(m MetricSpec) *PingdomMetric { return m.Pingdom }).
+		WithName("pingdom").
+		Include(pingdomValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -782,3 +795,20 @@ var objectiveOperatorRequiredForRawMetricValidationRule = validation.NewSingleRu
 	}
 	return nil
 })
+
+// whenCountMetricsIs is a helper function that returns a validation.Predicate which will only pass if
+// the count metrics is of the given type.
+func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
+	return func(c CountMetricsSpec) bool {
+		if c.TotalMetric == nil {
+			return false
+		}
+		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
+			return false
+		}
+		if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
+			return false
+		}
+		return true
+	}
+}

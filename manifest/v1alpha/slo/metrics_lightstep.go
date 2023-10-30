@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -27,8 +28,7 @@ type LightstepMetric struct {
 var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
 		Rules(validation.NewSingleRule(func(c CountMetricsSpec) error {
-			if c.GoodMetric.Lightstep.StreamID == nil ||
-				c.TotalMetric.Lightstep.StreamID == nil {
+			if c.GoodMetric.Lightstep.StreamID == nil || c.TotalMetric.Lightstep.StreamID == nil {
 				return nil
 			}
 			if *c.GoodMetric.Lightstep.StreamID != *c.TotalMetric.Lightstep.StreamID {
@@ -40,10 +40,7 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Rules(validation.EqualTo(false)),
-).When(func(c CountMetricsSpec) bool {
-	return c.GoodMetric != nil && c.TotalMetric != nil &&
-		c.GoodMetric.Lightstep != nil && c.TotalMetric.Lightstep != nil
-})
+).When(whenCountMetricsIs(v1alpha.Lightstep))
 
 // createLightstepMetricSpecValidation constructs a new MetriSpec level validation for Lightstep.
 func createLightstepMetricSpecValidation(
