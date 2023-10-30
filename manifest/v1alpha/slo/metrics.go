@@ -129,15 +129,6 @@ type RedshiftMetric struct {
 	Query        *string `json:"query" validate:"required,redshiftRequiredColumns"`
 }
 
-// SumoLogicMetric represents metric from Sumo Logic.
-type SumoLogicMetric struct {
-	Type         *string `json:"type" validate:"required"`
-	Query        *string `json:"query" validate:"required"`
-	Quantization *string `json:"quantization,omitempty"`
-	Rollup       *string `json:"rollup,omitempty"`
-	// For struct level validation refer to sumoLogicStructValidation in pkg/manifest/v1alpha/validator.go
-}
-
 // InstanaMetric represents metric from Redshift.
 type InstanaMetric struct {
 	MetricType     string                           `json:"metricType" validate:"required,oneof=infrastructure application"` //nolint:lll

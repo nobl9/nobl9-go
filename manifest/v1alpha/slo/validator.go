@@ -95,7 +95,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
 	val.RegisterStructValidation(countzMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
-	val.RegisterStructValidation(sumoLogicStructValidation, SumoLogicMetric{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("site", isSite)
@@ -209,31 +208,8 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec Spec) {
-	if !areSumoLogicQuantizationValuesEqual(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"sumoLogicCountMetricsEqualQuantization",
-			"",
-		)
-	}
-
-	if !areSumoLogicTimesliceValuesEqual(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"sumoLogicCountMetricsEqualTimeslice",
-			"",
-		)
-	}
 }
 
 func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec Spec) {
@@ -365,62 +341,6 @@ func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
 		if (objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.ThousandEyes != nil) ||
 			(objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.ThousandEyes != nil) {
 			return false
-		}
-	}
-	return true
-}
-
-func areSumoLogicQuantizationValuesEqual(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		countMetrics := objective.CountMetrics
-		if countMetrics == nil {
-			continue
-		}
-		if countMetrics.GoodMetric == nil || countMetrics.TotalMetric == nil {
-			continue
-		}
-		if countMetrics.GoodMetric.SumoLogic == nil && countMetrics.TotalMetric.SumoLogic == nil {
-			continue
-		}
-		if countMetrics.GoodMetric.SumoLogic.Quantization == nil || countMetrics.TotalMetric.SumoLogic.Quantization == nil {
-			continue
-		}
-		if *countMetrics.GoodMetric.SumoLogic.Quantization != *countMetrics.TotalMetric.SumoLogic.Quantization {
-			return false
-		}
-	}
-	return true
-}
-
-func areSumoLogicTimesliceValuesEqual(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		countMetrics := objective.CountMetrics
-		if countMetrics == nil {
-			continue
-		}
-		if countMetrics.GoodMetric == nil || countMetrics.TotalMetric == nil {
-			continue
-		}
-		if countMetrics.GoodMetric.SumoLogic == nil && countMetrics.TotalMetric.SumoLogic == nil {
-			continue
-		}
-
-		good := countMetrics.GoodMetric.SumoLogic
-		total := countMetrics.TotalMetric.SumoLogic
-		if *good.Type == "logs" && *total.Type == "logs" {
-			goodTS, err := getTimeSliceFromSumoLogicQuery(*good.Query)
-			if err != nil {
-				continue
-			}
-
-			totalTS, err := getTimeSliceFromSumoLogicQuery(*total.Query)
-			if err != nil {
-				continue
-			}
-
-			if goodTS != totalTS {
-				return false
-			}
 		}
 	}
 	return true
@@ -1252,133 +1172,6 @@ func isValidHeaderName(fl v.FieldLevel) bool {
 	validHeaderNameRegex := regexp.MustCompile(HeaderNameRegex)
 
 	return validHeaderNameRegex.MatchString(headerName)
-}
-
-func sumoLogicStructValidation(sl v.StructLevel) {
-	const (
-		metricType = "metrics"
-		logsType   = "logs"
-	)
-
-	sumoLogicMetric, ok := sl.Current().Interface().(SumoLogicMetric)
-	if !ok {
-		sl.ReportError(sumoLogicMetric, "", "", "couldNotConverse", "")
-		return
-	}
-
-	switch *sumoLogicMetric.Type {
-	case metricType:
-		validateSumoLogicMetricsConfiguration(sl, sumoLogicMetric)
-	case logsType:
-		validateSumoLogicLogsConfiguration(sl, sumoLogicMetric)
-	default:
-		msg := fmt.Sprintf("type [%s] is invalid, use one of: [%s|%s]", *sumoLogicMetric.Type, metricType, logsType)
-		sl.ReportError(sumoLogicMetric.Type, "type", "Type", msg, "")
-	}
-}
-
-// validateSumoLogicMetricsConfiguration validates configuration of Sumo Logic SLOs with metrics type.
-func validateSumoLogicMetricsConfiguration(sl v.StructLevel, sumoLogicMetric SumoLogicMetric) {
-	const minQuantizationSeconds = 15
-
-	shouldReturn := false
-	if sumoLogicMetric.Quantization == nil {
-		msg := "quantization is required when using metrics type"
-		sl.ReportError(sumoLogicMetric.Quantization, "quantization", "Quantization", msg, "")
-		shouldReturn = true
-	}
-
-	if sumoLogicMetric.Rollup == nil {
-		msg := "rollup is required when using metrics type"
-		sl.ReportError(sumoLogicMetric.Rollup, "rollup", "Rollup", msg, "")
-		shouldReturn = true
-	}
-
-	if shouldReturn {
-		return
-	}
-
-	quantization, err := time.ParseDuration(*sumoLogicMetric.Quantization)
-	if err != nil {
-		msg := fmt.Sprintf("error parsing quantization string to duration - %v", err)
-		sl.ReportError(sumoLogicMetric.Quantization, "quantization", "Quantization", msg, "")
-	}
-
-	if quantization.Seconds() < minQuantizationSeconds {
-		msg := fmt.Sprintf("minimum quantization value is [15s], got: [%vs]", quantization.Seconds())
-		sl.ReportError(sumoLogicMetric.Quantization, "quantization", "Quantization", msg, "")
-	}
-
-	var availableRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
-	isRollupValid := false
-	rollup := *sumoLogicMetric.Rollup
-	for _, availableRollup := range availableRollups {
-		if rollup == availableRollup {
-			isRollupValid = true
-			break
-		}
-	}
-
-	if !isRollupValid {
-		msg := fmt.Sprintf("rollup [%s] is invalid, use one of: [%s]", rollup, strings.Join(availableRollups, "|"))
-		sl.ReportError(sumoLogicMetric.Rollup, "rollup", "Rollup", msg, "")
-	}
-}
-
-// validateSumoLogicLogsConfiguration validates configuration of Sumo Logic SLOs with logs type.
-func validateSumoLogicLogsConfiguration(sl v.StructLevel, metric SumoLogicMetric) {
-	if metric.Query == nil {
-		return
-	}
-
-	validateSumoLogicTimeslice(sl, metric)
-	validateSumoLogicN9Fields(sl, metric)
-}
-
-func validateSumoLogicTimeslice(sl v.StructLevel, metric SumoLogicMetric) {
-	const minTimeSliceSeconds = 15
-
-	timeslice, err := getTimeSliceFromSumoLogicQuery(*metric.Query)
-	if err != nil {
-		sl.ReportError(metric.Query, "query", "Query", err.Error(), "")
-		return
-	}
-
-	if timeslice.Seconds() < minTimeSliceSeconds {
-		msg := fmt.Sprintf("minimum timeslice value is [15s], got: [%s]", timeslice)
-		sl.ReportError(metric.Query, "query", "Query", msg, "")
-	}
-}
-
-func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, error) {
-	r := regexp.MustCompile(`(?m).*\stimeslice\s(\d+\w+)\s.*`)
-	matchResults := r.FindStringSubmatch(query)
-
-	if len(matchResults) != 2 {
-		return 0, fmt.Errorf("exactly one timeslice declaration is required in the query")
-	}
-
-	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	timeslice, err := time.ParseDuration(matchResults[1])
-	if err != nil {
-		return 0, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
-	}
-
-	return timeslice, nil
-}
-
-func validateSumoLogicN9Fields(sl v.StructLevel, metric SumoLogicMetric) {
-	if matched, _ := regexp.MatchString(`(?m).*\bn9_value\b.*`, *metric.Query); !matched {
-		sl.ReportError(metric.Query, "query", "Query", "n9_value is required", "")
-	}
-
-	if matched, _ := regexp.MatchString(`(?m).*\bn9_time\b`, *metric.Query); !matched {
-		sl.ReportError(metric.Query, "query", "Query", "n9_time is required", "")
-	}
-
-	if matched, _ := regexp.MatchString(`(?m).*\bby\b.*`, *metric.Query); !matched {
-		sl.ReportError(metric.Query, "query", "Query", "aggregation function is required", "")
-	}
 }
 
 func validateAzureMonitorMetricsConfiguration(sl v.StructLevel) {
