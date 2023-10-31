@@ -122,7 +122,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
 	_ = val.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
 	_ = val.RegisterValidation("notBlank", notBlank)
-	_ = val.RegisterValidation("supportedThousandEyesTestType", supportedThousandEyesTestType)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("redshiftRequiredColumns", isValidRedshiftQuery)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
@@ -208,14 +207,7 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpec := sl.Current().Interface().(Spec)
 
-	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
 	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec Spec) {
-	if !doesNotHaveCountMetricsThousandEyes(sloSpec) {
-		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "onlyRawMetricsThousandEyes", "")
-	}
 }
 
 func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
@@ -331,19 +323,6 @@ func instanaMetricTypeApplicationValidation(application *InstanaApplicationMetri
 	}
 	sl.ReportError(application.Aggregation, aggregation,
 		cases.Title(language.Und).String(aggregation), "wrongAggregationValueForMetricID", "")
-}
-
-func doesNotHaveCountMetricsThousandEyes(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		if (objective.CountMetrics.TotalMetric != nil && objective.CountMetrics.TotalMetric.ThousandEyes != nil) ||
-			(objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.GoodMetric.ThousandEyes != nil) {
-			return false
-		}
-	}
-	return true
 }
 
 // haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
@@ -863,25 +842,6 @@ func buildCloudWatchStatRegex() *regexp.Regexp {
 	finalRegexStr := fmt.Sprintf("^%s$", concatRegexAlternatives(allFunctions))
 	finalRegex := regexp.MustCompile(finalRegexStr)
 	return finalRegex
-}
-
-func supportedThousandEyesTestType(fl v.FieldLevel) bool {
-	value := fl.Field().String()
-	switch value {
-	case
-		ThousandEyesNetLatency,
-		ThousandEyesNetLoss,
-		ThousandEyesWebPageLoad,
-		ThousandEyesWebDOMLoad,
-		ThousandEyesHTTPResponseTime,
-		ThousandEyesServerAvailability,
-		ThousandEyesServerThroughput,
-		ThousandEyesServerTotalTime,
-		ThousandEyesDNSServerResolutionTime,
-		ThousandEyesDNSSECValid:
-		return true
-	}
-	return false
 }
 
 func countzMetricsSpecValidation(sl v.StructLevel) {

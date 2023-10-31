@@ -70,25 +70,6 @@ type NewRelicMetric struct {
 	NRQL *string `json:"nrql" validate:"required,noSinceOrUntil"`
 }
 
-const (
-	ThousandEyesNetLatency              = "net-latency"
-	ThousandEyesNetLoss                 = "net-loss"
-	ThousandEyesWebPageLoad             = "web-page-load"
-	ThousandEyesWebDOMLoad              = "web-dom-load"
-	ThousandEyesHTTPResponseTime        = "http-response-time"
-	ThousandEyesServerAvailability      = "http-server-availability"
-	ThousandEyesServerThroughput        = "http-server-throughput"
-	ThousandEyesServerTotalTime         = "http-server-total-time"
-	ThousandEyesDNSServerResolutionTime = "dns-server-resolution-time"
-	ThousandEyesDNSSECValid             = "dns-dnssec-valid"
-)
-
-// ThousandEyesMetric represents metric from ThousandEyes
-type ThousandEyesMetric struct {
-	TestID   *int64  `json:"testID" validate:"required,gte=0"`
-	TestType *string `json:"testType" validate:"supportedThousandEyesTestType"`
-}
-
 // SplunkMetric represents metric from Splunk
 type SplunkMetric struct {
 	Query *string `json:"query" validate:"required,notEmpty,splunkQueryValid"`
@@ -536,42 +517,50 @@ var specMetricsValidation = validation.New[Spec](
 var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
 		Rules(appDynamicsCountMetricsLevelValidationRule).
-		Include(lightstepCountMetricsLevelValidation).
-		Include(pingdomCountMetricsLevelValidation).
-		Include(sumoLogicCountMetricsLevelValidation),
+		Include(
+			lightstepCountMetricsLevelValidation,
+			pingdomCountMetricsLevelValidation,
+			sumoLogicCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
 		Required().
-		Include(metricSpecValidation).
-		Include(countMetricsValidation).
-		Include(lightstepTotalCountMetricValidation),
+		Include(
+			metricSpecValidation,
+			countMetricsValidation,
+			lightstepTotalCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
-		Include(metricSpecValidation).
-		Include(countMetricsValidation).
-		Include(lightstepGoodCountMetricValidation),
+		Include(
+			metricSpecValidation,
+			countMetricsValidation,
+			lightstepGoodCountMetricValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
 		Rules(oneOfBadOverTotalValidationRule).
-		Include(countMetricsValidation).
-		Include(metricSpecValidation),
+		Include(
+			countMetricsValidation,
+			metricSpecValidation),
 )
 
 var rawMetricsValidation = validation.New[RawMetricSpec](
 	validation.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
 		WithName("query").
 		Required().
-		Include(metricSpecValidation).
-		Include(lightstepRawMetricValidation).
-		Include(pingdomRawMetricValidation),
+		Include(
+			metricSpecValidation,
+			lightstepRawMetricValidation,
+			pingdomRawMetricValidation,
+			thousandEyesRawMetricValidation),
 )
 
 var countMetricsValidation = validation.New[MetricSpec](
 	validation.For(validation.GetSelf[MetricSpec]()).
-		Include(pingdomCountMetricsValidation),
+		Include(
+			pingdomCountMetricsValidation,
+			thousandEyesCountMetricsValidation),
 )
 
 var metricSpecValidation = validation.New[MetricSpec](
