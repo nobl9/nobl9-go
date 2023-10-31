@@ -47,7 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
-	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9.\/-]+\/[a-zA-Z0-9.\/-]+$` //nolint:lll
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\.]+\/[a-zA-Z0-9-]+\/[a-zA-Z0-9-]+$` //nolint:lll
 )
 
 // Values used to validate time window size

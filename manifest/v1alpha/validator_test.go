@@ -870,8 +870,18 @@ func TestValidateAzureResourceID(t *testing.T) {
 			isValid:    false,
 		},
 		{
-			desc:       "incomplete valid resource id",
-			resourceID: "00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
+			desc:       "missing resource providerNamespace",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Test-RG1/providers/virtualMachines/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource type",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource name",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines", //nolint:lll
 			isValid:    false,
 		},
 		{
