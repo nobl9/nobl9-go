@@ -1224,42 +1224,6 @@ func TestAzureMonitorSloSpecValidation(t *testing.T) {
 			},
 			isValid: true,
 		},
-		{
-			desc: "the same resourceID and namespace bad/total",
-			sloSpec: SLOSpec{
-				Objectives: []Objective{{
-					CountMetrics: &CountMetricsSpec{
-						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
-							ResourceID:      "1",
-							MetricNamespace: "1",
-						}},
-						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
-							ResourceID:      "1",
-							MetricNamespace: "1",
-						}},
-					},
-				}},
-			},
-			isValid: true,
-		},
-		{
-			desc: "the same resourceID and namespace bad/total",
-			sloSpec: SLOSpec{
-				Objectives: []Objective{{
-					CountMetrics: &CountMetricsSpec{
-						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
-							ResourceID:      "1",
-							MetricNamespace: "1",
-						}},
-						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
-							ResourceID:      "1",
-							MetricNamespace: "1",
-						}},
-					},
-				}},
-			},
-			isValid: true,
-		},
 	}
 
 	for _, tc := range testCases {
