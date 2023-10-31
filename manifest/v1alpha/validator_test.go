@@ -848,6 +848,67 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
+func TestValidateAzureResourceID(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		resourceID string
+		isValid    bool
+	}{
+		{
+			desc:       "empty",
+			resourceID: "",
+			isValid:    false,
+		},
+		{
+			desc:       "one letter",
+			resourceID: "a",
+			isValid:    false,
+		},
+		{
+			desc:       "incomplete resource provider",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/vm",
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource providerNamespace",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Test-RG1/providers/virtualMachines/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource type",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource name",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "valid resource id",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
+			isValid:    true,
+		},
+	}
+
+	val := v.New()
+	err := val.RegisterValidation("azureResourceID", isValidAzureResourceID)
+	if err != nil {
+		assert.FailNow(t, "Cannot register validator")
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			err := val.Var(tC.resourceID, "azureResourceID")
+			if tC.isValid {
+				assert.Nil(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
 func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
 	slo := SLOSpec{
 		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
