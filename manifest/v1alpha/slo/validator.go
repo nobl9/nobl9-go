@@ -203,7 +203,6 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 func metricSpecStructLevelValidation(sl v.StructLevel) {
 	metricSpec := sl.Current().Interface().(MetricSpec)
 
-	metricTypeValidation(metricSpec, sl)
 	if metricSpec.Instana != nil {
 		instanaMetricValidation(metricSpec.Instana, sl)
 	}
@@ -367,106 +366,6 @@ func isHTTPS(fl v.FieldLevel) bool {
 		return false
 	}
 	return true
-}
-
-// nolint added because of detected duplicate with agentTypeValidation variant of this function
-func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
-	const expectedCountOfMetricTypes = 1
-	var metricTypesCount int
-	if ms.Prometheus != nil {
-		metricTypesCount++
-	}
-	if ms.Datadog != nil {
-		metricTypesCount++
-	}
-	if ms.NewRelic != nil {
-		metricTypesCount++
-	}
-	if ms.AppDynamics != nil {
-		metricTypesCount++
-	}
-	if ms.Splunk != nil {
-		metricTypesCount++
-	}
-	if ms.Lightstep != nil {
-		metricTypesCount++
-	}
-	if ms.SplunkObservability != nil {
-		metricTypesCount++
-	}
-	if ms.Dynatrace != nil {
-		metricTypesCount++
-	}
-	if ms.Elasticsearch != nil {
-		metricTypesCount++
-	}
-	if ms.BigQuery != nil {
-		metricTypesCount++
-	}
-	if ms.ThousandEyes != nil {
-		metricTypesCount++
-	}
-	if ms.Graphite != nil {
-		metricTypesCount++
-	}
-	if ms.OpenTSDB != nil {
-		metricTypesCount++
-	}
-	if ms.GrafanaLoki != nil {
-		metricTypesCount++
-	}
-	if ms.CloudWatch != nil {
-		metricTypesCount++
-	}
-	if ms.Pingdom != nil {
-		metricTypesCount++
-	}
-	if ms.AmazonPrometheus != nil {
-		metricTypesCount++
-	}
-	if ms.Redshift != nil {
-		metricTypesCount++
-	}
-	if ms.SumoLogic != nil {
-		metricTypesCount++
-	}
-	if ms.Instana != nil {
-		metricTypesCount++
-	}
-	if ms.InfluxDB != nil {
-		metricTypesCount++
-	}
-	if ms.GCM != nil {
-		metricTypesCount++
-	}
-	if ms.AzureMonitor != nil {
-		metricTypesCount++
-	}
-	if metricTypesCount != expectedCountOfMetricTypes {
-		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "newRelic", "NewRelic", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "appDynamics", "AppDynamics", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "splunk", "Splunk", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "lightstep", "Lightstep", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "splunkObservability", "SplunkObservability", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "dynatrace", "Dynatrace", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "elasticsearch", "Elasticsearch", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "bigQuery", "bigQuery", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "thousandEyes", "ThousandEyes", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "graphite", "Graphite", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "opentsdb", "OpenTSDB", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "grafanaLoki", "GrafanaLoki", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "cloudWatch", "CloudWatch", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "pingdom", "Pingdom", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "amazonPrometheus", "AmazonPrometheus", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "redshift", "Redshift", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "sumoLogic", "SumoLogic", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "instana", "Instana", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
-		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
-	}
 }
 
 func isSite(fl v.FieldLevel) bool {

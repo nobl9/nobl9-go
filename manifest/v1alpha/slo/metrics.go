@@ -476,22 +476,42 @@ func (m *MetricSpec) Query() interface{} {
 }
 
 const (
-	errCodeExactlyOneMetricType     = "exactly_one_metric_type"
-	errCodeBadOverTotalDisabled     = "bad_over_total_disabled"
-	errCodeExactlyOneMetricSpecType = "exactly_one_metric_spec_type"
-	errCodeTimeSliceTarget          = "time_slice_target"
+	errCodeExactlyOneMetricType       = "exactly_one_metric_type"
+	errCodeBadOverTotalDisabled       = "bad_over_total_disabled"
+	errCodeExactlyOneMetricSpecType   = "exactly_one_metric_spec_type"
+	errCodeEitherBadOrGoodCountMetric = "either_bad_or_good_count_metric"
+	errCodeTimeSliceTarget            = "time_slice_target"
 )
 
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(validation.NewSingleRule(func(v Spec) error {
-			if v.HasRawMetric() == v.HasCountMetrics() {
+		Rules(validation.NewSingleRule(func(s Spec) error {
+			if s.HasRawMetric() == s.HasCountMetrics() {
 				return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
 			}
 			return nil
 		}).WithErrorCode(errCodeExactlyOneMetricType)).
 		StopOnError().
 		Rules(exactlyOneMetricSpecTypeValidationRule).
+		StopOnError().
+		// Each objective should have exactly two count metrics.
+		Rules(validation.NewSingleRule(func(s Spec) error {
+			for i, objective := range s.Objectives {
+				if objective.CountMetrics == nil {
+					return nil
+				}
+				if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.BadMetric != nil {
+					return validation.NewPropertyError(
+						"countMetrics",
+						nil,
+						&validation.RuleError{
+							Message: "cannot have both 'bad' and 'good' metrics defined",
+							Code:    errCodeEitherBadOrGoodCountMetric,
+						}).PrependPropertyName(validation.SliceElementName("objectives", i))
+				}
+			}
+			return nil
+		})).
 		StopOnError().
 		Rules(
 			timeSliceTargetsValidationRule,

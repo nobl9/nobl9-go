@@ -937,6 +937,15 @@ func TestValidate_Spec(t *testing.T) {
 }
 
 func TestValidate_Spec_RawMetrics(t *testing.T) {
+	t.Run("no metric spec provided", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Prometheus)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Prometheus = nil
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:    "spec",
+			Message: "must have exactly one metric spec type, none were provided",
+		})
+	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
 		for name, metrics := range map[string][]*MetricSpec{
 			"single objective": {
@@ -980,6 +989,16 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 }
 
 func TestValidate_Spec_CountMetrics(t *testing.T) {
+	t.Run("no metric spec provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.Prometheus)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Prometheus = nil
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Prometheus = nil
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop:    "spec",
+			Message: "must have exactly one metric spec type, none were provided",
+		})
+	})
 	t.Run("bad over total enabled", func(t *testing.T) {
 		for _, typ := range badOverTotalEnabledSources {
 			slo := validSLO()
@@ -991,6 +1010,20 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 			err := validate(slo)
 			assert.Empty(t, err)
 		}
+	})
+	t.Run("bad provided with good", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			TotalMetric: validMetricSpec(v1alpha.AzureMonitor),
+			GoodMetric:  validMetricSpec(v1alpha.AzureMonitor),
+			BadMetric:   validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: errCodeEitherBadOrGoodCountMetric,
+		})
 	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
 		for name, metrics := range map[string][]*CountMetricsSpec{
