@@ -537,7 +537,8 @@ var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
 		Rules(appDynamicsCountMetricsLevelValidationRule).
 		Include(lightstepCountMetricsLevelValidation).
-		Include(pingdomCountMetricsLevelValidation),
+		Include(pingdomCountMetricsLevelValidation).
+		Include(sumoLogicCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
@@ -583,6 +584,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *PingdomMetric { return m.Pingdom }).
 		WithName("pingdom").
 		Include(pingdomValidation),
+	validation.ForPointer(func(m MetricSpec) *SumoLogicMetric { return m.SumoLogic }).
+		WithName("sumoLogic").
+		Include(sumoLogicValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{

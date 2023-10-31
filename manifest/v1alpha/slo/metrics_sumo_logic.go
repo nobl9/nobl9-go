@@ -75,9 +75,9 @@ var sumoLogicValidation = validation.New[SumoLogicMetric](
 var sumoLogicValidRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
 
 var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
+	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
-		Rules(validation.Forbidden[string]()),
+		Required(),
 	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
 		WithName("quantization").
 		Required().
@@ -88,7 +88,8 @@ var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
 				return errors.Errorf("error parsing quantization string to duration - %v", err)
 			}
 			if quantization.Seconds() < minQuantizationSeconds {
-				return errors.Errorf("minimum quantization value is [15s], got: [%vs]", quantization.Seconds())
+				return errors.Errorf("minimum quantization value is [%ds], got: [%vs]",
+					minQuantizationSeconds, quantization.Seconds())
 			}
 			return nil
 		})),
@@ -102,7 +103,7 @@ var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
 	})
 
 var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
+	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
 		Required().
 		Rules(
@@ -113,7 +114,7 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 					return err
 				}
 				if timeslice.Seconds() < minTimeSliceSeconds {
-					return errors.Errorf("minimum timeslice value is [15s], got: [%s]", timeslice)
+					return errors.Errorf("minimum timeslice value is [%ds], got: [%s]", minTimeSliceSeconds, timeslice)
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeGreaterThan),
