@@ -1,7 +1,6 @@
 package slo
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -114,7 +113,6 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = ptr("invalid")
 		err := validate(slo)
-		fmt.Println(err)
 		assertContainsErrors(t, err, 1, expectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
 			Message: `error parsing quantization string to duration - time: invalid duration "invalid"`,
@@ -165,7 +163,6 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			Rollup:       ptr("None"),
 		}
 		err := validate(slo)
-		fmt.Println(err)
 		assertContainsErrors(t, err, 2,
 			expectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
@@ -287,7 +284,6 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 				Query: ptr(test.Query),
 			}
 			err := validate(slo)
-			fmt.Println(err)
 			assertContainsErrors(t, err, 1, test.Error)
 		})
 	}

@@ -3,8 +3,6 @@ package slo
 import (
 	"regexp"
 
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -32,8 +30,7 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				return nil
 			}
 			if *c.GoodMetric.Lightstep.StreamID != *c.TotalMetric.Lightstep.StreamID {
-				return errors.Errorf(
-					"'lightstep.streamId' must be the same for both 'good' and 'total' metrics")
+				return countMetricsPropertyEqualityError("lightstep.streamId", goodMetric)
 			}
 			return nil
 		}).WithErrorCode(validation.ErrorCodeEqualTo)),

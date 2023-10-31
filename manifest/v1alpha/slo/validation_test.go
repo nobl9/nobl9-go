@@ -34,7 +34,6 @@ func TestValidate_Metadata(t *testing.T) {
 	err := validate(slo)
 	require.Error(t, err)
 	assert.EqualError(t, err, expectedMetadataError)
-	fmt.Println(err)
 }
 
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {
@@ -1141,7 +1140,12 @@ func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expe
 				}
 			}
 		}
-		require.Truef(t, found, "expected '%v' error was not found", expected)
+		// Pretty print the diff.
+		encExpected, _ := json.MarshalIndent(expected, "", " ")
+		encActual, _ := json.MarshalIndent(objErr.Errors, "", " ")
+		require.Truef(t, found,
+			"expected error was not found\nEXPECTED:\n%s\nENCOUNTERED:\n%s",
+			string(encExpected), string(encActual))
 	}
 }
 

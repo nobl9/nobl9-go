@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
-	"golang.org/x/exp/maps"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
@@ -91,11 +90,9 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(sloSpecStructLevelValidation, Spec{})
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
 	val.RegisterStructValidation(countzMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
-	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
@@ -203,25 +200,6 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 	return true
 }
 
-// nolint: lll
-func sloSpecStructLevelValidation(sl v.StructLevel) {
-	sloSpec := sl.Current().Interface().(Spec)
-
-	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
-}
-
-func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec Spec) {
-	if !haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec) {
-		sl.ReportError(
-			sloSpec.CountMetrics,
-			"objectives",
-			"Objectives",
-			"azureMonitorCountMetricsEqualResourceIDAndMetricNamespace",
-			"",
-		)
-	}
-}
-
 func metricSpecStructLevelValidation(sl v.StructLevel) {
 	metricSpec := sl.Current().Interface().(MetricSpec)
 
@@ -323,38 +301,6 @@ func instanaMetricTypeApplicationValidation(application *InstanaApplicationMetri
 	}
 	sl.ReportError(application.Aggregation, aggregation,
 		cases.Title(language.Und).String(aggregation), "wrongAggregationValueForMetricID", "")
-}
-
-// haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
-// and metricNamespace as total query
-// nolint: gocognit
-func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec Spec) bool {
-	for _, objective := range sloSpec.Objectives {
-		if objective.CountMetrics == nil {
-			continue
-		}
-		total := objective.CountMetrics.TotalMetric
-		good := objective.CountMetrics.GoodMetric
-		bad := objective.CountMetrics.BadMetric
-
-		if total != nil && total.AzureMonitor != nil {
-			if good != nil && good.AzureMonitor != nil {
-				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
-					good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-					return false
-				}
-			}
-
-			if bad != nil && bad.AzureMonitor != nil {
-				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
-					bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-					return false
-				}
-			}
-		}
-	}
-
-	return true
 }
 
 func isValidURL(fl v.FieldLevel) bool {
@@ -1128,31 +1074,4 @@ func isValidHeaderName(fl v.FieldLevel) bool {
 	validHeaderNameRegex := regexp.MustCompile(HeaderNameRegex)
 
 	return validHeaderNameRegex.MatchString(headerName)
-}
-
-func validateAzureMonitorMetricsConfiguration(sl v.StructLevel) {
-	metric, ok := sl.Current().Interface().(AzureMonitorMetric)
-	if !ok {
-		sl.ReportError(metric, "", "", "structConversion", "")
-		return
-	}
-
-	isValidAzureMonitorAggregation(sl, metric)
-}
-
-func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric) {
-	availableAggregations := map[string]struct{}{
-		"Avg":   {},
-		"Min":   {},
-		"Max":   {},
-		"Count": {},
-		"Sum":   {},
-	}
-	if _, ok := availableAggregations[metric.Aggregation]; !ok {
-		msg := fmt.Sprintf(
-			"aggregation [%s] is invalid, use one of: [%s]",
-			metric.Aggregation, strings.Join(maps.Keys(availableAggregations), "|"),
-		)
-		sl.ReportError(metric.Aggregation, "aggregation", "Aggregation", msg, "")
-	}
 }

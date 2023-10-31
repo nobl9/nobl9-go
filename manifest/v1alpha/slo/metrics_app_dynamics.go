@@ -29,8 +29,7 @@ var appDynamicsCountMetricsLevelValidationRule = validation.NewSingleRule(func(c
 		return nil
 	}
 	if *c.GoodMetric.AppDynamics.ApplicationName != *c.TotalMetric.AppDynamics.ApplicationName {
-		return errors.Errorf(
-			"'appDynamics.applicationName' must be the same for both 'good' and 'total' metrics")
+		return countMetricsPropertyEqualityError("appDynamics.applicationName", goodMetric)
 	}
 	return nil
 }).WithErrorCode(validation.ErrorCodeNotEqualTo)

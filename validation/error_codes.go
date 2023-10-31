@@ -16,6 +16,7 @@ const (
 	ErrorCodeStringDenyRegexp     ErrorCode = "string_deny_regexp"
 	ErrorCodeStringDescription    ErrorCode = "string_description"
 	ErrorCodeStringIsDNSSubdomain ErrorCode = "string_is_dns_subdomain"
+	ErrorCodeStringASCII          ErrorCode = "string_ascii"
 	ErrorCodeStringURL            ErrorCode = "string_url"
 	ErrorCodeStringLength         ErrorCode = "string_length"
 	ErrorCodeStringMinLength      ErrorCode = "string_max_length"

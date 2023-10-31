@@ -33,8 +33,7 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return nil
 				}
 				if *c.GoodMetric.SumoLogic.Quantization != *c.TotalMetric.SumoLogic.Quantization {
-					return errors.Errorf(
-						"'sumologic.quantization' must be the same for both 'good' and 'total' metrics")
+					return countMetricsPropertyEqualityError("sumologic.quantization", goodMetric)
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo),

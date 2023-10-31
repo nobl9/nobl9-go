@@ -80,6 +80,33 @@ func TestStringIsDNSSubdomain(t *testing.T) {
 	})
 }
 
+func TestStringASCII(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, input := range []string{
+			"foobar",
+			"0987654321",
+			"test@example.com",
+			"1234abcDEF",
+			"",
+		} {
+			err := StringASCII().Validate(input)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for _, input := range []string{
+			"ｆｏｏbar",
+			"ｘｙｚ０９８",
+			"１２３456",
+			"ｶﾀｶﾅ",
+		} {
+			err := StringASCII().Validate(input)
+			assert.Error(t, err)
+			assert.True(t, HasErrorCode(err, ErrorCodeStringASCII))
+		}
+	})
+}
+
 func TestStringDescription(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := StringDescription().Validate(strings.Repeat("l", 1050))

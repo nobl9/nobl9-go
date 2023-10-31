@@ -4,8 +4,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -37,8 +35,7 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return nil
 				}
 				if *c.GoodMetric.Pingdom.CheckID != *c.TotalMetric.Pingdom.CheckID {
-					return errors.Errorf(
-						"'pingdom.checkId' must be the same for both 'good' and 'total' metrics")
+					return countMetricsPropertyEqualityError("pingdom.checkId", goodMetric)
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo),
@@ -47,8 +44,7 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return nil
 				}
 				if *c.GoodMetric.Pingdom.CheckType != *c.TotalMetric.Pingdom.CheckType {
-					return errors.Errorf(
-						"'pingdom.checkType' must be the same for both 'good' and 'total' metrics")
+					return countMetricsPropertyEqualityError("pingdom.checkType", goodMetric)
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo),

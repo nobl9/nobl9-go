@@ -194,21 +194,6 @@ type GrafanaLokiMetric struct {
 	Logql *string `json:"logql" validate:"required"`
 }
 
-// AzureMonitorMetric represents metric from AzureMonitor
-type AzureMonitorMetric struct {
-	ResourceID      string                        `json:"resourceId" validate:"required"`
-	MetricName      string                        `json:"metricName" validate:"required"`
-	Aggregation     string                        `json:"aggregation" validate:"required"`
-	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
-	MetricNamespace string                        `json:"metricNamespace,omitempty"`
-}
-
-// AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
-type AzureMonitorMetricDimension struct {
-	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
-	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
-}
-
 func (s *Spec) containsIndicatorRawMetric() bool {
 	return s.Indicator.RawMetric != nil
 }
@@ -516,7 +501,9 @@ var specMetricsValidation = validation.New[Spec](
 
 var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
-		Rules(appDynamicsCountMetricsLevelValidationRule).
+		Rules(
+			appDynamicsCountMetricsLevelValidationRule,
+			azureMonitorCountMetricsLevelValidationRule).
 		Include(
 			lightstepCountMetricsLevelValidation,
 			pingdomCountMetricsLevelValidation,
@@ -576,6 +563,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *SumoLogicMetric { return m.SumoLogic }).
 		WithName("sumoLogic").
 		Include(sumoLogicValidation),
+	validation.ForPointer(func(m MetricSpec) *AzureMonitorMetric { return m.AzureMonitor }).
+		WithName("azureMonitor").
+		Include(azureMonitorValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -795,4 +785,13 @@ func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) boo
 		}
 		return true
 	}
+}
+
+const (
+	goodMetric = "good"
+	badMetric  = "bad"
+)
+
+func countMetricsPropertyEqualityError(propName, metric string) error {
+	return errors.Errorf("'%s' must be the same for both '%s' and 'total' metrics", propName, metric)
 }

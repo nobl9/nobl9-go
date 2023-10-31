@@ -52,9 +52,14 @@ func StringIsDNSSubdomain() RuleSet[string] {
 	).WithErrorCode(ErrorCodeStringIsDNSSubdomain)
 }
 
+var asciiRegexp = regexp.MustCompile("^[\x00-\x7F]*$")
+
+func StringASCII() SingleRule[string] {
+	return StringMatchRegexp(asciiRegexp).WithErrorCode(ErrorCodeStringASCII)
+}
+
 func StringDescription() SingleRule[string] {
-	return StringLength(0, 1050).
-		WithErrorCode(ErrorCodeStringDescription)
+	return StringLength(0, 1050).WithErrorCode(ErrorCodeStringDescription)
 }
 
 func StringIsURL() SingleRule[string] {
