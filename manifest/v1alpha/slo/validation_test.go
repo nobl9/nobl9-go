@@ -1086,9 +1086,10 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 }
 
 type expectedError struct {
-	Prop    string
-	Code    string
-	Message string
+	Prop            string
+	Code            string
+	Message         string
+	ContainsMessage string
 }
 
 func prependPropertyPath(errs []expectedError, path string) []expectedError {
@@ -1126,11 +1127,15 @@ func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expe
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
-				if expected.Message == actualRuleErr.Message {
+				if expected.Message != "" && expected.Message == actualRuleErr.Message {
 					found = true
 					break searchErrors
 				}
-				if expected.Code == actualRuleErr.Code {
+				if expected.ContainsMessage != "" && strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					found = true
+					break searchErrors
+				}
+				if expected.Code != "" && expected.Code == actualRuleErr.Code {
 					found = true
 					break searchErrors
 				}

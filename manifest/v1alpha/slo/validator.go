@@ -890,10 +890,6 @@ func countzMetricsSpecValidation(sl v.StructLevel) {
 	instanaCountMetricsSpecValidation(sl)
 }
 
-func reportCountMetricsSpecMessageForTotalMetric(sl v.StructLevel, countMetrics CountMetricsSpec) {
-	sl.ReportError(countMetrics.TotalMetric, "totalMetrics", "TotalMetric", "metricsOfTheSameType", "")
-}
-
 func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	cloudWatchMetric, ok := sl.Current().Interface().(CloudWatchMetric)
 	if !ok {

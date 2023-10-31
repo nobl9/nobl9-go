@@ -5,9 +5,10 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
-	"github.com/pkg/errors"
 )
 
 // SumoLogicMetric represents metric from Sumo Logic.
@@ -117,12 +118,12 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 					return errors.Errorf("minimum timeslice value is [%ds], got: [%s]", minTimeSliceSeconds, timeslice)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeGreaterThan),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m).*\bn9_value\b.*`)).
+			}),
+			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m).*\bn9_time\b`)).
+			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
 				WithDetails("n9_time is required"),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m).*\bby\b.*`)).
+			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
 				WithDetails("aggregation function is required"),
 		),
 	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
@@ -136,15 +137,19 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		return m.Type != nil && *m.Type == sumoLogicTypeLogs
 	})
 
-var sumoLogicTimeSliceRegexp = regexp.MustCompile(`(?m).*\stimeslice\s(\d+\w+)\s.*`)
+var sumoLogicTimeSliceRegexp = regexp.MustCompile(`(?m)\stimeslice\s(\d+\w+)\s`)
 
 func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, error) {
-	matchResults := sumoLogicTimeSliceRegexp.FindStringSubmatch(query)
-	if len(matchResults) != 2 {
+	submatches := sumoLogicTimeSliceRegexp.FindAllStringSubmatch(query, 2)
+	if len(submatches) != 1 {
 		return 0, fmt.Errorf("exactly one timeslice declaration is required in the query")
 	}
+	submatch := submatches[0]
+	if len(submatch) != 2 {
+		return 0, fmt.Errorf("timeslice declaration must matche regular expression: %s", sumoLogicTimeSliceRegexp)
+	}
 	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	timeslice, err := time.ParseDuration(matchResults[1])
+	timeslice, err := time.ParseDuration(submatch[1])
 	if err != nil {
 		return 0, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
 	}

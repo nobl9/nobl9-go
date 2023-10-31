@@ -4,9 +4,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
-	"github.com/pkg/errors"
 )
 
 // PingdomMetric represents metric from Pingdom.
