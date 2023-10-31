@@ -42,6 +42,7 @@ type MetricSpec struct {
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
 	Generic             *GenericMetric             `json:"generic,omitempty"`
+	Honeycomb           *HoneycombMetric           `json:"honeycomb,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -257,6 +258,29 @@ type GenericMetric struct {
 	Query *string `json:"query" validate:"required"`
 }
 
+// FIXME PC-10654: Check if it's correct.
+// HoneycombMetric represents metric from Honeycomb.
+type HoneycombMetric struct {
+	Dataset     string `json:"dataset" validate:"required,max=255,ascii,notBlank"`
+	Calculation string `json:"calculation" validate:"required,max=30,ascii,notBlank,supportedHoneycombCalculationType"`
+	// FIXME PC-10654: "with validation based on Honeycomb API docs", "max length - 100 characters (TBC)"
+	Attribute string          `json:"attribute" validate:"required,max=255,ascii,notBlank"`
+	Filter    HoneycombFilter `json:"filter"`
+}
+
+// HoneycombFilter represents filter for Honeycomb metric. It has custom struct validation.
+type HoneycombFilter struct {
+	Operator   string                     `json:"operator" validate:"max=30,ascii"`
+	Conditions []HoneycombFilterCondition `json:"conditions" validate:"required,gt=0,lte=100,dive"`
+}
+
+// HoneycombFilterCondition represents single condition for Honeycomb filter.
+type HoneycombFilterCondition struct {
+	Attribute string `json:"attribute" validate:"required,max=255,ascii,notBlank"`
+	Operator  string `json:"operator" validate:"required,max=30,ascii,notBlank,supportedHoneycombFilterConditionOperator"`
+	Value     string `json:"value" validate:"max=255,ascii"`
+}
+
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
 	return slo.Indicator.RawMetric != nil
 }
@@ -457,6 +481,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return AzureMonitor
 	case m.Generic != nil:
 		return Generic
+	case m.Honeycomb != nil:
+		return Honeycomb
 	default:
 		return 0
 	}
@@ -537,6 +563,8 @@ func (m *MetricSpec) Query() interface{} {
 		return azureMonitorCopy
 	case Generic:
 		return m.Generic
+	case Honeycomb:
+		return m.Honeycomb
 	default:
 		return nil
 	}

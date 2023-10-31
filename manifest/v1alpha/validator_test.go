@@ -1438,3 +1438,84 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestHoneycombValidation(t *testing.T) {
+	validate := NewValidator()
+	testCases := []struct {
+		desc    string
+		input   HoneycombMetric
+		isValid bool
+	}{
+		{
+			desc: "Valid HoneycombMetric",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+					},
+				},
+			},
+			isValid: true,
+		},
+		{
+			desc: "Invalid Operator in HoneycombFilter with multiple Conditions",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "INVALID",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+						{Attribute: "attr2", Operator: "<"},
+					},
+				},
+			},
+			isValid: false,
+		},
+		{
+			desc: "Invalid Calculation Type",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "INVALID",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+					},
+				},
+			},
+			isValid: false,
+		},
+		{
+			desc: "Invalid Condition Operator",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: "INVALID_OPERATOR"},
+					},
+				},
+			},
+			isValid: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validate.Check(tc.input)
+			if tc.isValid {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
