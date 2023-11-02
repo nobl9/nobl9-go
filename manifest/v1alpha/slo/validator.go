@@ -84,7 +84,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(countzMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 
 	_ = val.RegisterValidation("site", isSite)
@@ -108,7 +107,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
 	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
-	_ = val.RegisterValidation("bigQueryRequiredColumns", isValidBigQueryQuery)
 	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
 	_ = val.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
 	_ = val.RegisterValidation("notBlank", notBlank)
@@ -389,23 +387,6 @@ func isValidMetricPathGraphite(fl v.FieldLevel) bool {
 	return true
 }
 
-func isValidBigQueryQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	return validateBigQueryQuery(query)
-}
-
-func validateBigQueryQuery(query string) bool {
-	dateInProjection := regexp.MustCompile(`\bn9date\b`)
-	valueInProjection := regexp.MustCompile(`\bn9value\b`)
-	dateFromInWhere := regexp.MustCompile(`DATETIME\(\s*@n9date_from\s*\)`)
-	dateToInWhere := regexp.MustCompile(`DATETIME\(\s*@n9date_to\s*\)`)
-
-	return dateInProjection.MatchString(query) &&
-		valueInProjection.MatchString(query) &&
-		dateFromInWhere.MatchString(query) &&
-		dateToInWhere.MatchString(query)
-}
-
 func isValidInfluxDBQuery(fl v.FieldLevel) bool {
 	query := fl.Field().String()
 
@@ -566,10 +547,6 @@ func buildCloudWatchStatRegex() *regexp.Regexp {
 	return finalRegex
 }
 
-func countzMetricsSpecValidation(sl v.StructLevel) {
-	bigQueryCountMetricsSpecValidation(sl)
-}
-
 func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	cloudWatchMetric, ok := sl.Current().Interface().(CloudWatchMetric)
 	if !ok {
@@ -607,46 +584,6 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	}
 	if !v1alpha.IsValidRegion(*cloudWatchMetric.Region, regions) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
-	}
-}
-
-func bigQueryCountMetricsSpecValidation(sl v.StructLevel) {
-	countMetrics, ok := sl.Current().Interface().(CountMetricsSpec)
-	if !ok {
-		sl.ReportError(countMetrics, "", "", "structConversion", "")
-		return
-	}
-	if countMetrics.TotalMetric == nil || countMetrics.GoodMetric == nil {
-		return
-	}
-	if countMetrics.TotalMetric.BigQuery == nil || countMetrics.GoodMetric.BigQuery == nil {
-		return
-	}
-
-	if countMetrics.GoodMetric.BigQuery.Location != countMetrics.TotalMetric.BigQuery.Location {
-		sl.ReportError(
-			countMetrics.GoodMetric.BigQuery.Location,
-			"goodMetric.bigQuery.location", "",
-			"locationNameIsNotEqual", "",
-		)
-		sl.ReportError(
-			countMetrics.TotalMetric.BigQuery.Location,
-			"totalMetric.bigQuery.location", "",
-			"locationNameIsNotEqual", "",
-		)
-	}
-
-	if countMetrics.GoodMetric.BigQuery.ProjectID != countMetrics.TotalMetric.BigQuery.ProjectID {
-		sl.ReportError(
-			countMetrics.GoodMetric.BigQuery.ProjectID,
-			"goodMetric.bigQuery.projectId", "",
-			"projectIdIsNotEqual", "",
-		)
-		sl.ReportError(
-			countMetrics.TotalMetric.BigQuery.ProjectID,
-			"totalMetric.bigQuery.projectId", "",
-			"projectIdIsNotEqual", "",
-		)
 	}
 }
 

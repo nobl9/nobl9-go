@@ -140,13 +140,6 @@ type GraphiteMetric struct {
 	MetricPath *string `json:"metricPath" validate:"required,metricPathGraphite"`
 }
 
-// BigQueryMetric represents metric from BigQuery
-type BigQueryMetric struct {
-	Query     string `json:"query" validate:"required,bigQueryRequiredColumns"`
-	ProjectID string `json:"projectId" validate:"required"`
-	Location  string `json:"location" validate:"required"`
-}
-
 // OpenTSDBMetric represents metric from OpenTSDB.
 type OpenTSDBMetric struct {
 	Query *string `json:"query" validate:"required"`
@@ -491,7 +484,8 @@ var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 			pingdomCountMetricsLevelValidation,
 			sumoLogicCountMetricsLevelValidation,
 			instanaCountMetricsLevelValidation,
-			redshiftCountMetricsLevelValidation),
+			redshiftCountMetricsLevelValidation,
+			bigQueryCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
@@ -555,6 +549,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *RedshiftMetric { return m.Redshift }).
 		WithName("redshift").
 		Include(redshiftValidation),
+	validation.ForPointer(func(m MetricSpec) *BigQueryMetric { return m.BigQuery }).
+		WithName("bigQuery").
+		Include(bigQueryValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
