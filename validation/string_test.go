@@ -151,7 +151,7 @@ func TestStringIsURL(t *testing.T) {
 			"irc://irc.server.org/channel",
 			"irc://#channel@network",
 		} {
-			err := StringIsURL().Validate(input)
+			err := StringURL().Validate(input)
 			assert.NoError(t, err)
 		}
 	})
@@ -167,9 +167,21 @@ func TestStringIsURL(t *testing.T) {
 			"irc:",
 			"http://",
 		} {
-			err := StringIsURL().Validate(input)
+			err := StringURL().Validate(input)
 			assert.Error(t, err)
 			assert.True(t, HasErrorCode(err, ErrorCodeStringURL))
 		}
+	})
+}
+
+func TestStringJSON(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		err := StringJSON().Validate(`{"foo": "bar"}`)
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		err := StringJSON().Validate(`{]}`)
+		assert.Error(t, err)
+		assert.True(t, HasErrorCode(err, ErrorCodeStringJSON))
 	})
 }

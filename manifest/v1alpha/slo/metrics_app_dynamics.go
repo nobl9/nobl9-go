@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -16,23 +17,36 @@ type AppDynamicsMetric struct {
 	MetricPath      *string `json:"metricPath"`
 }
 
-var appDynamicsCountMetricsLevelValidationRule = validation.NewSingleRule(func(c CountMetricsSpec) error {
-	if c.GoodMetric == nil || c.TotalMetric == nil {
-		return nil
-	}
-	if c.GoodMetric.AppDynamics == nil || c.TotalMetric.AppDynamics == nil {
-		return nil
-	}
-	// Required properties are validated on a AppDynamicsMetric struct level.
-	if c.GoodMetric.AppDynamics.ApplicationName == nil ||
-		c.TotalMetric.AppDynamics.ApplicationName == nil {
-		return nil
-	}
-	if *c.GoodMetric.AppDynamics.ApplicationName != *c.TotalMetric.AppDynamics.ApplicationName {
-		return countMetricsPropertyEqualityError("appDynamics.applicationName", goodMetric)
-	}
-	return nil
-}).WithErrorCode(validation.ErrorCodeNotEqualTo)
+var appDynamicsCountMetricsLevelValidation = validation.New[CountMetricsSpec](
+	validation.For(validation.GetSelf[CountMetricsSpec]()).Rules(
+		validation.NewSingleRule(func(c CountMetricsSpec) error {
+			total := c.TotalMetric
+			good := c.GoodMetric
+			bad := c.BadMetric
+
+			if total == nil || total.AppDynamics.ApplicationName == nil {
+				return nil
+			}
+			if good != nil {
+				// Required properties are validated on a AppDynamicsMetric struct level.
+				if good.AppDynamics.ApplicationName == nil {
+					return nil
+				}
+				if *good.AppDynamics.ApplicationName != *total.AppDynamics.ApplicationName {
+					return countMetricsPropertyEqualityError("appDynamics.applicationName", goodMetric)
+				}
+			}
+			if bad != nil {
+				if bad.AppDynamics.ApplicationName == nil {
+					return nil
+				}
+				if *bad.AppDynamics.ApplicationName != *total.AppDynamics.ApplicationName {
+					return countMetricsPropertyEqualityError("appDynamics.applicationName", badMetric)
+				}
+			}
+			return nil
+		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
+).When(whenCountMetricsIs(v1alpha.AppDynamics))
 
 var appDynamicsMetricPathWildcardRegex = regexp.MustCompile(`([^\s|]\*)|(\*[^\s|])`)
 

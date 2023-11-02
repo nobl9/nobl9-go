@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"encoding/json"
 	"net/url"
 	"regexp"
 	"strings"
@@ -62,7 +63,7 @@ func StringDescription() SingleRule[string] {
 	return StringLength(0, 1050).WithErrorCode(ErrorCodeStringDescription)
 }
 
-func StringIsURL() SingleRule[string] {
+func StringURL() SingleRule[string] {
 	return NewSingleRule(func(v string) error {
 		u, err := url.Parse(v)
 		if err != nil {
@@ -76,6 +77,15 @@ func StringIsURL() SingleRule[string] {
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringURL)
+}
+
+func StringJSON() SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		if !json.Valid([]byte(s)) {
+			return errors.New("string is not a valid JSON")
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringJSON)
 }
 
 func regexErrorMsg(msg, format string, examples ...string) string {

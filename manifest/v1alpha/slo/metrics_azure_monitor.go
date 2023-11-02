@@ -1,6 +1,7 @@
 package slo
 
 import (
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -19,32 +20,35 @@ type AzureMonitorMetricDimension struct {
 	Value *string `json:"value"`
 }
 
-var azureMonitorCountMetricsLevelValidationRule = validation.NewSingleRule(func(c CountMetricsSpec) error {
-	total := c.TotalMetric
-	good := c.GoodMetric
-	bad := c.BadMetric
+var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
+	validation.For(validation.GetSelf[CountMetricsSpec]()).Rules(
+		validation.NewSingleRule(func(c CountMetricsSpec) error {
+			total := c.TotalMetric
+			good := c.GoodMetric
+			bad := c.BadMetric
 
-	if total == nil || total.AzureMonitor == nil {
-		return nil
-	}
-	if good != nil && good.AzureMonitor != nil {
-		if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
-			return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", goodMetric)
-		}
-		if good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-			return countMetricsPropertyEqualityError("azureMonitor.resourceId", goodMetric)
-		}
-	}
-	if bad != nil && bad.AzureMonitor != nil {
-		if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
-			return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", badMetric)
-		}
-		if bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
-			return countMetricsPropertyEqualityError("azureMonitor.resourceId", badMetric)
-		}
-	}
-	return nil
-}).WithErrorCode(validation.ErrorCodeNotEqualTo)
+			if total == nil {
+				return nil
+			}
+			if good != nil {
+				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
+					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", goodMetric)
+				}
+				if good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return countMetricsPropertyEqualityError("azureMonitor.resourceId", goodMetric)
+				}
+			}
+			if bad != nil {
+				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
+					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", badMetric)
+				}
+				if bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return countMetricsPropertyEqualityError("azureMonitor.resourceId", badMetric)
+				}
+			}
+			return nil
+		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
+).When(whenCountMetricsIs(v1alpha.AzureMonitor))
 
 var supportedAzureMonitorAggregations = []string{
 	"Avg",

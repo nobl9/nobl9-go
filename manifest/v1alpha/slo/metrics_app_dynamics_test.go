@@ -10,11 +10,23 @@ import (
 )
 
 func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
-	t.Run("appDynamics applicationName mismatch", func(t *testing.T) {
+	t.Run("appDynamics applicationName mismatch for bad over total", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validMetricSpec(v1alpha.AppDynamics)
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validMetricSpec(v1alpha.AppDynamics)
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics.ApplicationName = ptr("different")
+		err := validate(slo)
+		assertContainsErrors(t, err, 1, expectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: validation.ErrorCodeNotEqualTo,
+		})
+	})
+	t.Run("appDynamics applicationName mismatch for bad over total", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validMetricSpec(v1alpha.AppDynamics)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
+		slo.Spec.Objectives[0].CountMetrics.BadMetric = validMetricSpec(v1alpha.AppDynamics)
+		slo.Spec.Objectives[0].CountMetrics.BadMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
 			Prop: "spec.objectives[0].countMetrics",

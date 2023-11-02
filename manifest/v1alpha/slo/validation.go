@@ -86,7 +86,7 @@ var attachmentValidation = validation.New[Attachment](
 	validation.For(func(a Attachment) string { return a.URL }).
 		WithName("url").
 		Required().
-		Rules(validation.StringIsURL()),
+		Rules(validation.StringURL()),
 	validation.ForPointer(func(a Attachment) *string { return a.DisplayName }).
 		WithName("displayName").
 		Rules(validation.StringLength(0, 63)),

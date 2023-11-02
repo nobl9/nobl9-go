@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -110,13 +111,6 @@ type RedshiftMetric struct {
 	Query        *string `json:"query" validate:"required,redshiftRequiredColumns"`
 }
 
-// InstanaMetric represents metric from Redshift.
-type InstanaMetric struct {
-	MetricType     string                           `json:"metricType" validate:"required,oneof=infrastructure application"` //nolint:lll
-	Infrastructure *InstanaInfrastructureMetricType `json:"infrastructure,omitempty"`
-	Application    *InstanaApplicationMetricType    `json:"application,omitempty"`
-}
-
 // InfluxDBMetric represents metric from InfluxDB
 type InfluxDBMetric struct {
 	Query *string `json:"query" validate:"required,influxDBRequiredPlaceholders"`
@@ -126,29 +120,6 @@ type InfluxDBMetric struct {
 type GCMMetric struct {
 	Query     string `json:"query" validate:"required"`
 	ProjectID string `json:"projectId" validate:"required"`
-}
-
-type InstanaInfrastructureMetricType struct {
-	MetricRetrievalMethod string  `json:"metricRetrievalMethod" validate:"required,oneof=query snapshot"`
-	Query                 *string `json:"query,omitempty"`
-	SnapshotID            *string `json:"snapshotId,omitempty"`
-	MetricID              string  `json:"metricId" validate:"required"`
-	PluginID              string  `json:"pluginId" validate:"required"`
-}
-
-type InstanaApplicationMetricType struct {
-	MetricID         string                          `json:"metricId" validate:"required,oneof=calls erroneousCalls errors latency"` //nolint:lll
-	Aggregation      string                          `json:"aggregation" validate:"required"`
-	GroupBy          InstanaApplicationMetricGroupBy `json:"groupBy" validate:"required"`
-	APIQuery         string                          `json:"apiQuery" validate:"required,json"`
-	IncludeInternal  bool                            `json:"includeInternal,omitempty"`
-	IncludeSynthetic bool                            `json:"includeSynthetic,omitempty"`
-}
-
-type InstanaApplicationMetricGroupBy struct {
-	Tag               string  `json:"tag" validate:"required"`
-	TagEntity         string  `json:"tagEntity" validate:"required,oneof=DESTINATION SOURCE NOT_APPLICABLE"`
-	TagSecondLevelKey *string `json:"tagSecondLevelKey,omitempty"`
 }
 
 // IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.
@@ -521,13 +492,13 @@ var specMetricsValidation = validation.New[Spec](
 
 var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 	validation.For(validation.GetSelf[CountMetricsSpec]()).
-		Rules(
-			appDynamicsCountMetricsLevelValidationRule,
-			azureMonitorCountMetricsLevelValidationRule).
 		Include(
+			azureMonitorCountMetricsLevelValidation,
+			appDynamicsCountMetricsLevelValidation,
 			lightstepCountMetricsLevelValidation,
 			pingdomCountMetricsLevelValidation,
-			sumoLogicCountMetricsLevelValidation),
+			sumoLogicCountMetricsLevelValidation,
+			instanaCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
@@ -560,14 +531,16 @@ var rawMetricsValidation = validation.New[RawMetricSpec](
 			metricSpecValidation,
 			lightstepRawMetricValidation,
 			pingdomRawMetricValidation,
-			thousandEyesRawMetricValidation),
+			thousandEyesRawMetricValidation,
+			instanaRawMetricValidation),
 )
 
 var countMetricsValidation = validation.New[MetricSpec](
 	validation.For(validation.GetSelf[MetricSpec]()).
 		Include(
 			pingdomCountMetricsValidation,
-			thousandEyesCountMetricsValidation),
+			thousandEyesCountMetricsValidation,
+			instanaCountMetricsValidation),
 )
 
 var metricSpecValidation = validation.New[MetricSpec](
@@ -800,10 +773,13 @@ func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) boo
 		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
 			return false
 		}
-		if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
-			return false
+		if slices.Contains(badOverTotalEnabledSources, typ) {
+			if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
+				return false
+			}
+			return c.BadMetric != nil || c.GoodMetric != nil
 		}
-		return true
+		return c.GoodMetric != nil
 	}
 }
 

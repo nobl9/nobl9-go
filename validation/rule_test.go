@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSinglRule(t *testing.T) {
+func TestSingleRule(t *testing.T) {
 	r := NewSingleRule[int](func(v int) error {
 		if v < 0 {
 			return errors.Errorf("must be positive")
@@ -21,7 +21,7 @@ func TestSinglRule(t *testing.T) {
 	assert.EqualError(t, err, "must be positive")
 }
 
-func TestSinglRule_WithErrorCode(t *testing.T) {
+func TestSingleRule_WithErrorCode(t *testing.T) {
 	r := NewSingleRule[int](func(v int) error {
 		if v < 0 {
 			return errors.Errorf("must be positive")
@@ -36,7 +36,7 @@ func TestSinglRule_WithErrorCode(t *testing.T) {
 	assert.Equal(t, "test", err.(*RuleError).Code)
 }
 
-func TestSinglRule_WithDetals(t *testing.T) {
+func TestSingleRule_WithDetails(t *testing.T) {
 	for _, test := range []struct {
 		Error         string
 		Details       string

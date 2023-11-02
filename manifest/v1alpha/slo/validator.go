@@ -13,8 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -50,11 +48,7 @@ const HiddenValue = "[hidden]"
 var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
-	cloudWatchStatRegex             = buildCloudWatchStatRegex()
-	validInstanaLatencyAggregations = map[string]struct{}{
-		"sum": {}, "mean": {}, "min": {}, "max": {}, "p25": {},
-		"p50": {}, "p75": {}, "p90": {}, "p95": {}, "p98": {}, "p99": {},
-	}
+	cloudWatchStatRegex = buildCloudWatchStatRegex()
 )
 
 type ErrInvalidPayload struct {
@@ -90,7 +84,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
 	val.RegisterStructValidation(countzMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 
@@ -198,108 +191,6 @@ func areDimensionNamesUnique(fl v.FieldLevel) bool {
 		usedNames[name] = struct{}{}
 	}
 	return true
-}
-
-func metricSpecStructLevelValidation(sl v.StructLevel) {
-	metricSpec := sl.Current().Interface().(MetricSpec)
-
-	if metricSpec.Instana != nil {
-		instanaMetricValidation(metricSpec.Instana, sl)
-	}
-}
-
-const (
-	instanaMetricTypeInfrastructure = "infrastructure"
-	instanaMetricTypeApplication    = "application"
-
-	instanaMetricRetrievalMethodQuery    = "query"
-	instanaMetricRetrievalMethodSnapshot = "snapshot"
-)
-
-func instanaMetricValidation(metric *InstanaMetric, sl v.StructLevel) {
-	if metric.Infrastructure != nil && metric.Application != nil {
-		if metric.MetricType == instanaMetricTypeInfrastructure {
-			sl.ReportError(metric.Infrastructure, instanaMetricTypeInfrastructure,
-				cases.Title(language.Und).
-					String(instanaMetricTypeInfrastructure), "infrastructureObjectOnlyRequired", "")
-		}
-		if metric.MetricType == instanaMetricTypeApplication {
-			sl.ReportError(metric.Application, instanaMetricTypeApplication,
-				cases.Title(language.Und).
-					String(instanaMetricTypeApplication), "applicationObjectOnlyRequired", "")
-		}
-		return
-	}
-
-	switch metric.MetricType {
-	case instanaMetricTypeInfrastructure:
-		if metric.Infrastructure == nil {
-			sl.ReportError(metric.Infrastructure, instanaMetricTypeInfrastructure,
-				cases.Title(language.Und).
-					String(instanaMetricTypeInfrastructure), "infrastructureRequired", "")
-		} else {
-			instanaMetricTypeInfrastructureValidation(metric.Infrastructure, sl)
-		}
-	case instanaMetricTypeApplication:
-		if metric.Application == nil {
-			sl.ReportError(metric.Application, instanaMetricTypeApplication,
-				cases.Title(language.Und).
-					String(instanaMetricTypeApplication), "applicationRequired", "")
-		} else {
-			instanaMetricTypeApplicationValidation(metric.Application, sl)
-		}
-	}
-}
-
-func instanaMetricTypeInfrastructureValidation(infrastructure *InstanaInfrastructureMetricType, sl v.StructLevel) {
-	if infrastructure.Query != nil && infrastructure.SnapshotID != nil {
-		switch infrastructure.MetricRetrievalMethod {
-		case instanaMetricRetrievalMethodQuery:
-			sl.ReportError(infrastructure.Query, instanaMetricRetrievalMethodQuery,
-				cases.Title(language.Und).
-					String(instanaMetricRetrievalMethodQuery), "queryOnlyRequired", "")
-		case instanaMetricRetrievalMethodSnapshot:
-			sl.ReportError(infrastructure.Query, instanaMetricRetrievalMethodQuery,
-				cases.Title(language.Und).
-					String(instanaMetricRetrievalMethodQuery), "snapshotIDOnlyRequired", "")
-		}
-		return
-	}
-
-	switch infrastructure.MetricRetrievalMethod {
-	case instanaMetricRetrievalMethodQuery:
-		if infrastructure.Query == nil {
-			sl.ReportError(infrastructure.Query, instanaMetricRetrievalMethodQuery,
-				cases.Title(language.Und).
-					String(instanaMetricRetrievalMethodQuery), "queryRequired", "")
-		}
-	case instanaMetricRetrievalMethodSnapshot:
-		if infrastructure.SnapshotID == nil {
-			sl.ReportError(infrastructure.SnapshotID, instanaMetricRetrievalMethodSnapshot+"Id",
-				cases.Title(language.Und).
-					String(instanaMetricRetrievalMethodSnapshot+"Id"), "snapshotIdRequired", "")
-		}
-	}
-}
-
-func instanaMetricTypeApplicationValidation(application *InstanaApplicationMetricType, sl v.StructLevel) {
-	const aggregation = "aggregation"
-	switch application.MetricID {
-	case "calls", "erroneousCalls":
-		if application.Aggregation == "sum" {
-			return
-		}
-	case "errors":
-		if application.Aggregation == "mean" {
-			return
-		}
-	case "latency":
-		if _, isValid := validInstanaLatencyAggregations[application.Aggregation]; isValid {
-			return
-		}
-	}
-	sl.ReportError(application.Aggregation, aggregation,
-		cases.Title(language.Und).String(aggregation), "wrongAggregationValueForMetricID", "")
 }
 
 func isValidURL(fl v.FieldLevel) bool {
@@ -692,7 +583,6 @@ func buildCloudWatchStatRegex() *regexp.Regexp {
 func countzMetricsSpecValidation(sl v.StructLevel) {
 	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
-	instanaCountMetricsSpecValidation(sl)
 }
 
 func cloudWatchMetricStructValidation(sl v.StructLevel) {
@@ -789,36 +679,6 @@ func redshiftCountMetricsSpecValidation(sl v.StructLevel) {
 			countMetrics.TotalMetric.Redshift.DatabaseName,
 			"totalMetric.redshift.databaseName", "",
 			"databaseNameIsNotEqual", "",
-		)
-	}
-}
-
-func instanaCountMetricsSpecValidation(sl v.StructLevel) {
-	countMetrics, ok := sl.Current().Interface().(CountMetricsSpec)
-	if !ok {
-		sl.ReportError(countMetrics, "", "", "structConversion", "")
-		return
-	}
-	if countMetrics.TotalMetric == nil || countMetrics.GoodMetric == nil {
-		return
-	}
-	if countMetrics.TotalMetric.Instana == nil || countMetrics.GoodMetric.Instana == nil {
-		return
-	}
-
-	if countMetrics.TotalMetric.Instana.MetricType == instanaMetricTypeApplication {
-		sl.ReportError(
-			countMetrics.TotalMetric.Instana.MetricType,
-			"totalMetric.instana.metricType", "",
-			"instanaApplicationTypeNotAllowed", "",
-		)
-	}
-
-	if countMetrics.GoodMetric.Instana.MetricType == instanaMetricTypeApplication {
-		sl.ReportError(
-			countMetrics.GoodMetric.Instana.MetricType,
-			"goodMetric.instana.metricType", "",
-			"instanaApplicationTypeNotAllowed", "",
 		)
 	}
 }

@@ -1418,36 +1418,12 @@ unwrap kafka_consumergroup_lag [1m]))`),
 		Rollup:       ptr("Min"),
 	}},
 	v1alpha.Instana: {Instana: &InstanaMetric{
-		MetricType: instanaMetricTypeApplication,
-		Application: &InstanaApplicationMetricType{
-			MetricID:    "latency",
-			Aggregation: "p99",
-			GroupBy: InstanaApplicationMetricGroupBy{
-				Tag:       "endpoint.name",
-				TagEntity: "DESTINATION",
-			},
-			APIQuery: `
-{
-  "type": "EXPRESSION",
-  "logicalOperator": "AND",
-  "elements": [
-    {
-      "type": "TAG_FILTER",
-      "name": "service.name",
-      "operator": "EQUALS",
-      "entity": "DESTINATION",
-      "value": "master"
-    },
-    {
-      "type": "TAG_FILTER",
-      "name": "call.type",
-      "operator": "EQUALS",
-      "entity": "NOT_APPLICABLE",
-      "value": "HTTP"
-    }
-  ]
-}
-`,
+		MetricType: instanaMetricTypeInfrastructure,
+		Infrastructure: &InstanaInfrastructureMetricType{
+			MetricID:              "availableReplicas",
+			PluginID:              "kubernetesDeployment",
+			MetricRetrievalMethod: "query",
+			Query:                 ptr("entity.kubernetes.namespace:kube-system AND entity.kubernetes.deployment.name:aws-load-balancer-controller"), //nolint:lll
 		},
 	}},
 	v1alpha.InfluxDB: {InfluxDB: &InfluxDBMetric{
