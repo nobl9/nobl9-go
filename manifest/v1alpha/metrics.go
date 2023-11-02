@@ -270,14 +270,14 @@ type HoneycombMetric struct {
 
 // HoneycombFilter represents filter for Honeycomb metric. It has custom struct validation.
 type HoneycombFilter struct {
-	Operator   string                     `json:"operator" validate:"max=30,ascii"`
-	Conditions []HoneycombFilterCondition `json:"conditions" validate:"required,gt=0,lte=100,dive"`
+	Operator   string                     `json:"op" validate:"max=30,ascii"`
+	Conditions []HoneycombFilterCondition `json:"conditions" validate:"gt=0,lte=100,dive"`
 }
 
 // HoneycombFilterCondition represents single condition for Honeycomb filter.
 type HoneycombFilterCondition struct {
 	Attribute string `json:"attribute" validate:"required,max=255,ascii,notBlank"`
-	Operator  string `json:"operator" validate:"required,max=30,ascii,notBlank,supportedHoneycombFilterConditionOperator"`
+	Operator  string `json:"op" validate:"required,max=30,ascii,notBlank,supportedHoneycombFilterConditionOperator"`
 	Value     string `json:"value" validate:"max=255,ascii"`
 }
 
