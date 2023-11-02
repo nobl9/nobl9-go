@@ -1,7 +1,6 @@
 package slo
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +20,6 @@ func TestInstana_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana.MetricType = instanaMetricTypeApplication
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana.MetricType = instanaMetricTypeInfrastructure
 		err := validate(slo)
-		fmt.Println(err)
 		assertContainsErrors(t, err, 2, expectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,

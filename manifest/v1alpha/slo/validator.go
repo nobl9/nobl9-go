@@ -113,7 +113,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
-	_ = val.RegisterValidation("redshiftRequiredColumns", isValidRedshiftQuery)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
 	_ = val.RegisterValidation("influxDBRequiredPlaceholders", isValidInfluxDBQuery)
 	_ = val.RegisterValidation("noSinceOrUntil", isValidNewRelicQuery)
@@ -407,19 +406,6 @@ func validateBigQueryQuery(query string) bool {
 		dateToInWhere.MatchString(query)
 }
 
-func isValidRedshiftQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	dateInProjection := regexp.MustCompile(`^SELECT[\s\S]*\bn9date\b[\s\S]*FROM`)
-	valueInProjection := regexp.MustCompile(`^SELECT\s[\s\S]*\bn9value\b[\s\S]*\sFROM`)
-	dateFromInWhere := regexp.MustCompile(`WHERE[\s\S]*\W:n9date_from\b[\s\S]*`)
-	dateToInWhere := regexp.MustCompile(`WHERE[\s\S]*\W:n9date_to\b[\s\S]*`)
-
-	return dateInProjection.MatchString(query) &&
-		valueInProjection.MatchString(query) &&
-		dateFromInWhere.MatchString(query) &&
-		dateToInWhere.MatchString(query)
-}
-
 func isValidInfluxDBQuery(fl v.FieldLevel) bool {
 	query := fl.Field().String()
 
@@ -581,7 +567,6 @@ func buildCloudWatchStatRegex() *regexp.Regexp {
 }
 
 func countzMetricsSpecValidation(sl v.StructLevel) {
-	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
 }
 
@@ -622,64 +607,6 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	}
 	if !v1alpha.IsValidRegion(*cloudWatchMetric.Region, regions) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
-	}
-}
-
-func redshiftCountMetricsSpecValidation(sl v.StructLevel) {
-	countMetrics, ok := sl.Current().Interface().(CountMetricsSpec)
-	if !ok {
-		sl.ReportError(countMetrics, "", "", "structConversion", "")
-		return
-	}
-	if countMetrics.TotalMetric == nil || countMetrics.GoodMetric == nil {
-		return
-	}
-	if countMetrics.TotalMetric.Redshift == nil || countMetrics.GoodMetric.Redshift == nil {
-		return
-	}
-	if countMetrics.GoodMetric.Redshift.Region == nil || countMetrics.GoodMetric.Redshift.ClusterID == nil ||
-		countMetrics.GoodMetric.Redshift.DatabaseName == nil {
-		return
-	}
-	if countMetrics.TotalMetric.Redshift.Region == nil || countMetrics.TotalMetric.Redshift.ClusterID == nil ||
-		countMetrics.TotalMetric.Redshift.DatabaseName == nil {
-		return
-	}
-	if *countMetrics.GoodMetric.Redshift.Region != *countMetrics.TotalMetric.Redshift.Region {
-		sl.ReportError(
-			countMetrics.GoodMetric.Redshift.Region,
-			"goodMetric.redshift.region", "",
-			"regionIsNotEqual", "",
-		)
-		sl.ReportError(
-			countMetrics.TotalMetric.Redshift.Region,
-			"totalMetric.redshift.region", "",
-			"regionIsNotEqual", "",
-		)
-	}
-	if *countMetrics.GoodMetric.Redshift.ClusterID != *countMetrics.TotalMetric.Redshift.ClusterID {
-		sl.ReportError(
-			countMetrics.GoodMetric.Redshift.ClusterID,
-			"goodMetric.redshift.clusterId", "",
-			"clusterIdIsNotEqual", "",
-		)
-		sl.ReportError(
-			countMetrics.TotalMetric.Redshift.ClusterID,
-			"totalMetric.redshift.clusterId", "",
-			"clusterIdIsNotEqual", "",
-		)
-	}
-	if *countMetrics.GoodMetric.Redshift.DatabaseName != *countMetrics.TotalMetric.Redshift.DatabaseName {
-		sl.ReportError(
-			countMetrics.GoodMetric.Redshift.DatabaseName,
-			"goodMetric.redshift.databaseName", "",
-			"databaseNameIsNotEqual", "",
-		)
-		sl.ReportError(
-			countMetrics.TotalMetric.Redshift.DatabaseName,
-			"totalMetric.redshift.databaseName", "",
-			"databaseNameIsNotEqual", "",
-		)
 	}
 }
 

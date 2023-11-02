@@ -226,3 +226,10 @@ func validate(s SLO) error {
 	}
 	return v1alpha.ValidateObject(sloValidation, s)
 }
+
+func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
+	if p1 == nil || p2 == nil {
+		return true
+	}
+	return *p1 == *p2
+}

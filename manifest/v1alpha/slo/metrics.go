@@ -103,14 +103,6 @@ type CloudWatchMetric struct {
 	JSON       *string                     `json:"json,omitempty"`
 }
 
-// RedshiftMetric represents metric from Redshift.
-type RedshiftMetric struct {
-	Region       *string `json:"region" validate:"required,max=255"`
-	ClusterID    *string `json:"clusterId" validate:"required"`
-	DatabaseName *string `json:"databaseName" validate:"required"`
-	Query        *string `json:"query" validate:"required,redshiftRequiredColumns"`
-}
-
 // InfluxDBMetric represents metric from InfluxDB
 type InfluxDBMetric struct {
 	Query *string `json:"query" validate:"required,influxDBRequiredPlaceholders"`
@@ -498,7 +490,8 @@ var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 			lightstepCountMetricsLevelValidation,
 			pingdomCountMetricsLevelValidation,
 			sumoLogicCountMetricsLevelValidation,
-			instanaCountMetricsLevelValidation),
+			instanaCountMetricsLevelValidation,
+			redshiftCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
@@ -559,6 +552,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *AzureMonitorMetric { return m.AzureMonitor }).
 		WithName("azureMonitor").
 		Include(azureMonitorValidation),
+	validation.ForPointer(func(m MetricSpec) *RedshiftMetric { return m.Redshift }).
+		WithName("redshift").
+		Include(redshiftValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
