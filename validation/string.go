@@ -2,6 +2,7 @@ package validation
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strings"
@@ -18,10 +19,14 @@ func StringNotEmpty() SingleRule[string] {
 	}).WithErrorCode(ErrorCodeStringNotEmpty)
 }
 
-func StringMatchRegexp(re *regexp.Regexp) SingleRule[string] {
+func StringMatchRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if !re.MatchString(s) {
-			return errors.Errorf("string does not match regular expresion: %s", re)
+			msg := fmt.Sprintf("string does not match regular expresion: '%s'", re.String())
+			if len(examples) > 0 {
+				msg += " " + prettyExamples(examples)
+			}
+			return errors.New(msg)
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringMatchRegexp)
@@ -30,7 +35,7 @@ func StringMatchRegexp(re *regexp.Regexp) SingleRule[string] {
 func StringDenyRegexp(re *regexp.Regexp) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if re.MatchString(s) {
-			return errors.Errorf("string must not match regular expresion: %s", re)
+			return errors.Errorf("string must not match regular expresion: '%s'", re)
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringDenyRegexp)
@@ -41,15 +46,9 @@ var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
 func StringIsDNSSubdomain() RuleSet[string] {
 	return NewRuleSet[string](
 		StringLength(1, 63),
-		NewSingleRule(func(v string) error {
-			if !dns1123SubdomainRegexp.MatchString(v) {
-				return errors.New(regexErrorMsg(
-					"a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-',"+
-						" and must start and end with an alphanumeric character",
-					dns1123SubdomainRegexp.String(), "my-name", "123-abc"))
-			}
-			return nil
-		}),
+		StringMatchRegexp(dns1123SubdomainRegexp, "my-name", "123-abc").
+			WithDetails("a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-',"+
+				" and must start and end with an alphanumeric character"),
 	).WithErrorCode(ErrorCodeStringIsDNSSubdomain)
 }
 
@@ -88,17 +87,20 @@ func StringJSON() SingleRule[string] {
 	}).WithErrorCode(ErrorCodeStringJSON)
 }
 
-func regexErrorMsg(msg, format string, examples ...string) string {
+func prettyExamples(examples []string) string {
 	if len(examples) == 0 {
-		return msg + " (regex used for validation is '" + format + "')"
+		return ""
 	}
-	msg += " (e.g. "
+	b := strings.Builder{}
+	b.WriteString("(e.g. ")
 	for i := range examples {
 		if i > 0 {
-			msg += " or "
+			b.WriteString(", ")
 		}
-		msg += "'" + examples[i] + "', "
+		b.WriteString("'")
+		b.WriteString(examples[i])
+		b.WriteString("'")
 	}
-	msg += "regex used for validation is '" + format + "')"
-	return msg
+	b.WriteString(")")
+	return b.String()
 }

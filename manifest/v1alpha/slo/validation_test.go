@@ -33,7 +33,7 @@ func TestValidate_Metadata(t *testing.T) {
 	slo.ManifestSource = "/home/me/slo.yaml"
 	err := validate(slo)
 	require.Error(t, err)
-	assert.EqualError(t, err, expectedMetadataError)
+	assert.Equal(t, strings.TrimSuffix(expectedMetadataError, "\n"), err.Error())
 }
 
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {
@@ -1167,7 +1167,8 @@ func assertContainsErrors(t *testing.T, err error, expectedErrorsCount int, expe
 					found = true
 					break searchErrors
 				}
-				if expected.Code != "" && expected.Code == actualRuleErr.Code {
+				if expected.Code != "" &&
+					(expected.Code == actualRuleErr.Code || validation.HasErrorCode(actualRuleErr, expected.Code)) {
 					found = true
 					break searchErrors
 				}

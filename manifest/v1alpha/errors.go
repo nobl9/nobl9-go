@@ -48,7 +48,7 @@ type ObjectMetadata struct {
 
 func (o *ObjectError) Error() string {
 	b := new(strings.Builder)
-	b.WriteString(fmt.Sprintf("Validation for %s '%s'", o.Object.Kind, o.Object.Name))
+	fmt.Fprintf(b, "Validation for %s '%s'", o.Object.Kind, o.Object.Name)
 	if o.Object.IsProjectScoped {
 		b.WriteString(" in project '" + o.Object.Project + "'")
 	}

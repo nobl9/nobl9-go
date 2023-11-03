@@ -11,10 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	v "github.com/go-playground/validator/v10"
-
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 // Regular expressions for validating URL. It is from https://github.com/asaskevich/govalidator.
@@ -38,18 +35,11 @@ const (
 	S3BucketNameRegex               string = `^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$`
 	GCSNonDomainNameBucketNameRegex string = `^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`
 	GCSNonDomainNameBucketMaxLength int    = 63
-	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
 )
 
 // HiddenValue can be used as a value of a secret field and is ignored during saving
 const HiddenValue = "[hidden]"
-
-var (
-	// cloudWatchStatRegex matches valid stat function according to this documentation:
-	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
-	cloudWatchStatRegex = buildCloudWatchStatRegex()
-)
 
 type ErrInvalidPayload struct {
 	Msg string
@@ -84,8 +74,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
-
 	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("description", isValidDescription)
@@ -108,7 +96,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
 	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
 	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
-	_ = val.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
@@ -161,33 +148,6 @@ func regexError(msg, format string, examples ...string) string {
 	}
 	msg += "regex used for validation is '" + format + "')"
 	return msg
-}
-
-func areDimensionNamesUnique(fl v.FieldLevel) bool {
-	usedNames := make(map[string]struct{})
-	for i := 0; i < fl.Field().Len(); i++ {
-		if !fl.Field().CanInterface() {
-			return false
-		}
-		var name string
-		switch dimension := fl.Field().Index(i).Interface().(type) {
-		case CloudWatchMetricDimension:
-			if dimension.Name != nil {
-				name = *dimension.Name
-			}
-		case AzureMonitorMetricDimension:
-			if dimension.Name != nil {
-				name = *dimension.Name
-			}
-		default:
-			return false
-		}
-		if _, used := usedNames[name]; used {
-			return false
-		}
-		usedNames[name] = struct{}{}
-	}
-	return true
 }
 
 func isValidURL(fl v.FieldLevel) bool {
@@ -468,213 +428,6 @@ func splunkQueryValid(fl v.FieldLevel) bool {
 	}
 
 	return true
-}
-
-func wrapInParenthesis(regex string) string {
-	return fmt.Sprintf("(%s)", regex)
-}
-
-func concatRegexAlternatives(alternatives []string) string {
-	var result strings.Builder
-	for i, alternative := range alternatives {
-		result.WriteString(wrapInParenthesis(alternative))
-		if i < len(alternatives)-1 {
-			result.WriteString("|")
-		}
-	}
-	return wrapInParenthesis(result.String())
-}
-
-func buildCloudWatchStatRegex() *regexp.Regexp {
-	simpleFunctions := []string{
-		"SampleCount",
-		"Sum",
-		"Average",
-		"Minimum",
-		"Maximum",
-		"IQM",
-	}
-
-	floatFrom0To100 := `(100|(([1-9]\d?)|0))(\.\d{1,10})?`
-	shortFunctionNames := []string{
-		"p",
-		"tm",
-		"wm",
-		"tc",
-		"ts",
-	}
-	shortFunctions := wrapInParenthesis(concatRegexAlternatives(shortFunctionNames)) + wrapInParenthesis(floatFrom0To100)
-
-	percent := wrapInParenthesis(floatFrom0To100 + "%")
-	floatingPoint := wrapInParenthesis(`-?(([1-9]\d*)|0)(\.\d{1,10})?`)
-	percentArgumentAlternatives := []string{
-		fmt.Sprintf("%s:%s", percent, percent),
-		fmt.Sprintf("%s:", percent),
-		fmt.Sprintf(":%s", percent),
-	}
-	floatArgumentAlternatives := []string{
-		fmt.Sprintf("%s:%s", floatingPoint, floatingPoint),
-		fmt.Sprintf("%s:", floatingPoint),
-		fmt.Sprintf(":%s", floatingPoint),
-	}
-	var allArgumentAlternatives []string
-	allArgumentAlternatives = append(allArgumentAlternatives, percentArgumentAlternatives...)
-	allArgumentAlternatives = append(allArgumentAlternatives, floatArgumentAlternatives...)
-
-	valueOrPercentFunctionNames := []string{
-		"TM",
-		"WM",
-		"TC",
-		"TS",
-	}
-	valueOrPercentFunctions := wrapInParenthesis(concatRegexAlternatives(valueOrPercentFunctionNames)) +
-		fmt.Sprintf(`\(%s\)`, concatRegexAlternatives(allArgumentAlternatives))
-
-	valueOnlyFunctionNames := []string{
-		"PR",
-	}
-	valueOnlyFunctions := wrapInParenthesis(concatRegexAlternatives(valueOnlyFunctionNames)) +
-		fmt.Sprintf(`\(%s\)`, concatRegexAlternatives(floatArgumentAlternatives))
-
-	var allFunctions []string
-	allFunctions = append(allFunctions, simpleFunctions...)
-	allFunctions = append(allFunctions, shortFunctions)
-	allFunctions = append(allFunctions, valueOrPercentFunctions)
-	allFunctions = append(allFunctions, valueOnlyFunctions)
-
-	finalRegexStr := fmt.Sprintf("^%s$", concatRegexAlternatives(allFunctions))
-	finalRegex := regexp.MustCompile(finalRegexStr)
-	return finalRegex
-}
-
-func cloudWatchMetricStructValidation(sl v.StructLevel) {
-	cloudWatchMetric, ok := sl.Current().Interface().(CloudWatchMetric)
-	if !ok {
-		sl.ReportError(cloudWatchMetric, "", "", "couldNotConverse", "")
-		return
-	}
-
-	isConfiguration := cloudWatchMetric.IsStandardConfiguration()
-	isSQL := cloudWatchMetric.IsSQLConfiguration()
-	isJSON := cloudWatchMetric.IsJSONConfiguration()
-
-	var configOptions int
-	if isConfiguration {
-		configOptions++
-	}
-	if isSQL {
-		configOptions++
-	}
-	if isJSON {
-		configOptions++
-	}
-	if configOptions != 1 {
-		sl.ReportError(cloudWatchMetric.Stat, "stat", "Stat", "exactlyOneConfigType", "")
-		sl.ReportError(cloudWatchMetric.SQL, "sql", "SQL", "exactlyOneConfigType", "")
-		sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "exactlyOneConfigType", "")
-		return
-	}
-	regions := v1alpha.AWSRegions()
-
-	switch {
-	case isJSON:
-		validateCloudWatchJSONQuery(sl, cloudWatchMetric)
-	case isConfiguration:
-		validateCloudWatchConfiguration(sl, cloudWatchMetric)
-	}
-	if !v1alpha.IsValidRegion(*cloudWatchMetric.Region, regions) {
-		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
-	}
-}
-
-// validateCloudWatchConfigurationRequiredFields checks if all required fields for standard configuration exist.
-func validateCloudWatchConfigurationRequiredFields(sl v.StructLevel, cloudWatchMetric CloudWatchMetric) bool {
-	i := 0
-	if cloudWatchMetric.Namespace == nil {
-		sl.ReportError(cloudWatchMetric.Namespace, "namespace", "Namespace", "required", "")
-		i++
-	}
-	if cloudWatchMetric.MetricName == nil {
-		sl.ReportError(cloudWatchMetric.MetricName, "metricName", "MetricName", "required", "")
-		i++
-	}
-	if cloudWatchMetric.Stat == nil {
-		sl.ReportError(cloudWatchMetric.Stat, "stat", "Stat", "required", "")
-		i++
-	}
-	if cloudWatchMetric.Dimensions == nil {
-		sl.ReportError(cloudWatchMetric.Dimensions, "dimensions", "Dimensions", "required", "")
-		i++
-	}
-	return i == 0
-}
-
-// validateCloudWatchConfiguration validates standard configuration and data necessary for further data retrieval.
-func validateCloudWatchConfiguration(sl v.StructLevel, cloudWatchMetric CloudWatchMetric) {
-	if !validateCloudWatchConfigurationRequiredFields(sl, cloudWatchMetric) {
-		return
-	}
-
-	const maxLength = 255
-	if len(*cloudWatchMetric.Namespace) > maxLength {
-		sl.ReportError(cloudWatchMetric.Namespace, "namespace", "Namespace", "maxLength", "")
-	}
-	if len(*cloudWatchMetric.MetricName) > maxLength {
-		sl.ReportError(cloudWatchMetric.MetricName, "metricName", "MetricName", "maxLength", "")
-	}
-
-	if !isValidCloudWatchNamespace(*cloudWatchMetric.Namespace) {
-		sl.ReportError(cloudWatchMetric.Namespace, "namespace", "Namespace", "cloudWatchNamespaceRegex", "")
-	}
-	if !cloudWatchStatRegex.MatchString(*cloudWatchMetric.Stat) {
-		sl.ReportError(cloudWatchMetric.Stat, "stat", "Stat", "invalidCloudWatchStat", "")
-	}
-}
-
-// validateCloudWatchJSONQuery validates JSON query and data necessary for further data retrieval.
-func validateCloudWatchJSONQuery(sl v.StructLevel, cloudWatchMetric CloudWatchMetric) {
-	const queryPeriod = 60
-	if cloudWatchMetric.JSON == nil {
-		return
-	}
-	var metricDataQuerySlice []*cloudwatch.MetricDataQuery
-	if err := json.Unmarshal([]byte(*cloudWatchMetric.JSON), &metricDataQuerySlice); err != nil {
-		sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "invalidJSONQuery", "")
-		return
-	}
-
-	returnedValues := len(metricDataQuerySlice)
-	for _, metricData := range metricDataQuerySlice {
-		if err := metricData.Validate(); err != nil {
-			msg := fmt.Sprintf("\n%s", strings.TrimSuffix(err.Error(), "\n"))
-			sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", msg, "")
-			continue
-		}
-		if metricData.ReturnData != nil && !*metricData.ReturnData {
-			returnedValues--
-		}
-		if metricData.MetricStat != nil {
-			if metricData.MetricStat.Period == nil {
-				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "requiredPeriod", "")
-			} else if *metricData.MetricStat.Period != queryPeriod {
-				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "invalidPeriodValue", "")
-			}
-		} else {
-			if metricData.Period == nil {
-				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "requiredPeriod", "")
-			} else if *metricData.Period != queryPeriod {
-				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "invalidPeriodValue", "")
-			}
-		}
-	}
-	if returnedValues != 1 {
-		sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "onlyOneReturnValueRequired", "")
-	}
-}
-
-func isValidCloudWatchNamespace(namespace string) bool {
-	validNamespace := regexp.MustCompile(CloudWatchNamespaceRegex)
-	return validNamespace.MatchString(namespace)
 }
 
 func notBlank(fl v.FieldLevel) bool {

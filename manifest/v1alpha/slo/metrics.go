@@ -92,17 +92,6 @@ type ElasticsearchMetric struct {
 	Query *string `json:"query" validate:"required,elasticsearchBeginEndTimeRequired"`
 }
 
-// CloudWatchMetric represents metric from CloudWatch.
-type CloudWatchMetric struct {
-	Region     *string                     `json:"region" validate:"required,max=255"`
-	Namespace  *string                     `json:"namespace,omitempty"`
-	MetricName *string                     `json:"metricName,omitempty"`
-	Stat       *string                     `json:"stat,omitempty"`
-	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty" validate:"max=10,uniqueDimensionNames,dive"`
-	SQL        *string                     `json:"sql,omitempty"`
-	JSON       *string                     `json:"json,omitempty"`
-}
-
 // InfluxDBMetric represents metric from InfluxDB
 type InfluxDBMetric struct {
 	Query *string `json:"query" validate:"required,influxDBRequiredPlaceholders"`
@@ -112,27 +101,6 @@ type InfluxDBMetric struct {
 type GCMMetric struct {
 	Query     string `json:"query" validate:"required"`
 	ProjectID string `json:"projectId" validate:"required"`
-}
-
-// IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.
-func (c CloudWatchMetric) IsStandardConfiguration() bool {
-	return c.Stat != nil || c.Dimensions != nil || c.MetricName != nil || c.Namespace != nil
-}
-
-// IsSQLConfiguration returns true if the struct represents CloudWatch SQL configuration.
-func (c CloudWatchMetric) IsSQLConfiguration() bool {
-	return c.SQL != nil
-}
-
-// IsJSONConfiguration returns true if the struct represents CloudWatch JSON configuration.
-func (c CloudWatchMetric) IsJSONConfiguration() bool {
-	return c.JSON != nil
-}
-
-// CloudWatchMetricDimension represents name/value pair that is part of the identity of a metric.
-type CloudWatchMetricDimension struct {
-	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
-	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
 }
 
 // GraphiteMetric represents metric from Graphite.
@@ -552,6 +520,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *BigQueryMetric { return m.BigQuery }).
 		WithName("bigQuery").
 		Include(bigQueryValidation),
+	validation.ForPointer(func(m MetricSpec) *CloudWatchMetric { return m.CloudWatch }).
+		WithName("cloudWatch").
+		Include(cloudWatchValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
