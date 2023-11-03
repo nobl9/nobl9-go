@@ -56,6 +56,7 @@ type AgentSpec struct {
 	InfluxDB                *InfluxDBAgentConfig            `json:"influxdb,omitempty"`
 	AzureMonitor            *AzureMonitorAgentConfig        `json:"azureMonitor,omitempty"`
 	GCM                     *GCMAgentConfig                 `json:"gcm,omitempty"`
+	Generic                 *GenericAgentConfig             `json:"generic,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval        `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                     `json:"queryDelay,omitempty"`
 }
@@ -108,6 +109,8 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return GCM, nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor, nil
+	case spec.Generic != nil:
+		return Generic, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -235,6 +238,10 @@ type SplunkAgentConfig struct {
 // AzureMonitorAgentConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorAgentConfig struct {
 	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+}
+
+// GenericAgentConfig represents content of Generic Configuration typical for Agent Object.
+type GenericAgentConfig struct {
 }
 
 // AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition

@@ -41,6 +41,7 @@ type MetricSpec struct {
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
+	Generic             *GenericMetric             `json:"generic,omitempty"`
 }
 
 // PrometheusMetric represents metric from Prometheus
@@ -239,7 +240,7 @@ type GrafanaLokiMetric struct {
 
 // AzureMonitorMetric represents metric from AzureMonitor
 type AzureMonitorMetric struct {
-	ResourceID      string                        `json:"resourceId" validate:"required"`
+	ResourceID      string                        `json:"resourceId" validate:"required,azureResourceID" example:"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm"` //nolint:lll
 	MetricName      string                        `json:"metricName" validate:"required"`
 	Aggregation     string                        `json:"aggregation" validate:"required"`
 	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty" validate:"uniqueDimensionNames,dive"`
@@ -250,6 +251,10 @@ type AzureMonitorMetric struct {
 type AzureMonitorMetricDimension struct {
 	Name  *string `json:"name" validate:"required,max=255,ascii,notBlank"`
 	Value *string `json:"value" validate:"required,max=255,ascii,notBlank"`
+}
+
+type GenericMetric struct {
+	Query *string `json:"query" validate:"required"`
 }
 
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
@@ -450,6 +455,8 @@ func (m *MetricSpec) DataSourceType() DataSourceType {
 		return GCM
 	case m.AzureMonitor != nil:
 		return AzureMonitor
+	case m.Generic != nil:
+		return Generic
 	default:
 		return 0
 	}
@@ -528,6 +535,8 @@ func (m *MetricSpec) Query() interface{} {
 			return *azureMonitorCopy.Dimensions[i].Name < *azureMonitorCopy.Dimensions[j].Name
 		})
 		return azureMonitorCopy
+	case Generic:
+		return m.Generic
 	default:
 		return nil
 	}
