@@ -4,8 +4,6 @@ run:
   skip-dirs:
     - scripts
   skip-dirs-use-default: true
-  skip-files:
-    - old_sdk.go
 
 issues:
   # Enable all checks (which was as default disabled e.g. comments).
@@ -68,7 +66,6 @@ linters:
     - exportloopref
     - gochecknoinits
     - gocognit
-    - goconst
     - gocritic
     - gocyclo
     - gofmt

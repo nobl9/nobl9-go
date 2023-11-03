@@ -5,6 +5,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
@@ -847,6 +848,72 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 	assert.True(t, r)
 }
 
+func TestValidateAzureResourceID(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		resourceID string
+		isValid    bool
+	}{
+		{
+			desc:       "empty",
+			resourceID: "",
+			isValid:    false,
+		},
+		{
+			desc:       "one letter",
+			resourceID: "a",
+			isValid:    false,
+		},
+		{
+			desc:       "incomplete resource provider",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/vm",
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource providerNamespace",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Test-RG1/providers/virtualMachines/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource type",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource name",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "valid resource id",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
+			isValid:    true,
+		},
+		{
+			desc:       "valid resource id with _",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-123_x", //nolint:lll
+			isValid:    true,
+		},
+	}
+
+	val := v.New()
+	err := val.RegisterValidation("azureResourceID", isValidAzureResourceID)
+	if err != nil {
+		assert.FailNow(t, "Cannot register validator")
+	}
+
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			err := val.Var(tC.resourceID, "azureResourceID")
+			if tC.isValid {
+				assert.Nil(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
 func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
 	slo := SLOSpec{
 		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
@@ -1056,6 +1123,384 @@ func TestAlertingWindowValidation(t *testing.T) {
 			} else {
 				assert.Error(t, err)
 			}
+		})
+	}
+}
+
+func TestAzureMonitorSloSpecValidation(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		desc    string
+		sloSpec SLOSpec
+		isValid bool
+	}{
+		{
+			desc: "different namespace good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different namespace bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							MetricNamespace: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different resourceID good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "different resourceID bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID: "2",
+						}},
+					},
+				}},
+			},
+			isValid: false,
+		}, {
+			desc: "the same resourceID and namespace good/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						GoodMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+					},
+				}},
+			},
+			isValid: true,
+		}, {
+			desc: "the same resourceID and namespace bad/total",
+			sloSpec: SLOSpec{
+				Objectives: []Objective{{
+					CountMetrics: &CountMetricsSpec{
+						BadMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+						TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{
+							ResourceID:      "1",
+							MetricNamespace: "1",
+						}},
+					},
+				}},
+			},
+			isValid: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			t.Parallel()
+			isValid := haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(tc.sloSpec)
+			assert.Equal(t, tc.isValid, isValid)
+		})
+	}
+}
+
+func Test_isValidAWSAccountID(t *testing.T) {
+	tests := []struct {
+		name      string
+		accountID string
+		want      bool
+	}{
+		{
+			name:      "allow empty accountID",
+			accountID: "",
+			want:      true,
+		},
+		{
+			name:      "allow proper accountID",
+			accountID: "123456789012",
+			want:      true,
+		},
+		{
+			name:      "deny too short numeric accountID",
+			accountID: "1234",
+			want:      false,
+		},
+		{
+			name:      "deny too long numeric accountID",
+			accountID: "1234567890121",
+			want:      false,
+		},
+		{
+			name:      "deny too short alfa-numeric accountID",
+			accountID: "1234avb",
+			want:      false,
+		},
+		{
+			name:      "deny 12 char alfa-numeric accountID",
+			accountID: "1234avb12345",
+			want:      false,
+		},
+		{
+			name:      "deny 12 char alfa accountID",
+			accountID: "abcerjasdyja",
+			want:      false,
+		},
+		{
+			name:      "deny short char alfa accountID",
+			accountID: "abcasdyja",
+			want:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, isValidAWSAccountID(tt.accountID), "isValidCloudWatchAccountID(%v)", tt.accountID)
+		})
+	}
+}
+
+func Test_cloudWatchMetricStructValidation(t *testing.T) {
+	validator := v.New()
+	validator.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
+	_ = validator.RegisterValidation("uniqueDimensionNames", areDimensionNamesUnique)
+
+	type fieldError struct {
+		field string
+		tag   string
+	}
+
+	tests := []struct {
+		name          string
+		metric        CloudWatchMetric
+		wantErrorTags []fieldError
+	}{
+		{
+			name: "exact one config type",
+			metric: CloudWatchMetric{
+				SQL:  aws.String("test"),
+				JSON: aws.String("test"),
+			},
+			wantErrorTags: []fieldError{
+				{"Region", "required"},
+				{"stat", "exactlyOneConfigType"},
+				{"sql", "exactlyOneConfigType"},
+				{"json", "exactlyOneConfigType"},
+			},
+		},
+		{
+			name: "invalid region",
+			metric: CloudWatchMetric{
+				SQL:    aws.String("test"),
+				Region: aws.String("test"),
+			},
+			wantErrorTags: []fieldError{
+				{"region", "regionNotAvailable"},
+			},
+		},
+		{
+			name: "invalid accountId",
+			metric: CloudWatchMetric{
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+				AccountID:  aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
+		{
+			name: "accountId for json config must be empty",
+			metric: CloudWatchMetric{
+				JSON:      aws.String(`[{"id":"1","period":60}]`),
+				Region:    aws.String("us-east-2"),
+				AccountID: aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdMustBeEmpty"},
+			},
+		},
+		{
+			name: "empty region will not throw panic",
+			metric: CloudWatchMetric{
+				JSON:      aws.String(`[{"id":"1","period":60}]`),
+				AccountID: aws.String("1234"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdMustBeEmpty"},
+				{"Region", "required"},
+			},
+		},
+		{
+			name: "AccountId must be empty for JSON",
+			metric: CloudWatchMetric{
+				JSON:   aws.String(`[{"id":"1","period":60}]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
+			name: "accountId for configuration config is optional",
+			metric: CloudWatchMetric{
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
+			name: "accountId for configuration config is validated",
+			metric: CloudWatchMetric{
+				AccountID:  aws.String("1234"),
+				Namespace:  aws.String("namespace"),
+				Region:     aws.String("us-east-2"),
+				MetricName: aws.String("metric"),
+				Stat:       aws.String("Average"),
+				Dimensions: []CloudWatchMetricDimension{},
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
+		{
+			name: "accountId for sql not supported",
+			metric: CloudWatchMetric{
+				AccountID: aws.String("1234"),
+				SQL:       aws.String("test sql"),
+				Region:    aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdForSQLNotSupported"},
+			},
+		},
+		{
+			name: "accountId for json with sql is not supported",
+			metric: CloudWatchMetric{
+				JSON:   aws.String(`[{"Id": "m1","AccountId":"123456789012", "Expression": "SQL TEST","Period": 60}]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"json", "accountIdForSQLNotSupported"},
+			},
+		},
+		{
+			name: "accountId for supported json query",
+			metric: CloudWatchMetric{
+				JSON: aws.String(`[
+					{
+						"Id": "m1",
+						"AccountId": "123456789012",
+						"MetricStat": {
+							"Metric": {
+								"Namespace": "AWS/ApplicationELB",
+								"MetricName": "HTTPCode_Target_2XX_Count",
+								"Dimensions": [
+									{
+										"Name": "LoadBalancer",
+										"Value": "app/main-default-appingress-350b/904311bedb964754"
+									}
+								]
+							},
+							"Period": 60,
+							"Stat": "SampleCount"
+						}
+					}
+				]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{},
+		},
+		{
+			name: "validate accountId in json query",
+			metric: CloudWatchMetric{
+				JSON: aws.String(`[
+					{
+						"Id": "m1",
+						"AccountId": "12345678",
+						"MetricStat": {
+							"Metric": {
+								"Namespace": "AWS/ApplicationELB",
+								"MetricName": "HTTPCode_Target_2XX_Count",
+								"Dimensions": [
+									{
+										"Name": "LoadBalancer",
+										"Value": "app/main-default-appingress-350b/904311bedb964754"
+									}
+								]
+							},
+							"Period": 60,
+							"Stat": "SampleCount"
+						}
+					}
+				]`),
+				Region: aws.String("us-east-2"),
+			},
+			wantErrorTags: []fieldError{
+				{"accountId", "accountIdInvalid"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validator.Struct(tt.metric)
+			if len(tt.wantErrorTags) == 0 {
+				assert.Nil(t, err)
+				return
+			}
+
+			validationErrors, ok := err.(v.ValidationErrors)
+			if !ok {
+				t.Error("Expected a validation error, but got a different error type")
+			}
+
+			var tags []fieldError
+			for _, err := range validationErrors {
+				tags = append(tags, fieldError{tag: err.Tag(), field: err.Field()})
+			}
+
+			assert.ElementsMatch(t, tags, tt.wantErrorTags)
 		})
 	}
 }

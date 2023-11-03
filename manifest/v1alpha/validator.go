@@ -47,6 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -140,7 +141,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(webhookAlertMethodValidation, WebhookAlertMethod{})
 	val.RegisterStructValidation(emailAlertMethodValidation, EmailAlertMethod{})
-	val.RegisterStructValidation(sliAnalysisSpecStructValidation, SLIAnalysis{})
 	val.RegisterStructValidation(countMetricsSpecValidation, CountMetricsSpec{})
 	val.RegisterStructValidation(cloudWatchMetricStructValidation, CloudWatchMetric{})
 	val.RegisterStructValidation(annotationSpecStructDatesValidation, AnnotationSpec{})
@@ -151,7 +151,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
-	val.RegisterStructValidation(replayStructDatesValidation, Replay{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
@@ -207,6 +206,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
+	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
 
 	return &Validate{
 		validate: val,
@@ -484,6 +484,7 @@ func sloSpecStructLevelValidation(sl v.StructLevel) {
 	sloSpecStructLevelPingdomValidation(sl, sloSpec)
 	sloSpecStructLevelSumoLogicValidation(sl, sloSpec)
 	sloSpecStructLevelThousandEyesValidation(sl, sloSpec)
+	sloSpecStructLevelAzureMonitorValidation(sl, sloSpec)
 
 	// AnomalyConfig will be moved into Anomaly Rules in PC-8502
 	sloSpecStructLevelAnomalyConfigValidation(sl, sloSpec)
@@ -661,6 +662,18 @@ func sloSpecStructLevelSumoLogicValidation(sl v.StructLevel, sloSpec SLOSpec) {
 func sloSpecStructLevelThousandEyesValidation(sl v.StructLevel, sloSpec SLOSpec) {
 	if !doesNotHaveCountMetricsThousandEyes(sloSpec) {
 		sl.ReportError(sloSpec.Indicator.RawMetric, "indicator.rawMetric", "RawMetrics", "onlyRawMetricsThousandEyes", "")
+	}
+}
+
+func sloSpecStructLevelAzureMonitorValidation(sl v.StructLevel, sloSpec SLOSpec) {
+	if !haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec) {
+		sl.ReportError(
+			sloSpec.CountMetrics,
+			"objectives",
+			"Objectives",
+			"azureMonitorCountMetricsEqualResourceIDAndMetricNamespace",
+			"",
+		)
 	}
 }
 
@@ -1059,6 +1072,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		influxDBCount            int
 		gcmCount                 int
 		azureMonitorCount        int
+		genericCount             int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1133,6 +1147,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
+		if metric.Generic != nil {
+			genericCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1201,6 +1218,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if azureMonitorCount > 0 {
+		metricCount++
+	}
+	if genericCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1386,6 +1406,38 @@ func areSumoLogicTimesliceValuesEqual(sloSpec SLOSpec) bool {
 			}
 		}
 	}
+	return true
+}
+
+// haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace checks if good/bad query has the same resourceID
+// and metricNamespace as total query
+// nolint: gocognit
+func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec SLOSpec) bool {
+	for _, objective := range sloSpec.Objectives {
+		if objective.CountMetrics == nil {
+			continue
+		}
+		total := objective.CountMetrics.TotalMetric
+		good := objective.CountMetrics.GoodMetric
+		bad := objective.CountMetrics.BadMetric
+
+		if total != nil && total.AzureMonitor != nil {
+			if good != nil && good.AzureMonitor != nil {
+				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
+					good.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return false
+				}
+			}
+
+			if bad != nil && bad.AzureMonitor != nil {
+				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace ||
+					bad.AzureMonitor.ResourceID != total.AzureMonitor.ResourceID {
+					return false
+				}
+			}
+		}
+	}
+
 	return true
 }
 
@@ -1639,9 +1691,8 @@ func validateURLDynatrace(validateURL string) bool {
 }
 
 func areLabelsValid(fl v.FieldLevel) bool {
-	labels := fl.Field().Interface().(Labels)
-
-	return labels.Validate() == nil
+	lbl := fl.Field().Interface().(Labels)
+	return lbl.Validate() == nil
 }
 
 func isHTTPS(fl v.FieldLevel) bool {
@@ -1737,6 +1788,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.Generic != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -1761,6 +1815,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -1837,6 +1892,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.AzureMonitor != nil {
 		metricTypesCount++
 	}
+	if ms.Generic != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1861,6 +1919,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "genericMetric", "Generic", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
@@ -2317,6 +2376,11 @@ func isValidS3BucketName(fl v.FieldLevel) bool {
 	return validS3BucketNameRegex.MatchString(fl.Field().String())
 }
 
+func isValidAzureResourceID(fl v.FieldLevel) bool {
+	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
+	return validAzureResourceIDRegex.MatchString(fl.Field().String())
+}
+
 // isValidGCSBucketName checks if field matches restrictions specified
 // at https://cloud.google.com/storage/docs/naming-buckets.
 func isValidGCSBucketName(fl v.FieldLevel) bool {
@@ -2620,15 +2684,6 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 	return true
 }
 
-func sliAnalysisSpecStructValidation(sl v.StructLevel) {
-	sliAnalysis := sl.Current().Interface().(SLIAnalysis)
-	if (sliAnalysis.MetricSpec.RawMetric == nil && sliAnalysis.MetricSpec.CountMetrics == nil) ||
-		(sliAnalysis.MetricSpec.RawMetric != nil && sliAnalysis.MetricSpec.CountMetrics != nil) {
-		sl.ReportError(sliAnalysis.MetricSpec.RawMetric, "rawMetric", "RawMetric", "exactlyOneMetricType", "")
-		sl.ReportError(sliAnalysis.MetricSpec.CountMetrics, "countMetrics", "CountMetrics", "exactlyOneMetricType", "")
-	}
-}
-
 func countMetricsSpecValidation(sl v.StructLevel) {
 	countMetrics := sl.Current().Interface().(CountMetricsSpec)
 	if countMetrics.TotalMetric == nil {
@@ -2687,7 +2742,6 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "exactlyOneConfigType", "")
 		return
 	}
-	regions := AWSRegions()
 
 	switch {
 	case isJSON:
@@ -2695,9 +2749,34 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 	case isConfiguration:
 		validateCloudWatchConfiguration(sl, cloudWatchMetric)
 	}
-	if !isValidRegion(*cloudWatchMetric.Region, regions) {
+
+	if isJSON && cloudWatchMetric.AccountID != nil && len(*cloudWatchMetric.AccountID) > 0 {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdMustBeEmpty", "")
+	}
+
+	if isSQL && cloudWatchMetric.AccountID != nil && len(*cloudWatchMetric.AccountID) > 0 {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdForSQLNotSupported", "")
+	}
+
+	if isConfiguration && cloudWatchMetric.AccountID != nil && !isValidAWSAccountID(*cloudWatchMetric.AccountID) {
+		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
+	}
+
+	if cloudWatchMetric.Region != nil && !isValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
 	}
+}
+
+// isValidAWSAccountID checks if the provided string is a valid AWS account ID.
+// An AWS account ID is a 12-digit number, or it can be an empty string.
+func isValidAWSAccountID(accountID string) bool {
+	if len(accountID) == 0 {
+		return true
+	}
+	if match, _ := regexp.MatchString(`^[0-9]{12}$`, accountID); match {
+		return true
+	}
+	return false
 }
 
 func redshiftCountMetricsSpecValidation(sl v.StructLevel) {
@@ -3043,6 +3122,9 @@ func validateCloudWatchJSONQuery(sl v.StructLevel, cloudWatchMetric CloudWatchMe
 		if metricData.ReturnData != nil && !*metricData.ReturnData {
 			returnedValues--
 		}
+		if metricData.AccountId != nil && metricData.Expression != nil {
+			sl.ReportError(cloudWatchMetric.AccountID, "json", "JSON", "accountIdForSQLNotSupported", "")
+		}
 		if metricData.MetricStat != nil {
 			if metricData.MetricStat.Period == nil {
 				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "requiredPeriod", "")
@@ -3055,6 +3137,9 @@ func validateCloudWatchJSONQuery(sl v.StructLevel, cloudWatchMetric CloudWatchMe
 			} else if *metricData.Period != queryPeriod {
 				sl.ReportError(cloudWatchMetric.JSON, "json", "JSON", "invalidPeriodValue", "")
 			}
+		}
+		if metricData.AccountId != nil && !isValidAWSAccountID(*metricData.AccountId) {
+			sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
 		}
 	}
 	if returnedValues != 1 {
