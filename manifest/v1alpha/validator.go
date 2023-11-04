@@ -41,6 +41,7 @@ const (
 	GCSNonDomainNameBucketNameRegex string = `^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`
 	GCSNonDomainNameBucketMaxLength int    = 63
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
 )
 
 const (
@@ -150,21 +151,15 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
 	_ = val.RegisterValidation("metricSourceKind", isValidMetricSourceKind)
-	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
-	_ = val.RegisterValidation("bigQueryRequiredColumns", isValidBigQueryQuery)
-	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
 	_ = val.RegisterValidation("emails", hasValidEmails)
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("pingdomCheckTypeFieldValid", pingdomCheckTypeFieldValid)
 	_ = val.RegisterValidation("pingdomStatusValid", pingdomStatusValid)
-	_ = val.RegisterValidation("redshiftRequiredColumns", isValidRedshiftQuery)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
-	_ = val.RegisterValidation("influxDBRequiredPlaceholders", isValidInfluxDBQuery)
-	_ = val.RegisterValidation("noSinceOrUntil", isValidNewRelicQuery)
-	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
+	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
 
 	return &Validate{
 		validate: val,
@@ -553,6 +548,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.Generic != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -577,6 +575,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -1009,6 +1008,11 @@ func isValidS3BucketName(fl v.FieldLevel) bool {
 	return validS3BucketNameRegex.MatchString(fl.Field().String())
 }
 
+func isValidAzureResourceID(fl v.FieldLevel) bool {
+	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
+	return validAzureResourceIDRegex.MatchString(fl.Field().String())
+}
+
 // isValidGCSBucketName checks if field matches restrictions specified
 // at https://cloud.google.com/storage/docs/naming-buckets.
 func isValidGCSBucketName(fl v.FieldLevel) bool {
@@ -1046,100 +1050,9 @@ func isValidMetricSourceKind(fl v.FieldLevel) bool {
 	}
 }
 
-func isValidMetricPathGraphite(fl v.FieldLevel) bool {
-	// Graphite allows the use of wildcards in metric paths, but we decided not to support it for our MVP.
-	// https://graphite.readthedocs.io/en/latest/render_api.html#paths-and-wildcards
-	segments := strings.Split(fl.Field().String(), ".")
-	for _, segment := range segments {
-		// asterisk
-		if strings.Contains(segment, "*") {
-			return false
-		}
-		// character list of range
-		if strings.Contains(segment, "[") || strings.Contains(segment, "]") {
-			return false
-		}
-		// value list
-		if strings.Contains(segment, "{") || strings.Contains(segment, "}") {
-			return false
-		}
-	}
-	return true
-}
-
-func isValidBigQueryQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	return validateBigQueryQuery(query)
-}
-
-func validateBigQueryQuery(query string) bool {
-	dateInProjection := regexp.MustCompile(`\bn9date\b`)
-	valueInProjection := regexp.MustCompile(`\bn9value\b`)
-	dateFromInWhere := regexp.MustCompile(`DATETIME\(\s*@n9date_from\s*\)`)
-	dateToInWhere := regexp.MustCompile(`DATETIME\(\s*@n9date_to\s*\)`)
-
-	return dateInProjection.MatchString(query) &&
-		valueInProjection.MatchString(query) &&
-		dateFromInWhere.MatchString(query) &&
-		dateToInWhere.MatchString(query)
-}
-
-func isValidRedshiftQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	dateInProjection := regexp.MustCompile(`^SELECT[\s\S]*\bn9date\b[\s\S]*FROM`)
-	valueInProjection := regexp.MustCompile(`^SELECT\s[\s\S]*\bn9value\b[\s\S]*\sFROM`)
-	dateFromInWhere := regexp.MustCompile(`WHERE[\s\S]*\W:n9date_from\b[\s\S]*`)
-	dateToInWhere := regexp.MustCompile(`WHERE[\s\S]*\W:n9date_to\b[\s\S]*`)
-
-	return dateInProjection.MatchString(query) &&
-		valueInProjection.MatchString(query) &&
-		dateFromInWhere.MatchString(query) &&
-		dateToInWhere.MatchString(query)
-}
-
-func isValidInfluxDBQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-
-	return validateInfluxDBQuery(query)
-}
-
-func validateInfluxDBQuery(query string) bool {
-	bucketRegex := regexp.MustCompile("\\s*bucket\\s*:\\s*\".+\"\\s*")
-	queryRegex := regexp.MustCompile("\\s*range\\s*\\(\\s*start\\s*:\\s*time\\s*" +
-		"\\(\\s*v\\s*:\\s*" +
-		"params\\.n9time_start\\s*\\)\\s*,\\s*stop\\s*:\\s*time\\s*\\(\\s*v\\s*:\\s*" +
-		"params\\.n9time_stop" +
-		"\\s*\\)\\s*\\)")
-
-	return queryRegex.MatchString(query) && bucketRegex.MatchString(query)
-}
-
-func isValidNewRelicQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	return validateNewRelicQuery(query)
-}
-
-// validateNewRelicQuery checks if SINCE and UNTIL are absent in a query.
-func validateNewRelicQuery(query string) bool {
-	split := regexp.MustCompile(`\s`).Split(query, -1)
-	for _, s := range split {
-		lowerCase := strings.ToLower(s)
-		if lowerCase == "since" || lowerCase == "until" {
-			return false
-		}
-	}
-	return true
-}
-
 func isValidNewRelicInsightsAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
 	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == ""
-}
-
-func isValidElasticsearchQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-
-	return strings.Contains(query, "{{.BeginTime}}") && strings.Contains(query, "{{.EndTime}}")
 }
 
 func hasValidURLScheme(fl v.FieldLevel) bool {
@@ -1161,23 +1074,6 @@ func isValidJSON(fl v.FieldLevel) bool {
 	var object interface{}
 	err := json.Unmarshal([]byte(jsonString), &object)
 	return err == nil
-}
-
-func splunkQueryValid(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	wordToRegex := [3]string{
-		"\\bn9time\\b",  // the query has to contain a word "n9time"
-		"\\bn9value\\b", // the query has to contain a word "n9value"
-		"(\\bindex\\s*=.+)|(\"\\bindex\"\\s*=.+)", // the query has to contain index=something or "index"=something
-	}
-
-	for _, regex := range wordToRegex {
-		if isMatch := regexp.MustCompile(regex).MatchString(query); !isMatch {
-			return false
-		}
-	}
-
-	return true
 }
 
 func pingdomCheckTypeFieldValid(fl v.FieldLevel) bool {

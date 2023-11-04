@@ -40,6 +40,7 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Generic
 )
 
 // For each DataSourceType generate a map entry, key is the DataSourceType, value is the corresponding slo.MetricSpec.
@@ -126,6 +127,7 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Generic:             "Generic",
 }
 
 func (dst DataSourceType) String() string {
@@ -329,8 +331,16 @@ func (qdd QueryDelayDuration) LesserThan(b QueryDelayDuration) bool {
 	return qdd.Duration() < b.Duration()
 }
 
+func (qid QueryIntervalDuration) LesserThan(b QueryIntervalDuration) bool {
+	return qid.Duration() < b.Duration()
+}
+
 func (qdd QueryDelayDuration) IsZero() bool {
 	return qdd.Value == nil || *qdd.Value == 0
+}
+
+func (qid QueryIntervalDuration) IsZero() bool {
+	return qid.Value == nil || *qid.Value == 0
 }
 
 func (qdd QueryDelayDuration) Duration() time.Duration {
@@ -344,6 +354,23 @@ func (qdd QueryDelayDuration) Duration() time.Duration {
 	case QDDSecond:
 		return value * time.Second
 	case QDDMinute:
+		return value * time.Minute
+	}
+
+	return time.Duration(0)
+}
+
+func (qid QueryIntervalDuration) Duration() time.Duration {
+	if qid.Value == nil {
+		return time.Duration(0)
+	}
+
+	value := time.Duration(*qid.Value)
+
+	switch qid.Unit {
+	case QIDSecond:
+		return value * time.Second
+	case QIDMinute:
 		return value * time.Minute
 	}
 
@@ -499,6 +526,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzureMonitor.String(): {
 			Value: ptr(5),
 			Unit:  QDDMinute,
+		},
+		Generic.String(): {
+			Value: ptr(0),
+			Unit:  QDDSecond,
 		},
 	}
 }

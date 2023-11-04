@@ -1455,6 +1455,9 @@ fetch consumed_api
 		MetricName:  "HttpResponseTime",
 		Aggregation: "Avg",
 	}},
+	v1alpha.Generic: {Generic: &GenericMetric{
+		Query: ptr("anything is valid"),
+	}},
 }
 
 func ptr[T any](v T) *T { return &v }

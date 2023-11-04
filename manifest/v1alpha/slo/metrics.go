@@ -44,6 +44,7 @@ type MetricSpec struct {
 	InfluxDB            *InfluxDBMetric            `json:"influxdb,omitempty"`
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
+	Generic             *GenericMetric             `json:"generic,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -244,6 +245,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.GCM
 	case m.AzureMonitor != nil:
 		return v1alpha.AzureMonitor
+	case m.Generic != nil:
+		return v1alpha.Generic
 	default:
 		return 0
 	}
@@ -322,6 +325,8 @@ func (m *MetricSpec) Query() interface{} {
 			return *azureMonitorCopy.Dimensions[i].Name < *azureMonitorCopy.Dimensions[j].Name
 		})
 		return azureMonitorCopy
+	case v1alpha.Generic:
+		return m.Generic
 	default:
 		return nil
 	}

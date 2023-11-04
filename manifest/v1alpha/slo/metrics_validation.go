@@ -173,6 +173,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *NewRelicMetric { return m.NewRelic }).
 		WithName("newRelic").
 		Include(newRelicValidation),
+	validation.ForPointer(func(m MetricSpec) *GenericMetric { return m.Generic }).
+		WithName("generic").
+		Include(genericValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -324,6 +327,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.AzureMonitor != nil {
 			if err := typesMatch(v1alpha.AzureMonitor); err != nil {
+				return err
+			}
+		}
+		if metric.Generic != nil {
+			if err := typesMatch(v1alpha.Generic); err != nil {
 				return err
 			}
 		}
