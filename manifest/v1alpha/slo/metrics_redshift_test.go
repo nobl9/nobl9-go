@@ -81,6 +81,7 @@ func TestRedshift(t *testing.T) {
 			Code: validation.ErrorCodeStringMaxLength,
 		})
 	})
+	//nolint: lll
 	t.Run("invalid query", func(t *testing.T) {
 		for expectedDetails, query := range map[string]string{
 			"must contain 'n9date' column":         "SELECT value as n9value FROM sinusoid WHERE timestamp BETWEEN :n9date_from AND :n9date_to",

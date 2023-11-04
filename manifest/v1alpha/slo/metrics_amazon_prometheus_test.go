@@ -3,9 +3,10 @@ package slo
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAmazonPrometheus(t *testing.T) {

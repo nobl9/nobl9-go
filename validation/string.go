@@ -91,10 +91,10 @@ func StringJSON() SingleRule[string] {
 	}).WithErrorCode(ErrorCodeStringJSON)
 }
 
-func StringContains(substrs ...string) SingleRule[string] {
+func StringContains(substrings ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		var notContains []string
-		for _, substr := range substrs {
+		for _, substr := range substrings {
 			if !strings.Contains(s, substr) {
 				notContains = append(notContains, "'"+substr+"'")
 			}

@@ -158,6 +158,21 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *InfluxDBMetric { return m.InfluxDB }).
 		WithName("influxdb").
 		Include(influxdbValidation),
+	validation.ForPointer(func(m MetricSpec) *GrafanaLokiMetric { return m.GrafanaLoki }).
+		WithName("grafanaLoki").
+		Include(grafanaLokiValidation),
+	validation.ForPointer(func(m MetricSpec) *OpenTSDBMetric { return m.OpenTSDB }).
+		WithName("opentsdb").
+		Include(openTSDBValidation),
+	validation.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
+		WithName("splunk").
+		Include(splunkValidation),
+	validation.ForPointer(func(m MetricSpec) *SplunkObservabilityMetric { return m.SplunkObservability }).
+		WithName("splunkObservability").
+		Include(splunkObservabilityValidation),
+	validation.ForPointer(func(m MetricSpec) *NewRelicMetric { return m.NewRelic }).
+		WithName("newRelic").
+		Include(newRelicValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{

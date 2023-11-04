@@ -90,11 +90,9 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("s3BucketName", isValidS3BucketName)
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
-	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
-	_ = val.RegisterValidation("noSinceOrUntil", isValidNewRelicQuery)
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
@@ -271,23 +269,6 @@ func isValidRoleARN(fl v.FieldLevel) bool {
 	return validRoleARNRegex.MatchString(fl.Field().String())
 }
 
-func isValidNewRelicQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	return validateNewRelicQuery(query)
-}
-
-// validateNewRelicQuery checks if SINCE and UNTIL are absent in a query.
-func validateNewRelicQuery(query string) bool {
-	split := regexp.MustCompile(`\s`).Split(query, -1)
-	for _, s := range split {
-		lowerCase := strings.ToLower(s)
-		if lowerCase == "since" || lowerCase == "until" {
-			return false
-		}
-	}
-	return true
-}
-
 func isValidNewRelicInsightsAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
 	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == ""
@@ -318,23 +299,6 @@ func isValidJSON(fl v.FieldLevel) bool {
 	var object interface{}
 	err := json.Unmarshal([]byte(jsonString), &object)
 	return err == nil
-}
-
-func splunkQueryValid(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-	wordToRegex := [3]string{
-		"\\bn9time\\b",  // the query has to contain a word "n9time"
-		"\\bn9value\\b", // the query has to contain a word "n9value"
-		"(\\bindex\\s*=.+)|(\"\\bindex\"\\s*=.+)", // the query has to contain index=something or "index"=something
-	}
-
-	for _, regex := range wordToRegex {
-		if isMatch := regexp.MustCompile(regex).MatchString(query); !isMatch {
-			return false
-		}
-	}
-
-	return true
 }
 
 func notBlank(fl v.FieldLevel) bool {

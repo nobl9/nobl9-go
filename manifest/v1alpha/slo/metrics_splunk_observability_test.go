@@ -9,27 +9,27 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-func TestDynatrace(t *testing.T) {
+func TestSplunkObservability(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Dynatrace)
+		slo := validRawMetricSLO(v1alpha.SplunkObservability)
 		err := validate(slo)
 		assert.Empty(t, err)
 	})
 	t.Run("required", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Dynatrace)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
+		slo := validRawMetricSLO(v1alpha.SplunkObservability)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SplunkObservability.Program = nil
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace.metricSelector",
+			Prop: "spec.objectives[0].rawMetric.query.splunkObservability.program",
 			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("empty", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Dynatrace)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = ptr("")
+		slo := validRawMetricSLO(v1alpha.SplunkObservability)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SplunkObservability.Program = ptr("")
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace.metricSelector",
+			Prop: "spec.objectives[0].rawMetric.query.splunkObservability.program",
 			Code: validation.ErrorCodeStringNotEmpty,
 		})
 	})

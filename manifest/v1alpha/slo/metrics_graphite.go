@@ -22,8 +22,8 @@ var graphiteValidation = validation.New[GraphiteMetric](
 			// https://graphite.readthedocs.io/en/latest/render_api.html#paths-and-wildcards
 			validation.StringDenyRegexp(regexp.MustCompile(`\*`)).
 				WithDetails("wildacards are not allowed"),
-			validation.StringDenyRegexp(regexp.MustCompile(`\[[^\.]*\]`), "[a-z0-9]").
+			validation.StringDenyRegexp(regexp.MustCompile(`\[[^.]*\]`), "[a-z0-9]").
 				WithDetails("character list or range is not allowed"),
-			validation.StringDenyRegexp(regexp.MustCompile(`{[^\.]*}`), "{user,system,iowait}").
+			validation.StringDenyRegexp(regexp.MustCompile(`{[^.]*}`), "{user,system,iowait}").
 				WithDetails("value list is not allowed")),
 )
