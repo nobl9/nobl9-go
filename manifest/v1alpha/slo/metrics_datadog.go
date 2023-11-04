@@ -4,7 +4,7 @@ import "github.com/nobl9/nobl9-go/validation"
 
 // DatadogMetric represents metric from Datadog
 type DatadogMetric struct {
-	Query *string `json:"query" validate:"required"`
+	Query *string `json:"query"`
 }
 
 var datadogValidation = validation.New[DatadogMetric](

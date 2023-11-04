@@ -49,6 +49,11 @@ func TestStringDenyRegexp(t *testing.T) {
 		assert.EqualError(t, err, "string must not match regular expresion: '[ab]+'")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringDenyRegexp))
 	})
+	t.Run("examples output", func(t *testing.T) {
+		err := StringDenyRegexp(re, "ab", "a", "b").Validate("ab")
+		assert.EqualError(t, err, "string must not match regular expresion: '[ab]+' (e.g. 'ab', 'a', 'b')")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringDenyRegexp))
+	})
 }
 
 func TestStringIsDNSSubdomain(t *testing.T) {
@@ -188,5 +193,18 @@ func TestStringJSON(t *testing.T) {
 		err := StringJSON().Validate(`{]}`)
 		assert.Error(t, err)
 		assert.True(t, HasErrorCode(err, ErrorCodeStringJSON))
+	})
+}
+
+func TestStringContains(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		err := StringContains("th", "is").Validate("this")
+		assert.NoError(t, err)
+	})
+	t.Run("fails", func(t *testing.T) {
+		err := StringContains("th", "ht").Validate("one")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "string must contain the following substrings: 'th', 'ht'")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringContains))
 	})
 }

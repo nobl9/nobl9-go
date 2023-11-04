@@ -8,27 +8,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDatadog(t *testing.T) {
+func TestDynatrace(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Datadog)
+		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		err := validate(slo)
 		assert.Empty(t, err)
 	})
 	t.Run("required", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Datadog)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Datadog.Query = nil
+		slo := validRawMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop: "spec.objectives[0].rawMetric.query.datadog.query",
+			Prop: "spec.objectives[0].rawMetric.query.dynatrace.metricSelector",
 			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("empty", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Datadog)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Datadog.Query = ptr("")
+		slo := validRawMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = ptr("")
 		err := validate(slo)
 		assertContainsErrors(t, err, 1, expectedError{
-			Prop: "spec.objectives[0].rawMetric.query.datadog.query",
+			Prop: "spec.objectives[0].rawMetric.query.dynatrace.metricSelector",
 			Code: validation.ErrorCodeStringNotEmpty,
 		})
 	})

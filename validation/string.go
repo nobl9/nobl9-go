@@ -32,10 +32,14 @@ func StringMatchRegexp(re *regexp.Regexp, examples ...string) SingleRule[string]
 	}).WithErrorCode(ErrorCodeStringMatchRegexp)
 }
 
-func StringDenyRegexp(re *regexp.Regexp) SingleRule[string] {
+func StringDenyRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if re.MatchString(s) {
-			return errors.Errorf("string must not match regular expresion: '%s'", re)
+			msg := fmt.Sprintf("string must not match regular expresion: '%s'", re.String())
+			if len(examples) > 0 {
+				msg += " " + prettyExamples(examples)
+			}
+			return errors.New(msg)
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringDenyRegexp)
@@ -85,6 +89,21 @@ func StringJSON() SingleRule[string] {
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringJSON)
+}
+
+func StringContains(substrs ...string) SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		var notContains []string
+		for _, substr := range substrs {
+			if !strings.Contains(s, substr) {
+				notContains = append(notContains, "'"+substr+"'")
+			}
+		}
+		if len(notContains) > 0 {
+			return errors.New("string must contain the following substrings: " + strings.Join(notContains, ", "))
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringContains)
 }
 
 func prettyExamples(examples []string) string {

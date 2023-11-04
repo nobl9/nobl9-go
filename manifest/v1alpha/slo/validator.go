@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"path"
 	"reflect"
 	"regexp"
 	"strings"
@@ -74,7 +73,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	_ = val.RegisterValidation("site", isSite)
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("description", isValidDescription)
 	_ = val.RegisterValidation("opsgenieApiKey", isValidOpsgenieAPIKey)
@@ -87,19 +85,15 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("objectNameWithStringInterpolation", isValidObjectNameWithStringInterpolation)
 	_ = val.RegisterValidation("url", isValidURL)
 	_ = val.RegisterValidation("optionalURL", isEmptyOrValidURL)
-	_ = val.RegisterValidation("urlDynatrace", isValidURLDynatrace)
 	_ = val.RegisterValidation("urlElasticsearch", isValidURL)
 	_ = val.RegisterValidation("urlDiscord", isValidURLDiscord)
-	_ = val.RegisterValidation("prometheusLabelName", isValidPrometheusLabelName)
 	_ = val.RegisterValidation("s3BucketName", isValidS3BucketName)
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
-	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
 	_ = val.RegisterValidation("splunkQueryValid", splunkQueryValid)
 	_ = val.RegisterValidation("notBlank", notBlank)
 	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
-	_ = val.RegisterValidation("influxDBRequiredPlaceholders", isValidInfluxDBQuery)
 	_ = val.RegisterValidation("noSinceOrUntil", isValidNewRelicQuery)
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
@@ -159,10 +153,6 @@ func isEmptyOrValidURL(fl v.FieldLevel) bool {
 	return value == "" || value == HiddenValue || validateURL(value)
 }
 
-func isValidURLDynatrace(fl v.FieldLevel) bool {
-	return validateURLDynatrace(fl.Field().String())
-}
-
 func isValidURLDiscord(fl v.FieldLevel) bool {
 	key := fl.Field().String()
 	if strings.HasSuffix(strings.ToLower(key), "/slack") || strings.HasSuffix(strings.ToLower(key), "/github") {
@@ -189,22 +179,6 @@ func validateURL(validateURL string) bool {
 	return validURLRegex.MatchString(validateURL)
 }
 
-func validateURLDynatrace(validateURL string) bool {
-	u, err := url.Parse(validateURL)
-	if err != nil {
-		return false
-	}
-	// For SaaS type enforce https and land lack of path.
-	// Join instead of Clean (to avoid getting . for empty path), Trim to get rid of root.
-	pathURL := strings.Trim(path.Join(u.Path), "/")
-	if strings.HasSuffix(u.Host, "live.dynatrace.com") {
-		if u.Scheme != "https" || pathURL != "" {
-			return false
-		}
-	}
-	return true
-}
-
 func isHTTPS(fl v.FieldLevel) bool {
 	if !isNotEmpty(fl) || fl.Field().String() == HiddenValue {
 		return true
@@ -214,28 +188,6 @@ func isHTTPS(fl v.FieldLevel) bool {
 		return false
 	}
 	return true
-}
-
-func isSite(fl v.FieldLevel) bool {
-	value := fl.Field().String()
-	return isValidDatadogAPIUrl(value) || value == "eu" || value == "com"
-}
-
-func isValidDatadogAPIUrl(validateURL string) bool {
-	validUrls := []string{
-		"datadoghq.com",
-		"us3.datadoghq.com",
-		"us5.datadoghq.com",
-		"datadoghq.eu",
-		"ddog-gov.com",
-		"ap1.datadoghq.com",
-	}
-	for _, item := range validUrls {
-		if item == validateURL {
-			return true
-		}
-	}
-	return false
 }
 
 func isDurationMinutePrecision(fl v.FieldLevel) bool {
@@ -290,13 +242,6 @@ func isValidObjectNameWithStringInterpolation(fl v.FieldLevel) bool {
 	return len(IsDNS1123Label(toCheck)) == 0
 }
 
-func isValidPrometheusLabelName(fl v.FieldLevel) bool {
-	// Regex from https://prometheus.io/docs/concepts/data_model/
-	// valid Prometheus label has to match it
-	validLabel := regexp.MustCompile(`^[a-zA-Z_:][a-zA-Z0-9_:]*$`)
-	return validLabel.MatchString(fl.Field().String())
-}
-
 func isValidS3BucketName(fl v.FieldLevel) bool {
 	validS3BucketNameRegex := regexp.MustCompile(S3BucketNameRegex)
 	return validS3BucketNameRegex.MatchString(fl.Field().String())
@@ -324,44 +269,6 @@ func isNotEmpty(fl v.FieldLevel) bool {
 func isValidRoleARN(fl v.FieldLevel) bool {
 	validRoleARNRegex := regexp.MustCompile(RoleARNRegex)
 	return validRoleARNRegex.MatchString(fl.Field().String())
-}
-
-func isValidMetricPathGraphite(fl v.FieldLevel) bool {
-	// Graphite allows the use of wildcards in metric paths, but we decided not to support it for our MVP.
-	// https://graphite.readthedocs.io/en/latest/render_api.html#paths-and-wildcards
-	segments := strings.Split(fl.Field().String(), ".")
-	for _, segment := range segments {
-		// asterisk
-		if strings.Contains(segment, "*") {
-			return false
-		}
-		// character list of range
-		if strings.Contains(segment, "[") || strings.Contains(segment, "]") {
-			return false
-		}
-		// value list
-		if strings.Contains(segment, "{") || strings.Contains(segment, "}") {
-			return false
-		}
-	}
-	return true
-}
-
-func isValidInfluxDBQuery(fl v.FieldLevel) bool {
-	query := fl.Field().String()
-
-	return validateInfluxDBQuery(query)
-}
-
-func validateInfluxDBQuery(query string) bool {
-	bucketRegex := regexp.MustCompile("\\s*bucket\\s*:\\s*\".+\"\\s*")
-	queryRegex := regexp.MustCompile("\\s*range\\s*\\(\\s*start\\s*:\\s*time\\s*" +
-		"\\(\\s*v\\s*:\\s*" +
-		"params\\.n9time_start\\s*\\)\\s*,\\s*stop\\s*:\\s*time\\s*\\(\\s*v\\s*:\\s*" +
-		"params\\.n9time_stop" +
-		"\\s*\\)\\s*\\)")
-
-	return queryRegex.MatchString(query) && bucketRegex.MatchString(query)
 }
 
 func isValidNewRelicQuery(fl v.FieldLevel) bool {

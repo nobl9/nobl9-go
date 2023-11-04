@@ -143,6 +143,21 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *DatadogMetric { return m.Datadog }).
 		WithName("datadog").
 		Include(datadogValidation),
+	validation.ForPointer(func(m MetricSpec) *DynatraceMetric { return m.Dynatrace }).
+		WithName("dynatrace").
+		Include(dynatraceValidation),
+	validation.ForPointer(func(m MetricSpec) *ElasticsearchMetric { return m.Elasticsearch }).
+		WithName("elasticsearch").
+		Include(elasticsearchValidation),
+	validation.ForPointer(func(m MetricSpec) *GCMMetric { return m.GCM }).
+		WithName("gcm").
+		Include(gcmValidation),
+	validation.ForPointer(func(m MetricSpec) *GraphiteMetric { return m.Graphite }).
+		WithName("graphite").
+		Include(graphiteValidation),
+	validation.ForPointer(func(m MetricSpec) *InfluxDBMetric { return m.InfluxDB }).
+		WithName("influxdb").
+		Include(influxdbValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{

@@ -19,6 +19,7 @@ const (
 	ErrorCodeStringASCII          ErrorCode = "string_ascii"
 	ErrorCodeStringURL            ErrorCode = "string_url"
 	ErrorCodeStringJSON           ErrorCode = "string_json"
+	ErrorCodeStringContains       ErrorCode = "string_contains"
 	ErrorCodeStringLength         ErrorCode = "string_length"
 	ErrorCodeStringMinLength      ErrorCode = "string_max_length"
 	ErrorCodeStringMaxLength      ErrorCode = "string_min_length"
