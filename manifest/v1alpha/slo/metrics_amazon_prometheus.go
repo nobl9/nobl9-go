@@ -1,6 +1,15 @@
 package slo
 
+import "github.com/nobl9/nobl9-go/validation"
+
 // AmazonPrometheusMetric represents metric from Amazon Managed Prometheus
 type AmazonPrometheusMetric struct {
-	PromQL *string `json:"promql" validate:"required" example:"cpu_usage_user{cpu=\"cpu-total\"}"`
+	PromQL *string `json:"promql"`
 }
+
+var amazonPrometheusValidation = validation.New[AmazonPrometheusMetric](
+	validation.ForPointer(func(p AmazonPrometheusMetric) *string { return p.PromQL }).
+		WithName("promql").
+		Required().
+		Rules(validation.StringNotEmpty()),
+)

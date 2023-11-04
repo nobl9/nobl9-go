@@ -134,6 +134,15 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *CloudWatchMetric { return m.CloudWatch }).
 		WithName("cloudWatch").
 		Include(cloudWatchValidation),
+	validation.ForPointer(func(m MetricSpec) *PrometheusMetric { return m.Prometheus }).
+		WithName("prometheus").
+		Include(prometheusValidation),
+	validation.ForPointer(func(m MetricSpec) *AmazonPrometheusMetric { return m.AmazonPrometheus }).
+		WithName("amazonPrometheus").
+		Include(amazonPrometheusValidation),
+	validation.ForPointer(func(m MetricSpec) *DatadogMetric { return m.Datadog }).
+		WithName("datadog").
+		Include(datadogValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
