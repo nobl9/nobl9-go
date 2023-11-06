@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"regexp"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -58,13 +60,16 @@ var supportedAzureMonitorAggregations = []string{
 	"Sum",
 }
 
+var azureMonitorResourceIDRegexp = regexp.MustCompile(`^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$`) //nolint:lll
+
 var azureMonitorValidation = validation.New[AzureMonitorMetric](
 	validation.For(func(a AzureMonitorMetric) string { return a.MetricName }).
 		WithName("metricName").
 		Required(),
 	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
 		WithName("resourceId").
-		Required(),
+		Required().
+    Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegexp)),
 	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
 		Required().

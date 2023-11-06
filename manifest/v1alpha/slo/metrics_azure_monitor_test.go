@@ -200,3 +200,62 @@ func TestAzureMonitorDimension(t *testing.T) {
 		})
 	})
 }
+
+func TestAzureMonitor_ResourceID(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		resourceID string
+		isValid    bool
+	}{
+		{
+			desc:       "one letter",
+			resourceID: "a",
+			isValid:    false,
+		},
+		{
+			desc:       "incomplete resource provider",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/vm",
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource providerNamespace",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Test-RG1/providers/virtualMachines/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource type",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/vm", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "missing resource name",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines", //nolint:lll
+			isValid:    false,
+		},
+		{
+			desc:       "valid resource id",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm", //nolint:lll
+			isValid:    true,
+		},
+		{
+			desc:       "valid resource id with _",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-123_x", //nolint:lll
+			isValid:    true,
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			slo := validRawMetricSLO(v1alpha.AzureMonitor)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.ResourceID = tC.resourceID
+			err := validate(slo)
+			if tC.isValid {
+				assert.Empty(t, err)
+			} else {
+				assertContainsErrors(t, err, 1, expectedError{
+					Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
+					Code: validation.ErrorCodeStringMatchRegexp,
+				})
+			}
+		})
+	}
+}
