@@ -3,7 +3,6 @@ package testutils
 import (
 	"encoding/json"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,9 +13,9 @@ import (
 
 type ExpectedError struct {
 	Prop            string `json:"property"`
-	Code            string `json:"code"`
-	Message         string `json:"message"`
-	ContainsMessage string `json:"containsMessage"`
+	Code            string `json:"code,omitempty"`
+	Message         string `json:"message,omitempty"`
+	ContainsMessage string `json:"containsMessage,omitempty"`
 }
 
 func AssertContainsErrors(
@@ -83,29 +82,4 @@ func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
 		errs[i].Prop = path + "." + errs[i].Prop
 	}
 	return errs
-}
-
-var rec = testRecorder{}
-
-type testRecorder struct {
-	Tests []recordedTest `json:"tests"`
-	mu    sync.Mutex
-}
-
-type recordedTest struct {
-	TestName    string          `json:"testName"`
-	Object      interface{}     `json:"object"`
-	ErrorsCount int             `json:"errorsCount"`
-	Errors      []ExpectedError `json:"errors"`
-}
-
-func (r *testRecorder) Record(t *testing.T, object interface{}, errorsCount int, errors []ExpectedError) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.Tests = append(r.Tests, recordedTest{
-		TestName:    t.Name(),
-		Object:      object,
-		ErrorsCount: errorsCount,
-		Errors:      errors,
-	})
 }
