@@ -9,6 +9,41 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
+// TimeWindow represents content of time window
+type TimeWindow struct {
+	Unit      string    `json:"unit"`
+	Count     int       `json:"count"`
+	IsRolling bool      `json:"isRolling"`
+	Calendar  *Calendar `json:"calendar,omitempty"`
+
+	// Period is only returned in `/get/slo` requests it is ignored for `/apply`
+	Period *Period `json:"period,omitempty"`
+}
+
+// GetType returns value of twindow.TimeWindowTypeEnum for given time window>
+func (tw TimeWindow) GetType() twindow.TimeWindowTypeEnum {
+	if tw.isCalendar() {
+		return twindow.Calendar
+	}
+	return twindow.Rolling
+}
+
+func (tw TimeWindow) isCalendar() bool {
+	return tw.Calendar != nil
+}
+
+// Calendar struct represents calendar time window
+type Calendar struct {
+	StartTime string `json:"startTime"`
+	TimeZone  string `json:"timeZone"`
+}
+
+// Period represents period of time
+type Period struct {
+	Begin string `json:"begin"`
+	End   string `json:"end"`
+}
+
 // Values used to validate time window size
 const (
 	minimumRollingTimeWindowSize  = 5 * time.Minute
