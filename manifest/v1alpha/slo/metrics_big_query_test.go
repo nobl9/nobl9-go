@@ -63,7 +63,7 @@ func TestBigQuery(t *testing.T) {
 SELECT http_code AS n9value
 FROM 'bdwtest-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
-			"must contain 'n9value'": ` 
+			"must contain 'n9value'": `
 SELECT created AS n9date
 FROM 'bdwtest-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,

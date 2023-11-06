@@ -1315,7 +1315,7 @@ builtin:synthetic.http.duration.geo
 		ProjectID: "svc-256112",
 		Location:  "EU",
 		Query: `
-SELECT http_code AS n9value, created AS n9date 
+SELECT http_code AS n9value, created AS n9date
 FROM 'bdwtest-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
 	}},

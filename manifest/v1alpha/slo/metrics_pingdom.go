@@ -85,7 +85,7 @@ var pingdomValidation = validation.New[PingdomMetric](
 		Rules(
 			validation.StringNotEmpty(),
 			// This regexp is crafted in order to not interweave with StringNotEmpty validation.
-			validation.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`))),
+			validation.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`))), // nolint: gocritic
 )
 
 var pingdomUptimeCheckTypeValidation = validation.New[PingdomMetric](

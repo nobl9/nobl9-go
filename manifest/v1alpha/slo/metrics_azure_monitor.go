@@ -69,7 +69,7 @@ var azureMonitorValidation = validation.New[AzureMonitorMetric](
 	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
 		WithName("resourceId").
 		Required().
-    Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegexp)),
+		Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegexp)),
 	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
 		Required().
