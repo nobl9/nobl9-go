@@ -1452,7 +1452,7 @@ func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor}
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor, Honeycomb}
 	if objective.CountMetrics != nil {
 		if objective.CountMetrics.BadMetric == nil {
 			return false

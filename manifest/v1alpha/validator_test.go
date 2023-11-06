@@ -831,7 +831,6 @@ func TestIsBadOverTotalEnabledForDataSource_appd(t *testing.T) {
 			TotalMetric: &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
 		}}},
 	}
-
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
@@ -843,7 +842,6 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 			TotalMetric: &MetricSpec{CloudWatch: &CloudWatchMetric{}},
 		}}},
 	}
-
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
@@ -855,7 +853,17 @@ func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
 			TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
 		}}},
 	}
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}
 
+func TestIsBadOverTotalEnabledForDataSource_honeycomb(t *testing.T) {
+	slo := SLOSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{Honeycomb: &HoneycombMetric{}},
+			TotalMetric: &MetricSpec{Honeycomb: &HoneycombMetric{}},
+		}}},
+	}
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
