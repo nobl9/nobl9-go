@@ -83,6 +83,7 @@ func TestCloudWatchStandard(t *testing.T) {
 					Value: ptr("value"),
 				},
 			},
+			AccountID: ptr("123456789012"),
 		}
 		err := validate(slo)
 		assert.Empty(t, err)
@@ -94,9 +95,10 @@ func TestCloudWatchStandard(t *testing.T) {
 			Namespace:  ptr(""),
 			MetricName: ptr(""),
 			Stat:       ptr(""),
+			AccountID:  ptr(""),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
+		assertContainsErrors(t, err, 4,
 			expectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.metricName",
 				Code: validation.ErrorCodeStringNotEmpty,
@@ -109,6 +111,10 @@ func TestCloudWatchStandard(t *testing.T) {
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.stat",
 				Code: validation.ErrorCodeStringNotEmpty,
 			},
+			expectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
+				Code: validation.ErrorCodeStringNotEmpty,
+			},
 		)
 	})
 	t.Run("invalid fields", func(t *testing.T) {
@@ -118,9 +124,10 @@ func TestCloudWatchStandard(t *testing.T) {
 			Namespace:  ptr("?"),
 			MetricName: ptr(strings.Repeat("l", 256)),
 			Stat:       ptr("invalid"),
+			AccountID:  ptr("invalid"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
+		assertContainsErrors(t, err, 4,
 			expectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.namespace",
 				Code: validation.ErrorCodeStringMatchRegexp,
@@ -133,6 +140,10 @@ func TestCloudWatchStandard(t *testing.T) {
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.stat",
 				Code: validation.ErrorCodeStringMatchRegexp,
 			},
+			expectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
+				Code: validation.ErrorCodeStringMatchRegexp,
+			},
 		)
 	})
 	t.Run("valid stat", func(t *testing.T) {
@@ -143,9 +154,27 @@ func TestCloudWatchStandard(t *testing.T) {
 				Namespace:  ptr("my-ns"),
 				MetricName: ptr("my-metric"),
 				Stat:       ptr(stat),
+				AccountID:  ptr("123456789012"),
 			}
 			err := validate(slo)
 			assert.Emptyf(t, err, "invalid stat: %s", stat)
+		}
+	})
+	t.Run("invalid accountId", func(t *testing.T) {
+		for _, accountID := range []string{
+			"1234",
+			"0918203481029481092478109",
+			"notAnAccountID",
+			"neither123",
+			"this123that",
+		} {
+			slo := validRawMetricSLO(v1alpha.CloudWatch)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.AccountID = ptr(accountID)
+			err := validate(slo)
+			assertContainsErrors(t, err, 1, expectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
+				Code: validation.ErrorCodeStringMatchRegexp,
+			})
 		}
 	})
 }

@@ -1396,6 +1396,7 @@ unwrap kafka_consumergroup_lag [1m]))`),
 				Value: ptr("my-db-instance"),
 			},
 		},
+		AccountID: ptr("123456789012"),
 	}},
 	v1alpha.Pingdom: {Pingdom: &PingdomMetric{
 		CheckID:   ptr("8745322"),

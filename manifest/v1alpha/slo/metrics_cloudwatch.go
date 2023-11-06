@@ -20,6 +20,7 @@ type CloudWatchMetric struct {
 	MetricName *string                     `json:"metricName,omitempty"`
 	Stat       *string                     `json:"stat,omitempty"`
 	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
+	AccountID  *string                     `json:"accountId,omitempty"`
 	SQL        *string                     `json:"sql,omitempty"`
 	JSON       *string                     `json:"json,omitempty"`
 }
@@ -104,7 +105,7 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		Required().
 		Rules(validation.StringNotEmpty()).
 		StopOnError().
-		Rules(validation.StringMatchRegexp(cloudWatchNamespaceRegex)),
+		Rules(validation.StringMatchRegexp(cloudWatchNamespaceRegexp)),
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.MetricName }).
 		WithName("metricName").
 		Required().
@@ -131,13 +132,20 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 			}
 			return *c.Name
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
+	validation.ForPointer(func(c CloudWatchMetric) *string { return c.AccountID }).
+		WithName("accountId").
+		Required().
+		Rules(validation.StringNotEmpty()).
+		StopOnError().
+		Rules(validation.StringMatchRegexp(cloudWatchAccounIDRegexp, "123456789012")),
 ).When(func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() })
 
 var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
-	cloudWatchStatRegexp     = buildCloudWatchStatRegexp()
-	cloudWatchNamespaceRegex = regexp.MustCompile(`^[0-9A-Za-z.\-_/#:]{1,255}$`)
+	cloudWatchStatRegexp      = buildCloudWatchStatRegexp()
+	cloudWatchNamespaceRegexp = regexp.MustCompile(`^[0-9A-Za-z.\-_/#:]{1,255}$`)
+	cloudWatchAccounIDRegexp  = regexp.MustCompile(`^\d{12}$`)
 )
 
 var cloudwatchMetricDimensionValidation = validation.New[CloudWatchMetricDimension](
