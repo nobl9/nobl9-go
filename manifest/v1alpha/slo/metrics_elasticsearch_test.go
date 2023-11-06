@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -22,12 +23,12 @@ func TestElasticsearch(t *testing.T) {
 			Query: nil,
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.index",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -40,12 +41,12 @@ func TestElasticsearch(t *testing.T) {
 			Query: ptr(""),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.index",
 				Code: validation.ErrorCodeStringNotEmpty,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
 				Code: validation.ErrorCodeStringNotEmpty,
 			},
@@ -63,7 +64,7 @@ func TestElasticsearch(t *testing.T) {
 				Query: ptr(query),
 			}
 			err := validate(slo)
-			assertContainsErrors(t, err, 1, expectedError{
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
 				Code: validation.ErrorCodeStringContains,
 			})

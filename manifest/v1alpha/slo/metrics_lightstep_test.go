@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -22,7 +23,7 @@ func TestLightstep_CountMetricLevel(t *testing.T) {
 			TypeOfData: ptr(LightstepGoodCountDataType),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -31,7 +32,7 @@ func TestLightstep_CountMetricLevel(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Lightstep)
 		slo.Spec.Objectives[0].CountMetrics.Incremental = ptr(true)
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.incremental",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -73,7 +74,8 @@ func TestLightstep_RawMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Lightstep = metric
-			assertContainsErrors(t, validate(slo), 1, expectedError{
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.typeOfData",
 				Code: validation.ErrorCodeOneOf,
 			})
@@ -116,7 +118,8 @@ func TestLightstep_TotalMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].CountMetrics.TotalMetric.Lightstep = metric
-			assertContainsErrors(t, validate(slo), 1, expectedError{
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.lightstep.typeOfData",
 				Code: validation.ErrorCodeOneOf,
 			})
@@ -159,7 +162,8 @@ func TestLightstep_GoodMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.Lightstep = metric
-			assertContainsErrors(t, validate(slo), 1, expectedError{
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.lightstep.typeOfData",
 				Code: validation.ErrorCodeOneOf,
 			})
@@ -214,24 +218,24 @@ func TestLightstepLatencyTypeOfData(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 5,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 5,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.percentile",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.uql",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[1].rawMetric.query.lightstep.streamId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[1].rawMetric.query.lightstep.percentile",
 				Code: validation.ErrorCodeGreaterThan,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[2].rawMetric.query.lightstep.percentile",
 				Code: validation.ErrorCodeLessThanOrEqualTo,
 			},
@@ -258,16 +262,16 @@ func TestLightstepErrorRateTypeOfData(t *testing.T) {
 			UQL:        ptr("this"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.percentile",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.uql",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.streamId",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -297,16 +301,16 @@ spans count | rate | group_by [], sum
 			StreamID:   ptr("this"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.uql",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.percentile",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.lightstep.streamId",
 				Code: validation.ErrorCodeForbidden,
 			},
@@ -328,8 +332,8 @@ spans_sample count | delta | filter service == android | group_by [], sum) | joi
 					UQL:        ptr(uql),
 				}
 				err := validate(slo)
-				assertContainsErrors(t, err, 1,
-					expectedError{
+				testutils.AssertContainsErrors(t, slo, err, 1,
+					testutils.ExpectedError{
 						Prop: "spec.objectives[0].rawMetric.query.lightstep.uql",
 						Code: validation.ErrorCodeStringDenyRegexp,
 					},
@@ -368,28 +372,28 @@ func TestLightstepGoodTotalTypeOfData(t *testing.T) {
 			UQL:        ptr("this"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 6,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 6,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.lightstep.percentile",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.lightstep.uql",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.lightstep.streamId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.lightstep.percentile",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.lightstep.uql",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.lightstep.streamId",
 				Code: validation.ErrorCodeRequired,
 			},

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -22,12 +23,12 @@ func TestGCM(t *testing.T) {
 			ProjectID: "",
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.gcm.query",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.gcm.projectId",
 				Code: validation.ErrorCodeRequired,
 			},

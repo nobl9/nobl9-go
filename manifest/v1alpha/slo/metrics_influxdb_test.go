@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -19,7 +20,7 @@ func TestInfluxDB(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.InfluxDB)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.InfluxDB.Query = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.influxdb.query",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -28,7 +29,7 @@ func TestInfluxDB(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.InfluxDB)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.InfluxDB.Query = ptr("")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.influxdb.query",
 			Code: validation.ErrorCodeStringNotEmpty,
 		})
@@ -99,7 +100,7 @@ func TestInfluxDB_Query(t *testing.T) {
 			if tc.isValid {
 				assert.Empty(t, err)
 			} else {
-				assertContainsErrors(t, err, 1, expectedError{
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.influxdb.query",
 					Code: validation.ErrorCodeStringMatchRegexp,
 				})

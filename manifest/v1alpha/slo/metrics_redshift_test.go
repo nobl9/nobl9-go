@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -21,7 +22,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Redshift.Region = ptr("region-1")
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.Region = ptr("region-2")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -31,7 +32,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Redshift.ClusterID = ptr("1")
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.ClusterID = ptr("2")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -41,7 +42,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Redshift.DatabaseName = ptr("dev-db")
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.DatabaseName = ptr("prod-db")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -53,20 +54,20 @@ func TestRedshift(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Redshift)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Redshift = &RedshiftMetric{}
 		err := validate(slo)
-		assertContainsErrors(t, err, 4,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 4,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.redshift.region",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.redshift.clusterId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.redshift.databaseName",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.redshift.query",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -76,7 +77,7 @@ func TestRedshift(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Redshift)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Redshift.Region = ptr(strings.Repeat("a", 256))
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.redshift.region",
 			Code: validation.ErrorCodeStringMaxLength,
 		})
@@ -92,7 +93,7 @@ func TestRedshift(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.Redshift)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Redshift.Query = ptr(query)
 			err := validate(slo)
-			assertContainsErrors(t, err, 1, expectedError{
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.redshift.query",
 				ContainsMessage: expectedDetails,
 			})

@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -27,7 +28,7 @@ func TestAzureMonitor_CounMetrics(t *testing.T) {
 			MetricNamespace: "That",
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.metricNamespace' must be the same for both 'good' and 'total' metrics",
 		})
@@ -35,7 +36,7 @@ func TestAzureMonitor_CounMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.BadMetric = slo.Spec.Objectives[0].CountMetrics.GoodMetric
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.metricNamespace' must be the same for both 'bad' and 'total' metrics",
 		})
@@ -54,7 +55,7 @@ func TestAzureMonitor_CounMetrics(t *testing.T) {
 			Aggregation: "Avg",
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.resourceId' must be the same for both 'good' and 'total' metrics",
 		})
@@ -62,7 +63,7 @@ func TestAzureMonitor_CounMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.BadMetric = slo.Spec.Objectives[0].CountMetrics.GoodMetric
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.resourceId' must be the same for both 'bad' and 'total' metrics",
 		})
@@ -78,16 +79,16 @@ func TestAzureMonitor(t *testing.T) {
 			Aggregation: "",
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -105,7 +106,7 @@ func TestAzureMonitor(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Aggregation = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -146,36 +147,36 @@ func TestAzureMonitorDimension(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 8,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 8,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].value",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].name",
 				Code: validation.ErrorCodeStringNotEmpty,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].value",
 				Code: validation.ErrorCodeStringNotEmpty,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].name",
 				Code: validation.ErrorCodeStringMaxLength,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].value",
 				Code: validation.ErrorCodeStringMaxLength,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].name",
 				Code: validation.ErrorCodeStringASCII,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].value",
 				Code: validation.ErrorCodeStringASCII,
 			},
@@ -194,7 +195,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
 			Code: validation.ErrorCodeSliceUnique,
 		})
@@ -251,7 +252,7 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 			if tC.isValid {
 				assert.Empty(t, err)
 			} else {
-				assertContainsErrors(t, err, 1, expectedError{
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
 					Code: validation.ErrorCodeStringMatchRegexp,
 				})

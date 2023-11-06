@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -19,7 +20,7 @@ func TestOpenTSDB(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.OpenTSDB)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.OpenTSDB.Query = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.opentsdb.query",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -28,7 +29,7 @@ func TestOpenTSDB(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.OpenTSDB)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.OpenTSDB.Query = ptr("")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.opentsdb.query",
 			Code: validation.ErrorCodeStringNotEmpty,
 		})

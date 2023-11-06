@@ -30,6 +30,7 @@ ignorePaths:
   - manifest/v1alpha/slo/validation_test.go
   - validation/string_test.go
 words:
+  - Equalf
   - GOFILE
   - GOPACKAGE
   - auseg9kiegWKEtJZC416

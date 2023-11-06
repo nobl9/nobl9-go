@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -20,7 +21,7 @@ func TestInstana_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana.MetricType = instanaMetricTypeApplication
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana.MetricType = instanaMetricTypeInfrastructure
 		err := validate(slo)
-		assertContainsErrors(t, err, 2, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -30,28 +31,28 @@ func TestInstana_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana = validInstanaApplicationMetric()
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana = validInstanaApplicationMetric()
 		err := validate(slo)
-		assertContainsErrors(t, err, 6,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 6,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.instana.application",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.instana.metricType",
 				Code: validation.ErrorCodeEqualTo,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.instana.infrastructure",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.instana.application",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.instana.metricType",
 				Code: validation.ErrorCodeEqualTo,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.instana.infrastructure",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -62,12 +63,12 @@ func TestInstana_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana.MetricType = ""
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana.MetricType = ""
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.instana.metricType",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.instana.metricType",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -87,7 +88,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application = &InstanaApplicationMetricType{}
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure = &InstanaInfrastructureMetricType{}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.instana",
 			Message: "cannot use both 'instana.application' and 'instana.infrastructure'",
 		})
@@ -98,7 +99,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.instana",
 			Message: "when 'metricType' is 'application', 'instana.application' is required",
 		})
@@ -109,7 +110,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.instana",
 			Message: "when 'metricType' is 'infrastructure', 'instana.infrastructure' is required",
 		})
@@ -118,7 +119,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Instana)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.MetricType = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.metricType",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -127,7 +128,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Instana)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.MetricType = ""
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.metricType",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -142,16 +143,16 @@ func TestInstana_Infrastructure(t *testing.T) {
 			Infrastructure: &InstanaInfrastructureMetricType{},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.infrastructure.metricRetrievalMethod",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.infrastructure.metricId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.infrastructure.pluginId",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -161,7 +162,7 @@ func TestInstana_Infrastructure(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Instana)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure.MetricRetrievalMethod = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.infrastructure.metricRetrievalMethod",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -204,7 +205,7 @@ func TestInstana_Infrastructure(t *testing.T) {
 				slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure.Query = test.Query
 				slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Infrastructure.SnapshotID = test.SnapshotID
 				err := validate(slo)
-				assertContainsErrors(t, err, 1, expectedError{
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop:    "spec.objectives[0].rawMetric.query.instana.infrastructure",
 					Message: test.ErrorMessage,
 				})
@@ -222,20 +223,20 @@ func TestInstana_Application(t *testing.T) {
 			Application:    &InstanaApplicationMetricType{},
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 4,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 4,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.metricId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.aggregation",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.groupBy",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.apiQuery",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -261,7 +262,7 @@ func TestInstana_Application(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana = validInstanaApplicationMetric()
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.MetricID = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.application.metricId",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -271,7 +272,7 @@ func TestInstana_Application(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana = validInstanaApplicationMetric()
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.APIQuery = "{]}"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.application.apiQuery",
 			Code: validation.ErrorCodeStringJSON,
 		})
@@ -283,12 +284,12 @@ func TestInstana_Application(t *testing.T) {
 			TagSecondLevelKey: ptr(""),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.groupBy.tag",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.instana.application.groupBy.tagEntity",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -312,7 +313,7 @@ func TestInstana_Application(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana = validInstanaApplicationMetric()
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.GroupBy.TagEntity = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.application.groupBy.tagEntity",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -362,7 +363,7 @@ func TestInstana_Application(t *testing.T) {
 			if test.IsValid {
 				assert.Empty(t, err)
 			} else {
-				assertContainsErrors(t, err, 1, expectedError{
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.instana.application",
 					Code: validation.ErrorCodeEqualTo,
 				})
@@ -385,7 +386,7 @@ func TestInstana_Application(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.MetricID = "latency"
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.Aggregation = "invalid"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.instana.application",
 			Code: validation.ErrorCodeOneOf,
 		})

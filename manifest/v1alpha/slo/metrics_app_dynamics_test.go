@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -16,7 +17,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validMetricSpec(v1alpha.AppDynamics)
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeNotEqualTo,
 		})
@@ -28,7 +29,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.BadMetric = validMetricSpec(v1alpha.AppDynamics)
 		slo.Spec.Objectives[0].CountMetrics.BadMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeNotEqualTo,
 		})
@@ -53,11 +54,11 @@ func TestValidate_AppDynamics_Valid(t *testing.T) {
 func TestValidate_AppDynamics_Invalid(t *testing.T) {
 	for name, test := range map[string]struct {
 		Spec           *AppDynamicsMetric
-		ExpectedErrors []expectedError
+		ExpectedErrors []testutils.ExpectedError
 	}{
 		"required fields": {
 			Spec: &AppDynamicsMetric{},
-			ExpectedErrors: []expectedError{
+			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "applicationName",
 					Code: validation.ErrorCodeRequired,
@@ -73,7 +74,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 				ApplicationName: ptr("     "),
 				MetricPath:      ptr("path"),
 			},
-			ExpectedErrors: []expectedError{{
+			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "applicationName",
 				Code: validation.ErrorCodeStringNotEmpty,
 			}},
@@ -83,7 +84,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 				ApplicationName: ptr("name"),
 				MetricPath:      ptr("App | This* | Latency"),
 			},
-			ExpectedErrors: []expectedError{{
+			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "metricPath",
 				Code: errCodeAppDynamicsWildcardNotSupported,
 			}},
@@ -94,10 +95,10 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.AppDynamics = test.Spec
 			err := validate(slo)
 
-			raw := make([]expectedError, len(test.ExpectedErrors))
+			raw := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(raw, test.ExpectedErrors)
-			raw = prependPropertyPath(raw, "spec.objectives[0].rawMetric.query.appDynamics")
-			assertContainsErrors(t, err, len(test.ExpectedErrors), raw...)
+			raw = testutils.PrependPropertyPath(raw, "spec.objectives[0].rawMetric.query.appDynamics")
+			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors), raw...)
 		})
 		t.Run("countMetric "+name, func(t *testing.T) {
 			slo := validCountMetricSLO(v1alpha.AppDynamics)
@@ -105,13 +106,13 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics = test.Spec
 			err := validate(slo)
 
-			total := make([]expectedError, len(test.ExpectedErrors))
+			total := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(total, test.ExpectedErrors)
-			good := make([]expectedError, len(test.ExpectedErrors))
+			good := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(good, test.ExpectedErrors)
-			total = prependPropertyPath(total, "spec.objectives[0].countMetrics.total.appDynamics")
-			good = prependPropertyPath(good, "spec.objectives[0].countMetrics.good.appDynamics")
-			assertContainsErrors(t, err, len(test.ExpectedErrors)*2, append(total, good...)...) //nolint: makezero
+			total = testutils.PrependPropertyPath(total, "spec.objectives[0].countMetrics.total.appDynamics")
+			good = testutils.PrependPropertyPath(good, "spec.objectives[0].countMetrics.good.appDynamics")
+			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors)*2, append(total, good...)...) //nolint: makezero
 		})
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -19,7 +20,7 @@ func TestGraphite(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Graphite)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.graphite.metricPath",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -28,7 +29,7 @@ func TestGraphite(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Graphite)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = ptr("")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.graphite.metricPath",
 			Code: validation.ErrorCodeStringNotEmpty,
 		})
@@ -42,7 +43,7 @@ func TestGraphite(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.Graphite)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = ptr(path)
 			err := validate(slo)
-			assertContainsErrors(t, err, 1, expectedError{
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.graphite.metricPath",
 				ContainsMessage: containsMessage,
 			})

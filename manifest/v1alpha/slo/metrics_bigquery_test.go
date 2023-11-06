@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -20,7 +21,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.BigQuery.ProjectID = "1"
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.BigQuery.ProjectID = "2"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -30,7 +31,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.BigQuery.Location = "1"
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.BigQuery.Location = "2"
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -42,16 +43,16 @@ func TestBigQuery(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.BigQuery)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.BigQuery = &BigQueryMetric{}
 		err := validate(slo)
-		assertContainsErrors(t, err, 3,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.projectId",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.location",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.query",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -79,7 +80,7 @@ WHERE http_code = 200 AND created = DATETIME(@n9date_from)`,
 			slo := validRawMetricSLO(v1alpha.BigQuery)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.BigQuery.Query = query
 			err := validate(slo)
-			assertContainsErrors(t, err, 1, expectedError{
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.bigQuery.query",
 				ContainsMessage: expectedDetails,
 			})

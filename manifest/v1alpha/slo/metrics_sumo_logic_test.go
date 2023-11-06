@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -25,7 +26,7 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 			Rollup:       ptr("None"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -55,7 +56,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: validation.ErrorCodeEqualTo,
 		})
@@ -67,7 +68,7 @@ func TestSumoLogic(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Type = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -76,7 +77,7 @@ func TestSumoLogic(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Type = ptr("invalid")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -85,7 +86,7 @@ func TestSumoLogic(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Query = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.query",
 			Code: validation.ErrorCodeRequired,
 		})
@@ -98,12 +99,12 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Rollup = nil
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
 				Code: validation.ErrorCodeRequired,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
 				Code: validation.ErrorCodeRequired,
 			},
@@ -113,7 +114,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = ptr("invalid")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
 			Message: `error parsing quantization string to duration - time: invalid duration "invalid"`,
 		})
@@ -122,7 +123,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = ptr("14s")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
 			Message: "minimum quantization value is [15s], got: [14s]",
 		})
@@ -139,7 +140,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Rollup = ptr("invalid")
 		err := validate(slo)
-		assertContainsErrors(t, err, 1, expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
 			Code: validation.ErrorCodeOneOf,
 		})
@@ -163,12 +164,12 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			Rollup:       ptr("None"),
 		}
 		err := validate(slo)
-		assertContainsErrors(t, err, 2,
-			expectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
 				Code: validation.ErrorCodeForbidden,
 			},
-			expectedError{
+			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
 				Code: validation.ErrorCodeForbidden,
 			},
@@ -176,7 +177,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	})
 	tests := map[string]struct {
 		Query string
-		Error expectedError
+		Error testutils.ExpectedError
 	}{
 		"no timeslice segment": {
 			Query: `
@@ -186,7 +187,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				Message: "exactly one timeslice declaration is required in the query",
 			},
@@ -201,7 +202,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				Message: "exactly one timeslice declaration is required in the query",
 			},
@@ -215,7 +216,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				Message: `error parsing timeslice duration: time: unknown unit "x" in duration "20x"`,
 			},
@@ -229,7 +230,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				Message: `minimum timeslice value is [15s], got: [14s]`,
 			},
@@ -243,7 +244,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) by n9_time
   | sort by n9_time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				ContainsMessage: "n9_value is required",
 			},
@@ -257,7 +258,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by time
   | sort by time asc`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				ContainsMessage: "n9_time is required",
 			},
@@ -270,7 +271,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value`,
-			Error: expectedError{
+			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
 				ContainsMessage: "aggregation function is required",
 			},
@@ -284,7 +285,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 				Query: ptr(test.Query),
 			}
 			err := validate(slo)
-			assertContainsErrors(t, err, 1, test.Error)
+			testutils.AssertContainsErrors(t, slo, err, 1, test.Error)
 		})
 	}
 }
