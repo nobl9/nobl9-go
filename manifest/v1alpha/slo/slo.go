@@ -66,6 +66,14 @@ type ObjectiveBase struct {
 	NameChanged bool     `json:"-"`
 }
 
+func (o ObjectiveBase) GetValue() float64 {
+	var v float64
+	if o.Value != nil {
+		v = *o.Value
+	}
+	return v
+}
+
 // Objective represents single objective for SLO, for internal usage
 type Objective struct {
 	ObjectiveBase `json:",inline"`
@@ -76,6 +84,14 @@ type Objective struct {
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
 	Operator        *string           `json:"op,omitempty"`
+}
+
+func (o Objective) GetBudgetTarget() float64 {
+	var v float64
+	if o.BudgetTarget != nil {
+		v = *o.BudgetTarget
+	}
+	return v
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
