@@ -10,15 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var (
-	rec              = testRecorder{}
-	initRecorderOnce sync.Once
-)
+var rec = new(testRecorder)
 
 type testRecorder struct {
 	shouldRecord bool
-	mu           sync.Mutex
 	output       io.Writer
+	mu           sync.Mutex
+	initOnce     sync.Once
 }
 
 type recordedTest struct {
@@ -46,7 +44,7 @@ func (r *testRecorder) Record(t *testing.T, object interface{}, errorsCount int,
 }
 
 func (r *testRecorder) Init() {
-	initRecorderOnce.Do(func() {
+	r.initOnce.Do(func() {
 		path, isSet := os.LookupEnv("NOBL9_SDK_TEST_RECORD_FILE")
 		if !isSet {
 			return
