@@ -375,7 +375,6 @@ var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Dynatrace.String():    {Value: ptr(28), Unit: HRDDay},
 	AppDynamics.String():  {Value: ptr(30), Unit: HRDDay},
 	AzureMonitor.String(): {Value: ptr(30), Unit: HRDDay},
-	Honeycomb.String():    {Value: ptr(7), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
