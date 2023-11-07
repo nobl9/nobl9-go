@@ -5,8 +5,8 @@
   "devDependencies": {
     "cspell": "6.31.3",
     "license-checker": "25.0.1",
-    "markdownlint-cli": "0.35.0",
-    "renovate": "36.42.1",
+    "markdownlint-cli": "0.37.0",
+    "renovate": "36.109.4",
     "yaml": "2.3.2"
   },
   "scripts": {

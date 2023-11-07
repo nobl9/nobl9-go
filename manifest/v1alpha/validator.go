@@ -47,6 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -206,6 +207,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
+	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
 	_ = val.RegisterValidation("supportedHoneycombCalculationType", supportedHoneycombCalculationType)
 	_ = val.RegisterValidation("supportedHoneycombFilterConditionOperator", supportedHoneycombFilterConditionOperator)
 
@@ -2394,6 +2396,11 @@ func isValidExportType(fl v.FieldLevel) bool {
 func isValidS3BucketName(fl v.FieldLevel) bool {
 	validS3BucketNameRegex := regexp.MustCompile(S3BucketNameRegex)
 	return validS3BucketNameRegex.MatchString(fl.Field().String())
+}
+
+func isValidAzureResourceID(fl v.FieldLevel) bool {
+	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
+	return validAzureResourceIDRegex.MatchString(fl.Field().String())
 }
 
 // isValidGCSBucketName checks if field matches restrictions specified
