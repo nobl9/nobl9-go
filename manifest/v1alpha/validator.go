@@ -3480,7 +3480,7 @@ func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
-	case "!=", ">", ">=", "<", "<=",
+	case "=", "!=", ">", ">=", "<", "<=",
 		"starts-with", "does-not-start-with", "exists", "does-not-exist",
 		"contains", "does-not-contain", "in", "not-in":
 		return true
