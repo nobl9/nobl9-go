@@ -2731,6 +2731,7 @@ func countMetricsSpecValidation(sl v.StructLevel) {
 	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
 	instanaCountMetricsSpecValidation(sl)
+	honeycombCountMetricsSpecValidation(sl)
 }
 
 func reportCountMetricsSpecMessageForTotalMetric(sl v.StructLevel, countMetrics CountMetricsSpec) {
@@ -2926,6 +2927,53 @@ func bigQueryCountMetricsSpecValidation(sl v.StructLevel) {
 			"totalMetric.bigQuery.projectId", "",
 			"projectIdIsNotEqual", "",
 		)
+	}
+}
+
+func honeycombCountMetricsSpecValidation(sl v.StructLevel) {
+	countMetrics, ok := sl.Current().Interface().(CountMetricsSpec)
+	if !ok {
+		sl.ReportError(countMetrics, "", "", "structConversion", "")
+		return
+	}
+
+	total := countMetrics.TotalMetric
+	good := countMetrics.GoodMetric
+	bad := countMetrics.BadMetric
+
+	if total == nil {
+		return
+	}
+	if total.Honeycomb == nil {
+		return
+	}
+	if good != nil && good.Honeycomb != nil {
+		if good.Honeycomb.Dataset != total.Honeycomb.Dataset {
+			sl.ReportError(
+				countMetrics.GoodMetric.Honeycomb.Dataset,
+				"goodMetric.honeycomb.dataset", "",
+				"datasetIsNotEqual", "",
+			)
+			sl.ReportError(
+				countMetrics.TotalMetric.Honeycomb.Dataset,
+				"totalMetric.honeycomb.dataset", "",
+				"datasetIsNotEqual", "",
+			)
+		}
+	}
+	if bad != nil && bad.Honeycomb != nil {
+		if bad.Honeycomb.Dataset != total.Honeycomb.Dataset {
+			sl.ReportError(
+				countMetrics.BadMetric.Honeycomb.Dataset,
+				"badMetric.honeycomb.dataset", "",
+				"datasetIsNotEqual", "",
+			)
+			sl.ReportError(
+				countMetrics.TotalMetric.Honeycomb.Dataset,
+				"totalMetric.honeycomb.dataset", "",
+				"datasetIsNotEqual", "",
+			)
+		}
 	}
 }
 
@@ -3416,7 +3464,7 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 	}
 }
 
-// TODO PC-10654: make sure upper case is the only format accepted.
+// TODO PC-10654: make sure upper case is the only format accepted in the official Honeycomb API.
 func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
@@ -3428,7 +3476,7 @@ func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 	return false
 }
 
-// TODO PC-10654: make sure lower case is the only format accepted.
+// TODO PC-10654: make sure lower case is the only format accepted in the official Honeycomb API.
 func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
@@ -3440,19 +3488,41 @@ func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
 	return false
 }
 
-// TODO PC-10654: make sure upper case is the only format accepted.
+// TODO PC-10654: make sure upper case is the only format accepted in the official Honeycomb API.
 func validateHoneycombFilter(sl v.StructLevel) {
 	hf := sl.Current().Interface().(HoneycombFilter)
+
+	if len(hf.Conditions) <= 1 {
+		return
+	}
+
 	validOperators := map[string]struct{}{
 		"AND": {},
 		"OR":  {},
 	}
+	if hf.Operator == "" {
+		sl.ReportError(
+			hf.Operator, "Operator", "Operator",
+			"Operator is required if there is more than one condition", "",
+		)
+	} else if _, ok := validOperators[hf.Operator]; !ok {
+		msg := fmt.Sprintf(
+			"Operator is invalid, use one of: [%s]", strings.Join(maps.Keys(validOperators), "|"),
+		)
+		sl.ReportError(hf.Operator, "Operator", "Operator", msg, "")
+	}
 
-	if len(hf.Conditions) > 1 {
-		if hf.Operator == "" {
-			sl.ReportError(hf.Operator, "Operator", "Operator", "required", "")
-		} else if _, ok := validOperators[hf.Operator]; !ok {
-			sl.ReportError(hf.Operator, "Operator", "Operator", "invalid", "")
+	// Validate for duplicate conditions.
+	conditions := make(map[string]struct{})
+	for _, condition := range hf.Conditions {
+		key := fmt.Sprintf("%s|%s|%s", condition.Attribute, condition.Operator, condition.Value)
+		if _, exists := conditions[key]; exists {
+			sl.ReportError(
+				hf.Conditions, "Conditions", "conditions",
+				"Conditions must be unique", "",
+			)
+			break
 		}
+		conditions[key] = struct{}{}
 	}
 }
