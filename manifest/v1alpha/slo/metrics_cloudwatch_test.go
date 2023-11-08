@@ -84,7 +84,7 @@ func TestCloudWatchStandard(t *testing.T) {
 					Value: ptr("value"),
 				},
 			},
-			AccountID: ptr("123456789012"),
+			AccountID: nil, // Optional
 		}
 		err := validate(slo)
 		assert.Empty(t, err)

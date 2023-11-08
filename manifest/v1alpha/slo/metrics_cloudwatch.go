@@ -134,10 +134,9 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.AccountID }).
 		WithName("accountId").
-		Required().
 		Rules(validation.StringNotEmpty()).
 		StopOnError().
-		Rules(validation.StringMatchRegexp(cloudWatchAccounIDRegexp, "123456789012")),
+		Rules(validation.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
 ).When(func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() })
 
 var (
@@ -145,7 +144,7 @@ var (
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html
 	cloudWatchStatRegexp      = buildCloudWatchStatRegexp()
 	cloudWatchNamespaceRegexp = regexp.MustCompile(`^[0-9A-Za-z.\-_/#:]{1,255}$`)
-	cloudWatchAccounIDRegexp  = regexp.MustCompile(`^\d{12}$`)
+	cloudWatchAccountIDRegexp = regexp.MustCompile(`^\d{12}$`)
 )
 
 var cloudwatchMetricDimensionValidation = validation.New[CloudWatchMetricDimension](
