@@ -30,6 +30,7 @@ ignorePaths:
 words:
   - GOFILE
   - GOPACKAGE
+  - Structs
   - auseg9kiegWKEtJZC416
   - devel
   - dynatrace
