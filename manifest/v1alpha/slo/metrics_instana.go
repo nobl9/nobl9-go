@@ -9,7 +9,7 @@ import (
 
 // InstanaMetric represents metric from Redshift.
 type InstanaMetric struct {
-	MetricType     string                           `json:"metricType" validate:"required,oneof=infrastructure application"` //nolint:lll
+	MetricType     string                           `json:"metricType"`
 	Infrastructure *InstanaInfrastructureMetricType `json:"infrastructure,omitempty"`
 	Application    *InstanaApplicationMetricType    `json:"application,omitempty"`
 }
@@ -158,7 +158,7 @@ var instanaApplicationMetricValidation = validation.New[InstanaApplicationMetric
 			case "calls", "erroneousCalls":
 				if i.Aggregation != "sum" {
 					return &validation.RuleError{
-						Message: "'aggregation' must be 'sum' when 'metricId' is 'calls'",
+						Message: "'aggregation' must be 'sum' when 'metricId' is 'calls' or 'erroneousCalls'",
 						Code:    validation.ErrorCodeEqualTo,
 					}
 				}

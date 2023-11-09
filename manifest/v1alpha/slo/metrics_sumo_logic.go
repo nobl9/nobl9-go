@@ -14,7 +14,7 @@ import (
 // SumoLogicMetric represents metric from Sumo Logic.
 type SumoLogicMetric struct {
 	Type         *string `json:"type"`
-	Query        *string `json:"query" validate:"required"`
+	Query        *string `json:"query"`
 	Quantization *string `json:"quantization,omitempty"`
 	Rollup       *string `json:"rollup,omitempty"`
 }

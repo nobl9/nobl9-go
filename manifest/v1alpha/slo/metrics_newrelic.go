@@ -8,7 +8,7 @@ import (
 
 // NewRelicMetric represents metric from NewRelic
 type NewRelicMetric struct {
-	NRQL *string `json:"nrql" validate:"required,noSinceOrUntil"`
+	NRQL *string `json:"nrql"`
 }
 
 var newRelicValidation = validation.New[NewRelicMetric](

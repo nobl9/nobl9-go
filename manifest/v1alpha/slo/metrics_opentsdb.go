@@ -4,7 +4,7 @@ import "github.com/nobl9/nobl9-go/validation"
 
 // OpenTSDBMetric represents metric from OpenTSDB.
 type OpenTSDBMetric struct {
-	Query *string `json:"query" validate:"required"`
+	Query *string `json:"query"`
 }
 
 var openTSDBValidation = validation.New[OpenTSDBMetric](

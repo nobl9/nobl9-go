@@ -36,7 +36,7 @@ func TestGraphite(t *testing.T) {
 	})
 	t.Run("invalid metricPath", func(t *testing.T) {
 		for containsMessage, path := range map[string]string{
-			"wildacards are not allowed":             "foo.*.bar",
+			"wildcards are not allowed":              "foo.*.bar",
 			"character list or range is not allowed": "foo[a-z]bar.baz",
 			"value list is not allowed":              "foo.{user,system}.bar",
 		} {

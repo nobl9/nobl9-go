@@ -128,7 +128,7 @@ type CompositeBurnRateCondition struct {
 // AnomalyConfig represents relationship between anomaly type and selected notification methods.
 // This will be removed (moved into Anomaly Policy) in PC-8502
 type AnomalyConfig struct {
-	NoData *AnomalyConfigNoData `json:"noData" validate:"omitempty"`
+	NoData *AnomalyConfigNoData `json:"noData"`
 }
 
 // AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
