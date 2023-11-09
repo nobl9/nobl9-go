@@ -3407,5 +3407,5 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 func isValidHoneycombAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
 	validAPIKeyRegex := regexp.MustCompile(HoneycombAPIKeyRegex)
-	return len(apiKey) == 22 && validAPIKeyRegex.MatchString(apiKey)
+	return apiKey == "" || (len(apiKey) == 22 && validAPIKeyRegex.MatchString(apiKey))
 }
