@@ -260,12 +260,10 @@ type GenericMetric struct {
 
 // HoneycombMetric represents metric from Honeycomb.
 type HoneycombMetric struct {
-	// FIXME PC-10654: Check if the entire struct is correct.
-	Dataset     string `json:"dataset" validate:"required,max=255,ascii,notBlank"`
-	Calculation string `json:"calculation" validate:"required,max=30,ascii,notBlank,supportedHoneycombCalculationType"`
-	// FIXME PC-10654: "with validation based on Honeycomb API docs", "max length - 100 characters (TBC)"
-	Attribute string          `json:"attribute" validate:"required,max=255,ascii,notBlank"`
-	Filter    HoneycombFilter `json:"filter"`
+	Dataset     string          `json:"dataset" validate:"required,max=255,ascii,notBlank"`
+	Calculation string          `json:"calculation" validate:"required,max=30,ascii,notBlank,supportedHoneycombCalculationType"`
+	Attribute   string          `json:"attribute" validate:"required,max=255,ascii,notBlank"`
+	Filter      HoneycombFilter `json:"filter"`
 }
 
 // HoneycombFilter represents filter for Honeycomb metric. It has custom struct validation.

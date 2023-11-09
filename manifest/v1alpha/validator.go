@@ -3464,7 +3464,6 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 	}
 }
 
-// TODO PC-10654: make sure upper case is the only format accepted in the official Honeycomb API.
 func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
@@ -3476,7 +3475,6 @@ func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 	return false
 }
 
-// TODO PC-10654: make sure lower case is the only format accepted in the official Honeycomb API.
 func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
@@ -3488,7 +3486,6 @@ func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
 	return false
 }
 
-// TODO PC-10654: make sure upper case is the only format accepted in the official Honeycomb API.
 func validateHoneycombFilter(sl v.StructLevel) {
 	hf := sl.Current().Interface().(HoneycombFilter)
 
