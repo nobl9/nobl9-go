@@ -48,6 +48,7 @@ const (
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
 	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
+	HoneycombAPIKeyRegex            string = `^[a-zA-Z0-9]*$`
 )
 
 // Values used to validate time window size
@@ -3404,7 +3405,6 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 }
 
 func isValidHoneycombAPIKey(fl v.FieldLevel) bool {
-	apiKey := fl.Field().String()
-	validAPIKeyRegex := regexp.MustCompile(`^[a-zA-Z0-9]*$`)
-	return validAPIKeyRegex.MatchString(apiKey)
+	validAPIKeyRegex := regexp.MustCompile(HoneycombAPIKeyRegex)
+	return validAPIKeyRegex.MatchString(fl.Field().String())
 }
