@@ -415,7 +415,7 @@ type PublicAzureMonitorDirectConfig struct {
 
 // HoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombDirectConfig struct {
-	APIKey string `json:"apiKey,omitempty" validate:"honeycombApiKey" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+	APIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
 }
 
 // PublicHoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.
