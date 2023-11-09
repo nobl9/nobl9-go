@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Direct
+//go:generate go run ../../scripts/generate-object-impl.go Direct,PublicDirect
 
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
@@ -415,7 +415,7 @@ type PublicAzureMonitorDirectConfig struct {
 
 // HoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombDirectConfig struct {
-	APIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+	APIKey string `json:"apiKey,omitempty" validate:"honeycombApiKey" example:"lwPoPt20Gmdi4dwTdW9dTR"`
 }
 
 // PublicHoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.

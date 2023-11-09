@@ -48,6 +48,7 @@ const (
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
 	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
+	HoneycombAPIKeyRegex            string = `^[a-zA-Z0-9]*$`
 )
 
 // Values used to validate time window size
@@ -210,6 +211,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
 	_ = val.RegisterValidation("supportedHoneycombCalculationType", supportedHoneycombCalculationType)
 	_ = val.RegisterValidation("supportedHoneycombFilterConditionOperator", supportedHoneycombFilterConditionOperator)
+	_ = val.RegisterValidation("honeycombApiKey", isValidHoneycombAPIKey)
 
 	return &Validate{
 		validate: val,
@@ -3525,4 +3527,9 @@ func validateHoneycombFilter(sl v.StructLevel) {
 		}
 		conditions[key] = struct{}{}
 	}
+}
+
+func isValidHoneycombAPIKey(fl v.FieldLevel) bool {
+	validAPIKeyRegex := regexp.MustCompile(HoneycombAPIKeyRegex)
+	return validAPIKeyRegex.MatchString(fl.Field().String())
 }

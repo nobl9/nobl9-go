@@ -12,24 +12,26 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 //go:embed generate-object-impl.tpl
 var templateStr string
 
 type generator struct {
-	StructName             string
-	Receiver               string
-	IsProjectScopedObject  bool
-	IsV1alphaObjectContext bool
+	StructNames []string
+	Structs     []StructTemplate
 }
 
 type Template struct {
-	Receiver          string
-	StructName        string
 	Package           string
 	ProgramInvocation string
+	Structs           []StructTemplate
+}
 
+type StructTemplate struct {
+	Receiver                     string
+	Name                         string
 	GenerateObject               bool
 	GenerateProjectScopedObject  bool
 	GenerateV1alphaObjectContext bool
@@ -37,14 +39,14 @@ type Template struct {
 
 func main() {
 	if len(os.Args) != 2 {
-		errFatal("you must provide struct name")
+		errFatal("you must provide struct name or csv of struct names")
 	}
-	g := &generator{StructName: os.Args[1]}
+	g := &generator{StructNames: strings.Split(strings.TrimFunc(os.Args[1], unicode.IsSpace), ",")}
 
 	filename := os.Getenv("GOFILE")
 	pkg := os.Getenv("GOPACKAGE")
 	programName := filepath.Base(os.Args[0])
-	fmt.Printf("%s [Struct: %s, File: %s, Package: %s]\n", programName, g.StructName, filename, pkg)
+	fmt.Printf("%s [Struct: %s, File: %s, Package: %s]\n", programName, g.StructNames, filename, pkg)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -66,13 +68,9 @@ func main() {
 	}
 	buf := new(bytes.Buffer)
 	err = tpl.Execute(buf, Template{
-		Receiver:                     string(strings.ToLower(g.StructName)[0]),
-		StructName:                   g.StructName,
-		Package:                      pkg,
-		ProgramInvocation:            fmt.Sprintf("%s %s", programName, strings.Join(os.Args[1:], " ")),
-		GenerateObject:               true,
-		GenerateProjectScopedObject:  g.IsProjectScopedObject,
-		GenerateV1alphaObjectContext: g.IsV1alphaObjectContext && strings.Contains(cwd, "v1alpha"),
+		Package:           pkg,
+		ProgramInvocation: fmt.Sprintf("%s %s", programName, strings.Join(os.Args[1:], " ")),
+		Structs:           g.Structs,
 	})
 	if err != nil {
 		errFatal(err.Error())
@@ -101,11 +99,25 @@ func (g *generator) genDecl(node ast.Node) bool {
 		return false
 	}
 	structType, isStruct := spec.Type.(*ast.StructType)
-	if !isStruct || spec.Name.Name != g.StructName {
+	if !isStruct {
 		return false
 	}
-	g.IsProjectScopedObject = g.hasProjectInMetadata(structType.Fields)
-	g.IsV1alphaObjectContext = g.hasOrganizationAndManifestSource(structType.Fields)
+	matched := false
+	for _, structName := range g.StructNames {
+		if spec.Name.Name == structName {
+			matched = true
+		}
+	}
+	if !matched {
+		return false
+	}
+	g.Structs = append(g.Structs, StructTemplate{
+		Receiver:                     string(strings.ToLower(spec.Name.Name)[0]),
+		Name:                         spec.Name.Name,
+		GenerateObject:               true,
+		GenerateProjectScopedObject:  g.hasProjectInMetadata(structType.Fields),
+		GenerateV1alphaObjectContext: g.hasOrganizationAndManifestSource(structType.Fields),
+	})
 	return false
 }
 
