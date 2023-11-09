@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Direct
+//go:generate go run ../../scripts/generate-object-impl.go Direct,PublicDirect
 
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
