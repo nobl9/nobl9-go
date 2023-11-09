@@ -3532,5 +3532,5 @@ func validateHoneycombFilter(sl v.StructLevel) {
 func isValidHoneycombAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
 	validAPIKeyRegex := regexp.MustCompile(HoneycombAPIKeyRegex)
-	return apiKey == "" || (len(apiKey) == 22 && validAPIKeyRegex.MatchString(apiKey))
+	return len(apiKey) == 22 && validAPIKeyRegex.MatchString(apiKey)
 }
