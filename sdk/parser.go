@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaParser "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 )
 
@@ -64,13 +63,8 @@ func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 
 // annotateWithManifestSource annotates manifest.Object with the manifest definition source.
 func annotateWithManifestSource(object manifest.Object, source string) manifest.Object {
-	switch object.GetVersion() {
-	case "n9/v1alpha":
-		if v, ok := object.(v1alpha.ObjectContext); ok {
-			if v.GetManifestSource() == "" && source != "" {
-				object = v.SetManifestSource(source)
-			}
-		}
+	if object.GetManifestSource() == "" && source != "" {
+		object = object.SetManifestSource(source)
 	}
 	return object
 }

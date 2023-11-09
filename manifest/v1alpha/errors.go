@@ -14,13 +14,11 @@ import (
 func NewObjectError(object manifest.Object, errs []error) error {
 	oErr := &ObjectError{
 		Object: ObjectMetadata{
-			Kind: object.GetKind(),
-			Name: object.GetName(),
+			Kind:   object.GetKind(),
+			Name:   object.GetName(),
+			Source: object.GetManifestSource(),
 		},
 		Errors: errs,
-	}
-	if v, ok := object.(ObjectContext); ok {
-		oErr.Object.Source = v.GetManifestSource()
 	}
 	if v, ok := object.(manifest.ProjectScopedObject); ok {
 		oErr.Object.IsProjectScoped = true

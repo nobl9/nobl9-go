@@ -25,6 +25,15 @@ func (s SLO) Validate() error {
 	return validator.Check(s)
 }
 
+func (s SLO) GetManifestSource() string {
+	return s.ManifestSource
+}
+
+func (s SLO) SetManifestSource(src string) manifest.Object {
+	s.ManifestSource = src
+	return s
+}
+
 func (s SLO) GetProject() string {
 	return s.Metadata.Project
 }
@@ -40,14 +49,5 @@ func (s SLO) GetOrganization() string {
 
 func (s SLO) SetOrganization(org string) manifest.Object {
 	s.Organization = org
-	return s
-}
-
-func (s SLO) GetManifestSource() string {
-	return s.ManifestSource
-}
-
-func (s SLO) SetManifestSource(src string) manifest.Object {
-	s.ManifestSource = src
 	return s
 }
