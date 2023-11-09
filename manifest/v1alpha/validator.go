@@ -205,6 +205,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
+	_ = val.RegisterValidation("honeycombApiKey", isValidHoneycombAPIKey)
 
 	return &Validate{
 		validate: val,
@@ -3393,4 +3394,10 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 		)
 		sl.ReportError(metric.Aggregation, "aggregation", "Aggregation", msg, "")
 	}
+}
+
+func isValidHoneycombAPIKey(fl v.FieldLevel) bool {
+	apiKey := fl.Field().String()
+	validAPIKeyRegex := regexp.MustCompile(`^[a-zA-Z0-9]*$`)
+	return validAPIKeyRegex.MatchString(apiKey)
 }
