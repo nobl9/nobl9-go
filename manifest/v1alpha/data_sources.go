@@ -41,6 +41,7 @@ const (
 	GCM
 	AzureMonitor
 	Generic
+	Honeycomb
 )
 
 const DatasourceStableChannel = "stable"
@@ -126,6 +127,7 @@ var agentTypeToName = map[DataSourceType]string{
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
 	Generic:             "Generic",
+	Honeycomb:           "Honeycomb",
 }
 
 func (dst DataSourceType) String() string {
@@ -528,6 +530,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		Generic.String(): {
 			Value: ptr(0),
 			Unit:  QDDSecond,
+		},
+		Honeycomb.String(): {
+			Value: ptr(5),
+			Unit:  QDDMinute,
 		},
 	}
 }
