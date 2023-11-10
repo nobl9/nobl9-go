@@ -47,6 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -205,6 +206,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("elasticsearchBeginEndTimeRequired", isValidElasticsearchQuery)
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
+	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
 
 	return &Validate{
 		validate: val,
@@ -1070,6 +1072,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		influxDBCount            int
 		gcmCount                 int
 		azureMonitorCount        int
+		genericCount             int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1144,6 +1147,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.AzureMonitor != nil {
 			azureMonitorCount++
 		}
+		if metric.Generic != nil {
+			genericCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1212,6 +1218,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if azureMonitorCount > 0 {
+		metricCount++
+	}
+	if genericCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1779,6 +1788,12 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		agentTypesCount++
 	}
+	if sa.Generic != nil {
+		agentTypesCount++
+	}
+	if sa.Honeycomb != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -1803,6 +1818,8 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -1879,6 +1896,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.AzureMonitor != nil {
 		metricTypesCount++
 	}
+	if ms.Generic != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1903,6 +1923,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "influxdb", "InfluxDB", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "genericMetric", "Generic", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
@@ -1972,6 +1993,9 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		directTypesCount++
 	}
+	if sa.Honeycomb != nil {
+		directTypesCount++
+	}
 	if directTypesCount != expectedNumberOfDirectTypes {
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "newrelic", "NewRelic", "exactlyOneDirectTypeRequired", "")
@@ -1990,6 +2014,7 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "azureMonitor", "AzureMonitor", "exactlyOneDirectTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneDirectTypeRequired", "")
 	}
 }
 
@@ -2357,6 +2382,11 @@ func isValidExportType(fl v.FieldLevel) bool {
 func isValidS3BucketName(fl v.FieldLevel) bool {
 	validS3BucketNameRegex := regexp.MustCompile(S3BucketNameRegex)
 	return validS3BucketNameRegex.MatchString(fl.Field().String())
+}
+
+func isValidAzureResourceID(fl v.FieldLevel) bool {
+	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
+	return validAzureResourceIDRegex.MatchString(fl.Field().String())
 }
 
 // isValidGCSBucketName checks if field matches restrictions specified

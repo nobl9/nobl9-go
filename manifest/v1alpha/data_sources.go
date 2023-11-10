@@ -41,6 +41,8 @@ const (
 	InfluxDB
 	GCM
 	AzureMonitor
+	Generic
+	Honeycomb
 )
 
 const DatasourceStableChannel = "stable"
@@ -125,6 +127,8 @@ var agentTypeToName = map[DataSourceType]string{
 	InfluxDB:            "InfluxDB",
 	GCM:                 "GoogleCloudMonitoring",
 	AzureMonitor:        "AzureMonitor",
+	Generic:             "Generic",
+	Honeycomb:           "Honeycomb",
 }
 
 func (dst DataSourceType) String() string {
@@ -477,6 +481,14 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 			Unit:  twindow.Minute,
 		},
 		AzureMonitor.String(): {
+			Value: ptr(5),
+			Unit:  twindow.Minute,
+		},
+		Generic.String(): {
+			Value: ptr(0),
+			Unit:  twindow.Second,
+		},
+		Honeycomb.String(): {
 			Value: ptr(5),
 			Unit:  twindow.Minute,
 		},
