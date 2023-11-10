@@ -420,7 +420,7 @@ type HoneycombDirectConfig struct {
 
 // PublicHoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.
 type PublicHoneycombDirectConfig struct {
-	HiddenAPIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+	HiddenAPIKey string `json:"apiKey,omitempty"`
 }
 
 // PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
