@@ -119,34 +119,34 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 func TestQueryDelayValidation(t *testing.T) {
 	v := NewValidator()
 	for _, test := range []struct {
-		delay QueryDelay
+		qd    QueryDelay
 		Valid bool
 	}{
 		{
-			delay: QueryDelay{
+			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Minute),
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Second},
 			},
 			Valid: true,
 		},
 		{
-			delay: QueryDelay{
+			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Second),
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Minute},
 			},
 			Valid: true,
 		},
 		{
-			delay: QueryDelay{
+			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Hour),
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Hour},
 			},
 			Valid: false,
 		},
 		{
-			delay: QueryDelay{
+			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Day),
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Day},
 			},
 			Valid: false,
 		},
@@ -155,13 +155,14 @@ func TestQueryDelayValidation(t *testing.T) {
 		if !test.Valid {
 			validStr = "invalid"
 		}
-		t.Run(fmt.Sprintf("%s %s %s", validStr, test.delay.String(), test.delay.MinimumAgentVersion), func(t *testing.T) {
-			err := v.Check(test.delay)
-			if test.Valid {
-				require.NoError(t, err)
-			} else {
-				assert.Error(t, err)
-			}
-		})
+		t.Run(fmt.Sprintf("%s %s", validStr, Duration(test.qd.QueryDelayDuration)),
+			func(t *testing.T) {
+				err := v.Check(test.qd)
+				if test.Valid {
+					require.NoError(t, err)
+				} else {
+					assert.Error(t, err)
+				}
+			})
 	}
 }

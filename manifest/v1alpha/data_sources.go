@@ -57,7 +57,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	QueryDelayDuration
+	QueryDelayDuration  QueryDelayDuration
 }
 
 type SourceOf int
@@ -161,8 +161,8 @@ const (
 const (
 	maxQueryDelayDuration     = 1440
 	maxQueryDelayDurationUnit = twindow.Minute
-	SecondAlias               = "S"
-	MinuteAlias               = "M"
+	secondAlias               = "S"
+	minuteAlias               = "M"
 )
 
 const MinimalSupportedQueryDelayAgentVersion = "v0.65.0-beta09"
@@ -232,7 +232,7 @@ func (d Duration) String() string {
 }
 
 func (d Duration) LesserThan(b Duration) bool {
-	return d.Duration() < d.Duration()
+	return d.Duration() < b.Duration()
 }
 
 func (d Duration) IsZero() bool {
@@ -257,53 +257,40 @@ func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 	return duration.Duration() > maximum.Duration()
 }
 
-type QueryDelayDuration struct {
-	Duration
-}
+// QueryDelayDuration should be only used when validating. TODO: remove when new validation is implemented.
+type QueryDelayDuration Duration
 
 func (qdd QueryDelayDuration) IsValid() bool {
 	return qdd.Unit == twindow.Second || qdd.Unit == twindow.Minute
 }
 
-type QueryIntervalDuration struct {
-	Duration
-}
+type QueryIntervalDuration Duration
 
 func (qid QueryIntervalDuration) IsValid() bool {
 	return qid.Unit == twindow.Minute || qid.Unit == twindow.Second
 }
 
-type CollectionJitterDuration struct {
-	Duration
-}
+type CollectionJitterDuration Duration
 
-type TimeoutDuration struct {
-	Duration
-}
+type TimeoutDuration Duration
 
 func (td TimeoutDuration) IsValid() bool {
 	return td.Unit == twindow.Second
 }
 
-type Durations interface {
-	QueryDelayDuration | QueryIntervalDuration | CollectionJitterDuration | TimeoutDuration
-}
-
 // NewDuration is a helper for more concise creating of Durations.
-func NewDuration[T Durations](value int, unit twindow.TimeUnitEnum) T {
-	return T{
-		Duration: Duration{
-			Value: &value,
-			Unit:  unit,
-		},
+func NewDuration(value int, unit twindow.TimeUnitEnum) Duration {
+	return Duration{
+		Value: &value,
+		Unit:  unit,
 	}
 }
 
 func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
 	switch cases.Title(language.Und).String(unit) {
-	case twindow.Minute.String(), MinuteAlias:
+	case twindow.Minute.String(), minuteAlias:
 		return twindow.Minute, nil
-	case twindow.Second.String(), SecondAlias:
+	case twindow.Second.String(), secondAlias:
 		return twindow.Second, nil
 	}
 	return twindow.Second, errors.Errorf("'%s' is not a valid QueryDelayDurationUnit", unit)
@@ -311,9 +298,9 @@ func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error)
 
 func QueryIntervalDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
 	switch cases.Title(language.Und).String(unit) {
-	case twindow.Minute.String(), MinuteAlias:
+	case twindow.Minute.String(), minuteAlias:
 		return twindow.Minute, nil
-	case twindow.Second.String(), SecondAlias:
+	case twindow.Second.String(), secondAlias:
 		return twindow.Second, nil
 	}
 	return twindow.Second, errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
@@ -378,11 +365,11 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (Historica
 type QueryDelayDefaults map[string]Duration
 
 func (q QueryDelayDefaults) GetByName(name string) string {
-	return q[name].String()
+	return q[name].Duration().String()
 }
 
 func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
-	return q[at.String()].String()
+	return q[at.String()].Duration().String()
 }
 
 // GetQueryDelayDefaults serves an exported, single source of truth map that is now a part of v1alpha contract.

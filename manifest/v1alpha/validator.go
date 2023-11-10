@@ -132,7 +132,7 @@ func NewValidator() *Validate {
 	})
 
 	val.RegisterStructValidation(timeWindowStructLevelValidation, TimeWindow{})
-	val.RegisterStructValidation(queryDelayDurationValidation, QueryDelay{})
+	val.RegisterStructValidation(queryDelayDurationValidation, QueryDelayDuration{})
 	val.RegisterStructValidation(agentSpecStructLevelValidation, AgentSpec{})
 	val.RegisterStructValidation(sloSpecStructLevelValidation, SLOSpec{})
 	val.RegisterStructValidation(metricSpecStructLevelValidation, MetricSpec{})
@@ -1614,7 +1614,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 	}
 	if sa.QueryDelay != nil {
 		agentDefault := GetQueryDelayDefaults()[at.String()]
-		if sa.QueryDelay.LesserThan(agentDefault) {
+		if Duration(sa.QueryDelay.QueryDelayDuration).LesserThan(agentDefault) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -1623,7 +1623,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if IsBiggerThanMaxQueryDelayDuration(sa.QueryDelay.Duration) {
+		if IsBiggerThanMaxQueryDelayDuration(Duration(sa.QueryDelay.QueryDelayDuration)) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -2027,7 +2027,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 
 	if sd.QueryDelay != nil {
 		directDefault := GetQueryDelayDefaults()[dt]
-		if sd.QueryDelay.Duration.LesserThan(directDefault) {
+		if Duration(sd.QueryDelay.QueryDelayDuration).LesserThan(directDefault) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
@@ -2036,7 +2036,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if IsBiggerThanMaxQueryDelayDuration(sd.QueryDelay.Duration) {
+		if IsBiggerThanMaxQueryDelayDuration(Duration(sd.QueryDelay.QueryDelayDuration)) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
@@ -3047,7 +3047,7 @@ func historicalDataRetrievalDurationValidation(sl v.StructLevel) {
 }
 
 func queryDelayDurationValidation(sl v.StructLevel) {
-	duration, ok := sl.Current().Interface().(QueryDelay)
+	duration, ok := sl.Current().Interface().(QueryDelayDuration)
 	if !ok {
 		sl.ReportError(duration, "", "", "structConversion", "")
 		return
