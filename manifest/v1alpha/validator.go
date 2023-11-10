@@ -1993,6 +1993,9 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		directTypesCount++
 	}
+	if sa.Honeycomb != nil {
+		directTypesCount++
+	}
 	if directTypesCount != expectedNumberOfDirectTypes {
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "newrelic", "NewRelic", "exactlyOneDirectTypeRequired", "")
@@ -2011,6 +2014,7 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "azureMonitor", "AzureMonitor", "exactlyOneDirectTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneDirectTypeRequired", "")
 	}
 }
 
