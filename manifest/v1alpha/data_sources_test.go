@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 func TestHistoricalRetrievalDuration_durationInMinutes(t *testing.T) {
@@ -108,6 +109,56 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 			if test.Valid {
 				require.NoError(t, err)
 				assert.Equal(t, test.Expected, hdr)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
+func TestQueryDelayValidation(t *testing.T) {
+	v := NewValidator()
+	for _, test := range []struct {
+		delay QueryDelay
+		Valid bool
+	}{
+		{
+			delay: QueryDelay{
+				MinimumAgentVersion: "0.69.0-beta04",
+				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Minute),
+			},
+			Valid: true,
+		},
+		{
+			delay: QueryDelay{
+				MinimumAgentVersion: "0.69.0-beta04",
+				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Second),
+			},
+			Valid: true,
+		},
+		{
+			delay: QueryDelay{
+				MinimumAgentVersion: "0.69.0-beta04",
+				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Hour),
+			},
+			Valid: false,
+		},
+		{
+			delay: QueryDelay{
+				MinimumAgentVersion: "0.69.0-beta04",
+				QueryDelayDuration:  NewDuration[QueryDelayDuration](5, twindow.Day),
+			},
+			Valid: false,
+		},
+	} {
+		validStr := "valid"
+		if !test.Valid {
+			validStr = "invalid"
+		}
+		t.Run(fmt.Sprintf("%s %s %s", validStr, test.delay.String(), test.delay.MinimumAgentVersion), func(t *testing.T) {
+			err := v.Check(test.delay)
+			if test.Valid {
+				require.NoError(t, err)
 			} else {
 				assert.Error(t, err)
 			}

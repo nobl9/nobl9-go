@@ -3017,7 +3017,7 @@ func historicalDataRetrievalDurationValidation(sl v.StructLevel) {
 }
 
 func queryDelayDurationValidation(sl v.StructLevel) {
-	duration, ok := sl.Current().Interface().(Duration)
+	duration, ok := sl.Current().Interface().(QueryDelay)
 	if !ok {
 		sl.ReportError(duration, "", "", "structConversion", "")
 		return

@@ -55,7 +55,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	Duration
+	QueryDelayDuration
 }
 
 type SourceOf int
@@ -146,48 +146,6 @@ type HistoricalRetrievalDuration struct {
 	Unit  HistoricalRetrievalDurationUnit `json:"unit" validate:"required"`
 }
 
-type FormattedDuration struct {
-	Value int    `json:"value" validate:"required,min=0,max=86400"`
-	Unit  string `json:"unit" validate:"required"`
-}
-
-type Duration struct {
-	Value     *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit      twindow.TimeUnitEnum `json:"unit" validate:"required"`
-	validator func(Duration) bool
-}
-
-func GetFormattedDuration(duration Duration) FormattedDuration {
-	value := 0
-	if duration.Value != nil {
-		value = *duration.Value
-	}
-	return FormattedDuration{
-		Unit:  duration.Unit.String(),
-		Value: value,
-	}
-}
-
-func NewQueryDelayDuration(value int, unit twindow.TimeUnitEnum) Duration {
-	return Duration{
-		Value: &value,
-		Unit:  unit,
-		validator: func(duration Duration) bool {
-			return isMinuteOrSecond(duration.Unit)
-		},
-	}
-}
-
-func NewTimeoutDuration(value int, unit twindow.TimeUnitEnum) Duration {
-	return Duration{
-		Value: &value,
-		Unit:  unit,
-		validator: func(duration Duration) bool {
-			return duration.Unit == twindow.Second
-		},
-	}
-}
-
 type HistoricalRetrievalDurationUnit string
 
 const (
@@ -260,21 +218,13 @@ func (d HistoricalRetrievalDuration) duration() time.Duration {
 	return time.Duration(0)
 }
 
-func (d Duration) IsValid() bool {
-	return d.validator(d)
+type Duration struct {
+	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
+	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
 }
 
 func (d Duration) String() string {
 	return fmt.Sprintf("%d%s", d.Value, formatTimeUnit(d.Unit))
-}
-
-func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
-	maxQueryDelayDurationInt := maxQueryDelayDuration
-	max := Duration{
-		Value: &maxQueryDelayDurationInt,
-		Unit:  maxQueryDelayDurationUnit,
-	}
-	return duration.Duration() > max.Duration()
 }
 
 func (d Duration) LesserThan(b Duration) bool {
@@ -292,6 +242,57 @@ func (d Duration) Duration() time.Duration {
 
 	value := time.Duration(*d.Value)
 	return value * d.Unit.Duration()
+}
+
+func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
+	maxQueryDelayDurationInt := maxQueryDelayDuration
+	maximum := Duration{
+		Value: &maxQueryDelayDurationInt,
+		Unit:  maxQueryDelayDurationUnit,
+	}
+	return duration.Duration() > maximum.Duration()
+}
+
+type QueryDelayDuration struct {
+	Duration
+}
+
+func (qdd QueryDelayDuration) IsValid() bool {
+	return qdd.Unit == twindow.Second || qdd.Unit == twindow.Minute
+}
+
+type QueryIntervalDuration struct {
+	Duration
+}
+
+func (qid QueryIntervalDuration) IsValid() bool {
+	return qid.Unit == twindow.Minute || qid.Unit == twindow.Second
+}
+
+type CollectionJitterDuration struct {
+	Duration
+}
+
+type TimeoutDuration struct {
+	Duration
+}
+
+func (td TimeoutDuration) IsValid() bool {
+	return td.Unit == twindow.Second
+}
+
+type Durations interface {
+	QueryDelayDuration | QueryIntervalDuration | CollectionJitterDuration | TimeoutDuration
+}
+
+// NewDuration is a helper for more concise creating of Durations.
+func NewDuration[T Durations](value int, unit twindow.TimeUnitEnum) T {
+	return T{
+		Duration: Duration{
+			Value: &value,
+			Unit:  unit,
+		},
+	}
 }
 
 func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
@@ -327,10 +328,6 @@ func formatTimeUnit(unit twindow.TimeUnitEnum) string {
 	default:
 		return "UNDEFINED"
 	}
-}
-
-func isMinuteOrSecond(unit twindow.TimeUnitEnum) bool {
-	return unit == twindow.Second || unit == twindow.Minute
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
