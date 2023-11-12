@@ -323,10 +323,9 @@ type CloudWatchDirectConfig struct {
 // PublicCloudWatchDirectConfig represents content of CloudWatch Configuration typical for Direct Object
 // without secrets.
 type PublicCloudWatchDirectConfig struct {
-	HiddenAccessKeyID     string                     `json:"accessKeyID,omitempty"`
-	HiddenSecretAccessKey string                     `json:"secretAccessKey,omitempty"`
-	HiddenRoleARN         string                     `json:"roleARN,omitempty"`
-	CrossAccountIAMRoles  *AwsIAMRoleAuthExternalIDs `json:"crossAccountIAMRoles,omitempty"`
+	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
+	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
+	HiddenRoleARN         string `json:"roleARN,omitempty"`
 }
 
 // PingdomDirectConfig represents content of Pingdom Configuration typical for Direct Object.
@@ -374,11 +373,10 @@ type RedshiftDirectConfig struct {
 
 // PublicRedshiftDirectConfig represents content of Redshift configuration typical for Direct Object without secrets.
 type PublicRedshiftDirectConfig struct {
-	HiddenAccessKeyID     string                     `json:"accessKeyID,omitempty"`
-	HiddenSecretAccessKey string                     `json:"secretAccessKey,omitempty"`
-	SecretARN             string                     `json:"secretARN"`
-	HiddenRoleARN         string                     `json:"roleARN,omitempty"`
-	CrossAccountIAMRoles  *AwsIAMRoleAuthExternalIDs `json:"crossAccountIAMRoles,omitempty"`
+	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
+	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
+	SecretARN             string `json:"secretARN"`
+	HiddenRoleARN         string `json:"roleARN,omitempty"`
 }
 
 // SumoLogicDirectConfig represents content of SumoLogic configuration typical for Direct Object.
