@@ -2731,7 +2731,6 @@ func countMetricsSpecValidation(sl v.StructLevel) {
 	redshiftCountMetricsSpecValidation(sl)
 	bigQueryCountMetricsSpecValidation(sl)
 	instanaCountMetricsSpecValidation(sl)
-	honeycombCountMetricsSpecValidation(sl)
 }
 
 func reportCountMetricsSpecMessageForTotalMetric(sl v.StructLevel, countMetrics CountMetricsSpec) {
@@ -2927,53 +2926,6 @@ func bigQueryCountMetricsSpecValidation(sl v.StructLevel) {
 			"totalMetric.bigQuery.projectId", "",
 			"projectIdIsNotEqual", "",
 		)
-	}
-}
-
-func honeycombCountMetricsSpecValidation(sl v.StructLevel) {
-	countMetrics, ok := sl.Current().Interface().(CountMetricsSpec)
-	if !ok {
-		sl.ReportError(countMetrics, "", "", "structConversion", "")
-		return
-	}
-
-	total := countMetrics.TotalMetric
-	good := countMetrics.GoodMetric
-	bad := countMetrics.BadMetric
-
-	if total == nil {
-		return
-	}
-	if total.Honeycomb == nil {
-		return
-	}
-	if good != nil && good.Honeycomb != nil {
-		if good.Honeycomb.Dataset != total.Honeycomb.Dataset {
-			sl.ReportError(
-				countMetrics.GoodMetric.Honeycomb.Dataset,
-				"goodMetric.honeycomb.dataset", "",
-				"datasetIsNotEqual", "",
-			)
-			sl.ReportError(
-				countMetrics.TotalMetric.Honeycomb.Dataset,
-				"totalMetric.honeycomb.dataset", "",
-				"datasetIsNotEqual", "",
-			)
-		}
-	}
-	if bad != nil && bad.Honeycomb != nil {
-		if bad.Honeycomb.Dataset != total.Honeycomb.Dataset {
-			sl.ReportError(
-				countMetrics.BadMetric.Honeycomb.Dataset,
-				"badMetric.honeycomb.dataset", "",
-				"datasetIsNotEqual", "",
-			)
-			sl.ReportError(
-				countMetrics.TotalMetric.Honeycomb.Dataset,
-				"totalMetric.honeycomb.dataset", "",
-				"datasetIsNotEqual", "",
-			)
-		}
 	}
 }
 
