@@ -14,7 +14,7 @@ func TestAmazonPrometheus(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AmazonPrometheus)
 		err := validate(slo)
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AmazonPrometheus)

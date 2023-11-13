@@ -19,7 +19,7 @@ func TestPropertyRules(t *testing.T) {
 			WithName("test.path").
 			Rules(NewSingleRule(func(v string) error { return nil }))
 		err := r.Validate(mockStruct{})
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 
 	t.Run("no predicates, validate", func(t *testing.T) {
@@ -44,7 +44,7 @@ func TestPropertyRules(t *testing.T) {
 			When(func(st mockStruct) bool { return st.Field == "" }).
 			Rules(NewSingleRule(func(v string) error { return errors.New("ops!") }))
 		err := r.Validate(mockStruct{Field: "something"})
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 
 	t.Run("multiple rules", func(t *testing.T) {
@@ -169,11 +169,11 @@ func TestRequiredAndOmitempty(t *testing.T) {
 
 		t.Run("implicit omitempty", func(t *testing.T) {
 			err := rules.Validate(nil)
-			assert.Empty(t, err)
+			assert.Nil(t, err)
 		})
 		t.Run("explicit omitempty", func(t *testing.T) {
 			err := rules.Omitempty().Validate(nil)
-			assert.Empty(t, err)
+			assert.Nil(t, err)
 		})
 		t.Run("required", func(t *testing.T) {
 			errs := rules.Required().Validate(nil)

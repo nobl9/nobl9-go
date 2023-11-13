@@ -14,7 +14,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.BigQuery)
 		err := validate(slo)
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 	t.Run("projectId must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.BigQuery)

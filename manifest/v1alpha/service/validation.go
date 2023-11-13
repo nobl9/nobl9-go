@@ -13,6 +13,6 @@ var serviceValidation = validation.New[Service](
 	v1alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
 )
 
-func validate(s Service) error {
+func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(serviceValidation, s)
 }

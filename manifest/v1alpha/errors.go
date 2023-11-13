@@ -8,14 +8,14 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-func ValidateObject[T manifest.Object](validator validation.Validator[T], s T) error {
+func ValidateObject[T manifest.Object](validator validation.Validator[T], s T) *ObjectError {
 	if err := validator.Validate(s); err != nil {
 		return NewObjectError(s, err)
 	}
 	return nil
 }
 
-func NewObjectError(object manifest.Object, err *validation.ValidatorError) error {
+func NewObjectError(object manifest.Object, err *validation.ValidatorError) *ObjectError {
 	oErr := &ObjectError{
 		Object: ObjectMetadata{
 			Kind: object.GetKind(),

@@ -12,6 +12,6 @@ var projectValidation = validation.New[Project](
 	v1alpha.FieldRuleSpecDescription(func(p Project) string { return p.Spec.Description }),
 )
 
-func validate(p Project) error {
+func validate(p Project) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(projectValidation, p)
 }

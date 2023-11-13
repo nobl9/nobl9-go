@@ -16,7 +16,7 @@ func TestSingleRule(t *testing.T) {
 	})
 
 	err := r.Validate(0)
-	assert.Empty(t, err)
+	assert.Nil(t, err)
 	err = r.Validate(-1)
 	assert.EqualError(t, err, "must be positive")
 }
@@ -30,7 +30,7 @@ func TestSingleRule_WithErrorCode(t *testing.T) {
 	}).WithErrorCode(ErrorCode("test"))
 
 	err := r.Validate(0)
-	assert.Empty(t, err)
+	assert.Nil(t, err)
 	err = r.Validate(-1)
 	assert.EqualError(t, err, "must be positive")
 	assert.Equal(t, "test", err.(*RuleError).Code)
@@ -68,7 +68,7 @@ func TestSingleRule_WithDetails(t *testing.T) {
 			WithDetails(test.Details)
 
 		err := r.Validate(0)
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 		err = r.Validate(-1)
 		assert.EqualError(t, err, test.ExpectedError)
 		assert.Equal(t, "test", err.(*RuleError).Code)

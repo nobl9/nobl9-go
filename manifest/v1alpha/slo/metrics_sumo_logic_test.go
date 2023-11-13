@@ -133,7 +133,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.SumoLogic)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Rollup = ptr(rollup)
 			err := validate(slo)
-			assert.Empty(t, err)
+			assert.Nil(t, err)
 		}
 	})
 	t.Run("invalid rollup", func(t *testing.T) {

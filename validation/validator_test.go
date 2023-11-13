@@ -16,7 +16,7 @@ func TestValidator(t *testing.T) {
 				Rules(NewSingleRule(func(v string) error { return nil })),
 		)
 		errs := r.Validate(mockValidatorStruct{})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("errors", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestValidatorWhen(t *testing.T) {
 			When(func(validatorStruct mockValidatorStruct) bool { return false })
 
 		errs := r.Validate(mockValidatorStruct{})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 	t.Run("when condition is met, validate", func(t *testing.T) {
 		r := New[mockValidatorStruct](

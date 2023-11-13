@@ -25,7 +25,10 @@ func (s SLO) GetName() string {
 }
 
 func (s SLO) Validate() error {
-	return validate(s)
+	if err := validate(s); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s SLO) GetProject() string {

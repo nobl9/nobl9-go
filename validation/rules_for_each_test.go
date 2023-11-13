@@ -18,7 +18,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return nil }))
 		errs := r.Validate(mockStruct{})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("no predicates, validate", func(t *testing.T) {
@@ -43,7 +43,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 			When(func(st mockStruct) bool { return len(st.Fields) == 0 }).
 			RulesForEach(NewSingleRule(func(v string) error { return errors.New("ops!") }))
 		errs := r.Validate(mockStruct{Fields: []string{"something"}})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("multiple rules and for each rules", func(t *testing.T) {

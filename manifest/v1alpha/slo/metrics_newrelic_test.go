@@ -14,7 +14,7 @@ func TestNewRelic(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.NewRelic)
 		err := validate(slo)
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.NewRelic)
@@ -92,7 +92,7 @@ uNtIL LIMIT MAX TIMESERIES`,
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.NewRelic.NRQL = ptr(test.query)
 			err := validate(slo)
 			if test.isValid {
-				assert.Empty(t, err)
+				assert.Nil(t, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",

@@ -15,7 +15,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Redshift)
 		err := validate(slo)
-		assert.Empty(t, err)
+		assert.Nil(t, err)
 	})
 	t.Run("region must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Redshift)

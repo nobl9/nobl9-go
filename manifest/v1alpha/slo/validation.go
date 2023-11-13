@@ -216,7 +216,7 @@ var objectiveBaseValidation = validation.New[ObjectiveBase](
 		Required(),
 )
 
-func validate(s SLO) error {
+func validate(s SLO) *v1alpha.ObjectError {
 	if s.Spec.AnomalyConfig != nil && s.Spec.AnomalyConfig.NoData != nil {
 		for i := range s.Spec.AnomalyConfig.NoData.AlertMethods {
 			if s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project == "" {

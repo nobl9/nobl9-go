@@ -52,7 +52,7 @@ func TestPingdom_RawMetricLevel(t *testing.T) {
 	t.Run("valid checkType", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Pingdom)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
-		assert.NoError(t, validate(slo))
+		assert.Nil(t, validate(slo))
 	})
 	t.Run("invalid checkType", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Pingdom)
@@ -143,7 +143,7 @@ func TestPingdom_CheckTypeUptime(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = ptr(status)
 			err := validate(slo)
-			assert.Empty(t, err)
+			assert.Nil(t, err)
 		}
 	})
 	t.Run("invalid status", func(t *testing.T) {
