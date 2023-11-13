@@ -80,7 +80,6 @@ type Client struct {
 
 	credentials *credentials
 	userAgent   string
-	dryRun      bool
 }
 
 // DefaultClient returns fully configured instance of Client with default Config and HTTP client.
@@ -202,13 +201,13 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(ctx context.Context, objects []manifest.Object) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiApply)
+func (c *Client) ApplyObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiDelete)
+func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
 }
 
 // applyOrDeleteObjects applies or deletes list of objects
@@ -217,6 +216,7 @@ func (c *Client) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
 	apiMode string,
+	dryRun bool,
 ) error {
 	var err error
 	objects, err = c.setOrganizationForObjects(ctx, objects)
@@ -235,7 +235,7 @@ func (c *Client) applyOrDeleteObjects(
 	case apiDelete:
 		method = http.MethodDelete
 	}
-	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(c.dryRun)}}
+	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
 	req, err := c.CreateRequest(ctx, method, apiMode, "", q, buf)
 	if err != nil {
 		return err
@@ -344,12 +344,6 @@ func (c *Client) GetAgentCredentials(
 		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
-}
-
-// WithDryRun configures the Client to run all supported state changing operations in dry-run mode.
-func (c *Client) WithDryRun() *Client {
-	c.dryRun = true
-	return c
 }
 
 // CreateRequest creates a new http.Request pointing at the Nobl9 API URL.

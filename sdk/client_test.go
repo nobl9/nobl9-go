@@ -180,8 +180,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	client.WithDryRun()
-	err := client.ApplyObjects(context.Background(), requestPayload)
+	err := client.ApplyObjects(context.Background(), requestPayload, true)
 	// Verify response handling.
 	require.NoError(t, err)
 }
@@ -221,8 +220,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	client.WithDryRun()
-	err := client.DeleteObjects(context.Background(), requestPayload)
+	err := client.DeleteObjects(context.Background(), requestPayload, true)
 	// Verify response handling.
 	require.NoError(t, err)
 }
