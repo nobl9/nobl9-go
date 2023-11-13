@@ -385,7 +385,6 @@ func (c *Client) CreateRequest(
 		return nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, method, apiURL.JoinPath(endpoint).String(), body)
-	fmt.Println(apiURL.JoinPath(endpoint).String())
 	if err != nil {
 		return nil, err
 	}
