@@ -228,7 +228,7 @@ type Duration struct {
 }
 
 func (d Duration) String() string {
-	return fmt.Sprintf("%d%s", d.Value, formatTimeUnit(d.Unit))
+	return fmt.Sprintf("%d%s", d.Value, d.Unit.Format())
 }
 
 func (d Duration) LesserThan(b Duration) bool {
@@ -304,21 +304,6 @@ func QueryIntervalDurationUnitFromString(unit string) (twindow.TimeUnitEnum, err
 		return twindow.Second, nil
 	}
 	return twindow.Second, errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
-}
-
-func formatTimeUnit(unit twindow.TimeUnitEnum) string {
-	switch unit {
-	case twindow.Second:
-		return "s"
-	case twindow.Minute:
-		return "m"
-	case twindow.Hour:
-		return "h"
-	case twindow.Day:
-		return "d"
-	default:
-		return "UNDEFINED"
-	}
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{

@@ -431,6 +431,25 @@ func (tu TimeUnitEnum) String() string {
 	return "UNKNOWN"
 }
 
+func (tu TimeUnitEnum) Format() string {
+	switch tu {
+	case Second:
+		return "s"
+	case Minute:
+		return "m"
+	case Hour:
+		return "h"
+	case Day:
+		return "d"
+	case Quarter:
+		return "q"
+	case Year:
+		return "y"
+	default:
+		return "UNKNOWN"
+	}
+}
+
 // MustParseTimeUnit parses passed time unit
 func MustParseTimeUnit(timeUnit string) TimeUnitEnum {
 	result, ok := timeUnits[timeUnit]

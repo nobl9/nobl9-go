@@ -1613,8 +1613,9 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 		return
 	}
 	if sa.QueryDelay != nil {
+		queryDelay := Duration(sa.QueryDelay.QueryDelayDuration)
 		agentDefault := GetQueryDelayDefaults()[at.String()]
-		if Duration(sa.QueryDelay.QueryDelayDuration).LesserThan(agentDefault) {
+		if queryDelay.LesserThan(agentDefault) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -1623,7 +1624,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if IsBiggerThanMaxQueryDelayDuration(Duration(sa.QueryDelay.QueryDelayDuration)) {
+		if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
 			sl.ReportError(
 				sa,
 				"QueryDelayDuration",
@@ -2026,8 +2027,9 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 	}
 
 	if sd.QueryDelay != nil {
+		queryDelay := Duration(sd.QueryDelay.QueryDelayDuration)
 		directDefault := GetQueryDelayDefaults()[dt]
-		if Duration(sd.QueryDelay.QueryDelayDuration).LesserThan(directDefault) {
+		if queryDelay.LesserThan(directDefault) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
@@ -2036,7 +2038,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 				"",
 			)
 		}
-		if IsBiggerThanMaxQueryDelayDuration(Duration(sd.QueryDelay.QueryDelayDuration)) {
+		if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
 			sl.ReportError(
 				sd,
 				"QueryDelayDuration",
