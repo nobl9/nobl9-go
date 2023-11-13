@@ -297,7 +297,7 @@ func (c *Client) GetAWSIAMRoleAuthenticationConnectionDataForDirect(ctx context.
 	v1alpha.AwsIAMRoleAuthExternalIDs,
 	error,
 ) {
-	getUrl := url.PathEscape(fmt.Sprintf("data-sources/iam-role-auth-data/%s", directName))
+	getUrl := fmt.Sprintf("data-sources/iam-role-auth-data/%s", directName)
 	req, err := c.CreateRequest(ctx, http.MethodGet, getUrl, "", nil, nil)
 	if err != nil {
 		return v1alpha.AwsIAMRoleAuthExternalIDs{}, err
@@ -385,6 +385,7 @@ func (c *Client) CreateRequest(
 		return nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, method, apiURL.JoinPath(endpoint).String(), body)
+	fmt.Println(apiURL.JoinPath(endpoint).String())
 	if err != nil {
 		return nil, err
 	}
