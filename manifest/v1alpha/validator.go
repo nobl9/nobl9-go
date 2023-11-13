@@ -3467,7 +3467,7 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
 	value := fl.Field().String()
 	switch value {
-	case "COUNT", "CONCURRENCY", "SUM", "AVG", "COUNT_DISTINCT", "MAX", "MIN",
+	case "COUNT", "SUM", "AVG", "COUNT_DISTINCT", "MAX", "MIN",
 		"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
 		"RATE_AVG", "RATE_SUM", "RATE_MAX":
 		return true
