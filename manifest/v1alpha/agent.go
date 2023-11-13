@@ -57,6 +57,7 @@ type AgentSpec struct {
 	AzureMonitor            *AzureMonitorAgentConfig        `json:"azureMonitor,omitempty"`
 	GCM                     *GCMAgentConfig                 `json:"gcm,omitempty"`
 	Generic                 *GenericAgentConfig             `json:"generic,omitempty"`
+	Honeycomb               *HoneycombAgentConfig           `json:"honeycomb,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval        `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                     `json:"queryDelay,omitempty"`
 }
@@ -111,6 +112,8 @@ func (spec AgentSpec) GetType() (DataSourceType, error) {
 		return AzureMonitor, nil
 	case spec.Generic != nil:
 		return Generic, nil
+	case spec.Honeycomb != nil:
+		return Honeycomb, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -242,4 +245,9 @@ type AzureMonitorAgentConfig struct {
 
 // GenericAgentConfig represents content of Generic Configuration typical for Agent Object.
 type GenericAgentConfig struct {
+}
+
+// HoneycombAgentConfig represents content of Honeycomb Configuration typical for Agent Object.
+type HoneycombAgentConfig struct {
+	// Honeycomb agent doesn't require any additional parameters.
 }

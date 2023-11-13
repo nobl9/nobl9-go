@@ -551,6 +551,9 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 	if sa.Generic != nil {
 		agentTypesCount++
 	}
+	if sa.Honeycomb != nil {
+		agentTypesCount++
+	}
 	if agentTypesCount != expectedNumberOfAgentTypes {
 		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
@@ -576,6 +579,7 @@ func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
 		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneAgentTypeRequired", "")
 	}
 }
 
@@ -645,6 +649,9 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 	if sa.AzureMonitor != nil {
 		directTypesCount++
 	}
+	if sa.Honeycomb != nil {
+		directTypesCount++
+	}
 	if directTypesCount != expectedNumberOfDirectTypes {
 		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "newrelic", "NewRelic", "exactlyOneDirectTypeRequired", "")
@@ -663,6 +670,7 @@ func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneDirectTypeRequired", "")
 		sl.ReportError(sa, "azureMonitor", "AzureMonitor", "exactlyOneDirectTypeRequired", "")
+		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneDirectTypeRequired", "")
 	}
 }
 
