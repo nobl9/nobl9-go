@@ -270,14 +270,6 @@ func (qid QueryIntervalDuration) IsValid() bool {
 	return qid.Unit == twindow.Minute || qid.Unit == twindow.Second
 }
 
-type CollectionJitterDuration Duration
-
-type TimeoutDuration Duration
-
-func (td TimeoutDuration) IsValid() bool {
-	return td.Unit == twindow.Second
-}
-
 // NewDuration is a helper for more concise creating of Durations.
 func NewDuration(value int, unit twindow.TimeUnitEnum) Duration {
 	return Duration{
