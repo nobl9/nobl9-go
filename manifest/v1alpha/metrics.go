@@ -269,7 +269,7 @@ type HoneycombMetric struct {
 // HoneycombFilter represents filter for Honeycomb metric. It has custom struct validation.
 type HoneycombFilter struct {
 	Operator   string                     `json:"op" validate:"max=30,ascii"`
-	Conditions []HoneycombFilterCondition `json:"conditions" validate:"gte=0,lte=100,dive"`
+	Conditions []HoneycombFilterCondition `json:"conditions" validate:"max=100,dive"`
 }
 
 // HoneycombFilterCondition represents single condition for Honeycomb filter.
