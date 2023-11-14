@@ -21,13 +21,11 @@ func newObjectError(object manifest.Object, err *validation.ValidatorError) *Obj
 	}
 	oErr := &ObjectError{
 		Object: ObjectMetadata{
-			Kind: object.GetKind(),
-			Name: object.GetName(),
+			Kind:   object.GetKind(),
+			Name:   object.GetName(),
+			Source: object.GetManifestSource(),
 		},
 		Errors: err.Errors,
-	}
-	if v, ok := object.(ObjectContext); ok {
-		oErr.Object.Source = v.GetManifestSource()
 	}
 	if v, ok := object.(manifest.ProjectScopedObject); ok {
 		oErr.Object.IsProjectScoped = true

@@ -2,11 +2,15 @@
 
 package service
 
-import "github.com/nobl9/nobl9-go/manifest"
+import (
+	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+)
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Service{}
 var _ manifest.ProjectScopedObject = Service{}
+var _ v1alpha.ObjectContext = Service{}
 
 func (s Service) GetVersion() string {
 	return s.APIVersion
@@ -27,6 +31,15 @@ func (s Service) Validate() error {
 	return nil
 }
 
+func (s Service) GetManifestSource() string {
+	return s.ManifestSource
+}
+
+func (s Service) SetManifestSource(src string) manifest.Object {
+	s.ManifestSource = src
+	return s
+}
+
 func (s Service) GetProject() string {
 	return s.Metadata.Project
 }
@@ -42,14 +55,5 @@ func (s Service) GetOrganization() string {
 
 func (s Service) SetOrganization(org string) manifest.Object {
 	s.Organization = org
-	return s
-}
-
-func (s Service) GetManifestSource() string {
-	return s.ManifestSource
-}
-
-func (s Service) SetManifestSource(src string) manifest.Object {
-	s.ManifestSource = src
 	return s
 }
