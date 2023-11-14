@@ -137,6 +137,14 @@ func HasErrorCode(err error, code ErrorCode) bool {
 	return false
 }
 
+var newLineReplacer = strings.NewReplacer("\n", "\\n", "\r", "\\r")
+
+// propertyValueString returns the string representation of the given value.
+// Structs, interfaces, maps and slices are converted to compacted JSON strings.
+// It tries to improve readability by:
+// - limiting the string to 100 characters
+// - removing leading and trailing whitespaces
+// - escaping newlines
 func propertyValueString(v interface{}) string {
 	if v == nil {
 		return ""
@@ -151,11 +159,14 @@ func propertyValueString(v interface{}) string {
 			s = string(raw)
 		}
 	case reflect.Invalid:
-		s = ""
+		return ""
 	default:
 		s = fmt.Sprint(ft.Interface())
 	}
-	return limitString(s, 100)
+	s = limitString(s, 100)
+	s = strings.TrimSpace(s)
+	s = newLineReplacer.Replace(s)
+	return s
 }
 
 // ruleSetError is a container for transferring multiple errors reported by RuleSet.

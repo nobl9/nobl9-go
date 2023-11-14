@@ -79,6 +79,21 @@ func TestNewPropertyError(t *testing.T) {
 			InputValue:    nil,
 			ExpectedValue: "",
 		},
+		"blank lines": {
+			InputValue:    ` 		SELECT value FROM my-table WHERE value = "abc"    `,
+			ExpectedValue: `SELECT value FROM my-table WHERE value = "abc"`,
+		},
+		"multiline": {
+			InputValue: `
+SELECT value FROM
+my-table WHERE value = "abc"
+`,
+			ExpectedValue: "SELECT value FROM\\nmy-table WHERE value = \"abc\"",
+		},
+		"carriage return": {
+			InputValue:    "return\rcarriage",
+			ExpectedValue: "return\\rcarriage",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			err := NewPropertyError(
