@@ -24,20 +24,20 @@ func (r RoleBinding) Validate() error {
 	return validator.Check(r)
 }
 
-func (r RoleBinding) GetOrganization() string {
-	return r.Organization
-}
-
-func (r RoleBinding) SetOrganization(org string) manifest.Object {
-	r.Organization = org
-	return r
-}
-
 func (r RoleBinding) GetManifestSource() string {
 	return r.ManifestSource
 }
 
 func (r RoleBinding) SetManifestSource(src string) manifest.Object {
 	r.ManifestSource = src
+	return r
+}
+
+func (r RoleBinding) GetOrganization() string {
+	return r.Organization
+}
+
+func (r RoleBinding) SetOrganization(org string) manifest.Object {
+	r.Organization = org
 	return r
 }

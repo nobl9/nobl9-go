@@ -32,7 +32,7 @@ func ExampleService() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{myService}, false); err != nil {
+	if err := client.ApplyObjects(context.Background(), []manifest.Object{myService}); err != nil {
 		log.Fatal("failed to apply service, err: %w", err)
 	}
 	// Output:

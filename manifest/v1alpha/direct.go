@@ -30,6 +30,8 @@ type PublicDirect struct {
 	Metadata   DirectMetadata   `json:"metadata"`
 	Spec       PublicDirectSpec `json:"spec"`
 	Status     *DirectStatus    `json:"status,omitempty"`
+
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 type DirectMetadata struct {
