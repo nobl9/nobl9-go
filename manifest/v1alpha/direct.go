@@ -429,8 +429,8 @@ type PublicDirectWithSLOs struct {
 	SLOs   []SLO        `json:"slos"`
 }
 
-// AwsIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
-type AwsIAMRoleAuthExternalIDs struct {
+// AWSIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
+type AWSIAMRoleAuthExternalIDs struct {
 	ExternalID string `json:"externalID"`
 	AccountID  string `json:"accountID"`
 }
