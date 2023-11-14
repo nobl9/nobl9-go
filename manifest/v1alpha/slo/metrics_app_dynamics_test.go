@@ -47,7 +47,7 @@ func TestValidate_AppDynamics_Valid(t *testing.T) {
 		}(),
 	} {
 		err := validate(slo)
-		assert.Nil(t, err)
+		testutils.AssertNoErrors(t, slo, err)
 	}
 }
 
@@ -136,12 +136,14 @@ func TestValidate_AppDynamics_MetricPathRegex(t *testing.T) {
 		{isValid: false, metricPath: "App| *p |Latency"},
 		{isValid: false, metricPath: "App|Latency|p*"},
 	} {
-		err := appDynamicsValidation.Validate(AppDynamicsMetric{
+		slo := validRawMetricSLO(v1alpha.AppDynamics)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AppDynamics = &AppDynamicsMetric{
 			ApplicationName: ptr("name"),
 			MetricPath:      ptr(test.metricPath),
-		})
+		}
+		err := validate(slo)
 		if test.isValid {
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		} else {
 			assert.Error(t, err)
 		}

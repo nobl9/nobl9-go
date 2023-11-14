@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -14,7 +12,7 @@ func TestInstana_CountMetrics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Instana)
 		err := validate(slo)
-		assert.Nil(t, err)
+		testutils.AssertNoErrors(t, slo, err)
 	})
 	t.Run("metricType must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Instana)
@@ -81,7 +79,7 @@ func TestInstana_RawMetrics(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Instana)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana = validInstanaApplicationMetric()
 		err := validate(slo)
-		assert.Nil(t, err)
+		testutils.AssertNoErrors(t, slo, err)
 	})
 	t.Run("both application and infrastructure provided", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Instana)
@@ -254,7 +252,7 @@ func TestInstana_Application(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.MetricID = metricID
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.Aggregation = aggregation
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("invalid metricId", func(t *testing.T) {
@@ -305,7 +303,7 @@ func TestInstana_Application(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana = validInstanaApplicationMetric()
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.GroupBy.TagEntity = tagEntity
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("invalid tagEntity", func(t *testing.T) {
@@ -361,7 +359,7 @@ func TestInstana_Application(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.Aggregation = test.Aggregation
 			err := validate(slo)
 			if test.IsValid {
-				assert.Nil(t, err)
+				testutils.AssertNoErrors(t, slo, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.instana.application",
@@ -377,7 +375,7 @@ func TestInstana_Application(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.MetricID = "latency"
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Instana.Application.Aggregation = agg
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("metricId - invalid latency", func(t *testing.T) {

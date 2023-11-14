@@ -73,6 +73,12 @@ var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(validation
 		WithName("checkType").
 		Required().
 		Rules(validation.OneOf(PingdomTypeUptime, PingdomTypeTransaction)),
+	validation.For(func(p PingdomMetric) *string { return p.Status }).
+		WithName("status").
+		When(func(metric PingdomMetric) bool {
+			return metric.CheckType != nil && *metric.CheckType == PingdomTypeUptime
+		}).
+		Rules(validation.Required[*string]()),
 ))
 
 var pingdomValidation = validation.New[PingdomMetric](
@@ -91,7 +97,6 @@ var pingdomValidation = validation.New[PingdomMetric](
 var pingdomUptimeCheckTypeValidation = validation.New[PingdomMetric](
 	validation.ForPointer(func(m PingdomMetric) *string { return m.Status }).
 		WithName("status").
-		Required().
 		Rules(validation.NewSingleRule(func(s string) error {
 			for _, status := range strings.Split(s, ",") {
 				if err := validation.OneOf(

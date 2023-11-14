@@ -22,8 +22,9 @@ type testRecorder struct {
 type recordedTest struct {
 	TestName    string          `json:"testName"`
 	Object      interface{}     `json:"object"`
-	ErrorsCount int             `json:"errorsCount"`
-	Errors      []ExpectedError `json:"errors"`
+	IsValid     bool            `json:"isValid"`
+	ErrorsCount int             `json:"errorsCount,omitempty"`
+	Errors      []ExpectedError `json:"errors,omitempty"`
 }
 
 func (r *testRecorder) Record(t *testing.T, object interface{}, errorsCount int, errors []ExpectedError) {
@@ -33,12 +34,16 @@ func (r *testRecorder) Record(t *testing.T, object interface{}, errorsCount int,
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if err := json.NewEncoder(r.output).Encode(recordedTest{
+	rt := recordedTest{
 		TestName:    t.Name(),
 		Object:      object,
 		ErrorsCount: errorsCount,
 		Errors:      errors,
-	}); err != nil {
+	}
+	if errorsCount == 0 {
+		rt.IsValid = true
+	}
+	if err := json.NewEncoder(r.output).Encode(rt); err != nil {
 		log.Err(err).Msg("failed to record test")
 	}
 }

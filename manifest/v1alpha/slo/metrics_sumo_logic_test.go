@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -133,7 +131,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.SumoLogic)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Rollup = ptr(rollup)
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("invalid rollup", func(t *testing.T) {

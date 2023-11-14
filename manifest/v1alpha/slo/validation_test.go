@@ -41,10 +41,10 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.BudgetingMethod = BudgetingMethodOccurrences.String()
-		assert.Nil(t, validate(slo))
+		testutils.AssertNoErrors(t, slo, validate(slo))
 		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
 		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.1)
-		assert.Nil(t, validate(slo))
+		testutils.AssertNoErrors(t, slo, validate(slo))
 	})
 	t.Run("empty method", func(t *testing.T) {
 		slo := validSLO()
@@ -71,7 +71,7 @@ func TestValidate_Spec_Service(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Service = "my-service"
 		err := validate(slo)
-		assert.Nil(t, err)
+		testutils.AssertNoErrors(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validSLO()
@@ -89,7 +89,7 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.AlertPolicies = []string{"my-policy"}
 		err := validate(slo)
-		assert.Nil(t, err)
+		testutils.AssertNoErrors(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validSLO()
@@ -112,7 +112,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.Attachments = attachments
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails, too many attachments", func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.Composite = composite
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
@@ -301,7 +301,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
@@ -408,7 +408,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.TimeWindows = tw
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
@@ -658,7 +658,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.Indicator = ind
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
@@ -739,7 +739,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 			slo := validSLO()
 			slo.Spec.Objectives = objectives
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
@@ -1009,7 +1009,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				BadMetric:   validMetricSpec(typ),
 			}
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("bad provided with good", func(t *testing.T) {

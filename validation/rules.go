@@ -1,9 +1,5 @@
 package validation
 
-import (
-	"reflect"
-)
-
 // For creates a typed PropertyRules instance for the property which access is defined through getter function.
 func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
 	return PropertyRules[T, S]{getter: func(s S) (v T, isEmpty bool) { return getter(s), false }}
@@ -143,10 +139,4 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 		slice = append(slice, step)
 	}
 	return slice
-}
-
-// isEmptyFunc checks only the types which it makes sense for.
-// It's hard to consider 0 an empty value for anything really.
-func isEmptyFunc(v interface{}) bool {
-	return reflect.ValueOf(v).IsZero()
 }

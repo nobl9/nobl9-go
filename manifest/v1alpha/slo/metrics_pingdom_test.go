@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -46,13 +44,31 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 			Code: validation.ErrorCodeEqualTo,
 		})
 	})
+	t.Run("required status", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.Pingdom)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Pingdom.CheckType = ptr(PingdomTypeUptime)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Pingdom.Status = nil
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Pingdom.CheckType = ptr(PingdomTypeUptime)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Pingdom.Status = nil
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.total.pingdom.status",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.good.pingdom.status",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
 }
 
 func TestPingdom_RawMetricLevel(t *testing.T) {
 	t.Run("valid checkType", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Pingdom)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
-		assert.Nil(t, validate(slo))
+		testutils.AssertNoErrors(t, slo, validate(slo))
 	})
 	t.Run("invalid checkType", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Pingdom)
@@ -63,6 +79,13 @@ func TestPingdom_RawMetricLevel(t *testing.T) {
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkType",
 			Code: validation.ErrorCodeEqualTo,
 		})
+	})
+	t.Run("omit empty status", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Pingdom)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = nil
+		err := validate(slo)
+		testutils.AssertNoErrors(t, slo, err)
 	})
 }
 
@@ -121,16 +144,6 @@ func TestPingdom_CheckTypeTransaction(t *testing.T) {
 }
 
 func TestPingdom_CheckTypeUptime(t *testing.T) {
-	t.Run("required status", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Pingdom)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = nil
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.status",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
 	t.Run("valid status", func(t *testing.T) {
 		for _, status := range []string{
 			pingdomStatusUp,
@@ -143,7 +156,7 @@ func TestPingdom_CheckTypeUptime(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = ptr(PingdomTypeUptime)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = ptr(status)
 			err := validate(slo)
-			assert.Nil(t, err)
+			testutils.AssertNoErrors(t, slo, err)
 		}
 	})
 	t.Run("invalid status", func(t *testing.T) {

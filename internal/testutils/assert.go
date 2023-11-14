@@ -18,19 +18,24 @@ type ExpectedError struct {
 	ContainsMessage string `json:"containsMessage,omitempty"`
 }
 
+func AssertNoErrors(t *testing.T, object interface{}, objErr *v1alpha.ObjectError) {
+	t.Helper()
+	rec.Record(t, object, 0, nil)
+
+	require.Nil(t, objErr, "ObjectError is expected to be nil")
+}
+
 func AssertContainsErrors(
 	t *testing.T,
 	object interface{},
-	err error,
+	objErr *v1alpha.ObjectError,
 	expectedErrorsCount int,
 	expectedErrors ...ExpectedError,
 ) {
 	t.Helper()
 	rec.Record(t, object, expectedErrorsCount, expectedErrors)
-	// Convert to ObjectError.
-	require.Error(t, err)
-	var objErr *v1alpha.ObjectError
-	require.ErrorAs(t, err, &objErr)
+
+	require.NotNil(t, objErr, "ObjectError is expected but got nil")
 	// Count errors.
 	actualErrorsCount := 0
 	for _, actual := range objErr.Errors {
@@ -41,7 +46,7 @@ func AssertContainsErrors(
 	require.Equalf(t,
 		expectedErrorsCount,
 		actualErrorsCount,
-		"%T contains a different number of errors than expected", err)
+		"%T contains a different number of errors than expected", objErr)
 	// Find and match expected errors.
 	for _, expected := range expectedErrors {
 		found := false
