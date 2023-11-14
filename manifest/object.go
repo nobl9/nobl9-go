@@ -19,6 +19,10 @@ type Object interface {
 	GetName() string
 	// Validate performs static validation of the Object.
 	Validate() error
+	// GetManifestSource returns the source of the Object's manifest.
+	GetManifestSource() string
+	// SetManifestSource sets the source of the Object's manifest.
+	SetManifestSource(src string) Object
 }
 
 // ProjectScopedObject an Object which is tied to a specific KindProject.

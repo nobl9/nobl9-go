@@ -154,19 +154,17 @@ type customObject struct {
 	validationError error
 }
 
-func (c customObject) GetVersion() string { return "" }
-
-func (c customObject) GetKind() Kind { return c.kind }
-
-func (c customObject) GetName() string { return c.name }
-
-func (c customObject) Validate() error { return c.validationError }
+func (c customObject) GetVersion() string              { return "" }
+func (c customObject) GetKind() Kind                   { return c.kind }
+func (c customObject) GetName() string                 { return c.name }
+func (c customObject) Validate() error                 { return c.validationError }
+func (c customObject) GetManifestSource() string       { return "" }
+func (c customObject) SetManifestSource(string) Object { return c }
 
 type customProjectScopedObject struct {
 	customObject
 	project string
 }
 
-func (c customProjectScopedObject) GetProject() string { return c.project }
-
+func (c customProjectScopedObject) GetProject() string               { return c.project }
 func (c customProjectScopedObject) SetProject(project string) Object { c.project = project; return c }
