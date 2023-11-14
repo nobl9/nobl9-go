@@ -78,7 +78,7 @@ func ExampleSLO() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{mySLO}, false); err != nil {
+	if err := client.ApplyObjects(context.Background(), []manifest.Object{mySLO}); err != nil {
 		log.Fatal("failed to apply slo, err: %w", err)
 	}
 	// Output:
