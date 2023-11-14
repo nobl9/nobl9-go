@@ -261,7 +261,7 @@ type GenericMetric struct {
 // HoneycombMetric represents metric from Honeycomb.
 type HoneycombMetric struct {
 	Dataset     string          `json:"dataset" validate:"required,max=255,ascii,notBlank"`
-	Calculation string          `json:"calculation" validate:"required,max=30,ascii,notBlank,supportedHoneycombCalculationType"`
+	Calculation string          `json:"calculation" validate:"required,max=30,ascii,notBlank,supportedHoneycombCalculationType"` //nolint:lll
 	Attribute   string          `json:"attribute" validate:"required,max=255,ascii,notBlank"`
 	Filter      HoneycombFilter `json:"filter"`
 }
