@@ -56,7 +56,7 @@ func (r *testRecorder) Init() {
 		}
 		r.shouldRecord = true
 		// #nosec G304
-		f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o600)
+		f, err := os.Create(path)
 		if err != nil {
 			panic(err)
 		}

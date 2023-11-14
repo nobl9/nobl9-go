@@ -34,10 +34,16 @@ define _print_check_step
 	printf -- '------\n%s...\n' "${1}"
 endef
 
-.PHONY: test
+.PHONY: test test/record
 ## Run all unit tests.
 test:
 	go test -race -cover ./...
+
+## Record tests and save them in ./bin/recorded-tests.json.
+test/record:
+	RECORD_FILE="$(abspath $(dir .))/$(BIN_DIR)/recorded-tests" ; \
+	NOBL9_SDK_TEST_RECORD_FILE="$$RECORD_FILE" go test ./... ; \
+	jq -s < "$$RECORD_FILE" > "$$RECORD_FILE.json"
 
 .PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/renovate check/format check/generate check/vulns
 ## Run all checks.
