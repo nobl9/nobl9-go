@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -1521,6 +1522,19 @@ func TestHoneycombValidation(t *testing.T) {
 		isValid bool
 	}{
 		{
+			desc: "Invalid Honeycomb Condition Count",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator:   "AND",
+					Conditions: createTooManyHoneycombConditions(),
+				},
+			},
+			isValid: false,
+		},
+		{
 			desc: "Valid HoneycombMetric",
 			input: HoneycombMetric{
 				Dataset:     "dataset1",
@@ -1592,4 +1606,15 @@ func TestHoneycombValidation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func createTooManyHoneycombConditions() []HoneycombFilterCondition {
+	tooManyHoneycombConditions := make([]HoneycombFilterCondition, 101)
+	for i := 0; i < 101; i++ {
+		tooManyHoneycombConditions[i] = HoneycombFilterCondition{
+			Attribute: fmt.Sprintf("attr%d", i),
+			Operator:  ">",
+		}
+	}
+	return tooManyHoneycombConditions
 }
