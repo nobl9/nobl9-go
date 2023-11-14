@@ -311,12 +311,13 @@ func (c *Client) GetAWSIAMRoleAuthenticationConnectionDataForDirect(ctx context.
 		return nil, err
 	}
 
-	var response *v1alpha.AWSIAMRoleAuthExternalIDs
-	if err = json.NewDecoder(resp.Body).Decode(response); err != nil {
-		return response, errors.Wrap(err, "failed to decode response body")
+	var response v1alpha.AWSIAMRoleAuthExternalIDs
+	fmt.Println(resp.Body)
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, errors.Wrap(err, "failed to decode response body")
 	}
 
-	return response, nil
+	return &response, nil
 }
 
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.

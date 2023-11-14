@@ -313,7 +313,7 @@ func TestClient_GetAWSIAMRoleAuthenticationConnectionDataForDirect(t *testing.T)
 	response, err := client.GetAWSIAMRoleAuthenticationConnectionDataForDirect(context.Background(), "test-direct-name")
 	// Verify response handling.
 	require.NoError(t, err)
-	assert.Equal(t, expectedData, response)
+	assert.Equal(t, expectedData, *response)
 }
 
 func TestClient_GetAgentCredentials(t *testing.T) {
