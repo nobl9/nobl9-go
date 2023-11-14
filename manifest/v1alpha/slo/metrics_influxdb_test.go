@@ -12,7 +12,7 @@ func TestInfluxDB(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.InfluxDB)
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.InfluxDB)
@@ -96,7 +96,7 @@ func TestInfluxDB_Query(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.InfluxDB.Query = ptr(tc.query)
 			err := validate(slo)
 			if tc.isValid {
-				testutils.AssertNoErrors(t, slo, err)
+				testutils.AssertNoError(t, slo, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.influxdb.query",

@@ -41,6 +41,8 @@ type PropertyRules[T, S any] struct {
 	isPointer bool
 }
 
+// Validate validates the property value using provided rules.
+// nolint: gocognit
 func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	var (
 		ruleErrors         []error

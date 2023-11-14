@@ -97,7 +97,7 @@ func TestAzureMonitor(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.AzureMonitor)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Aggregation = agg
 			err := validate(slo)
-			testutils.AssertNoErrors(t, slo, err)
+			testutils.AssertNoError(t, slo, err)
 		}
 	})
 	t.Run("invalid aggregations", func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("invalid fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
@@ -248,7 +248,7 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.ResourceID = tC.resourceID
 			err := validate(slo)
 			if tC.isValid {
-				testutils.AssertNoErrors(t, slo, err)
+				testutils.AssertNoError(t, slo, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",

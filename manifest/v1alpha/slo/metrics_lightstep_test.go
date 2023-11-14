@@ -56,7 +56,7 @@ func TestLightstep_RawMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Lightstep = metric
-			testutils.AssertNoErrors(t, slo, validate(slo))
+			testutils.AssertNoError(t, slo, validate(slo))
 		}
 	})
 	t.Run("invalid typeOfData", func(t *testing.T) {
@@ -95,7 +95,7 @@ func TestLightstep_TotalMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].CountMetrics.TotalMetric.Lightstep = metric
-			testutils.AssertNoErrors(t, slo, validate(slo))
+			testutils.AssertNoError(t, slo, validate(slo))
 		}
 	})
 	t.Run("invalid typeOfData", func(t *testing.T) {
@@ -139,7 +139,7 @@ func TestLightstep_GoodMetricLevel(t *testing.T) {
 			},
 		} {
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.Lightstep = metric
-			testutils.AssertNoErrors(t, slo, validate(slo))
+			testutils.AssertNoError(t, slo, validate(slo))
 		}
 	})
 	t.Run("invalid typeOfData", func(t *testing.T) {
@@ -178,7 +178,7 @@ func TestLightstepLatencyTypeOfData(t *testing.T) {
 			Percentile: ptr(99.99),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Lightstep)
@@ -249,7 +249,7 @@ func TestLightstepErrorRateTypeOfData(t *testing.T) {
 			StreamID:   ptr("123"),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Lightstep)
@@ -288,7 +288,7 @@ spans count | rate | group_by [], sum
 ) | join left/right * 100`),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Lightstep)
@@ -353,7 +353,7 @@ func TestLightstepGoodTotalTypeOfData(t *testing.T) {
 			StreamID:   ptr("123"),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Lightstep)

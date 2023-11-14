@@ -18,7 +18,7 @@ func TestCloudWatch(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("invalid configuration", func(t *testing.T) {
 		for name, metric := range map[string]*CloudWatchMetric{
@@ -86,7 +86,7 @@ func TestCloudWatchStandard(t *testing.T) {
 			AccountID: nil, // Optional
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -157,7 +157,7 @@ func TestCloudWatchStandard(t *testing.T) {
 				AccountID:  ptr("123456789012"),
 			}
 			err := validate(slo)
-			testutils.AssertNoErrors(t, slo, err)
+			testutils.AssertNoError(t, slo, err)
 		}
 	})
 	t.Run("invalid accountId", func(t *testing.T) {
@@ -187,7 +187,7 @@ func TestCloudWatchJSON(t *testing.T) {
 			JSON:   getCloudWatchJSON(t, "cloudwatch_valid_json"),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	tests := map[string]struct {
 		JSON            *string
@@ -256,7 +256,7 @@ func TestCloudWatchSQL(t *testing.T) {
 			SQL:    ptr("SELECT * FROM table"),
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("no empty", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -286,7 +286,7 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("slice too long", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)

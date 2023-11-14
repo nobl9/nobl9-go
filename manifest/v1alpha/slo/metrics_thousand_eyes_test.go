@@ -12,7 +12,7 @@ func TestThousandEyes(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.ThousandEyes)
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("forbidden for count metrics", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.ThousandEyes)
@@ -66,7 +66,7 @@ func TestThousandEyes(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.ThousandEyes)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.ThousandEyes.TestType = ptr(testType)
 			err := validate(slo)
-			testutils.AssertNoErrors(t, slo, err)
+			testutils.AssertNoError(t, slo, err)
 		}
 	})
 }

@@ -12,7 +12,7 @@ func TestElasticsearch(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Elasticsearch)
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Elasticsearch)

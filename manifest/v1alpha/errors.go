@@ -10,12 +10,15 @@ import (
 
 func ValidateObject[T manifest.Object](validator validation.Validator[T], s T) *ObjectError {
 	if err := validator.Validate(s); err != nil {
-		return NewObjectError(s, err)
+		return newObjectError(s, err)
 	}
 	return nil
 }
 
-func NewObjectError(object manifest.Object, err *validation.ValidatorError) *ObjectError {
+func newObjectError(object manifest.Object, err *validation.ValidatorError) *ObjectError {
+	if err == nil {
+		return nil
+	}
 	oErr := &ObjectError{
 		Object: ObjectMetadata{
 			Kind: object.GetKind(),

@@ -47,7 +47,7 @@ func TestValidate_AppDynamics_Valid(t *testing.T) {
 		}(),
 	} {
 		err := validate(slo)
-		testutils.AssertNoErrors(t, slo, err)
+		testutils.AssertNoError(t, slo, err)
 	}
 }
 
@@ -143,7 +143,7 @@ func TestValidate_AppDynamics_MetricPathRegex(t *testing.T) {
 		}
 		err := validate(slo)
 		if test.isValid {
-			testutils.AssertNoErrors(t, slo, err)
+			testutils.AssertNoError(t, slo, err)
 		} else {
 			assert.Error(t, err)
 		}
