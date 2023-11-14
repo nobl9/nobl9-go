@@ -276,7 +276,7 @@ type HoneycombFilter struct {
 type HoneycombFilterCondition struct {
 	Attribute string `json:"attribute" validate:"required,max=255,ascii,notBlank"`
 	Operator  string `json:"op" validate:"required,max=30,ascii,notBlank,supportedHoneycombFilterConditionOperator"`
-	Value     string `json:"value" validate:"max=255,ascii"`
+	Value     string `json:"value" validate:"ascii"`
 }
 
 func (slo *SLOSpec) containsIndicatorRawMetric() bool {
