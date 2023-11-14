@@ -288,7 +288,7 @@ func TestClient_GetAWSExternalID(t *testing.T) {
 }
 
 func TestClient_GetAWSIAMRoleAuthenticationConnectionDataForDirect(t *testing.T) {
-	expectedData := v1alpha.AwsIAMRoleAuthExternalIDs{
+	expectedData := v1alpha.AWSIAMRoleAuthExternalIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
 	}
