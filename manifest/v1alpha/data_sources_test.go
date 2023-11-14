@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 func TestHistoricalRetrievalDuration_durationInMinutes(t *testing.T) {
@@ -125,28 +124,28 @@ func TestQueryDelayValidation(t *testing.T) {
 		{
 			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Second},
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: Second},
 			},
 			Valid: true,
 		},
 		{
 			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Minute},
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: Minute},
 			},
 			Valid: true,
 		},
 		{
 			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Hour},
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: Hour},
 			},
 			Valid: false,
 		},
 		{
 			qd: QueryDelay{
 				MinimumAgentVersion: "0.69.0-beta04",
-				QueryDelayDuration:  QueryDelayDuration{Value: ptr(5), Unit: twindow.Day},
+				QueryDelayDuration:  QueryDelayDuration{Value: ptr(24), Unit: Hour},
 			},
 			Valid: false,
 		},
@@ -181,7 +180,7 @@ func TestGetTimeDurationAndDurationFromDuration(t *testing.T) {
 		{
 			duration: Duration{
 				Value: ptr(60),
-				Unit:  twindow.Second,
+				Unit:  Second,
 			},
 			expectStr:      "60s",
 			expectDuration: time.Second * 60,
@@ -189,7 +188,7 @@ func TestGetTimeDurationAndDurationFromDuration(t *testing.T) {
 		{
 			duration: Duration{
 				Value: ptr(5),
-				Unit:  twindow.Minute,
+				Unit:  Minute,
 			},
 			expectStr:      "5m",
 			expectDuration: time.Minute * 5,
@@ -197,7 +196,7 @@ func TestGetTimeDurationAndDurationFromDuration(t *testing.T) {
 		{
 			duration: Duration{
 				Value: ptr(1000),
-				Unit:  twindow.Minute,
+				Unit:  Minute,
 			},
 			expectStr:      "1000m",
 			expectDuration: time.Minute * 1000,

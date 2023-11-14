@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 type DataSourceType int
@@ -57,7 +57,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	QueryDelayDuration  QueryDelayDuration
+	QueryDelayDuration
 }
 
 type SourceOf int
@@ -160,7 +160,7 @@ const (
 
 const (
 	maxQueryDelayDuration     = 1440
-	maxQueryDelayDurationUnit = twindow.Minute
+	maxQueryDelayDurationUnit = Minute
 	secondAlias               = "S"
 	minuteAlias               = "M"
 )
@@ -223,15 +223,47 @@ func (d HistoricalRetrievalDuration) duration() time.Duration {
 }
 
 type Duration struct {
-	Value *int                 `json:"value" validate:"required,min=0,max=86400"`
-	Unit  twindow.TimeUnitEnum `json:"unit" validate:"required"`
+	Value *int         `json:"value" validate:"required,min=0,max=86400"`
+	Unit  DurationUnit `json:"unit" validate:"required"`
+}
+
+type DurationUnit string
+
+const (
+	Second DurationUnit = "Second"
+	Minute DurationUnit = "Minute"
+	Hour   DurationUnit = "Hour"
+)
+
+func (d DurationUnit) Duration() time.Duration {
+	switch d {
+	case Second:
+		return time.Second
+	case Minute:
+		return time.Minute
+	case Hour:
+		return time.Hour
+	}
+	return time.Duration(0)
+}
+
+func (d DurationUnit) String() string {
+	switch d {
+	case Second, "":
+		return "s"
+	case Minute:
+		return "m"
+	case Hour:
+		return "h"
+	}
+	return string(d)
 }
 
 func (d Duration) String() string {
 	if d.IsZero() {
-		return fmt.Sprintf("%d%s", 0, twindow.Second.Format())
+		return fmt.Sprintf("%d%s", 0, d.Unit)
 	}
-	return fmt.Sprintf("%d%s", *d.Value, d.Unit.Format())
+	return fmt.Sprintf("%d%s", *d.Value, d.Unit)
 }
 
 func (d Duration) LesserThan(b Duration) bool {
@@ -264,41 +296,23 @@ func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 type QueryDelayDuration Duration
 
 func (qdd QueryDelayDuration) IsValid() bool {
-	return qdd.Unit == twindow.Second || qdd.Unit == twindow.Minute
+	return qdd.Unit == Second || qdd.Unit == Minute
 }
 
 type QueryIntervalDuration Duration
 
 func (qid QueryIntervalDuration) IsValid() bool {
-	return qid.Unit == twindow.Minute || qid.Unit == twindow.Second
+	return qid.Unit == Minute || qid.Unit == Second
 }
 
-// NewDuration is a helper for more concise creating of Durations.
-func NewDuration(value int, unit twindow.TimeUnitEnum) Duration {
-	return Duration{
-		Value: &value,
-		Unit:  unit,
-	}
-}
-
-func QueryDelayDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
+func DurationUnitFromString(unit string) (DurationUnit, error) {
 	switch cases.Title(language.Und).String(unit) {
 	case twindow.Minute.String(), minuteAlias:
-		return twindow.Minute, nil
+		return Minute, nil
 	case twindow.Second.String(), secondAlias:
-		return twindow.Second, nil
+		return Second, nil
 	}
-	return twindow.Second, errors.Errorf("'%s' is not a valid QueryDelayDurationUnit", unit)
-}
-
-func QueryIntervalDurationUnitFromString(unit string) (twindow.TimeUnitEnum, error) {
-	switch cases.Title(language.Und).String(unit) {
-	case twindow.Minute.String(), minuteAlias:
-		return twindow.Minute, nil
-	case twindow.Second.String(), secondAlias:
-		return twindow.Second, nil
-	}
-	return twindow.Second, errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
+	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -361,103 +375,103 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 	return QueryDelayDefaults{
 		AmazonPrometheus.String(): {
 			Value: ptr(0),
-			Unit:  twindow.Second,
+			Unit:  Second,
 		},
 		Prometheus.String(): {
 			Value: ptr(0),
-			Unit:  twindow.Second,
+			Unit:  Second,
 		},
 		AppDynamics.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		BigQuery.String(): {
 			Value: ptr(0),
-			Unit:  twindow.Second,
+			Unit:  Second,
 		},
 		CloudWatch.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Datadog.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Dynatrace.String(): {
 			Value: ptr(2),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Elasticsearch.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		GCM.String(): {
 			Value: ptr(2),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		GrafanaLoki.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Graphite.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		InfluxDB.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Instana.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Lightstep.String(): {
 			Value: ptr(2),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		NewRelic.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		OpenTSDB.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Pingdom.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Redshift.String(): {
 			Value: ptr(30),
-			Unit:  twindow.Second,
+			Unit:  Second,
 		},
 		Splunk.String(): {
 			Value: ptr(5),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		SplunkObservability.String(): {
 			Value: ptr(5),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		SumoLogic.String(): {
 			Value: ptr(4),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		ThousandEyes.String(): {
 			Value: ptr(1),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		AzureMonitor.String(): {
 			Value: ptr(5),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 		Generic.String(): {
 			Value: ptr(0),
-			Unit:  twindow.Second,
+			Unit:  Second,
 		},
 		Honeycomb.String(): {
 			Value: ptr(5),
-			Unit:  twindow.Minute,
+			Unit:  Minute,
 		},
 	}
 }
