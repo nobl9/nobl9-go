@@ -166,3 +166,47 @@ func TestQueryDelayValidation(t *testing.T) {
 			})
 	}
 }
+
+func TestGetTimeDurationAndDurationFromDuration(t *testing.T) {
+	for _, tc := range []struct {
+		duration       Duration
+		expectStr      string
+		expectDuration time.Duration
+	}{
+		{
+			duration:       Duration{},
+			expectStr:      "0s",
+			expectDuration: time.Second * 0,
+		},
+		{
+			duration: Duration{
+				Value: ptr(60),
+				Unit:  twindow.Second,
+			},
+			expectStr:      "60s",
+			expectDuration: time.Second * 60,
+		},
+		{
+			duration: Duration{
+				Value: ptr(5),
+				Unit:  twindow.Minute,
+			},
+			expectStr:      "5m",
+			expectDuration: time.Minute * 5,
+		},
+		{
+			duration: Duration{
+				Value: ptr(1000),
+				Unit:  twindow.Minute,
+			},
+			expectStr:      "1000m",
+			expectDuration: time.Minute * 1000,
+		},
+	} {
+		t.Run(fmt.Sprintf("%v should be represented as %s and %s", tc.duration, tc.expectStr, tc.expectDuration),
+			func(t *testing.T) {
+				assert.Equal(t, tc.expectStr, tc.duration.String())
+				assert.Equal(t, tc.expectDuration, tc.duration.Duration())
+			})
+	}
+}

@@ -228,7 +228,10 @@ type Duration struct {
 }
 
 func (d Duration) String() string {
-	return fmt.Sprintf("%d%s", d.Value, d.Unit.Format())
+	if d.IsZero() {
+		return fmt.Sprintf("%d%s", 0, twindow.Second.Format())
+	}
+	return fmt.Sprintf("%d%s", *d.Value, d.Unit.Format())
 }
 
 func (d Duration) LesserThan(b Duration) bool {
@@ -342,11 +345,11 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (Historica
 type QueryDelayDefaults map[string]Duration
 
 func (q QueryDelayDefaults) GetByName(name string) string {
-	return q[name].Duration().String()
+	return q[name].String()
 }
 
 func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
-	return q[at.String()].Duration().String()
+	return q[at.String()].String()
 }
 
 // GetQueryDelayDefaults serves an exported, single source of truth map that is now a part of v1alpha contract.
