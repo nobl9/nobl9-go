@@ -312,7 +312,7 @@ func (c *Client) GetAWSIAMRoleAuthenticationConnectionDataForDirect(ctx context.
 	}
 
 	var response v1alpha.AWSIAMRoleAuthExternalIDs
-	fmt.Println(resp.Body)
+
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")
 	}
