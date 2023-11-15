@@ -297,9 +297,9 @@ func isValidQueryDelayUnit(queryDelay Duration) bool {
 
 func DurationUnitFromString(unit string) (DurationUnit, error) {
 	switch cases.Title(language.Und).String(unit) {
-	case Minute.String(), minuteAlias:
+	case string(Minute), minuteAlias:
 		return Minute, nil
-	case Second.String(), secondAlias:
+	case string(Second), secondAlias:
 		return Second, nil
 	}
 	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
