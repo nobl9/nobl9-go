@@ -9,7 +9,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 type DataSourceType int
@@ -57,7 +56,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	QueryDelayDuration
+	Duration
 }
 
 type SourceOf int
@@ -292,24 +291,15 @@ func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 	return duration.Duration() > maximum.Duration()
 }
 
-// QueryDelayDuration should be only used when validating. TODO: remove when new validation is implemented.
-type QueryDelayDuration Duration
-
-func (qdd QueryDelayDuration) IsValid() bool {
-	return qdd.Unit == Second || qdd.Unit == Minute
-}
-
-type QueryIntervalDuration Duration
-
-func (qid QueryIntervalDuration) IsValid() bool {
-	return qid.Unit == Minute || qid.Unit == Second
+func isValidQueryDelayUnit(queryDelay Duration) bool {
+	return queryDelay.Unit == Second || queryDelay.Unit == Minute
 }
 
 func DurationUnitFromString(unit string) (DurationUnit, error) {
 	switch cases.Title(language.Und).String(unit) {
-	case twindow.Minute.String(), minuteAlias:
+	case Minute.String(), minuteAlias:
 		return Minute, nil
-	case twindow.Second.String(), secondAlias:
+	case Second.String(), secondAlias:
 		return Second, nil
 	}
 	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
