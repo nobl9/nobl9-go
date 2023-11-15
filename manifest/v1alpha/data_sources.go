@@ -256,9 +256,18 @@ func (d DurationUnit) String() string {
 
 func (d Duration) String() string {
 	if d.IsZero() {
-		return fmt.Sprintf("%d%s", 0, d.Unit)
+		return "0s"
 	}
-	return fmt.Sprintf("%d%s", *d.Value, d.Unit)
+	switch d.Unit {
+	case Second:
+		return fmt.Sprintf("%ds", *d.Value)
+	case Minute:
+		return fmt.Sprintf("%dm", *d.Value)
+	case Hour:
+		return fmt.Sprintf("%dh", *d.Value)
+	default:
+		return fmt.Sprintf("%ds", *d.Value)
+	}
 }
 
 func (d Duration) LesserThan(b Duration) bool {
