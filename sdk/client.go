@@ -293,7 +293,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 	return externalIDString, nil
 }
 
-func (c *Client) GetAWSIAMRoleAuthenticationConnectionDataForDirect(ctx context.Context, directName string) (
+func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName string) (
 	*v1alpha.AWSIAMRoleAuthExternalIDs,
 	error,
 ) {

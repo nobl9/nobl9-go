@@ -287,7 +287,7 @@ func TestClient_GetAWSExternalID(t *testing.T) {
 	assert.Equal(t, "external-id", externalID)
 }
 
-func TestClient_GetAWSIAMRoleAuthenticationConnectionDataForDirect(t *testing.T) {
+func TestClient_GetAWSIAMRoleAuthExternalIDs(t *testing.T) {
 	expectedData := v1alpha.AWSIAMRoleAuthExternalIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
@@ -310,7 +310,7 @@ func TestClient_GetAWSIAMRoleAuthenticationConnectionDataForDirect(t *testing.T)
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.GetAWSIAMRoleAuthenticationConnectionDataForDirect(context.Background(), "test-direct-name")
+	response, err := client.GetAWSIAMRoleAuthExternalIDs(context.Background(), "test-direct-name")
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)
