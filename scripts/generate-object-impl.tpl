@@ -31,6 +31,15 @@ func ({{ .Receiver }} {{ .Name }}) GetName() string {
 func ({{ .Receiver }} {{ .Name }}) Validate() error {
   return validator.Check({{ .Receiver }})
 }
+
+func ({{ .Receiver }} {{ .Name }}) GetManifestSource() string {
+  return {{ .Receiver }}.ManifestSource
+}
+
+func ({{ .Receiver }} {{ .Name }}) SetManifestSource(src string) manifest.Object {
+{{ .Receiver }}.ManifestSource = src
+  return {{ .Receiver }}
+}
 {{- end }}
 
 {{- if .GenerateProjectScopedObject }}
@@ -53,15 +62,6 @@ func ({{ .Receiver }} {{ .Name }}) GetOrganization() string {
 
 func ({{ .Receiver }} {{ .Name }}) SetOrganization(org string) manifest.Object {
   {{ .Receiver }}.Organization = org
-  return {{ .Receiver }}
-}
-
-func ({{ .Receiver }} {{ .Name }}) GetManifestSource() string {
-  return {{ .Receiver }}.ManifestSource
-}
-
-func ({{ .Receiver }} {{ .Name }}) SetManifestSource(src string) manifest.Object {
-  {{ .Receiver }}.ManifestSource = src
   return {{ .Receiver }}
 }
 {{- end }}
