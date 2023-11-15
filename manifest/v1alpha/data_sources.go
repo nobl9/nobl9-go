@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 	"github.com/pkg/errors"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
 type DataSourceType int
