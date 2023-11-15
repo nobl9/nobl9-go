@@ -148,27 +148,26 @@ func TestQueryDelayDurationValidation(t *testing.T) {
 			valid: false,
 		},
 	} {
-		t.Run(fmt.Sprintf("%s", test.desc),
-			func(t *testing.T) {
-				testDirectSpec := DirectSpec{
-					QueryDelay: &QueryDelay{
-						MinimumAgentVersion: "0.69.0-beta04",
-						Duration:            test.qd,
-					},
-					Lightstep: &LightstepDirectConfig{
-						Organization: "test",
-						Project:      "test",
-						AppToken:     "secret",
-					},
-					SourceOf: []string{"Metrics"},
-				}
-				err := v.Check(testDirectSpec)
-				if test.valid {
-					require.NoError(t, err)
-				} else {
-					assert.Error(t, err)
-				}
-			})
+		t.Run(test.desc, func(t *testing.T) {
+			testDirectSpec := DirectSpec{
+				QueryDelay: &QueryDelay{
+					MinimumAgentVersion: "0.69.0-beta04",
+					Duration:            test.qd,
+				},
+				Lightstep: &LightstepDirectConfig{
+					Organization: "test",
+					Project:      "test",
+					AppToken:     "secret",
+				},
+				SourceOf: []string{"Metrics"},
+			}
+			err := v.Check(testDirectSpec)
+			if test.valid {
+				require.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		})
 	}
 }
 
