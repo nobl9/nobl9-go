@@ -248,14 +248,10 @@ func (d DurationUnit) Duration() time.Duration {
 
 func (d DurationUnit) String() string {
 	switch d {
-	case Second, "":
-		return "s"
-	case Minute:
-		return "m"
-	case Hour:
-		return "h"
+	case Second, Minute, Hour:
+		return string(d)
 	}
-	return string(d)
+	return ""
 }
 
 func (d Duration) String() string {
