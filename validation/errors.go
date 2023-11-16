@@ -29,16 +29,15 @@ func (e *ValidatorError) WithName(name string) *ValidatorError {
 	return e
 }
 
-const validatorErrorFmt = "Validation for %s has failed for the following properties:\n"
-
 func (e *ValidatorError) Error() string {
 	b := strings.Builder{}
-	indent := ""
+	b.WriteString("Validation")
 	if e.Name != "" {
-		b.WriteString(fmt.Sprintf(validatorErrorFmt, e.Name))
-		indent = strings.Repeat(" ", 2)
+		b.WriteString(" for ")
+		b.WriteString(e.Name)
 	}
-	JoinErrors(&b, e.Errors, indent)
+	b.WriteString(" has failed for the following properties:\n")
+	JoinErrors(&b, e.Errors, strings.Repeat(" ", 2))
 	return b.String()
 }
 

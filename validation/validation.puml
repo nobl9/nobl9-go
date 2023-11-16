@@ -1,0 +1,15 @@
+@startuml
+'https://plantuml.com/object-diagram
+
+class SingleRule
+class RuleSet
+class PropertyRules
+class PropertyRulesForEach
+class Validator
+
+Object01 <|-- Object02
+Object03 *-- Object04
+Object05 o-- "4" Object06
+Object07 .. Object08 : some labels
+
+@enduml
