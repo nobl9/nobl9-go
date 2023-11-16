@@ -251,3 +251,9 @@ type GenericAgentConfig struct {
 type HoneycombAgentConfig struct {
 	// Honeycomb agent doesn't require any additional parameters.
 }
+
+// AgentWithSLOs struct which mapped one to one with kind: agent and slo yaml definition
+type AgentWithSLOs struct {
+	Agent Agent `json:"agent"`
+	SLOs  []SLO `json:"slos"`
+}

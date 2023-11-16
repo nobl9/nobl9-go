@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 const (
@@ -387,10 +385,6 @@ var (
 		quarter: Quarter,
 		year:    Year,
 	}
-
-	timeUnitsList               = []string{"Second", "Minute", "Hour", "Day", "Week", "Month", "Quarter", "Year"}
-	rollingWindowTimeUnitsList  = []string{"Minute", "Hour", "Day"}
-	calendarWindowTimeUnitsList = []string{"Day", "Week", "Month", "Quarter", "Year"}
 )
 
 // containsTimeUnitEnum checks if time unit is contained in a provided enum string map
@@ -418,12 +412,14 @@ func IsTimeUnit(timeUnit string) bool {
 	return ok
 }
 
-func ValidateCalendarAlignedTimeUnit(timeUnit string) error {
-	return validation.OneOf[string](calendarWindowTimeUnitsList...).Validate(timeUnit)
+func IsCalendarAlignedTimeUnit(timeUnit string) bool {
+	_, ok := calendarWindowTimeUnits[timeUnit]
+	return ok
 }
 
-func ValidateRollingWindowTimeUnit(timeUnit string) error {
-	return validation.OneOf[string](rollingWindowTimeUnitsList...).Validate(timeUnit)
+func IsRollingWindowTimeUnit(timeUnit string) bool {
+	_, ok := rollingWindowTimeUnits[timeUnit]
+	return ok
 }
 
 func (tu TimeUnitEnum) String() string {
@@ -455,8 +451,4 @@ func ParseStartDate(startDateStr string) (time.Time, error) {
 		return time.Time{}, fmt.Errorf("error parsing date: %w", err)
 	}
 	return startDate, nil
-}
-
-func ValidationRuleTimeUnit() validation.SingleRule[string] {
-	return validation.OneOf[string](timeUnitsList...)
 }

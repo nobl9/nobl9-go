@@ -45,3 +45,9 @@ type AlertCondition struct {
 	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"`                               //nolint:lll
 	Operator         string      `json:"op,omitempty" validate:"omitempty,operator" example:"lt"`
 }
+
+// AlertPolicyWithSLOs struct which mapped one to one with kind: alert policy and slo yaml definition
+type AlertPolicyWithSLOs struct {
+	AlertPolicy AlertPolicy `json:"alertPolicy"`
+	SLOs        []SLO       `json:"slos"`
+}
