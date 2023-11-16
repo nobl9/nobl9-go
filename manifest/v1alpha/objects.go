@@ -13,6 +13,4 @@ const APIVersion = "n9/v1alpha"
 type ObjectContext interface {
 	GetOrganization() string
 	SetOrganization(org string) manifest.Object
-	GetManifestSource() string
-	SetManifestSource(src string) manifest.Object
 }
