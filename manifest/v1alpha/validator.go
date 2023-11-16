@@ -28,7 +28,6 @@ import (
 const (
 	//nolint:lll
 	IPRegex          string = `(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))`
-	DNSNameRegex     string = `^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`
 	URLSchemaRegex   string = `((?i)(https?):\/\/)`
 	URLUsernameRegex string = `(\S+(:\S*)?@)`
 	URLPathRegex     string = `((\/|\?|#)[^\s]*)`
@@ -41,13 +40,10 @@ const (
 	NumericRegex string = "^[-+]?[0-9]+(?:\\.[0-9]+)?$"
 	//nolint:lll
 	//cspell:ignore FFFD
-	RoleARNRegex                    string = `^[\x{0009}\x{000A}\x{000D}\x{0020}-\x{007E}\x{0085}\x{00A0}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]+$`
-	S3BucketNameRegex               string = `^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$`
-	GCSNonDomainNameBucketNameRegex string = `^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`
-	GCSNonDomainNameBucketMaxLength int    = 63
-	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
-	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
-	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-._()]+\/providers\/[a-zA-Z0-9-.()_]+\/[a-zA-Z0-9-_()]+\/[a-zA-Z0-9-_()]+$` //nolint:lll
+	RoleARNRegex             string = `^[\x{0009}\x{000A}\x{000D}\x{0020}-\x{007E}\x{0085}\x{00A0}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]+$`
+	CloudWatchNamespaceRegex string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
+	HeaderNameRegex          string = `^([a-zA-Z0-9]+[_-]?)+$`
+	AzureResourceIDRegex     string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-._()]+\/providers\/[a-zA-Z0-9-.()_]+\/[a-zA-Z0-9-_()]+\/[a-zA-Z0-9-_()]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -185,10 +181,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("urlElasticsearch", isValidURL)
 	_ = val.RegisterValidation("urlDiscord", isValidURLDiscord)
 	_ = val.RegisterValidation("prometheusLabelName", isValidPrometheusLabelName)
-	_ = val.RegisterValidation("exportType", isValidExportType)
-	_ = val.RegisterValidation("s3BucketName", isValidS3BucketName)
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
-	_ = val.RegisterValidation("gcsBucketName", isValidGCSBucketName)
 	_ = val.RegisterValidation("metricSourceKind", isValidMetricSourceKind)
 	_ = val.RegisterValidation("metricPathGraphite", isValidMetricPathGraphite)
 	_ = val.RegisterValidation("bigQueryRequiredColumns", isValidBigQueryQuery)
@@ -2384,37 +2377,9 @@ func alertMethodSpecStructLevelValidation(sl v.StructLevel) {
 	}
 }
 
-func isValidExportType(fl v.FieldLevel) bool {
-	switch fl.Field().String() {
-	case DataExportTypeS3, DataExportTypeSnowflake, DataExportTypeGCS:
-		return true
-	default:
-		return false
-	}
-}
-
-func isValidS3BucketName(fl v.FieldLevel) bool {
-	validS3BucketNameRegex := regexp.MustCompile(S3BucketNameRegex)
-	return validS3BucketNameRegex.MatchString(fl.Field().String())
-}
-
 func isValidAzureResourceID(fl v.FieldLevel) bool {
 	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
 	return validAzureResourceIDRegex.MatchString(fl.Field().String())
-}
-
-// isValidGCSBucketName checks if field matches restrictions specified
-// at https://cloud.google.com/storage/docs/naming-buckets.
-func isValidGCSBucketName(fl v.FieldLevel) bool {
-	value := fl.Field().String()
-	if len(value) <= GCSNonDomainNameBucketMaxLength {
-		validGCSBucketNameRegex := regexp.MustCompile(GCSNonDomainNameBucketNameRegex)
-		if validGCSBucketNameRegex.MatchString(value) {
-			return true
-		}
-	}
-	validDNSNameRegex := regexp.MustCompile(DNSNameRegex)
-	return validDNSNameRegex.MatchString(value)
 }
 
 func isNotEmpty(fl v.FieldLevel) bool {

@@ -1,0 +1,12 @@
+Validation for DataExport 'MY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORT' in project 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT' has failed for the following fields:
+  - 'metadata.name' with value 'MY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEX...':
+    - length must be between 1 and 63
+    - string does not match regular expresion: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
+  - 'metadata.displayName' with value 'my-dataexportmy-dataexportmy-dataexportmy-dataexportmy-dataexportmy-dataexportmy-dataexportmy-dataex...':
+    - length must be between 0 and 63
+  - 'metadata.project' with value 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT...':
+    - length must be between 1 and 63
+    - string does not match regular expresion: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
+  - 'spec.spec.bucketName' with value 'my-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketm...':
+    - string does not match regular expresion: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'; must be a valid GCS bucket name
+Manifest source: /home/me/dataexport.yaml

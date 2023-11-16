@@ -10,6 +10,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
@@ -66,7 +67,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindRoleBinding:
 		return genericParseObject[v1alpha.RoleBinding](unmarshal)
 	case manifest.KindDataExport:
-		return genericParseObject[v1alpha.DataExport](unmarshal)
+		return genericParseObject[dataexport.DataExport](unmarshal)
 	case manifest.KindAnnotation:
 		return genericParseObject[v1alpha.Annotation](unmarshal)
 	case manifest.KindUserGroup:
