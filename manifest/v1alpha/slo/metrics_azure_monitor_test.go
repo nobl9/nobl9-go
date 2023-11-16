@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-func TestAzureMonitor_CounMetrics(t *testing.T) {
+func TestAzureMonitor_CountMetrics(t *testing.T) {
 	t.Run("metricNamespace must be the same for good/bad and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = &AzureMonitorMetric{
@@ -239,6 +239,11 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 		{
 			desc:       "valid resource id with _",
 			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-123_x", //nolint:lll
+			isValid:    true,
+		},
+		{
+			desc:       "valid resource id with _ in rg",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mc_().rg-xxx-01_ups-aks_eu_west/providers/Microsoft.()Network/loadBalancers1_-()/kubernetes", //nolint:lll
 			isValid:    true,
 		},
 	}
