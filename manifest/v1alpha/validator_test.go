@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
@@ -831,7 +832,6 @@ func TestIsBadOverTotalEnabledForDataSource_appd(t *testing.T) {
 			TotalMetric: &MetricSpec{AppDynamics: &AppDynamicsMetric{}},
 		}}},
 	}
-
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
@@ -843,7 +843,6 @@ func TestIsBadOverTotalEnabledForDataSource_cloudwatch(t *testing.T) {
 			TotalMetric: &MetricSpec{CloudWatch: &CloudWatchMetric{}},
 		}}},
 	}
-
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
@@ -926,7 +925,17 @@ func TestIsBadOverTotalEnabledForDataSource_azuremonitor(t *testing.T) {
 			TotalMetric: &MetricSpec{AzureMonitor: &AzureMonitorMetric{}},
 		}}},
 	}
+	r := isBadOverTotalEnabledForDataSource(slo)
+	assert.True(t, r)
+}
 
+func TestIsBadOverTotalEnabledForDataSource_honeycomb(t *testing.T) {
+	slo := SLOSpec{
+		Objectives: []Objective{{CountMetrics: &CountMetricsSpec{
+			BadMetric:   &MetricSpec{Honeycomb: &HoneycombMetric{}},
+			TotalMetric: &MetricSpec{Honeycomb: &HoneycombMetric{}},
+		}}},
+	}
 	r := isBadOverTotalEnabledForDataSource(slo)
 	assert.True(t, r)
 }
@@ -1508,4 +1517,109 @@ func Test_cloudWatchMetricStructValidation(t *testing.T) {
 			assert.ElementsMatch(t, tags, tt.wantErrorTags)
 		})
 	}
+}
+
+func TestHoneycombValidation(t *testing.T) {
+	validate := NewValidator()
+	testCases := []struct {
+		desc    string
+		input   HoneycombMetric
+		isValid bool
+	}{
+		{
+			desc: "Invalid Honeycomb Condition Count",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator:   "AND",
+					Conditions: createTooManyHoneycombConditions(),
+				},
+			},
+			isValid: false,
+		},
+		{
+			desc: "Valid HoneycombMetric",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+					},
+				},
+			},
+			isValid: true,
+		},
+		{
+			desc: "Invalid Operator in HoneycombFilter with multiple Conditions",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "INVALID",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+						{Attribute: "attr2", Operator: "<"},
+					},
+				},
+			},
+			isValid: false,
+		},
+		{
+			desc: "Invalid Calculation Type",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "INVALID",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: ">"},
+					},
+				},
+			},
+			isValid: false,
+		},
+		{
+			desc: "Invalid Condition Operator",
+			input: HoneycombMetric{
+				Dataset:     "dataset1",
+				Calculation: "COUNT",
+				Attribute:   "attr",
+				Filter: HoneycombFilter{
+					Operator: "AND",
+					Conditions: []HoneycombFilterCondition{
+						{Attribute: "attr", Operator: "INVALID_OPERATOR"},
+					},
+				},
+			},
+			isValid: false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := validate.Check(tc.input)
+			if tc.isValid {
+				assert.Nil(t, err)
+			} else {
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
+
+func createTooManyHoneycombConditions() []HoneycombFilterCondition {
+	tooManyHoneycombConditions := make([]HoneycombFilterCondition, 101)
+	for i := 0; i < 101; i++ {
+		tooManyHoneycombConditions[i] = HoneycombFilterCondition{
+			Attribute: fmt.Sprintf("attr%d", i),
+			Operator:  ">",
+		}
+	}
+	return tooManyHoneycombConditions
 }
