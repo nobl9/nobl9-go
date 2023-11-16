@@ -22,7 +22,7 @@ func StringNotEmpty() SingleRule[string] {
 func StringMatchRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if !re.MatchString(s) {
-			msg := fmt.Sprintf("string does not match regular expresion: '%s'", re.String())
+			msg := fmt.Sprintf("string does not match regular expression: '%s'", re.String())
 			if len(examples) > 0 {
 				msg += " " + prettyExamples(examples)
 			}
@@ -35,7 +35,7 @@ func StringMatchRegexp(re *regexp.Regexp, examples ...string) SingleRule[string]
 func StringDenyRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
 		if re.MatchString(s) {
-			msg := fmt.Sprintf("string must not match regular expresion: '%s'", re.String())
+			msg := fmt.Sprintf("string must not match regular expression: '%s'", re.String())
 			if len(examples) > 0 {
 				msg += " " + prettyExamples(examples)
 			}

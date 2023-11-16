@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestForbiden(t *testing.T) {
+func TestForbidden(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := Forbidden[string]().Validate("")
 		assert.NoError(t, err)
