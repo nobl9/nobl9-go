@@ -105,9 +105,12 @@ func TestStringASCII(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		for _, input := range []string{
+			// cspell:disable
+			"ｆｏｏbar",
 			"ｘｙｚ０９８",
 			"１２３456",
 			"ｶﾀｶﾅ",
+			// cspell:enable
 		} {
 			err := StringASCII().Validate(input)
 			assert.Error(t, err)
