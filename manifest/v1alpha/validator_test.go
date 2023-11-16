@@ -1532,7 +1532,7 @@ func TestHoneycombValidation(t *testing.T) {
 				Dataset:     "dataset1",
 				Calculation: "COUNT",
 				Attribute:   "attr",
-				Filter: HoneycombFilter{
+				Filter: &HoneycombFilter{
 					Operator:   "AND",
 					Conditions: createTooManyHoneycombConditions(),
 				},
@@ -1545,7 +1545,7 @@ func TestHoneycombValidation(t *testing.T) {
 				Dataset:     "dataset1",
 				Calculation: "COUNT",
 				Attribute:   "attr",
-				Filter: HoneycombFilter{
+				Filter: &HoneycombFilter{
 					Operator: "AND",
 					Conditions: []HoneycombFilterCondition{
 						{Attribute: "attr", Operator: ">"},
@@ -1560,7 +1560,7 @@ func TestHoneycombValidation(t *testing.T) {
 				Dataset:     "dataset1",
 				Calculation: "COUNT",
 				Attribute:   "attr",
-				Filter: HoneycombFilter{
+				Filter: &HoneycombFilter{
 					Operator: "INVALID",
 					Conditions: []HoneycombFilterCondition{
 						{Attribute: "attr", Operator: ">"},
@@ -1576,7 +1576,7 @@ func TestHoneycombValidation(t *testing.T) {
 				Dataset:     "dataset1",
 				Calculation: "INVALID",
 				Attribute:   "attr",
-				Filter: HoneycombFilter{
+				Filter: &HoneycombFilter{
 					Operator: "AND",
 					Conditions: []HoneycombFilterCondition{
 						{Attribute: "attr", Operator: ">"},
@@ -1591,7 +1591,7 @@ func TestHoneycombValidation(t *testing.T) {
 				Dataset:     "dataset1",
 				Calculation: "COUNT",
 				Attribute:   "attr",
-				Filter: HoneycombFilter{
+				Filter: &HoneycombFilter{
 					Operator: "AND",
 					Conditions: []HoneycombFilterCondition{
 						{Attribute: "attr", Operator: "INVALID_OPERATOR"},
