@@ -894,6 +894,11 @@ func TestValidateAzureResourceID(t *testing.T) {
 			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-123_x", //nolint:lll
 			isValid:    true,
 		},
+		{
+			desc:       "valid resource id with _ in rg",
+			resourceID: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mc_().rg-xxx-01_ups-aks_eu_west/providers/Microsoft.()Network/loadBalancers1_-()/kubernetes", //nolint:lll
+			isValid:    true,
+		},
 	}
 
 	val := v.New()
