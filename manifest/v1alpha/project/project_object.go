@@ -24,7 +24,10 @@ func (p Project) GetName() string {
 }
 
 func (p Project) Validate() error {
-	return validate(p)
+	if err := validate(p); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (p Project) GetManifestSource() string {

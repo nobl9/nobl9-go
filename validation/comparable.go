@@ -10,7 +10,7 @@ import (
 func EqualTo[T comparable](compared T) Rule[T] {
 	return NewSingleRule(func(v T) error {
 		if v != compared {
-			return errors.Errorf(comparisonFmt, v, cmpEqualTo, compared)
+			return errors.Errorf(comparisonFmt, cmpEqualTo, compared)
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeEqualTo)
@@ -19,7 +19,7 @@ func EqualTo[T comparable](compared T) Rule[T] {
 func NotEqualTo[T comparable](compared T) Rule[T] {
 	return NewSingleRule(func(v T) error {
 		if v == compared {
-			return errors.Errorf(comparisonFmt, v, cmpNotEqualTo, compared)
+			return errors.Errorf(comparisonFmt, cmpNotEqualTo, compared)
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeNotEqualTo)
@@ -45,7 +45,7 @@ func LessThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }
 
-var comparisonFmt = "%v should be %s %v"
+var comparisonFmt = "should be %s %v"
 
 func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
 	return func(v T) error {
@@ -62,7 +62,7 @@ func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compare
 			passed = v <= compared
 		}
 		if !passed {
-			return fmt.Errorf(comparisonFmt, v, op, compared)
+			return fmt.Errorf(comparisonFmt, op, compared)
 		}
 		return nil
 	}

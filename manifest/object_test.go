@@ -46,12 +46,12 @@ var expectedUniquenessConstraintMessage string
 func TestValidate(t *testing.T) {
 	t.Run("nil objects slice", func(t *testing.T) {
 		errs := Validate(nil)
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("empty objects slice", func(t *testing.T) {
 		errs := Validate([]Object{})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("no errors", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestValidate(t *testing.T) {
 			customObject{kind: KindProject, name: "default"},
 			customObject{kind: KindRoleBinding, name: "default"},
 		})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("errors", func(t *testing.T) {

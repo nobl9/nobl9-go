@@ -2,15 +2,20 @@ package validation
 
 import (
 	"reflect"
-
-	"github.com/pkg/errors"
 )
 
-func Required[T any]() Rule[T] {
+func Required[T any]() SingleRule[T] {
 	return NewSingleRule(func(v T) error {
-		if reflect.ValueOf(v).IsZero() {
-			return errors.New("property is required but was empty")
+		if isEmptyFunc(v) {
+			return NewRequiredError()
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeRequired)
+	})
+}
+
+// isEmptyFunc checks only the types which it makes sense for.
+// It's hard to consider 0 an empty value for anything really.
+func isEmptyFunc(v interface{}) bool {
+	rv := reflect.ValueOf(v)
+	return rv.Kind() == 0 || rv.IsZero()
 }

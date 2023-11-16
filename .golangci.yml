@@ -53,6 +53,8 @@ linters-settings:
     default-signifies-exhaustive: true
   misspell:
     locale: US
+  gocognit:
+    min-complexity: 30
 
 linters:
   disable-all: true

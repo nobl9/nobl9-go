@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -18,16 +17,16 @@ import (
 var errorsTestData embed.FS
 
 func TestObjectError(t *testing.T) {
-	errs := []error{
+	errs := validation.PropertyErrors{
 		&validation.PropertyError{
 			PropertyName:  "metadata.name",
 			PropertyValue: "default",
-			Errors:        []validation.RuleError{{Message: "here's an error"}},
+			Errors:        []*validation.RuleError{{Message: "here's an error"}},
 		},
 		&validation.PropertyError{
 			PropertyName:  "spec.description",
 			PropertyValue: "some long description",
-			Errors:        []validation.RuleError{{Message: "here's another error"}},
+			Errors:        []*validation.RuleError{{Message: "here's another error"}},
 		},
 	}
 
@@ -59,7 +58,7 @@ func TestObjectError(t *testing.T) {
 }
 
 func TestObjectError_UnmarshalJSON(t *testing.T) {
-	expected := &ObjectError{
+	expected := ObjectError{
 		Object: ObjectMetadata{
 			Kind:            manifest.KindService,
 			Name:            "test-service",
@@ -67,30 +66,26 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 			IsProjectScoped: true,
 			Project:         "default",
 		},
-		Errors: []error{
-			&validation.PropertyError{
+		Errors: validation.PropertyErrors{
+			{
 				PropertyName:  "metadata.project",
 				PropertyValue: "default",
-				Errors:        []validation.RuleError{{Message: "nested"}},
+				Errors:        []*validation.RuleError{{Message: "nested"}},
 			},
-			errors.New("some error"),
-			&validation.PropertyError{
+			{
 				PropertyName:  "metadata.name",
 				PropertyValue: "my-project",
 			},
 		},
 	}
-	data, err := json.Marshal(expected)
+	data, err := json.MarshalIndent(expected, "", " ")
 	require.NoError(t, err)
 
 	var actual ObjectError
 	err = json.Unmarshal(data, &actual)
 	require.NoError(t, err)
 
-	assert.Equal(t, expected.Object, actual.Object)
-	assert.Equal(t, expected.Errors[0], actual.Errors[0])
-	assert.Equal(t, expected.Errors[1].Error(), actual.Errors[1].Error())
-	assert.Equal(t, expected.Errors[2].(*validation.PropertyError), actual.Errors[2])
+	assert.Equal(t, expected, actual)
 }
 
 func expectedErrorOutput(t *testing.T, name string) string {
