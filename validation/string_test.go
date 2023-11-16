@@ -28,12 +28,12 @@ func TestStringMatchRegexp(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		err := StringMatchRegexp(re).Validate("cd")
-		assert.EqualError(t, err, "string does not match regular expresion: '[ab]+'")
+		assert.EqualError(t, err, "string does not match regular expression: '[ab]+'")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringMatchRegexp))
 	})
 	t.Run("examples output", func(t *testing.T) {
 		err := StringMatchRegexp(re, "ab", "a", "b").Validate("cd")
-		assert.EqualError(t, err, "string does not match regular expresion: '[ab]+' (e.g. 'ab', 'a', 'b')")
+		assert.EqualError(t, err, "string does not match regular expression: '[ab]+' (e.g. 'ab', 'a', 'b')")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringMatchRegexp))
 	})
 }
@@ -46,12 +46,12 @@ func TestStringDenyRegexp(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		err := StringDenyRegexp(re).Validate("ab")
-		assert.EqualError(t, err, "string must not match regular expresion: '[ab]+'")
+		assert.EqualError(t, err, "string must not match regular expression: '[ab]+'")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringDenyRegexp))
 	})
 	t.Run("examples output", func(t *testing.T) {
 		err := StringDenyRegexp(re, "ab", "a", "b").Validate("ab")
-		assert.EqualError(t, err, "string must not match regular expresion: '[ab]+' (e.g. 'ab', 'a', 'b')")
+		assert.EqualError(t, err, "string must not match regular expression: '[ab]+' (e.g. 'ab', 'a', 'b')")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringDenyRegexp))
 	})
 }
@@ -105,10 +105,12 @@ func TestStringASCII(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		for _, input := range []string{
+			// cspell:disable
 			"ｆｏｏbar",
 			"ｘｙｚ０９８",
 			"１２３456",
 			"ｶﾀｶﾅ",
+			// cspell:enable
 		} {
 			err := StringASCII().Validate(input)
 			assert.Error(t, err)

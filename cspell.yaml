@@ -1,4 +1,5 @@
-allowCompoundWords: true
+# Compound words will not detect some common misspells like 'expresion' or 'forbiden'
+# allowCompoundWords: true
 language: en_US
 dictionaries:
   - companies
@@ -15,6 +16,7 @@ ignoreRegExpList:
   - /github.*/g
   - /nolint.*/g
   - /nosec.*/g
+  - /(errors|fmt|assert|require)\.[^\(]+/g
 ignorePaths:
   - sdk/test_data
   - .golangci.yml
@@ -22,32 +24,37 @@ ignorePaths:
   - "**/go.mod"
   - "**/go.sum"
   - "**/node_modules/**"
-  - cspell.json
+  - cspell.yaml
   - CODEOWNERS
   - bin/**
   # TODO: Remove this exclusion after cleanup is done.
   - manifest/**
-  - manifest/v1alpha/slo/validation_test.go
-  - validation/string_test.go
 words:
-  - Equalf
-  - GOFILE
-  - GOPACKAGE
-  - Structs
-  - auseg9kiegWKEtJZC416
+  - apiurl
+  - auseg9kiegwketjzc416
+  - awsiam
+  - clientcreds
+  - codeowners
+  - dataexport
+  - datasource
   - devel
+  - doublestar
   - dynatrace
   - endef
   - enduml
-  - falsef
   - gobin
+  - gofile
   - goimports
   - golangci
   - gomnd
+  - gopackage
+  - goreleaser
   - gosec
   - govulncheck
   - jwks
   - logql
+  - mapstructure
+  - mktemp
   - msgf
   - msteams
   - nobl
@@ -56,9 +63,12 @@ words:
   - nrql
   - opentsdb
   - plantuml
-  - println
+  - preconfigured
   - promql
   - puml
+  - retryable
+  - retryablehttp
+  - retryhttp
   - rollup
   - rtmp
   - slis
@@ -66,10 +76,10 @@ words:
   - sloerrorbudgetstatus
   - slos
   - startuml
+  - structs
+  - testutils
   - tpng
-  - truef
   - tsdb
   - usrmgmt
   - vuln
   - vulns
-  - wrapf
