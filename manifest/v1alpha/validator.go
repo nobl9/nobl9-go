@@ -47,7 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
-	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-._()]+\/providers\/[a-zA-Z0-9-.()_]+\/[a-zA-Z0-9-_()]+\/[a-zA-Z0-9-_()]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -152,6 +152,7 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
 	val.RegisterStructValidation(validateAzureMonitorMetricsConfiguration, AzureMonitorMetric{})
+	val.RegisterStructValidation(validateHoneycombFilter, HoneycombFilter{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
@@ -207,6 +208,8 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("json", isValidJSON)
 	_ = val.RegisterValidation("newRelicApiKey", isValidNewRelicInsightsAPIKey)
 	_ = val.RegisterValidation("azureResourceID", isValidAzureResourceID)
+	_ = val.RegisterValidation("supportedHoneycombCalculationType", supportedHoneycombCalculationType)
+	_ = val.RegisterValidation("supportedHoneycombFilterConditionOperator", supportedHoneycombFilterConditionOperator)
 
 	return &Validate{
 		validate: val,
@@ -1073,6 +1076,7 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		gcmCount                 int
 		azureMonitorCount        int
 		genericCount             int
+		honeycombCount           int
 	)
 	for _, metric := range sloSpec.AllMetricSpecs() {
 		if metric == nil {
@@ -1150,6 +1154,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		if metric.Generic != nil {
 			genericCount++
 		}
+		if metric.Honeycomb != nil {
+			honeycombCount++
+		}
 	}
 	if prometheusCount > 0 {
 		metricCount++
@@ -1221,6 +1228,9 @@ func areAllMetricSpecsOfTheSameType(sloSpec SLOSpec) bool {
 		metricCount++
 	}
 	if genericCount > 0 {
+		metricCount++
+	}
+	if honeycombCount > 0 {
 		metricCount++
 	}
 	// exactly one exists
@@ -1444,7 +1454,7 @@ func haveAzureMonitorCountMetricSpecTheSameResourceIDAndMetricNamespace(sloSpec 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 func isBadOverTotalEnabledForDataSourceType(objective Objective) bool {
-	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor}
+	enabledDataSources := []DataSourceType{CloudWatch, AppDynamics, AzureMonitor, Honeycomb}
 	if objective.CountMetrics != nil {
 		if objective.CountMetrics.BadMetric == nil {
 			return false
@@ -1899,6 +1909,9 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 	if ms.Generic != nil {
 		metricTypesCount++
 	}
+	if ms.Honeycomb != nil {
+		metricTypesCount++
+	}
 	if metricTypesCount != expectedCountOfMetricTypes {
 		sl.ReportError(ms, "prometheus", "Prometheus", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "datadog", "Datadog", "exactlyOneMetricTypeRequired", "")
@@ -1924,6 +1937,7 @@ func metricTypeValidation(ms MetricSpec, sl v.StructLevel) {
 		sl.ReportError(ms, "gcm", "GCM", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "azuremonitor", "AzureMonitor", "exactlyOneMetricTypeRequired", "")
 		sl.ReportError(ms, "genericMetric", "Generic", "exactlyOneMetricTypeRequired", "")
+		sl.ReportError(ms, "honeycomb", "Honeycomb", "exactlyOneMetricTypeRequired", "")
 	}
 }
 
@@ -3399,5 +3413,65 @@ func isValidAzureMonitorAggregation(sl v.StructLevel, metric AzureMonitorMetric)
 			metric.Aggregation, strings.Join(maps.Keys(availableAggregations), "|"),
 		)
 		sl.ReportError(metric.Aggregation, "aggregation", "Aggregation", msg, "")
+	}
+}
+
+func supportedHoneycombCalculationType(fl v.FieldLevel) bool {
+	value := fl.Field().String()
+	switch value {
+	case "COUNT", "SUM", "AVG", "COUNT_DISTINCT", "MAX", "MIN",
+		"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
+		"RATE_AVG", "RATE_SUM", "RATE_MAX":
+		return true
+	}
+	return false
+}
+
+func supportedHoneycombFilterConditionOperator(fl v.FieldLevel) bool {
+	value := fl.Field().String()
+	switch value {
+	case "=", "!=", ">", ">=", "<", "<=",
+		"starts-with", "does-not-start-with", "exists", "does-not-exist",
+		"contains", "does-not-contain", "in", "not-in":
+		return true
+	}
+	return false
+}
+
+func validateHoneycombFilter(sl v.StructLevel) {
+	hf := sl.Current().Interface().(HoneycombFilter)
+
+	if len(hf.Conditions) <= 1 {
+		return
+	}
+
+	validOperators := map[string]struct{}{
+		"AND": {},
+		"OR":  {},
+	}
+	if hf.Operator == "" {
+		sl.ReportError(
+			hf.Operator, "Operator", "Operator",
+			"Operator is required if there is more than one condition", "",
+		)
+	} else if _, ok := validOperators[hf.Operator]; !ok {
+		msg := fmt.Sprintf(
+			"Operator is invalid, use one of: [%s]", strings.Join(maps.Keys(validOperators), "|"),
+		)
+		sl.ReportError(hf.Operator, "Operator", "Operator", msg, "")
+	}
+
+	// Validate for duplicate conditions.
+	conditions := make(map[string]struct{})
+	for _, condition := range hf.Conditions {
+		key := fmt.Sprintf("%s|%s|%s", condition.Attribute, condition.Operator, condition.Value)
+		if _, exists := conditions[key]; exists {
+			sl.ReportError(
+				hf.Conditions, "Conditions", "conditions",
+				"Conditions must be unique", "",
+			)
+			break
+		}
+		conditions[key] = struct{}{}
 	}
 }
