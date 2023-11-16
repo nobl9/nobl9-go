@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Direct
+//go:generate go run ../../scripts/generate-object-impl.go Direct,PublicDirect
 
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
@@ -30,6 +30,8 @@ type PublicDirect struct {
 	Metadata   DirectMetadata   `json:"metadata"`
 	Spec       PublicDirectSpec `json:"spec"`
 	Status     *DirectStatus    `json:"status,omitempty"`
+
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 type DirectMetadata struct {
@@ -62,6 +64,7 @@ type DirectSpec struct {
 	Lightstep               *LightstepDirectConfig           `json:"lightstep,omitempty"`
 	Dynatrace               *DynatraceDirectConfig           `json:"dynatrace,omitempty"`
 	AzureMonitor            *AzureMonitorDirectConfig        `json:"azureMonitor,omitempty"`
+	Honeycomb               *HoneycombDirectConfig           `json:"honeycomb,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval         `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                      `json:"queryDelay,omitempty"`
 }
@@ -84,6 +87,7 @@ var allDirectTypes = map[string]struct{}{
 	Lightstep.String():           {},
 	Dynatrace.String():           {},
 	AzureMonitor.String():        {},
+	Honeycomb.String():           {},
 }
 
 func IsValidDirectType(directType string) bool {
@@ -127,6 +131,8 @@ func (spec DirectSpec) GetType() (string, error) {
 		return Dynatrace.String(), nil
 	case spec.AzureMonitor != nil:
 		return AzureMonitor.String(), nil
+	case spec.Honeycomb != nil:
+		return Honeycomb.String(), nil
 	}
 	return "", errors.New("unknown direct type")
 }
@@ -154,6 +160,7 @@ type PublicDirectSpec struct {
 	Lightstep               *PublicLightstepDirectConfig           `json:"lightstep,omitempty"`
 	Dynatrace               *PublicDynatraceDirectConfig           `json:"dynatrace,omitempty"`
 	AzureMonitor            *PublicAzureMonitorDirectConfig        `json:"azureMonitor,omitempty"`
+	Honeycomb               *PublicHoneycombDirectConfig           `json:"honeycomb,omitempty"`
 	HistoricalDataRetrieval *HistoricalDataRetrieval               `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *QueryDelay                            `json:"queryDelay,omitempty"`
 }
@@ -408,8 +415,24 @@ type PublicAzureMonitorDirectConfig struct {
 	HiddenClientSecret string `json:"clientSecret"`
 }
 
+// HoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object.
+type HoneycombDirectConfig struct {
+	APIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+}
+
+// PublicHoneycombDirectConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.
+type PublicHoneycombDirectConfig struct {
+	HiddenAPIKey string `json:"apiKey,omitempty"`
+}
+
 // PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
 type PublicDirectWithSLOs struct {
 	Direct PublicDirect `json:"direct"`
 	SLOs   []SLO        `json:"slos"`
+}
+
+// AWSIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
+type AWSIAMRoleAuthExternalIDs struct {
+	ExternalID string `json:"externalID"`
+	AccountID  string `json:"accountID"`
 }

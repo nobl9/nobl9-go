@@ -180,7 +180,8 @@ func TestClient_ApplyObjects(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	err := client.ApplyObjects(context.Background(), requestPayload, true)
+	client.WithDryRun()
+	err := client.ApplyObjects(context.Background(), requestPayload)
 	// Verify response handling.
 	require.NoError(t, err)
 }
@@ -220,7 +221,8 @@ func TestClient_DeleteObjects(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	err := client.DeleteObjects(context.Background(), requestPayload, true)
+	client.WithDryRun()
+	err := client.DeleteObjects(context.Background(), requestPayload)
 	// Verify response handling.
 	require.NoError(t, err)
 }
@@ -283,6 +285,35 @@ func TestClient_GetAWSExternalID(t *testing.T) {
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, "external-id", externalID)
+}
+
+func TestClient_GetAWSIAMRoleAuthExternalIDs(t *testing.T) {
+	expectedData := v1alpha.AWSIAMRoleAuthExternalIDs{
+		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
+		AccountID:  "123456789012",
+	}
+
+	client, srv := prepareTestClient(t, endpointConfig{
+		// Define endpoint response.
+		Path: "api/data-sources/iam-role-auth-data/test-direct-name",
+		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
+		},
+		// Verify request parameters.
+		TestRequestFunc: func(t *testing.T, r *http.Request) {
+			assert.Equal(t, http.MethodGet, r.Method)
+		},
+	})
+
+	// Start and close the test server.
+	srv.Start()
+	defer srv.Close()
+
+	// Run the API method.
+	response, err := client.GetAWSIAMRoleAuthExternalIDs(context.Background(), "test-direct-name")
+	// Verify response handling.
+	require.NoError(t, err)
+	assert.Equal(t, expectedData, *response)
 }
 
 func TestClient_GetAgentCredentials(t *testing.T) {

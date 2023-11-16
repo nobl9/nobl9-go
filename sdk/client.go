@@ -80,6 +80,7 @@ type Client struct {
 
 	credentials *credentials
 	userAgent   string
+	dryRun      bool
 }
 
 // DefaultClient returns fully configured instance of Client with default Config and HTTP client.
@@ -201,13 +202,13 @@ func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) stri
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
-func (c *Client) ApplyObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiApply, dryRun)
+func (c *Client) ApplyObjects(ctx context.Context, objects []manifest.Object) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiApply)
 }
 
 // DeleteObjects deletes list of objects passed as argument via API.
-func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object, dryRun bool) error {
-	return c.applyOrDeleteObjects(ctx, objects, apiDelete, dryRun)
+func (c *Client) DeleteObjects(ctx context.Context, objects []manifest.Object) error {
+	return c.applyOrDeleteObjects(ctx, objects, apiDelete)
 }
 
 // applyOrDeleteObjects applies or deletes list of objects
@@ -216,7 +217,6 @@ func (c *Client) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
 	apiMode string,
-	dryRun bool,
 ) error {
 	var err error
 	objects, err = c.setOrganizationForObjects(ctx, objects)
@@ -235,7 +235,7 @@ func (c *Client) applyOrDeleteObjects(
 	case apiDelete:
 		method = http.MethodDelete
 	}
-	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(dryRun)}}
+	q := url.Values{QueryKeyDryRun: []string{strconv.FormatBool(c.dryRun)}}
 	req, err := c.CreateRequest(ctx, method, apiMode, "", q, buf)
 	if err != nil {
 		return err
@@ -293,6 +293,33 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 	return externalIDString, nil
 }
 
+func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName string) (
+	*v1alpha.AWSIAMRoleAuthExternalIDs,
+	error,
+) {
+	getUrl := fmt.Sprintf("data-sources/iam-role-auth-data/%s", directName)
+	req, err := c.CreateRequest(ctx, http.MethodGet, getUrl, "", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute request")
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if err = c.processResponseErrors(resp); err != nil {
+		return nil, err
+	}
+
+	var response v1alpha.AWSIAMRoleAuthExternalIDs
+
+	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, errors.Wrap(err, "failed to decode response body")
+	}
+
+	return &response, nil
+}
+
 // DeleteObjectsByName makes a call to endpoint for deleting objects with passed names and object types.
 func (c *Client) DeleteObjectsByName(
 	ctx context.Context,
@@ -344,6 +371,12 @@ func (c *Client) GetAgentCredentials(
 		return creds, errors.Wrap(err, "failed to decode response body")
 	}
 	return creds, nil
+}
+
+// WithDryRun configures the Client to run all supported state changing operations in dry-run mode.
+func (c *Client) WithDryRun() *Client {
+	c.dryRun = true
+	return c
 }
 
 // CreateRequest creates a new http.Request pointing at the Nobl9 API URL.

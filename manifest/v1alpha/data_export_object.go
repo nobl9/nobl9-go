@@ -25,6 +25,15 @@ func (d DataExport) Validate() error {
 	return validator.Check(d)
 }
 
+func (d DataExport) GetManifestSource() string {
+	return d.ManifestSource
+}
+
+func (d DataExport) SetManifestSource(src string) manifest.Object {
+	d.ManifestSource = src
+	return d
+}
+
 func (d DataExport) GetProject() string {
 	return d.Metadata.Project
 }
@@ -40,14 +49,5 @@ func (d DataExport) GetOrganization() string {
 
 func (d DataExport) SetOrganization(org string) manifest.Object {
 	d.Organization = org
-	return d
-}
-
-func (d DataExport) GetManifestSource() string {
-	return d.ManifestSource
-}
-
-func (d DataExport) SetManifestSource(src string) manifest.Object {
-	d.ManifestSource = src
 	return d
 }

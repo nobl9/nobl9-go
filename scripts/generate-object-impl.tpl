@@ -4,41 +4,51 @@ package {{ .Package }}
 
 import "github.com/nobl9/nobl9-go/manifest"
 
+{{- range .Structs }}
 // Ensure interfaces are implemented.
-var _ manifest.Object = {{ .StructName }}{}
+var _ manifest.Object = {{ .Name }}{}
 {{- if .GenerateProjectScopedObject }}
-var _ manifest.ProjectScopedObject = {{ .StructName }}{}
+var _ manifest.ProjectScopedObject = {{ .Name }}{}
 {{- end }}
 {{- if .GenerateV1alphaObjectContext }}
-var _ ObjectContext = {{ .StructName }}{}
+var _ ObjectContext = {{ .Name }}{}
 {{- end }}
 
 {{- if .GenerateObject }}
 
-func ({{ .Receiver }} {{ .StructName }}) GetVersion() string {
+func ({{ .Receiver }} {{ .Name }}) GetVersion() string {
   return {{ .Receiver }}.APIVersion
 }
 
-func ({{ .Receiver }} {{ .StructName }}) GetKind() manifest.Kind {
+func ({{ .Receiver }} {{ .Name }}) GetKind() manifest.Kind {
   return {{ .Receiver }}.Kind
 }
 
-func ({{ .Receiver }} {{ .StructName }}) GetName() string {
+func ({{ .Receiver }} {{ .Name }}) GetName() string {
   return {{ .Receiver }}.Metadata.Name
 }
 
-func ({{ .Receiver }} {{ .StructName }}) Validate() error {
+func ({{ .Receiver }} {{ .Name }}) Validate() error {
   return validator.Check({{ .Receiver }})
+}
+
+func ({{ .Receiver }} {{ .Name }}) GetManifestSource() string {
+  return {{ .Receiver }}.ManifestSource
+}
+
+func ({{ .Receiver }} {{ .Name }}) SetManifestSource(src string) manifest.Object {
+{{ .Receiver }}.ManifestSource = src
+  return {{ .Receiver }}
 }
 {{- end }}
 
 {{- if .GenerateProjectScopedObject }}
 
-func ({{ .Receiver }} {{ .StructName }}) GetProject() string {
+func ({{ .Receiver }} {{ .Name }}) GetProject() string {
     return {{ .Receiver }}.Metadata.Project
 }
 
-func ({{ .Receiver }} {{ .StructName }}) SetProject(project string) manifest.Object {
+func ({{ .Receiver }} {{ .Name }}) SetProject(project string) manifest.Object {
   {{ .Receiver }}.Metadata.Project = project
   return {{ .Receiver }}
 }
@@ -46,21 +56,13 @@ func ({{ .Receiver }} {{ .StructName }}) SetProject(project string) manifest.Obj
 
 {{- if .GenerateV1alphaObjectContext }}
 
-func ({{ .Receiver }} {{ .StructName }}) GetOrganization() string {
+func ({{ .Receiver }} {{ .Name }}) GetOrganization() string {
   return {{ .Receiver }}.Organization
 }
 
-func ({{ .Receiver }} {{ .StructName }}) SetOrganization(org string) manifest.Object {
+func ({{ .Receiver }} {{ .Name }}) SetOrganization(org string) manifest.Object {
   {{ .Receiver }}.Organization = org
   return {{ .Receiver }}
 }
-
-func ({{ .Receiver }} {{ .StructName }}) GetManifestSource() string {
-  return {{ .Receiver }}.ManifestSource
-}
-
-func ({{ .Receiver }} {{ .StructName }}) SetManifestSource(src string) manifest.Object {
-  {{ .Receiver }}.ManifestSource = src
-  return {{ .Receiver }}
-}
+{{- end }}
 {{- end }}
