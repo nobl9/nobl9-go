@@ -7,8 +7,8 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go UserGroup
 
-func New(metadata Metadata, spec Spec) *UserGroup {
-	return &UserGroup{
+func New(metadata Metadata, spec Spec) UserGroup {
+	return UserGroup{
 		APIVersion: v1alpha.APIVersion,
 		Kind:       manifest.KindUserGroup,
 		Metadata:   metadata,
