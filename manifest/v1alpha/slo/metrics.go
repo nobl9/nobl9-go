@@ -45,6 +45,7 @@ type MetricSpec struct {
 	GCM                 *GCMMetric                 `json:"gcm,omitempty"`
 	AzureMonitor        *AzureMonitorMetric        `json:"azureMonitor,omitempty"`
 	Generic             *GenericMetric             `json:"generic,omitempty"`
+	Honeycomb           *HoneycombMetric           `json:"honeycomb,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -247,6 +248,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.AzureMonitor
 	case m.Generic != nil:
 		return v1alpha.Generic
+	case m.Honeycomb != nil:
+		return v1alpha.Honeycomb
 	default:
 		return 0
 	}
@@ -327,6 +330,8 @@ func (m *MetricSpec) Query() interface{} {
 		return azureMonitorCopy
 	case v1alpha.Generic:
 		return m.Generic
+	case v1alpha.Honeycomb:
+		return m.Honeycomb
 	default:
 		return nil
 	}

@@ -176,6 +176,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *GenericMetric { return m.Generic }).
 		WithName("generic").
 		Include(genericValidation),
+	validation.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -332,6 +335,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Generic != nil {
 			if err := typesMatch(v1alpha.Generic); err != nil {
+				return err
+			}
+		}
+		if metric.Honeycomb != nil {
+			if err := typesMatch(v1alpha.Honeycomb); err != nil {
 				return err
 			}
 		}

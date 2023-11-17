@@ -1192,6 +1192,20 @@ func validSLO() SLO {
 	)
 }
 
+// Ensure that validateExactlyOneMetricSpecType function handles all possible data source types.
+func TestValidateExactlyOneMetricSpecType(t *testing.T) {
+	for _, s1 := range v1alpha.DataSourceTypeValues() {
+		for _, s2 := range v1alpha.DataSourceTypeValues() {
+			err := validateExactlyOneMetricSpecType(validMetricSpec(s1), validMetricSpec(s2))
+			if s1 == s2 {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+			}
+		}
+	}
+}
+
 func validMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
 	ms := validMetricSpecs[typ]
 	var clone MetricSpec
@@ -1393,6 +1407,21 @@ fetch consumed_api
 	}},
 	v1alpha.Generic: {Generic: &GenericMetric{
 		Query: ptr("anything is valid"),
+	}},
+	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
+		Dataset:     "sequence-of-numbers",
+		Calculation: "SUM",
+		Attribute:   "http.status_code",
+		Filter: HoneycombFilter{
+			Operator: "AND",
+			Conditions: []HoneycombFilterCondition{
+				{
+					Attribute: "http.status_code",
+					Operator:  "=",
+					Value:     "200",
+				},
+			},
+		},
 	}},
 }
 
