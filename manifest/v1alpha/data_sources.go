@@ -302,6 +302,10 @@ func (d DurationUnit) Duration() time.Duration {
 	return time.Duration(0)
 }
 
+func (d DurationUnit) String() string {
+	return string(d)
+}
+
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
 	Datadog.String():          {Value: ptr(30), Unit: HRDDay},
 	Prometheus.String():       {Value: ptr(30), Unit: HRDDay},
