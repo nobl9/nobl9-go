@@ -1626,7 +1626,7 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 		)
 	}
 	agentDefault := GetQueryDelayDefaults()[at.String()]
-	if queryDelay.LesserThan(agentDefault) {
+	if queryDelay.LessThan(agentDefault) {
 		sl.ReportError(
 			sa,
 			"QueryDelayDuration",
@@ -2051,7 +2051,7 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 		)
 	}
 	directDefault := GetQueryDelayDefaults()[dt]
-	if queryDelay.LesserThan(directDefault) {
+	if queryDelay.LessThan(directDefault) {
 		sl.ReportError(
 			sd,
 			"QueryDelayDuration",

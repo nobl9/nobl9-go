@@ -234,26 +234,6 @@ const (
 	Hour   DurationUnit = "Hour"
 )
 
-func (d DurationUnit) Duration() time.Duration {
-	switch d {
-	case Second:
-		return time.Second
-	case Minute:
-		return time.Minute
-	case Hour:
-		return time.Hour
-	}
-	return time.Duration(0)
-}
-
-func (d DurationUnit) String() string {
-	switch d {
-	case Second, Minute, Hour:
-		return string(d)
-	}
-	return ""
-}
-
 func (d Duration) String() string {
 	if d.IsZero() {
 		return "0s"
@@ -270,7 +250,7 @@ func (d Duration) String() string {
 	}
 }
 
-func (d Duration) LesserThan(b Duration) bool {
+func (d Duration) LessThan(b Duration) bool {
 	return d.Duration() < b.Duration()
 }
 
@@ -308,6 +288,18 @@ func DurationUnitFromString(unit string) (DurationUnit, error) {
 		return Second, nil
 	}
 	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
+}
+
+func (d DurationUnit) Duration() time.Duration {
+	switch d {
+	case Second:
+		return time.Second
+	case Minute:
+		return time.Minute
+	case Hour:
+		return time.Hour
+	}
+	return time.Duration(0)
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
