@@ -7,7 +7,7 @@ import (
 
 //go:generate go run ../../scripts/generate-object-impl.go SLO
 
-// New creates a new Service based on provided Metadata nad Spec.
+// New creates a new SLO based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) SLO {
 	return SLO{
 		APIVersion: manifest.VersionV1alpha.String(),
