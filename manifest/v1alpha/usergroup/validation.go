@@ -6,8 +6,8 @@ import (
 )
 
 var userGroupValidation = validation.New[UserGroup](
-	v1alpha.FieldRuleMetadataName(func(p UserGroup) string { return p.Metadata.Name }),
-	validation.For(func(p UserGroup) string { return p.Spec.DisplayName }).
+	v1alpha.FieldRuleMetadataName(func(u UserGroup) string { return u.Metadata.Name }),
+	validation.For(func(u UserGroup) string { return u.Spec.DisplayName }).
 		WithName("spec.displayName").
 		Rules(validation.StringLength(0, 63)),
 )
