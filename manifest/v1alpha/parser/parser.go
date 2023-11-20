@@ -12,6 +12,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 )
 
@@ -49,7 +50,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindService:
 		return genericParseObject[service.Service](unmarshal)
 	case manifest.KindSLO:
-		return genericParseObject[v1alpha.SLO](unmarshal)
+		return genericParseObject[slo.SLO](unmarshal)
 	case manifest.KindProject:
 		return genericParseObject[project.Project](unmarshal)
 	case manifest.KindAgent:
