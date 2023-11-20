@@ -6,7 +6,7 @@
     "cspell": "8.0.0",
     "markdownlint-cli": "0.37.0",
     "renovate": "37.60.4",
-    "yaml": "2.3.2"
+    "yaml": "2.3.4"
   },
   "scripts": {
     "check-trailing-whitespaces": "node ./scripts/check-trailing-whitespaces.js",
