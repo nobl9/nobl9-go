@@ -3192,7 +3192,6 @@ func notBlank(fl v.FieldLevel) bool {
 func isValidHeaderName(fl v.FieldLevel) bool {
 	headerName := fl.Field().String()
 	validHeaderNameRegex := regexp.MustCompile(HeaderNameRegex)
-
 	return validHeaderNameRegex.MatchString(headerName)
 }
 
