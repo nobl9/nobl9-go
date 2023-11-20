@@ -7,6 +7,4 @@ Validation for DataExport 'MY DATAEXPORTMY DATAEXPORTMY DATAEXPORTMY DATAEXPORTM
   - 'metadata.project' with value 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT...':
     - length must be between 1 and 63
     - string does not match regular expresion: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
-  - 'spec.spec.bucketName' with value 'my-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketm...':
-    - string does not match regular expresion: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'; must be a valid GCS bucket name
 Manifest source: /home/me/dataexport.yaml
