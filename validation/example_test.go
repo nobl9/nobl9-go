@@ -8,13 +8,13 @@ import (
 )
 
 type Teacher struct {
-	Name     string
-	Age      time.Duration
-	Students []Student
+	Name     string        `json:"name"`
+	Age      time.Duration `json:"age"`
+	Students []Student     `json:"students"`
 }
 
 type Student struct {
-	Index string
+	Index string `json:"index"`
 }
 
 func ExampleValidator() {
