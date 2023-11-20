@@ -30,6 +30,8 @@ type PublicDirect struct {
 	Metadata   DirectMetadata   `json:"metadata"`
 	Spec       PublicDirectSpec `json:"spec"`
 	Status     *DirectStatus    `json:"status,omitempty"`
+
+	ManifestSource string `json:"manifestSrc,omitempty"`
 }
 
 type DirectMetadata struct {
@@ -427,4 +429,10 @@ type PublicHoneycombDirectConfig struct {
 type PublicDirectWithSLOs struct {
 	Direct PublicDirect `json:"direct"`
 	SLOs   []SLO        `json:"slos"`
+}
+
+// AWSIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
+type AWSIAMRoleAuthExternalIDs struct {
+	ExternalID string `json:"externalID"`
+	AccountID  string `json:"accountID"`
 }

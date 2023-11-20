@@ -25,6 +25,15 @@ func (a Annotation) Validate() error {
 	return validator.Check(a)
 }
 
+func (a Annotation) GetManifestSource() string {
+	return a.ManifestSource
+}
+
+func (a Annotation) SetManifestSource(src string) manifest.Object {
+	a.ManifestSource = src
+	return a
+}
+
 func (a Annotation) GetProject() string {
 	return a.Metadata.Project
 }
@@ -40,14 +49,5 @@ func (a Annotation) GetOrganization() string {
 
 func (a Annotation) SetOrganization(org string) manifest.Object {
 	a.Organization = org
-	return a
-}
-
-func (a Annotation) GetManifestSource() string {
-	return a.ManifestSource
-}
-
-func (a Annotation) SetManifestSource(src string) manifest.Object {
-	a.ManifestSource = src
 	return a
 }

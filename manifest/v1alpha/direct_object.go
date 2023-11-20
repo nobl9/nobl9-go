@@ -25,6 +25,15 @@ func (d Direct) Validate() error {
 	return validator.Check(d)
 }
 
+func (d Direct) GetManifestSource() string {
+	return d.ManifestSource
+}
+
+func (d Direct) SetManifestSource(src string) manifest.Object {
+	d.ManifestSource = src
+	return d
+}
+
 func (d Direct) GetProject() string {
 	return d.Metadata.Project
 }
@@ -40,15 +49,6 @@ func (d Direct) GetOrganization() string {
 
 func (d Direct) SetOrganization(org string) manifest.Object {
 	d.Organization = org
-	return d
-}
-
-func (d Direct) GetManifestSource() string {
-	return d.ManifestSource
-}
-
-func (d Direct) SetManifestSource(src string) manifest.Object {
-	d.ManifestSource = src
 	return d
 }
 
@@ -70,6 +70,15 @@ func (p PublicDirect) GetName() string {
 
 func (p PublicDirect) Validate() error {
 	return validator.Check(p)
+}
+
+func (p PublicDirect) GetManifestSource() string {
+	return p.ManifestSource
+}
+
+func (p PublicDirect) SetManifestSource(src string) manifest.Object {
+	p.ManifestSource = src
+	return p
 }
 
 func (p PublicDirect) GetProject() string {

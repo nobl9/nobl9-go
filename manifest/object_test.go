@@ -46,12 +46,12 @@ var expectedUniquenessConstraintMessage string
 func TestValidate(t *testing.T) {
 	t.Run("nil objects slice", func(t *testing.T) {
 		errs := Validate(nil)
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("empty objects slice", func(t *testing.T) {
 		errs := Validate([]Object{})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("no errors", func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestValidate(t *testing.T) {
 			customObject{kind: KindProject, name: "default"},
 			customObject{kind: KindRoleBinding, name: "default"},
 		})
-		assert.Empty(t, errs)
+		assert.Nil(t, errs)
 	})
 
 	t.Run("errors", func(t *testing.T) {
@@ -154,19 +154,17 @@ type customObject struct {
 	validationError error
 }
 
-func (c customObject) GetVersion() string { return "" }
-
-func (c customObject) GetKind() Kind { return c.kind }
-
-func (c customObject) GetName() string { return c.name }
-
-func (c customObject) Validate() error { return c.validationError }
+func (c customObject) GetVersion() string              { return "" }
+func (c customObject) GetKind() Kind                   { return c.kind }
+func (c customObject) GetName() string                 { return c.name }
+func (c customObject) Validate() error                 { return c.validationError }
+func (c customObject) GetManifestSource() string       { return "" }
+func (c customObject) SetManifestSource(string) Object { return c }
 
 type customProjectScopedObject struct {
 	customObject
 	project string
 }
 
-func (c customProjectScopedObject) GetProject() string { return c.project }
-
+func (c customProjectScopedObject) GetProject() string               { return c.project }
 func (c customProjectScopedObject) SetProject(project string) Object { c.project = project; return c }

@@ -47,7 +47,7 @@ const (
 	GCSNonDomainNameBucketMaxLength int    = 63
 	CloudWatchNamespaceRegex        string = `^[0-9A-Za-z.\-_/#:]{1,255}$`
 	HeaderNameRegex                 string = `^([a-zA-Z0-9]+[_-]?)+$`
-	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
+	AzureResourceIDRegex            string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-._()]+\/providers\/[a-zA-Z0-9-.()_]+\/[a-zA-Z0-9-_()]+\/[a-zA-Z0-9-_()]+$` //nolint:lll
 )
 
 // Values used to validate time window size
@@ -2784,7 +2784,7 @@ func cloudWatchMetricStructValidation(sl v.StructLevel) {
 		sl.ReportError(cloudWatchMetric.AccountID, "accountId", "AccountID", "accountIdInvalid", "")
 	}
 
-	if cloudWatchMetric.Region != nil && !isValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
+	if cloudWatchMetric.Region != nil && !IsValidRegion(*cloudWatchMetric.Region, AWSRegions()) {
 		sl.ReportError(cloudWatchMetric.Region, "region", "Region", "regionNotAvailable", "")
 	}
 }

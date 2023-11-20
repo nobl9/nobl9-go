@@ -7,15 +7,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStringRequired(t *testing.T) {
+func TestRequired(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		err := Required[any]().Validate("non-empty")
-		assert.NoError(t, err)
+		for _, v := range []interface{}{
+			1,
+			"s",
+			0.1,
+			[]int{},
+			map[string]int{},
+		} {
+			err := Required[any]().Validate(v)
+			assert.NoError(t, err)
+		}
 	})
 	t.Run("fails", func(t *testing.T) {
-		err := Required[any]().Validate("")
-		require.Error(t, err)
-		assert.EqualError(t, err, "property is required but was empty")
-		assert.True(t, HasErrorCode(err, ErrorCodeRequired))
+		for _, v := range []interface{}{
+			nil,
+			struct{}{},
+			"",
+			false,
+			0,
+			0.0,
+		} {
+			err := Required[any]().Validate(v)
+			require.Error(t, err)
+			assert.True(t, HasErrorCode(err, ErrorCodeRequired))
+		}
 	})
 }

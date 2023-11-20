@@ -35,7 +35,7 @@ func AWSRegions() []AWSRegion {
 	}
 }
 
-func isValidRegion(code string, regions []AWSRegion) bool {
+func IsValidRegion(code string, regions []AWSRegion) bool {
 	for _, region := range regions {
 		if region.Code == code {
 			return true
