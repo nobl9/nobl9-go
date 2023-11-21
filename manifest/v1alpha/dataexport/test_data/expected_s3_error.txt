@@ -1,7 +1,0 @@
-Validation for DataExport 's3-export' in project 'default' has failed for the following fields:
-  - 'spec.spec.bucketName' with value 'my-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketm...':
-    - length must be between 3 and 63
-    - string does not match regular expression: '^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$'; must be a valid S3 bucket name
-  - 'spec.spec.roleArn':
-    - property is required but was empty
-Manifest source: /home/me/dataexport.yaml

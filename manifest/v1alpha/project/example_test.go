@@ -27,12 +27,12 @@ func ExampleProject() {
 	)
 	// Verify the object:
 	if err := myProject.Validate(); err != nil {
-		log.Fatal("project validation failed, err: %w", err)
+		log.Fatalf("project validation failed, err: %v", err)
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
 	if err := client.ApplyObjects(context.Background(), []manifest.Object{myProject}); err != nil {
-		log.Fatal("failed to apply project, err: %w", err)
+		log.Fatalf("failed to apply project, err: %v", err)
 	}
 	// Output:
 	// apiVersion: n9/v1alpha

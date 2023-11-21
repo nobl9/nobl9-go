@@ -1,4 +1,0 @@
-Validation for DataExport 'gcs-export' in project 'default' has failed for the following fields:
-  - 'spec.spec.bucketName' with value 'my-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketmy-bucketm...':
-    - string does not match regular expression: '^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$'; must be a valid GCS bucket name
-Manifest source: /home/me/dataexport.yaml

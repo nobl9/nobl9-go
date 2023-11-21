@@ -46,7 +46,6 @@ var s3SpecValidation = validation.New[Spec](
 		return S3DataExportSpec{}
 	}).
 		WithName("spec").
-		Required().
 		Include(s3Validation),
 ).
 	When(func(s Spec) bool { return s.ExportType == DataExportTypeS3 || s.ExportType == DataExportTypeSnowflake })
@@ -76,7 +75,6 @@ var gcsSpecValidation = validation.New[Spec](
 		return GCSDataExportSpec{}
 	}).
 		WithName("spec").
-		Required().
 		Include(gcsValidation),
 ).
 	When(func(s Spec) bool { return s.ExportType == DataExportTypeGCS })
