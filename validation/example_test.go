@@ -131,7 +131,7 @@ func ExampleValidator_When() {
 // Let's change that by adding property name through [PropertyRules.WithName].
 //
 // We can also change the [Rule] to be something more real.
-// This package comes with a number of predefined [Rule] instances, we'll use
+// Validation package comes with a number of predefined [Rule] instances, we'll use
 // [EqualTo] which accepts a single argument, value to compare with.
 func ExamplePropertyRules_WithName() {
 	v := validation.New[Teacher](
@@ -141,7 +141,7 @@ func ExamplePropertyRules_WithName() {
 	).WithName("Teacher")
 
 	teacher := Teacher{
-		Name: "Tom",
+		Name: "Jake",
 		Age:  51 * year,
 	}
 
@@ -152,8 +152,8 @@ func ExamplePropertyRules_WithName() {
 
 	// Output:
 	// Validation for Teacher has failed for the following properties:
-	//   - 'name' with value 'Tom':
-	//     - always fails
+	//   - 'name' with value 'Jake':
+	//     - should be equal to 'Tom'
 }
 
 // Bringing it all together, let's create a fully fledged [Validator] for [Teacher].

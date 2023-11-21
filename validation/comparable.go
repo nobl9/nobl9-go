@@ -45,7 +45,7 @@ func LessThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }
 
-var comparisonFmt = "should be %s %v"
+var comparisonFmt = "should be %s '%v'"
 
 func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
 	return func(v T) error {
