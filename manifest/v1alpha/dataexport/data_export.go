@@ -56,19 +56,19 @@ type Status struct {
 
 // S3DataExportSpec represents content of Amazon S3 export type spec.
 type S3DataExportSpec struct {
-	BucketName string `json:"bucketName" example:"examplebucket"`
-	RoleARN    string `json:"roleArn" example:"arn:aws:iam::12345/role/n9-access"`
+	BucketName string `json:"bucketName"`
+	RoleARN    string `json:"roleArn"`
 }
 
 // GCSDataExportSpec represents content of GCP Cloud Storage export type spec.
 type GCSDataExportSpec struct {
-	BucketName string `json:"bucketName" example:"example-bucket.org.com"`
+	BucketName string `json:"bucketName"`
 }
 
 // ExportJobStatus represents content of ExportJob status
 type ExportJobStatus struct {
-	Timestamp string `json:"timestamp,omitempty" example:"2021-02-09T10:43:07Z"`
-	State     string `json:"state" example:"finished"`
+	Timestamp string `json:"timestamp,omitempty"`
+	State     string `json:"state"`
 }
 
 func (d *Spec) UnmarshalJSON(bytes []byte) error {

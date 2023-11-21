@@ -8,18 +8,21 @@ import (
 )
 
 const (
-	S3BucketNameRegex               string = `^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$`
-	DNSNameRegex                    string = `^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`
-	GCSNonDomainNameBucketNameRegex string = `^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`
-	GCSNonDomainNameBucketMaxLength int    = 63
+	GCSNonDomainNameBucketMaxLength int = 63
 )
+
+var S3BucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$`)
+var DNSNameRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
+var GCSNonDNSNameBucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`)
 
 var dataExportValidation = validation.New[DataExport](
 	validation.For(func(d DataExport) Metadata { return d.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(d DataExport) Spec { return d.Spec }).
 		WithName("spec").
-		Include(specValidation, s3SpecValidation, gcsSpecValidation),
+		Include(specValidation).
+		Include(s3SpecValidation).
+		Include(gcsSpecValidation),
 )
 
 var metadataValidation = validation.New[Metadata](
@@ -54,7 +57,7 @@ var s3Validation = validation.New[S3DataExportSpec](
 		Required().
 		Rules(
 			validation.StringLength(3, 63),
-			validation.StringMatchRegexp(regexp.MustCompile(S3BucketNameRegex)).
+			validation.StringMatchRegexp(S3BucketNameRegexp).
 				WithDetails("must be a valid S3 bucket name")),
 	validation.For(func(c S3DataExportSpec) string { return c.RoleARN }).
 		WithName("roleArn").
@@ -85,13 +88,13 @@ var gcsValidation = validation.New[GCSDataExportSpec](
 		WithName("bucketName").
 		Required().
 		Rules(validation.StringLength(3, 222)).
-		Include(bucketNonDomainNameValidation).
+		Include(bucketNonDNSNameValidation).
 		Include(bucketDNSNameValidation),
 )
 
-var bucketNonDomainNameValidation = validation.New[string](
-	validation.For(func(n string) string { return n }).
-		Rules(validation.StringMatchRegexp(regexp.MustCompile(GCSNonDomainNameBucketNameRegex)).
+var bucketNonDNSNameValidation = validation.New[string](
+	validation.For(validation.GetSelf[string]()).
+		Rules(validation.StringMatchRegexp(GCSNonDNSNameBucketNameRegexp).
 			WithDetails("must be a valid GCS bucket name")),
 ).
 	When(func(n string) bool {
@@ -99,8 +102,8 @@ var bucketNonDomainNameValidation = validation.New[string](
 	})
 
 var bucketDNSNameValidation = validation.New[string](
-	validation.For(func(n string) string { return n }).
-		Rules(validation.StringMatchRegexp(regexp.MustCompile(DNSNameRegex)).
+	validation.For(validation.GetSelf[string]()).
+		Rules(validation.StringMatchRegexp(DNSNameRegexp).
 			WithDetails("must be a valid GCS bucket name")),
 ).
 	When(func(n string) bool {

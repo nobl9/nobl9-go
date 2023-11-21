@@ -27,12 +27,12 @@ func ExampleDataExport() {
 	)
 	// Verify the object:
 	if err := dataExport.Validate(); err != nil {
-		log.Fatal("dataexport validation failed, err: %w", err)
+		log.Fatal("data export validation failed, err: %w", err)
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
 	if err := client.ApplyObjects(context.Background(), []manifest.Object{dataExport}); err != nil {
-		log.Fatal("failed to apply dataexport err: %w", err)
+		log.Fatal("failed to apply data export err: %w", err)
 	}
 	// Output:
 	// apiVersion: n9/v1alpha
