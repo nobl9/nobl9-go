@@ -2,11 +2,14 @@
 
 Package validation implements a functional API for consistent, type safe validation.
 It puts heavy focus on end user errors readability, providing means for construing
-information-rich error messages. Validation pipeline is lazily evaluated
+information-rich error messages.
+
+Validation pipeline is immutable and lazily evaluated.
 
 ## Usage
 
-Refer to [example_test.go](./example_test.go) for a runnable example.
+This README goes through more abstract
+Refer to [example_test.go](./example_test.go) for a tutorial through runnable examples.
 
 ### Legend
 
@@ -33,103 +36,100 @@ If any property rules fail [ValidatorError](#validatorerror) is returned.
 ### Property rules
 
 When validating structured data, namely `struct`,
-each structure consists of multiple properties. \
+each structure consists of multiple properties.
 For `struct`, these will be its fields.
 
-Most commonly, property has it's name and value. For instance:
+Most commonly, property has it's name and value.
+Property name should be derived from the struct
+representation visible by the errors consumer,
+this will most likely be JSON format.
+
+Nested properties are represented by paths,
+where each property is delimited by `.`.
+Arrays are represented by `[<index>]`.
+Let's examine a simple teacher/student example:
 
 ```go
+package univeristy
+
 type Teacher struct {
-  Name     string     `json:"name"`
-  Students []Student  `json:"students"`
+	Name     string    `json:"name"`
+	Students []Student `json:"students"`
 }
 
 type Student struct {
-  Index string
+	Index string
 }
 ```
 
-Nested properties are represented by paths where each property is delimited by `.`.
-Arrays are represented by `[<index>]`. Property name should be derived from the struct
-representation visible by the errors consumer, this will most likely be JSON format.
-Looking at the above teacher/student example,
-we can distinguish the following property paths:
+We can distinguish the following property paths:
 
 - `name`
 - `students`
 - `students[0].Index` _(let's assume there's only a single student)_
 
-If any rule fails [PropertyError](#propertyerror) is returned.
+If any property rule fails [PropertyError](#propertyerror) is returned.
 
 #### PropertyRules
 
-`PropertyRules` aggregates [rules](#rule) for a single property. In order to define a property rule,
-use either constructor:
-
-- `For` handles the value as is.
-- `ForPointer` extracts underlying pointer value. If the pointer was `nil` and `Required` 
-  was not set, property validation will be skipped.
-- `ForEach` creates a new `PropertyRulesForEach` instance.
+`PropertyRules` aggregates [rules](#rule) for a single property.
 
 #### PropertyRulesForEach
 
-`PropertyRulesForEach` is an extension of `PropertyRules`, it provides means of defining
-rules for each property in a slice through either:
+`PropertyRulesForEach` is an extension of [PropertyRules](#propertyrules),
+it provides means of defining rules for each property in a slice.
 
-- `RulesForEach`
-- `IncludeForEach`
-
-These work the same as `PropertyRules.Rules` and `PropertyRules.Include` except they are
-run for each element of the slice.
-
-```go
-studentValidation := validation.New[Student]()
-```
-
-Currently it only works with slices, maps are not supported.
+Currently, it only works with slices, maps are not supported.
 
 ### Rule
 
-Rules receive and validate a value. If a rule is not met it returns [RuleError](#ruleerror).
+Rules validate a concrete value.
+If a rule is not met it returns [RuleError](#ruleerror).
 
 #### SingleRule
 
 This is the most basic validation building block.
 It's error code can be set using `WithErrorCode` function and its error message can
-also be enhanced using `WithDetails` function. 
+also be enhanced using `WithDetails` function.
 Details are delimited by `;` character.
 
 #### RuleSet
 
-Rule sets are used to aggregate multiple `SingleRule` into a single validation rule.
+Rule sets are used to aggregate multiple [SingleRule](#singlerule)
+into a single validation rule.
 It wraps any and all errors returned from single rules in a container which is later
 on unpacked. If you use either `WithErrorCode` or `WithDetails` functions, each error
 will be extended with the provided details and error code.
 
 ### Errors
 
-Each validation level defines an error which further enhances the details of what went wrong.
+Each validation level defines an error which adds further details of what went wrong.
 
 #### ValidatorError
 
 Adds top level entity name, following our teacher example,
-it would be simply `teacher`, although that once again depends on how your end use perceives
-this entity. It wraps multiple `PropertyError`.
+it would be simply `teacher`.
+Although that once again depends on how your end use perceives this entity.
+It wraps multiple [PropertyError](#propertyerror).
 
 #### PropertyError
+
 Adds both property name and value. Property value is converted to a string
-representation. It wraps multiple `RuleError`. 
+representation. It wraps multiple [RuleError](#ruleerror).
 
 #### RuleError
+
 The most basic building block for validation errors, associated with a single
-failing `SingleRule`. It conveys an error message and `ErrorCode`.
+failing [SingleRule](#singlerule).
+It conveys an error message and [ErrorCode](#error-codes).
 
 #### Error codes
 
 To aid the process of testing, `ErrorCode` has been introduced along with a helper functions
-`WithErrorCode` to associate `Rule` with an error code and `AddCode` to associate multiple
-error codes with a single `Rule`. Multiple error codes are delimited by `:`, similar to how
-wrapped errors are represented in Go.
+`WithErrorCode` to associate [Rule](#rule) with an error code and `AddCode` to associate multiple
+error codes with a single [Rule](#rule).
+Multiple error codes are delimited by `:`,
+similar to how wrapped errors are represented in Go.
 
 To check if `ErrorCode` is part if a given validation error, use `HasErrorCode`.
 
@@ -139,7 +139,7 @@ To check if `ErrorCode` is part if a given validation error, use `HasErrorCode`.
 
 Existing, established solutions are mostly based on struct tags and heavily utilize reflection.
 This leaves type safety an issue to be solved and handled by developers. For simple use cases,
-covered by predefined validation functions, this solutions works well enough. 
+covered by predefined validation functions, this solutions works well enough.
 However when adding custom validation rules, type casting has to be heavily utilized,
 and it becomes increasingly harder to track what exactly is being validated.
 Another issue is the readability of the errors, it's often hard or even impossible to shape

@@ -2,8 +2,9 @@ package validation_test
 
 import (
 	"fmt"
-	"github.com/nobl9/nobl9-go/validation"
 	"time"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 type Teacher struct {
@@ -118,6 +119,41 @@ func ExampleValidator_When() {
 	// Output:
 	// Validation for Jerry has failed for the following properties:
 	//   - always fails
+}
+
+// So far we've been using a very simple [PropertyRules] instance:
+//
+//	validation.For(func(t Teacher) string { return t.Name }).
+//		Rules(validation.NewSingleRule(func(name string) error { return fmt.Errorf("always fails") }))
+//
+// The error message returned by this property rule does not tell us
+// which property is failing.
+// Let's change that by adding property name through [PropertyRules.WithName].
+//
+// We can also change the [Rule] to be something more real.
+// This package comes with a number of predefined [Rule] instances, we'll use
+// [EqualTo] which accepts a single argument, value to compare with.
+func ExamplePropertyRules_WithName() {
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Rules(validation.EqualTo("Tom")),
+	).WithName("Teacher")
+
+	teacher := Teacher{
+		Name: "Tom",
+		Age:  51 * year,
+	}
+
+	err := v.Validate(teacher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Tom':
+	//     - always fails
 }
 
 // Bringing it all together, let's create a fully fledged [Validator] for [Teacher].
