@@ -1,6 +1,8 @@
-package v1alpha
+package slo
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // BudgetingMethod indicates algorithm to calculate error budget
 type BudgetingMethod int
@@ -31,7 +33,7 @@ func (m BudgetingMethod) String() string {
 func ParseBudgetingMethod(value string) (BudgetingMethod, error) {
 	result, ok := getBudgetingMethodNames()[value]
 	if !ok {
-		return result, fmt.Errorf("'%s' is not valid budgeting method", value)
+		return result, fmt.Errorf("'%s' is not a valid budgeting method", value)
 	}
 	return result, nil
 }
