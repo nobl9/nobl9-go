@@ -56,7 +56,7 @@ func ExampleValidator_WithName() {
 }
 
 // You can also add [Validator] name during runtime,
-// by calling [ValidatorError.WithName] function on the returned error or.
+// by calling [ValidatorError.WithName] function on the returned error.
 //
 // NOTE: We left the previous "Teacher" name assignment, to demonstrate that
 // the [ValidatorError.WithName] function call will shadow it.
