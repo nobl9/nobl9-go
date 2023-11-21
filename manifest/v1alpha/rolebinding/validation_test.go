@@ -51,7 +51,7 @@ func TestSpec(t *testing.T) {
 				err := validate(rb)
 				testutils.AssertContainsErrors(t, rb, err, 1, testutils.ExpectedError{
 					Prop: "spec",
-					Code: validation.ErrorCodeOneOf,
+					Code: validation.ErrorCodeMutuallyExclusive,
 				})
 			})
 		}
