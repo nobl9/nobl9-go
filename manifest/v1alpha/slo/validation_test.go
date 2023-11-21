@@ -1401,6 +1401,7 @@ fetch consumed_api
 		ProjectID: "svc-256112",
 	}},
 	v1alpha.AzureMonitor: {AzureMonitor: &AzureMonitorMetric{
+		DataType:    AzureMonitorDataTypeMetrics,
 		ResourceID:  "/subscriptions/9c26f90e/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 		MetricName:  "HttpResponseTime",
 		Aggregation: "Avg",

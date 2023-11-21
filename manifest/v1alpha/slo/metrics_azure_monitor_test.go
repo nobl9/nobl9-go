@@ -13,6 +13,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 	t.Run("metricNamespace must be the same for good/bad and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:        AzureMonitorDataTypeMetrics,
 			ResourceID:      "/subscriptions/1/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 			MetricName:      "HttpResponseTime",
 			Aggregation:     "Avg",
@@ -20,6 +21,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		}
 		// Good.
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:        AzureMonitorDataTypeMetrics,
 			ResourceID:      "/subscriptions/1/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 			MetricName:      "HttpResponseTime",
 			Aggregation:     "Avg",
@@ -42,12 +44,14 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 	t.Run("resourceId must be the same for good/bad and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeMetrics,
 			ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 			MetricName:  "HttpResponseTime",
 			Aggregation: "Avg",
 		}
 		// Good.
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeMetrics,
 			ResourceID:  "/subscriptions/333/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 			MetricName:  "HttpResponseTime",
 			Aggregation: "Avg",
@@ -66,12 +70,114 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 			Message: "'azureMonitor.resourceId' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
+	t.Run("dataType must be the same for good/bad and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeMetrics,
+			ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
+			MetricName:  "HttpResponseTime",
+			Aggregation: "Avg",
+		}
+		// Good.
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeLogs,
+			WorkspaceID: "00000000-0000-0000-0000-000000000000",
+			KQLQuery:    "A | project TimeGenerated as n9time, 1 as n9value",
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.dataType' must be the same for both 'good' and 'total' metrics",
+		})
+		// Bad.
+		slo.Spec.Objectives[0].CountMetrics.BadMetric = slo.Spec.Objectives[0].CountMetrics.GoodMetric
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
+		err = validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.dataType' must be the same for both 'bad' and 'total' metrics",
+		})
+	})
 }
 
-func TestAzureMonitor(t *testing.T) {
+var validAzureMonitorMetricsDataType = AzureMonitorMetric{
+	DataType:    AzureMonitorDataTypeMetrics,
+	ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
+	MetricName:  "HttpResponseTime",
+	Aggregation: "Avg",
+}
+
+var validAzureMonitorLogsDataType = AzureMonitorMetric{
+	DataType:    AzureMonitorDataTypeLogs,
+	WorkspaceID: "00000000-0000-0000-0000-000000000000",
+	KQLQuery:    "A | project TimeGenerated as n9time, 1 as n9value",
+}
+
+var validAzureMetrics = map[string]*AzureMonitorMetric{
+	AzureMonitorDataTypeMetrics: &validAzureMonitorMetricsDataType,
+	AzureMonitorDataTypeLogs:    &validAzureMonitorLogsDataType,
+}
+
+func TestAzureMonitor_DataType(t *testing.T) {
 	t.Run("required fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = &AzureMonitorMetric{
+			DataType: "",
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("valid dataType", func(t *testing.T) {
+		for _, dt := range supportedAzureMonitorDataTypes {
+			slo := validRawMetricSLO(v1alpha.AzureMonitor)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = validAzureMetrics[dt]
+			err := validate(slo)
+			testutils.AssertNoError(t, slo, err)
+		}
+	})
+	t.Run("invalid dataType", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.DataType = "invalid"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
+			Code: validation.ErrorCodeOneOf,
+		})
+	})
+}
+
+func TestAzureMonitor_LogsDataType(t *testing.T) {
+	t.Run("required fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeLogs,
+			WorkspaceID: "",
+			KQLQuery:    "",
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspaceId",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
+func TestAzureMonitor_MetricDataType(t *testing.T) {
+	t.Run("required fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = &AzureMonitorMetric{
+			DataType:    AzureMonitorDataTypeMetrics,
 			ResourceID:  "",
 			MetricName:  "",
 			Aggregation: "",
