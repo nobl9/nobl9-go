@@ -4,7 +4,7 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-// HoneycombMetric represents metric from Honeycomb.
+// HoneycombMetric represents metric from Honeycomb. To access this integration, contact support@nobl9.com.
 type HoneycombMetric struct {
 	Dataset     string `json:"dataset"`
 	Calculation string `json:"calculation"`
