@@ -1,15 +1,37 @@
 # Validation
 
 Package validation implements a functional API for consistent, type safe validation.
-It puts heavy focus on end user errors readability, providing means for construing
-information-rich error messages.
+It puts heavy focus on end user errors readability, providing means of crafting clear
+and information-rich error messages.
 
-Validation pipeline is immutable and lazily evaluated.
+Validation pipeline is immutable and lazily loaded.
+
+- Immutable, as changing the pipeline through chained functions,
+  will return a new pipeline.
+  It allows extended reusability of validation components.
+- Lazily loaded, as properties are extracted through getter functions,
+  which are only called when you call the `Validate` method.
+  Functional approach allows validation components to only be called when needed.
+  You should define your pipeline once and call it
+  whenever you validate instances of your entity.
+
+All that has been made possible by the introduction of generics in Go.
+Prior to that, there wasn't really any viable way to create type safe validation API.
+Although the current state of type inference is somewhat clunky,
+the API can only improve in time when generics support in Go is further extended.
+
+## NOTE: Work in progress!
+
+Although already battle tested through SLO hellfire,
+this library is still a work in progress.
+The principles and the API at its core won't change,
+but the details and capabilities might hopefully will.
+Contributions and suggestions are most welcome!
 
 ## Usage
 
-This README goes through more abstract
-Refer to [example_test.go](./example_test.go) for a tutorial through runnable examples.
+**This README goes through an abstract overview of the library. \
+Refer to [example_test.go](./example_test.go) for a hands-on tutorial with runnable examples.**
 
 ### Legend
 
@@ -144,3 +166,7 @@ However when adding custom validation rules, type casting has to be heavily util
 and it becomes increasingly harder to track what exactly is being validated.
 Another issue is the readability of the errors, it's often hard or even impossible to shape
 the error to the developer liking.
+
+### Acknowledgements
+
+Heavily inspired by [C# FluentValidation](https://docs.fluentvalidation.net/).
