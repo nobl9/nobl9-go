@@ -87,12 +87,18 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 ).When(azureMonitorMetricDataTypeIs(AzureMonitorDataTypeMetrics))
 
 var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric](
-	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
-		WithName("kqlQuery").
-		Required(),
 	validation.For(func(a AzureMonitorMetric) string { return a.WorkspaceID }).
 		WithName("workspaceId").
 		Required(),
+	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
+		WithName("kqlQuery").
+		Required().
+		Rules(
+			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
+				WithDetails("n9_time is required"),
+			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
+				WithDetails("n9_value is required"),
+		),
 ).When(azureMonitorMetricDataTypeIs(AzureMonitorDataTypeLogs))
 
 var azureMonitorMetricDimensionValidation = validation.New[AzureMonitorMetricDimension](

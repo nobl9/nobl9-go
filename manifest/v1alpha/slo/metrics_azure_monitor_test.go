@@ -82,7 +82,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = &AzureMonitorMetric{
 			DataType:    AzureMonitorDataTypeLogs,
 			WorkspaceID: "00000000-0000-0000-0000-000000000000",
-			KQLQuery:    "A | project TimeGenerated as n9time, 1 as n9value",
+			KQLQuery:    "A | project TimeGenerated as n9_time, 1 as n9_value",
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
@@ -100,22 +100,27 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 	})
 }
 
-var validAzureMonitorMetricsDataType = AzureMonitorMetric{
-	DataType:    AzureMonitorDataTypeMetrics,
-	ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
-	MetricName:  "HttpResponseTime",
-	Aggregation: "Avg",
+func validAzureMonitorMetricsDataType() *AzureMonitorMetric {
+	return &AzureMonitorMetric{DataType: AzureMonitorDataTypeMetrics,
+		ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
+		MetricName:  "HttpResponseTime",
+		Aggregation: "Avg",
+	}
 }
 
-var validAzureMonitorLogsDataType = AzureMonitorMetric{
-	DataType:    AzureMonitorDataTypeLogs,
-	WorkspaceID: "00000000-0000-0000-0000-000000000000",
-	KQLQuery:    "A | project TimeGenerated as n9time, 1 as n9value",
+func validAzureMonitorLogsDataType() *AzureMonitorMetric {
+	return &AzureMonitorMetric{
+		DataType:    AzureMonitorDataTypeLogs,
+		WorkspaceID: "00000000-0000-0000-0000-000000000000",
+		KQLQuery:    "A | project TimeGenerated as n9_time, 1 as n9_value",
+	}
 }
 
-var validAzureMetrics = map[string]*AzureMonitorMetric{
-	AzureMonitorDataTypeMetrics: &validAzureMonitorMetricsDataType,
-	AzureMonitorDataTypeLogs:    &validAzureMonitorLogsDataType,
+func getValidAzureMetric(dataType string) *AzureMonitorMetric {
+	if dataType == AzureMonitorDataTypeMetrics {
+		return validAzureMonitorMetricsDataType()
+	}
+	return validAzureMonitorLogsDataType()
 }
 
 func TestAzureMonitor_DataType(t *testing.T) {
@@ -135,7 +140,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 	t.Run("valid dataType", func(t *testing.T) {
 		for _, dt := range supportedAzureMonitorDataTypes {
 			slo := validRawMetricSLO(v1alpha.AzureMonitor)
-			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = validAzureMetrics[dt]
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(dt)
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
@@ -168,6 +173,34 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
 				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("required query token - n9_value", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.
+			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_missingtime, 1 as n9_value"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Message: "string does not match regular expression: '(?m)\\\\bn9_time\\\\b'; n9_time is required",
+				Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code:    validation.ErrorCodeStringMatchRegexp,
+			},
+		)
+	})
+	t.Run("required query token - n9_time", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.
+			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_time, 1 as n9_missingvalue"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Message: "string does not match regular expression: '(?m)\\\\bn9_time\\\\b'; n9_value is required",
+				Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code:    validation.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
