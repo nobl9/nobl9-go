@@ -14,6 +14,53 @@ import (
 //go:embed test_data
 var errorsTestData embed.FS
 
+func TestValidatorError(t *testing.T) {
+	for name, err := range map[string]*ValidatorError{
+		"no_name": {
+			Errors: PropertyErrors{
+				{
+					PropertyName:  "this",
+					PropertyValue: "123",
+					Errors:        []*RuleError{{Message: "this is an error"}},
+				},
+				{
+					PropertyName: "that",
+					Errors:       []*RuleError{{Message: "that is an error"}},
+				},
+			},
+		},
+		"with_name": {
+			Name: "Teacher",
+			Errors: PropertyErrors{
+				{
+					PropertyName:  "this",
+					PropertyValue: "123",
+					Errors:        []*RuleError{{Message: "this is an error"}},
+				},
+				{
+					PropertyName: "that",
+					Errors:       []*RuleError{{Message: "that is an error"}},
+				},
+			},
+		},
+		"prop_no_name": {
+			Errors: PropertyErrors{
+				{
+					Errors: []*RuleError{{Message: "no name"}},
+				},
+				{
+					PropertyName: "that",
+					Errors:       []*RuleError{{Message: "that is an error"}},
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("validator_error_%s.txt", name)))
+		})
+	}
+}
+
 func TestNewPropertyError(t *testing.T) {
 	t.Run("string value", func(t *testing.T) {
 		err := NewPropertyError("name", "value",
@@ -132,6 +179,16 @@ func TestPropertyError(t *testing.T) {
 			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", typ)))
 		})
 	}
+	t.Run("no name provided", func(t *testing.T) {
+		err := &PropertyError{
+			Errors: []*RuleError{
+				{Message: "what a shame this happened"},
+				{Message: "this is outrageous..."},
+				{Message: "here's another error"},
+			},
+		}
+		assert.EqualError(t, err, expectedErrorOutput(t, "property_error_no_name.txt"))
+	})
 }
 
 func TestPropertyError_PrependPropertyName(t *testing.T) {

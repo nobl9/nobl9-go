@@ -16,14 +16,6 @@ type ValidatorError struct {
 	Name   string         `json:"name"`
 }
 
-type PropertyErrors []*PropertyError
-
-func (e PropertyErrors) Error() string {
-	b := strings.Builder{}
-	JoinErrors(&b, e, "")
-	return b.String()
-}
-
 func (e *ValidatorError) WithName(name string) *ValidatorError {
 	e.Name = name
 	return e
@@ -38,6 +30,14 @@ func (e *ValidatorError) Error() string {
 	}
 	b.WriteString(" has failed for the following properties:\n")
 	JoinErrors(&b, e.Errors, strings.Repeat(" ", 2))
+	return b.String()
+}
+
+type PropertyErrors []*PropertyError
+
+func (e PropertyErrors) Error() string {
+	b := strings.Builder{}
+	JoinErrors(&b, e, "")
 	return b.String()
 }
 
@@ -192,7 +192,9 @@ const listPoint = "- "
 
 func buildErrorMessage(b *strings.Builder, errMsg, indent string) {
 	b.WriteString(indent)
-	b.WriteString(listPoint)
+	if !strings.HasPrefix(errMsg, listPoint) {
+		b.WriteString(listPoint)
+	}
 	// Indent the whole error message.
 	errMsg = strings.ReplaceAll(errMsg, "\n", "\n"+indent)
 	b.WriteString(errMsg)

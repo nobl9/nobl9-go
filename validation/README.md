@@ -27,36 +27,6 @@ Refer to [example_test.go](./example_test.go) for a runnable example.
 
 Validator aggregates [property rules](#property-rules) into a single validation scenario,
 most commonly associated with an entity, like `struct`.
-In order to create a new validator use `New` constructor:
-
-[//]: # ( @formatter:off)
-```go
-type Teacher struct {
-    Name     string
-    Age      time.Duration
-}
-
-teacherValidator := validation.New(
-    ... // Your property rules go here.
-)
-```
-
-Validator rules can be evaluated on condition, to specify the predicate use `When` function:
-
-```go
-teacherValidator = teacherValidator.When(func(t Teacher) bool { return t.Age < 50 })
-```
-
-In the example validation for `Teacher` instance will only be evaluated
-if the `Age` property is less then 50.
-
-In order to associate `Validator` with an entity name use `WithName` function:
-
-```go
-teacherValidator = teacherValidator.WithName("teacher")
-```
-
-This will result in an error message displaying the entity name you've provided.
 
 If any property rules fail [ValidatorError](#validatorerror) is returned.
 
