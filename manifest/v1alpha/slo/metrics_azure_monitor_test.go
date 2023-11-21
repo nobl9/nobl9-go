@@ -72,18 +72,9 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 	})
 	t.Run("dataType must be the same for good/bad and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
-		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = &AzureMonitorMetric{
-			DataType:    AzureMonitorDataTypeMetrics,
-			ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
-			MetricName:  "HttpResponseTime",
-			Aggregation: "Avg",
-		}
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeMetrics)
 		// Good.
-		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = &AzureMonitorMetric{
-			DataType:    AzureMonitorDataTypeLogs,
-			WorkspaceID: "00000000-0000-0000-0000-000000000000",
-			KQLQuery:    "A | project TimeGenerated as n9_time, 1 as n9_value",
-		}
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].countMetrics",
