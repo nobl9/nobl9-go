@@ -28,12 +28,12 @@ func ExampleService() {
 	)
 	// Verify the object:
 	if err := myService.Validate(); err != nil {
-		log.Fatal("service validation failed, err: %w", err)
+		log.Fatalf("service validation failed, err: %v", err)
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
 	if err := client.ApplyObjects(context.Background(), []manifest.Object{myService}); err != nil {
-		log.Fatal("failed to apply service, err: %w", err)
+		log.Fatalf("failed to apply service, err: %v", err)
 	}
 	// Output:
 	// apiVersion: n9/v1alpha
