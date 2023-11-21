@@ -209,7 +209,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 			{
 				desc:        "to short",
 				workspaceId: "0000000-0000-0000-0000-00000000000",
-				isValid:     true,
+				isValid:     false,
 			},
 			{
 				desc:        "valid rfc4122 uuid",
