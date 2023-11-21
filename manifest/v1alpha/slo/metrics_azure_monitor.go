@@ -15,13 +15,13 @@ const (
 // AzureMonitorMetric represents metric from AzureMonitor
 type AzureMonitorMetric struct {
 	DataType        string                        `json:"dataType"`
-	ResourceID      string                        `json:"resourceId"`
-	MetricName      string                        `json:"metricName"`
-	Aggregation     string                        `json:"aggregation"`
+	ResourceID      string                        `json:"resourceId,omitempty"`
+	MetricName      string                        `json:"metricName,omitempty"`
+	Aggregation     string                        `json:"aggregation,omitempty"`
 	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty"`
 	MetricNamespace string                        `json:"metricNamespace,omitempty"`
-	KQLQuery        string                        `json:"kqlQuery"`
-	WorkspaceID     string                        `json:"workspaceId"`
+	KQLQuery        string                        `json:"kqlQuery,omitempty"`
+	WorkspaceID     string                        `json:"workspaceId,omitempty"`
 }
 
 // AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
