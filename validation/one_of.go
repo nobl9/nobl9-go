@@ -35,14 +35,14 @@ func MutuallyExclusive[S any](required bool, getters map[string]func(s S) any) S
 		}
 		switch len(nonEmpty) {
 		case 0:
-			if required {
-				keys := maps.Keys(getters)
-				slices.Sort(keys)
-				return errors.Errorf(
-					"one of %s properties must be set, none was provided",
-					prettyStringList(keys))
+			if !required {
+				return nil
 			}
-			return nil
+			keys := maps.Keys(getters)
+			slices.Sort(keys)
+			return errors.Errorf(
+				"one of %s properties must be set, none was provided",
+				prettyStringList(keys))
 		case 1:
 			return nil
 		default:
