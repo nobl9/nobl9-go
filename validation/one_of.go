@@ -20,7 +20,7 @@ func OneOf[T comparable](values ...T) SingleRule[T] {
 	}).WithErrorCode(ErrorCodeOneOf)
 }
 
-// MutuallyExclusive checks is properties are mutually exclusive.
+// MutuallyExclusive checks if properties are mutually exclusive.
 // This means, exactly one of the properties can be provided.
 // If required is true, then a single non-empty property is required.
 func MutuallyExclusive[S any](required bool, getters map[string]func(s S) any) SingleRule[S] {
