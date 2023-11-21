@@ -76,7 +76,7 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 	validation.ForEach(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		IncludeForEach(azureMonitorMetricDimensionValidation).
-		// We don't want to check names uniqueness if for exsample names are empty.
+		// We don't want to check names uniqueness if they're empty.
 		StopOnError().
 		Rules(validation.SliceUnique(func(d AzureMonitorMetricDimension) string {
 			if d.Name == nil {
@@ -89,7 +89,8 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric](
 	validation.For(func(a AzureMonitorMetric) string { return a.WorkspaceID }).
 		WithName("workspaceId").
-		Required(),
+		Required().
+		Rules(validation.StringRFC4122Uuid()),
 	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
 		Required().
@@ -132,6 +133,9 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if good.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", goodMetric)
 				}
+				if good.AzureMonitor.WorkspaceID != total.AzureMonitor.WorkspaceID {
+					return countMetricsPropertyEqualityError("azureMonitor.workspaceId", goodMetric)
+				}
 				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", goodMetric)
 				}
@@ -142,6 +146,9 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 			if bad != nil {
 				if bad.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", badMetric)
+				}
+				if bad.AzureMonitor.WorkspaceID != total.AzureMonitor.WorkspaceID {
+					return countMetricsPropertyEqualityError("azureMonitor.workspaceId", badMetric)
 				}
 				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", badMetric)

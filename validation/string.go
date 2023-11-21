@@ -56,6 +56,16 @@ func StringIsDNSSubdomain() RuleSet[string] {
 	).WithErrorCode(ErrorCodeStringIsDNSSubdomain)
 }
 
+var uuidRFC4122Regexp = regexp.
+	MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
+func StringRFC4122Uuid() SingleRule[string] {
+	return StringMatchRegexp(uuidRFC4122Regexp, "0000000-0000-0000-0000-000000000000",
+		"e190c630-8873-11ee-b9d1-0242ac120002", "79258D24-01A7-47E5-ACBB-7E762DE52298").
+		WithDetails("expected RFC-4122 compliant UUID string").
+		WithErrorCode(ErrorCodeStringRFC4122Uuid)
+}
+
 var asciiRegexp = regexp.MustCompile("^[\x00-\x7F]*$")
 
 func StringASCII() SingleRule[string] {
