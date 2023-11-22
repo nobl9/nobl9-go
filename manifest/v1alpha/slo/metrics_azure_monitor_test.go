@@ -159,7 +159,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 			testutils.AssertNoError(t, slo, err)
 		}
 	})
-	t.Run("invalid dataType", func(t *testing.T) {
+	t.Run("invalid", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.DataType = "invalid"
 		err := validate(slo)
