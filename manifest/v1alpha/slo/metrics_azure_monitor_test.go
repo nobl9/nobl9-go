@@ -89,7 +89,53 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 			Message: "'azureMonitor.dataType' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
-	t.Run("workspaceId must be the same for good/bad and total", func(t *testing.T) {
+	t.Run("workspace.subscriptionId must be the same for good/bad and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor.Workspace.
+			SubscriptionID = "44444444-4444-4444-4444-444444444444"
+		// Good.
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor.Workspace.
+			SubscriptionID = "11111111-1111-1111-1111-111111111111"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.workspace.subscriptionId' must be the same for both 'good' and 'total' metrics",
+		})
+		// Bad.
+		slo.Spec.Objectives[0].CountMetrics.BadMetric = slo.Spec.Objectives[0].CountMetrics.GoodMetric
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
+		err = validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.workspace.subscriptionId' must be the same for both 'bad' and 'total' metrics",
+		})
+	})
+	t.Run("workspace.resourceGroup must be the same for good/bad and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor.Workspace.
+			ResourceGroup = "rg-1"
+		// Good.
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor.Workspace.
+			ResourceGroup = "rg-2"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.workspace.resourceGroup' must be the same for both 'good' and 'total' metrics",
+		})
+		// Bad.
+		slo.Spec.Objectives[0].CountMetrics.BadMetric = slo.Spec.Objectives[0].CountMetrics.GoodMetric
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
+		err = validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "'azureMonitor.workspace.resourceGroup' must be the same for both 'bad' and 'total' metrics",
+		})
+	})
+	t.Run("workspace.workspaceId must be the same for good/bad and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.AzureMonitor.Workspace.
@@ -255,7 +301,6 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			})
 	})
-
 	t.Run("subscriptionId must be uuid if defined validation", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
@@ -266,6 +311,59 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
 				Code: validation.ErrorCodeStringUUID,
 			})
+	})
+	t.Run("resourceGroup must match regex if defined validation", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		testCases := []struct {
+			desc          string
+			resourceGroup string
+			isValid       bool
+		}{
+			{
+				desc:          "unsupported character",
+				resourceGroup: "azure-monitor-!test-sources",
+				isValid:       false,
+			},
+			{
+				desc:          "spaces",
+				resourceGroup: "azure-monitor test-sources",
+				isValid:       false,
+			},
+			{
+				desc:          "valid azure resource group 1",
+				resourceGroup: "azure-monitor-test-sources",
+				isValid:       true,
+			},
+			{
+				desc:          "valid azure resource group 2",
+				resourceGroup: "azure-monitor-test-source)s",
+				isValid:       true,
+			},
+			{
+				desc:          "valid azure resource group 3",
+				resourceGroup: "MC-azure-monitor-test-sources_aks-cluster_westeurope",
+				isValid:       true,
+			},
+		}
+		for _, tC := range testCases {
+			t.Run(tC.desc, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.AzureMonitor)
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Workspace.ResourceGroup = tC.resourceGroup
+				err := validate(slo)
+				if tC.isValid {
+					testutils.AssertNoError(t, slo, err)
+				} else {
+					testutils.AssertContainsErrors(t, slo, err, 1,
+						testutils.ExpectedError{
+							Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
+							Message: "string does not match regular expression: '^[a-zA-Z0-9-._()]+$'",
+							Code:    validation.ErrorCodeStringMatchRegexp,
+						})
+				}
+			})
+		}
 	})
 	t.Run("workspaceId must be uuid validation", func(t *testing.T) {
 		testCases := []struct {

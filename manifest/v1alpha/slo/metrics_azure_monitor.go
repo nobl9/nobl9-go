@@ -87,11 +87,17 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
 ).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics })
 
+var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
+
 var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
 		WithName("subscriptionId").
-		OmitEmpty().
+		OmitEmpty(). //TODO: replace this with Required() when log analytics discovery (PC-11169) is implemented
 		Rules(validation.StringUUID()),
+	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.ResourceGroup }).
+		WithName("resourceGroup").
+		OmitEmpty(). //TODO: replace this with Required() when log analytics discovery (PC-11169) is implemented
+		Rules(validation.StringMatchRegexp(validAzureResourceGroupRegex)),
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
 		WithName("workspaceId").
 		Required().
@@ -145,9 +151,16 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if good.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", goodMetric)
 				}
-				if good.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil &&
-					good.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
-					return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", goodMetric)
+				if good.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil {
+					if good.AzureMonitor.Workspace.SubscriptionID != total.AzureMonitor.Workspace.SubscriptionID {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.subscriptionId", goodMetric)
+					}
+					if good.AzureMonitor.Workspace.ResourceGroup != total.AzureMonitor.Workspace.ResourceGroup {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.resourceGroup", goodMetric)
+					}
+					if good.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", goodMetric)
+					}
 				}
 				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", goodMetric)
@@ -160,9 +173,16 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if bad.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", badMetric)
 				}
-				if bad.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil &&
-					bad.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
-					return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", badMetric)
+				if bad.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil {
+					if bad.AzureMonitor.Workspace.SubscriptionID != total.AzureMonitor.Workspace.SubscriptionID {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.subscriptionId", badMetric)
+					}
+					if bad.AzureMonitor.Workspace.ResourceGroup != total.AzureMonitor.Workspace.ResourceGroup {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.resourceGroup", badMetric)
+					}
+					if bad.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
+						return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", badMetric)
+					}
 				}
 				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", badMetric)
