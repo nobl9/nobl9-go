@@ -55,7 +55,7 @@ func TestValidate_Spec_ExportType(t *testing.T) {
 		err := validate(dataExport)
 		testutils.AssertNoError(t, dataExport, err)
 	})
-	t.Run("fails, unsupported export type", func(t *testing.T) {
+	t.Run("fails with unsupported export type", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "Azure"
 		err := validate(dataExport)
@@ -77,7 +77,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 		err := validate(dataExport)
 		testutils.AssertNoError(t, dataExport, err)
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with required fields", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "S3"
 		dataExport.Spec.Spec = S3DataExportSpec{}
@@ -96,7 +96,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with invalid bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "S3"
 		dataExport.Spec.Spec = S3DataExportSpec{
@@ -108,17 +108,13 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			t,
 			dataExport,
 			err,
-			2,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringLength,
-			},
+			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
 				Code: validation.ErrorCodeStringMatchRegexp,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with invalid role ARN", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "S3"
 		dataExport.Spec.Spec = S3DataExportSpec{
@@ -149,7 +145,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 		err := validate(dataExport)
 		testutils.AssertNoError(t, dataExport, err)
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with required fields", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "Snowflake"
 		dataExport.Spec.Spec = S3DataExportSpec{}
@@ -168,7 +164,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with invalid bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "Snowflake"
 		dataExport.Spec.Spec = S3DataExportSpec{
@@ -180,17 +176,13 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			t,
 			dataExport,
 			err,
-			2,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringLength,
-			},
+			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
 				Code: validation.ErrorCodeStringMatchRegexp,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with invalid role ARN", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "Snowflake"
 		dataExport.Spec.Spec = S3DataExportSpec{
@@ -211,25 +203,20 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 }
 
 func TestValidate_Spec_Spec_GCS(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
-			BucketName: "my-travel-maps",
-		}
-		err := validate(dataExport)
-		testutils.AssertNoError(t, dataExport, err)
-	})
-	t.Run("passes", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
-			BucketName: "0f75d593-8e7b-4418-a5ba-cb2970f0b91e",
-		}
-		err := validate(dataExport)
-		testutils.AssertNoError(t, dataExport, err)
-	})
-	t.Run("fails", func(t *testing.T) {
+	for name, bucketName := range map[string]string{
+		"passes with valid name":   "my-travel-maps",
+		"passes with guid as name": "0f75d593-8e7b-4418-a5ba-cb2970f0b91e",
+	} {
+		t.Run(name, func(t *testing.T) {
+			dataExport := validDataExport()
+			dataExport.Spec.Spec = GCSDataExportSpec{
+				BucketName: bucketName,
+			}
+			err := validate(dataExport)
+			testutils.AssertNoError(t, dataExport, err)
+		})
+	}
+	t.Run("fails with bucket name containing hyphens", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "GCS"
 		dataExport.Spec.Spec = GCSDataExportSpec{
@@ -242,7 +229,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 				Code: validation.ErrorCodeStringMatchRegexp,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with bucket name containing spaces", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "GCS"
 		dataExport.Spec.Spec = GCSDataExportSpec{
@@ -255,7 +242,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 				Code: validation.ErrorCodeStringMatchRegexp,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with required bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "GCS"
 		dataExport.Spec.Spec = GCSDataExportSpec{}
@@ -266,7 +253,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with too short bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "GCS"
 		dataExport.Spec.Spec = GCSDataExportSpec{
@@ -287,7 +274,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 				Code: validation.ErrorCodeStringMatchRegexp,
 			})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails with too long bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "GCS"
 		dataExport.Spec.Spec = GCSDataExportSpec{

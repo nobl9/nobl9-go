@@ -55,7 +55,6 @@ var s3Validation = validation.New[S3DataExportSpec](
 		WithName("bucketName").
 		Required().
 		Rules(
-			validation.StringLength(3, 63),
 			validation.StringMatchRegexp(S3BucketNameRegexp).
 				WithDetails("must be a valid S3 bucket name")),
 	validation.For(func(c S3DataExportSpec) string { return c.RoleARN }).
