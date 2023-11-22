@@ -50,12 +50,6 @@ var supportedAzureMonitorDataTypes = []string{
 	AzureMonitorDataTypeLogs,
 }
 
-func azureMonitorMetricDataTypeIs(dataType string) validation.Predicate[AzureMonitorMetric] {
-	return func(m AzureMonitorMetric) bool {
-		return m.DataType == dataType
-	}
-}
-
 var azureMonitorResourceIDRegex = regexp.MustCompile(`^/subscriptions/[a-zA-Z0-9-]+/resourceGroups/[a-zA-Z0-9-._()]+/providers/[a-zA-Z0-9-.()_]+/[a-zA-Z0-9-_()]+/[a-zA-Z0-9-_()]+$`) //nolint:lll
 
 var azureMonitorValidation = validation.New[AzureMonitorMetric](
@@ -91,7 +85,7 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 			}
 			return *d.Name
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
-).When(azureMonitorMetricDataTypeIs(AzureMonitorDataTypeMetrics))
+).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics })
 
 var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
@@ -118,7 +112,7 @@ var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric
 			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
 		),
-).When(azureMonitorMetricDataTypeIs(AzureMonitorDataTypeLogs))
+).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs })
 
 var azureMonitorMetricDimensionValidation = validation.New[AzureMonitorMetricDimension](
 	validation.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
