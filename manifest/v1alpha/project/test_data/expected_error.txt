@@ -1,7 +1,7 @@
 Validation for Project 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT' has failed for the following fields:
   - 'metadata.name' with value 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT...':
     - length must be between 1 and 63
-    - a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name',  or '123-abc', regex used for validation is '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$')
+    - string does not match regular expression: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
   - 'metadata.displayName' with value 'my-projectmy-projectmy-projectmy-projectmy-projectmy-projectmy-projectmy-projectmy-projectmy-project':
     - length must be between 0 and 63
   - 'metadata.labels' with value '{"L O L":["dip","dip"]}':

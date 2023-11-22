@@ -25,7 +25,10 @@ func (s Service) GetName() string {
 }
 
 func (s Service) Validate() error {
-	return validate(s)
+	if err := validate(s); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s Service) GetManifestSource() string {

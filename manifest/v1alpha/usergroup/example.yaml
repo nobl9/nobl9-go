@@ -1,0 +1,8 @@
+apiVersion: n9/v1alpha
+kind: UserGroup
+metadata:
+  name: my-group
+spec:
+  displayName: My Group
+  members:
+  - id: 00uc6qfkg93USC3rk4x7

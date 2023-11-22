@@ -25,6 +25,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
+	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -112,13 +113,7 @@ func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
 
 func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
 	responsePayload := []manifest.Object{
-		v1alpha.UserGroup{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindUserGroup,
-			Metadata: v1alpha.UserGroupMetadata{
-				Name: "service1",
-			},
-		},
+		v1alphaUserGroup.New(v1alphaUserGroup.Metadata{Name: "service1"}, v1alphaUserGroup.Spec{}),
 	}
 
 	calledTimes := 0

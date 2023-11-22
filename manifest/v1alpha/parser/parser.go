@@ -11,7 +11,10 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 )
 
 type unmarshalFunc func(v interface{}) error
@@ -48,7 +51,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindService:
 		return genericParseObject[service.Service](unmarshal)
 	case manifest.KindSLO:
-		return genericParseObject[v1alpha.SLO](unmarshal)
+		return genericParseObject[slo.SLO](unmarshal)
 	case manifest.KindProject:
 		return genericParseObject[project.Project](unmarshal)
 	case manifest.KindAgent:
@@ -64,13 +67,13 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindAlertSilence:
 		return genericParseObject[v1alpha.AlertSilence](unmarshal)
 	case manifest.KindRoleBinding:
-		return genericParseObject[v1alpha.RoleBinding](unmarshal)
+		return genericParseObject[rolebinding.RoleBinding](unmarshal)
 	case manifest.KindDataExport:
 		return genericParseObject[v1alpha.DataExport](unmarshal)
 	case manifest.KindAnnotation:
 		return genericParseObject[v1alpha.Annotation](unmarshal)
 	case manifest.KindUserGroup:
-		return genericParseObject[v1alpha.UserGroup](unmarshal)
+		return genericParseObject[usergroup.UserGroup](unmarshal)
 	default:
 		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}

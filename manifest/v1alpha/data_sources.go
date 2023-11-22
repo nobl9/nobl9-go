@@ -11,38 +11,42 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-type DataSourceType int
+//go:generate ../../bin/go-enum  --values --noprefix
 
+// DataSourceType represents the type of data source, either Agent or Direct.
+//
 // Beware that order of these constants is very important
 // existing integrations are saved in db with type = DataSourceType.
 // New integrations always have to be added as last item in this list to get new "type id".
-const (
-	Prometheus DataSourceType = iota + 1
-	Datadog
-	NewRelic
-	AppDynamics
-	Splunk
-	Lightstep
-	SplunkObservability
-	Dynatrace
-	ThousandEyes
-	Graphite
-	BigQuery
-	Elasticsearch
-	OpenTSDB
-	GrafanaLoki
-	CloudWatch
-	Pingdom
-	AmazonPrometheus
-	Redshift
-	SumoLogic
-	Instana
-	InfluxDB
-	GCM
-	AzureMonitor
-	Generic
-	Honeycomb
-)
+//
+/* ENUM(
+Prometheus = 1
+Datadog
+NewRelic
+AppDynamics
+Splunk
+Lightstep
+SplunkObservability
+Dynatrace
+ThousandEyes
+Graphite
+BigQuery
+Elasticsearch
+OpenTSDB
+GrafanaLoki
+CloudWatch
+Pingdom
+AmazonPrometheus
+Redshift
+SumoLogic
+Instana
+InfluxDB
+GCM
+AzureMonitor
+Generic
+Honeycomb
+)*/
+type DataSourceType int
 
 const DatasourceStableChannel = "stable"
 
@@ -100,42 +104,6 @@ func SourceOfToStringSlice(isMetrics, isServices bool) []string {
 func IsValidSourceOf(sourceOf string) bool {
 	_, ok := getSourceOfNames()[sourceOf]
 	return ok
-}
-
-var agentTypeToName = map[DataSourceType]string{
-	Prometheus:          "Prometheus",
-	Datadog:             "Datadog",
-	NewRelic:            "NewRelic",
-	AppDynamics:         "AppDynamics",
-	Splunk:              "Splunk",
-	Lightstep:           "Lightstep",
-	SplunkObservability: "SplunkObservability",
-	Dynatrace:           "Dynatrace",
-	Elasticsearch:       "Elasticsearch",
-	ThousandEyes:        "ThousandEyes",
-	Graphite:            "Graphite",
-	BigQuery:            "BigQuery",
-	OpenTSDB:            "OpenTSDB",
-	GrafanaLoki:         "GrafanaLoki",
-	CloudWatch:          "CloudWatch",
-	Pingdom:             "Pingdom",
-	AmazonPrometheus:    "AmazonPrometheus",
-	Redshift:            "Redshift",
-	SumoLogic:           "SumoLogic",
-	Instana:             "Instana",
-	InfluxDB:            "InfluxDB",
-	GCM:                 "GoogleCloudMonitoring",
-	AzureMonitor:        "AzureMonitor",
-	Generic:             "Generic",
-	Honeycomb:           "Honeycomb",
-}
-
-func (dst DataSourceType) String() string {
-	if key, ok := agentTypeToName[dst]; ok {
-		return key
-	}
-	//nolint: goconst
-	return "Unknown"
 }
 
 // HistoricalRetrievalDuration struct was previously called Duration. However, this name was too generic

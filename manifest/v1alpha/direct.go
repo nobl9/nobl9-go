@@ -425,12 +425,6 @@ type PublicHoneycombDirectConfig struct {
 	HiddenAPIKey string `json:"apiKey,omitempty"`
 }
 
-// PublicDirectWithSLOs struct which mapped one to one with kind: direct and slo yaml definition
-type PublicDirectWithSLOs struct {
-	Direct PublicDirect `json:"direct"`
-	SLOs   []SLO        `json:"slos"`
-}
-
 // AWSIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
 type AWSIAMRoleAuthExternalIDs struct {
 	ExternalID string `json:"externalID"`

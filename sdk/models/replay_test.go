@@ -1,12 +1,12 @@
 package models
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -141,11 +141,9 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
-				assert.Error(t, err)
-				for _, e := range err.(ValidationError).Errors {
-					assert.True(t, validation.HasErrorCode(e, tc.ErrorCode))
-				}
-				fmt.Println(err)
+				require.Error(t, err)
+				require.IsType(t, &validation.ValidatorError{}, err)
+				assert.True(t, validation.HasErrorCode(err, tc.ErrorCode))
 			}
 		})
 	}
@@ -201,7 +199,11 @@ func TestParseJSONToReplayStruct(t *testing.T) {
 			reader := strings.NewReader(tc.inputJSON)
 			got, err := ParseJSONToReplayStruct(reader)
 
-			assert.Equal(t, tc.wantErr, err != nil)
+			if tc.wantErr {
+				assert.NotEmpty(t, err)
+			} else {
+				assert.Empty(t, err)
+			}
 			assert.Equal(t, tc.want, got)
 		})
 	}

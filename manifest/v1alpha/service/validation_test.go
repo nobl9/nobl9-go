@@ -30,5 +30,5 @@ func TestValidate_AllErrors(t *testing.T) {
 		},
 		ManifestSource: "/home/me/service.yaml",
 	})
-	assert.Equal(t, expectedError, err.Error())
+	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
 }
