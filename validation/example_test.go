@@ -376,7 +376,60 @@ func ExampleHasErrorCode() {
 	// Has error code: teacher_name
 	// Has error code: string_length
 	// Has error code: string_match_regexp
+}''
+
+// Sometimes you need top level context.
+func ExamplePropertyRules_Include() {
+	v := validation.New[Teacher](
+		validation.For(validation.GetSelf[Teacher]()).
+			Rules(validation.NewSingleRule(func(t Teacher) error {
+			})),
+	).WithName("Teacher")
+
+	teacher := Teacher{
+		Name: "Jake",
+		Age:  51 * year,
+	}
+
+	err := v.Validate(teacher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - now I have access to the whole teacher
 }
+
+// Sometimes you need top level context.
+//func ExampleNewPropertyError() {
+//	v := validation.New[Teacher](
+//		validation.For(validation.GetSelf[Teacher]()).
+//			Rules(validation.NewSingleRule(func(t Teacher) error {
+//				return validation.NewPropertyError(
+//					"name",
+//					t.Name,
+//					&validation.RuleError{
+//						Message: "cannot have both 'bad' and 'good' metrics defined",
+//						Code:    errCodeEitherBadOrGoodCountMetric,
+//					}).PrependPropertyName(validation.SliceElementName("students", i))
+//			})),
+//	).WithName("Teacher")
+//
+//	teacher := Teacher{
+//		Name: "Jake",
+//		Age:  51 * year,
+//	}
+//
+//	err := v.Validate(teacher)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+
+// Output:
+// Validation for Teacher has failed for the following properties:
+//   - now I have access to the whole teacher
+//}
 
 // Bringing it all together, let's create a fully fledged [Validator] for [Teacher].
 func ExampleValidator() {
