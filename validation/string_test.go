@@ -119,14 +119,14 @@ func TestStringASCII(t *testing.T) {
 	})
 }
 
-func TestStringRFC4122Uuid(t *testing.T) {
+func TestStringUUID(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		for _, input := range []string{
 			"00000000-0000-0000-0000-000000000000",
 			"e190c630-8873-11ee-b9d1-0242ac120002",
 			"79258D24-01A7-47E5-ACBB-7E762DE52298",
 		} {
-			err := StringRFC4122Uuid().Validate(input)
+			err := StringUUID().Validate(input)
 			assert.NoError(t, err)
 		}
 	})
@@ -139,9 +139,9 @@ func TestStringRFC4122Uuid(t *testing.T) {
 			"00000000-0000-0000-0000-0000000000",
 			// cspell:enable
 		} {
-			err := StringRFC4122Uuid().Validate(input)
+			err := StringUUID().Validate(input)
 			assert.Error(t, err)
-			assert.True(t, HasErrorCode(err, ErrorCodeStringRFC4122Uuid))
+			assert.True(t, HasErrorCode(err, ErrorCodeStringUUID))
 		}
 	})
 }

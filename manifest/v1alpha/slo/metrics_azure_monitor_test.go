@@ -114,29 +114,6 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 	})
 }
 
-func validAzureMonitorMetricsDataType() *AzureMonitorMetric {
-	return &AzureMonitorMetric{DataType: AzureMonitorDataTypeMetrics,
-		ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
-		MetricName:  "HttpResponseTime",
-		Aggregation: "Avg",
-	}
-}
-
-func validAzureMonitorLogsDataType() *AzureMonitorMetric {
-	return &AzureMonitorMetric{
-		DataType:    AzureMonitorDataTypeLogs,
-		WorkspaceID: "00000000-0000-0000-0000-000000000000",
-		KQLQuery:    "A | project TimeGenerated as n9_time, 1 as n9_value",
-	}
-}
-
-func getValidAzureMetric(dataType string) *AzureMonitorMetric {
-	if dataType == AzureMonitorDataTypeMetrics {
-		return validAzureMonitorMetricsDataType()
-	}
-	return validAzureMonitorLogsDataType()
-}
-
 func TestAzureMonitor_DataType(t *testing.T) {
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
@@ -151,7 +128,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 			},
 		)
 	})
-	t.Run("valid dataType", func(t *testing.T) {
+	t.Run("valid", func(t *testing.T) {
 		for _, dt := range supportedAzureMonitorDataTypes {
 			slo := validRawMetricSLO(v1alpha.AzureMonitor)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(dt)
@@ -239,7 +216,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
 							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspaceId",
-							Code: validation.ErrorCodeStringRFC4122Uuid,
+							Code: validation.ErrorCodeStringUUID,
 						})
 				}
 			})
@@ -470,4 +447,27 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 			}
 		})
 	}
+}
+
+func validAzureMonitorMetricsDataType() *AzureMonitorMetric {
+	return &AzureMonitorMetric{DataType: AzureMonitorDataTypeMetrics,
+		ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
+		MetricName:  "HttpResponseTime",
+		Aggregation: "Avg",
+	}
+}
+
+func validAzureMonitorLogsDataType() *AzureMonitorMetric {
+	return &AzureMonitorMetric{
+		DataType:    AzureMonitorDataTypeLogs,
+		WorkspaceID: "00000000-0000-0000-0000-000000000000",
+		KQLQuery:    "A | project TimeGenerated as n9_time, 1 as n9_value",
+	}
+}
+
+func getValidAzureMetric(dataType string) *AzureMonitorMetric {
+	if dataType == AzureMonitorDataTypeMetrics {
+		return validAzureMonitorMetricsDataType()
+	}
+	return validAzureMonitorLogsDataType()
 }
