@@ -50,8 +50,7 @@ var specMetricsValidation = validation.New[Spec](
 		StopOnError().
 		Rules(
 			timeSliceTargetsValidationRule,
-			objectiveOperatorRequiredForRawMetricValidationRule,
-		),
+			objectiveOperatorRequiredForRawMetricValidationRule),
 )
 
 var countMetricsSpecValidation = validation.New[CountMetricsSpec](
