@@ -23,7 +23,10 @@ func AssertNoError(t *testing.T, object interface{}, objErr *v1alpha.ObjectError
 	t.Helper()
 	rec.Record(t, object, 0, nil)
 
-	require.Nil(t, objErr, "ObjectError is expected to be nil")
+	if objErr != nil {
+		encErr, _ := json.MarshalIndent(objErr, "", " ")
+		require.FailNowf(t, "ObjectError should be nil", "ACTUAL:\n%s", string(encErr))
+	}
 }
 
 // AssertContainsErrors asserts that the given object has:
