@@ -14,14 +14,21 @@ const (
 
 // AzureMonitorMetric represents metric from AzureMonitor
 type AzureMonitorMetric struct {
-	DataType        string                        `json:"dataType"`
-	ResourceID      string                        `json:"resourceId,omitempty"`
-	MetricName      string                        `json:"metricName,omitempty"`
-	Aggregation     string                        `json:"aggregation,omitempty"`
-	Dimensions      []AzureMonitorMetricDimension `json:"dimensions,omitempty"`
-	MetricNamespace string                        `json:"metricNamespace,omitempty"`
-	KQLQuery        string                        `json:"kqlQuery,omitempty"`
-	WorkspaceID     string                        `json:"workspaceId,omitempty"`
+	DataType        string                                   `json:"dataType"`
+	ResourceID      string                                   `json:"resourceId,omitempty"`
+	MetricName      string                                   `json:"metricName,omitempty"`
+	Aggregation     string                                   `json:"aggregation,omitempty"`
+	Dimensions      []AzureMonitorMetricDimension            `json:"dimensions,omitempty"`
+	MetricNamespace string                                   `json:"metricNamespace,omitempty"`
+	Workspace       *AzureMonitorMetricLogAnalyticsWorkspace `json:"workspace,omitempty"`
+	KQLQuery        string                                   `json:"kqlQuery,omitempty"`
+}
+
+// AzureMonitorMetricLogAnalyticsWorkspace represents Azure Log Analytics Workspace
+type AzureMonitorMetricLogAnalyticsWorkspace struct {
+	SubscriptionID string `json:"subscriptionId"`
+	ResourceGroup  string `json:"resourceGroup"`
+	WorkspaceID    string `json:"workspaceId"`
 }
 
 // AzureMonitorMetricDimension represents name/value pair that is part of the identity of a metric.
@@ -86,11 +93,22 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
 ).When(azureMonitorMetricDataTypeIs(AzureMonitorDataTypeMetrics))
 
-var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric](
-	validation.For(func(a AzureMonitorMetric) string { return a.WorkspaceID }).
+var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
+	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
+		WithName("subscriptionId").
+		Omitempty().
+		Rules(validation.StringUUID()),
+	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
 		WithName("workspaceId").
 		Required().
 		Rules(validation.StringUUID()),
+)
+
+var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric](
+	validation.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
+		WithName("workspace").
+		Required().
+		Include(azureMonitorMetricLogAnalyticsWorkspaceValidation),
 	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
 		Required().
@@ -133,8 +151,9 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if good.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", goodMetric)
 				}
-				if good.AzureMonitor.WorkspaceID != total.AzureMonitor.WorkspaceID {
-					return countMetricsPropertyEqualityError("azureMonitor.workspaceId", goodMetric)
+				if good.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil &&
+					good.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
+					return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", goodMetric)
 				}
 				if good.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", goodMetric)
@@ -147,8 +166,9 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if bad.AzureMonitor.DataType != total.AzureMonitor.DataType {
 					return countMetricsPropertyEqualityError("azureMonitor.dataType", badMetric)
 				}
-				if bad.AzureMonitor.WorkspaceID != total.AzureMonitor.WorkspaceID {
-					return countMetricsPropertyEqualityError("azureMonitor.workspaceId", badMetric)
+				if bad.AzureMonitor.Workspace != nil && total.AzureMonitor.Workspace != nil &&
+					bad.AzureMonitor.Workspace.WorkspaceID != total.AzureMonitor.Workspace.WorkspaceID {
+					return countMetricsPropertyEqualityError("azureMonitor.workspace.workspaceId", badMetric)
 				}
 				if bad.AzureMonitor.MetricNamespace != total.AzureMonitor.MetricNamespace {
 					return countMetricsPropertyEqualityError("azureMonitor.metricNamespace", badMetric)
