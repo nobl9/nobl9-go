@@ -29,32 +29,35 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Spec_ExportType(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		err := validate(dataExport)
-		testutils.AssertNoError(t, dataExport, err)
-	})
-	t.Run("passes", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "Snowflake"
-		dataExport.Spec.Spec = S3DataExportSpec{
-			BucketName: "my-bucket",
-			RoleARN:    "arn:aws:iam::123456789012:role/my-role",
-		}
-		err := validate(dataExport)
-		testutils.AssertNoError(t, dataExport, err)
-	})
-	t.Run("passes", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "S3"
-		dataExport.Spec.Spec = S3DataExportSpec{
-			BucketName: "my-bucket",
-			RoleARN:    "arn:aws:iam::123456789012:role/my-role",
-		}
-		err := validate(dataExport)
-		testutils.AssertNoError(t, dataExport, err)
-	})
+	for name, spec := range map[string]Spec{
+		"passes with valid GCS spec": {
+			ExportType: "GCS",
+			Spec: GCSDataExportSpec{
+				BucketName: "my-bucket",
+			},
+		},
+		"passes with valid Snowflake spec": {
+			ExportType: "Snowflake",
+			Spec: S3DataExportSpec{
+				BucketName: "my-bucket",
+				RoleARN:    "arn:aws:iam::123456789012:role/my-role",
+			},
+		},
+		"passes with valid S3 spec": {
+			ExportType: "S3",
+			Spec: S3DataExportSpec{
+				BucketName: "my-bucket",
+				RoleARN:    "arn:aws:iam::123456789012:role/my-role",
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dataExport := validDataExport()
+			dataExport.Spec = spec
+			err := validate(dataExport)
+			testutils.AssertNoError(t, dataExport, err)
+		})
+	}
 	t.Run("fails with unsupported export type", func(t *testing.T) {
 		dataExport := validDataExport()
 		dataExport.Spec.ExportType = "Azure"
@@ -216,85 +219,80 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			testutils.AssertNoError(t, dataExport, err)
 		})
 	}
-	t.Run("fails with bucket name containing hyphens", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
+
+	for name, test := range map[string]struct {
+		ExpectedErrors      []testutils.ExpectedError
+		ExpectedErrorsCount int
+		BucketName          string
+	}{
+		"fails with bucket name containing hyphens": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringMatchRegexp,
+				},
+			},
 			BucketName: "My-Travel-Maps",
-		}
-		err := validate(dataExport)
-		testutils.AssertContainsErrors(t, dataExport, err, 1,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
-			})
-	})
-	t.Run("fails with bucket name containing spaces", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
+		},
+		"fails with bucket name containing spaces": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringMatchRegexp,
+				},
+			},
 			BucketName: "travel maps",
-		}
-		err := validate(dataExport)
-		testutils.AssertContainsErrors(t, dataExport, err, 1,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
-			})
-	})
-	t.Run("fails with required bucket name", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{}
-		err := validate(dataExport)
-		testutils.AssertContainsErrors(t, dataExport, err, 1,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeRequired,
-			})
-	})
-	t.Run("fails with too short bucket name", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
+		},
+		"fails with required bucket name": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+		},
+		"fails with too short bucket name": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringLength,
+				},
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringMatchRegexp,
+				},
+			},
 			BucketName: "1",
-		}
-		err := validate(dataExport)
-		testutils.AssertContainsErrors(
-			t,
-			dataExport,
-			err,
-			2,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringLength,
+		},
+		"fails with too long bucket name": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringLength,
+				},
+				{
+					Prop: "spec.spec.bucketName",
+					Code: validation.ErrorCodeStringMatchRegexp,
+				},
 			},
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
-			})
-	})
-	t.Run("fails with too long bucket name", func(t *testing.T) {
-		dataExport := validDataExport()
-		dataExport.Spec.ExportType = "GCS"
-		dataExport.Spec.Spec = GCSDataExportSpec{
 			BucketName: strings.Repeat("my-bucket", 100),
-		}
-		err := validate(dataExport)
-		testutils.AssertContainsErrors(
-			t,
-			dataExport,
-			err,
-			2,
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringLength,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
-			})
-	})
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			dataExport := validDataExport()
+			dataExport.Spec.ExportType = "GCS"
+			dataExport.Spec.Spec = GCSDataExportSpec{
+				BucketName: test.BucketName,
+			}
+			err := validate(dataExport)
+			testutils.AssertContainsErrors(t, dataExport, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
 }
 
 func validDataExport() DataExport {
