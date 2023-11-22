@@ -96,7 +96,7 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
 		WithName("subscriptionId").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringUUID()),
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
 		WithName("workspaceId").

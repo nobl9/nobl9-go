@@ -124,7 +124,7 @@ func (r PropertyRules[T, S]) Required() PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) Omitempty() PropertyRules[T, S] {
+func (r PropertyRules[T, S]) OmitEmpty() PropertyRules[T, S] {
 	r.omitempty = true
 	return r
 }

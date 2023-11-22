@@ -46,7 +46,7 @@ var honeycombValidation = validation.New[HoneycombMetric](
 			validation.StringASCII()),
 	validation.For(func(h HoneycombMetric) HoneycombFilter { return h.Filter }).
 		WithName("filter").
-		Omitempty().
+		OmitEmpty().
 		Include(honeycombFilterValidation),
 )
 
@@ -60,7 +60,7 @@ var honeycombFilterValidation = validation.New[HoneycombFilter](
 		})),
 	validation.For(func(h HoneycombFilter) string { return h.Operator }).
 		WithName("op").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.OneOf(supportedHoneycombFilterOperators...)).
 		Include(),
 	validation.ForEach(func(h HoneycombFilter) []HoneycombFilterCondition { return h.Conditions }).

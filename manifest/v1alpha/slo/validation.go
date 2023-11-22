@@ -169,11 +169,11 @@ var indicatorValidation = validation.New[Indicator](
 				Rules(validation.StringIsDNSSubdomain()),
 			validation.For(func(m MetricSourceSpec) string { return m.Project }).
 				WithName("project").
-				Omitempty().
+				OmitEmpty().
 				Rules(validation.StringIsDNSSubdomain()),
 			validation.For(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
 				WithName("kind").
-				Omitempty().
+				OmitEmpty().
 				Rules(validation.OneOf(manifest.KindAgent, manifest.KindDirect)),
 		)),
 	validation.ForPointer(func(i Indicator) *MetricSpec { return i.RawMetric }).
@@ -214,11 +214,11 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 var objectiveBaseValidation = validation.New[ObjectiveBase](
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringMaxLength(63)),
 )
 
