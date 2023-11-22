@@ -138,7 +138,7 @@ func getValidAzureMetric(dataType string) *AzureMonitorMetric {
 }
 
 func TestAzureMonitor_DataType(t *testing.T) {
-	t.Run("required fields", func(t *testing.T) {
+	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = &AzureMonitorMetric{
 			DataType: "",
