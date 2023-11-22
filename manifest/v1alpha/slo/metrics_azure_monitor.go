@@ -49,7 +49,7 @@ func azureMonitorMetricDataTypeIs(dataType string) validation.Predicate[AzureMon
 	}
 }
 
-var azureMonitorResourceIDRegexp = regexp.MustCompile(`^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-._()]+\/providers\/[a-zA-Z0-9-.()_]+\/[a-zA-Z0-9-_()]+\/[a-zA-Z0-9-_()]+$`) //nolint:lll
+var azureMonitorResourceIDRegex = regexp.MustCompile(`^/subscriptions/[a-zA-Z0-9-]+/resourceGroups/[a-zA-Z0-9-._()]+/providers/[a-zA-Z0-9-.()_]+/[a-zA-Z0-9-_()]+/[a-zA-Z0-9-_()]+$`) //nolint:lll
 
 var azureMonitorValidation = validation.New[AzureMonitorMetric](
 	validation.For(validation.GetSelf[AzureMonitorMetric]()).
@@ -68,7 +68,7 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
 		WithName("resourceId").
 		Required().
-		Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegexp)),
+		Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegex)),
 	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
 		Required().
@@ -90,7 +90,7 @@ var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric
 	validation.For(func(a AzureMonitorMetric) string { return a.WorkspaceID }).
 		WithName("workspaceId").
 		Required().
-		Rules(validation.StringRFC4122Uuid()),
+		Rules(validation.StringUUID()),
 	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
 		Required().
