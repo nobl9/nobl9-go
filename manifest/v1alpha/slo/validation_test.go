@@ -724,8 +724,8 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 
 func TestValidate_Spec_Objectives(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		for _, objectives := range [][]Objective{
-			{{
+		for name, objectives := range map[string][]Objective{
+			"valid raw metric": {{
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       ptr(9.2),
@@ -735,11 +735,27 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
 				Operator:     ptr(v1alpha.GreaterThan.String()),
 			}},
+			"empty value for count metrics": {{
+				ObjectiveBase: ObjectiveBase{
+					Name:        "name",
+					Value:       nil,
+					DisplayName: strings.Repeat("l", 63),
+				},
+				BudgetTarget: ptr(0.9),
+				CountMetrics: &CountMetricsSpec{
+					Incremental: ptr(false),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+				},
+				Operator: ptr(v1alpha.GreaterThan.String()),
+			}},
 		} {
-			slo := validSLO()
-			slo.Spec.Objectives = objectives
-			err := validate(slo)
-			testutils.AssertNoError(t, slo, err)
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = objectives
+				err := validate(slo)
+				testutils.AssertNoError(t, slo, err)
+			})
 		}
 	})
 	t.Run("fails", func(t *testing.T) {
