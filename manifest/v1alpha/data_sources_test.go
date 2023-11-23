@@ -184,6 +184,14 @@ func TestGetStrAndStdDurationFromDuration(t *testing.T) {
 		},
 		{
 			duration: Duration{
+				Value: ptr(100),
+				Unit:  Millisecond,
+			},
+			expectStr:      "100ms",
+			expectDuration: time.Millisecond * 100,
+		},
+		{
+			duration: Duration{
 				Value: ptr(60),
 				Unit:  Second,
 			},

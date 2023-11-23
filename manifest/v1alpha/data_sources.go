@@ -197,9 +197,10 @@ type Duration struct {
 type DurationUnit string
 
 const (
-	Second DurationUnit = "Second"
-	Minute DurationUnit = "Minute"
-	Hour   DurationUnit = "Hour"
+	Millisecond DurationUnit = "Millisecond"
+	Second      DurationUnit = "Second"
+	Minute      DurationUnit = "Minute"
+	Hour        DurationUnit = "Hour"
 )
 
 func (d Duration) String() string {
@@ -207,6 +208,8 @@ func (d Duration) String() string {
 		return "0s"
 	}
 	switch d.Unit {
+	case Millisecond:
+		return fmt.Sprintf("%dms", *d.Value)
 	case Second:
 		return fmt.Sprintf("%ds", *d.Value)
 	case Minute:
@@ -260,6 +263,8 @@ func DurationUnitFromString(unit string) (DurationUnit, error) {
 
 func (d DurationUnit) Duration() time.Duration {
 	switch d {
+	case Millisecond:
+		return time.Millisecond
 	case Second:
 		return time.Second
 	case Minute:
