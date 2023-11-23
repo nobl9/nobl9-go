@@ -437,7 +437,7 @@ func ExampleRuleSet() {
 	//     - string does not match regular expression: '^(Tom|Jerry)$'; Teacher can be either Tom or Jerry :); I will add that to both rules!
 }
 
-// To inspect if an error contains a given [ErrorCode], use [HasErrorCode] function.
+// To inspect if an error contains a given [validation.ErrorCode], use [HasErrorCode] function.
 // This function will also return true if the expected [ErrorCode]
 // is part of a chain of wrapped error codes.
 // In this example we're dealing with two error code chains:

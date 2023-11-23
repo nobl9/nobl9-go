@@ -1,6 +1,7 @@
 package validation
 
-// For creates a typed PropertyRules instance for the property which access is defined through getter function.
+// For creates a new [PropertyRules] instance for the property
+// which value is extracted through [PropertyGetter] function.
 func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
 	return PropertyRules[T, S]{getter: func(s S) (v T, isEmpty bool) { return getter(s), false }}
 }
