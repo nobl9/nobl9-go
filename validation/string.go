@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -104,6 +105,72 @@ func StringContains(substrings ...string) SingleRule[string] {
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringContains)
+}
+
+const (
+	iso8601Standard = "ISO 8601"
+)
+
+func StringDateFormat(layout string) SingleRule[string] {
+	return NewSingleRule(
+		func(v string) error {
+			if _, err := parseDateStr(v, layout); err != nil {
+				return err
+			}
+
+			return nil
+		}).
+		WithErrorCode(ErrorCodeDateFormatRequired)
+}
+
+func parseDateStr(value, layout string) (time.Time, error) {
+	layoutToISO := map[string]string{
+		time.RFC3339:     iso8601Standard,
+		time.RFC3339Nano: iso8601Standard,
+	}
+
+	parsedTime, err := time.Parse(layout, value)
+	if err != nil {
+		if standard, ok := layoutToISO[layout]; ok {
+			return time.Time{}, fmt.Errorf("\"%s\" must fulfil %s standard", value, standard)
+		}
+
+		return time.Time{}, err
+	}
+
+	return parsedTime, nil
+}
+
+// StringDatePropertyGreaterThanProperty checks if property string values are parseable to declared format,
+// then checks getter returned value passed as greaterGetter argument
+// if it is greater that value returned by lowerGetter
+func StringDatePropertyGreaterThanProperty[S any](
+	layout string,
+	greaterProperty string, greaterGetter func(s S) string,
+	lowerProperty string, lowerGetter func(s S) string,
+) SingleRule[S] {
+	return NewSingleRule(func(s S) error {
+		var parsedGreater time.Time
+		var parsedLower time.Time
+		var err error
+		greaterStr := greaterGetter(s)
+		if parsedGreater, err = parseDateStr(greaterStr, layout); err != nil {
+			return NewPropertyError(greaterProperty, s, err)
+		}
+		lowerStr := lowerGetter(s)
+		if parsedLower, err = parseDateStr(lowerStr, layout); err != nil {
+			return NewPropertyError(lowerProperty, s, err)
+		}
+
+		if !parsedGreater.After(parsedLower) {
+			return errors.Errorf(
+				`"%s" in property "%s" with must be greater than "%s" in property "%s"`,
+				greaterStr, greaterProperty, lowerStr, lowerProperty,
+			)
+		}
+
+		return nil
+	})
 }
 
 func prettyExamples(examples []string) string {
