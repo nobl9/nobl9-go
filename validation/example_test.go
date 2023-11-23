@@ -527,6 +527,111 @@ func ExampleNewPropertyError() {
 	//     - you can pass me too!
 }
 
+// So far we've defined validation rules for simple, top-level properties.
+// What If we want to define validation rules for nested properties?
+// We can use [PropertyRules.Include] to include another [Validator] in our [PropertyRules].
+//
+// Let's extend our [Teacher] struct to include a nested [University] property.
+// [University] in of itself is another struct with its own validation rules.
+//
+// Notice how the nested property path is automatically built for you,
+// each segment separated by a dot.
+func ExamplePropertyRules_Include() {
+	universityValidation := validation.New[University](
+		validation.For(func(u University) string { return u.Address }).
+			WithName("address").
+			Required(),
+	)
+	teacherValidation := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Rules(validation.EqualTo("Tom")),
+		validation.For(func(t Teacher) University { return t.University }).
+			WithName("university").
+			Include(universityValidation),
+	).WithName("Teacher")
+
+	teacher := Teacher{
+		Name: "Jerry",
+		Age:  51 * year,
+		University: University{
+			Name:    "Poznan University of Technology",
+			Address: "",
+		},
+	}
+
+	err := teacherValidation.Validate(teacher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Jerry':
+	//     - should be equal to 'Tom'
+	//   - 'university.address':
+	//     - property is required but was empty
+}
+
+// When dealing with slices we often want to both validate the whole slice
+// and each of its elements.
+// You can use [ForEach] function to do just that.
+// It returns a new struct [PropertyRulesForEach] which behaves exactly
+// the same as [PropertyRules], but extends its API slightly.
+//
+// To define rules for each element use:
+// - [PropertyRulesForEach.RulesForEach]
+// - [PropertyRulesForEach.IncludeForEach]
+// These work exactly the same way as [PropertyRules.Rules] and [PropertyRules.Include]
+// on each slice element.
+//
+// [PropertyRulesForEach.Rules] is in turn used to define rules for the whole slice.
+//
+// NOTE: [PropertyRulesForEach] does not implement Include function for the whole slice.
+//
+// In the below example, we're defining that students slice must have at most 2 elements
+// and that each element's index must be unique.
+// For each element we're also including [Student] [Validator].
+// Notice that property path fro slices has the following format:
+// <slice_name>[<index>].<slice_property_name>
+func ExampleForEach() {
+	studentValidator := validation.New[Student](
+		validation.For(func(s Student) string { return s.Index }).
+			WithName("index").
+			Rules(validation.StringLength(9, 9)),
+	)
+	teacherValidator := validation.New[Teacher](
+		validation.ForEach(func(t Teacher) []Student { return t.Students }).
+			WithName("students").
+			Rules(
+				validation.SliceMaxLength[[]Student](2),
+				validation.SliceUnique(func(v Student) string { return v.Index })).
+			IncludeForEach(studentValidator),
+	).When(func(t Teacher) bool { return t.Age < 50 })
+
+	teacher := Teacher{
+		Name: "John",
+		Students: []Student{
+			{Index: "918230014"},
+			{Index: "9182300123"},
+			{Index: "918230014"},
+		},
+	}
+
+	err := teacherValidator.Validate(teacher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation has failed for the following properties:
+	//   - 'students[1].index' with value '9182300123':
+	//     - length must be between 9 and 9
+	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
+	//     - length must be less than or equal to 2
+	//     - elements are not unique, index 0 collides with index 2
+}
+
 // WARNING!
 // The below examples display the CURRENT state of flow management for rules.
 // It's far from ideal and will be CHANGED IN THE FUTURE.
@@ -597,9 +702,13 @@ func ExamplePropertyRules_StopOnError() {
 	//     - should be not equal to 'Jerry'
 }
 
-// Bringing it all (mostly) together,
-// let's create a fully fledged [Validator] for [Teacher].
+// Bringing it all (mostly) together, let's create a fully fledged [Validator] for [Teacher].
 func ExampleValidator() {
+	universityValidation := validation.New[University](
+		validation.For(func(u University) string { return u.Address }).
+			WithName("address").
+			Required(),
+	)
 	studentValidator := validation.New[Student](
 		validation.For(func(s Student) string { return s.Index }).
 			WithName("index").
@@ -618,25 +727,109 @@ func ExampleValidator() {
 				validation.SliceMaxLength[[]Student](2),
 				validation.SliceUnique(func(v Student) string { return v.Index })).
 			IncludeForEach(studentValidator),
+		validation.For(func(t Teacher) University { return t.University }).
+			WithName("university").
+			Include(universityValidation),
 	).When(func(t Teacher) bool { return t.Age < 50 })
 
 	teacher := Teacher{
 		Name: "John",
 		Students: []Student{
+			{Index: "918230014"},
 			{Index: "9182300123"},
 			{Index: "918230014"},
 		},
+		University: University{
+			Name:    "Poznan University of Technology",
+			Address: "",
+		},
 	}
 
-	err := teacherValidator.WithName("teacher").Validate(teacher)
+	err := teacherValidator.WithName("John").Validate(teacher)
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	// Output:
-	// Validation for teacher has failed for the following properties:
+	// Validation for John has failed for the following properties:
 	//   - 'name' with value 'John':
 	//     - must be one of [Jake, George]
-	//   - 'students[0].index' with value '9182300123':
+	//   - 'students[1].index' with value '9182300123':
 	//     - length must be between 9 and 9
+	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
+	//     - length must be less than or equal to 2
+	//   - elements are not unique, index 0 collides with index 2
+	//     - 'university.address':
+	//   - property is required but was empty
+}
+
+// What follows below is a collection of more complex examples and useful patterns.
+
+// When dealing with properties that should only be validated if a certain other
+// property has specific value, it's recommended to use [PropertyRules.When] and [PropertyRules.Include]
+// to separate validation paths into non-overlapping branches.
+//
+// Notice how in the below example [File.Format] is the common,
+// shared property between [CSV] and [JSON] files.
+// We define separate [Validator] for [CSV] and [JSON] and use [PropertyRules.When] to only validate
+// their included [Validator] if the correct [File.Format] is provided.
+func ExampleValidator_branchingPattern() {
+	type (
+		CSV struct {
+			Separator string `json:"separator"`
+		}
+		JSON struct {
+			Indent string `json:"indent"`
+		}
+		File struct {
+			Format string `json:"format"`
+			CSV    *CSV   `json:"csv,omitempty"`
+			JSON   *JSON  `json:"json,omitempty"`
+		}
+	)
+
+	csvValidation := validation.New[CSV](
+		validation.For(func(c CSV) string { return c.Separator }).
+			WithName("separator").
+			Required().
+			Rules(validation.OneOf(",", ";")),
+	)
+
+	jsonValidation := validation.New[JSON](
+		validation.For(func(j JSON) string { return j.Indent }).
+			WithName("indent").
+			Required().
+			Rules(validation.StringMatchRegexp(regexp.MustCompile(`^\s*$`))),
+	)
+
+	fileValidation := validation.New[File](
+		validation.ForPointer(func(f File) *CSV { return f.CSV }).
+			When(func(f File) bool { return f.Format == "csv" }).
+			Include(csvValidation),
+		validation.ForPointer(func(f File) *JSON { return f.JSON }).
+			When(func(f File) bool { return f.Format == "json" }).
+			Include(jsonValidation),
+		validation.For(func(f File) string { return f.Format }).
+			WithName("format").
+			Required().
+			Rules(validation.OneOf("csv", "json")),
+	).WithName("File")
+
+	file := File{
+		Format: "json",
+		CSV:    nil,
+		JSON: &JSON{
+			Indent: "invalid",
+		},
+	}
+
+	err := fileValidation.Validate(file)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation for File has failed for the following properties:
+	//   - 'indent' with value 'invalid':
+	//     - string does not match regular expression: '^\s*$'
 }
