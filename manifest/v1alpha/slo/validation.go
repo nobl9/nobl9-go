@@ -125,12 +125,12 @@ var specCompositeValidationRule = validation.NewSingleRule(func(s Spec) error {
 			return validation.NewPropertyError(
 				"burnRateCondition",
 				s.Composite.BurnRateCondition,
-				&validation.RuleError{
-					Message: fmt.Sprintf(
+				validation.NewRuleError(
+					fmt.Sprintf(
 						"burnRateCondition may only be used with budgetingMethod == '%s'",
 						BudgetingMethodOccurrences),
-					Code: validation.ErrorCodeForbidden,
-				},
+					validation.ErrorCodeForbidden,
+				),
 			)
 		}
 	}

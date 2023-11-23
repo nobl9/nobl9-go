@@ -376,13 +376,26 @@ func ExampleHasErrorCode() {
 	// Has error code: teacher_name
 	// Has error code: string_length
 	// Has error code: string_match_regexp
-}''
+}
 
-// Sometimes you need top level context.
+// Sometimes you need top level context,
+// but you want to scope the error to a specific, nested property.
+// One of the ways to do that is to use [NewPropertyError]
+// and return [PropertyError] from your validation rule.
+// Note that you can still use [ErrorCode] and pass [RuleError] to the constructor.
+// You can pass any number of [RuleError].
 func ExamplePropertyRules_Include() {
 	v := validation.New[Teacher](
 		validation.For(validation.GetSelf[Teacher]()).
 			Rules(validation.NewSingleRule(func(t Teacher) error {
+				if t.Name == "Jake" {
+					return validation.NewPropertyError(
+						"name",
+						t.Name,
+						validation.NewRuleError("name cannot be Jake", "error_code_jake"),
+						validation.NewRuleError("you can pass me too!"))
+				}
+				return nil
 			})),
 	).WithName("Teacher")
 
@@ -393,12 +406,19 @@ func ExamplePropertyRules_Include() {
 
 	err := v.Validate(teacher)
 	if err != nil {
+		propertyErrors := err.Errors
+		ruleErrors := propertyErrors[0].Errors
+		fmt.Printf("Error code: %s\n\n", ruleErrors[0].Code)
 		fmt.Println(err)
 	}
 
 	// Output:
+	// Error code: error_code_jake
+	//
 	// Validation for Teacher has failed for the following properties:
-	//   - now I have access to the whole teacher
+	//   - 'name' with value 'Jake':
+	//     - name cannot be Jake
+	//     - you can pass me too!
 }
 
 // Sometimes you need top level context.

@@ -77,6 +77,16 @@ func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	return e
 }
 
+// NewRuleError creates a new RuleError with the given message and optional error codes.
+// Error codes are added according to the rules defined by RuleError.AddCode.
+func NewRuleError(message string, codes ...ErrorCode) *RuleError {
+	ruleError := &RuleError{Message: message}
+	for _, code := range codes {
+		ruleError = ruleError.AddCode(code)
+	}
+	return ruleError
+}
+
 type RuleError struct {
 	Message string    `json:"error"`
 	Code    ErrorCode `json:"code,omitempty"`
@@ -88,6 +98,13 @@ func (r *RuleError) Error() string {
 
 const ErrorCodeSeparator = ":"
 
+// AddCode extends the RuleError with the given error code.
+// Codes are prepended, the last code in chain is always the first one set.
+// Example:
+//
+//	ruleError.AddCode("code").AddCode("another").AddCode("last")
+//
+// This will result in 'last:another:code' ErrorCode.
 func (r *RuleError) AddCode(code ErrorCode) *RuleError {
 	r.Code = concatStrings(code, r.Code, ErrorCodeSeparator)
 	return r
@@ -223,8 +240,8 @@ func unpackRuleErrors(errs []error, ruleErrors []*RuleError) []*RuleError {
 }
 
 func NewRequiredError() *RuleError {
-	return &RuleError{
-		Message: "property is required but was empty",
-		Code:    ErrorCodeRequired,
-	}
+	return NewRuleError(
+		"property is required but was empty",
+		ErrorCodeRequired,
+	)
 }

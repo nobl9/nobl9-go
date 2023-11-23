@@ -226,21 +226,30 @@ func TestRuleError(t *testing.T) {
 		ExpectedCode ErrorCode
 	}{
 		{
-			RuleError: &RuleError{Message: "test"},
+			RuleError: NewRuleError("test"),
 		},
 		{
-			RuleError:    &RuleError{Message: "test", Code: "code"},
+			RuleError:    NewRuleError("test", "code"),
 			ExpectedCode: "code",
 		},
 		{
-			RuleError:    &RuleError{Message: "test"},
+			RuleError:    NewRuleError("test"),
 			InputCode:    "code",
 			ExpectedCode: "code",
 		},
 		{
-			RuleError:    &RuleError{Message: "test", Code: "original"},
+			RuleError:    NewRuleError("test", "original"),
 			InputCode:    "added",
 			ExpectedCode: "added:original",
+		},
+		{
+			RuleError:    NewRuleError("test", "code-1", "code-2"),
+			ExpectedCode: "code-2:code-1",
+		},
+		{
+			RuleError:    NewRuleError("test", "original-1", "original-2"),
+			InputCode:    "added",
+			ExpectedCode: "added:original-2:original-1",
 		},
 	} {
 		result := test.RuleError.AddCode(test.InputCode)
