@@ -1,0 +1,10 @@
+Validation for RoleBinding 'MY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDING' has failed for the following fields:
+  - 'metadata.name' with value 'MY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDINGMY BINDING...':
+    - length must be between 1 and 63
+    - string does not match regular expression: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
+  - 'spec.roleRef':
+    - property is required but was empty
+  - 'spec.projectRef' with value 'MY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECTMY PROJECT...':
+    - length must be between 1 and 63
+    - string does not match regular expression: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
+Manifest source: /home/me/rolebinding.yaml

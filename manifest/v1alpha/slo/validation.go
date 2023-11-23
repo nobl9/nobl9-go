@@ -182,6 +182,8 @@ var indicatorValidation = validation.New[Indicator](
 )
 
 var objectiveValidation = validation.New[Objective](
+	validation.For(validation.GetSelf[Objective]()).
+		Include(rawMetricObjectiveValidation),
 	validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
 		Include(objectiveBaseValidation),
 	validation.ForPointer(func(o Objective) *float64 { return o.BudgetTarget }).
@@ -202,6 +204,13 @@ var objectiveValidation = validation.New[Objective](
 		Include(rawMetricsValidation),
 )
 
+var rawMetricObjectiveValidation = validation.New[Objective](
+	validation.ForPointer(func(o Objective) *float64 { return o.ObjectiveBase.Value }).
+		WithName("value").
+		Required(),
+).
+	When(func(o Objective) bool { return o.RawMetric != nil })
+
 var objectiveBaseValidation = validation.New[ObjectiveBase](
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
@@ -211,9 +220,6 @@ var objectiveBaseValidation = validation.New[ObjectiveBase](
 		WithName("displayName").
 		Omitempty().
 		Rules(validation.StringMaxLength(63)),
-	validation.ForPointer(func(o ObjectiveBase) *float64 { return o.Value }).
-		WithName("value").
-		Required(),
 )
 
 func validate(s SLO) *v1alpha.ObjectError {

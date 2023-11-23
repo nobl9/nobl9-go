@@ -95,6 +95,10 @@ func decodeJSON(data []byte) ([]manifest.Object, error) {
 
 func decodeYAML(data []byte) ([]manifest.Object, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(data))
+	// Documents can have any size, at most it will be the whole data.
+	// This means sometimes we might exceed the limit imposed by bufio.Scanner.
+	maxTokenSize := len(data) + 1
+	scanner.Buffer(make([]byte, 0, len(data)), maxTokenSize)
 	scanner.Split(splitYAMLDocument)
 	var res []genericObject
 	for scanner.Scan() {
@@ -116,6 +120,9 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 			}
 			res = append(res, object)
 		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 	if len(res) == 0 {
 		return nil, ErrNoDefinitionsFound
