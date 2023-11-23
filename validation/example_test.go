@@ -13,6 +13,12 @@ type Teacher struct {
 	Age        time.Duration `json:"age"`
 	Students   []Student     `json:"students"`
 	MiddleName *string       `json:"middleName,omitempty"`
+	University University    `json:"university"`
+}
+
+type University struct {
+	Name    string `json:"name"`
+	Address string `json:"address"`
 }
 
 type Student struct {
@@ -170,6 +176,10 @@ func ExamplePropertyRules_WithName() {
 // us to work with the underlying value in our rules.
 // Under the hood it wraps [PropertyGetter] and safely extracts the underlying value.
 // If the value was nil, it will not attempt to evaluate any rules for this property.
+// The rationale for that is it doesn't make sense to evaluate any rules for properties
+// which are essentially empty. The only rule that makes sense in this context is to
+// ensure the property is required.
+// We'll learn about a way to achieve that in the next example: [ExamplePropertyRules_Required].
 //
 // Let's define a rule for [Teacher.MiddleName] property.
 // Not everyone has to have a middle name, that's why we've defined this field
@@ -197,6 +207,98 @@ func ExampleForPointer() {
 	// Validation for Teacher has failed for the following properties:
 	//   - 'middleName' with value 'Thaddeus':
 	//     - length must be less than or equal to 5
+}
+
+// By default, when [PropertyRules] is constructed using [ForPointer]
+// it will skip validation of the property if the pointer is nil.
+// To enforce a value is set for pointer use [PropertyRules.Required].
+//
+// You may ask yourself why not just use [validation.Required] rule instead?
+// If we'd be to do that, we'd be forced to operate on pointer in all of our rules.
+// Other than checking if the pointer is nil, there aren't any rules which would
+// benefit from working on the pointer instead of the underlying value.
+//
+// If you want to also make sure the underlying value is filled,
+// i.e. it's not a zero value, you can also use [validation.Required] rule
+// on top of [PropertyRules.Required].
+//
+// [PropertyRules.Required] when used with [For] constructor, will ensure
+// the property does not contain a zero value.
+//
+// NOTE: [PropertyRules.Required] is introducing a short circuit.
+// If the assertion fails, validation will stop and return [validation.ErrorCodeRequired].
+// None of the rules you've defined would be evaluated.
+//
+// NOTE: Placement of [PropertyRules.Required] does not matter,
+// it's not evaluated in a sequential loop, unlike standard [Rule].
+// However, we recommend you always place it below [PropertyRules.WithName]
+// to make your rules more readable.
+func ExamplePropertyRules_Required() {
+	alwaysFailingRule := validation.NewSingleRule(func(string) error { return fmt.Errorf("always fails") })
+
+	v := validation.New[Teacher](
+		validation.ForPointer(func(t Teacher) *string { return t.MiddleName }).
+			WithName("middleName").
+			Required().
+			Rules(alwaysFailingRule),
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Required().
+			Rules(alwaysFailingRule),
+	).WithName("Teacher")
+
+	teacher := Teacher{
+		Name:       "",
+		Age:        51 * year,
+		MiddleName: nil,
+	}
+
+	err := v.Validate(teacher)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - 'middleName':
+	//     - property is required but was empty
+	//   - 'name':
+	//     - property is required but was empty
+}
+
+// While [ForPointer] will by default omit validation for nil pointers,
+// it might be useful to have a similar behaviour for optional properties
+// which are direct values.
+// [PropertyRules.Omitempty] will do the trick.
+//
+// NOTE: [PropertyRules.Omitempty] will have no effect on pointers handled
+// by [ForPointer], as they already behave in the same way.
+func ExamplePropertyRules_Omitempty() {
+	alwaysFailingRule := validation.NewSingleRule(func(string) error { return fmt.Errorf("always fails") })
+
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Omitempty().
+			Rules(alwaysFailingRule),
+		validation.ForPointer(func(t Teacher) *string { return t.MiddleName }).
+			WithName("middleName").
+			Rules(alwaysFailingRule),
+	).WithName("Teacher")
+
+	teacher := Teacher{
+		Name:       "",
+		Age:        51 * year,
+		MiddleName: nil,
+	}
+
+	err := v.Validate(teacher)
+	if err == nil {
+		fmt.Println("no error! we skipped 'name' validation and 'middleName' is implicitly skipped")
+	}
+
+	// Output:
+	// no error! we skipped 'name' validation and 'middleName' is implicitly skipped
 }
 
 // If you want to access the value of the entity you're writing the [Validator] for,
@@ -384,7 +486,7 @@ func ExampleHasErrorCode() {
 // and return [PropertyError] from your validation rule.
 // Note that you can still use [ErrorCode] and pass [RuleError] to the constructor.
 // You can pass any number of [RuleError].
-func ExamplePropertyRules_Include() {
+func ExampleNewPropertyError() {
 	v := validation.New[Teacher](
 		validation.For(validation.GetSelf[Teacher]()).
 			Rules(validation.NewSingleRule(func(t Teacher) error {
@@ -420,36 +522,6 @@ func ExamplePropertyRules_Include() {
 	//     - name cannot be Jake
 	//     - you can pass me too!
 }
-
-// Sometimes you need top level context.
-//func ExampleNewPropertyError() {
-//	v := validation.New[Teacher](
-//		validation.For(validation.GetSelf[Teacher]()).
-//			Rules(validation.NewSingleRule(func(t Teacher) error {
-//				return validation.NewPropertyError(
-//					"name",
-//					t.Name,
-//					&validation.RuleError{
-//						Message: "cannot have both 'bad' and 'good' metrics defined",
-//						Code:    errCodeEitherBadOrGoodCountMetric,
-//					}).PrependPropertyName(validation.SliceElementName("students", i))
-//			})),
-//	).WithName("Teacher")
-//
-//	teacher := Teacher{
-//		Name: "Jake",
-//		Age:  51 * year,
-//	}
-//
-//	err := v.Validate(teacher)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-
-// Output:
-// Validation for Teacher has failed for the following properties:
-//   - now I have access to the whole teacher
-//}
 
 // Bringing it all together, let's create a fully fledged [Validator] for [Teacher].
 func ExampleValidator() {
