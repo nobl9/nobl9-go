@@ -31,8 +31,8 @@ type AlertSilenceMetadata struct {
 type AlertSilenceSpec struct {
 	Description string                        `json:"description" validate:"description"`
 	Slo         string                        `json:"slo" validate:"required"`
-	AlertPolicy AlertSilenceAlertPolicySource `json:"alertPolicy" validate:"required,dive"`
-	Period      AlertSilencePeriod            `json:"period" validate:"required,dive"`
+	AlertPolicy AlertSilenceAlertPolicySource `json:"alertPolicy" validate:"required"`
+	Period      AlertSilencePeriod            `json:"period" validate:"required"`
 }
 
 func (a AlertSilenceSpec) GetParsedDuration() (time.Duration, error) {

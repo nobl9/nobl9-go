@@ -44,7 +44,7 @@ type PublicAlertMethodStatus struct {
 // AlertMethodSpec represents content of AlertMethod's Spec.
 type AlertMethodSpec struct {
 	Description string                 `json:"description" validate:"description" example:"Sends notification"`
-	Webhook     *WebhookAlertMethod    `json:"webhook,omitempty" validate:"omitempty,dive"`
+	Webhook     *WebhookAlertMethod    `json:"webhook,omitempty" validate:"omitempty"`
 	PagerDuty   *PagerDutyAlertMethod  `json:"pagerduty,omitempty"`
 	Slack       *SlackAlertMethod      `json:"slack,omitempty"`
 	Discord     *DiscordAlertMethod    `json:"discord,omitempty"`
