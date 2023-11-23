@@ -234,7 +234,9 @@ func ExampleForPointer() {
 // However, we recommend you always place it below [PropertyRules.WithName]
 // to make your rules more readable.
 func ExamplePropertyRules_Required() {
-	alwaysFailingRule := validation.NewSingleRule(func(string) error { return fmt.Errorf("always fails") })
+	alwaysFailingRule := validation.NewSingleRule(func(string) error {
+		return fmt.Errorf("always fails")
+	})
 
 	v := validation.New[Teacher](
 		validation.ForPointer(func(t Teacher) *string { return t.MiddleName }).
@@ -274,7 +276,9 @@ func ExamplePropertyRules_Required() {
 // NOTE: [PropertyRules.Omitempty] will have no effect on pointers handled
 // by [ForPointer], as they already behave in the same way.
 func ExamplePropertyRules_Omitempty() {
-	alwaysFailingRule := validation.NewSingleRule(func(string) error { return fmt.Errorf("always fails") })
+	alwaysFailingRule := validation.NewSingleRule(func(string) error {
+		return fmt.Errorf("always fails")
+	})
 
 	v := validation.New[Teacher](
 		validation.For(func(t Teacher) string { return t.Name }).
@@ -523,7 +527,78 @@ func ExampleNewPropertyError() {
 	//     - you can pass me too!
 }
 
-// Bringing it all together, let's create a fully fledged [Validator] for [Teacher].
+// WARNING!
+// The below examples display the CURRENT state of flow management for rules.
+// It's far from ideal and will be CHANGED IN THE FUTURE.
+
+// To only proceed with further validation on condition, use [PropertyRules.When].
+// Similar to [PropertyRules.Rules] predicates provided through [PropertyRules.When]
+// are evaluated in the order they are provided.
+// If a predicate is not met, proceeding (as defined in code) validation rules are not evaluated.
+func ExamplePropertyRules_When() {
+	alwaysFailingRule := validation.NewSingleRule(func(string) error {
+		return fmt.Errorf("always fails")
+	})
+
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Rules(validation.NotEqualTo("Jerry")).
+			When(func(t Teacher) bool { return t.Name == "Tom" }).
+			Rules(alwaysFailingRule),
+	).WithName("Teacher")
+
+	for _, name := range []string{"Tom", "Jerry", "Mickey"} {
+		teacher := Teacher{Name: name}
+		err := v.Validate(teacher)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Tom':
+	//     - always fails
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Jerry':
+	//     - should be not equal to 'Jerry'
+}
+
+// To fail validation immediately after certain [Rule] fails use [PropertyRules.StopOnError].
+// You need to call it directly AFTER you've called [PropertyRules.Rules].
+func ExamplePropertyRules_StopOnError() {
+	alwaysFailingRule := validation.NewSingleRule(func(string) error {
+		return fmt.Errorf("always fails")
+	})
+
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Rules(validation.NotEqualTo("Jerry")).
+			StopOnError().
+			Rules(alwaysFailingRule),
+	).WithName("Teacher")
+
+	for _, name := range []string{"Tom", "Jerry"} {
+		teacher := Teacher{Name: name}
+		err := v.Validate(teacher)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	// Output:
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Tom':
+	//     - always fails
+	// Validation for Teacher has failed for the following properties:
+	//   - 'name' with value 'Jerry':
+	//     - should be not equal to 'Jerry'
+}
+
+// Bringing it all (mostly) together,
+// let's create a fully fledged [Validator] for [Teacher].
 func ExampleValidator() {
 	studentValidator := validation.New[Student](
 		validation.For(func(s Student) string { return s.Index }).
