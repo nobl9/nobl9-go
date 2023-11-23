@@ -72,7 +72,7 @@ Arrays are represented by `[<index>]`.
 Let's examine a simple teacher/student example:
 
 ```go
-package univeristy
+package university
 
 type Teacher struct {
 	Name     string    `json:"name"`

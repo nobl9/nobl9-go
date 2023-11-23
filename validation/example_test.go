@@ -269,7 +269,7 @@ func ExamplePropertyRules_Required() {
 }
 
 // While [ForPointer] will by default omit validation for nil pointers,
-// it might be useful to have a similar behaviour for optional properties
+// it might be useful to have a similar behavior for optional properties
 // which are direct values.
 // [PropertyRules.Omitempty] will do the trick.
 //
@@ -432,6 +432,7 @@ func ExampleRuleSet() {
 		fmt.Println(err)
 	}
 
+	// nolint: lll
 	// Output:
 	// Error codes: teacher_name:string_length, teacher_name:string_match_regexp
 	//
@@ -758,9 +759,9 @@ func ExampleValidator() {
 	//     - length must be between 9 and 9
 	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
 	//     - length must be less than or equal to 2
-	//   - elements are not unique, index 0 collides with index 2
-	//     - 'university.address':
-	//   - property is required but was empty
+	//     - elements are not unique, index 0 collides with index 2
+	//   - 'university.address':
+	//     - property is required but was empty
 }
 
 // What follows below is a collection of more complex examples and useful patterns.
