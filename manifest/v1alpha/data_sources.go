@@ -64,7 +64,7 @@ type HistoricalDataRetrieval struct {
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
-	QueryDelayDuration
+	Duration
 }
 
 type SourceOf int
@@ -121,47 +121,19 @@ type HistoricalRetrievalDuration struct {
 	Unit  HistoricalRetrievalDurationUnit `json:"unit" validate:"required"`
 }
 
-type QueryDelayDuration struct {
-	Value *int                   `json:"value" validate:"required,min=0,max=86400"`
-	Unit  QueryDelayDurationUnit `json:"unit" validate:"required"`
-}
-
-type QueryIntervalDuration struct {
-	Value *int                      `json:"value" validate:"required,min=0,max=86400"`
-	Unit  QueryIntervalDurationUnit `json:"unit" validate:"required"`
-}
-
-type CollectionJitterDuration struct {
-	Value *int                         `json:"value" validate:"required,min=0,max=86400"`
-	Unit  CollectionJitterDurationUnit `json:"unit" validate:"required"`
-}
-
 type HistoricalRetrievalDurationUnit string
-type QueryDelayDurationUnit string
-type QueryIntervalDurationUnit string
-type CollectionJitterDurationUnit string
 
 const (
-	HRDDay         HistoricalRetrievalDurationUnit = "Day"
-	HRDHour        HistoricalRetrievalDurationUnit = "Hour"
-	HRDMinute      HistoricalRetrievalDurationUnit = "Minute"
-	QDDMinute      QueryDelayDurationUnit          = "Minute"
-	QDDSecond      QueryDelayDurationUnit          = "Second"
-	QDDMinuteAlias                                 = "M"
-	QDDSecondAlias                                 = "S"
-	QIDMinute      QueryIntervalDurationUnit       = "Minute"
-	QIDSecond      QueryIntervalDurationUnit       = "Second"
-	QIDMinuteAlias                                 = "M"
-	QIDSecondAlias                                 = "S"
-	CJDMinute      CollectionJitterDurationUnit    = "Minute"
-	CJDSecond      CollectionJitterDurationUnit    = "Second"
-	CJDMinuteAlias                                 = "M"
-	CJDSecondAlias                                 = "S"
+	HRDDay    HistoricalRetrievalDurationUnit = "Day"
+	HRDHour   HistoricalRetrievalDurationUnit = "Hour"
+	HRDMinute HistoricalRetrievalDurationUnit = "Minute"
 )
 
 const (
 	maxQueryDelayDuration     = 1440
-	maxQueryDelayDurationUnit = QDDMinute
+	maxQueryDelayDurationUnit = Minute
+	secondAlias               = "S"
+	minuteAlias               = "M"
 )
 
 const MinimalSupportedQueryDelayAgentVersion = "v0.65.0-beta09"
@@ -221,132 +193,94 @@ func (d HistoricalRetrievalDuration) duration() time.Duration {
 	return time.Duration(0)
 }
 
-func (qddu QueryDelayDurationUnit) IsValid() bool {
-	return qddu == QDDMinute || qddu == QDDSecond
+type Duration struct {
+	Value *int         `json:"value" validate:"required,min=0,max=86400"`
+	Unit  DurationUnit `json:"unit" validate:"required"`
 }
 
-func (qddu QueryDelayDurationUnit) String() string {
-	switch qddu {
-	case QDDMinute:
-		return "Minute"
-	case QDDSecond:
-		return "Second"
+type DurationUnit string
+
+const (
+	Millisecond DurationUnit = "Millisecond"
+	Second      DurationUnit = "Second"
+	Minute      DurationUnit = "Minute"
+	Hour        DurationUnit = "Hour"
+)
+
+func (d Duration) String() string {
+	if d.IsZero() {
+		return "0s"
 	}
-	return ""
-}
-
-func (qidu QueryIntervalDurationUnit) IsValid() bool {
-	return qidu == QIDMinute || qidu == QIDSecond
-}
-
-func (qidu QueryIntervalDurationUnit) String() string {
-	switch qidu {
-	case QIDMinute:
-		return string(QIDMinute)
-	case QIDSecond:
-		return string(QIDSecond)
+	switch d.Unit {
+	case Millisecond:
+		return fmt.Sprintf("%dms", *d.Value)
+	case Second:
+		return fmt.Sprintf("%ds", *d.Value)
+	case Minute:
+		return fmt.Sprintf("%dm", *d.Value)
+	case Hour:
+		return fmt.Sprintf("%dh", *d.Value)
+	default:
+		return fmt.Sprintf("%ds", *d.Value)
 	}
-	return ""
 }
 
-func QueryDelayDurationUnitFromString(unit string) (QueryDelayDurationUnit, error) {
-	switch cases.Title(language.Und).String(unit) {
-	case QDDMinute.String(), QDDMinuteAlias:
-		return QDDMinute, nil
-	case QDDSecond.String(), QDDSecondAlias:
-		return QDDSecond, nil
+func (d Duration) LessThan(b Duration) bool {
+	return d.Duration() < b.Duration()
+}
+
+func (d Duration) IsZero() bool {
+	return d.Value == nil || *d.Value == 0
+}
+
+func (d Duration) Duration() time.Duration {
+	if d.Value == nil {
+		return time.Duration(0)
 	}
-	return "", errors.Errorf("'%s' is not a valid QueryDelayDurationUnit", unit)
+
+	value := time.Duration(*d.Value)
+	return value * d.Unit.Duration()
 }
 
-func QueryIntervalDurationUnitFromString(unit string) (QueryIntervalDurationUnit, error) {
-	switch cases.Title(language.Und).String(unit) {
-	case QIDMinute.String(), QIDMinuteAlias:
-		return QIDMinute, nil
-	case QIDSecond.String(), QIDSecondAlias:
-		return QIDSecond, nil
-	}
-	return "", errors.Errorf("'%s' is not a valid QueryIntervalDurationUnit", unit)
-}
-
-func (qdd QueryDelayDuration) String() string {
-	if qdd.Unit == QDDMinute {
-		return fmt.Sprintf("%dm", *qdd.Value)
-	}
-	return fmt.Sprintf("%ds", *qdd.Value)
-}
-
-func (qid QueryIntervalDuration) String() string {
-	if qid.Unit == QIDMinute {
-		return fmt.Sprintf("%dm", *qid.Value)
-	}
-	return fmt.Sprintf("%ds", *qid.Value)
-}
-
-func (cjd CollectionJitterDuration) String() string {
-	if cjd.Unit == CJDMinute {
-		return fmt.Sprintf("%dm", *cjd.Value)
-	}
-	return fmt.Sprintf("%ds", *cjd.Value)
-}
-
-func (qdd QueryDelayDuration) BiggerThanMax() bool {
+func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 	maxQueryDelayDurationInt := maxQueryDelayDuration
-	max := QueryDelayDuration{
+	maximum := Duration{
 		Value: &maxQueryDelayDurationInt,
 		Unit:  maxQueryDelayDurationUnit,
 	}
-	return qdd.Duration() > max.Duration()
+	return duration.Duration() > maximum.Duration()
 }
 
-func (qdd QueryDelayDuration) LesserThan(b QueryDelayDuration) bool {
-	return qdd.Duration() < b.Duration()
+func isValidQueryDelayUnit(queryDelay Duration) bool {
+	return queryDelay.Unit == Second || queryDelay.Unit == Minute
 }
 
-func (qid QueryIntervalDuration) LesserThan(b QueryIntervalDuration) bool {
-	return qid.Duration() < b.Duration()
-}
-
-func (qdd QueryDelayDuration) IsZero() bool {
-	return qdd.Value == nil || *qdd.Value == 0
-}
-
-func (qid QueryIntervalDuration) IsZero() bool {
-	return qid.Value == nil || *qid.Value == 0
-}
-
-func (qdd QueryDelayDuration) Duration() time.Duration {
-	if qdd.Value == nil {
-		return time.Duration(0)
+func DurationUnitFromString(unit string) (DurationUnit, error) {
+	switch cases.Title(language.Und).String(unit) {
+	case string(Minute), minuteAlias:
+		return Minute, nil
+	case string(Second), secondAlias:
+		return Second, nil
 	}
+	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
+}
 
-	value := time.Duration(*qdd.Value)
-
-	switch qdd.Unit {
-	case QDDSecond:
-		return value * time.Second
-	case QDDMinute:
-		return value * time.Minute
+func (d DurationUnit) Duration() time.Duration {
+	switch d {
+	case Millisecond:
+		return time.Millisecond
+	case Second:
+		return time.Second
+	case Minute:
+		return time.Minute
+	case Hour:
+		return time.Hour
 	}
-
 	return time.Duration(0)
 }
 
-func (qid QueryIntervalDuration) Duration() time.Duration {
-	if qid.Value == nil {
-		return time.Duration(0)
-	}
-
-	value := time.Duration(*qid.Value)
-
-	switch qid.Unit {
-	case QIDSecond:
-		return value * time.Second
-	case QIDMinute:
-		return value * time.Minute
-	}
-
-	return time.Duration(0)
+func (d DurationUnit) String() string {
+	return string(d)
 }
 
 var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
@@ -390,7 +324,7 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (Historica
 		errors.Errorf("historical data retrieval is not supported for %s %s", typeName, kind)
 }
 
-type QueryDelayDefaults map[string]QueryDelayDuration
+type QueryDelayDefaults map[string]Duration
 
 func (q QueryDelayDefaults) GetByName(name string) string {
 	return q[name].String()
@@ -409,103 +343,103 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 	return QueryDelayDefaults{
 		AmazonPrometheus.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  Second,
 		},
 		Prometheus.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  Second,
 		},
 		AppDynamics.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		BigQuery.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  Second,
 		},
 		CloudWatch.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Datadog.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Dynatrace.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Elasticsearch.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		GCM.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		GrafanaLoki.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Graphite.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		InfluxDB.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Instana.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Lightstep.String(): {
 			Value: ptr(2),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		NewRelic.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		OpenTSDB.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Pingdom.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Redshift.String(): {
 			Value: ptr(30),
-			Unit:  QDDSecond,
+			Unit:  Second,
 		},
 		Splunk.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		SplunkObservability.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		SumoLogic.String(): {
 			Value: ptr(4),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		ThousandEyes.String(): {
 			Value: ptr(1),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		AzureMonitor.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 		Generic.String(): {
 			Value: ptr(0),
-			Unit:  QDDSecond,
+			Unit:  Second,
 		},
 		Honeycomb.String(): {
 			Value: ptr(5),
-			Unit:  QDDMinute,
+			Unit:  Minute,
 		},
 	}
 }

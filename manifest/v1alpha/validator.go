@@ -101,7 +101,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(queryDelayDurationValidation, QueryDelayDuration{})
 	val.RegisterStructValidation(agentSpecStructLevelValidation, AgentSpec{})
 	val.RegisterStructValidation(alertPolicyConditionStructLevelValidation, AlertCondition{})
 	val.RegisterStructValidation(alertMethodSpecStructLevelValidation, AlertMethodSpec{})
@@ -372,26 +371,38 @@ func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
 		sl.ReportError(sa, "", "", "unknownAgentType", "")
 		return
 	}
-	if sa.QueryDelay != nil {
-		agentDefault := GetQueryDelayDefaults()[at.String()]
-		if sa.QueryDelay.QueryDelayDuration.LesserThan(agentDefault) {
-			sl.ReportError(
-				sa,
-				"QueryDelayDuration",
-				"QueryDelayDuration",
-				"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
-				"",
-			)
-		}
-		if sa.QueryDelay.QueryDelayDuration.BiggerThanMax() {
-			sl.ReportError(
-				sa,
-				"QueryDelayDuration",
-				"QueryDelayDuration",
-				"queryDelayDurationBiggerThanMaximumAllowed",
-				"",
-			)
-		}
+	if sa.QueryDelay == nil {
+		return
+	}
+
+	queryDelay := sa.QueryDelay.Duration
+	if !isValidQueryDelayUnit(queryDelay) {
+		sl.ReportError(
+			queryDelay.Unit,
+			"unit",
+			"Unit",
+			"invalidUnit",
+			"",
+		)
+	}
+	agentDefault := GetQueryDelayDefaults()[at.String()]
+	if queryDelay.LessThan(agentDefault) {
+		sl.ReportError(
+			sa,
+			"QueryDelayDuration",
+			"QueryDelayDuration",
+			"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
+			"",
+		)
+	}
+	if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
+		sl.ReportError(
+			sa,
+			"QueryDelayDuration",
+			"QueryDelayDuration",
+			"queryDelayDurationBiggerThanMaximumAllowed",
+			"",
+		)
 	}
 }
 
@@ -681,26 +692,38 @@ func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
 		return
 	}
 
-	if sd.QueryDelay != nil {
-		directDefault := GetQueryDelayDefaults()[dt]
-		if sd.QueryDelay.QueryDelayDuration.LesserThan(directDefault) {
-			sl.ReportError(
-				sd,
-				"QueryDelayDuration",
-				"QueryDelayDuration",
-				"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
-				"",
-			)
-		}
-		if sd.QueryDelay.QueryDelayDuration.BiggerThanMax() {
-			sl.ReportError(
-				sd,
-				"QueryDelayDuration",
-				"QueryDelayDuration",
-				"queryDelayDurationBiggerThanMaximumAllowed",
-				"",
-			)
-		}
+	if sd.QueryDelay == nil {
+		return
+	}
+
+	queryDelay := sd.QueryDelay.Duration
+	if !isValidQueryDelayUnit(queryDelay) {
+		sl.ReportError(
+			queryDelay.Unit,
+			"unit",
+			"Unit",
+			"invalidUnit",
+			"",
+		)
+	}
+	directDefault := GetQueryDelayDefaults()[dt]
+	if queryDelay.LessThan(directDefault) {
+		sl.ReportError(
+			sd,
+			"QueryDelayDuration",
+			"QueryDelayDuration",
+			"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
+			"",
+		)
+	}
+	if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
+		sl.ReportError(
+			sd,
+			"QueryDelayDuration",
+			"QueryDelayDuration",
+			"queryDelayDurationBiggerThanMaximumAllowed",
+			"",
+		)
 	}
 }
 
@@ -1235,24 +1258,6 @@ func historicalDataRetrievalValidation(sl v.StructLevel) {
 
 func historicalDataRetrievalDurationValidation(sl v.StructLevel) {
 	duration, ok := sl.Current().Interface().(HistoricalRetrievalDuration)
-	if !ok {
-		sl.ReportError(duration, "", "", "structConversion", "")
-		return
-	}
-
-	if !duration.Unit.IsValid() {
-		sl.ReportError(
-			duration.Unit,
-			"unit",
-			"Unit",
-			"invalidUnit",
-			"",
-		)
-	}
-}
-
-func queryDelayDurationValidation(sl v.StructLevel) {
-	duration, ok := sl.Current().Interface().(QueryDelayDuration)
 	if !ok {
 		sl.ReportError(duration, "", "", "structConversion", "")
 		return
