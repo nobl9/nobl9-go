@@ -32,4 +32,5 @@ const (
 	ErrorCodeOneOf                ErrorCode = "one_of"
 	ErrorCodeMutuallyExclusive    ErrorCode = "mutually_exclusive"
 	ErrorCodeSliceUnique          ErrorCode = "slice_unique"
+	ErrorCodeDateFormatRequired   ErrorCode = "date_format"
 )
