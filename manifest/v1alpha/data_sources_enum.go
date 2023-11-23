@@ -55,8 +55,8 @@ const (
 	Instana
 	// InfluxDB is a DataSourceType of type InfluxDB.
 	InfluxDB
-	// GCM is a DataSourceType of type GCM.
-	GCM
+	// GoogleCloudMonitoring is a DataSourceType of type GoogleCloudMonitoring.
+	GoogleCloudMonitoring
 	// AzureMonitor is a DataSourceType of type AzureMonitor.
 	AzureMonitor
 	// Generic is a DataSourceType of type Generic.
@@ -67,7 +67,7 @@ const (
 
 var ErrInvalidDataSourceType = errors.New("not a valid DataSourceType")
 
-const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGCMAzureMonitorGenericHoneycomb"
+const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycomb"
 
 // DataSourceTypeValues returns a list of the values for DataSourceType
 func DataSourceTypeValues() []DataSourceType {
@@ -93,7 +93,7 @@ func DataSourceTypeValues() []DataSourceType {
 		SumoLogic,
 		Instana,
 		InfluxDB,
-		GCM,
+		GoogleCloudMonitoring,
 		AzureMonitor,
 		Generic,
 		Honeycomb,
@@ -101,31 +101,31 @@ func DataSourceTypeValues() []DataSourceType {
 }
 
 var _DataSourceTypeMap = map[DataSourceType]string{
-	Prometheus:          _DataSourceTypeName[0:10],
-	Datadog:             _DataSourceTypeName[10:17],
-	NewRelic:            _DataSourceTypeName[17:25],
-	AppDynamics:         _DataSourceTypeName[25:36],
-	Splunk:              _DataSourceTypeName[36:42],
-	Lightstep:           _DataSourceTypeName[42:51],
-	SplunkObservability: _DataSourceTypeName[51:70],
-	Dynatrace:           _DataSourceTypeName[70:79],
-	ThousandEyes:        _DataSourceTypeName[79:91],
-	Graphite:            _DataSourceTypeName[91:99],
-	BigQuery:            _DataSourceTypeName[99:107],
-	Elasticsearch:       _DataSourceTypeName[107:120],
-	OpenTSDB:            _DataSourceTypeName[120:128],
-	GrafanaLoki:         _DataSourceTypeName[128:139],
-	CloudWatch:          _DataSourceTypeName[139:149],
-	Pingdom:             _DataSourceTypeName[149:156],
-	AmazonPrometheus:    _DataSourceTypeName[156:172],
-	Redshift:            _DataSourceTypeName[172:180],
-	SumoLogic:           _DataSourceTypeName[180:189],
-	Instana:             _DataSourceTypeName[189:196],
-	InfluxDB:            _DataSourceTypeName[196:204],
-	GCM:                 _DataSourceTypeName[204:207],
-	AzureMonitor:        _DataSourceTypeName[207:219],
-	Generic:             _DataSourceTypeName[219:226],
-	Honeycomb:           _DataSourceTypeName[226:235],
+	Prometheus:            _DataSourceTypeName[0:10],
+	Datadog:               _DataSourceTypeName[10:17],
+	NewRelic:              _DataSourceTypeName[17:25],
+	AppDynamics:           _DataSourceTypeName[25:36],
+	Splunk:                _DataSourceTypeName[36:42],
+	Lightstep:             _DataSourceTypeName[42:51],
+	SplunkObservability:   _DataSourceTypeName[51:70],
+	Dynatrace:             _DataSourceTypeName[70:79],
+	ThousandEyes:          _DataSourceTypeName[79:91],
+	Graphite:              _DataSourceTypeName[91:99],
+	BigQuery:              _DataSourceTypeName[99:107],
+	Elasticsearch:         _DataSourceTypeName[107:120],
+	OpenTSDB:              _DataSourceTypeName[120:128],
+	GrafanaLoki:           _DataSourceTypeName[128:139],
+	CloudWatch:            _DataSourceTypeName[139:149],
+	Pingdom:               _DataSourceTypeName[149:156],
+	AmazonPrometheus:      _DataSourceTypeName[156:172],
+	Redshift:              _DataSourceTypeName[172:180],
+	SumoLogic:             _DataSourceTypeName[180:189],
+	Instana:               _DataSourceTypeName[189:196],
+	InfluxDB:              _DataSourceTypeName[196:204],
+	GoogleCloudMonitoring: _DataSourceTypeName[204:225],
+	AzureMonitor:          _DataSourceTypeName[225:237],
+	Generic:               _DataSourceTypeName[237:244],
+	Honeycomb:             _DataSourceTypeName[244:253],
 }
 
 // String implements the Stringer interface.
@@ -165,10 +165,10 @@ var _DataSourceTypeValue = map[string]DataSourceType{
 	_DataSourceTypeName[180:189]: SumoLogic,
 	_DataSourceTypeName[189:196]: Instana,
 	_DataSourceTypeName[196:204]: InfluxDB,
-	_DataSourceTypeName[204:207]: GCM,
-	_DataSourceTypeName[207:219]: AzureMonitor,
-	_DataSourceTypeName[219:226]: Generic,
-	_DataSourceTypeName[226:235]: Honeycomb,
+	_DataSourceTypeName[204:225]: GoogleCloudMonitoring,
+	_DataSourceTypeName[225:237]: AzureMonitor,
+	_DataSourceTypeName[237:244]: Generic,
+	_DataSourceTypeName[244:253]: Honeycomb,
 }
 
 // ParseDataSourceType attempts to convert a string to a DataSourceType.
