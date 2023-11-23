@@ -1,10 +1,14 @@
 package sdk
 
 import (
+	"bufio"
 	"embed"
+	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -115,6 +119,48 @@ func TestDecode(t *testing.T) {
 			}
 		})
 	}
+	t.Run("scanner token size overflow", func(t *testing.T) {
+		// Generate objects.
+		objectsNum := 800
+		expectedObjects := make([]manifest.Object, 0, objectsNum)
+		for i := 0; i < objectsNum; i++ {
+			expectedObjects = append(expectedObjects, project.New(
+				project.Metadata{
+					Name: fmt.Sprintf("%d", i),
+				},
+				project.Spec{},
+			))
+		}
+
+		objectsData, err := yaml.Marshal(expectedObjects)
+		// Ensure we're actually generating enough data to overflow the buffer default limit,
+		// as defined in bufio package.
+		require.Greater(t, len(objectsData), bufio.MaxScanTokenSize)
+		require.NoError(t, err)
+
+		// Write objects to file.
+		tmpDir := t.TempDir()
+		filename := filepath.Join(tmpDir, "test.yaml")
+		err = os.WriteFile(filename, objectsData, 0o600)
+		require.NoError(t, err)
+
+		// Read objects from file.
+		data, err := os.ReadFile(filename)
+		require.NoError(t, err)
+
+		objects, err := DecodeObjects(data)
+		require.NoError(t, err)
+		assert.Len(t, expectedObjects, objectsNum)
+		assert.IsType(t, project.Project{}, expectedObjects[0])
+
+		objectNames := make([]string, 0, len(expectedObjects))
+		for _, object := range expectedObjects {
+			objectNames = append(objectNames, object.GetName())
+		}
+		for _, object := range objects {
+			assert.Contains(t, objectNames, object.GetName())
+		}
+	})
 }
 
 func TestDecodeSingle(t *testing.T) {

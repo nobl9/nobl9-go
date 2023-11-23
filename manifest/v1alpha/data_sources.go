@@ -41,12 +41,16 @@ Redshift
 SumoLogic
 Instana
 InfluxDB
-GCM
+GoogleCloudMonitoring
 AzureMonitor
 Generic
 Honeycomb
 )*/
 type DataSourceType int
+
+// GCM aliases GoogleCloudMonitoring.
+// Eventually we should solve this inconsistency between the enum name and it's string representation.
+const GCM = GoogleCloudMonitoring
 
 const DatasourceStableChannel = "stable"
 
