@@ -164,13 +164,13 @@ func StringDatePropertyGreaterThanProperty[S any](
 
 		if !parsedGreater.After(parsedLower) {
 			return errors.Errorf(
-				`"%s" in property "%s" with must be greater than "%s" in property "%s"`,
+				`"%s" in property "%s" must be greater than "%s" in property "%s"`,
 				greaterStr, greaterProperty, lowerStr, lowerProperty,
 			)
 		}
 
 		return nil
-	})
+	}).WithErrorCode(ErrorCodeDateStringGreater)
 }
 
 func prettyExamples(examples []string) string {

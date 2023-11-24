@@ -306,11 +306,12 @@ func TestStringDatePropertyGreaterThanProperty(t *testing.T) {
 				t,
 				err,
 				fmt.Sprintf(
-					`"%s" in property "%s" with must be greater than "%s" in property "%s"`,
+					`"%s" in property "%s" must be greater than "%s" in property "%s"`,
 					strDatesCompare.greaterValue, strDatesCompare.greaterProperty,
 					strDatesCompare.lowerValue, strDatesCompare.lowerProperty,
 				),
 			)
+			assert.True(t, HasErrorCode(err, ErrorCodeDateStringGreater))
 		}
 	})
 }

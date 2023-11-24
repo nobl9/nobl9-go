@@ -33,4 +33,5 @@ const (
 	ErrorCodeMutuallyExclusive    ErrorCode = "mutually_exclusive"
 	ErrorCodeSliceUnique          ErrorCode = "slice_unique"
 	ErrorCodeDateFormatRequired   ErrorCode = "date_format"
+	ErrorCodeDateStringGreater    ErrorCode = "date_string_greater"
 )
