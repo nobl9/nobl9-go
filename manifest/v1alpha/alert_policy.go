@@ -26,16 +26,16 @@ type AlertPolicyMetadata struct {
 
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
-	Description      string              `json:"description" validate:"description" example:"Error budget is at risk"`
-	Severity         string              `json:"severity" validate:"required,severity" example:"High"`
-	CoolDownDuration string              `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
-	Conditions       []AlertCondition    `json:"conditions" validate:"required,min=1,dive"`
-	AlertMethods     []PublicAlertMethod `json:"alertMethods"`
+	Description      string           `json:"description" validate:"description" example:"Error budget is at risk"`
+	Severity         string           `json:"severity" validate:"required,severity" example:"High"`
+	CoolDownDuration string           `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
+	Conditions       []AlertCondition `json:"conditions" validate:"required,min=1,dive"`
+	//AlertMethods     []PublicAlertMethod `json:"alertMethods"`
 }
 
-func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
+/*func (spec AlertPolicySpec) GetAlertMethods() []v1alphaAlertMethod.PublicAlertMethod {
 	return spec.AlertMethods
-}
+}*/
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {

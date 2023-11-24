@@ -11,6 +11,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alert"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
@@ -64,7 +65,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindAlert:
 		return genericParseObject[alert.Alert](unmarshal)
 	case manifest.KindAlertMethod:
-		return genericParseObject[v1alpha.AlertMethod](unmarshal)
+		return genericParseObject[alertmethod.AlertMethod](unmarshal)
 	case manifest.KindAlertPolicy:
 		return genericParseObject[v1alpha.AlertPolicy](unmarshal)
 	case manifest.KindAlertSilence:
