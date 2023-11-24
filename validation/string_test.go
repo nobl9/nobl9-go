@@ -216,21 +216,21 @@ func TestStringContains(t *testing.T) {
 
 func TestStringDateFormat(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		for format, dateStrs := range map[string][]string{
+		for format, dateStrings := range map[string][]string{
 			time.RFC3339:     {"2023-05-18T17:10:05Z"},
 			time.RFC3339Nano: {"2023-05-18T17:10:05.999999999Z", "2023-05-18T17:10:05Z"},
 			time.RFC1123:     {"Mon, 19 Jan 2023 17:10:05 CEST"}} {
-			for _, dateStr := range dateStrs {
+			for _, dateStr := range dateStrings {
 				err := StringDateFormat(format).Validate(dateStr)
 				assert.NoError(t, err)
 			}
 		}
 	})
 	t.Run("fails with ISO standard error", func(t *testing.T) {
-		for format, dateStrs := range map[string][]string{
+		for format, dateStrings := range map[string][]string{
 			time.RFC3339:     {"", "2006-45-02T17:10:05Z", "2023-05-18 17:10:05"},
 			time.RFC3339Nano: {"", "2023-45-18T17:10:05.999999999Z", "2023-45-18 17:10:05.9999"}} {
-			for _, dateStr := range dateStrs {
+			for _, dateStr := range dateStrings {
 				err := StringDateFormat(format).Validate(dateStr)
 				require.Error(t, err)
 				assert.EqualError(t, err, fmt.Sprintf(`"%s" must fulfil %s standard`, dateStr, iso8601Standard))
@@ -239,9 +239,9 @@ func TestStringDateFormat(t *testing.T) {
 		}
 	})
 	t.Run("fails with fallback error", func(t *testing.T) {
-		for format, dateStrs := range map[string][]string{
+		for format, dateStrings := range map[string][]string{
 			time.RFC1123: {"", "Wtf, 02 Jan 2006 15:04:05 CEST", "Mon, 88 Jan 2066 15:04:05 CEST"}} {
-			for _, dateStr := range dateStrs {
+			for _, dateStr := range dateStrings {
 				err := StringDateFormat(format).Validate(dateStr)
 				require.Error(t, err)
 				assert.ErrorContainsf(
