@@ -30,22 +30,22 @@ type Annotation struct {
 }
 
 type Metadata struct {
-	Name    string `json:"name" validate:"required,objectName"`
-	Project string `json:"project,omitempty" validate:"objectName"`
+	Name    string `json:"name"`
+	Project string `json:"project,omitempty"`
 }
 
 type Spec struct {
-	Slo           string `json:"slo" validate:"required"`
+	Slo           string `json:"slo"`
 	ObjectiveName string `json:"objectiveName,omitempty"`
-	Description   string `json:"description" validate:"required,max=1000"`
-	StartTime     string `json:"startTime" validate:"required"`
-	EndTime       string `json:"endTime" validate:"required"`
+	Description   string `json:"description"`
+	StartTime     string `json:"startTime"`
+	EndTime       string `json:"endTime"`
 }
 
 // Status represents content of Status optional for Annotation Object
 type Status struct {
-	UpdatedAt string `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
-	IsSystem  bool   `json:"isSystem" example:"false"`
+	UpdatedAt string `json:"updatedAt"`
+	IsSystem  bool   `json:"isSystem"`
 }
 
 func (s Spec) GetParsedStartTime() (time.Time, error) {
