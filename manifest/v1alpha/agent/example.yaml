@@ -1,0 +1,10 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: prometheus
+  displayName: My Prometheus
+  project: default
+spec:
+  description: Example Project
+  prometheus:
+    url: https://prometheus-service.monitoring:8080

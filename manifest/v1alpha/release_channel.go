@@ -2,6 +2,8 @@ package v1alpha
 
 import (
 	"fmt"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 //go:generate ../../bin/go-enum --nocase --names --lower --values
@@ -28,4 +30,8 @@ func (r *ReleaseChannel) UnmarshalText(text []byte) error {
 	}
 	*r = tmp
 	return nil
+}
+
+func ReleaseChannelValidation() validation.SingleRule[ReleaseChannel] {
+	return validation.OneOf(ReleaseChannelStable, ReleaseChannelBeta)
 }

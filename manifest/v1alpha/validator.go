@@ -101,7 +101,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(agentSpecStructLevelValidation, AgentSpec{})
 	val.RegisterStructValidation(alertPolicyConditionStructLevelValidation, AlertCondition{})
 	val.RegisterStructValidation(alertMethodSpecStructLevelValidation, AlertMethodSpec{})
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
@@ -110,7 +109,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(annotationSpecStructDatesValidation, AnnotationSpec{})
 	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
 	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
-	val.RegisterStructValidation(agentSpecHistoricalRetrievalValidation, Agent{})
 	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
 	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
 	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
@@ -350,61 +348,61 @@ func isMinDateTime(fl v.FieldLevel) bool {
 	return true
 }
 
-func agentSpecStructLevelValidation(sl v.StructLevel) {
-	sa := sl.Current().Interface().(AgentSpec)
-
-	agentTypeValidation(sa, sl)
-	if sa.Prometheus != nil {
-		prometheusConfigValidation(sa.Prometheus, sl)
-	}
-	agentQueryDelayValidation(sa, sl)
-	sourceOfValidation(sa.SourceOf, sl)
-
-	if !isValidReleaseChannel(sa.ReleaseChannel) {
-		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
-	}
-}
-
-func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
-	at, err := sa.GetType()
-	if err != nil {
-		sl.ReportError(sa, "", "", "unknownAgentType", "")
-		return
-	}
-	if sa.QueryDelay == nil {
-		return
-	}
-
-	queryDelay := sa.QueryDelay.Duration
-	if !isValidQueryDelayUnit(queryDelay) {
-		sl.ReportError(
-			queryDelay.Unit,
-			"unit",
-			"Unit",
-			"invalidUnit",
-			"",
-		)
-	}
-	agentDefault := GetQueryDelayDefaults()[at.String()]
-	if queryDelay.LessThan(agentDefault) {
-		sl.ReportError(
-			sa,
-			"QueryDelayDuration",
-			"QueryDelayDuration",
-			"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
-			"",
-		)
-	}
-	if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
-		sl.ReportError(
-			sa,
-			"QueryDelayDuration",
-			"QueryDelayDuration",
-			"queryDelayDurationBiggerThanMaximumAllowed",
-			"",
-		)
-	}
-}
+//func agentSpecStructLevelValidation(sl v.StructLevel) {
+//	sa := sl.Current().Interface().(AgentSpec)
+//
+//	agentTypeValidation(sa, sl)
+//	if sa.Prometheus != nil {
+//		prometheusConfigValidation(sa.Prometheus, sl)
+//	}
+//	agentQueryDelayValidation(sa, sl)
+//	sourceOfValidation(sa.SourceOf, sl)
+//
+//	if !isValidReleaseChannel(sa.ReleaseChannel) {
+//		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
+//	}
+//}
+//
+//func agentQueryDelayValidation(sa AgentSpec, sl v.StructLevel) {
+//	at, err := sa.GetType()
+//	if err != nil {
+//		sl.ReportError(sa, "", "", "unknownAgentType", "")
+//		return
+//	}
+//	if sa.QueryDelay == nil {
+//		return
+//	}
+//
+//	queryDelay := sa.QueryDelay.Duration
+//	if !isValidQueryDelayUnit(queryDelay) {
+//		sl.ReportError(
+//			queryDelay.Unit,
+//			"unit",
+//			"Unit",
+//			"invalidUnit",
+//			"",
+//		)
+//	}
+//	agentDefault := GetQueryDelayDefaults()[at.String()]
+//	if queryDelay.LessThan(agentDefault) {
+//		sl.ReportError(
+//			sa,
+//			"QueryDelayDuration",
+//			"QueryDelayDuration",
+//			"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
+//			"",
+//		)
+//	}
+//	if IsBiggerThanMaxQueryDelayDuration(queryDelay) {
+//		sl.ReportError(
+//			sa,
+//			"QueryDelayDuration",
+//			"QueryDelayDuration",
+//			"queryDelayDurationBiggerThanMaximumAllowed",
+//			"",
+//		)
+//	}
+//}
 
 func isValidURL(fl v.FieldLevel) bool {
 	return validateURL(fl.Field().String())
@@ -475,123 +473,6 @@ func isHTTPS(fl v.FieldLevel) bool {
 		return false
 	}
 	return true
-}
-
-func prometheusConfigValidation(pc *PrometheusAgentConfig, sl v.StructLevel) {
-	switch {
-	case pc.URL == nil:
-		sl.ReportError(pc.URL, "url", "URL", "integrationUrlRequired", "")
-	case !validateURL(*pc.URL):
-		sl.ReportError(pc.URL, "url", "URL", "integrationUrlNotValid", "")
-	}
-}
-
-// nolint added because of detected duplicate with metricTypeValidation variant of this function
-func agentTypeValidation(sa AgentSpec, sl v.StructLevel) {
-	const expectedNumberOfAgentTypes = 1
-	var agentTypesCount int
-	if sa.Prometheus != nil {
-		agentTypesCount++
-	}
-	if sa.Datadog != nil {
-		agentTypesCount++
-	}
-	if sa.NewRelic != nil {
-		agentTypesCount++
-	}
-	if sa.AppDynamics != nil {
-		agentTypesCount++
-	}
-	if sa.Splunk != nil {
-		agentTypesCount++
-	}
-	if sa.Lightstep != nil {
-		agentTypesCount++
-	}
-	if sa.SplunkObservability != nil {
-		agentTypesCount++
-	}
-	if sa.ThousandEyes != nil {
-		agentTypesCount++
-	}
-	if sa.Dynatrace != nil {
-		agentTypesCount++
-	}
-	if sa.Elasticsearch != nil {
-		agentTypesCount++
-	}
-	if sa.Graphite != nil {
-		agentTypesCount++
-	}
-	if sa.BigQuery != nil {
-		agentTypesCount++
-	}
-	if sa.OpenTSDB != nil {
-		agentTypesCount++
-	}
-	if sa.GrafanaLoki != nil {
-		agentTypesCount++
-	}
-	if sa.CloudWatch != nil {
-		agentTypesCount++
-	}
-	if sa.Pingdom != nil {
-		agentTypesCount++
-	}
-	if sa.AmazonPrometheus != nil {
-		agentTypesCount++
-	}
-	if sa.Redshift != nil {
-		agentTypesCount++
-	}
-	if sa.SumoLogic != nil {
-		agentTypesCount++
-	}
-	if sa.Instana != nil {
-		agentTypesCount++
-	}
-	if sa.InfluxDB != nil {
-		agentTypesCount++
-	}
-	if sa.GCM != nil {
-		agentTypesCount++
-	}
-	if sa.AzureMonitor != nil {
-		agentTypesCount++
-	}
-	if sa.Generic != nil {
-		agentTypesCount++
-	}
-	if sa.Honeycomb != nil {
-		agentTypesCount++
-	}
-	if agentTypesCount != expectedNumberOfAgentTypes {
-		sl.ReportError(sa, "prometheus", "Prometheus", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "newrelic", "NewRelic", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "appdynamics", "AppDynamics", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "splunk", "Splunk", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "splunkObservability", "SplunkObservability", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "elasticsearch", "Elasticsearch", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "thousandEyes", "ThousandEyes", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "graphite", "Graphite", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "bigQuery", "BigQuery", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "opentsdb", "OpenTSDB", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "grafanaLoki", "GrafanaLoki", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "cloudWatch", "CloudWatch", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "pingdom", "Pingdom", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "amazonPrometheus", "AmazonPrometheus", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "redshift", "Redshift", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "sumoLogic", "SumoLogic", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "instana", "Instana", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "gcm", "GCM", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "azuremonitor", "AzureMonitor", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "generic", "Generic", "exactlyOneAgentTypeRequired", "")
-		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneAgentTypeRequired", "")
-	}
 }
 
 func directSpecStructLevelValidation(sl v.StructLevel) {
@@ -1143,53 +1024,53 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 	return true
 }
 
-func agentSpecHistoricalRetrievalValidation(sl v.StructLevel) {
-	validatedAgent, ok := sl.Current().Interface().(Agent)
-	if !ok {
-		sl.ReportError(validatedAgent, "", "", "structConversion", "")
-		return
-	}
-	if validatedAgent.Spec.HistoricalDataRetrieval == nil {
-		return
-	}
-
-	integrationType, err := validatedAgent.Spec.GetType()
-	if err != nil {
-		sl.ReportError(
-			validatedAgent.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"historicalDataRetrievalNotAvailable",
-			"")
-		return
-	}
-
-	maxDuration, err := GetDataRetrievalMaxDuration(validatedAgent.Kind, integrationType.String())
-	if err != nil {
-		sl.ReportError(
-			validatedAgent.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"historicalDataRetrievalNotAvailable",
-			"")
-		return
-	}
-
-	maxDurationAllowed := HistoricalRetrievalDuration{
-		Value: maxDuration.Value,
-		Unit:  maxDuration.Unit,
-	}
-
-	if validatedAgent.Spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		sl.ReportError(
-			validatedAgent.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"dataRetrievalMaxDurationExceeded",
-			"")
-		return
-	}
-}
+//func agentSpecHistoricalRetrievalValidation(sl v.StructLevel) {
+//	validatedAgent, ok := sl.Current().Interface().(Agent)
+//	if !ok {
+//		sl.ReportError(validatedAgent, "", "", "structConversion", "")
+//		return
+//	}
+//	if validatedAgent.Spec.HistoricalDataRetrieval == nil {
+//		return
+//	}
+//
+//	integrationType, err := validatedAgent.Spec.GetType()
+//	if err != nil {
+//		sl.ReportError(
+//			validatedAgent.Spec.HistoricalDataRetrieval,
+//			"historicalDataRetrieval",
+//			"HistoricalDataRetrieval",
+//			"historicalDataRetrievalNotAvailable",
+//			"")
+//		return
+//	}
+//
+//	maxDuration, err := GetDataRetrievalMaxDuration(validatedAgent.Kind, integrationType.String())
+//	if err != nil {
+//		sl.ReportError(
+//			validatedAgent.Spec.HistoricalDataRetrieval,
+//			"historicalDataRetrieval",
+//			"HistoricalDataRetrieval",
+//			"historicalDataRetrievalNotAvailable",
+//			"")
+//		return
+//	}
+//
+//	maxDurationAllowed := HistoricalRetrievalDuration{
+//		Value: maxDuration.Value,
+//		Unit:  maxDuration.Unit,
+//	}
+//
+//	if validatedAgent.Spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
+//		sl.ReportError(
+//			validatedAgent.Spec.HistoricalDataRetrieval,
+//			"historicalDataRetrieval",
+//			"HistoricalDataRetrieval",
+//			"dataRetrievalMaxDurationExceeded",
+//			"")
+//		return
+//	}
+//}
 
 func directSpecHistoricalRetrievalValidation(sl v.StructLevel) {
 	validatedDirect, ok := sl.Current().Interface().(Direct)
