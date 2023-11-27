@@ -38,7 +38,7 @@ func TestValidate_AllErrors(t *testing.T) {
 }
 
 func TestSpec(t *testing.T) {
-	t.Run("error code datatime fields compare", func(t *testing.T) {
+	t.Run("end time is after start time", func(t *testing.T) {
 		startTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
 		endTime, _ := time.Parse(time.RFC3339, "2023-05-01T13:10:05Z")
 

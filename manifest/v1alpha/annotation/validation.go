@@ -1,9 +1,7 @@
 package annotation
 
 import (
-	"time"
-
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
@@ -39,10 +37,7 @@ var specValidation = validation.New[Spec](
 		Required().
 		Rules(validation.StringLength(0, 1000)),
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(datePropertyGreaterThanProperty(
-			"endTime", func(s Spec) time.Time { return s.EndTime },
-			"startTime", func(s Spec) time.Time { return s.StartTime },
-		)),
+		Rules(endTimeAfterStartTime),
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
@@ -51,23 +46,15 @@ func validate(p Annotation) *v1alpha.ObjectError {
 
 const errorCodeDateAfter validation.ErrorCode = "date_greater_than"
 
-// DatePropertyGreaterThanProperty checks if getter returned value passed as greaterGetter argument
-// is greater that value returned by lowerGetter
-func datePropertyGreaterThanProperty[S any](
-	greaterProperty string, greaterGetter func(s S) time.Time,
-	lowerProperty string, lowerGetter func(s S) time.Time,
-) validation.SingleRule[S] {
-	return validation.NewSingleRule(func(s S) error {
-		greater := greaterGetter(s)
-		lower := lowerGetter(s)
-
-		if !greater.After(lower) {
-			return errors.Errorf(
+var endTimeAfterStartTime = validation.NewSingleRule(func(s Spec) error {
+	if !s.EndTime.After(s.StartTime) {
+		return &validation.RuleError{
+			Message: fmt.Sprintf(
 				`"%s" in property "%s" must be greater than "%s" in property "%s"`,
-				greater, greaterProperty, lower, lowerProperty,
-			)
+				s.EndTime, "endTime", s.StartTime, "startTime"),
+			Code: errorCodeDateAfter,
 		}
+	}
 
-		return nil
-	}).WithErrorCode(errorCodeDateAfter)
-}
+	return nil
+})
