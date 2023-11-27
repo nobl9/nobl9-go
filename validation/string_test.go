@@ -210,12 +210,3 @@ func TestStringContains(t *testing.T) {
 		assert.True(t, HasErrorCode(err, ErrorCodeStringContains))
 	})
 }
-
-type stringDateComparable struct {
-	greaterProperty string
-	greaterValue    string
-	lowerProperty   string
-	lowerValue      string
-}
-
-type some struct{}
