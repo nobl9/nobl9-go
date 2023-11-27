@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 //go:embed test_data/expected_error.txt
@@ -32,6 +33,23 @@ func TestValidate_AllErrors(t *testing.T) {
 	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
 }
 
-func TestValidateSpec(t *testing.T) {}
+func TestValidateSpec(t *testing.T) {
+
+}
+
+func validAgent() Agent {
+	return New(
+		Metadata{
+			Name:        "prometheus",
+			DisplayName: "Prometheus Agent",
+			Project:     "default",
+		}, Spec{
+			Description:    "Example Prometheus Agent",
+			ReleaseChannel: v1alpha.ReleaseChannelStable,
+			Prometheus: &PrometheusConfig{
+				URL: ptr("https://prometheus-service.monitoring:8080"),
+			},
+		})
+}
 
 func ptr[T any](v T) *T { return &v }

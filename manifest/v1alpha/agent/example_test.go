@@ -20,20 +20,17 @@ func ExampleAgent() {
 		},
 		agent.Spec{
 			Description: "Example Agent",
-			Prometheus: &agent.PrometheusConfig{
-				URL:    &url,
-				Region: "",
-			},
+			Prometheus:  &agent.PrometheusConfig{URL: &url},
 		},
 	)
 	// Verify the object:
 	if err := myAgent.Validate(); err != nil {
-		log.Fatalf("project validation failed, err: %v", err)
+		log.Fatalf("agent validation failed, err: %v", err)
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
 	if err := client.ApplyObjects(context.Background(), []manifest.Object{myAgent}); err != nil {
-		log.Fatalf("failed to apply project, err: %v", err)
+		log.Fatalf("failed to apply agent, err: %v", err)
 	}
 	// Output:
 	// apiVersion: n9/v1alpha
@@ -43,7 +40,7 @@ func ExampleAgent() {
 	//   displayName: My Agent
 	//   project: default
 	// spec:
-	//   description: Example project
+	//   description: Example Agent
 	//   prometheus:
 	//     url: https://prometheus-service.monitoring:8080
 }

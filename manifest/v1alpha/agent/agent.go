@@ -33,15 +33,15 @@ type Agent struct {
 }
 
 type Metadata struct {
-	Name        string `json:"name" validate:"required,objectName"`
-	DisplayName string `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string `json:"project,omitempty" validate:"objectName"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+	Project     string `json:"project,omitempty"`
 }
 
 // Spec represents content of Spec typical for Agent Object
 type Spec struct {
-	Description             string                           `json:"description,omitempty" validate:"description" example:"Prometheus description"` //nolint:lll
-	ReleaseChannel          v1alpha.ReleaseChannel           `json:"releaseChannel,omitempty" example:"beta,stable"`
+	Description             string                           `json:"description,omitempty"`
+	ReleaseChannel          v1alpha.ReleaseChannel           `json:"releaseChannel,omitempty"`
 	Prometheus              *PrometheusConfig                `json:"prometheus,omitempty"`
 	Datadog                 *DatadogConfig                   `json:"datadog,omitempty"`
 	NewRelic                *NewRelicConfig                  `json:"newRelic,omitempty"`
@@ -136,8 +136,7 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 
 // PrometheusConfig represents content of Prometheus Configuration typical for Agent Object.
 type PrometheusConfig struct {
-	URL    *string `json:"url,omitempty" example:"http://prometheus-service.monitoring:8080"`
-	Region string  `json:"region,omitempty" example:"eu-cental-1"`
+	URL string `json:"url"`
 }
 
 // DatadogConfig represents content of Datadog Configuration typical for Agent Object.
@@ -147,7 +146,7 @@ type DatadogConfig struct {
 
 // NewRelicConfig represents content of NewRelic Configuration typical for Agent Object.
 type NewRelicConfig struct {
-	AccountID int `json:"accountId,omitempty" example:"123654"`
+	AccountID int `json:"accountId,omitempty"`
 }
 
 // AmazonPrometheusConfig represents content of Amazon Managed Service Configuration typical for Agent Object.
@@ -157,9 +156,7 @@ type AmazonPrometheusConfig struct {
 }
 
 // RedshiftConfig represents content of Redshift configuration typical for Agent Object
-// Since the agent does not require additional configuration this is just a marker struct.
-type RedshiftConfig struct {
-}
+type RedshiftConfig struct{}
 
 // OpenTSDBConfig represents content of OpenTSDBConfig Configuration typical for Agent Object.
 type OpenTSDBConfig struct {
@@ -172,9 +169,7 @@ type GrafanaLokiConfig struct {
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
-type CloudWatchConfig struct {
-	// CloudWatch agent doesn't require any additional parameters.
-}
+type CloudWatchConfig struct{}
 
 // SumoLogicConfig represents content of Sumo Logic configuration typical for Agent Object.
 type SumoLogicConfig struct {
@@ -192,14 +187,10 @@ type InfluxDBConfig struct {
 }
 
 // PingdomConfig represents content of Pingdom Configuration typical for Agent Object.
-type PingdomConfig struct {
-	// Pingdom agent doesn't require any additional parameter
-}
+type PingdomConfig struct{}
 
 // GCMConfig represents content of GCM configuration.
-// Since the agent does not require additional configuration this is just a marker struct.
-type GCMConfig struct {
-}
+type GCMConfig struct{}
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceConfig struct {
@@ -217,14 +208,10 @@ type GraphiteConfig struct {
 }
 
 // BigQueryConfig represents content of BigQuery configuration.
-// Since the agent does not require additional configuration this is just a marker struct.
-type BigQueryConfig struct {
-}
+type BigQueryConfig struct{}
 
 // ThousandEyesConfig represents content of ThousandEyes Configuration typical for Agent Object.
-type ThousandEyesConfig struct {
-	// ThousandEyes agent doesn't require any additional parameters.
-}
+type ThousandEyesConfig struct{}
 
 // SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Agent Object.
 type SplunkObservabilityConfig struct {
@@ -253,10 +240,7 @@ type AzureMonitorConfig struct {
 }
 
 // GenericConfig represents content of Generic Configuration typical for Agent Object.
-type GenericConfig struct {
-}
+type GenericConfig struct{}
 
 // HoneycombConfig represents content of Honeycomb Configuration typical for Agent Object.
-type HoneycombConfig struct {
-	// Honeycomb agent doesn't require any additional parameters.
-}
+type HoneycombConfig struct{}

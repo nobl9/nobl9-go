@@ -23,7 +23,108 @@ var specValidation = validation.New[Spec](
 		WithName("releaseChannel").
 		Omitempty().
 		Rules(v1alpha.ReleaseChannelValidation()),
+	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
+		WithName("prometheus").
+		Include(prometheusValidation),
+	validation.ForPointer(func(s Spec) *DatadogConfig { return s.Datadog }).
+		WithName("datadog").
+		Include(datadogValidation),
+	validation.ForPointer(func(s Spec) *NewRelicConfig { return s.NewRelic }).
+		WithName("newRelic").
+		Include(newRelicValidation),
+	validation.ForPointer(func(s Spec) *AppDynamicsConfig { return s.AppDynamics }).
+		WithName("appDynamics").
+		Include(appDynamicsValidation),
+	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
+		WithName("splunk").
+		Include(splunkValidation),
+	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
+		WithName("lightstep").
+		Include(lightstepValidation),
+	validation.ForPointer(func(s Spec) *SplunkObservabilityConfig { return s.SplunkObservability }).
+		WithName("splunkObservability").
+		Include(splunkObservabilityValidation),
+	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
+		WithName("dynatrace").
+		Include(dynatraceValidation),
+	validation.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
+		WithName("elasticsearch").
+		Include(elasticsearchValidation),
+	validation.ForPointer(func(s Spec) *ThousandEyesConfig { return s.ThousandEyes }).
+		WithName("thousandEyes").
+		Include(thousandEyesValidation),
+	validation.ForPointer(func(s Spec) *GraphiteConfig { return s.Graphite }).
+		WithName("graphite").
+		Include(graphiteValidation),
+	validation.ForPointer(func(s Spec) *BigQueryConfig { return s.BigQuery }).
+		WithName("bigQuery").
+		Include(bigQueryValidation),
+	validation.ForPointer(func(s Spec) *OpenTSDBConfig { return s.OpenTSDB }).
+		WithName("opentsdb").
+		Include(openTSDBValidation),
+	validation.ForPointer(func(s Spec) *GrafanaLokiConfig { return s.GrafanaLoki }).
+		WithName("grafanaLoki").
+		Include(grafanaLokiValidation),
+	validation.ForPointer(func(s Spec) *CloudWatchConfig { return s.CloudWatch }).
+		WithName("cloudWatch").
+		Include(cloudWatchValidation),
+	validation.ForPointer(func(s Spec) *PingdomConfig { return s.Pingdom }).
+		WithName("pingdom").
+		Include(pingdomValidation),
+	validation.ForPointer(func(s Spec) *AmazonPrometheusConfig { return s.AmazonPrometheus }).
+		WithName("amazonPrometheus").
+		Include(amazonPrometheusValidation),
+	validation.ForPointer(func(s Spec) *RedshiftConfig { return s.Redshift }).
+		WithName("redshift").
+		Include(redshiftValidation),
+	validation.ForPointer(func(s Spec) *SumoLogicConfig { return s.SumoLogic }).
+		WithName("sumoLogic").
+		Include(sumoLogicValidation),
+	validation.ForPointer(func(s Spec) *InstanaConfig { return s.Instana }).
+		WithName("instana").
+		Include(instanaValidation),
+	validation.ForPointer(func(s Spec) *InfluxDBConfig { return s.InfluxDB }).
+		WithName("influxdb").
+		Include(influxDBValidation),
+	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
+		WithName("azureMonitor").
+		Include(azureMonitorValidation),
+	validation.ForPointer(func(s Spec) *GCMConfig { return s.GCM }).
+		WithName("gcm").
+		Include(gcmValidation),
+	validation.ForPointer(func(s Spec) *GenericConfig { return s.Generic }).
+		WithName("generic").
+		Include(genericValidation),
+	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombValidation),
 )
+
+var prometheusValidation = validation.New[PrometheusConfig]()
+var datadogValidation = validation.New[DatadogConfig]()
+var newRelicValidation = validation.New[NewRelicConfig]()
+var appDynamicsValidation = validation.New[AppDynamicsConfig]()
+var splunkValidation = validation.New[SplunkConfig]()
+var lightstepValidation = validation.New[LightstepConfig]()
+var splunkObservabilityValidation = validation.New[SplunkObservabilityConfig]()
+var dynatraceValidation = validation.New[DynatraceConfig]()
+var elasticsearchValidation = validation.New[ElasticsearchConfig]()
+var thousandEyesValidation = validation.New[ThousandEyesConfig]()
+var graphiteValidation = validation.New[GraphiteConfig]()
+var bigQueryValidation = validation.New[BigQueryConfig]()
+var openTSDBValidation = validation.New[OpenTSDBConfig]()
+var grafanaLokiValidation = validation.New[GrafanaLokiConfig]()
+var cloudWatchValidation = validation.New[CloudWatchConfig]()
+var pingdomValidation = validation.New[PingdomConfig]()
+var amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()
+var redshiftValidation = validation.New[RedshiftConfig]()
+var sumoLogicValidation = validation.New[SumoLogicConfig]()
+var instanaValidation = validation.New[InstanaConfig]()
+var influxDBValidation = validation.New[InfluxDBConfig]()
+var azureMonitorValidation = validation.New[AzureMonitorConfig]()
+var gcmValidation = validation.New[GCMConfig]()
+var genericValidation = validation.New[GenericConfig]()
+var honeycombValidation = validation.New[HoneycombConfig]()
 
 const errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
 

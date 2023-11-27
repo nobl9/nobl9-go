@@ -5,6 +5,6 @@ metadata:
   displayName: My Prometheus
   project: default
 spec:
-  description: Example Project
+  description: Example Prometheus Agent
   prometheus:
     url: https://prometheus-service.monitoring:8080
