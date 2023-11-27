@@ -10,7 +10,6 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 //go:embed test_data/expected_error.txt
@@ -56,7 +55,7 @@ func TestSpec(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec",
-			Code: validation.ErrorCodeDateGreaterThan,
+			Code: errorCodeDateAfter,
 		})
 	})
 }

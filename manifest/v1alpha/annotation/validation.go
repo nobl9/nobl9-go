@@ -49,6 +49,8 @@ func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(annotationValidation, p)
 }
 
+const errorCodeDateAfter validation.ErrorCode = "date_greater_than"
+
 // DatePropertyGreaterThanProperty checks if getter returned value passed as greaterGetter argument
 // is greater that value returned by lowerGetter
 func datePropertyGreaterThanProperty[S any](
@@ -67,5 +69,5 @@ func datePropertyGreaterThanProperty[S any](
 		}
 
 		return nil
-	}).WithErrorCode(validation.ErrorCodeDateGreaterThan)
+	}).WithErrorCode(errorCodeDateAfter)
 }
