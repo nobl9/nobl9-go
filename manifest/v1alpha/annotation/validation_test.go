@@ -2,6 +2,7 @@ package annotation
 
 import (
 	_ "embed"
+	"github.com/nobl9/nobl9-go/manifest"
 	"strings"
 	"testing"
 	"time"
@@ -16,21 +17,21 @@ import (
 var expectedError string
 
 func TestValidate_AllErrors(t *testing.T) {
-	err := validate(
-		New(
-			Metadata{
-				Name:    strings.Repeat("MY ANNOTATION", 20),
-				Project: strings.Repeat("MY ANNOTATION", 20),
-			},
-			Spec{
-				Slo:           "existing-slo",
-				ObjectiveName: "existing-slo-objective-1",
-				Description:   "Example annotation",
-				StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-				EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
-			},
-		),
-	)
+	err := validate(Annotation{
+		Kind: manifest.KindAnnotation,
+		Metadata: Metadata{
+			Name:    strings.Repeat("MY ANNOTATION", 20),
+			Project: strings.Repeat("MY ANNOTATION", 20),
+		},
+		Spec: Spec{
+			Slo:           "slo-name",
+			ObjectiveName: "some-obj-name",
+			Description:   strings.Repeat("l", 2000),
+			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+		},
+		ManifestSource: "/home/me/annotation.yaml",
+	})
 	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
 }
 
