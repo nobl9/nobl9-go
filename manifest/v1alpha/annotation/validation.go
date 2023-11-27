@@ -39,7 +39,7 @@ var specValidation = validation.New[Spec](
 		Required().
 		Rules(validation.StringLength(0, 1000)),
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(DatePropertyGreaterThanProperty(
+		Rules(datePropertyGreaterThanProperty(
 			"endTime", func(s Spec) time.Time { return s.EndTime },
 			"startTime", func(s Spec) time.Time { return s.StartTime },
 		)),
@@ -51,7 +51,7 @@ func validate(p Annotation) *v1alpha.ObjectError {
 
 // DatePropertyGreaterThanProperty checks if getter returned value passed as greaterGetter argument
 // is greater that value returned by lowerGetter
-func DatePropertyGreaterThanProperty[S any](
+func datePropertyGreaterThanProperty[S any](
 	greaterProperty string, greaterGetter func(s S) time.Time,
 	lowerProperty string, lowerGetter func(s S) time.Time,
 ) validation.SingleRule[S] {
