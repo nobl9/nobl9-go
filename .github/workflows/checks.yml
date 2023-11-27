@@ -14,13 +14,13 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           check-latest: true
       - name: Set up prerequisites - node and yarn
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
       - name: Set up yarn cache
         id: yarn-cache
         run: echo "::set-output name=dir::$(yarn cache dir)"
