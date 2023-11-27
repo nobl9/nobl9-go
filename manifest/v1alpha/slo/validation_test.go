@@ -1428,16 +1428,6 @@ fetch consumed_api
 		Dataset:     "sequence-of-numbers",
 		Calculation: "SUM",
 		Attribute:   "http.status_code",
-		Filter: HoneycombFilter{
-			Operator: "AND",
-			Conditions: []HoneycombFilterCondition{
-				{
-					Attribute: "http.status_code",
-					Operator:  "=",
-					Value:     "200",
-				},
-			},
-		},
 	}},
 }
 
