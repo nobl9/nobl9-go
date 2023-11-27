@@ -26,8 +26,8 @@ func TestValidate_AllErrors(t *testing.T) {
 				Slo:           "existing-slo",
 				ObjectiveName: "existing-slo-objective-1",
 				Description:   "Example annotation",
-				StartTime:     time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
-				EndTime:       time.Date(2023, 5, 2, 17, 10, 05, 0, time.UTC),
+				StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+				EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 			},
 		),
 	)
@@ -73,8 +73,8 @@ func TestValidate_Spec_Objective(t *testing.T) {
 func TestSpec_Time(t *testing.T) {
 	t.Run("passes, end time after start time", func(t *testing.T) {
 		annotation := validAnnotation()
-		annotation.Spec.StartTime = time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC)
-		annotation.Spec.EndTime = time.Date(2023, 5, 14, 17, 10, 05, 0, time.UTC)
+		annotation.Spec.StartTime = time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
+		annotation.Spec.EndTime = time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
@@ -85,15 +85,15 @@ func TestSpec_Time(t *testing.T) {
 				Slo:           "my-slo",
 				ObjectiveName: "my-obj",
 				Description:   "my-annotation description",
-				StartTime:     time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
-				EndTime:       time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
+				StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+				EndTime:       time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
 			},
 			"end time is before start time": {
 				Slo:           "my-slo",
 				ObjectiveName: "my-obj",
 				Description:   "my-annotation description",
-				StartTime:     time.Date(2023, 5, 5, 17, 10, 05, 0, time.UTC),
-				EndTime:       time.Date(2023, 5, 2, 17, 10, 05, 0, time.UTC),
+				StartTime:     time.Date(2023, 5, 5, 17, 10, 5, 0, time.UTC),
+				EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 			},
 		}
 		for name, spec := range tests {
@@ -128,8 +128,8 @@ func validAnnotation() Annotation {
 			Slo:           "existing-slo",
 			ObjectiveName: "existing-slo-objective-1",
 			Description:   "Example annotation",
-			StartTime:     time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 2, 17, 10, 05, 0, time.UTC),
+			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 		},
 	)
 }

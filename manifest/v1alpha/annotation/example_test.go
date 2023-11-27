@@ -21,8 +21,8 @@ func ExampleAnnotation() {
 			Slo:           "existing-slo",
 			ObjectiveName: "existing-slo-objective-1",
 			Description:   "Example annotation",
-			StartTime:     time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 2, 17, 10, 05, 0, time.UTC),
+			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 		},
 	)
 	// Verify the object:
