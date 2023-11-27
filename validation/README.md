@@ -61,7 +61,7 @@ When validating structured data, namely `struct`,
 each structure consists of multiple properties.
 For `struct`, these will be its fields.
 
-Most commonly, property has it's name and value.
+Most commonly, property has its name and value.
 Property name should be derived from the struct
 representation visible by the errors consumer,
 this will most likely be JSON format.
@@ -111,7 +111,7 @@ If a rule is not met it returns [RuleError](#ruleerror).
 #### SingleRule
 
 This is the most basic validation building block.
-It's error code can be set using `WithErrorCode` function and its error message can
+Its error code can be set using `WithErrorCode` function and its error message can
 also be enhanced using `WithDetails` function.
 Details are delimited by `;` character.
 
