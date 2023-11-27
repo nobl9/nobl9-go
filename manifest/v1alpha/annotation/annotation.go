@@ -35,23 +35,15 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Slo           string `json:"slo"`
-	ObjectiveName string `json:"objectiveName,omitempty"`
-	Description   string `json:"description"`
-	StartTime     string `json:"startTime"`
-	EndTime       string `json:"endTime"`
+	Slo           string    `json:"slo"`
+	ObjectiveName string    `json:"objectiveName,omitempty"`
+	Description   string    `json:"description"`
+	StartTime     time.Time `json:"startTime"`
+	EndTime       time.Time `json:"endTime"`
 }
 
 // Status represents content of Status optional for Annotation Object
 type Status struct {
 	UpdatedAt string `json:"updatedAt"`
 	IsSystem  bool   `json:"isSystem"`
-}
-
-func (s Spec) GetParsedStartTime() (time.Time, error) {
-	return time.Parse(time.RFC3339, s.StartTime)
-}
-
-func (s Spec) GetParsedEndTime() (time.Time, error) {
-	return time.Parse(time.RFC3339, s.EndTime)
 }

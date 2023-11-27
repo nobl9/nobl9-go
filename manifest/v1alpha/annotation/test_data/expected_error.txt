@@ -11,6 +11,6 @@ Validation for Annotation 'MY ANNOTATIONMY ANNOTATIONMY ANNOTATIONMY ANNOTATIONM
     - length must be between 1 and 63
   - 'spec.description' with value 'llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
     - length must be between 0 and 1000
-  - 'spec.endTime' with value '{"slo":"llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
-    - "" must fulfil ISO 8601 standard
+  - 'spec' with value '{"slo":"llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
+    - "2023-05-01 17:10:05 +0000 UTC" in property "endTime" must be greater than "2023-05-01 17:10:05 +0000 UTC" in property "startTime"
 Manifest source: /home/me/annotation.yaml

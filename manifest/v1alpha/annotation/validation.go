@@ -3,6 +3,8 @@ package annotation
 import (
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -37,13 +39,34 @@ var specValidation = validation.New[Spec](
 		Required().
 		Rules(validation.StringLength(0, 1000)),
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(validation.StringDatePropertyGreaterThanProperty(
-			time.RFC3339,
-			"endTime", func(s Spec) string { return s.EndTime },
-			"startTime", func(s Spec) string { return s.StartTime },
+		Rules(DatePropertyGreaterThanProperty(
+			"endTime", func(s Spec) time.Time { return s.EndTime },
+			"startTime", func(s Spec) time.Time { return s.StartTime },
 		)),
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(annotationValidation, p)
+}
+
+// DatePropertyGreaterThanProperty checks if property string values are parsable to declared format,
+// then checks getter returned value passed as greaterGetter argument
+// if it is greater that value returned by lowerGetter
+func DatePropertyGreaterThanProperty[S any](
+	greaterProperty string, greaterGetter func(s S) time.Time,
+	lowerProperty string, lowerGetter func(s S) time.Time,
+) validation.SingleRule[S] {
+	return validation.NewSingleRule(func(s S) error {
+		greater := greaterGetter(s)
+		lower := lowerGetter(s)
+
+		if !greater.After(lower) {
+			return errors.Errorf(
+				`"%s" in property "%s" must be greater than "%s" in property "%s"`,
+				greater, greaterProperty, lower, lowerProperty,
+			)
+		}
+
+		return nil
+	}).WithErrorCode(validation.ErrorCodeDateGreaterThan)
 }

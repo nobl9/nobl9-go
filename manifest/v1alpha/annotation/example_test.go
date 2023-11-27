@@ -3,6 +3,7 @@ package annotation_test
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -10,6 +11,9 @@ import (
 )
 
 func ExampleAnnotation() {
+	startTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
+	endTime, _ := time.Parse(time.RFC3339, "2023-05-02T17:10:05Z")
+
 	// Create the object:
 	myAnnotation := annotation.New(
 		annotation.Metadata{
@@ -20,8 +24,8 @@ func ExampleAnnotation() {
 			Slo:           "existing-slo",
 			ObjectiveName: "existing-slo-objective-1",
 			Description:   "Example annotation",
-			StartTime:     "2023-05-01T17:10:05Z",
-			EndTime:       "2023-05-02T17:10:05Z",
+			StartTime:     startTime,
+			EndTime:       endTime,
 		},
 	)
 	// Verify the object:

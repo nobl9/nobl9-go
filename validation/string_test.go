@@ -1,12 +1,9 @@
 package validation
 
 import (
-	"fmt"
-	"github.com/stretchr/testify/require"
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -211,108 +208,6 @@ func TestStringContains(t *testing.T) {
 		assert.Error(t, err)
 		assert.EqualError(t, err, "string must contain the following substrings: 'th', 'ht'")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringContains))
-	})
-}
-
-func TestStringDateFormat(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		for format, dateStrings := range map[string][]string{
-			time.RFC3339:     {"2023-05-18T17:10:05Z"},
-			time.RFC3339Nano: {"2023-05-18T17:10:05.999999999Z", "2023-05-18T17:10:05Z"},
-			time.RFC1123:     {"Mon, 19 Jan 2023 17:10:05 CEST"}} {
-			for _, dateStr := range dateStrings {
-				err := StringDateFormat(format).Validate(dateStr)
-				assert.NoError(t, err)
-			}
-		}
-	})
-	t.Run("fails with ISO standard error", func(t *testing.T) {
-		for format, dateStrings := range map[string][]string{
-			time.RFC3339:     {"", "2006-45-02T17:10:05Z", "2023-05-18 17:10:05"},
-			time.RFC3339Nano: {"", "2023-45-18T17:10:05.999999999Z", "2023-45-18 17:10:05.9999"}} {
-			for _, dateStr := range dateStrings {
-				err := StringDateFormat(format).Validate(dateStr)
-				require.Error(t, err)
-				assert.EqualError(t, err, fmt.Sprintf(`"%s" must fulfil %s standard`, dateStr, iso8601Standard))
-				assert.True(t, HasErrorCode(err, ErrorCodeDateFormatRequired))
-			}
-		}
-	})
-	t.Run("fails with fallback error", func(t *testing.T) {
-		for format, dateStrings := range map[string][]string{
-			time.RFC1123: {"", "Wtf, 02 Jan 2006 15:04:05 CEST", "Mon, 88 Jan 2066 15:04:05 CEST"}} {
-			for _, dateStr := range dateStrings {
-				err := StringDateFormat(format).Validate(dateStr)
-				require.Error(t, err)
-				assert.ErrorContainsf(
-					t,
-					err,
-					fmt.Sprintf(`parsing time "%s"`, dateStr),
-					"error message doesn't contain required phrase",
-				)
-				assert.True(t, HasErrorCode(err, ErrorCodeDateFormatRequired))
-			}
-		}
-	})
-}
-
-func TestStringDatePropertyGreaterThanProperty(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		for format, strDatesCompare := range map[string]stringDateComparable{
-			time.RFC3339: {
-				greaterProperty: "endsTime",
-				greaterValue:    "2023-05-18T17:10:05Z",
-				lowerProperty:   "startsTime",
-				lowerValue:      "2023-05-01T11:10:05Z",
-			},
-			time.RFC1123: {
-				greaterProperty: "endsTime",
-				greaterValue:    "Thu, 23 Nov 2023 17:10:05 CEST",
-				lowerProperty:   "startsTime",
-				lowerValue:      "Wed, 22 Nov 2023 17:10:05 CEST",
-			},
-		} {
-			err := StringDatePropertyGreaterThanProperty(
-				format,
-				strDatesCompare.greaterProperty, func(s any) string { return strDatesCompare.greaterValue },
-				strDatesCompare.lowerProperty, func(s any) string { return strDatesCompare.lowerValue },
-			).Validate(some{})
-			assert.NoError(t, err)
-		}
-	})
-
-	t.Run("fails", func(t *testing.T) {
-		for format, strDatesCompare := range map[string]stringDateComparable{
-			time.RFC3339: {
-				greaterProperty: "endsTime",
-				greaterValue:    "2023-05-01T17:10:05Z",
-				lowerProperty:   "startsTime",
-				lowerValue:      "2023-05-01T17:10:05Z",
-			},
-			time.RFC1123: {
-				greaterProperty: "endsTime",
-				greaterValue:    "Tue, 21 Nov 2023 17:10:05 CEST",
-				lowerProperty:   "startsTime",
-				lowerValue:      "Thu, 23 Nov 2023 17:10:05 CEST",
-			},
-		} {
-			err := StringDatePropertyGreaterThanProperty(
-				format,
-				strDatesCompare.greaterProperty, func(s any) string { return strDatesCompare.greaterValue },
-				strDatesCompare.lowerProperty, func(s any) string { return strDatesCompare.lowerValue },
-			).Validate(some{})
-			require.Error(t, err)
-			assert.EqualError(
-				t,
-				err,
-				fmt.Sprintf(
-					`"%s" in property "%s" must be greater than "%s" in property "%s"`,
-					strDatesCompare.greaterValue, strDatesCompare.greaterProperty,
-					strDatesCompare.lowerValue, strDatesCompare.lowerProperty,
-				),
-			)
-			assert.True(t, HasErrorCode(err, ErrorCodeDateStringGreater))
-		}
 	})
 }
 

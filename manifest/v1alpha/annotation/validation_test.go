@@ -6,6 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -16,6 +17,9 @@ import (
 var expectedError string
 
 func TestValidate_AllErrors(t *testing.T) {
+	startTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
+	endTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
+
 	err := validate(Annotation{
 		Kind: manifest.KindAnnotation,
 		Metadata: Metadata{
@@ -26,8 +30,8 @@ func TestValidate_AllErrors(t *testing.T) {
 			Slo:           strings.Repeat("l", 2000),
 			ObjectiveName: strings.Repeat("l", 2000),
 			Description:   strings.Repeat("l", 2000),
-			StartTime:     "",
-			EndTime:       "",
+			StartTime:     startTime,
+			EndTime:       endTime,
 		},
 		ManifestSource: "/home/me/annotation.yaml",
 	})
@@ -35,32 +39,24 @@ func TestValidate_AllErrors(t *testing.T) {
 }
 
 func TestSpec(t *testing.T) {
-	t.Run("date strings fields fails on comparison", func(t *testing.T) {
-		tests := map[string]Spec{
-			"EndTime equals StartTime, fails on comparison": {
-				Slo:           "some-slo",
-				ObjectiveName: "obj-name",
-				Description:   "description",
-				StartTime:     "2023-05-01T17:10:05Z",
-				EndTime:       "2023-05-01T17:10:05Z",
+	t.Run("error code datatime fields compare", func(t *testing.T) {
+		startTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
+		endTime, _ := time.Parse(time.RFC3339, "2023-05-01T13:10:05Z")
+
+		annotation := New(
+			Metadata{Name: "my-name"},
+			Spec{
+				Slo:           "my-slo",
+				ObjectiveName: "my-obj",
+				Description:   "my-annotation description",
+				StartTime:     startTime,
+				EndTime:       endTime,
 			},
-			"EndTime required as greater fails on comparison to StartTime": {
-				Slo:           "some-slo",
-				ObjectiveName: "obj-name",
-				Description:   "description",
-				StartTime:     "2023-05-05T17:10:05Z",
-				EndTime:       "2023-05-01T17:10:05Z",
-			},
-		}
-		for name, spec := range tests {
-			t.Run(name, func(t *testing.T) {
-				rb := New(Metadata{Name: "my-name"}, spec)
-				err := validate(rb)
-				testutils.AssertContainsErrors(t, rb, err, 1, testutils.ExpectedError{
-					Prop: "spec",
-					Code: validation.ErrorCodeDateStringGreater,
-				})
-			})
-		}
+		)
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: validation.ErrorCodeDateGreaterThan,
+		})
 	})
 }
