@@ -44,15 +44,13 @@ func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(annotationValidation, p)
 }
 
-const errorCodeDateAfter validation.ErrorCode = "date_greater_than"
+const errorCodeEndTimeAfterStartTime validation.ErrorCode = "end_time_after_start_time"
 
 var endTimeAfterStartTime = validation.NewSingleRule(func(s Spec) error {
 	if !s.EndTime.After(s.StartTime) {
 		return &validation.RuleError{
-			Message: fmt.Sprintf(
-				`"%s" in property "%s" must be greater than "%s" in property "%s"`,
-				s.EndTime, "endTime", s.StartTime, "startTime"),
-			Code: errorCodeDateAfter,
+			Message: fmt.Sprintf(`endTime '%s' must be after startTime '%s'`, s.EndTime, s.StartTime),
+			Code:    errorCodeEndTimeAfterStartTime,
 		}
 	}
 

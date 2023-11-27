@@ -55,7 +55,7 @@ func TestSpec(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec",
-			Code: errorCodeDateAfter,
+			Code: errorCodeEndTimeAfterStartTime,
 		})
 	})
 }

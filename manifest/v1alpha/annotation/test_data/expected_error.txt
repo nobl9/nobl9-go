@@ -12,5 +12,5 @@ Validation for Annotation 'MY ANNOTATIONMY ANNOTATIONMY ANNOTATIONMY ANNOTATIONM
   - 'spec.description' with value 'llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
     - length must be between 0 and 1000
   - 'spec' with value '{"slo":"llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll...':
-    - "2023-05-01 17:10:05 +0000 UTC" in property "endTime" must be greater than "2023-05-01 17:10:05 +0000 UTC" in property "startTime"
+    - endTime '2023-05-01 17:10:05 +0000 UTC' must be after startTime '2023-05-01 17:10:05 +0000 UTC'
 Manifest source: /home/me/annotation.yaml
