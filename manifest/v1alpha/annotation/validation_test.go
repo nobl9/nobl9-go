@@ -60,10 +60,10 @@ func TestValidate_Spec_Objective(t *testing.T) {
 		testutils.AssertNoError(t, annotation, err)
 	})
 	t.Run("fails", func(t *testing.T) {
-		slo := validAnnotation()
-		slo.Spec.ObjectiveName = "MY OBJECTIVE"
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		annotation := validAnnotation()
+		annotation.Spec.ObjectiveName = "MY OBJECTIVE"
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectiveName",
 			Code: validation.ErrorCodeStringIsDNSSubdomain,
 		})
