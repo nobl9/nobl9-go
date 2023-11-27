@@ -11,9 +11,6 @@ import (
 )
 
 func ExampleAnnotation() {
-	startTime, _ := time.Parse(time.RFC3339, "2023-05-01T17:10:05Z")
-	endTime, _ := time.Parse(time.RFC3339, "2023-05-02T17:10:05Z")
-
 	// Create the object:
 	myAnnotation := annotation.New(
 		annotation.Metadata{
@@ -24,8 +21,8 @@ func ExampleAnnotation() {
 			Slo:           "existing-slo",
 			ObjectiveName: "existing-slo-objective-1",
 			Description:   "Example annotation",
-			StartTime:     startTime,
-			EndTime:       endTime,
+			StartTime:     time.Date(2023, 5, 1, 17, 10, 05, 0, time.UTC),
+			EndTime:       time.Date(2023, 5, 2, 17, 10, 05, 0, time.UTC),
 		},
 	)
 	// Verify the object:
