@@ -49,9 +49,8 @@ func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(annotationValidation, p)
 }
 
-// DatePropertyGreaterThanProperty checks if property string values are parsable to declared format,
-// then checks getter returned value passed as greaterGetter argument
-// if it is greater that value returned by lowerGetter
+// DatePropertyGreaterThanProperty checks if getter returned value passed as greaterGetter argument
+// is greater that value returned by lowerGetter
 func DatePropertyGreaterThanProperty[S any](
 	greaterProperty string, greaterGetter func(s S) time.Time,
 	lowerProperty string, lowerGetter func(s S) time.Time,
