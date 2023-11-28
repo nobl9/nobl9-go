@@ -37,20 +37,20 @@ var specValidation = validation.New[Spec](
 		Required().
 		Rules(validation.StringLength(0, 1000)),
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(startTimeAfterEndTime),
+		Rules(endTimeNotBeforeStartTime),
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(annotationValidation, p)
 }
 
-const errorCodeStartTimeAfterEndTime validation.ErrorCode = "end_time_after_start_time"
+const errorCodeEndTimeNotBeforeStartTime validation.ErrorCode = "end_time_not_before_start_time"
 
-var startTimeAfterEndTime = validation.NewSingleRule(func(s Spec) error {
-	if s.StartTime.After(s.EndTime) {
+var endTimeNotBeforeStartTime = validation.NewSingleRule(func(s Spec) error {
+	if s.EndTime.Before(s.StartTime) {
 		return &validation.RuleError{
-			Message: fmt.Sprintf(`startTime '%s' must be before endTime '%s'`, s.StartTime, s.EndTime),
-			Code:    errorCodeStartTimeAfterEndTime,
+			Message: fmt.Sprintf(`endTime '%s' must be equal or after startTime '%s'`, s.EndTime, s.StartTime),
+			Code:    errorCodeEndTimeNotBeforeStartTime,
 		}
 	}
 
