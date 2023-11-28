@@ -16,29 +16,28 @@ type ValidatorError struct {
 	Name   string         `json:"name"`
 }
 
-type PropertyErrors []*PropertyError
-
-func (e PropertyErrors) Error() string {
-	b := strings.Builder{}
-	JoinErrors(&b, e, "")
-	return b.String()
-}
-
 func (e *ValidatorError) WithName(name string) *ValidatorError {
 	e.Name = name
 	return e
 }
 
-const validatorErrorFmt = "Validation for %s has failed for the following properties:\n"
-
 func (e *ValidatorError) Error() string {
 	b := strings.Builder{}
-	indent := ""
+	b.WriteString("Validation")
 	if e.Name != "" {
-		b.WriteString(fmt.Sprintf(validatorErrorFmt, e.Name))
-		indent = strings.Repeat(" ", 2)
+		b.WriteString(" for ")
+		b.WriteString(e.Name)
 	}
-	JoinErrors(&b, e.Errors, indent)
+	b.WriteString(" has failed for the following properties:\n")
+	JoinErrors(&b, e.Errors, strings.Repeat(" ", 2))
+	return b.String()
+}
+
+type PropertyErrors []*PropertyError
+
+func (e PropertyErrors) Error() string {
+	b := strings.Builder{}
+	JoinErrors(&b, e, "")
 	return b.String()
 }
 
@@ -78,6 +77,16 @@ func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	return e
 }
 
+// NewRuleError creates a new [RuleError] with the given message and optional error codes.
+// Error codes are added according to the rules defined by [RuleError.AddCode].
+func NewRuleError(message string, codes ...ErrorCode) *RuleError {
+	ruleError := &RuleError{Message: message}
+	for _, code := range codes {
+		ruleError = ruleError.AddCode(code)
+	}
+	return ruleError
+}
+
 type RuleError struct {
 	Message string    `json:"error"`
 	Code    ErrorCode `json:"code,omitempty"`
@@ -89,6 +98,13 @@ func (r *RuleError) Error() string {
 
 const ErrorCodeSeparator = ":"
 
+// AddCode extends the [RuleError] with the given error code.
+// Codes are prepended, the last code in chain is always the first one set.
+// Example:
+//
+//	ruleError.AddCode("code").AddCode("another").AddCode("last")
+//
+// This will result in 'last:another:code' [ErrorCode].
 func (r *RuleError) AddCode(code ErrorCode) *RuleError {
 	r.Code = concatStrings(code, r.Code, ErrorCodeSeparator)
 	return r
@@ -104,6 +120,8 @@ func concatStrings(pre, post, sep string) string {
 	return pre + sep + post
 }
 
+// HasErrorCode checks if an error contains given [ErrorCode].
+// It supports all [validation] errors.
 func HasErrorCode(err error, code ErrorCode) bool {
 	switch v := err.(type) {
 	case PropertyErrors:
@@ -169,7 +187,7 @@ func propertyValueString(v interface{}) string {
 	return s
 }
 
-// ruleSetError is a container for transferring multiple errors reported by RuleSet.
+// ruleSetError is a container for transferring multiple errors reported by [RuleSet].
 // It is intentionally not exported as it is only an intermediate stage before the
 // aggregated errors are flattened.
 type ruleSetError []error
@@ -193,7 +211,9 @@ const listPoint = "- "
 
 func buildErrorMessage(b *strings.Builder, errMsg, indent string) {
 	b.WriteString(indent)
-	b.WriteString(listPoint)
+	if !strings.HasPrefix(errMsg, listPoint) {
+		b.WriteString(listPoint)
+	}
 	// Indent the whole error message.
 	errMsg = strings.ReplaceAll(errMsg, "\n", "\n"+indent)
 	b.WriteString(errMsg)
@@ -206,7 +226,7 @@ func limitString(s string, limit int) string {
 	return s
 }
 
-// unpackRuleErrors unpacks error messages recursively scanning ruleSetError if it is detected.
+// unpackRuleErrors unpacks error messages recursively scanning [ruleSetError] if it is detected.
 func unpackRuleErrors(errs []error, ruleErrors []*RuleError) []*RuleError {
 	for _, err := range errs {
 		switch v := err.(type) {
@@ -222,8 +242,8 @@ func unpackRuleErrors(errs []error, ruleErrors []*RuleError) []*RuleError {
 }
 
 func NewRequiredError() *RuleError {
-	return &RuleError{
-		Message: "property is required but was empty",
-		Code:    ErrorCodeRequired,
-	}
+	return NewRuleError(
+		"property is required but was empty",
+		ErrorCodeRequired,
+	)
 }
