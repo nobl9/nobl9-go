@@ -90,49 +90,36 @@ func TestValidate_Spec_Objective(t *testing.T) {
 }
 
 func TestSpec_Time(t *testing.T) {
-	t.Run("passes, end time after start time", func(t *testing.T) {
-		annotation := validAnnotation()
-		annotation.Spec.StartTime = time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
-		annotation.Spec.EndTime = time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)
-		err := validate(annotation)
-		testutils.AssertNoError(t, annotation, err)
-	})
-
 	tests := map[string]Spec{
-		"end time equals start time": {
-			Slo:           "my-slo",
-			ObjectiveName: "my-obj",
-			Description:   "my-annotation description",
-			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+		"passes, end time after start time": {
+			StartTime: time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+			EndTime:   time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC),
 		},
-		"end time is before start time": {
-			Slo:           "my-slo",
-			ObjectiveName: "my-obj",
-			Description:   "my-annotation description",
-			StartTime:     time.Date(2023, 5, 5, 17, 10, 5, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+		"passes, end time equals start time": {
+			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:   time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 		},
 	}
 	for name, spec := range tests {
 		t.Run(name, func(t *testing.T) {
-			annotation := New(
-				Metadata{Name: "my-name"},
-				Spec{
-					Slo:           "my-slo",
-					ObjectiveName: "my-obj",
-					Description:   "my-annotation description",
-					StartTime:     spec.StartTime,
-					EndTime:       spec.EndTime,
-				},
-			)
+			annotation := validAnnotation()
+			annotation.Spec.StartTime = spec.StartTime
+			annotation.Spec.EndTime = spec.EndTime
 			err := validate(annotation)
-			testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-				Prop: "spec",
-				Code: errorCodeEndTimeAfterStartTime,
-			})
+			testutils.AssertNoError(t, annotation, err)
 		})
 	}
+
+	t.Run("fails, end time is before start time", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.StartTime = time.Date(2023, 5, 5, 17, 10, 5, 0, time.UTC)
+		annotation.Spec.EndTime = time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: errorCodeStartTimeAfterEndTime,
+		})
+	})
 }
 
 func validAnnotation() Annotation {
