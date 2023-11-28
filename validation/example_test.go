@@ -214,7 +214,7 @@ func ExampleForPointer() {
 // To enforce a value is set for pointer use [PropertyRules.Required].
 //
 // You may ask yourself why not just use [validation.Required] rule instead?
-// If we'd be to do that, we'd be forced to operate on pointer in all of our rules.
+// If we were to do that, we'd be forced to operate on pointer in all of our rules.
 // Other than checking if the pointer is nil, there aren't any rules which would
 // benefit from working on the pointer instead of the underlying value.
 //
