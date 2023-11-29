@@ -5,6 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 	"strings"
+	"time"
 )
 
 var alertPolicyValidation = validation.New[AlertPolicy](
@@ -33,9 +34,18 @@ var specValidation = validation.New[Spec](
 		WithName("severity").
 		Required().
 		Rules(severity),
+	validation.For(func(s Spec) string { return s.CoolDownDuration }).
+		WithName("coolDown").
+		Omitempty().
+		Rules(durationNotNegativeGreaterThanOrEqual(5*time.Minute)),
 )
 
-const errorCodeSeverity validation.ErrorCode = "severity"
+const (
+	errorCodeSeverity                   validation.ErrorCode = "severity"
+	errorCodeDuration                   validation.ErrorCode = "duration"
+	errorCodeDurationNotNegative        validation.ErrorCode = "duration_not_negative"
+	errorCodeDurationGreaterThanOrEqual validation.ErrorCode = "duration_greater_than_or_equal"
+)
 
 // TODO discuss
 var severity = validation.NewSingleRule(
@@ -49,7 +59,7 @@ var severity = validation.NewSingleRule(
 						v1alpha.SeverityLow.String(),
 						v1alpha.SeverityMedium.String(),
 						v1alpha.SeverityHigh.String(),
-					}, ",")),
+					}, ", ")),
 				Code: errorCodeSeverity,
 			}
 		}
@@ -57,6 +67,36 @@ var severity = validation.NewSingleRule(
 		return nil
 	},
 )
+
+var durationNotNegativeGreaterThanOrEqual = func(greaterThanOrEqual time.Duration) validation.SingleRule[string] {
+	return validation.NewSingleRule(
+		func(v string) error {
+			parsedDuration, err := time.ParseDuration(v)
+			if err != nil {
+				return &validation.RuleError{
+					Message: err.Error(),
+					Code:    errorCodeDuration,
+				}
+			}
+
+			if parsedDuration < 0 {
+				return &validation.RuleError{
+					Message: fmt.Sprintf("duration '%s' must be not negative value", v),
+					Code:    errorCodeDurationNotNegative,
+				}
+			}
+
+			if parsedDuration < greaterThanOrEqual {
+				return &validation.RuleError{
+					Message: fmt.Sprintf("duration must be equal or greater than %s", greaterThanOrEqual),
+					Code:    errorCodeDurationGreaterThanOrEqual,
+				}
+			}
+
+			return nil
+		},
+	)
+}
 
 func validate(p AlertPolicy) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertPolicyValidation, p)

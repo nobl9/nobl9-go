@@ -37,8 +37,8 @@ type Metadata struct {
 // Spec represents content of AlertPolicy's Spec.
 type Spec struct {
 	Description      string            `json:"description"`
-	Severity         string            `json:"severity" validate:"required,severity" example:"High"`
-	CoolDownDuration string            `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
+	Severity         string            `json:"severity"`
+	CoolDownDuration string            `json:"coolDown,omitempty"`
 	Conditions       []AlertCondition  `json:"conditions" validate:"required,min=1,dive"`
 	AlertMethods     []AlertMethodsRef `json:"alertMethods"`
 }
