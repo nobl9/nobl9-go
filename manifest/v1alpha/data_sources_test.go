@@ -70,33 +70,31 @@ func TestHistoricalRetrievalDuration_durationInMinutes_unsupportedUnit(t *testin
 func TestGetDataRetrievalMaxDuration(t *testing.T) {
 	for _, test := range []struct {
 		Kind       manifest.Kind
-		SourceType string
+		SourceType DataSourceType
 		Valid      bool
 		Expected   HistoricalRetrievalDuration
 	}{
 		{
 			Kind:       manifest.KindAgent,
-			SourceType: CloudWatch.String(),
+			SourceType: CloudWatch,
 			Valid:      true,
-			Expected:   agentDataRetrievalMaxDuration[CloudWatch.String()],
+			Expected:   agentDataRetrievalMaxDuration[CloudWatch],
 		},
 		{
-			Kind:       manifest.KindAgent,
-			SourceType: "",
+			Kind: manifest.KindAgent,
 		},
 		{
 			Kind:       manifest.KindDirect,
-			SourceType: CloudWatch.String(),
+			SourceType: CloudWatch,
 			Valid:      true,
-			Expected:   directDataRetrievalMaxDuration[CloudWatch.String()],
+			Expected:   directDataRetrievalMaxDuration[CloudWatch],
 		},
 		{
 			Kind:       manifest.KindDirect,
-			SourceType: "invalid",
+			SourceType: -1,
 		},
 		{
-			Kind:       manifest.KindSLO,
-			SourceType: "",
+			Kind: manifest.KindSLO,
 		},
 	} {
 		validStr := "valid"
@@ -221,4 +219,8 @@ func TestGetStrAndStdDurationFromDuration(t *testing.T) {
 				assert.Equal(t, tc.expectDuration, tc.duration.Duration())
 			})
 	}
+}
+
+func TestHistoricalDataRetrievalValidation(t *testing.T) {
+
 }

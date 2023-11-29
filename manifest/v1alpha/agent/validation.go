@@ -3,6 +3,7 @@ package agent
 import (
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -13,16 +14,42 @@ var agentValidation = validation.New[Agent](
 	v1alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
 	v1alpha.FieldRuleSpecDescription(func(a Agent) string { return a.Spec.Description }),
 	validation.For(func(a Agent) Spec { return a.Spec }).
+		WithName("spec").
 		Include(specValidation),
 )
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(exactlyOneDataSourceTypeValidationRule),
+		Rules(
+			exactlyOneDataSourceTypeValidationRule,
+			validation.NewSingleRule(func(spec Spec) error {
+				typ, _ := spec.GetType()
+				return v1alpha.MaxDataRetrievalDurationValidation(manifest.KindAgent, typ)
+			}),
+			validation.NewSingleRule(func(spec Spec) error {
+				typ, _ := spec.GetType()
+				agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
+				if spec.QueryDelay.LessThan(agentDefault) {
+					return validation.NewPropertyError(
+						"queryDelay",
+						spec.QueryDelay,
+						errors.Errorf("must be at greater than %s", agentDefault),
+					)
+				}
+				return nil
+			})),
 	validation.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		Omitempty().
 		Rules(v1alpha.ReleaseChannelValidation()),
+	validation.ForPointer(func(s Spec) *v1alpha.HistoricalDataRetrieval { return s.HistoricalDataRetrieval }).
+		WithName("historicalDataRetrieval").
+		Omitempty().
+		Include(v1alpha.HistoricalDataRetrievalValidation()),
+	validation.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
+		WithName("queryDelay").
+		Omitempty().
+		Include(v1alpha.QueryDelayValidation()),
 	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
 		WithName("prometheus").
 		Include(prometheusValidation),
@@ -100,8 +127,18 @@ var specValidation = validation.New[Spec](
 		Include(honeycombValidation),
 )
 
-var prometheusValidation = validation.New[PrometheusConfig]()
-var datadogValidation = validation.New[DatadogConfig]()
+var prometheusValidation = validation.New[PrometheusConfig](
+	validation.For(func(p PrometheusConfig) string { return p.URL }).
+		WithName("url").
+		Required().
+		Rules(validation.StringURL()),
+)
+var datadogValidation = validation.New[DatadogConfig](
+	validation.For(func(d DatadogConfig) string { return d.Site }).
+		WithName("site").
+		Required().
+		Rules(validation.StringURL()),
+)
 var newRelicValidation = validation.New[NewRelicConfig]()
 var appDynamicsValidation = validation.New[AppDynamicsConfig]()
 var splunkValidation = validation.New[SplunkConfig]()

@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 //go:generate ../../bin/go-enum  --values --noprefix
@@ -49,7 +50,7 @@ Honeycomb
 type DataSourceType int
 
 // GCM aliases GoogleCloudMonitoring.
-// Eventually we should solve this inconsistency between the enum name and it's string representation.
+// Eventually we should solve this inconsistency between the enum name and its string representation.
 const GCM = GoogleCloudMonitoring
 
 const DatasourceStableChannel = "stable"
@@ -57,14 +58,92 @@ const DatasourceStableChannel = "stable"
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {
-	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
+	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
 	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
 }
 
+func HistoricalDataRetrievalValidation() validation.Validator[HistoricalDataRetrieval] {
+	return validation.New[HistoricalDataRetrieval](
+		validation.For(validation.GetSelf[HistoricalDataRetrieval]()).
+			Rules(defaultDataRetrievalDurationValidation),
+		validation.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
+			WithName("maxDuration").
+			Required().
+			Include(historicalRetrievalDurationValidation),
+		validation.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.DefaultDuration }).
+			WithName("defaultDuration").
+			Required().
+			Include(historicalRetrievalDurationValidation),
+	)
+}
+
+func MaxDataRetrievalDurationValidation(kind manifest.Kind, typ DataSourceType) error {
+	maxDuration, err := GetDataRetrievalMaxDuration(kind, typ)
+	if err != nil {
+		return err
+	}
+	maxDurationAllowed := HistoricalRetrievalDuration{
+		Value: maxDuration.Value,
+		Unit:  maxDuration.Unit,
+	}
+	if maxDuration.BiggerThan(maxDurationAllowed) {
+		return errors.Errorf(
+			"must be smaller than or equal to %d%s",
+			maxDurationAllowed.Value, maxDurationAllowed.Unit)
+	}
+	return nil
+}
+
+var historicalRetrievalDurationValidation = validation.New[HistoricalRetrievalDuration](
+	validation.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
+		WithName("value").
+		Required().
+		Rules(validation.GreaterThan(0), validation.LessThan(43200)),
+	validation.For(func(h HistoricalRetrievalDuration) HistoricalRetrievalDurationUnit { return h.Unit }).
+		WithName("unit").
+		Required().
+		Rules(validation.OneOf(HRDDay, HRDHour, HRDMinute)),
+)
+
+var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
+	func(dataRetrieval HistoricalDataRetrieval) error {
+		if dataRetrieval.DefaultDuration.BiggerThan(dataRetrieval.MaxDuration) {
+			return validation.NewPropertyError(
+				"defaultDuration",
+				dataRetrieval.DefaultDuration,
+				errors.Errorf(
+					"must be smaller than or equal to %d%s",
+					dataRetrieval.MaxDuration.Value, dataRetrieval.MaxDuration.Unit))
+		}
+		return nil
+	})
+
 type QueryDelay struct {
-	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty" example:"0.0.9"`
+	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
 	Duration
+}
+
+var maxQueryDelay = Duration{
+	Value: func() *int { v := maxQueryDelayDuration; return &v }(),
+	Unit:  maxQueryDelayDurationUnit,
+}
+
+func QueryDelayValidation() validation.Validator[QueryDelay] {
+	return validation.New[QueryDelay](
+		validation.For(func(q QueryDelay) Duration { return q.Duration }).
+			Include(durationValidation).
+			Rules(validation.NewSingleRule(func(d Duration) error {
+				if d.Duration() > maxQueryDelay.Duration() {
+					return errors.Errorf("must be smaller than or equal to %s", maxQueryDelay)
+				}
+				return nil
+			})),
+		validation.For(func(q QueryDelay) DurationUnit { return q.Unit }).
+			WithName("unit").
+			Required().
+			Rules(validation.OneOf(Minute, Second)),
+	)
 }
 
 type SourceOf int
@@ -198,6 +277,17 @@ type Duration struct {
 	Unit  DurationUnit `json:"unit" validate:"required"`
 }
 
+var durationValidation = validation.New[Duration](
+	validation.ForPointer(func(d Duration) *int { return d.Value }).
+		WithName("value").
+		Required().
+		Rules(validation.GreaterThan(0), validation.LessThan(86400)),
+	// Unit "one of" validation is left to specific use cases.
+	validation.For(func(d Duration) DurationUnit { return d.Unit }).
+		WithName("unit").
+		Required(),
+)
+
 type DurationUnit string
 
 const (
@@ -242,7 +332,7 @@ func (d Duration) Duration() time.Duration {
 	return value * d.Unit.Duration()
 }
 
-func IsBiggerThanMaxQueryDelayDuration(duration Duration) bool {
+func isBiggerThanMaxQueryDelayDuration(duration Duration) bool {
 	maxQueryDelayDurationInt := maxQueryDelayDuration
 	maximum := Duration{
 		Value: &maxQueryDelayDurationInt,
@@ -283,45 +373,45 @@ func (d DurationUnit) String() string {
 	return string(d)
 }
 
-var agentDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
-	Datadog.String():          {Value: ptr(30), Unit: HRDDay},
-	Prometheus.String():       {Value: ptr(30), Unit: HRDDay},
-	AmazonPrometheus.String(): {Value: ptr(30), Unit: HRDDay},
-	NewRelic.String():         {Value: ptr(30), Unit: HRDDay},
-	Splunk.String():           {Value: ptr(30), Unit: HRDDay},
-	Graphite.String():         {Value: ptr(30), Unit: HRDDay},
-	Lightstep.String():        {Value: ptr(30), Unit: HRDDay},
-	CloudWatch.String():       {Value: ptr(15), Unit: HRDDay},
-	Dynatrace.String():        {Value: ptr(28), Unit: HRDDay},
-	AppDynamics.String():      {Value: ptr(30), Unit: HRDDay},
-	AzureMonitor.String():     {Value: ptr(30), Unit: HRDDay},
+var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
+	Datadog:          {Value: ptr(30), Unit: HRDDay},
+	Prometheus:       {Value: ptr(30), Unit: HRDDay},
+	AmazonPrometheus: {Value: ptr(30), Unit: HRDDay},
+	NewRelic:         {Value: ptr(30), Unit: HRDDay},
+	Splunk:           {Value: ptr(30), Unit: HRDDay},
+	Graphite:         {Value: ptr(30), Unit: HRDDay},
+	Lightstep:        {Value: ptr(30), Unit: HRDDay},
+	CloudWatch:       {Value: ptr(15), Unit: HRDDay},
+	Dynatrace:        {Value: ptr(28), Unit: HRDDay},
+	AppDynamics:      {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor:     {Value: ptr(30), Unit: HRDDay},
 }
 
-var directDataRetrievalMaxDuration = map[string]HistoricalRetrievalDuration{
-	Datadog.String():      {Value: ptr(30), Unit: HRDDay},
-	NewRelic.String():     {Value: ptr(30), Unit: HRDDay},
-	Splunk.String():       {Value: ptr(30), Unit: HRDDay},
-	Lightstep.String():    {Value: ptr(30), Unit: HRDDay},
-	CloudWatch.String():   {Value: ptr(15), Unit: HRDDay},
-	Dynatrace.String():    {Value: ptr(28), Unit: HRDDay},
-	AppDynamics.String():  {Value: ptr(30), Unit: HRDDay},
-	AzureMonitor.String(): {Value: ptr(30), Unit: HRDDay},
+var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
+	Datadog:      {Value: ptr(30), Unit: HRDDay},
+	NewRelic:     {Value: ptr(30), Unit: HRDDay},
+	Splunk:       {Value: ptr(30), Unit: HRDDay},
+	Lightstep:    {Value: ptr(30), Unit: HRDDay},
+	CloudWatch:   {Value: ptr(15), Unit: HRDDay},
+	Dynatrace:    {Value: ptr(28), Unit: HRDDay},
+	AppDynamics:  {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor: {Value: ptr(30), Unit: HRDDay},
 }
 
-func GetDataRetrievalMaxDuration(kind manifest.Kind, typeName string) (HistoricalRetrievalDuration, error) {
+func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
 	//nolint: exhaustive
 	switch kind {
 	case manifest.KindAgent:
-		if hrd, ok := agentDataRetrievalMaxDuration[typeName]; ok {
+		if hrd, ok := agentDataRetrievalMaxDuration[typ]; ok {
 			return hrd, nil
 		}
 	case manifest.KindDirect:
-		if hrd, ok := directDataRetrievalMaxDuration[typeName]; ok {
+		if hrd, ok := directDataRetrievalMaxDuration[typ]; ok {
 			return hrd, nil
 		}
 	}
 	return HistoricalRetrievalDuration{},
-		errors.Errorf("historical data retrieval is not supported for %s %s", typeName, kind)
+		errors.Errorf("historical data retrieval is not supported for %s %s", typ, kind)
 }
 
 type QueryDelayDefaults map[string]Duration

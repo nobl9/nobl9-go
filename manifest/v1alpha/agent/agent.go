@@ -141,13 +141,71 @@ type PrometheusConfig struct {
 
 // DatadogConfig represents content of Datadog Configuration typical for Agent Object.
 type DatadogConfig struct {
-	Site string `json:"site,omitempty" validate:"site" example:"eu,us3.datadoghq.com"`
+	Site string `json:"site"`
 }
 
 // NewRelicConfig represents content of NewRelic Configuration typical for Agent Object.
 type NewRelicConfig struct {
-	AccountID int `json:"accountId,omitempty"`
+	AccountID int `json:"accountId"`
 }
+
+// AppDynamicsConfig represents content of AppDynamics Configuration typical for Agent Object.
+type AppDynamicsConfig struct {
+	URL string `json:"url,omitempty"`
+}
+
+// SplunkConfig represents content of Splunk Configuration typical for Agent Object.
+type SplunkConfig struct {
+	URL string `json:"url,omitempty"`
+}
+
+// LightstepConfig represents content of Lightstep Configuration typical for Agent Object.
+type LightstepConfig struct {
+	Organization string `json:"organization,omitempty"`
+	Project      string `json:"project,omitempty"`
+}
+
+// SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Agent Object.
+type SplunkObservabilityConfig struct {
+	Realm string `json:"realm,omitempty" validate:"required"`
+}
+
+// DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
+type DynatraceConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url,urlDynatrace"`
+}
+
+// ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
+type ElasticsearchConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url,urlElasticsearch"`
+}
+
+// ThousandEyesConfig represents content of ThousandEyes Configuration typical for Agent Object.
+type ThousandEyesConfig struct{}
+
+// GraphiteConfig represents content of Graphite Configuration typical for Agent Object.
+type GraphiteConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url"`
+}
+
+// BigQueryConfig represents content of BigQuery configuration.
+type BigQueryConfig struct{}
+
+// OpenTSDBConfig represents content of OpenTSDBConfig Configuration typical for Agent Object.
+type OpenTSDBConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url"`
+}
+
+// GrafanaLokiConfig represents content of GrafanaLoki Configuration typical for Agent Object.
+type GrafanaLokiConfig struct {
+	URL string `json:"url,omitempty" validate:"required,url"`
+}
+
+// CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
+type CloudWatchConfig struct{}
+
+// PingdomConfig represents content of Pingdom Configuration typical for Agent Object.
+type PingdomConfig struct{}
 
 // AmazonPrometheusConfig represents content of Amazon Managed Service Configuration typical for Agent Object.
 type AmazonPrometheusConfig struct {
@@ -157,19 +215,6 @@ type AmazonPrometheusConfig struct {
 
 // RedshiftConfig represents content of Redshift configuration typical for Agent Object
 type RedshiftConfig struct{}
-
-// OpenTSDBConfig represents content of OpenTSDBConfig Configuration typical for Agent Object.
-type OpenTSDBConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url" example:"example of OpenTSDBConfig cluster URL"` //nolint: lll
-}
-
-// GrafanaLokiConfig represents content of GrafanaLoki Configuration typical for Agent Object.
-type GrafanaLokiConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url" example:"example of GrafanaLoki cluster URL"` //nolint: lll
-}
-
-// CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
-type CloudWatchConfig struct{}
 
 // SumoLogicConfig represents content of Sumo Logic configuration typical for Agent Object.
 type SumoLogicConfig struct {
@@ -186,57 +231,12 @@ type InfluxDBConfig struct {
 	URL string `json:"url" validate:"required,url"`
 }
 
-// PingdomConfig represents content of Pingdom Configuration typical for Agent Object.
-type PingdomConfig struct{}
-
 // GCMConfig represents content of GCM configuration.
 type GCMConfig struct{}
 
-// DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
-type DynatraceConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlDynatrace" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
-}
-
-// ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
-type ElasticsearchConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlElasticsearch" example:"https://observability-deployment-946814.es.eu-central-1.aws.cloud.es.io:9243"` //nolint: lll
-}
-
-// GraphiteConfig represents content of Graphite Configuration typical for Agent Object.
-type GraphiteConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url" example:"http://graphite.example.com"`
-}
-
-// BigQueryConfig represents content of BigQuery configuration.
-type BigQueryConfig struct{}
-
-// ThousandEyesConfig represents content of ThousandEyes Configuration typical for Agent Object.
-type ThousandEyesConfig struct{}
-
-// SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Agent Object.
-type SplunkObservabilityConfig struct {
-	Realm string `json:"realm,omitempty" validate:"required"  example:"us1"`
-}
-
-// LightstepConfig represents content of Lightstep Configuration typical for Agent Object.
-type LightstepConfig struct {
-	Organization string `json:"organization,omitempty" example:"LightStep-Play"`
-	Project      string `json:"project,omitempty" example:"play"`
-}
-
-// AppDynamicsConfig represents content of AppDynamics Configuration typical for Agent Object.
-type AppDynamicsConfig struct {
-	URL string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
-}
-
-// SplunkConfig represents content of Splunk Configuration typical for Agent Object.
-type SplunkConfig struct {
-	URL string `json:"url,omitempty" example:"https://localhost:8089/servicesNS/admin/"`
-}
-
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorConfig struct {
-	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122"`
 }
 
 // GenericConfig represents content of Generic Configuration typical for Agent Object.

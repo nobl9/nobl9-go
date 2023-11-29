@@ -10,7 +10,6 @@ import (
 )
 
 func ExampleAgent() {
-	url := "https://prometheus-service.monitoring:8080"
 	// Create the object:
 	myAgent := agent.New(
 		agent.Metadata{
@@ -20,7 +19,9 @@ func ExampleAgent() {
 		},
 		agent.Spec{
 			Description: "Example Agent",
-			Prometheus:  &agent.PrometheusConfig{URL: &url},
+			Prometheus: &agent.PrometheusConfig{
+				URL: "https://prometheus-service.monitoring:8080",
+			},
 		},
 	)
 	// Verify the object:
