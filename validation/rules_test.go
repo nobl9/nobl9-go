@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -149,16 +150,16 @@ func TestPropertyRules(t *testing.T) {
 func TestForPointer(t *testing.T) {
 	t.Run("nil pointer", func(t *testing.T) {
 		r := ForPointer(func(s *string) *string { return s })
-		v, isEmpty := r.getter(nil)
+		v, err := r.getter(nil)
 		assert.Equal(t, "", v)
-		assert.True(t, isEmpty)
+		assert.ErrorIs(t, err, emptyErr{})
 	})
 	t.Run("non nil pointer", func(t *testing.T) {
 		r := ForPointer(func(s *string) *string { return s })
 		s := "this string"
-		v, isEmpty := r.getter(&s)
+		v, err := r.getter(&s)
 		assert.Equal(t, s, v)
-		assert.False(t, isEmpty)
+		assert.NoError(t, err)
 	})
 }
 
@@ -201,6 +202,63 @@ func TestRequiredAndOmitempty(t *testing.T) {
 			assert.Len(t, errs, 1)
 			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
 		})
+	})
+}
+
+func TestTransform(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			Rules(GreaterThan(122))
+		errs := transformed.Validate("123")
+		assert.Empty(t, errs)
+	})
+	t.Run("fails validation", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("123")
+		assert.Len(t, errs, 1)
+		assert.True(t, HasErrorCode(errs, ErrorCodeGreaterThan))
+	})
+	t.Run("zero value with omitempty", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			Omitempty().
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("")
+		assert.Empty(t, errs)
+	})
+	t.Run("zero value with required", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			Required().
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("")
+		assert.Len(t, errs, 1)
+		assert.True(t, HasErrorCode(errs, ErrorCodeRequired))
+	})
+	t.Run("skip zero value", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("")
+		assert.Len(t, errs, 1)
+		assert.True(t, HasErrorCode(errs, ErrorCodeGreaterThan))
+	})
+	t.Run("fail transformation", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("123z")
+		assert.Len(t, errs, 1)
+		assert.EqualError(t, errs, expectedErrorOutput(t, "property_error_transform.txt"))
+		assert.True(t, HasErrorCode(errs, ErrorCodeTransform))
 	})
 }
 
