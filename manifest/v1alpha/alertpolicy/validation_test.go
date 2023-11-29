@@ -102,12 +102,12 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 		"fails, negative": {
 			value:           "-1m",
 			expectedCode:    errorCodeDurationNotNegative,
-			expectedMessage: fmt.Sprintf("duration '-1m' must be not negative value"),
+			expectedMessage: "duration '-1m' must be not negative value",
 		},
 		"fails, not greater or equal to 5m": {
 			value:           "4m",
 			expectedCode:    errorCodeDurationGreaterThanOrEqual,
-			expectedMessage: fmt.Sprintf("duration must be equal or greater than 5m0s"),
+			expectedMessage: "duration must be equal or greater than 5m0s",
 		},
 	}
 	for name, valueAndExpectations := range tests {
