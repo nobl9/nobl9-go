@@ -157,17 +157,17 @@ var instanaApplicationMetricValidation = validation.New[InstanaApplicationMetric
 			switch i.MetricID {
 			case "calls", "erroneousCalls":
 				if i.Aggregation != "sum" {
-					return &validation.RuleError{
-						Message: "'aggregation' must be 'sum' when 'metricId' is 'calls' or 'erroneousCalls'",
-						Code:    validation.ErrorCodeEqualTo,
-					}
+					return validation.NewRuleError(
+						"'aggregation' must be 'sum' when 'metricId' is 'calls' or 'erroneousCalls'",
+						validation.ErrorCodeEqualTo,
+					)
 				}
 			case "errors":
 				if i.Aggregation != "mean" {
-					return &validation.RuleError{
-						Message: "'aggregation' must be 'mean' when 'metricId' is 'errors'",
-						Code:    validation.ErrorCodeEqualTo,
-					}
+					return validation.NewRuleError(
+						"'aggregation' must be 'mean' when 'metricId' is 'errors'",
+						validation.ErrorCodeEqualTo,
+					)
 				}
 			case "latency":
 				if err := validation.OneOf(validInstanaLatencyAggregations...).

@@ -4,14 +4,10 @@ import (
 	"fmt"
 )
 
-// ForEach creates a typed PropertyRules instance for a slice property
-// which access is defined through getter function.
+// ForEach creates a new [PropertyRulesForEach] instance for a slice property
+// which value is extracted through [PropertyGetter] function.
 func ForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[T, S] {
 	return PropertyRulesForEach[T, S]{getter: getter}
-}
-
-func SliceElementName(sliceName string, index int) string {
-	return fmt.Sprintf("%s[%d]", sliceName, index)
 }
 
 // PropertyRulesForEach is responsible for validating a single property.
@@ -135,4 +131,8 @@ func (r PropertyRulesForEach[T, S]) IncludeForEach(rules ...Validator[T]) Proper
 func (r PropertyRulesForEach[T, S]) StopOnError() PropertyRulesForEach[T, S] {
 	r.steps = append(r.steps, stopOnErrorStep(0))
 	return r
+}
+
+func SliceElementName(sliceName string, index int) string {
+	return fmt.Sprintf("%s[%d]", sliceName, index)
 }

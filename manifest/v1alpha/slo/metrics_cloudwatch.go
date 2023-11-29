@@ -167,7 +167,7 @@ var cloudwatchMetricDimensionValidation = validation.New[CloudWatchMetricDimensi
 var cloudWatchJSONValidationRule = validation.NewSingleRule(func(v string) error {
 	var metricDataQuerySlice []*cloudwatch.MetricDataQuery
 	if err := json.Unmarshal([]byte(v), &metricDataQuerySlice); err != nil {
-		return &validation.RuleError{Message: err.Error(), Code: validation.ErrorCodeStringJSON}
+		return validation.NewRuleError(err.Error(), validation.ErrorCodeStringJSON)
 	}
 
 	returnedData := len(metricDataQuerySlice)
@@ -201,16 +201,16 @@ func validateCloudwatchJSONPeriod(period *int64, propName string, index int) err
 	}
 	const queryPeriod = 60
 	if period == nil {
-		return &validation.RuleError{
-			Message: fmt.Sprintf("'%s' property is required", indexPropName()),
-			Code:    validation.ErrorCodeRequired,
-		}
+		return validation.NewRuleError(
+			fmt.Sprintf("'%s' property is required", indexPropName()),
+			validation.ErrorCodeRequired,
+		)
 	}
 	if *period != queryPeriod {
-		return &validation.RuleError{
-			Message: fmt.Sprintf("'%s' property should be equal to %d", indexPropName(), queryPeriod),
-			Code:    validation.ErrorCodeEqualTo,
-		}
+		return validation.NewRuleError(
+			fmt.Sprintf("'%s' property should be equal to %d", indexPropName(), queryPeriod),
+			validation.ErrorCodeEqualTo,
+		)
 	}
 	return nil
 }

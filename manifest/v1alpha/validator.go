@@ -103,7 +103,6 @@ func NewValidator() *Validate {
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(webhookAlertMethodValidation, WebhookAlertMethod{})
 	val.RegisterStructValidation(emailAlertMethodValidation, EmailAlertMethod{})
-	val.RegisterStructValidation(annotationSpecStructDatesValidation, AnnotationSpec{})
 	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
 	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
 	val.RegisterStructValidation(agentSpecHistoricalRetrievalValidation, Agent{})
@@ -196,28 +195,6 @@ func regexError(msg, format string, examples ...string) string {
 	}
 	msg += "regex used for validation is '" + format + "')"
 	return msg
-}
-
-func annotationSpecStructDatesValidation(sl v.StructLevel) {
-	annotationSpec := sl.Current().Interface().(AnnotationSpec)
-
-	startTime, err := annotationSpec.GetParsedStartTime()
-	if err != nil {
-		sl.ReportError(annotationSpec.StartTime, "startTime", "StartTime", "iso8601dateTimeFormatRequired", "")
-
-		return
-	}
-
-	endTime, err := annotationSpec.GetParsedEndTime()
-	if err != nil {
-		sl.ReportError(annotationSpec.EndTime, "endTime", "EndTime", "iso8601dateTimeFormatRequired", "")
-
-		return
-	}
-
-	if endTime.Unix() < startTime.Unix() {
-		sl.ReportError(annotationSpec.EndTime, "endTime", "EndTime", "endTimeBeforeStartTime", "")
-	}
 }
 
 func isValidWebhookTemplate(fl v.FieldLevel) bool {
@@ -1257,7 +1234,6 @@ func notBlank(fl v.FieldLevel) bool {
 func isValidHeaderName(fl v.FieldLevel) bool {
 	headerName := fl.Field().String()
 	validHeaderNameRegex := regexp.MustCompile(HeaderNameRegex)
-
 	return validHeaderNameRegex.MatchString(headerName)
 }
 

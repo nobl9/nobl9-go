@@ -39,10 +39,10 @@ var specMetricsValidation = validation.New[Spec](
 					return validation.NewPropertyError(
 						"countMetrics",
 						nil,
-						&validation.RuleError{
-							Message: "cannot have both 'bad' and 'good' metrics defined",
-							Code:    errCodeEitherBadOrGoodCountMetric,
-						}).PrependPropertyName(validation.SliceElementName("objectives", i))
+						validation.NewRuleError(
+							"cannot have both 'bad' and 'good' metrics defined",
+							errCodeEitherBadOrGoodCountMetric,
+						)).PrependPropertyName(validation.SliceElementName("objectives", i))
 				}
 			}
 			return nil
@@ -184,6 +184,7 @@ var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.CloudWatch,
 	v1alpha.AppDynamics,
 	v1alpha.AzureMonitor,
+	v1alpha.Honeycomb,
 }
 
 // Support for bad/total metrics will be enabled gradually.
@@ -364,11 +365,11 @@ var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(s Spec)
 				return validation.NewPropertyError(
 					"timeSliceTarget",
 					objective.TimeSliceTarget,
-					&validation.RuleError{
-						Message: fmt.Sprintf(
+					validation.NewRuleError(
+						fmt.Sprintf(
 							"property may only be used with budgetingMethod == '%s'",
 							BudgetingMethodTimeslices),
-						Code: validation.ErrorCodeForbidden}).
+						validation.ErrorCodeForbidden)).
 					PrependPropertyName(validation.SliceElementName("objectives", i))
 			}
 		}
