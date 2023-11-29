@@ -2,10 +2,11 @@ package alertpolicy
 
 import (
 	"fmt"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 	"strings"
 	"time"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 var alertPolicyValidation = validation.New[AlertPolicy](

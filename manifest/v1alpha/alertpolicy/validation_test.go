@@ -3,14 +3,15 @@ package alertpolicy
 import (
 	_ "embed"
 	"fmt"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 //go:embed test_data/expected_error.txt
@@ -26,7 +27,7 @@ func TestValidate_AllErrors(t *testing.T) {
 		Spec: Spec{
 			Description:      strings.Repeat("l", 2000),
 			Severity:         v1alpha.SeverityHigh.String(),
-			CoolDownDuration: "10s",
+			CoolDownDuration: "5m",
 			Conditions:       nil,
 			AlertMethods:     nil,
 		},
