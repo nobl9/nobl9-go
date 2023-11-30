@@ -120,34 +120,63 @@ var prometheusValidation = validation.New[PrometheusConfig](
 		Required().
 		Rules(validation.StringURL()),
 )
+
 var datadogValidation = validation.New[DatadogConfig](
 	validation.For(func(d DatadogConfig) string { return d.Site }).
 		WithName("site").
 		Required().
-		Rules(validation.StringURL()),
+		Rules(v1alpha.DataDogSiteValidationRule()),
 )
-var newRelicValidation = validation.New[NewRelicConfig]()
+
+var newRelicValidation = validation.New[NewRelicConfig](
+	validation.For(func(n NewRelicConfig) int { return n.AccountID }).
+		WithName("url").
+		Required().
+		Rules(validation.GreaterThanOrEqualTo(1)),
+)
+
 var appDynamicsValidation = validation.New[AppDynamicsConfig]()
+
 var splunkValidation = validation.New[SplunkConfig]()
+
 var lightstepValidation = validation.New[LightstepConfig]()
+
 var splunkObservabilityValidation = validation.New[SplunkObservabilityConfig]()
+
 var dynatraceValidation = validation.New[DynatraceConfig]()
+
 var elasticsearchValidation = validation.New[ElasticsearchConfig]()
+
 var thousandEyesValidation = validation.New[ThousandEyesConfig]()
+
 var graphiteValidation = validation.New[GraphiteConfig]()
+
 var bigQueryValidation = validation.New[BigQueryConfig]()
+
 var openTSDBValidation = validation.New[OpenTSDBConfig]()
+
 var grafanaLokiValidation = validation.New[GrafanaLokiConfig]()
+
 var cloudWatchValidation = validation.New[CloudWatchConfig]()
+
 var pingdomValidation = validation.New[PingdomConfig]()
+
 var amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()
+
 var redshiftValidation = validation.New[RedshiftConfig]()
+
 var sumoLogicValidation = validation.New[SumoLogicConfig]()
+
 var instanaValidation = validation.New[InstanaConfig]()
+
 var influxDBValidation = validation.New[InfluxDBConfig]()
+
 var azureMonitorValidation = validation.New[AzureMonitorConfig]()
+
 var gcmValidation = validation.New[GCMConfig]()
+
 var genericValidation = validation.New[GenericConfig]()
+
 var honeycombValidation = validation.New[HoneycombConfig]()
 
 const errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"

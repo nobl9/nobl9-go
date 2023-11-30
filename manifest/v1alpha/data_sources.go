@@ -508,6 +508,16 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 	}
 }
 
+func DataDogSiteValidationRule() validation.SingleRule[string] {
+	return validation.OneOf(
+		"datadoghq.com",
+		"us3.datadoghq.com",
+		"us5.datadoghq.com",
+		"datadoghq.eu",
+		"ddog-gov.com",
+		"ap1.datadoghq.com")
+}
+
 func ptr[T interface{}](val T) *T {
 	return &val
 }

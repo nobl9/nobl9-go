@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -19,7 +18,7 @@ func TestAgent_Spec_GetType(t *testing.T) {
 			if agent == v1alpha.GCM {
 				agentTypeStr = "GCM"
 			}
-			setZeroValue(&spec, agentTypeStr)
+			setZeroValue(t, &spec, agentTypeStr)
 			typ, err := spec.GetType()
 			require.NoError(t, err)
 			assert.Equal(t, typ.String(), agent.String())
@@ -28,26 +27,12 @@ func TestAgent_Spec_GetType(t *testing.T) {
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
-func setZeroValue(obj interface{}, fieldName string) {
-	objValue := reflect.ValueOf(obj)
-	// Make sure obj is a pointer to a struct.
-	if objValue.Kind() != reflect.Ptr || objValue.Elem().Kind() != reflect.Struct {
-		fmt.Println("Invalid object type. Expected a pointer to a struct.")
-		return
+func setZeroValue(t *testing.T, obj interface{}, fieldName string) {
+	t.Helper()
+	objValue := reflect.ValueOf(obj).Elem()
+	fieldValue := objValue.FieldByName(fieldName)
+	if !fieldValue.IsValid() || !fieldValue.CanSet() {
+		t.Fatalf("cannot set value for field: %s", fieldName)
 	}
-	structValue := objValue.Elem()
-	fieldValue := structValue.FieldByName(fieldName)
-
-	// Check if the field exists.
-	if !fieldValue.IsValid() {
-		fmt.Println("Field not found:", fieldName)
-		return
-	}
-	// Check if the field is settable.
-	if !fieldValue.CanSet() {
-		fmt.Println("Cannot set value for field:", fieldName)
-		return
-	}
-	// Set zero value.
 	fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
 }

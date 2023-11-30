@@ -2,10 +2,12 @@ package agent
 
 import (
 	_ "embed"
+	"fmt"
+	"github.com/nobl9/nobl9-go/validation"
+	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/nobl9/nobl9-go/validation"
+	"unicode"
 
 	"github.com/stretchr/testify/assert"
 
@@ -339,13 +341,128 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_URLOnlyAgents(t *testing.T) {
+	for _, typ := range []v1alpha.DataSourceType{
+		v1alpha.Prometheus,
+		v1alpha.AppDynamics,
+		v1alpha.Splunk,
+		v1alpha.Graphite,
+		v1alpha.OpenTSDB,
+		v1alpha.GrafanaLoki,
+		v1alpha.SumoLogic,
+		v1alpha.Instana,
+		v1alpha.InfluxDB,
+	} {
+		t.Run(typ.String(), func(t *testing.T) {
+			runes := []rune(typ.String())
+			runes[0] = unicode.ToLower(runes[0])
+			propName := string(runes)
+
+			t.Run("passes", func(t *testing.T) {
+				agent := validAgent(typ)
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
+			t.Run("required url", func(t *testing.T) {
+				agent := validAgent(typ)
+				setURLValue(t, &agent.Spec, typ.String(), "")
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: fmt.Sprintf("spec.%s.url", propName),
+					Code: validation.ErrorCodeRequired,
+				})
+			})
+			t.Run("invalid url", func(t *testing.T) {
+				agent := validAgent(typ)
+				setURLValue(t, &agent.Spec, typ.String(), "invalid")
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: fmt.Sprintf("spec.%s.url", propName),
+					Code: validation.ErrorCodeStringURL,
+				})
+			})
+		})
+	}
+}
+
+func TestValidateSpec_Datadog(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Datadog)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required site", func(t *testing.T) {
+		agent := validAgent(v1alpha.Datadog)
+		agent.Spec.Datadog.Site = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.datadog.site",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid site", func(t *testing.T) {
+		agent := validAgent(v1alpha.Datadog)
+		agent.Spec.Datadog.Site = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.datadog.site",
+			Code: validation.ErrorCodeOneOf,
+		})
+	})
+}
+
+func TestValidateSpec_NewRelic(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.NewRelic)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required account id", func(t *testing.T) {
+		agent := validAgent(v1alpha.NewRelic)
+		agent.Spec.NewRelic.AccountID = 0
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.newRelic.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid account id", func(t *testing.T) {
+		agent := validAgent(v1alpha.NewRelic)
+		agent.Spec.NewRelic.AccountID = -1
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.newRelic.url",
+			Code: validation.ErrorCodeGreaterThanOrEqualTo,
+		})
+	})
+}
+
+func TestValidateSpec_EmptyConfigs(t *testing.T) {
+	for _, typ := range []v1alpha.DataSourceType{
+		v1alpha.ThousandEyes,
+		v1alpha.BigQuery,
+		v1alpha.CloudWatch,
+		v1alpha.Pingdom,
+		v1alpha.Redshift,
+		v1alpha.GCM,
+		v1alpha.Generic,
+		v1alpha.Honeycomb,
+	} {
+		t.Run(typ.String(), func(t *testing.T) {
+			agent := validAgent(typ)
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		})
+	}
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpecs[typ]
-	spec.Description = "Example Prometheus Agent"
+	spec.Description = fmt.Sprintf("Example %s Agent", typ)
 	spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	return New(Metadata{
-		Name:        "prometheus",
-		DisplayName: "Prometheus Agent",
+		Name:        strings.ToLower(typ.String()),
+		DisplayName: typ.String() + " Agent",
 		Project:     "default",
 	}, spec)
 }
@@ -358,7 +475,7 @@ var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
 	},
 	v1alpha.Datadog: {
 		Datadog: &DatadogConfig{
-			Site: "https://datadog-service.monitoring:8125",
+			Site: "datadoghq.com",
 		},
 	},
 	v1alpha.NewRelic: {
@@ -462,6 +579,16 @@ var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
 	v1alpha.Honeycomb: {
 		Honeycomb: &HoneycombConfig{},
 	},
+}
+
+func setURLValue(t *testing.T, obj interface{}, fieldName string, value string) {
+	t.Helper()
+	v := reflect.ValueOf(obj)
+	v.Elem().
+		FieldByName(fieldName).
+		Elem().
+		FieldByName("URL").
+		SetString(value)
 }
 
 func ptr[T any](v T) *T { return &v }

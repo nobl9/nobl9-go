@@ -185,7 +185,7 @@ type ThousandEyesConfig struct{}
 
 // GraphiteConfig represents content of Graphite Configuration typical for Agent Object.
 type GraphiteConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url"`
+	URL string `json:"url,omitempty"`
 }
 
 // BigQueryConfig represents content of BigQuery configuration.
@@ -193,12 +193,12 @@ type BigQueryConfig struct{}
 
 // OpenTSDBConfig represents content of OpenTSDBConfig Configuration typical for Agent Object.
 type OpenTSDBConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url"`
+	URL string `json:"url,omitempty"`
 }
 
 // GrafanaLokiConfig represents content of GrafanaLoki Configuration typical for Agent Object.
 type GrafanaLokiConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url"`
+	URL string `json:"url,omitempty"`
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
@@ -218,17 +218,17 @@ type RedshiftConfig struct{}
 
 // SumoLogicConfig represents content of Sumo Logic configuration typical for Agent Object.
 type SumoLogicConfig struct {
-	URL string `json:"url" validate:"required,url"`
+	URL string `json:"url"`
 }
 
 // InstanaConfig represents content of Instana configuration typical for Agent Object
 type InstanaConfig struct {
-	URL string `json:"url" validate:"required,url"`
+	URL string `json:"url"`
 }
 
 // InfluxDBConfig represents content of InfluxDB configuration typical fo Agent Object
 type InfluxDBConfig struct {
-	URL string `json:"url" validate:"required,url"`
+	URL string `json:"url"`
 }
 
 // GCMConfig represents content of GCM configuration.
