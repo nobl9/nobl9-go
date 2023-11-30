@@ -1,6 +1,8 @@
 package v1alpha
 
-import "fmt"
+import (
+	"github.com/nobl9/nobl9-go/validation"
+)
 
 // Severity level describe importance of triggered alert
 type Severity int16
@@ -10,6 +12,8 @@ const (
 	SeverityMedium
 	SeverityHigh
 )
+
+const ErrorCodeSeverity validation.ErrorCode = "severity"
 
 func getSeverityLevels() map[string]Severity {
 	return map[string]Severity{
@@ -28,11 +32,7 @@ func (m Severity) String() string {
 	return "Unknown"
 }
 
-// ParseSeverity parses string to Severity
-func ParseSeverity(value string) (Severity, error) {
-	result, ok := getSeverityLevels()[value]
-	if !ok {
-		return result, fmt.Errorf("'%s' is not valid severity", value)
-	}
-	return result, nil
+func SeverityValidation() validation.SingleRule[string] {
+	return validation.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String()).
+		WithErrorCode(ErrorCodeSeverity)
 }

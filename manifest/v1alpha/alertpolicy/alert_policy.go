@@ -39,7 +39,7 @@ type Spec struct {
 	Description      string            `json:"description"`
 	Severity         string            `json:"severity"`
 	CoolDownDuration string            `json:"coolDown,omitempty"`
-	Conditions       []AlertCondition  `json:"conditions" validate:"required,min=1,dive"`
+	Conditions       []AlertCondition  `json:"conditions"`
 	AlertMethods     []AlertMethodsRef `json:"alertMethods"`
 }
 

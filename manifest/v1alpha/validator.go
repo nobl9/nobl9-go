@@ -109,7 +109,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("objectName", isValidObjectName)
 	_ = val.RegisterValidation("description", isValidDescription)
-	_ = val.RegisterValidation("severity", isValidSeverity)
 	_ = val.RegisterValidation("operator", isValidOperator)
 	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
 	_ = val.RegisterValidation("httpsURL", isHTTPS)
@@ -117,7 +116,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
 	_ = val.RegisterValidation("nonNegativeDuration", isNonNegativeDuration)
-	_ = val.RegisterValidation("alertPolicyMeasurement", isValidAlertPolicyMeasurement)
 	_ = val.RegisterValidation("objectNameWithStringInterpolation", isValidObjectNameWithStringInterpolation)
 	_ = val.RegisterValidation("url", isValidURL)
 	_ = val.RegisterValidation("labels", areLabelsValid)
@@ -496,11 +494,6 @@ func isValidDescription(fl v.FieldLevel) bool {
 	return utf8.RuneCountInString(fl.Field().String()) <= 1050
 }
 
-func isValidSeverity(fl v.FieldLevel) bool {
-	_, err := ParseSeverity(fl.Field().String())
-	return err == nil
-}
-
 func isValidOperator(fl v.FieldLevel) bool {
 	_, err := ParseOperator(fl.Field().String())
 	return err == nil
@@ -517,11 +510,6 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 		}
 	}
 	return true
-}
-
-func isValidAlertPolicyMeasurement(fl v.FieldLevel) bool {
-	_, err := ParseMeasurement(fl.Field().String())
-	return err == nil
 }
 
 func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {

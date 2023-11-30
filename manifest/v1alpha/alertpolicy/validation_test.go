@@ -2,7 +2,6 @@ package alertpolicy
 
 import (
 	_ "embed"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -67,14 +66,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.severity",
-			Message: fmt.Sprintf(
-				`severity must be set to one of the values: %s`,
-				strings.Join([]string{
-					v1alpha.SeverityLow.String(),
-					v1alpha.SeverityMedium.String(),
-					v1alpha.SeverityHigh.String(),
-				}, ", ")),
-			Code: errorCodeSeverity,
+			Code: v1alpha.ErrorCodeSeverity,
 		})
 	})
 }
@@ -123,6 +115,121 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 	}
 }
 
+func TestValidate_Spec_Conditions(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions = []AlertCondition{validAlertCondition()}
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+	t.Run("fails, too few conditions", func(t *testing.T) {
+		slo := validAlertPolicy()
+		slo.Spec.Conditions = make([]AlertCondition, 0)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions",
+			Code: validation.ErrorCodeSliceMinLength,
+		})
+	})
+}
+
+func TestValidate_Spec_Condition_Measurement(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = v1alpha.MeasurementBurnedBudget.String()
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+	t.Run("fails, required", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = ""
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0].measurement",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("fails", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = "Unknown"
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0].measurement",
+			Code: v1alpha.ErrorCodeMeasurement,
+		})
+	})
+}
+
+func TestValidate_Spec_Condition_Value(t *testing.T) {
+	tests := map[string]interface{}{
+		"passes, float": 0.97,
+		"passes, int":   2,
+	}
+	for name, value := range tests {
+		t.Run(name, func(t *testing.T) {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions[0].Value = value
+			err := validate(alertPolicy)
+			testutils.AssertNoError(t, alertPolicy, err)
+		})
+	}
+
+	t.Run("fails, required", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Value = ""
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0].value",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+}
+
+func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = "15m"
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+	t.Run("passes, no value", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+
+	tests := map[string]valueWithCodeExpect{
+		"fails, wrong format": {
+			value:           "1 hour",
+			expectedCode:    errorCodeDuration,
+			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
+		},
+		"fails, negative": {
+			value:           "-30m",
+			expectedCode:    errorCodeDurationNotNegative,
+			expectedMessage: "duration '-1m' must be not negative value",
+		},
+		"fails, not minute precision": {
+			value:           "4s",
+			expectedCode:    errorCodeDurationGreaterThanOrEqual,
+			expectedMessage: "duration must be defined with minute precision",
+		},
+	}
+	for name, valueAndExpectations := range tests {
+		t.Run(name, func(t *testing.T) {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions[0].AlertingWindow = valueAndExpectations.value
+			err := validate(alertPolicy)
+			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+				Prop:    "spec.conditions[0].alertingWindow",
+				Message: valueAndExpectations.expectedMessage,
+				Code:    valueAndExpectations.expectedCode,
+			})
+		})
+	}
+}
+
 func validAlertPolicy() AlertPolicy {
 	return New(
 		Metadata{
@@ -133,8 +240,18 @@ func validAlertPolicy() AlertPolicy {
 			Description:      "Example alertPolicy",
 			Severity:         v1alpha.SeverityHigh.String(),
 			CoolDownDuration: "5m",
-		},
+			Conditions:       []AlertCondition{validAlertCondition()}},
 	)
+}
+
+func validAlertCondition() AlertCondition {
+	return AlertCondition{
+		Measurement:      v1alpha.MeasurementBurnedBudget.String(),
+		Value:            "0.97",
+		AlertingWindow:   "",
+		LastsForDuration: "",
+		Operator:         "",
+	}
 }
 
 type valueWithCodeExpect struct {

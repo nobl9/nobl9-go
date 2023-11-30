@@ -1,9 +1,9 @@
 package v1alpha
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 // Measurement is allowed measurement types used for comparing values and triggering alerts
@@ -15,6 +15,8 @@ const (
 	MeasurementTimeToBurnBudget
 	MeasurementTimeToBurnEntireBudget
 )
+
+const ErrorCodeMeasurement validation.ErrorCode = "measurement"
 
 func getMeasurements() map[string]Measurement {
 	return map[string]Measurement{
@@ -35,15 +37,6 @@ func (m Measurement) String() string {
 	return "Unknown"
 }
 
-// ParseMeasurement parses string to Measurement
-func ParseMeasurement(value string) (Measurement, error) {
-	result, ok := getMeasurements()[value]
-	if !ok {
-		return result, fmt.Errorf("'%s' is not valid measurement", value)
-	}
-	return result, nil
-}
-
 // GetExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
 func GetExpectedOperatorForMeasurement(measurement Measurement) (Operator, error) {
 	switch measurement {
@@ -58,4 +51,13 @@ func GetExpectedOperatorForMeasurement(measurement Measurement) (Operator, error
 	default:
 		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
 	}
+}
+
+func MeasurementValidation() validation.SingleRule[string] {
+	return validation.OneOf(
+		MeasurementBurnedBudget.String(),
+		MeasurementAverageBurnRate.String(),
+		MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String(),
+	).WithErrorCode(ErrorCodeMeasurement)
 }
