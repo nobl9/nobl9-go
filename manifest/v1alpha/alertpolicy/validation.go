@@ -73,7 +73,7 @@ var durationNotNegativeGreaterThanOrEqual = func(greaterThanOrEqual time.Duratio
 			if parsedDuration < greaterThanOrEqual {
 				return &validation.RuleError{
 					Message: fmt.Sprintf("duration must be equal or greater than %s", greaterThanOrEqual),
-					Code:    errorCodeDurationFullMinutePrecision,
+					Code:    errorCodeDurationGreaterThanOrEqual,
 				}
 			}
 
@@ -122,7 +122,7 @@ func alertingWindowDurationFullMinutePrecision(duration time.Duration) error {
 	if int64(duration.Seconds())%int64(time.Minute.Seconds()) != 0 {
 		return &validation.RuleError{
 			Message: "duration must be defined with minute precision",
-			Code:    errorCodeDurationNotNegative,
+			Code:    errorCodeDurationFullMinutePrecision,
 		}
 	}
 
