@@ -27,7 +27,7 @@ type AlertPolicyMetadata struct {
 // AlertPolicySpec represents content of AlertPolicy's Spec.
 type AlertPolicySpec struct {
 	Description      string              `json:"description" validate:"description" example:"Error budget is at risk"`
-	Severity         string              `json:"severity" validate:"required,severity" example:"High"`
+	Severity         string              `json:"severity" validate:"required" example:"High"`
 	CoolDownDuration string              `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
 	Conditions       []AlertCondition    `json:"conditions" validate:"required,min=1,dive"`
 	AlertMethods     []PublicAlertMethod `json:"alertMethods"`
@@ -39,7 +39,7 @@ func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {
-	Measurement      string      `json:"measurement" validate:"required,alertPolicyMeasurement" example:"BurnedBudget"`
+	Measurement      string      `json:"measurement" validate:"required" example:"BurnedBudget"`
 	Value            interface{} `json:"value" validate:"required" example:"0.97"`
 	AlertingWindow   string      `json:"alertingWindow,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationMinutePrecision" example:"30m"` //nolint:lll
 	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"`                               //nolint:lll
