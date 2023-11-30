@@ -184,36 +184,109 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			},
 		)
 	})
-	t.Run("required nested fields", func(t *testing.T) {
-		for _, dur := range
-		agent := validAgent(v1alpha.Prometheus)
-		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(0),
+	for name, test := range map[string]struct {
+		Duration v1alpha.HistoricalRetrievalDuration
+		Errors   []testutils.ExpectedError
+	}{
+		"required unit": {
+			Duration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10)},
+			Errors: []testutils.ExpectedError{
+				{
+					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
+					Code: validation.ErrorCodeRequired,
+				},
+				{
+					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
+					Code: validation.ErrorCodeRequired,
+				},
 			},
-			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(0),
+		},
+		"required value": {
+			Duration: v1alpha.HistoricalRetrievalDuration{Unit: v1alpha.HRDHour},
+			Errors: []testutils.ExpectedError{
+				{
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Code: validation.ErrorCodeRequired,
+				},
+				{
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Code: validation.ErrorCodeRequired,
+				},
 			},
+		},
+		"value too small": {
+			Duration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(-1),
+				Unit:  v1alpha.HRDHour,
+			},
+			Errors: []testutils.ExpectedError{
+				{
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Code: validation.ErrorCodeGreaterThan,
+				},
+				{
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Code: validation.ErrorCodeGreaterThan,
+				},
+			},
+		},
+		"value too large": {
+			Duration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(43200),
+				Unit:  v1alpha.HRDHour,
+			},
+			Errors: []testutils.ExpectedError{
+				{
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Code: validation.ErrorCodeLessThan,
+				},
+				{
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Code: validation.ErrorCodeLessThan,
+				},
+			},
+		},
+		"invalid unit": {
+			Duration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(43200),
+				Unit:  "invalid",
+			},
+			Errors: []testutils.ExpectedError{
+				{
+					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
+					Code: validation.ErrorCodeOneOf,
+				},
+				{
+					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
+					Code: validation.ErrorCodeOneOf,
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration:     test.Duration,
+				DefaultDuration: test.Duration,
+			}
+			err := validate(agent)
+			testutils.AssertContainsErrors(t, agent, err, len(test.Errors), test.Errors...)
+		})
+	}
+	t.Run("valid units", func(t *testing.T) {
+		for _, unit := range []v1alpha.HistoricalRetrievalDurationUnit{
+			v1alpha.HRDMinute,
+			v1alpha.HRDHour,
+			v1alpha.HRDDay,
+		} {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+			}
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
 		}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 4,
-			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.maxDuration.unit",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.maxDuration.value",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.defaultDuration.value",
-				Code: validation.ErrorCodeRequired,
-			},
-		)
 	})
 }
 

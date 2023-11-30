@@ -26,21 +26,8 @@ var specValidation = validation.New[Spec](
 				typ, _ := spec.GetType()
 				return v1alpha.MaxDataRetrievalDurationValidation(manifest.KindAgent, typ)
 			}),
-			validation.NewSingleRule(func(spec Spec) error {
-				if spec.QueryDelay == nil {
-					return nil
-				}
-				typ, _ := spec.GetType()
-				agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
-				if spec.QueryDelay.LessThan(agentDefault) {
-					return validation.NewPropertyError(
-						"queryDelay",
-						spec.QueryDelay,
-						errors.Errorf("should be greater than %s", agentDefault),
-					)
-				}
-				return nil
-			})),
+			queryDelayGreaterThanOrEqualToDefaultValidationRule,
+		),
 	validation.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		Omitempty().
@@ -311,6 +298,22 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	return nil
 }).WithErrorCode(errCodeExactlyOneDataSourceType)
+
+var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRule(func(spec Spec) error {
+	if spec.QueryDelay == nil {
+		return nil
+	}
+	typ, _ := spec.GetType()
+	agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
+	if spec.QueryDelay.LessThan(agentDefault) {
+		return validation.NewPropertyError(
+			"queryDelay",
+			spec.QueryDelay,
+			errors.Errorf("should be greater than or equal to %s", agentDefault),
+		)
+	}
+	return nil
+})
 
 func validate(a Agent) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(agentValidation, a)
