@@ -132,13 +132,16 @@ var maxQueryDelay = Duration{
 func QueryDelayValidation() validation.Validator[QueryDelay] {
 	return validation.New[QueryDelay](
 		validation.For(func(q QueryDelay) Duration { return q.Duration }).
-			Include(durationValidation).
 			Rules(validation.NewSingleRule(func(d Duration) error {
 				if d.Duration() > maxQueryDelay.Duration() {
 					return errors.Errorf("must be smaller than or equal to %s", maxQueryDelay)
 				}
 				return nil
 			})),
+		validation.ForPointer(func(q QueryDelay) *int { return q.Value }).
+			WithName("value").
+			Required().
+			Rules(validation.GreaterThan(0), validation.LessThan(86400)),
 		validation.For(func(q QueryDelay) DurationUnit { return q.Unit }).
 			WithName("unit").
 			Required().
@@ -276,17 +279,6 @@ type Duration struct {
 	Value *int         `json:"value" validate:"required,min=0,max=86400"`
 	Unit  DurationUnit `json:"unit" validate:"required"`
 }
-
-var durationValidation = validation.New[Duration](
-	validation.ForPointer(func(d Duration) *int { return d.Value }).
-		WithName("value").
-		Required().
-		Rules(validation.GreaterThan(0), validation.LessThan(86400)),
-	// Unit "one of" validation is left to specific use cases.
-	validation.For(func(d Duration) DurationUnit { return d.Unit }).
-		WithName("unit").
-		Required(),
-)
 
 type DurationUnit string
 

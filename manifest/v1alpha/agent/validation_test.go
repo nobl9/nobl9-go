@@ -2,6 +2,7 @@ package agent
 
 import (
 	_ "embed"
+	"github.com/nobl9/nobl9-go/validation"
 	"strings"
 	"testing"
 
@@ -59,6 +60,160 @@ func TestValidateSpec(t *testing.T) {
 				Code: errCodeExactlyOneDataSourceType,
 			})
 		}
+	})
+}
+
+func TestValidateSpec_ReleaseChannel(t *testing.T) {
+	t.Run("valid release channels", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelBeta,
+			0, // empty field.
+		} {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.ReleaseChannel = rc
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
+	})
+	t.Run("invalid release channel", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.ReleaseChannel = -1
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: validation.ErrorCodeOneOf,
+		})
+	})
+}
+
+func TestValidateSpec_QueryDelay(t *testing.T) {
+	t.Run("required", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.queryDelay.value",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.queryDelay.unit",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("value too small", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(-1),
+			Unit:  v1alpha.Minute,
+		}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.queryDelay",
+				Message: "should be greater than " +
+					v1alpha.GetQueryDelayDefaults()[v1alpha.Prometheus.String()].String(),
+			},
+			testutils.ExpectedError{
+				Prop: "spec.queryDelay.value",
+				Code: validation.ErrorCodeGreaterThan,
+			},
+		)
+	})
+	t.Run("value too large", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(86400),
+			Unit:  v1alpha.Second,
+		}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay.value",
+			Code: validation.ErrorCodeLessThan,
+		})
+	})
+	t.Run("valid units", func(t *testing.T) {
+		for _, unit := range []v1alpha.DurationUnit{
+			v1alpha.Minute,
+			v1alpha.Second,
+		} {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+				Value: ptr(10),
+				Unit:  unit,
+			}}
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
+	})
+	t.Run("invalid units", func(t *testing.T) {
+		for _, unit := range []v1alpha.DurationUnit{
+			v1alpha.Millisecond,
+			v1alpha.Hour,
+			"invalid",
+		} {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+				Value: ptr(10),
+				Unit:  unit,
+			}}
+			err := validate(agent)
+			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+				Prop: "spec.queryDelay.unit",
+				Code: validation.ErrorCodeOneOf,
+			})
+		}
+	})
+}
+
+func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
+	t.Run("required", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.maxDuration",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.defaultDuration",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("required nested fields", func(t *testing.T) {
+		for _, dur := range
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(0),
+			},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(0),
+			},
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 4,
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.maxDuration.unit",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.maxDuration.value",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
 	})
 }
 
@@ -186,3 +341,5 @@ var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
 		Honeycomb: &HoneycombConfig{},
 	},
 }
+
+func ptr[T any](v T) *T { return &v }

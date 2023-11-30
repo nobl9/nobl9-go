@@ -27,13 +27,16 @@ var specValidation = validation.New[Spec](
 				return v1alpha.MaxDataRetrievalDurationValidation(manifest.KindAgent, typ)
 			}),
 			validation.NewSingleRule(func(spec Spec) error {
+				if spec.QueryDelay == nil {
+					return nil
+				}
 				typ, _ := spec.GetType()
 				agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
 				if spec.QueryDelay.LessThan(agentDefault) {
 					return validation.NewPropertyError(
 						"queryDelay",
 						spec.QueryDelay,
-						errors.Errorf("must be at greater than %s", agentDefault),
+						errors.Errorf("should be greater than %s", agentDefault),
 					)
 				}
 				return nil
