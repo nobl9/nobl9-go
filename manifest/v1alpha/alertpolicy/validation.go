@@ -46,9 +46,10 @@ var specValidation = validation.New[Spec](
 )
 
 const (
-	errorCodeDuration                   validation.ErrorCode = "duration"
-	errorCodeDurationNotNegative        validation.ErrorCode = "duration_not_negative"
-	errorCodeDurationGreaterThanOrEqual validation.ErrorCode = "duration_greater_than_or_equal"
+	errorCodeDuration                    validation.ErrorCode = "duration"
+	errorCodeDurationNotNegative         validation.ErrorCode = "duration_not_negative"
+	errorCodeDurationGreaterThanOrEqual  validation.ErrorCode = "duration_greater_than_or_equal"
+	errorCodeDurationFullMinutePrecision validation.ErrorCode = "duration_full_minute_precision"
 )
 
 var durationNotNegativeGreaterThanOrEqual = func(greaterThanOrEqual time.Duration) validation.SingleRule[string] {
@@ -72,7 +73,7 @@ var durationNotNegativeGreaterThanOrEqual = func(greaterThanOrEqual time.Duratio
 			if parsedDuration < greaterThanOrEqual {
 				return &validation.RuleError{
 					Message: fmt.Sprintf("duration must be equal or greater than %s", greaterThanOrEqual),
-					Code:    errorCodeDurationGreaterThanOrEqual,
+					Code:    errorCodeDurationFullMinutePrecision,
 				}
 			}
 
@@ -95,6 +96,7 @@ var conditionValidation = validation.New[AlertCondition](
 		Rules(durationNotNegativeMinutePrecision),
 )
 
+// TODO temporary shape, refactor using transform, rewrite 'StructLevel' old validation
 var durationNotNegativeMinutePrecision = validation.NewSingleRule(
 	func(v string) error {
 		parsedDuration, err := time.ParseDuration(v)
@@ -112,16 +114,20 @@ var durationNotNegativeMinutePrecision = validation.NewSingleRule(
 			}
 		}
 
-		if int64(parsedDuration.Seconds())%int64(time.Minute.Seconds()) != 0 {
-			return &validation.RuleError{
-				Message: "duration must be defined with minute precision",
-				Code:    errorCodeDurationNotNegative,
-			}
-		}
-
-		return nil
+		return alertingWindowDurationFullMinutePrecision(parsedDuration)
 	},
 )
+
+func alertingWindowDurationFullMinutePrecision(duration time.Duration) error {
+	if int64(duration.Seconds())%int64(time.Minute.Seconds()) != 0 {
+		return &validation.RuleError{
+			Message: "duration must be defined with minute precision",
+			Code:    errorCodeDurationNotNegative,
+		}
+	}
+
+	return nil
+}
 
 func validate(p AlertPolicy) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertPolicyValidation, p)

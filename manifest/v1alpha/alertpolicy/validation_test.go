@@ -186,6 +186,26 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 }
 
 func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
+	validValues := []string{
+		"5m",
+		"1h",
+		"72h",
+		"1h30m",
+		"1h1m60s",
+		"300s",
+		"0.1h",
+		"300000ms",
+		"300000000000ns",
+	}
+	for _, value := range validValues {
+		t.Run("passes", func(t *testing.T) {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions[0].AlertingWindow = value
+			err := validate(alertPolicy)
+			testutils.AssertNoError(t, alertPolicy, err)
+		})
+	}
+
 	t.Run("passes", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].AlertingWindow = "15m"
@@ -210,11 +230,6 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 			expectedCode:    errorCodeDurationNotNegative,
 			expectedMessage: "duration '-1m' must be not negative value",
 		},
-		"fails, not minute precision": {
-			value:           "4s",
-			expectedCode:    errorCodeDurationGreaterThanOrEqual,
-			expectedMessage: "duration must be defined with minute precision",
-		},
 	}
 	for name, valueAndExpectations := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -228,6 +243,43 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 			})
 		})
 	}
+
+	notMinutePrecisionTests := []string{
+		"5m30s",
+		"1h30s",
+		"1h5m5s",
+		"0.01h",
+		"555s",
+	}
+	for _, value := range notMinutePrecisionTests {
+		t.Run("fails, not minute precision", func(t *testing.T) {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions[0].AlertingWindow = value
+			err := validate(alertPolicy)
+			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+				Prop:    "spec.conditions[0].alertingWindow",
+				Message: "duration must be defined with minute precision",
+				Code:    errorCodeDurationFullMinutePrecision,
+			})
+		})
+	}
+	// other cases to cover
+	//"555h": false,
+	//"555d": false,
+	//
+	//// Invalid: Not supported unit
+	//// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (ref. time.ParseDuration)
+	//"0.01y": false,
+	//"0.5w":  false,
+	//"1w":    false,
+	//
+	//// Invalid: Not a minute precision
+	//"5m30s":  false,
+	//"1h30s":  false,
+	//"1h5m5s": false,
+	//"0.01h":  false,
+	//"555s":   false,
+	//
 }
 
 func validAlertPolicy() AlertPolicy {
