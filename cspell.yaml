@@ -31,6 +31,7 @@ ignorePaths:
   - manifest/**
 words:
   - apiurl
+  - atoi
   - auseg9kiegwketjzc416
   - awsiam
   - clientcreds
@@ -76,6 +77,7 @@ words:
   - sloerrorbudgetstatus
   - slos
   - startuml
+  - strconv
   - structs
   - testutils
   - tpng
