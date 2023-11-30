@@ -27,7 +27,7 @@ func TestValidate_AllErrors(t *testing.T) {
 			Description:      strings.Repeat("l", 2000),
 			Severity:         v1alpha.SeverityHigh.String(),
 			CoolDownDuration: "5m",
-			Conditions:       nil,
+			Conditions:       []AlertCondition{validAlertCondition()},
 			AlertMethods:     nil,
 		},
 		ManifestSource: "/home/me/alertpolicy.yaml",
