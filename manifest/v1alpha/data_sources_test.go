@@ -220,7 +220,3 @@ func TestGetStrAndStdDurationFromDuration(t *testing.T) {
 			})
 	}
 }
-
-func TestHistoricalDataRetrievalValidation(t *testing.T) {
-
-}

@@ -78,23 +78,6 @@ func HistoricalDataRetrievalValidation() validation.Validator[HistoricalDataRetr
 	)
 }
 
-func MaxDataRetrievalDurationValidation(kind manifest.Kind, typ DataSourceType) error {
-	maxDuration, err := GetDataRetrievalMaxDuration(kind, typ)
-	if err != nil {
-		return err
-	}
-	maxDurationAllowed := HistoricalRetrievalDuration{
-		Value: maxDuration.Value,
-		Unit:  maxDuration.Unit,
-	}
-	if maxDuration.BiggerThan(maxDurationAllowed) {
-		return errors.Errorf(
-			"must be smaller than or equal to %d%s",
-			maxDurationAllowed.Value, maxDurationAllowed.Unit)
-	}
-	return nil
-}
-
 var historicalRetrievalDurationValidation = validation.New[HistoricalRetrievalDuration](
 	validation.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
 		WithName("value").
@@ -109,12 +92,16 @@ var historicalRetrievalDurationValidation = validation.New[HistoricalRetrievalDu
 var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
 	func(dataRetrieval HistoricalDataRetrieval) error {
 		if dataRetrieval.DefaultDuration.BiggerThan(dataRetrieval.MaxDuration) {
+			var maxDurationValue int
+			if dataRetrieval.MaxDuration.Value != nil {
+				maxDurationValue = *dataRetrieval.MaxDuration.Value
+			}
 			return validation.NewPropertyError(
 				"defaultDuration",
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
-					"must be smaller than or equal to %d%s",
-					dataRetrieval.MaxDuration.Value, dataRetrieval.MaxDuration.Unit))
+					"must be smaller than or equal to 'maxDuration' (%d %s)",
+					maxDurationValue, dataRetrieval.MaxDuration.Unit))
 		}
 		return nil
 	})
@@ -325,12 +312,7 @@ func (d Duration) Duration() time.Duration {
 }
 
 func isBiggerThanMaxQueryDelayDuration(duration Duration) bool {
-	maxQueryDelayDurationInt := maxQueryDelayDuration
-	maximum := Duration{
-		Value: &maxQueryDelayDurationInt,
-		Unit:  maxQueryDelayDurationUnit,
-	}
-	return duration.Duration() > maximum.Duration()
+	return duration.Duration() > maxQueryDelay.Duration()
 }
 
 func isValidQueryDelayUnit(queryDelay Duration) bool {

@@ -20,14 +20,11 @@ var agentValidation = validation.New[Agent](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
+		Rules(exactlyOneDataSourceTypeValidationRule).
+		StopOnError().
 		Rules(
-			exactlyOneDataSourceTypeValidationRule,
-			validation.NewSingleRule(func(spec Spec) error {
-				typ, _ := spec.GetType()
-				return v1alpha.MaxDataRetrievalDurationValidation(manifest.KindAgent, typ)
-			}),
-			queryDelayGreaterThanOrEqualToDefaultValidationRule,
-		),
+			historicalDataRetrievalValidationRule,
+			queryDelayGreaterThanOrEqualToDefaultValidationRule),
 	validation.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		Omitempty().
@@ -298,6 +295,14 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	return nil
 }).WithErrorCode(errCodeExactlyOneDataSourceType)
+
+var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec Spec) error {
+	typ, _ := spec.GetType()
+	if _, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err != nil {
+		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
+	}
+	return nil
+})
 
 var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRule(func(spec Spec) error {
 	if spec.QueryDelay == nil {

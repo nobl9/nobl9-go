@@ -2,9 +2,10 @@ package agent
 
 import (
 	_ "embed"
-	"github.com/nobl9/nobl9-go/validation"
 	"strings"
 	"testing"
+
+	"github.com/nobl9/nobl9-go/validation"
 
 	"github.com/stretchr/testify/assert"
 
@@ -113,7 +114,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.queryDelay",
-				Message: "should be greater than " +
+				Message: "should be greater than or equal to " +
 					v1alpha.GetQueryDelayDefaults()[v1alpha.Prometheus.String()].String(),
 			},
 			testutils.ExpectedError{
@@ -165,6 +166,18 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				Code: validation.ErrorCodeOneOf,
 			})
 		}
+	})
+	t.Run("delay larger than max query delay", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(1441),
+			Unit:  v1alpha.Minute,
+		}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.queryDelay",
+			Message: "must be smaller than or equal to 1440m",
+		})
 	})
 }
 
@@ -248,7 +261,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		},
 		"invalid unit": {
 			Duration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(43200),
+				Value: ptr(200),
 				Unit:  "invalid",
 			},
 			Errors: []testutils.ExpectedError{
@@ -287,6 +300,42 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			err := validate(agent)
 			testutils.AssertNoError(t, agent, err)
 		}
+	})
+	t.Run("data retrieval disabled for data source type", func(t *testing.T) {
+		agent := validAgent(v1alpha.Generic)
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(20),
+				Unit:  v1alpha.HRDHour,
+			},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(10),
+				Unit:  v1alpha.HRDHour,
+			},
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval",
+			Message: "historical data retrieval is not supported for Generic Agent",
+		})
+	})
+	t.Run("data retrieval default larger than max", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(1),
+				Unit:  v1alpha.HRDHour,
+			},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(2),
+				Unit:  v1alpha.HRDHour,
+			},
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval.defaultDuration",
+			Message: "must be smaller than or equal to 'maxDuration' (1 Hour)",
+		})
 	})
 }
 
