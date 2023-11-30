@@ -88,13 +88,13 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 	tests := map[string]valueWithCodeExpect{
 		"fails, wrong format": {
 			value:           "1 hour",
-			expectedCode:    errorCodeDuration,
+			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
 		},
 		"fails, negative": {
-			value:           "-1m",
-			expectedCode:    errorCodeDurationNotNegative,
-			expectedMessage: "duration '-1m' must be not negative value",
+			value:           "-10m",
+			expectedCode:    errorCodeDurationGreaterThanOrEqual,
+			expectedMessage: "duration must be equal or greater than 5m0s",
 		},
 		"fails, not greater or equal to 5m": {
 			value:           "4m",
@@ -227,8 +227,8 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 		},
 		"fails, negative": {
 			value:           "-30m",
-			expectedCode:    errorCodeDurationNotNegative,
-			expectedMessage: "duration '-1m' must be not negative value",
+			expectedCode:    errorCodeDurationGreaterThanOrEqual,
+			expectedMessage: "duration must be equal or greater than 0m0s",
 		},
 	}
 	for name, valueAndExpectations := range tests {

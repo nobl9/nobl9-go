@@ -34,10 +34,10 @@ var specValidation = validation.New[Spec](
 		WithName("severity").
 		Required().
 		Rules(v1alpha.SeverityValidation()),
-	validation.For(func(s Spec) string { return s.CoolDownDuration }).
+	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		Omitempty().
-		Rules(durationNotNegativeGreaterThanOrEqual(5*time.Minute)),
+		Rules(durationGreaterThanOrEqual(5*time.Minute)),
 	validation.ForEach(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
@@ -47,30 +47,14 @@ var specValidation = validation.New[Spec](
 
 const (
 	errorCodeDuration                    validation.ErrorCode = "duration"
-	errorCodeDurationNotNegative         validation.ErrorCode = "duration_not_negative"
 	errorCodeDurationGreaterThanOrEqual  validation.ErrorCode = "duration_greater_than_or_equal"
 	errorCodeDurationFullMinutePrecision validation.ErrorCode = "duration_full_minute_precision"
 )
 
-var durationNotNegativeGreaterThanOrEqual = func(greaterThanOrEqual time.Duration) validation.SingleRule[string] {
+var durationGreaterThanOrEqual = func(greaterThanOrEqual time.Duration) validation.SingleRule[time.Duration] {
 	return validation.NewSingleRule(
-		func(v string) error {
-			parsedDuration, err := time.ParseDuration(v)
-			if err != nil {
-				return &validation.RuleError{
-					Message: err.Error(),
-					Code:    errorCodeDuration,
-				}
-			}
-
-			if parsedDuration < 0 {
-				return &validation.RuleError{
-					Message: fmt.Sprintf("duration '%s' must be not negative value", v),
-					Code:    errorCodeDurationNotNegative,
-				}
-			}
-
-			if parsedDuration < greaterThanOrEqual {
+		func(v time.Duration) error {
+			if v < greaterThanOrEqual {
 				return &validation.RuleError{
 					Message: fmt.Sprintf("duration must be equal or greater than %s", greaterThanOrEqual),
 					Code:    errorCodeDurationGreaterThanOrEqual,
@@ -90,44 +74,24 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) interface{} { return c.Value }).
 		WithName("value").
 		Required(),
-	validation.For(func(c AlertCondition) string { return c.AlertingWindow }).
+	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
 		WithName("alertingWindow").
 		Omitempty().
-		Rules(durationNotNegativeMinutePrecision),
+		Rules(durationGreaterThanOrEqual(0), durationFullMinutePrecision),
 )
 
-// TODO temporary shape, refactor using transform, rewrite 'StructLevel' old validation
-var durationNotNegativeMinutePrecision = validation.NewSingleRule(
-	func(v string) error {
-		parsedDuration, err := time.ParseDuration(v)
-		if err != nil {
+var durationFullMinutePrecision = validation.NewSingleRule(
+	func(v time.Duration) error {
+		if int64(v.Seconds())%int64(time.Minute.Seconds()) != 0 {
 			return &validation.RuleError{
-				Message: err.Error(),
-				Code:    errorCodeDuration,
+				Message: "duration must be defined with minute precision",
+				Code:    errorCodeDurationFullMinutePrecision,
 			}
 		}
 
-		if parsedDuration < 0 {
-			return &validation.RuleError{
-				Message: fmt.Sprintf("duration '%s' must be not negative value", v),
-				Code:    errorCodeDurationNotNegative,
-			}
-		}
-
-		return alertingWindowDurationFullMinutePrecision(parsedDuration)
+		return nil
 	},
 )
-
-func alertingWindowDurationFullMinutePrecision(duration time.Duration) error {
-	if int64(duration.Seconds())%int64(time.Minute.Seconds()) != 0 {
-		return &validation.RuleError{
-			Message: "duration must be defined with minute precision",
-			Code:    errorCodeDurationFullMinutePrecision,
-		}
-	}
-
-	return nil
-}
 
 func validate(p AlertPolicy) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertPolicyValidation, p)
