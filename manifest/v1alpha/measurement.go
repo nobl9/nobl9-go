@@ -1,6 +1,8 @@
 package v1alpha
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/validation"
@@ -35,6 +37,15 @@ func (m Measurement) String() string {
 	}
 	//nolint: goconst
 	return "Unknown"
+}
+
+// ParseMeasurement parses string to Measurement
+func ParseMeasurement(value string) (Measurement, error) {
+	result, ok := getMeasurements()[value]
+	if !ok {
+		return result, fmt.Errorf("'%s' is not valid measurement", value)
+	}
+	return result, nil
 }
 
 // GetExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
