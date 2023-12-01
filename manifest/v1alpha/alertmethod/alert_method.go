@@ -121,7 +121,7 @@ type PublicPagerDutyAlertMethod struct {
 
 // SlackAlertMethod represents a set of properties required to send message to Slack.
 type SlackAlertMethod struct {
-	URL string `json:"url" validate:"optionalURL"` // Required when AlertMethod is created.
+	URL string `json:"url"` // Required when AlertMethod is created.
 }
 
 // PublicSlackAlertMethod represents a set of properties required to send message to Slack without secrets.
@@ -167,7 +167,7 @@ type PublicDiscordAlertMethod struct {
 
 // JiraAlertMethod represents a set of properties required create tickets in Jira.
 type JiraAlertMethod struct {
-	URL        string `json:"url" validate:"required,httpsURL,url"`
+	URL        string `json:"url"`
 	Username   string `json:"username"`
 	APIToken   string `json:"apiToken"` // Field required when AlertMethod is created.
 	ProjectKey string `json:"projectKey"`
@@ -193,8 +193,8 @@ type PublicTeamsAlertMethod struct {
 
 // EmailAlertMethod represents a set of properties required to send an email.
 type EmailAlertMethod struct {
-	To  []string `json:"to,omitempty" validate:"omitempty,max=10,emails"`
-	Cc  []string `json:"cc,omitempty" validate:"omitempty,max=10,emails"`
+	To  []string `json:"to,omitempty"`
+	Cc  []string `json:"cc,omitempty"`
 	Bcc []string `json:"bcc,omitempty" validate:"omitempty,max=10,emails"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Subject string `json:"subject,omitempty"`

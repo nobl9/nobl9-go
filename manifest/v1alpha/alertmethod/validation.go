@@ -40,10 +40,7 @@ var specValidation = validation.New[Spec](
 		WithName("description").
 		Rules(validation.StringLength(0, maxDescriptionLength)),
 	validation.For(validation.GetSelf[Spec]()).
-		WithName("spec").
-		Required().
 		Rules(validation.NewSingleRule(func(s Spec) error {
-
 			alertMethodCounter := 0
 			if s.Webhook != nil {
 				alertMethodCounter++
@@ -108,7 +105,6 @@ var specValidation = validation.New[Spec](
 
 var webhookValidation = validation.New[WebhookAlertMethod](
 	validation.For(validation.GetSelf[WebhookAlertMethod]()).
-		WithName("webhook").
 		Rules(
 			validation.NewSingleRule(func(w WebhookAlertMethod) error {
 				if w.Template != nil && len(w.TemplateFields) > 0 {
@@ -124,9 +120,11 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		Include(optionalUrlValidation()),
 	validation.ForPointer(func(w WebhookAlertMethod) *string { return w.Template }).
 		WithName("template").
+		When(func(w WebhookAlertMethod) bool { return w.Template != nil }).
 		Rules(webhookTemplateValidationRule()),
 	validation.For(func(w WebhookAlertMethod) []string { return w.TemplateFields }).
 		WithName("templateFields").
+		When(func(w WebhookAlertMethod) bool { return w.Template == nil }).
 		Rules(validation.SliceMinLength[[]string](1)).
 		StopOnError().
 		Rules(webhookTemplateFieldsValidationRule()),
@@ -228,8 +226,8 @@ var emailValidation = validation.New[EmailAlertMethod](
 func optionalUrlValidation(options ...validation.StringURLOption) validation.Validator[string] {
 	return validation.New[string](
 		validation.For(validation.GetSelf[string]()).
-			Rules(validation.StringURL(options...)).
-			When(func(v string) bool { return v != "" && v != hiddenValue }),
+			When(func(v string) bool { return v != "" && v != hiddenValue }).
+			Rules(validation.StringURL(options...)),
 	)
 }
 
