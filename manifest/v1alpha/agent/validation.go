@@ -1,6 +1,10 @@
 package agent
 
 import (
+	"net/url"
+	"path"
+	"strings"
+
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -141,9 +145,22 @@ var (
 			Required(),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
-		validation.For(func(d DynatraceConfig) string { return d.URL }).
+		validation.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
 			WithName("url").
-			Required(),
+			Required().
+			Rules(validation.NewSingleRule(func(u *url.URL) error {
+				// For SaaS type enforce https and land lack of path.
+				// - Join instead of Clean (to avoid getting . for empty path),
+				// - Trim to get rid of root.
+				pathURL := strings.Trim(path.Join(u.Path), "/")
+				if strings.HasSuffix(u.Host, "live.dynatrace.com") &&
+					(u.Scheme != "https" || pathURL != "") {
+					return errors.New(
+						"Dynatrace SaaS URL (live.dynatrace.com) requires https scheme and empty URL path" +
+							"; example: https://rxh50243.live.dynatrace.com/")
+				}
+				return nil
+			})),
 	)
 	elasticsearchValidation    = validation.New[ElasticsearchConfig]()
 	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()

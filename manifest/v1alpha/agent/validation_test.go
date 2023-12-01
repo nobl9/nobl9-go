@@ -493,6 +493,32 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_Dynatrace(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.URL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.URL = "h ttp"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpecs[typ]
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)

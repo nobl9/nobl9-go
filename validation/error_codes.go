@@ -33,4 +33,5 @@ const (
 	ErrorCodeOneOf                ErrorCode = "one_of"
 	ErrorCodeMutuallyExclusive    ErrorCode = "mutually_exclusive"
 	ErrorCodeSliceUnique          ErrorCode = "slice_unique"
+	ErrorCodeURL                  ErrorCode = "url"
 )

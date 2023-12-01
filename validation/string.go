@@ -72,13 +72,7 @@ func StringURL() SingleRule[string] {
 		if err != nil {
 			return errors.Wrap(err, "failed to parse URL")
 		}
-		if u.Scheme == "" {
-			return errors.New("valid URL must have a scheme (e.g. https://)")
-		}
-		if u.Host == "" && u.Fragment == "" && u.Opaque == "" {
-			return errors.New("valid URL must contain either host, fragment or opaque data")
-		}
-		return nil
+		return validateURL(*u)
 	}).WithErrorCode(ErrorCodeStringURL)
 }
 
