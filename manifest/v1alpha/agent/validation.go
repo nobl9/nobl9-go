@@ -114,70 +114,45 @@ var specValidation = validation.New[Spec](
 		Include(honeycombValidation),
 )
 
-var prometheusValidation = validation.New[PrometheusConfig](
-	validation.For(func(p PrometheusConfig) string { return p.URL }).
-		WithName("url").
-		Required().
-		Rules(validation.StringURL()),
+var (
+	datadogValidation = validation.New[DatadogConfig](
+		validation.For(func(d DatadogConfig) string { return d.Site }).
+			WithName("site").
+			Required().
+			Rules(v1alpha.DataDogSiteValidationRule()),
+	)
+	newRelicValidation = validation.New[NewRelicConfig](
+		validation.For(func(n NewRelicConfig) int { return n.AccountID }).
+			WithName("accountId").
+			Required().
+			Rules(validation.GreaterThanOrEqualTo(1)),
+	)
+	lightstepValidation           = validation.New[LightstepConfig]()
+	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig]()
+	dynatraceValidation           = validation.New[DynatraceConfig]()
+	elasticsearchValidation       = validation.New[ElasticsearchConfig]()
+	amazonPrometheusValidation    = validation.New[AmazonPrometheusConfig]()
+	azureMonitorValidation        = validation.New[AzureMonitorConfig]()
+	// URL only.
+	prometheusValidation  = newURLValidator(func(p PrometheusConfig) string { return p.URL })
+	appDynamicsValidation = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
+	splunkValidation      = newURLValidator(func(s SplunkConfig) string { return s.URL })
+	graphiteValidation    = newURLValidator(func(g GraphiteConfig) string { return g.URL })
+	openTSDBValidation    = newURLValidator(func(o OpenTSDBConfig) string { return o.URL })
+	grafanaLokiValidation = newURLValidator(func(g GrafanaLokiConfig) string { return g.URL })
+	sumoLogicValidation   = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
+	instanaValidation     = newURLValidator(func(i InstanaConfig) string { return i.URL })
+	influxDBValidation    = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	// Empty configs.
+	thousandEyesValidation = validation.New[ThousandEyesConfig]()
+	bigQueryValidation     = validation.New[BigQueryConfig]()
+	cloudWatchValidation   = validation.New[CloudWatchConfig]()
+	pingdomValidation      = validation.New[PingdomConfig]()
+	redshiftValidation     = validation.New[RedshiftConfig]()
+	gcmValidation          = validation.New[GCMConfig]()
+	genericValidation      = validation.New[GenericConfig]()
+	honeycombValidation    = validation.New[HoneycombConfig]()
 )
-
-var datadogValidation = validation.New[DatadogConfig](
-	validation.For(func(d DatadogConfig) string { return d.Site }).
-		WithName("site").
-		Required().
-		Rules(v1alpha.DataDogSiteValidationRule()),
-)
-
-var newRelicValidation = validation.New[NewRelicConfig](
-	validation.For(func(n NewRelicConfig) int { return n.AccountID }).
-		WithName("url").
-		Required().
-		Rules(validation.GreaterThanOrEqualTo(1)),
-)
-
-var appDynamicsValidation = validation.New[AppDynamicsConfig]()
-
-var splunkValidation = validation.New[SplunkConfig]()
-
-var lightstepValidation = validation.New[LightstepConfig]()
-
-var splunkObservabilityValidation = validation.New[SplunkObservabilityConfig]()
-
-var dynatraceValidation = validation.New[DynatraceConfig]()
-
-var elasticsearchValidation = validation.New[ElasticsearchConfig]()
-
-var thousandEyesValidation = validation.New[ThousandEyesConfig]()
-
-var graphiteValidation = validation.New[GraphiteConfig]()
-
-var bigQueryValidation = validation.New[BigQueryConfig]()
-
-var openTSDBValidation = validation.New[OpenTSDBConfig]()
-
-var grafanaLokiValidation = validation.New[GrafanaLokiConfig]()
-
-var cloudWatchValidation = validation.New[CloudWatchConfig]()
-
-var pingdomValidation = validation.New[PingdomConfig]()
-
-var amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()
-
-var redshiftValidation = validation.New[RedshiftConfig]()
-
-var sumoLogicValidation = validation.New[SumoLogicConfig]()
-
-var instanaValidation = validation.New[InstanaConfig]()
-
-var influxDBValidation = validation.New[InfluxDBConfig]()
-
-var azureMonitorValidation = validation.New[AzureMonitorConfig]()
-
-var gcmValidation = validation.New[GCMConfig]()
-
-var genericValidation = validation.New[GenericConfig]()
-
-var honeycombValidation = validation.New[HoneycombConfig]()
 
 const errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
 
@@ -326,6 +301,9 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 }).WithErrorCode(errCodeExactlyOneDataSourceType)
 
 var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec Spec) error {
+	if spec.HistoricalDataRetrieval == nil {
+		return nil
+	}
 	typ, _ := spec.GetType()
 	if _, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err != nil {
 		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
@@ -348,6 +326,16 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 	}
 	return nil
 })
+
+// newURLValidator is a helper construct for Agent which only have a simple 'url' field validation.
+func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validation.Validator[S] {
+	return validation.New[S](
+		validation.For(getter).
+			WithName("url").
+			Required().
+			Rules(validation.StringURL()),
+	)
+}
 
 func validate(a Agent) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(agentValidation, a)

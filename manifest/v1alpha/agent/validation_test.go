@@ -342,16 +342,16 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 }
 
 func TestValidateSpec_URLOnlyAgents(t *testing.T) {
-	for _, typ := range []v1alpha.DataSourceType{
-		v1alpha.Prometheus,
-		v1alpha.AppDynamics,
-		v1alpha.Splunk,
-		v1alpha.Graphite,
-		v1alpha.OpenTSDB,
-		v1alpha.GrafanaLoki,
-		v1alpha.SumoLogic,
-		v1alpha.Instana,
-		v1alpha.InfluxDB,
+	for _, typ := range map[string]v1alpha.DataSourceType{
+		"prometheus":  v1alpha.Prometheus,
+		"appDynamics": v1alpha.AppDynamics,
+		"splunk":      v1alpha.Splunk,
+		"graphite":    v1alpha.Graphite,
+		"opentsdb":    v1alpha.OpenTSDB,
+		"grafana":     v1alpha.GrafanaLoki,
+		"sumoLogic":   v1alpha.SumoLogic,
+		"instana":     v1alpha.Instana,
+		"influxdb":    v1alpha.InfluxDB,
 	} {
 		t.Run(typ.String(), func(t *testing.T) {
 			runes := []rune(typ.String())
@@ -422,7 +422,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		agent.Spec.NewRelic.AccountID = 0
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.newRelic.url",
+			Prop: "spec.newRelic.accountId",
 			Code: validation.ErrorCodeRequired,
 		})
 	})
@@ -431,7 +431,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		agent.Spec.NewRelic.AccountID = -1
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.newRelic.url",
+			Prop: "spec.newRelic.accountId",
 			Code: validation.ErrorCodeGreaterThanOrEqualTo,
 		})
 	})
