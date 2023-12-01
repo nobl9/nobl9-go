@@ -66,6 +66,9 @@ func TestHoneycomb(t *testing.T) {
 		for _, typ := range supportedHoneycombCalculationTypes {
 			slo := validRawMetricSLO(v1alpha.Honeycomb)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb.Calculation = typ
+			if typ == "CONCURRENCY" || typ == "COUNT" {
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb.Attribute = ""
+			}
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
