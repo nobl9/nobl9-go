@@ -1,8 +1,9 @@
 package validation
 
-// For creates a typed PropertyRules instance for the property which access is defined through getter function.
+// For creates a new [PropertyRules] instance for the property
+// which value is extracted through [PropertyGetter] function.
 func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
-	return PropertyRules[T, S]{getter: func(s S) (v T, isEmpty bool) { return getter(s), false }}
+	return PropertyRules[T, S]{getter: func(s S) (v T, err error) { return getter(s), nil }}
 }
 
 // ForPointer accepts a getter function returning a pointer and wraps its call in order to
@@ -10,14 +11,37 @@ func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
 // If required is set to true, the nil pointer value will result in an error and the
 // validation will not proceed.
 func ForPointer[T, S any](getter PropertyGetter[*T, S]) PropertyRules[T, S] {
-	return PropertyRules[T, S]{getter: func(s S) (indirect T, isEmpty bool) {
+	return PropertyRules[T, S]{getter: func(s S) (indirect T, err error) {
 		ptr := getter(s)
 		if ptr != nil {
-			return *ptr, false
+			return *ptr, nil
 		}
 		zv := *new(T)
-		return zv, true
+		return zv, emptyErr{}
 	}, isPointer: true}
+}
+
+// Transform transforms value from one type to another.
+// Value returned by [PropertyGetter] is transformed through [Transformer] function.
+// If [Transformer] returns an error, the validation will not proceed and transformation error will be reported.
+// [Transformer] is only called if [PropertyGetter] returns a non-zero value.
+func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T, N]) PropertyRules[N, S] {
+	return PropertyRules[N, S]{
+		getter: func(s S) (transformed N, err error) {
+			v := getter(s)
+			if err != nil {
+				return transformed, err
+			}
+			if isEmptyFunc(v) {
+				return transformed, emptyErr{}
+			}
+			transformed, err = transform(v)
+			if err != nil {
+				return transformed, NewPropertyError("", v, NewRuleError(err.Error(), ErrorCodeTransform))
+			}
+			return transformed, nil
+		},
+	}
 }
 
 // GetSelf is a convenience method for extracting 'self' property of a validated value.
@@ -25,16 +49,21 @@ func GetSelf[S any]() PropertyGetter[S, S] {
 	return func(s S) S { return s }
 }
 
+type Transformer[T, N any] func(T) (N, error)
+
 type Predicate[S any] func(S) bool
 
 type PropertyGetter[T, S any] func(S) T
 
-type optionalPropertyGetter[T, S any] func(S) (v T, isEmpty bool)
+type internalPropertyGetter[T, S any] func(S) (v T, err error)
+type emptyErr struct{}
+
+func (emptyErr) Error() string { return "" }
 
 // PropertyRules is responsible for validating a single property.
 type PropertyRules[T, S any] struct {
 	name      string
-	getter    optionalPropertyGetter[T, S]
+	getter    internalPropertyGetter[T, S]
 	steps     []interface{}
 	required  bool
 	omitempty bool
@@ -49,12 +78,11 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 		allErrors          PropertyErrors
 		previousStepFailed bool
 	)
-	propValue, isEmpty := r.getter(st)
-	isEmpty = isEmpty || (!r.isPointer && isEmptyFunc(propValue))
-	if r.required && isEmpty {
-		return PropertyErrors{NewPropertyError(r.name, nil, NewRequiredError())}
+	propValue, skip, err := r.getValue(st)
+	if err != nil {
+		return err
 	}
-	if isEmpty && (r.omitempty || r.isPointer) {
+	if skip {
 		return nil
 	}
 loop:
@@ -141,4 +169,26 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 		slice = append(slice, step)
 	}
 	return slice
+}
+
+func (r PropertyRules[T, S]) getValue(st S) (v T, skip bool, errs PropertyErrors) {
+	v, err := r.getter(st)
+	_, isEmptyError := err.(emptyErr)
+	// Any error other than [emptyErr] is considered critical, we don't proceed with validation.
+	if err != nil && !isEmptyError {
+		if propErr, ok := err.(*PropertyError); ok {
+			// Make sure the name is set to the current property name.
+			propErr.PropertyName = r.name
+			return v, false, PropertyErrors{propErr}
+		}
+		return v, false, PropertyErrors{NewPropertyError(r.name, nil, err)}
+	}
+	isEmpty := isEmptyError || (!r.isPointer && isEmptyFunc(v))
+	if r.required && isEmpty {
+		return v, false, PropertyErrors{NewPropertyError(r.name, nil, NewRequiredError())}
+	}
+	if isEmpty && (r.omitempty || r.isPointer) {
+		return v, true, nil
+	}
+	return v, false, nil
 }

@@ -1,0 +1,11 @@
+apiVersion: n9/v1alpha
+kind: Annotation
+metadata:
+  name: my-annotation
+  project: my-project
+spec:
+  slo: existing-slo
+  objectiveName: existing-slo-objective-1
+  description: Example annotation
+  startTime: 2023-05-01T17:10:05Z
+  endTime: 2023-05-02T17:10:05Z

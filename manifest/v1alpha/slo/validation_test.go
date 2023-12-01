@@ -901,7 +901,9 @@ func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 func TestValidate_Spec(t *testing.T) {
 	t.Run("exactly one metric type - both provided", func(t *testing.T) {
 		slo := validSLO()
-		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)}
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
+			MetricQuery: validMetricSpec(v1alpha.Prometheus),
+		}
 		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
 			Incremental: ptr(true),
 			TotalMetric: validMetricSpec(v1alpha.Prometheus),
@@ -984,6 +986,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 						ObjectiveBase: ObjectiveBase{Value: ptr(10. + float64(i)), Name: strconv.Itoa(i)},
 						BudgetTarget:  ptr(0.9),
 						RawMetric:     &RawMetricSpec{MetricQuery: m},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
 					})
 				}
 				err := validate(slo)
@@ -1195,6 +1198,7 @@ func validSLO() SLO {
 						TotalMetric: validMetricSpec(v1alpha.Prometheus),
 						GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 					},
+					Operator: ptr(v1alpha.LessThan.String()),
 				},
 			},
 			TimeWindows: []TimeWindow{
@@ -1428,16 +1432,6 @@ fetch consumed_api
 		Dataset:     "sequence-of-numbers",
 		Calculation: "SUM",
 		Attribute:   "http.status_code",
-		Filter: HoneycombFilter{
-			Operator: "AND",
-			Conditions: []HoneycombFilterCondition{
-				{
-					Attribute: "http.status_code",
-					Operator:  "=",
-					Value:     "200",
-				},
-			},
-		},
 	}},
 }
 

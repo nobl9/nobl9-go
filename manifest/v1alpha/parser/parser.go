@@ -11,6 +11,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
@@ -70,9 +72,9 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindRoleBinding:
 		return genericParseObject[rolebinding.RoleBinding](unmarshal)
 	case manifest.KindDataExport:
-		return genericParseObject[v1alpha.DataExport](unmarshal)
+		return genericParseObject[dataexport.DataExport](unmarshal)
 	case manifest.KindAnnotation:
-		return genericParseObject[v1alpha.Annotation](unmarshal)
+		return genericParseObject[annotation.Annotation](unmarshal)
 	case manifest.KindUserGroup:
 		return genericParseObject[usergroup.UserGroup](unmarshal)
 	default:

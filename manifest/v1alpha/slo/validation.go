@@ -125,12 +125,12 @@ var specCompositeValidationRule = validation.NewSingleRule(func(s Spec) error {
 			return validation.NewPropertyError(
 				"burnRateCondition",
 				s.Composite.BurnRateCondition,
-				&validation.RuleError{
-					Message: fmt.Sprintf(
+				validation.NewRuleError(
+					fmt.Sprintf(
 						"burnRateCondition may only be used with budgetingMethod == '%s'",
 						BudgetingMethodOccurrences),
-					Code: validation.ErrorCodeForbidden,
-				},
+					validation.ErrorCodeForbidden,
+				),
 			)
 		}
 	}
@@ -193,9 +193,6 @@ var objectiveValidation = validation.New[Objective](
 	validation.ForPointer(func(o Objective) *float64 { return o.TimeSliceTarget }).
 		WithName("timeSliceTarget").
 		Rules(validation.GreaterThan(0.0), validation.LessThanOrEqualTo(1.0)),
-	validation.ForPointer(func(o Objective) *string { return o.Operator }).
-		WithName("op").
-		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
 		WithName("countMetrics").
 		Include(countMetricsSpecValidation),
@@ -208,6 +205,10 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 	validation.ForPointer(func(o Objective) *float64 { return o.ObjectiveBase.Value }).
 		WithName("value").
 		Required(),
+	validation.ForPointer(func(o Objective) *string { return o.Operator }).
+		WithName("op").
+		Required().
+		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 ).
 	When(func(o Objective) bool { return o.RawMetric != nil })
 

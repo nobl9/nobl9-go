@@ -27,7 +27,7 @@ func TestSingleRule_WithErrorCode(t *testing.T) {
 			return errors.Errorf("must be positive")
 		}
 		return nil
-	}).WithErrorCode(ErrorCode("test"))
+	}).WithErrorCode("test")
 
 	err := r.Validate(0)
 	assert.Nil(t, err)
@@ -64,7 +64,7 @@ func TestSingleRule_WithDetails(t *testing.T) {
 			}
 			return nil
 		}).
-			WithErrorCode(ErrorCode("test")).
+			WithErrorCode("test").
 			WithDetails(test.Details)
 
 		err := r.Validate(0)
