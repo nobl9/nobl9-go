@@ -3,13 +3,13 @@ package agent
 import (
 	_ "embed"
 	"fmt"
-	"github.com/nobl9/nobl9-go/validation"
 	"reflect"
 	"strings"
 	"testing"
-	"unicode"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nobl9/nobl9-go/validation"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -342,22 +342,18 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 }
 
 func TestValidateSpec_URLOnlyAgents(t *testing.T) {
-	for _, typ := range map[string]v1alpha.DataSourceType{
+	for propName, typ := range map[string]v1alpha.DataSourceType{
 		"prometheus":  v1alpha.Prometheus,
 		"appDynamics": v1alpha.AppDynamics,
 		"splunk":      v1alpha.Splunk,
 		"graphite":    v1alpha.Graphite,
 		"opentsdb":    v1alpha.OpenTSDB,
-		"grafana":     v1alpha.GrafanaLoki,
+		"grafanaLoki": v1alpha.GrafanaLoki,
 		"sumoLogic":   v1alpha.SumoLogic,
 		"instana":     v1alpha.Instana,
 		"influxdb":    v1alpha.InfluxDB,
 	} {
 		t.Run(typ.String(), func(t *testing.T) {
-			runes := []rune(typ.String())
-			runes[0] = unicode.ToLower(runes[0])
-			propName := string(runes)
-
 			t.Run("passes", func(t *testing.T) {
 				agent := validAgent(typ)
 				err := validate(agent)
@@ -381,6 +377,25 @@ func TestValidateSpec_URLOnlyAgents(t *testing.T) {
 					Code: validation.ErrorCodeStringURL,
 				})
 			})
+		})
+	}
+}
+
+func TestValidateSpec_EmptyConfigs(t *testing.T) {
+	for _, typ := range []v1alpha.DataSourceType{
+		v1alpha.ThousandEyes,
+		v1alpha.BigQuery,
+		v1alpha.CloudWatch,
+		v1alpha.Pingdom,
+		v1alpha.Redshift,
+		v1alpha.GCM,
+		v1alpha.Generic,
+		v1alpha.Honeycomb,
+	} {
+		t.Run(typ.String(), func(t *testing.T) {
+			agent := validAgent(typ)
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
 		})
 	}
 }
@@ -437,23 +452,45 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 	})
 }
 
-func TestValidateSpec_EmptyConfigs(t *testing.T) {
-	for _, typ := range []v1alpha.DataSourceType{
-		v1alpha.ThousandEyes,
-		v1alpha.BigQuery,
-		v1alpha.CloudWatch,
-		v1alpha.Pingdom,
-		v1alpha.Redshift,
-		v1alpha.GCM,
-		v1alpha.Generic,
-		v1alpha.Honeycomb,
-	} {
-		t.Run(typ.String(), func(t *testing.T) {
-			agent := validAgent(typ)
-			err := validate(agent)
-			testutils.AssertNoError(t, agent, err)
+func TestValidateSpec_Lightstep(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Lightstep)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.Lightstep)
+		agent.Spec.Lightstep.Organization = ""
+		agent.Spec.Lightstep.Project = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.lightstep.organization",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.lightstep.project",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
+func TestValidateSpec_SplunkObservability(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.SplunkObservability)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.SplunkObservability)
+		agent.Spec.SplunkObservability.Realm = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.splunkObservability.realm",
+			Code: validation.ErrorCodeRequired,
 		})
-	}
+	})
 }
 
 func validAgent(typ v1alpha.DataSourceType) Agent {
@@ -581,6 +618,7 @@ var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
 	},
 }
 
+// setURLValue is a help function which sets the value of 'URL' field of the given Agent config.
 func setURLValue(t *testing.T, obj interface{}, fieldName string, value string) {
 	t.Helper()
 	v := reflect.ValueOf(obj)

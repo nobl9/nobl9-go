@@ -127,12 +127,27 @@ var (
 			Required().
 			Rules(validation.GreaterThanOrEqualTo(1)),
 	)
-	lightstepValidation           = validation.New[LightstepConfig]()
-	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig]()
-	dynatraceValidation           = validation.New[DynatraceConfig]()
-	elasticsearchValidation       = validation.New[ElasticsearchConfig]()
-	amazonPrometheusValidation    = validation.New[AmazonPrometheusConfig]()
-	azureMonitorValidation        = validation.New[AzureMonitorConfig]()
+	lightstepValidation = validation.New[LightstepConfig](
+		validation.For(func(l LightstepConfig) string { return l.Organization }).
+			WithName("organization").
+			Required(),
+		validation.For(func(l LightstepConfig) string { return l.Project }).
+			WithName("project").
+			Required(),
+	)
+	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
+		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
+			WithName("realm").
+			Required(),
+	)
+	dynatraceValidation = validation.New[DynatraceConfig](
+		validation.For(func(d DynatraceConfig) string { return d.URL }).
+			WithName("url").
+			Required(),
+	)
+	elasticsearchValidation    = validation.New[ElasticsearchConfig]()
+	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()
+	azureMonitorValidation     = validation.New[AzureMonitorConfig]()
 	// URL only.
 	prometheusValidation  = newURLValidator(func(p PrometheusConfig) string { return p.URL })
 	appDynamicsValidation = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })

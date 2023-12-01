@@ -151,33 +151,33 @@ type NewRelicConfig struct {
 
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for Agent Object.
 type AppDynamicsConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // SplunkConfig represents content of Splunk Configuration typical for Agent Object.
 type SplunkConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // LightstepConfig represents content of Lightstep Configuration typical for Agent Object.
 type LightstepConfig struct {
-	Organization string `json:"organization,omitempty"`
-	Project      string `json:"project,omitempty"`
+	Organization string `json:"organization"`
+	Project      string `json:"project"`
 }
 
 // SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Agent Object.
 type SplunkObservabilityConfig struct {
-	Realm string `json:"realm,omitempty" validate:"required"`
+	Realm string `json:"realm"`
 }
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlDynatrace"`
+	URL string `json:"url" validate:"urlDynatrace"`
 }
 
 // ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
 type ElasticsearchConfig struct {
-	URL string `json:"url,omitempty" validate:"required,url,urlElasticsearch"`
+	URL string `json:"url" validate:"required,url,urlElasticsearch"`
 }
 
 // ThousandEyesConfig represents content of ThousandEyes Configuration typical for Agent Object.
@@ -185,7 +185,7 @@ type ThousandEyesConfig struct{}
 
 // GraphiteConfig represents content of Graphite Configuration typical for Agent Object.
 type GraphiteConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // BigQueryConfig represents content of BigQuery configuration.
@@ -193,12 +193,12 @@ type BigQueryConfig struct{}
 
 // OpenTSDBConfig represents content of OpenTSDBConfig Configuration typical for Agent Object.
 type OpenTSDBConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // GrafanaLokiConfig represents content of GrafanaLoki Configuration typical for Agent Object.
 type GrafanaLokiConfig struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
