@@ -193,9 +193,6 @@ var objectiveValidation = validation.New[Objective](
 	validation.ForPointer(func(o Objective) *float64 { return o.TimeSliceTarget }).
 		WithName("timeSliceTarget").
 		Rules(validation.GreaterThan(0.0), validation.LessThanOrEqualTo(1.0)),
-	validation.ForPointer(func(o Objective) *string { return o.Operator }).
-		WithName("op").
-		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 	validation.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
 		WithName("countMetrics").
 		Include(countMetricsSpecValidation),
@@ -208,6 +205,10 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 	validation.ForPointer(func(o Objective) *float64 { return o.ObjectiveBase.Value }).
 		WithName("value").
 		Required(),
+	validation.ForPointer(func(o Objective) *string { return o.Operator }).
+		WithName("op").
+		Required().
+		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 ).
 	When(func(o Objective) bool { return o.RawMetric != nil })
 

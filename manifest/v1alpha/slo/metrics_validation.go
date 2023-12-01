@@ -48,9 +48,7 @@ var specMetricsValidation = validation.New[Spec](
 			return nil
 		})).
 		StopOnError().
-		Rules(
-			timeSliceTargetsValidationRule,
-			objectiveOperatorRequiredForRawMetricValidationRule),
+		Rules(timeSliceTargetsValidationRule),
 )
 
 var countMetricsSpecValidation = validation.New[CountMetricsSpec](
@@ -376,22 +374,6 @@ var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(s Spec)
 	}
 	return nil
 }).WithErrorCode(errCodeTimeSliceTarget)
-
-var objectiveOperatorRequiredForRawMetricValidationRule = validation.NewSingleRule[Spec](func(s Spec) error {
-	if !s.HasRawMetric() {
-		return nil
-	}
-	for i, objective := range s.Objectives {
-		if objective.Operator == nil {
-			return validation.NewPropertyError(
-				"op",
-				objective.Operator,
-				validation.NewRequiredError()).
-				PrependPropertyName(validation.SliceElementName("objectives", i))
-		}
-	}
-	return nil
-})
 
 // whenCountMetricsIs is a helper function that returns a validation.Predicate which will only pass if
 // the count metrics is of the given type.
