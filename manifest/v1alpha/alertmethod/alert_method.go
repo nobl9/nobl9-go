@@ -37,7 +37,7 @@ type Metadata struct {
 
 // Spec holds detailed information specific to AlertMethod.
 type Spec struct {
-	Description string                 `json:"description" validate:"description"` // todo: validation
+	Description string                 `json:"description" validate:"description"`
 	Webhook     *WebhookAlertMethod    `json:"webhook,omitempty"`
 	PagerDuty   *PagerDutyAlertMethod  `json:"pagerduty,omitempty"`
 	Slack       *SlackAlertMethod      `json:"slack,omitempty"`

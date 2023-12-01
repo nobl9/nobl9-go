@@ -1,10 +1,10 @@
 package alertmethod
 
 import (
-	"github.com/nobl9/nobl9-go/validation"
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
@@ -166,7 +166,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 }
 
 func getAllowedTemplateFields() (result []string) {
-	for field, _ := range notificationTemplateAllowedFields {
+	for field := range notificationTemplateAllowedFields {
 		result = append(result, field)
 	}
 	return result

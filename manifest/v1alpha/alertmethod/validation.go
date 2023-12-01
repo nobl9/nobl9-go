@@ -138,8 +138,8 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
-		Rules(validation.StringMaxLength(32)).
-		When(func(p PagerDutyAlertMethod) bool { return p.IntegrationKey != "" && p.IntegrationKey != hiddenValue }),
+		When(func(p PagerDutyAlertMethod) bool { return p.IntegrationKey != "" && p.IntegrationKey != hiddenValue }).
+		Rules(validation.StringMaxLength(32)),
 )
 
 var slackValidation = validation.New[SlackAlertMethod](
@@ -151,7 +151,6 @@ var slackValidation = validation.New[SlackAlertMethod](
 var discordValidation = validation.New[DiscordAlertMethod](
 	validation.For(func(s DiscordAlertMethod) string { return s.URL }).
 		WithName("url").
-		Required().
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if strings.HasSuffix(strings.ToLower(v), "/slack") || strings.HasSuffix(strings.ToLower(v), "/github") {
@@ -185,9 +184,7 @@ var jiraValidation = validation.New[JiraAlertMethod](
 	validation.For(func(s JiraAlertMethod) string { return s.URL }).
 		WithName("url").
 		Required().
-		Rules(
-			validation.StringURL(),
-		),
+		Rules(validation.StringURL(validation.RequireHttps)),
 	validation.For(func(s JiraAlertMethod) string { return s.Username }).
 		WithName("username").
 		Required(),
@@ -204,7 +201,6 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 
 var emailValidation = validation.New[EmailAlertMethod](
 	validation.For(validation.GetSelf[EmailAlertMethod]()).
-		WithName("email").
 		Rules(
 			validation.NewSingleRule(func(e EmailAlertMethod) error {
 				if len(e.To) == 0 && len(e.Cc) == 0 && len(e.Bcc) == 0 {
@@ -284,7 +280,7 @@ func hasValidTemplateFields(templateFields []string, allowedFields map[string]st
 
 var opsgenieAuthValidation = validation.New[string](
 	validation.For(validation.GetSelf[string]()).
-		WithName("auth").
+		When(func(v string) bool { return v != "" && v != hiddenValue }).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if !strings.HasPrefix(v, "Basic") &&
@@ -292,8 +288,7 @@ var opsgenieAuthValidation = validation.New[string](
 					return errors.New("invalid auth format")
 				}
 				return nil
-			})).
-		When(func(v string) bool { return v != "" && v != hiddenValue }))
+			})))
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertMethodValidation, a)

@@ -30,7 +30,7 @@ type AlertPolicySpec struct {
 	Severity         string           `json:"severity" validate:"required,severity" example:"High"`
 	CoolDownDuration string           `json:"coolDown,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationAtLeast=5m" example:"5m"` //nolint:lll
 	Conditions       []AlertCondition `json:"conditions" validate:"required,min=1,dive"`
-	//AlertMethods     []PublicAlertMethod `json:"alertMethods"`
+	// AlertMethods     []PublicAlertMethod `json:"alertMethods"`
 }
 
 /*func (spec AlertPolicySpec) GetAlertMethods() []v1alphaAlertMethod.PublicAlertMethod {
