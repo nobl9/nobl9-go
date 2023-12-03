@@ -535,7 +535,7 @@ func alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl v.StructLevel
 	}
 }
 
-// TODO
+// TODO rewrite validation steps
 func alertPolicyConditionWithLastsForMeasurementValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 

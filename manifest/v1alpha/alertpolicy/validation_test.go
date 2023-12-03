@@ -3,11 +3,11 @@ package alertpolicy
 import (
 	_ "embed"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -327,7 +327,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	}
 }
 
-// TestValidate_Spec_Condition_LastsForDuration TODO
+// TestValidate_Spec_Condition_LastsForDuration TODO as a next step
 func TestValidate_Spec_Condition_LastsForDuration(_ *testing.T) {
 
 }
