@@ -53,7 +53,7 @@ type AlertCondition struct {
 	Value            interface{} `json:"value"`
 	AlertingWindow   string      `json:"alertingWindow,omitempty"`                                                                //nolint:lll
 	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"` //nolint:lll
-	Operator         string      `json:"op,omitempty" validate:"omitempty,operator" example:"lt"`
+	Operator         string      `json:"op,omitempty"`
 }
 
 type AlertMethodsRef struct {

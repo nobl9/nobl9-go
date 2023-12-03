@@ -2,6 +2,8 @@ package alertpolicy
 
 import (
 	_ "embed"
+	"fmt"
+	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
 
@@ -320,7 +322,78 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 }
 
 func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
+	// TODO
+}
 
+func TestValidate_Spec_Condition_Operator(t *testing.T) {
+	const emptyOperator = ""
+	allValidOps := []string{"gt", "lt", "lte", "gte", ""}
+
+	testCases := []AlertCondition{
+		{
+			Measurement:      v1alpha.MeasurementTimeToBurnEntireBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+		},
+		{
+			Measurement:      v1alpha.MeasurementTimeToBurnBudget.String(),
+			LastsForDuration: "10m",
+			Value:            "30m",
+		},
+		{
+			Measurement: v1alpha.MeasurementBurnedBudget.String(),
+			Value:       30.0,
+		},
+		{
+			Measurement:      v1alpha.MeasurementAverageBurnRate.String(),
+			Value:            30.0,
+			LastsForDuration: "5m",
+		},
+		{
+			Measurement:    v1alpha.MeasurementAverageBurnRate.String(),
+			Value:          30.0,
+			AlertingWindow: "5m",
+		},
+	}
+
+	for _, alertCondition := range testCases {
+		t.Run("operator with a reference to Measurement", func(t *testing.T) {
+			measurement, _ := v1alpha.ParseMeasurement(alertCondition.Measurement)
+			expectedOperator, err := v1alpha.GetExpectedOperatorForMeasurement(measurement)
+			assert.NoError(t, err)
+
+			allowedOps := []string{expectedOperator.String(), emptyOperator}
+			for _, op := range allValidOps {
+				alertPolicy := validAlertPolicy()
+				alertCondition.Operator = op
+				alertPolicy.Spec.Conditions[0] = alertCondition
+				err := validate(alertPolicy)
+				if slices.Contains(allowedOps, op) {
+					testutils.AssertNoError(t, alertPolicy, err)
+				} else {
+					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+						Prop: "spec.conditions[0].operator",
+						Message: fmt.Sprintf(
+							`measurement '%s' determines operator must be defined with '%s' or left empty`,
+							measurement.String(), expectedOperator,
+						),
+						Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+					})
+				}
+			}
+		})
+	}
+
+	t.Run("fails, invalid operator", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Operator = "noop"
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop:    "spec.conditions[0].operator",
+			Message: "'noop' is not valid operator",
+			Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+		})
+	})
 }
 
 func validAlertPolicy() AlertPolicy {
@@ -341,7 +414,7 @@ func validAlertCondition() AlertCondition {
 	return AlertCondition{
 		Measurement:      v1alpha.MeasurementBurnedBudget.String(),
 		Value:            "0.97",
-		AlertingWindow:   "",
+		AlertingWindow:   "10m",
 		LastsForDuration: "",
 		Operator:         "",
 	}

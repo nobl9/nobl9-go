@@ -1,6 +1,7 @@
 package alertpolicy
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -44,10 +45,6 @@ var specValidation = validation.New[Spec](
 		IncludeForEach(conditionValidation),
 )
 
-const (
-	errorCodeDurationFullMinutePrecision validation.ErrorCode = "duration_full_minute_precision"
-)
-
 var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) string { return c.Measurement }).
 		WithName("measurement").
@@ -69,6 +66,15 @@ var conditionValidation = validation.New[AlertCondition](
 			validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5),
 			validation.LessThanOrEqualTo[time.Duration](time.Hour*24*7),
 		),
+	validation.For(validation.GetSelf[AlertCondition]()).
+		WithName("operator").
+		Omitempty().
+		Rules(appropriateOperatorToMeasurement),
+)
+
+const (
+	errorCodeDurationFullMinutePrecision                     validation.ErrorCode = "duration_full_minute_precision"
+	errorCodeOperatorAppropriateOperatorRegardingMeasurement validation.ErrorCode = "operator_regarding_measurement"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
@@ -77,6 +83,49 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 			return &validation.RuleError{
 				Message: "duration must be defined with minute precision",
 				Code:    errorCodeDurationFullMinutePrecision,
+			}
+		}
+
+		return nil
+	},
+)
+
+var appropriateOperatorToMeasurement = validation.NewSingleRule(
+	func(v AlertCondition) error {
+		if v.Operator != "" {
+			// TODO redundant operation - discuss
+			measurement, measurementErr := v1alpha.ParseMeasurement(v.Measurement)
+			if measurementErr != nil {
+				return &validation.RuleError{
+					Message: measurementErr.Error(),
+					Code:    validation.ErrorCodeTransform,
+				}
+			}
+
+			expectedOperator, err := v1alpha.GetExpectedOperatorForMeasurement(measurement)
+			if err != nil {
+				return &validation.RuleError{
+					Message: measurementErr.Error(),
+					Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+				}
+			}
+
+			operator, operatorErr := v1alpha.ParseOperator(v.Operator)
+			if operatorErr != nil {
+				return &validation.RuleError{
+					Message: operatorErr.Error(),
+					Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+				}
+			}
+
+			if operator != expectedOperator {
+				return &validation.RuleError{
+					Message: fmt.Sprintf(
+						`measurement '%s' determines operator must be defined with '%s' or left empty`,
+						measurement.String(), expectedOperator.String(),
+					),
+					Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+				}
 			}
 		}
 
