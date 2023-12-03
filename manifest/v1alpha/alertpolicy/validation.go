@@ -56,6 +56,11 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) interface{} { return c.Value }).
 		WithName("value").
 		Required(),
+	validation.For(validation.GetSelf[AlertCondition]()).
+		Rules(validation.MutuallyExclusive(true, map[string]func(c AlertCondition) any{
+			"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
+			"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
+		})),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
 		WithName("alertingWindow").
 		Omitempty().

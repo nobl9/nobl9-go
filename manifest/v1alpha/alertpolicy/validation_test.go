@@ -124,13 +124,40 @@ func TestValidate_Spec_Conditions(t *testing.T) {
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
 	t.Run("fails, too few conditions", func(t *testing.T) {
-		slo := validAlertPolicy()
-		slo.Spec.Conditions = make([]AlertCondition, 0)
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions = make([]AlertCondition, 0)
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions",
 			Code: validation.ErrorCodeSliceMinLength,
 		})
+	})
+}
+
+func TestValidate_Spec_Condition(t *testing.T) {
+	t.Run("fields mutual exclusion", func(t *testing.T) {
+		tests := map[string]AlertCondition{
+			"fails, both alertingWindow and lastsFor": {
+				AlertingWindow:   "6m",
+				LastsForDuration: "16m",
+			},
+			"fails, no alertingWindow and no lastsFor": {
+				AlertingWindow:   "",
+				LastsForDuration: "",
+			},
+		}
+		for name, testCase := range tests {
+			t.Run(name, func(t *testing.T) {
+				alertPolicy := validAlertPolicy()
+				alertPolicy.Spec.Conditions[0].AlertingWindow = testCase.AlertingWindow
+				alertPolicy.Spec.Conditions[0].LastsForDuration = testCase.LastsForDuration
+				err := validate(alertPolicy)
+				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+					Prop: "spec.conditions[0]",
+					Code: validation.ErrorCodeMutuallyExclusive,
+				})
+			})
+		}
 	})
 }
 
