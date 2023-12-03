@@ -327,6 +327,11 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	}
 }
 
+// TestValidate_Spec_Condition_LastsForDuration TODO
+func TestValidate_Spec_Condition_LastsForDuration(_ *testing.T) {
+
+}
+
 func TestValidate_Spec_Condition_Operator(t *testing.T) {
 	const emptyOperator = ""
 	allValidOps := []string{"gt", "lt", "lte", "gte", ""}
