@@ -217,7 +217,6 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 
 func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	validValues := []string{
-		"",
 		"5m",
 		"1h",
 		"72h",
@@ -236,6 +235,13 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 			testutils.AssertNoError(t, alertPolicy, err)
 		})
 	}
+	t.Run("passes, empty with lastsFor defined", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		alertPolicy.Spec.Conditions[0].LastsForDuration = "5m"
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
 
 	tests := map[string]valueWithCodeExpect{
 		"fails, wrong format": {
@@ -321,9 +327,10 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	}
 }
 
-func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
-	// TODO
-}
+//
+//func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
+//	// TODO
+//}
 
 func TestValidate_Spec_Condition_Operator(t *testing.T) {
 	const emptyOperator = ""
@@ -341,18 +348,14 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 			Value:            "30m",
 		},
 		{
-			Measurement: v1alpha.MeasurementBurnedBudget.String(),
-			Value:       30.0,
+			Measurement:    v1alpha.MeasurementBurnedBudget.String(),
+			Value:          30.0,
+			AlertingWindow: "5m",
 		},
 		{
 			Measurement:      v1alpha.MeasurementAverageBurnRate.String(),
 			Value:            30.0,
 			LastsForDuration: "5m",
-		},
-		{
-			Measurement:    v1alpha.MeasurementAverageBurnRate.String(),
-			Value:          30.0,
-			AlertingWindow: "5m",
 		},
 	}
 
