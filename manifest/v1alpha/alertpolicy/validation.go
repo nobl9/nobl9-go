@@ -1,7 +1,6 @@
 package alertpolicy
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -37,7 +36,7 @@ var specValidation = validation.New[Spec](
 	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		Omitempty().
-		Rules(durationGreaterThanOrEqual(5*time.Minute)),
+		Rules(validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5)),
 	validation.ForEach(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
@@ -46,25 +45,8 @@ var specValidation = validation.New[Spec](
 )
 
 const (
-	errorCodeDuration                    validation.ErrorCode = "duration"
-	errorCodeDurationGreaterThanOrEqual  validation.ErrorCode = "duration_greater_than_or_equal"
 	errorCodeDurationFullMinutePrecision validation.ErrorCode = "duration_full_minute_precision"
 )
-
-var durationGreaterThanOrEqual = func(greaterThanOrEqual time.Duration) validation.SingleRule[time.Duration] {
-	return validation.NewSingleRule(
-		func(v time.Duration) error {
-			if v < greaterThanOrEqual {
-				return &validation.RuleError{
-					Message: fmt.Sprintf("duration must be equal or greater than %s", greaterThanOrEqual),
-					Code:    errorCodeDurationGreaterThanOrEqual,
-				}
-			}
-
-			return nil
-		},
-	)
-}
 
 var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) string { return c.Measurement }).
@@ -77,7 +59,11 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
 		WithName("alertingWindow").
 		Omitempty().
-		Rules(durationGreaterThanOrEqual(0), durationFullMinutePrecision),
+		Rules(
+			durationFullMinutePrecision,
+			validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5),
+			validation.LessThanOrEqualTo[time.Duration](time.Hour*24*7),
+		),
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(

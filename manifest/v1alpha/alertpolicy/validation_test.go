@@ -93,13 +93,13 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 		},
 		"fails, negative": {
 			value:           "-10m",
-			expectedCode:    errorCodeDurationGreaterThanOrEqual,
-			expectedMessage: "duration must be equal or greater than 5m0s",
+			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
+			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
 		"fails, not greater or equal to 5m": {
 			value:           "4m",
-			expectedCode:    errorCodeDurationGreaterThanOrEqual,
-			expectedMessage: "duration must be equal or greater than 5m0s",
+			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
+			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
 	}
 	for name, valueAndExpectations := range tests {
@@ -108,8 +108,9 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 			alertPolicy.Spec.CoolDownDuration = valueAndExpectations.value
 			err := validate(alertPolicy)
 			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-				Prop: "spec.coolDown",
-				Code: valueAndExpectations.expectedCode,
+				Prop:    "spec.coolDown",
+				Code:    valueAndExpectations.expectedCode,
+				Message: valueAndExpectations.expectedMessage,
 			})
 		})
 	}
@@ -187,6 +188,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 
 func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	validValues := []string{
+		"",
 		"5m",
 		"1h",
 		"72h",
@@ -206,29 +208,11 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 		})
 	}
 
-	t.Run("passes", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].AlertingWindow = "15m"
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
-	t.Run("passes, no value", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
-
 	tests := map[string]valueWithCodeExpect{
 		"fails, wrong format": {
 			value:           "1 hour",
-			expectedCode:    errorCodeDuration,
+			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
-		},
-		"fails, negative": {
-			value:           "-30m",
-			expectedCode:    errorCodeDurationGreaterThanOrEqual,
-			expectedMessage: "duration must be equal or greater than 0m0s",
 		},
 	}
 	for name, valueAndExpectations := range tests {
@@ -244,42 +228,72 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 		})
 	}
 
-	notMinutePrecisionTests := []string{
-		"5m30s",
-		"1h30s",
-		"1h5m5s",
-		"0.01h",
-		"555s",
+	failParseUnitTests := map[string]valuesWithCodeExpect{
+		"fails, cannot parse days in format": {
+			values: []string{
+				"555d",
+				"0.01y",
+				"0.5w",
+				"1w",
+			},
+			expectedCode:    validation.ErrorCodeTransform,
+			expectedMessage: `time: unknown unit`,
+		},
 	}
-	for _, value := range notMinutePrecisionTests {
-		t.Run("fails, not minute precision", func(t *testing.T) {
-			alertPolicy := validAlertPolicy()
-			alertPolicy.Spec.Conditions[0].AlertingWindow = value
-			err := validate(alertPolicy)
-			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-				Prop:    "spec.conditions[0].alertingWindow",
-				Message: "duration must be defined with minute precision",
-				Code:    errorCodeDurationFullMinutePrecision,
-			})
+	for name, testCase := range failParseUnitTests {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				alertPolicy := validAlertPolicy()
+				alertPolicy.Spec.Conditions[0].AlertingWindow = value
+				err := validate(alertPolicy)
+				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+					Prop:            "spec.conditions[0].alertingWindow",
+					ContainsMessage: testCase.expectedMessage,
+					Code:            testCase.expectedCode,
+				})
+			}
 		})
 	}
-	// other cases to cover
-	//"555h": false,
-	//"555d": false,
-	//
-	//// Invalid: Not supported unit
-	//// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (ref. time.ParseDuration)
-	//"0.01y": false,
-	//"0.5w":  false,
-	//"1w":    false,
-	//
-	//// Invalid: Not a minute precision
-	//"5m30s":  false,
-	//"1h30s":  false,
-	//"1h5m5s": false,
-	//"0.01h":  false,
-	//"555s":   false,
-	//
+
+	failTests := map[string]valuesWithCodeExpect{
+		"fails, not minute precision": {
+			values: []string{
+				"5m30s",
+				"1h30s",
+				"1h5m5s",
+				"0.21h",
+				"555s",
+			},
+			expectedCode:    errorCodeDurationFullMinutePrecision,
+			expectedMessage: "duration must be defined with minute precision",
+		},
+		"fails, too long": {
+			values: []string{
+				"555h",
+				"168h1m0s",
+			},
+			expectedCode:    validation.ErrorCodeLessThanOrEqualTo,
+			expectedMessage: `should be less than or equal to '168h0m0s'`,
+		},
+	}
+	for name, testCase := range failTests {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				alertPolicy := validAlertPolicy()
+				alertPolicy.Spec.Conditions[0].AlertingWindow = value
+				err := validate(alertPolicy)
+				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+					Prop:    "spec.conditions[0].alertingWindow",
+					Message: testCase.expectedMessage,
+					Code:    testCase.expectedCode,
+				})
+			}
+		})
+	}
+}
+
+func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
+
 }
 
 func validAlertPolicy() AlertPolicy {
@@ -308,6 +322,12 @@ func validAlertCondition() AlertCondition {
 
 type valueWithCodeExpect struct {
 	value           string
+	expectedCode    string
+	expectedMessage string
+}
+
+type valuesWithCodeExpect struct {
+	values          []string
 	expectedCode    string
 	expectedMessage string
 }

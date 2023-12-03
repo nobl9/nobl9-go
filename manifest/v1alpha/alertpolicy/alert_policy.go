@@ -49,10 +49,10 @@ func (spec Spec) GetAlertMethods() []AlertMethodsRef {
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {
-	Measurement      string      `json:"measurement" validate:"required,alertPolicyMeasurement" example:"BurnedBudget"`
-	Value            interface{} `json:"value" validate:"required" example:"0.97"`
-	AlertingWindow   string      `json:"alertingWindow,omitempty" validate:"omitempty,validDuration,nonNegativeDuration,durationMinutePrecision" example:"30m"` //nolint:lll
-	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"`                               //nolint:lll
+	Measurement      string      `json:"measurement"`
+	Value            interface{} `json:"value"`
+	AlertingWindow   string      `json:"alertingWindow,omitempty"`                                                                //nolint:lll
+	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"` //nolint:lll
 	Operator         string      `json:"op,omitempty" validate:"omitempty,operator" example:"lt"`
 }
 

@@ -512,10 +512,10 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 	return true
 }
 
-// TODO rewrite these rules
 func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {
 	condition := sl.Current().Interface().(AlertCondition)
 
+	// currently to rewrite:
 	alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl)
 	alertPolicyConditionOperatorLimitsValidation(sl)
 
