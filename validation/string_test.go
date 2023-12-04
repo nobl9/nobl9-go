@@ -119,6 +119,33 @@ func TestStringASCII(t *testing.T) {
 	})
 }
 
+func TestStringUUID(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, input := range []string{
+			"00000000-0000-0000-0000-000000000000",
+			"e190c630-8873-11ee-b9d1-0242ac120002",
+			"79258D24-01A7-47E5-ACBB-7E762DE52298",
+		} {
+			err := StringUUID().Validate(input)
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for _, input := range []string{
+			// cspell:disable
+			"foobar",
+			"0987654321",
+			"AXAXAXAX-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+			"00000000-0000-0000-0000-0000000000",
+			// cspell:enable
+		} {
+			err := StringUUID().Validate(input)
+			assert.Error(t, err)
+			assert.True(t, HasErrorCode(err, ErrorCodeStringUUID))
+		}
+	})
+}
+
 func TestStringDescription(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		err := StringDescription().Validate(strings.Repeat("l", 1050))

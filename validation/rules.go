@@ -66,7 +66,7 @@ type PropertyRules[T, S any] struct {
 	getter    internalPropertyGetter[T, S]
 	steps     []interface{}
 	required  bool
-	omitempty bool
+	omitEmpty bool
 	isPointer bool
 }
 
@@ -152,8 +152,8 @@ func (r PropertyRules[T, S]) Required() PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) Omitempty() PropertyRules[T, S] {
-	r.omitempty = true
+func (r PropertyRules[T, S]) OmitEmpty() PropertyRules[T, S] {
+	r.omitEmpty = true
 	return r
 }
 
@@ -187,7 +187,7 @@ func (r PropertyRules[T, S]) getValue(st S) (v T, skip bool, errs PropertyErrors
 	if r.required && isEmpty {
 		return v, false, PropertyErrors{NewPropertyError(r.name, nil, NewRequiredError())}
 	}
-	if isEmpty && (r.omitempty || r.isPointer) {
+	if isEmpty && (r.omitEmpty || r.isPointer) {
 		return v, true, nil
 	}
 	return v, false, nil
