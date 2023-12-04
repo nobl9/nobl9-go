@@ -271,9 +271,9 @@ func ExamplePropertyRules_Required() {
 // While [ForPointer] will by default omit validation for nil pointers,
 // it might be useful to have a similar behavior for optional properties
 // which are direct values.
-// [PropertyRules.Omitempty] will do the trick.
+// [PropertyRules.OmitEmpty] will do the trick.
 //
-// NOTE: [PropertyRules.Omitempty] will have no effect on pointers handled
+// NOTE: [PropertyRules.OmitEmpty] will have no effect on pointers handled
 // by [ForPointer], as they already behave in the same way.
 func ExamplePropertyRules_Omitempty() {
 	alwaysFailingRule := validation.NewSingleRule(func(string) error {
@@ -283,7 +283,7 @@ func ExamplePropertyRules_Omitempty() {
 	v := validation.New[Teacher](
 		validation.For(func(t Teacher) string { return t.Name }).
 			WithName("name").
-			Omitempty().
+			OmitEmpty().
 			Rules(alwaysFailingRule),
 		validation.ForPointer(func(t Teacher) *string { return t.MiddleName }).
 			WithName("middleName").

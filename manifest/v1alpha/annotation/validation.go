@@ -19,7 +19,7 @@ var metadataValidation = validation.New[Metadata](
 	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validation.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
 )
 
@@ -30,7 +30,7 @@ var specValidation = validation.New[Spec](
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.For(func(s Spec) string { return s.ObjectiveName }).
 		WithName("objectiveName").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
