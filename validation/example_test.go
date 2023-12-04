@@ -275,7 +275,7 @@ func ExamplePropertyRules_Required() {
 //
 // NOTE: [PropertyRules.OmitEmpty] will have no effect on pointers handled
 // by [ForPointer], as they already behave in the same way.
-func ExamplePropertyRules_Omitempty() {
+func ExamplePropertyRules_OmitEmpty() {
 	alwaysFailingRule := validation.NewSingleRule(func(string) error {
 		return fmt.Errorf("always fails")
 	})

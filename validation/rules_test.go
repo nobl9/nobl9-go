@@ -168,11 +168,11 @@ func TestRequiredAndOmitempty(t *testing.T) {
 		rules := ForPointer(func(s *string) *string { return s }).
 			Rules(StringMinLength(10))
 
-		t.Run("implicit omitempty", func(t *testing.T) {
+		t.Run("implicit omitEmpty", func(t *testing.T) {
 			err := rules.Validate(nil)
 			assert.Nil(t, err)
 		})
-		t.Run("explicit omitempty", func(t *testing.T) {
+		t.Run("explicit omitEmpty", func(t *testing.T) {
 			err := rules.OmitEmpty().Validate(nil)
 			assert.Nil(t, err)
 		})
@@ -192,7 +192,7 @@ func TestRequiredAndOmitempty(t *testing.T) {
 			assert.Len(t, errs, 1)
 			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
 		})
-		t.Run("omitempty", func(t *testing.T) {
+		t.Run("omitEmpty", func(t *testing.T) {
 			errs := rules.OmitEmpty().Validate(ptr(""))
 			assert.Len(t, errs, 1)
 			assert.True(t, HasErrorCode(errs, ErrorCodeStringMinLength))
@@ -222,7 +222,7 @@ func TestTransform(t *testing.T) {
 		assert.Len(t, errs, 1)
 		assert.True(t, HasErrorCode(errs, ErrorCodeGreaterThan))
 	})
-	t.Run("zero value with omitempty", func(t *testing.T) {
+	t.Run("zero value with omitEmpty", func(t *testing.T) {
 		getter := func(s string) string { return s }
 		transformed := Transform(getter, strconv.Atoi).
 			WithName("prop").
