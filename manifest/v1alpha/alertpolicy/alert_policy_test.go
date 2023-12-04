@@ -38,7 +38,6 @@ func TestAlertCondition_UnmarshalYaml(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.Equal(t, testCase.expected, condition.Value)
-
 		})
 	}
 }
