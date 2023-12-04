@@ -63,10 +63,9 @@ func AssertContainsErrors(
 		"%T contains a different number of errors than expected", objErr)
 	// Find and match expected errors.
 	for _, expected := range expectedErrors {
-		found := true
-	searchErrors:
+		found := false
 		for _, actual := range objErr.Errors {
-			errorMatched := errorMatch{}
+			var failedMessage, failedContainsMessage, failedCode bool
 
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
@@ -75,24 +74,23 @@ func AssertContainsErrors(
 			}
 			for _, actualRuleErr := range propErr.Errors {
 				if expected.Message != "" && expected.Message != actualRuleErr.Message {
-					errorMatched.failedMessage = true
+					failedMessage = true
 					break
 				}
 				if expected.ContainsMessage != "" &&
 					!strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
-					errorMatched.failedContainsMessage = true
+					failedContainsMessage = true
 					break
 				}
 				if expected.Code != "" &&
 					(expected.Code != actualRuleErr.Code && !validation.HasErrorCode(actualRuleErr, expected.Code)) {
-					errorMatched.failedCode = true
+					failedCode = true
 					break
 				}
 			}
 
-			if errorMatched.matchedCompletely() {
+			if !failedMessage && !failedContainsMessage && !failedCode {
 				found = true
-				break searchErrors
 			}
 		}
 
