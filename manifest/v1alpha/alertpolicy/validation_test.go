@@ -452,7 +452,7 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 				"-168h",
 			},
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '5m0s'`,
+			expectedMessage: `should be greater than or equal to '0s'`,
 		},
 	}
 	for name, testCase := range tests {
@@ -478,17 +478,18 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 				"-168h",
 			},
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '5m0s'`,
+			expectedMessage: `should be greater than or equal to '0s'`,
 		},
 	}
 	for name, testCase := range failTests {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				alertPolicy := validAlertPolicy()
-				alertPolicy.Spec.Conditions[0].AlertingWindow = value
+				alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+				alertPolicy.Spec.Conditions[0].LastsForDuration = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    "spec.conditions[0].alertingWindow",
+					Prop:    "spec.conditions[0].lastsFor",
 					Message: testCase.expectedMessage,
 					Code:    testCase.expectedCode,
 				})
