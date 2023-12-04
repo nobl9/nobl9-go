@@ -1425,7 +1425,6 @@ fetch consumed_api
 		Query: ptr("anything is valid"),
 	}},
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
-		Dataset:     "sequence-of-numbers",
 		Calculation: "SUM",
 		Attribute:   "http.status_code",
 	}},

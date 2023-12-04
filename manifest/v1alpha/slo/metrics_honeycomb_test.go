@@ -23,15 +23,10 @@ func TestHoneycomb(t *testing.T) {
 		}{
 			{
 				Metric: &HoneycombMetric{
-					Dataset:     " ",
 					Calculation: "MAX",
 					Attribute:   "   ",
-				}, ErrorsCount: 2,
+				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
-					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.dataset",
-						Code: validation.ErrorCodeStringNotEmpty,
-					},
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
 						Code: validation.ErrorCodeStringNotEmpty,
@@ -40,15 +35,10 @@ func TestHoneycomb(t *testing.T) {
 			},
 			{
 				Metric: &HoneycombMetric{
-					Dataset:     strings.Repeat("l", 256),
 					Calculation: "MAX",
 					Attribute:   strings.Repeat("l", 256),
-				}, ErrorsCount: 2,
+				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
-					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.dataset",
-						Code: validation.ErrorCodeStringMaxLength,
-					},
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
 						Code: validation.ErrorCodeStringMaxLength,

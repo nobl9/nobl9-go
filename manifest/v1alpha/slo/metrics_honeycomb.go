@@ -8,18 +8,11 @@ import (
 
 // HoneycombMetric represents metric from Honeycomb. To access this integration, contact support@nobl9.com.
 type HoneycombMetric struct {
-	Dataset     string `json:"dataset"`
 	Calculation string `json:"calculation"`
 	Attribute   string `json:"attribute"`
 }
 
 var honeycombValidation = validation.New[HoneycombMetric](
-	validation.For(func(h HoneycombMetric) string { return h.Dataset }).
-		WithName("dataset").
-		Required().
-		Rules(
-			validation.StringMaxLength(255),
-			validation.StringNotEmpty()),
 	validation.For(func(h HoneycombMetric) string { return h.Calculation }).
 		WithName("calculation").
 		Required().
