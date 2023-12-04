@@ -35,11 +35,9 @@ var specValidation = validation.New[Spec](
 		Rules(v1alpha.ReleaseChannelValidation()),
 	validation.ForPointer(func(s Spec) *v1alpha.HistoricalDataRetrieval { return s.HistoricalDataRetrieval }).
 		WithName("historicalDataRetrieval").
-		OmitEmpty().
 		Include(v1alpha.HistoricalDataRetrievalValidation()),
 	validation.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
 		WithName("queryDelay").
-		OmitEmpty().
 		Include(v1alpha.QueryDelayValidation()),
 	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
 		WithName("prometheus").
