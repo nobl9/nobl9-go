@@ -628,15 +628,15 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 			Code: validation.ErrorCodeRequired,
 		})
 	})
-	//t.Run("invalid tenantId", func(t *testing.T) {
-	//	agent := validAgent(v1alpha.AzureMonitor)
-	//	agent.Spec.AzureMonitor.TenantID = "invalid"
-	//	err := validate(agent)
-	//	testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-	//		Prop: "spec.azureMonitor.tenantId",
-	//		Code: validation.ErrorCodeStringUUID,
-	//	})
-	//})
+	t.Run("invalid tenantId", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzureMonitor)
+		agent.Spec.AzureMonitor.TenantID = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.azureMonitor.tenantId",
+			Code: validation.ErrorCodeStringUUID,
+		})
+	})
 }
 
 func validAgent(typ v1alpha.DataSourceType) Agent {

@@ -31,15 +31,15 @@ var specValidation = validation.New[Spec](
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
 	validation.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
-		Omitempty().
+		OmitEmpty().
 		Rules(v1alpha.ReleaseChannelValidation()),
 	validation.ForPointer(func(s Spec) *v1alpha.HistoricalDataRetrieval { return s.HistoricalDataRetrieval }).
 		WithName("historicalDataRetrieval").
-		Omitempty().
+		OmitEmpty().
 		Include(v1alpha.HistoricalDataRetrievalValidation()),
 	validation.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
 		WithName("queryDelay").
-		Omitempty().
+		OmitEmpty().
 		Include(v1alpha.QueryDelayValidation()),
 	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
 		WithName("prometheus").
@@ -178,8 +178,8 @@ var (
 	azureMonitorValidation = validation.New[AzureMonitorConfig](
 		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
 			WithName("tenantId").
-			Required(),
-		//Rules(validation.StringUUID()),
+			Required().
+			Rules(validation.StringUUID()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })

@@ -236,7 +236,7 @@ type GCMConfig struct{}
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorConfig struct {
-	TenantID string `json:"tenantId" validate:"required,uuid_rfc4122"`
+	TenantID string `json:"tenantId"`
 }
 
 // GenericConfig represents content of Generic Configuration typical for Agent Object.
