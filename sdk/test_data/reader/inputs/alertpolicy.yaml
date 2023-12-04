@@ -1,0 +1,14 @@
+apiVersion: n9/v1alpha
+kind: AlertPolicy
+metadata:
+  name: average-burn-rate-test
+  project: default
+spec:
+  alertMethods: []
+  conditions:
+    - measurement: averageBurnRate
+      value: 0.000000020
+      lastsFor: 5m
+  coolDown: 5m
+  description: ""
+  severity: Medium

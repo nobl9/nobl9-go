@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
@@ -68,7 +69,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindAlertMethod:
 		return genericParseObject[alertmethod.AlertMethod](unmarshal)
 	case manifest.KindAlertPolicy:
-		return genericParseObject[v1alpha.AlertPolicy](unmarshal)
+		return genericParseObject[alertpolicy.AlertPolicy](unmarshal)
 	case manifest.KindAlertSilence:
 		return genericParseObject[v1alpha.AlertSilence](unmarshal)
 	case manifest.KindRoleBinding:

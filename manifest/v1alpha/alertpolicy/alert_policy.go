@@ -1,6 +1,9 @@
 package alertpolicy
 
 import (
+	"encoding/json"
+
+	"github.com/goccy/go-yaml"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -63,4 +66,19 @@ type AlertMethodsRef struct {
 type AlertMethodsRefMetadata struct {
 	Name    string `json:"name" validate:"required,objectName"`
 	Project string `json:"project,omitempty" validate:"objectName"`
+}
+
+// UnmarshalYAML Using json unmarshal allows us to correctly receive float64 value in Value field
+// https://nobl9.atlassian.net/browse/PC-11300
+func (d *AlertCondition) UnmarshalYAML(bytes []byte) error {
+	jsonByte, err := yaml.YAMLToJSON(bytes)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(jsonByte, &d); err != nil {
+		return err
+	}
+
+	return nil
 }
