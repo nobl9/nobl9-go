@@ -264,7 +264,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				v1alpha.MeasurementBurnedBudget,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: "time: invalid duration '",
+			expectedMessage: "must be valid float64",
 		},
 		"fails, unexpected format when measurement is burnedBudget or averageBurnRate": {
 			values: []interface{}{
@@ -351,9 +351,9 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				alertPolicy.Spec.Conditions[0].AlertingWindow = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    "spec.conditions[0].alertingWindow",
-					Message: testCase.expectedMessage,
-					Code:    testCase.expectedCode,
+					Prop:            "spec.conditions[0].alertingWindow",
+					ContainsMessage: testCase.expectedMessage,
+					Code:            testCase.expectedCode,
 				})
 			}
 		})

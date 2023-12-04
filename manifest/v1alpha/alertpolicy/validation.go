@@ -23,7 +23,7 @@ var metadataValidation = validation.New[Metadata](
 	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validation.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
 	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
@@ -38,7 +38,7 @@ var specValidation = validation.New[Spec](
 		Rules(v1alpha.SeverityValidation()),
 	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5)),
 	validation.ForEach(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
@@ -62,7 +62,7 @@ var conditionValidation = validation.New[AlertCondition](
 		})),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
 		WithName("alertingWindow").
-		Omitempty().
+		OmitEmpty().
 		Rules(
 			durationFullMinutePrecision,
 			validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5),
@@ -70,11 +70,11 @@ var conditionValidation = validation.New[AlertCondition](
 		),
 	validation.For(validation.GetSelf[AlertCondition]()).
 		WithName("operator").
-		Omitempty().
+		OmitEmpty().
 		Rules(appropriateOperatorToMeasurement),
 	validation.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).
 		WithName("lastsFor").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.GreaterThanOrEqualTo[time.Duration](0)),
 )
 
