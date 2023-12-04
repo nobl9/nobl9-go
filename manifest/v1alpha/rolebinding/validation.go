@@ -23,7 +23,7 @@ var specValidation = validation.New[Spec](
 		Required(),
 	validation.For(func(s Spec) string { return s.ProjectRef }).
 		WithName("projectRef").
-		Omitempty().
+		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
 )
 

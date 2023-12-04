@@ -19,6 +19,7 @@ const (
 	ErrorCodeStringIsDNSSubdomain ErrorCode = "string_is_dns_subdomain"
 	ErrorCodeStringASCII          ErrorCode = "string_ascii"
 	ErrorCodeStringURL            ErrorCode = "string_url"
+	ErrorCodeStringUUID           ErrorCode = "string_uuid"
 	ErrorCodeStringJSON           ErrorCode = "string_json"
 	ErrorCodeStringContains       ErrorCode = "string_contains"
 	ErrorCodeStringLength         ErrorCode = "string_length"
