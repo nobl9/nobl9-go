@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
@@ -50,9 +52,9 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("measurement").
 		Required().
 		Rules(v1alpha.MeasurementValidation()),
-	validation.For(func(c AlertCondition) interface{} { return c.Value }).
-		WithName("value").
-		Required(),
+	validation.For(validation.GetSelf[AlertCondition]()).
+		Include(timeToBurnBudgetValueValidation).
+		Include(burnedAndAverageBudgetValueValidation),
 	validation.For(validation.GetSelf[AlertCondition]()).
 		Rules(validation.MutuallyExclusive(true, map[string]func(c AlertCondition) any{
 			"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
@@ -70,6 +72,10 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("operator").
 		Omitempty().
 		Rules(appropriateOperatorToMeasurement),
+	validation.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).
+		WithName("lastsFor").
+		Omitempty().
+		Rules(validation.GreaterThanOrEqualTo[time.Duration](0)),
 )
 
 const (
@@ -90,10 +96,54 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 	},
 )
 
+var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
+	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
+		WithName("value").
+		Required().
+		Rules(validation.GreaterThan[time.Duration](0)),
+).
+	When(func(c AlertCondition) bool {
+		return c.Measurement == v1alpha.MeasurementTimeToBurnBudget.String() ||
+			c.Measurement == v1alpha.MeasurementTimeToBurnEntireBudget.String()
+	})
+
+var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
+	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
+		WithName("value").
+		Required(),
+).
+	When(func(c AlertCondition) bool {
+		return c.Measurement == v1alpha.MeasurementBurnedBudget.String() ||
+			c.Measurement == v1alpha.MeasurementAverageBurnRate.String()
+	})
+
+func transformDurationValue(v interface{}) (time.Duration, error) {
+	valueDuration, ok := v.(string)
+	if !ok {
+		return 0, errors.Errorf("time: invalid duration '%v'", v)
+	}
+
+	duration, err := time.ParseDuration(valueDuration)
+	if err != nil {
+		return 0, errors.Errorf("time: invalid duration '%v'", v)
+	}
+
+	return duration, nil
+}
+
+func transformFloat64Value(v interface{}) (float64, error) {
+	parsedVal, ok := v.(float64)
+	if !ok {
+		return 0, errors.Errorf("'%v' must be valid float64", v)
+	}
+
+	return parsedVal, nil
+}
+
+// TODO check if when is more applicable
 var appropriateOperatorToMeasurement = validation.NewSingleRule(
 	func(v AlertCondition) error {
 		if v.Operator != "" {
-			// TODO redundant operation - discuss
 			measurement, measurementErr := v1alpha.ParseMeasurement(v.Measurement)
 			if measurementErr != nil {
 				return &validation.RuleError{

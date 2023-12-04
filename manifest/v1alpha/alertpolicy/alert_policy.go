@@ -51,8 +51,8 @@ func (spec Spec) GetAlertMethods() []AlertMethodsRef {
 type AlertCondition struct {
 	Measurement      string      `json:"measurement"`
 	Value            interface{} `json:"value"`
-	AlertingWindow   string      `json:"alertingWindow,omitempty"`                                                                //nolint:lll
-	LastsForDuration string      `json:"lastsFor,omitempty" validate:"omitempty,validDuration,nonNegativeDuration" example:"15m"` //nolint:lll
+	AlertingWindow   string      `json:"alertingWindow,omitempty"`
+	LastsForDuration string      `json:"lastsFor,omitempty"`
 	Operator         string      `json:"op,omitempty"`
 }
 
