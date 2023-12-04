@@ -765,7 +765,7 @@ var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
 }
 
 // setURLValue is a help function which sets the value of 'URL' field of the given Agent config.
-func setURLValue(t *testing.T, obj interface{}, fieldName string, value string) {
+func setURLValue(t *testing.T, obj interface{}, fieldName, value string) {
 	t.Helper()
 	v := reflect.ValueOf(obj)
 	v.Elem().

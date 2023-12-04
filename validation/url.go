@@ -7,7 +7,7 @@ import (
 )
 
 func URL() SingleRule[*url.URL] {
-	return NewSingleRule(func(v *url.URL) error { return validateURL(v) }).WithErrorCode(ErrorCodeURL)
+	return NewSingleRule(validateURL).WithErrorCode(ErrorCodeURL)
 }
 
 func validateURL(u *url.URL) error {
