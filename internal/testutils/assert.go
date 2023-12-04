@@ -63,30 +63,36 @@ func AssertContainsErrors(
 		"%T contains a different number of errors than expected", objErr)
 	// Find and match expected errors.
 	for _, expected := range expectedErrors {
-		found := false
+		found := true
 	searchErrors:
 		for _, actual := range objErr.Errors {
+			errorMatched := errorMatch{}
+
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
-				if expected.Message != "" && expected.Message == actualRuleErr.Message {
-					found = true
-					break searchErrors
+				if expected.Message != "" && expected.Message != actualRuleErr.Message {
+					errorMatched.failedMessage = true
 				}
-				if expected.ContainsMessage != "" && strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
-					found = true
-					break searchErrors
+				if expected.ContainsMessage != "" &&
+					!strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					errorMatched.failedContainsMessage = true
 				}
 				if expected.Code != "" &&
-					(expected.Code == actualRuleErr.Code || validation.HasErrorCode(actualRuleErr, expected.Code)) {
-					found = true
-					break searchErrors
+					(expected.Code != actualRuleErr.Code && !validation.HasErrorCode(actualRuleErr, expected.Code)) {
+					errorMatched.failedCode = true
 				}
 			}
+
+			if errorMatched.matchedCompletely() {
+				found = true
+				break searchErrors
+			}
 		}
+
 		// Pretty print the diff.
 		encExpected, _ := json.MarshalIndent(expected, "", " ")
 		encActual, _ := json.MarshalIndent(objErr.Errors, "", " ")
@@ -101,4 +107,14 @@ func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
 		errs[i].Prop = path + "." + errs[i].Prop
 	}
 	return errs
+}
+
+type errorMatch struct {
+	failedMessage         bool
+	failedContainsMessage bool
+	failedCode            bool
+}
+
+func (e errorMatch) matchedCompletely() bool {
+	return !e.failedMessage && !e.failedContainsMessage && !e.failedCode
 }
