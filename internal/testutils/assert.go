@@ -109,13 +109,3 @@ func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
 	}
 	return errs
 }
-
-type errorMatch struct {
-	failedMessage         bool
-	failedContainsMessage bool
-	failedCode            bool
-}
-
-func (e errorMatch) matchedCompletely() bool {
-	return !e.failedMessage && !e.failedContainsMessage && !e.failedCode
-}
