@@ -1,10 +1,11 @@
 package validation
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var validURLs = []string{
@@ -54,7 +55,7 @@ func TestURL(t *testing.T) {
 		for _, input := range validURLs {
 			u, err := url.Parse(input)
 			require.NoError(t, err)
-			err = URL().Validate(*u)
+			err = URL().Validate(u)
 			assert.NoError(t, err)
 		}
 	})
@@ -62,7 +63,7 @@ func TestURL(t *testing.T) {
 		for _, input := range invalidURLs {
 			u, err := url.Parse(input)
 			require.NoError(t, err)
-			err = URL().Validate(*u)
+			err = URL().Validate(u)
 			require.Error(t, err)
 			assert.True(t, HasErrorCode(err, ErrorCodeURL))
 		}

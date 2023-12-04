@@ -6,15 +6,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-func URL() SingleRule[url.URL] {
-	return NewSingleRule(func(v url.URL) error { return validateURL(v) }).WithErrorCode(ErrorCodeURL)
+func URL() SingleRule[*url.URL] {
+	return NewSingleRule(func(v *url.URL) error { return validateURL(v) }).WithErrorCode(ErrorCodeURL)
 }
 
-func validateURL(v url.URL) error {
-	if v.Scheme == "" {
+func validateURL(u *url.URL) error {
+	if u.Scheme == "" {
 		return errors.New("valid URL must have a scheme (e.g. https://)")
 	}
-	if v.Host == "" && v.Fragment == "" && v.Opaque == "" {
+	if u.Host == "" && u.Fragment == "" && u.Opaque == "" {
 		return errors.New("valid URL must contain either host, fragment or opaque data")
 	}
 	return nil

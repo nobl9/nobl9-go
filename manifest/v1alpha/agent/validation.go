@@ -145,15 +145,12 @@ var (
 			Required(),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
-		validation.Transform(
-			func(d DynatraceConfig) string { return d.URL },
-			validation.PointerTransformer(url.Parse),
-		).
+		validation.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
 			WithName("url").
 			Required().
 			Rules(
 				validation.URL(),
-				validation.NewSingleRule(func(u url.URL) error {
+				validation.NewSingleRule(func(u *url.URL) error {
 					// For SaaS type enforce https and land lack of path.
 					// - Join instead of Clean (to avoid getting . for empty path),
 					// - Trim to get rid of root.
@@ -168,19 +165,33 @@ var (
 				}),
 			),
 	)
-	elasticsearchValidation    = validation.New[ElasticsearchConfig]()
-	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig]()
-	azureMonitorValidation     = validation.New[AzureMonitorConfig]()
+	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig](
+		validation.For(func(a AmazonPrometheusConfig) string { return a.URL }).
+			WithName("url").
+			Required().
+			Rules(validation.StringURL()),
+		validation.For(func(a AmazonPrometheusConfig) string { return a.Region }).
+			WithName("region").
+			Required().
+			Rules(validation.StringMaxLength(255)),
+	)
+	azureMonitorValidation = validation.New[AzureMonitorConfig](
+		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
+			WithName("tenantId").
+			Required(),
+		//Rules(validation.StringUUID()),
+	)
 	// URL only.
-	prometheusValidation  = newURLValidator(func(p PrometheusConfig) string { return p.URL })
-	appDynamicsValidation = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
-	splunkValidation      = newURLValidator(func(s SplunkConfig) string { return s.URL })
-	graphiteValidation    = newURLValidator(func(g GraphiteConfig) string { return g.URL })
-	openTSDBValidation    = newURLValidator(func(o OpenTSDBConfig) string { return o.URL })
-	grafanaLokiValidation = newURLValidator(func(g GrafanaLokiConfig) string { return g.URL })
-	sumoLogicValidation   = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
-	instanaValidation     = newURLValidator(func(i InstanaConfig) string { return i.URL })
-	influxDBValidation    = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
+	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
+	splunkValidation        = newURLValidator(func(s SplunkConfig) string { return s.URL })
+	elasticsearchValidation = newURLValidator(func(e ElasticsearchConfig) string { return e.URL })
+	graphiteValidation      = newURLValidator(func(g GraphiteConfig) string { return g.URL })
+	openTSDBValidation      = newURLValidator(func(o OpenTSDBConfig) string { return o.URL })
+	grafanaLokiValidation   = newURLValidator(func(g GrafanaLokiConfig) string { return g.URL })
+	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
+	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
+	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
 	// Empty configs.
 	thousandEyesValidation = validation.New[ThousandEyesConfig]()
 	bigQueryValidation     = validation.New[BigQueryConfig]()

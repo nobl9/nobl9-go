@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"net/url"
 	"strconv"
 	"testing"
 
@@ -257,63 +256,6 @@ func TestTransform(t *testing.T) {
 			WithName("prop").
 			Rules(GreaterThan(123))
 		errs := transformed.Validate("123z")
-		assert.Len(t, errs, 1)
-		assert.EqualError(t, errs, expectedErrorOutput(t, "property_error_transform.txt"))
-		assert.True(t, HasErrorCode(errs, ErrorCodeTransform))
-	})
-}
-
-func TestPointerTransformer(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, PointerTransformer(url.Parse)).
-			Rules(URL())
-		errs := transformed.Validate("https://nobl9.com")
-		assert.Empty(t, errs)
-	})
-	t.Run("fails validation", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, PointerTransformer(url.Parse)).
-			WithName("prop").
-			Rules(URL())
-		errs := transformed.Validate("-")
-		assert.Len(t, errs, 1)
-		assert.True(t, HasErrorCode(errs, ErrorCodeURL))
-	})
-	t.Run("zero value with omitempty", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, PointerTransformer(url.Parse)).
-			WithName("prop").
-			Omitempty().
-			Rules(URL())
-		errs := transformed.Validate("")
-		assert.Empty(t, errs)
-	})
-	t.Run("zero value with required", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, strconv.Atoi).
-			WithName("prop").
-			Required().
-			Rules(GreaterThan(123))
-		errs := transformed.Validate("")
-		assert.Len(t, errs, 1)
-		assert.True(t, HasErrorCode(errs, ErrorCodeRequired))
-	})
-	t.Run("skip zero value", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, strconv.Atoi).
-			WithName("prop").
-			Rules(GreaterThan(123))
-		errs := transformed.Validate("")
-		assert.Len(t, errs, 1)
-		assert.True(t, HasErrorCode(errs, ErrorCodeGreaterThan))
-	})
-	t.Run("fails transformation", func(t *testing.T) {
-		getter := func(s string) string { return s }
-		transformed := Transform(getter, PointerTransformer(url.Parse)).
-			WithName("prop").
-			Rules(URL())
-		errs := transformed.Validate("/")
 		assert.Len(t, errs, 1)
 		assert.EqualError(t, errs, expectedErrorOutput(t, "property_error_transform.txt"))
 		assert.True(t, HasErrorCode(errs, ErrorCodeTransform))

@@ -72,7 +72,7 @@ func StringURL() SingleRule[string] {
 		if err != nil {
 			return errors.Wrap(err, "failed to parse URL")
 		}
-		return validateURL(*u)
+		return validateURL(u)
 	}).WithErrorCode(ErrorCodeStringURL)
 }
 

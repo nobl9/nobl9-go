@@ -514,9 +514,129 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 			Prop: "spec.dynatrace.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	urlTests := map[string]struct {
+		url     string
+		isValid bool
+	}{
+		"valid SaaS": {
+			url:     "https://test.live.dynatrace.com",
+			isValid: true,
+		},
+		"SaaS with port explicit speciefed": {
+			url:     "https://test.live.dynatrace.com:433",
+			isValid: true,
+		},
+		"valid SaaS multiple trailing /": {
+			url:     "https://test.live.dynatrace.com///",
+			isValid: true,
+		},
+		"invalid SaaS lack of https": {
+			url:     "http://test.live.dynatrace.com",
+			isValid: false,
+		},
+		"valid Managed/Environment ActiveGate lack of https": {
+			url:     "http://test.com/e/environment-id",
+			isValid: true,
+		},
+		"valid Managed/Environment ActiveGate wrong environment-id": {
+			url:     "https://test.com/e/environment-id",
+			isValid: true,
+		},
+		"valid Managed/Environment ActiveGate IP": {
+			url:     "https://127.0.0.1/e/environment-id",
+			isValid: true,
+		},
+		"valid Managed/Environment ActiveGate wrong environment-id, multiple /": {
+			url:     "https://test.com///some-devops-path///e///environment-id///",
+			isValid: true,
+		},
+	}
+	for name, test := range urlTests {
+		t.Run(name, func(t *testing.T) {
+			agent := validAgent(v1alpha.Dynatrace)
+			agent.Spec.Dynatrace.URL = test.url
+			err := validate(agent)
+			if test.isValid {
+				testutils.AssertNoError(t, agent, err)
+			} else {
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.dynatrace.url",
+					ContainsMessage: "Dynatrace SaaS URL (live.dynatrace.com)" +
+						" requires https scheme and empty URL path",
+				})
+			}
+		})
+	}
+}
+
+func TestValidateSpec_AmazonPrometheus(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.AmazonPrometheus)
+		agent.Spec.AmazonPrometheus.Region = strings.Repeat("l", 255)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.AmazonPrometheus)
+		agent.Spec.AmazonPrometheus.URL = ""
+		agent.Spec.AmazonPrometheus.Region = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.amazonPrometheus.url",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.amazonPrometheus.region",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.AmazonPrometheus)
+		agent.Spec.AmazonPrometheus.URL = "invalid"
+		agent.Spec.AmazonPrometheus.Region = strings.Repeat("l", 256)
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.amazonPrometheus.url",
+				Code: validation.ErrorCodeStringURL,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.amazonPrometheus.region",
+				Code: validation.ErrorCodeStringMaxLength,
+			},
+		)
+	})
+}
+
+func TestValidateSpec_AzureMonitor(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzureMonitor)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required tenantId", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzureMonitor)
+		agent.Spec.AzureMonitor.TenantID = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.azureMonitor.tenantId",
 			Code: validation.ErrorCodeRequired,
 		})
 	})
+	//t.Run("invalid tenantId", func(t *testing.T) {
+	//	agent := validAgent(v1alpha.AzureMonitor)
+	//	agent.Spec.AzureMonitor.TenantID = "invalid"
+	//	err := validate(agent)
+	//	testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+	//		Prop: "spec.azureMonitor.tenantId",
+	//		Code: validation.ErrorCodeStringUUID,
+	//	})
+	//})
 }
 
 func validAgent(typ v1alpha.DataSourceType) Agent {

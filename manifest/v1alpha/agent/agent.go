@@ -177,7 +177,7 @@ type DynatraceConfig struct {
 
 // ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
 type ElasticsearchConfig struct {
-	URL string `json:"url" validate:"required,url,urlElasticsearch"`
+	URL string `json:"url"`
 }
 
 // ThousandEyesConfig represents content of ThousandEyes Configuration typical for Agent Object.
@@ -209,8 +209,8 @@ type PingdomConfig struct{}
 
 // AmazonPrometheusConfig represents content of Amazon Managed Service Configuration typical for Agent Object.
 type AmazonPrometheusConfig struct {
-	URL    string `json:"url" validate:"required,url"`
-	Region string `json:"region" validate:"required,max=255"`
+	URL    string `json:"url"`
+	Region string `json:"region"`
 }
 
 // RedshiftConfig represents content of Redshift configuration typical for Agent Object

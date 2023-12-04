@@ -51,22 +51,6 @@ func GetSelf[S any]() PropertyGetter[S, S] {
 
 type Transformer[T, N any] func(T) (N, error)
 
-// PointerTransformer is a convenience wrapper around [Transformer].
-// It returns a [Transformer] for the concrete value of the wrapped pointer [Transformer].
-func PointerTransformer[T, N any](t Transformer[T, *N]) Transformer[T, N] {
-	return func(v T) (deref N, err error) {
-		tp, err := t(v)
-		if err != nil {
-			return deref, err
-		}
-		if tp == nil {
-			return deref, nil
-		}
-		deref = *tp
-		return deref, nil
-	}
-}
-
 type Predicate[S any] func(S) bool
 
 type PropertyGetter[T, S any] func(S) T
