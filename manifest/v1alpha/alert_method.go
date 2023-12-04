@@ -113,3 +113,9 @@ type PublicEmailAlertMethod struct {
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Body string `json:"body,omitempty"`
 }
+
+// AlertMethodWithAlertPolicy represents an AlertPolicies assigned to AlertMethod.
+type AlertMethodWithAlertPolicy struct {
+	AlertMethod   PublicAlertMethod `json:"alertMethod"`
+	AlertPolicies []AlertPolicy     `json:"alertPolicies"`
+}

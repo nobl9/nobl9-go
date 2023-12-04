@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -18,7 +19,7 @@ func TestValidate_Spec_PagerDutyAlertMethod(t *testing.T) {
 			IntegrationKey: "",
 		},
 		"passes with hidden integrationKey": {
-			IntegrationKey: "[hidden]",
+			IntegrationKey: v1alpha.HiddenValue,
 		},
 		"passes with max length integrationKey": {
 			IntegrationKey: strings.Repeat("l", 32),

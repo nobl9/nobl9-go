@@ -33,9 +33,9 @@ type AlertPolicySpec struct {
 	AlertMethods     []PublicAlertMethod `json:"alertMethods"`
 }
 
-/*func (spec AlertPolicySpec) GetAlertMethods() []v1alphaAlertMethod.PublicAlertMethod {
+func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
 	return spec.AlertMethods
-}*/
+}
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {

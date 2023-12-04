@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -26,7 +27,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			Template: &template,
 		},
 		"passes with hidden url": {
-			URL:      "[hidden]",
+			URL:      v1alpha.HiddenValue,
 			Template: &template,
 		},
 		"passes with valid template": {

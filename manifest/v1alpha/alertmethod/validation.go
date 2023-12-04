@@ -10,9 +10,6 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-// HiddenValue can be used as a value of a secret field and is ignored during saving
-const HiddenValue = "[hidden]"
-
 const (
 	expectedNumberOfAlertMethodTypes = 1
 	maxDescriptionLength             = 1050
@@ -139,7 +136,9 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
-		When(func(p PagerDutyAlertMethod) bool { return p.IntegrationKey != "" && p.IntegrationKey != HiddenValue }).
+		When(func(p PagerDutyAlertMethod) bool {
+			return p.IntegrationKey != "" && p.IntegrationKey != v1alpha.HiddenValue
+		}).
 		Rules(validation.StringMaxLength(32)),
 )
 
@@ -223,7 +222,7 @@ var emailValidation = validation.New[EmailAlertMethod](
 func optionalUrlValidation(options ...validation.StringURLOption) validation.Validator[string] {
 	return validation.New[string](
 		validation.For(validation.GetSelf[string]()).
-			When(func(v string) bool { return v != "" && v != HiddenValue }).
+			When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
 			Rules(validation.StringURL(options...)),
 	)
 }
@@ -281,7 +280,7 @@ func hasValidTemplateFields(templateFields []string, allowedFields map[string]st
 
 var opsgenieAuthValidation = validation.New[string](
 	validation.For(validation.GetSelf[string]()).
-		When(func(v string) bool { return v != "" && v != HiddenValue }).
+		When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if !strings.HasPrefix(v, "Basic") &&

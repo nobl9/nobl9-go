@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -20,7 +21,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			URL: "",
 		},
 		"passes with hidden url": {
-			URL: "[hidden]",
+			URL: v1alpha.HiddenValue,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
