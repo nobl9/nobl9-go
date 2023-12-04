@@ -3,10 +3,11 @@ package alertpolicy
 import (
 	_ "embed"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
