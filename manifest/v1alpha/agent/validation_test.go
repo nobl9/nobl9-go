@@ -21,7 +21,7 @@ var expectedError string
 
 func TestValidate_AllErrors(t *testing.T) {
 	err := validate(Agent{
-		Kind: manifest.KindProject,
+		Kind: manifest.KindAgent,
 		Metadata: Metadata{
 			Name:        strings.Repeat("MY AGENT", 20),
 			DisplayName: strings.Repeat("my-agent", 10),
