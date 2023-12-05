@@ -86,16 +86,16 @@ func parseGenericObject(unmarshal unmarshalFunc) (manifest.Object, error) {
 }
 
 func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc, error) {
-	var unmarshal unmarshalFunc
+	jsonUnmarshal := func(v interface{}) error {
+		dec := json.NewDecoder(bytes.NewReader(data))
+		if UseStrictDecodingMode {
+			dec.DisallowUnknownFields()
+		}
+		return dec.Decode(v)
+	}
 	switch format {
 	case manifest.ObjectFormatJSON:
-		unmarshal = func(v interface{}) error {
-			dec := json.NewDecoder(bytes.NewReader(data))
-			if UseStrictDecodingMode {
-				dec.DisallowUnknownFields()
-			}
-			return dec.Decode(v)
-		}
+		return jsonUnmarshal, nil
 	case manifest.ObjectFormatYAML:
 		// Workaround for https://github.com/goccy/go-yaml/issues/313.
 		// If the library changes its interpretation of empty pointer fields,
@@ -105,17 +105,10 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to convert YAML to JSON")
 		}
-		var opts []yaml.DecodeOption
-		if UseStrictDecodingMode {
-			opts = append(opts, yaml.Strict())
-		}
-		unmarshal = func(v interface{}) error {
-			return yaml.UnmarshalWithOptions(data, v, opts...)
-		}
+		return jsonUnmarshal, nil
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)
 	}
-	return unmarshal, nil
 }
 
 func genericParseObject[T manifest.Object](unmarshal unmarshalFunc) (T, error) {
