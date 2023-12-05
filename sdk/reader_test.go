@@ -96,6 +96,14 @@ func TestResolveSources(t *testing.T) {
 }
 
 func TestReadDefinitions_FromReader(t *testing.T) {
+	t.Run("dataexport", func(t *testing.T) {
+		definitions, err := ReadObjectsFromSources(
+			context.Background(),
+			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
+		require.NoError(t, err)
+		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
+	})
+
 	t.Run("read definitions from reader", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
