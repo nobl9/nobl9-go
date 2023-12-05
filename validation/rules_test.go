@@ -145,6 +145,21 @@ func TestPropertyRules(t *testing.T) {
 			Errors:        []*RuleError{{Message: expectedErrs.Error()}},
 		}, errs[0])
 	})
+
+	t.Run("hide value", func(t *testing.T) {
+		expectedErr := errors.New("oh no! here's the value: 'secret'")
+		r := For(func(m mockStruct) string { return "secret" }).
+			WithName("test.path").
+			HideValue().
+			Rules(NewSingleRule(func(v string) error { return expectedErr }))
+		errs := r.Validate(mockStruct{})
+		require.Len(t, errs, 1)
+		assert.Equal(t, &PropertyError{
+			PropertyName:  "test.path",
+			PropertyValue: "",
+			Errors:        []*RuleError{{Message: "oh no! here's the value: '[hidden]'"}},
+		}, errs[0])
+	})
 }
 
 func TestForPointer(t *testing.T) {
@@ -258,6 +273,17 @@ func TestTransform(t *testing.T) {
 		errs := transformed.Validate("123z")
 		assert.Len(t, errs, 1)
 		assert.EqualError(t, errs, expectedErrorOutput(t, "property_error_transform.txt"))
+		assert.True(t, HasErrorCode(errs, ErrorCodeTransform))
+	})
+	t.Run("fail transformation with hidden value", func(t *testing.T) {
+		getter := func(s string) string { return s }
+		transformed := Transform(getter, strconv.Atoi).
+			WithName("prop").
+			HideValue().
+			Rules(GreaterThan(123))
+		errs := transformed.Validate("secret!")
+		assert.Len(t, errs, 1)
+		assert.EqualError(t, errs, expectedErrorOutput(t, "property_error_transform_with_hidden_value.txt"))
 		assert.True(t, HasErrorCode(errs, ErrorCodeTransform))
 	})
 }
