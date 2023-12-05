@@ -70,7 +70,7 @@ type AlertMethodsRefMetadata struct {
 	Project string `json:"project,omitempty" validate:"objectName"`
 }
 
-// UnmarshalYAML Using json unmarshal allows us to correctly receive float64 value in Value field
+// UnmarshalYAMLALT Using json unmarshal allows us to correctly receive float64 value in Value field
 // https://nobl9.atlassian.net/browse/PC-11300
 func (d *AlertCondition) UnmarshalYAMLALT(bytes []byte) error {
 	jsonByte, err := yaml.YAMLToJSON(bytes)
@@ -85,7 +85,7 @@ func (d *AlertCondition) UnmarshalYAMLALT(bytes []byte) error {
 	return nil
 }
 
-// Unmarshal TODO handle correct Value parsing https://nobl9.atlassian.net/browse/PC-11300
+// UnmarshalYAML TODO handle correct Value parsing https://nobl9.atlassian.net/browse/PC-11300
 func (d *AlertCondition) UnmarshalYAML(bytes []byte) error {
 	var tempCondition struct {
 		Measurement      string `json:"measurement"`
