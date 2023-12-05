@@ -144,7 +144,7 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	})
 }
 
-func TestReadDefinitions_UsingCustomizedUnmarshalling(t *testing.T) {
+func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
 	t.Run("report an error when unexpected structure was returned", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
@@ -158,14 +158,14 @@ func TestReadDefinitions_UsingCustomizedUnmarshalling(t *testing.T) {
 				t,
 				appliedDataExport.Spec.Spec,
 				&dataexport.S3DataExportSpec{
-					BucketName: "examplebucket",
+					BucketName: "example-bucket",
 					RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
 				},
 			)
 			return
 		}
 
-		t.Errorf("could not convert defintion to DataExport")
+		t.Errorf("could not convert definition to DataExport")
 	})
 }
 
