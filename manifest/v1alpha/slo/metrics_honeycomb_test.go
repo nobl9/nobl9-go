@@ -23,15 +23,10 @@ func TestHoneycomb(t *testing.T) {
 		}{
 			{
 				Metric: &HoneycombMetric{
-					Dataset:     " ",
 					Calculation: "MAX",
 					Attribute:   "   ",
-				}, ErrorsCount: 2,
+				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
-					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.dataset",
-						Code: validation.ErrorCodeStringNotEmpty,
-					},
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
 						Code: validation.ErrorCodeStringNotEmpty,
@@ -40,15 +35,10 @@ func TestHoneycomb(t *testing.T) {
 			},
 			{
 				Metric: &HoneycombMetric{
-					Dataset:     strings.Repeat("l", 256),
 					Calculation: "MAX",
 					Attribute:   strings.Repeat("l", 256),
-				}, ErrorsCount: 2,
+				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
-					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.dataset",
-						Code: validation.ErrorCodeStringMaxLength,
-					},
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
 						Code: validation.ErrorCodeStringMaxLength,
@@ -63,9 +53,12 @@ func TestHoneycomb(t *testing.T) {
 		}
 	})
 	t.Run("valid calculation type", func(t *testing.T) {
-		for _, typ := range supportedHoneycombCalculationTypes {
+		for _, calculationType := range supportedHoneycombCalculationTypes {
 			slo := validRawMetricSLO(v1alpha.Honeycomb)
-			slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb.Calculation = typ
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb.Calculation = calculationType
+			if calculationType == "CONCURRENCY" || calculationType == "COUNT" {
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb.Attribute = ""
+			}
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
