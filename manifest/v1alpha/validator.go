@@ -93,7 +93,6 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(alertPolicyConditionStructLevelValidation, AlertCondition{})
 	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
 	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
@@ -512,127 +511,6 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 	return true
 }
 
-func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl)
-	alertPolicyConditionOperatorLimitsValidation(sl)
-
-	if condition.AlertingWindow != "" {
-		alertPolicyConditionWithAlertingWindowMeasurementValidation(sl)
-		alertPolicyConditionAlertingWindowLengthValidation(sl)
-	} else {
-		alertPolicyConditionWithLastsForMeasurementValidation(sl)
-	}
-}
-
-func alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-	if condition.LastsForDuration != "" && condition.AlertingWindow != "" {
-		sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
-	}
-}
-
-// TODO rewrite validation steps
-func alertPolicyConditionWithLastsForMeasurementValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	switch condition.Measurement {
-	case MeasurementTimeToBurnBudget.String(),
-		MeasurementTimeToBurnEntireBudget.String():
-		valueDuration, ok := condition.Value.(string)
-		if !ok {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValueDuration", "")
-		}
-
-		duration, err := time.ParseDuration(valueDuration)
-		if err != nil {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValueDuration", "")
-		}
-		if duration <= 0 {
-			sl.ReportError(condition, "measurement", "Measurement", "negativeOrZeroValueDuration", "")
-		}
-	case MeasurementBurnedBudget.String(),
-		MeasurementAverageBurnRate.String():
-		_, ok := condition.Value.(float64)
-		if !ok {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValue", "")
-		}
-	default:
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-}
-
-func alertPolicyConditionWithAlertingWindowMeasurementValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	switch condition.Measurement {
-	case MeasurementAverageBurnRate.String():
-		_, ok := condition.Value.(float64)
-		if !ok {
-			sl.ReportError(condition, "value", "Value", "invalidValue", "")
-		}
-	case MeasurementTimeToBurnEntireBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "timeToBurnEntireBudgetNotSupportedWithAlertingWindow", "")
-	case MeasurementTimeToBurnBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "timeToBurnBudgetNotSupportedWithAlertingWindow", "")
-	case MeasurementBurnedBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "burnedBudgetNotSupportedWithAlertingWindow", "")
-	default:
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-}
-
-func alertPolicyConditionAlertingWindowLengthValidation(sl v.StructLevel) {
-	const (
-		minDuration = time.Minute * 5    // 5m
-		maxDuration = time.Hour * 24 * 7 // 7d
-	)
-	condition := sl.Current().Interface().(AlertCondition)
-
-	durationToValidate, err := time.ParseDuration(condition.AlertingWindow)
-	if err != nil {
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", "errorParsingAlertingWindowDuration", "")
-		return
-	}
-
-	if durationToValidate < minDuration {
-		minDurationTag := fmt.Sprintf("minimumAlertingWindowDuration=%s", minDuration)
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", minDurationTag, "")
-	}
-
-	if durationToValidate > maxDuration {
-		maxDurationTag := fmt.Sprintf("maximumAlertingWindowDuration=%s", maxDuration)
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", maxDurationTag, "")
-	}
-}
-
-func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	measurement, measurementErr := ParseMeasurement(condition.Measurement)
-	if measurementErr != nil {
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-
-	if condition.Operator != "" {
-		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
-		if err != nil {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-		}
-
-		operator, operatorErr := ParseOperator(condition.Operator)
-		if operatorErr != nil {
-			sl.ReportError(condition, "op", "Operator", "invalidOperatorType", "")
-		}
-
-		if operator != expectedOperator {
-			sl.ReportError(condition, "op", "Operator", "invalidOperatorTypeForProvidedMeasurement", "")
-		}
-	}
-}
-
 // stringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"
 const stringInterpolationPlaceholder = "{}"
 
@@ -684,7 +562,7 @@ func isValidMetricSourceKind(fl v.FieldLevel) bool {
 
 func isValidNewRelicInsightsAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
-	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == "" || apiKey == HiddenValue
+	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == ""
 }
 
 func hasValidURLScheme(fl v.FieldLevel) bool {

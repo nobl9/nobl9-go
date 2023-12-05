@@ -27,7 +27,7 @@ func TestValidate_AllErrors(t *testing.T) {
 		},
 		Spec: Spec{
 			Description:      strings.Repeat("l", 2000),
-			Severity:         v1alpha.SeverityHigh.String(),
+			Severity:         SeverityHigh.String(),
 			CoolDownDuration: "5m",
 			Conditions:       []AlertCondition{validAlertCondition()},
 			AlertMethods:     nil,
@@ -44,7 +44,6 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
-
 	t.Run("passes, valid label", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Metadata.Labels = v1alpha.Labels{
@@ -53,7 +52,6 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
-
 	t.Run("fails, invalid label", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Metadata.Labels = v1alpha.Labels{
@@ -79,7 +77,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 func TestValidate_Spec_Severity(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Severity = v1alpha.SeverityHigh.String()
+		alertPolicy.Spec.Severity = SeverityHigh.String()
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
@@ -98,7 +96,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.severity",
-			Code: v1alpha.ErrorCodeSeverity,
+			Code: ErrorCodeSeverity,
 		})
 	})
 }
@@ -191,15 +189,25 @@ func TestValidate_Spec_Condition(t *testing.T) {
 }
 
 func TestValidate_Spec_Condition_Measurement(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
+	t.Run("passes, with alertingWindow defined", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].Measurement = v1alpha.MeasurementBurnedBudget.String()
+		alertPolicy.Spec.Conditions[0].Measurement = MeasurementAverageBurnRate.String()
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+	t.Run("passes, with lastsFor defined", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBurnedBudget.String()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
 	t.Run("fails, required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = ""
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
@@ -210,37 +218,68 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = "Unknown"
 		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, alertPolicy, err, 2, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
-			Code: v1alpha.ErrorCodeMeasurement,
+			Code: ErrorCodeMeasurement,
 		})
 	})
+	failTests := map[string]measurementDetermined{
+		"fails, alertingWindow is defined": {
+			measurements: []Measurement{
+				MeasurementTimeToBurnBudget,
+				MeasurementTimeToBurnEntireBudget,
+				MeasurementBurnedBudget,
+			},
+			expectedCode: errorCodeMeasurementWithAlertingWindow,
+			expectedMessage: fmt.Sprintf(
+				`measurement must be set to '%s' when alertingWindow is defined`,
+				MeasurementAverageBurnRate.String(),
+			),
+		},
+	}
+	for name, testCase := range failTests {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				for _, measurement := range testCase.measurements {
+					alertPolicy := validAlertPolicy()
+					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
+					alertPolicy.Spec.Conditions[0].Value = value
+					err := validate(alertPolicy)
+					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+						Prop:            "spec.conditions[0]",
+						ContainsMessage: testCase.expectedMessage,
+						Code:            testCase.expectedCode,
+					})
+				}
+			}
+		})
+	}
 }
 
 func TestValidate_Spec_Condition_Value(t *testing.T) {
-	passTests := map[string]measurementDeterminedValue{
-		"passes, valid duration when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
+	passTests := map[string]measurementDetermined{
+		"passes, valid duration when measurement is timeToBurnBudget or timeToBurnEntireBudget and lastsFor is defined": {
 			values: []interface{}{
 				"1ms",
 				"15s",
 				"15m",
 				"1h",
 			},
-			measurements: []v1alpha.Measurement{
-				v1alpha.MeasurementTimeToBurnBudget,
-				v1alpha.MeasurementTimeToBurnEntireBudget,
+			measurements: []Measurement{
+				MeasurementTimeToBurnBudget,
+				MeasurementTimeToBurnEntireBudget,
 			},
 		},
-		"passes, valid float measurement is burnedBudget or averageBurnRate": {
+		"passes, valid float measurement is burnedBudget or averageBurnRate and lastsFor is defined": {
 			values: []interface{}{
 				0.000000020,
 				0.97,
 				2.00,
 				157.00,
 			},
-			measurements: []v1alpha.Measurement{
-				v1alpha.MeasurementAverageBurnRate,
-				v1alpha.MeasurementBurnedBudget,
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBurnedBudget,
 			},
 		},
 	}
@@ -259,10 +298,10 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			}
 		})
 	}
-
 	t.Run("fails, required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Value = ""
+		alertPolicy.Spec.Conditions[0].Measurement = MeasurementAverageBurnRate.String()
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0].value",
@@ -270,16 +309,16 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 		})
 	})
 
-	failTests := map[string]measurementDeterminedValue{
+	failTests := map[string]measurementDetermined{
 		"fails, greater than 0 when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
 			values: []interface{}{
 				"-1ms",
 				"-15s",
 				"-1h",
 			},
-			measurements: []v1alpha.Measurement{
-				v1alpha.MeasurementTimeToBurnBudget,
-				v1alpha.MeasurementTimeToBurnEntireBudget,
+			measurements: []Measurement{
+				MeasurementTimeToBurnBudget,
+				MeasurementTimeToBurnEntireBudget,
 			},
 			expectedCode:    validation.ErrorCodeGreaterThan,
 			expectedMessage: "should be greater than '0s'",
@@ -290,9 +329,9 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				"1.9",
 				"100",
 			},
-			measurements: []v1alpha.Measurement{
-				v1alpha.MeasurementAverageBurnRate,
-				v1alpha.MeasurementBurnedBudget,
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBurnedBudget,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "must be valid float64",
@@ -303,9 +342,9 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				"s892k",
 				"100",
 			},
-			measurements: []v1alpha.Measurement{
-				v1alpha.MeasurementAverageBurnRate,
-				v1alpha.MeasurementBurnedBudget,
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBurnedBudget,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "must be valid float64",
@@ -318,6 +357,8 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 					alertPolicy := validAlertPolicy()
 					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
 					alertPolicy.Spec.Conditions[0].Value = value
+					alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
+					alertPolicy.Spec.Conditions[0].AlertingWindow = ""
 					err := validate(alertPolicy)
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 						Prop:            "spec.conditions[0].value",
@@ -535,22 +576,22 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 
 	testCases := []AlertCondition{
 		{
-			Measurement:      v1alpha.MeasurementTimeToBurnEntireBudget.String(),
+			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
 		},
 		{
-			Measurement:      v1alpha.MeasurementTimeToBurnBudget.String(),
+			Measurement:      MeasurementTimeToBurnBudget.String(),
 			LastsForDuration: "10m",
 			Value:            "30m",
 		},
 		{
-			Measurement:    v1alpha.MeasurementBurnedBudget.String(),
+			Measurement:    MeasurementAverageBurnRate.String(),
 			Value:          30.0,
 			AlertingWindow: "5m",
 		},
 		{
-			Measurement:      v1alpha.MeasurementAverageBurnRate.String(),
+			Measurement:      MeasurementAverageBurnRate.String(),
 			Value:            30.0,
 			LastsForDuration: "5m",
 		},
@@ -558,8 +599,8 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 
 	for _, alertCondition := range testCases {
 		t.Run("operator with a reference to Measurement", func(t *testing.T) {
-			measurement, _ := v1alpha.ParseMeasurement(alertCondition.Measurement)
-			expectedOperator, err := v1alpha.GetExpectedOperatorForMeasurement(measurement)
+			measurement, _ := ParseMeasurement(alertCondition.Measurement)
+			expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
 			assert.NoError(t, err)
 
 			allowedOps := []string{expectedOperator.String(), emptyOperator}
@@ -583,7 +624,6 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 			}
 		})
 	}
-
 	t.Run("fails, invalid operator", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Operator = "noop"
@@ -604,7 +644,7 @@ func validAlertPolicy() AlertPolicy {
 		},
 		Spec{
 			Description:      "Example alertPolicy",
-			Severity:         v1alpha.SeverityHigh.String(),
+			Severity:         SeverityHigh.String(),
 			CoolDownDuration: "5m",
 			Conditions:       []AlertCondition{validAlertCondition()}},
 	)
@@ -612,7 +652,7 @@ func validAlertPolicy() AlertPolicy {
 
 func validAlertCondition() AlertCondition {
 	return AlertCondition{
-		Measurement:      v1alpha.MeasurementBurnedBudget.String(),
+		Measurement:      MeasurementAverageBurnRate.String(),
 		Value:            0.97,
 		AlertingWindow:   "10m",
 		LastsForDuration: "",
@@ -626,9 +666,9 @@ type valuesWithCodeExpect struct {
 	expectedMessage string
 }
 
-type measurementDeterminedValue struct {
+type measurementDetermined struct {
 	values          []interface{}
-	measurements    []v1alpha.Measurement
+	measurements    []Measurement
 	expectedCode    string
 	expectedMessage string
 }

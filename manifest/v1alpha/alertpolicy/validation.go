@@ -35,7 +35,7 @@ var specValidation = validation.New[Spec](
 	validation.For(func(s Spec) string { return s.Severity }).
 		WithName("severity").
 		Required().
-		Rules(v1alpha.SeverityValidation()),
+		Rules(SeverityValidation()),
 	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		OmitEmpty().
@@ -51,10 +51,12 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) string { return c.Measurement }).
 		WithName("measurement").
 		Required().
-		Rules(v1alpha.MeasurementValidation()),
+		Rules(MeasurementValidation()),
 	validation.For(validation.GetSelf[AlertCondition]()).
+		Include(measurementWithAlertingWindowValidation).
 		Include(timeToBurnBudgetValueValidation).
-		Include(burnedAndAverageBudgetValueValidation),
+		Include(burnedAndAverageBudgetValueValidation).
+		Include(averageBudgetWithAlertingWindowValueValidation),
 	validation.For(validation.GetSelf[AlertCondition]()).
 		Rules(validation.MutuallyExclusive(true, map[string]func(c AlertCondition) any{
 			"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
@@ -81,6 +83,7 @@ var conditionValidation = validation.New[AlertCondition](
 const (
 	errorCodeDurationFullMinutePrecision                     validation.ErrorCode = "duration_full_minute_precision"
 	errorCodeOperatorAppropriateOperatorRegardingMeasurement validation.ErrorCode = "operator_regarding_measurement"
+	errorCodeMeasurementWithAlertingWindow                   validation.ErrorCode = "measurement_regarding_alerting_window"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
@@ -103,8 +106,8 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 		Rules(validation.GreaterThan[time.Duration](0)),
 ).
 	When(func(c AlertCondition) bool {
-		return c.Measurement == v1alpha.MeasurementTimeToBurnBudget.String() ||
-			c.Measurement == v1alpha.MeasurementTimeToBurnEntireBudget.String()
+		return c.Measurement == MeasurementTimeToBurnBudget.String() ||
+			c.Measurement == MeasurementTimeToBurnEntireBudget.String()
 	})
 
 var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
@@ -113,9 +116,35 @@ var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 		Required(),
 ).
 	When(func(c AlertCondition) bool {
-		return c.Measurement == v1alpha.MeasurementBurnedBudget.String() ||
-			c.Measurement == v1alpha.MeasurementAverageBurnRate.String()
+		return c.Measurement == MeasurementBurnedBudget.String() ||
+			c.Measurement == MeasurementAverageBurnRate.String()
 	})
+
+var averageBudgetWithAlertingWindowValueValidation = validation.New[AlertCondition](
+	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
+		WithName("value"),
+).
+	When(func(c AlertCondition) bool {
+		return c.AlertingWindow != "" &&
+			c.Measurement == MeasurementAverageBurnRate.String()
+	})
+
+var measurementWithAlertingWindowValidation = validation.New[AlertCondition](
+	validation.For(validation.GetSelf[AlertCondition]()).
+		Rules(
+			validation.NewSingleRule(func(c AlertCondition) error {
+				if c.AlertingWindow != "" && c.Measurement != MeasurementAverageBurnRate.String() {
+					return &validation.RuleError{
+						Message: fmt.Sprintf(
+							`measurement must be set to '%s' when alertingWindow is defined`,
+							MeasurementAverageBurnRate.String(),
+						),
+						Code: errorCodeMeasurementWithAlertingWindow,
+					}
+				}
+				return nil
+			})),
+)
 
 func transformDurationValue(v interface{}) (time.Duration, error) {
 	valueDuration, ok := v.(string)
@@ -147,7 +176,7 @@ func transformFloat64Value(v interface{}) (float64, error) {
 var appropriateOperatorToMeasurement = validation.NewSingleRule(
 	func(v AlertCondition) error {
 		if v.Operator != "" {
-			measurement, measurementErr := v1alpha.ParseMeasurement(v.Measurement)
+			measurement, measurementErr := ParseMeasurement(v.Measurement)
 			if measurementErr != nil {
 				return &validation.RuleError{
 					Message: measurementErr.Error(),
@@ -155,7 +184,7 @@ var appropriateOperatorToMeasurement = validation.NewSingleRule(
 				}
 			}
 
-			expectedOperator, err := v1alpha.GetExpectedOperatorForMeasurement(measurement)
+			expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
 			if err != nil {
 				return &validation.RuleError{
 					Message: measurementErr.Error(),

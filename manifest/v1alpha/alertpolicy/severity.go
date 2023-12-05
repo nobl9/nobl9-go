@@ -1,4 +1,4 @@
-package v1alpha
+package alertpolicy
 
 import (
 	"github.com/nobl9/nobl9-go/validation"
