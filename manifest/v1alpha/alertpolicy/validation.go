@@ -140,7 +140,10 @@ func transformFloat64Value(v interface{}) (float64, error) {
 	return parsedVal, nil
 }
 
-// TODO check if when is more applicable
+// TODO discuss - using WHEN here does not give us much
+// also: there is one method returning operator depending on measurement GetExpectedOperatorForMeasurement,
+// so logic in every included rule will be the same
+// there is no need to present relations in validation if we have one func defining expected value
 var appropriateOperatorToMeasurement = validation.NewSingleRule(
 	func(v AlertCondition) error {
 		if v.Operator != "" {
