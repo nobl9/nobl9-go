@@ -153,19 +153,15 @@ func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
 
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
 
-		if appliedDataExport, ok := definitions[0].(dataexport.DataExport); ok {
-			assert.Equal(
-				t,
-				appliedDataExport.Spec.Spec,
-				&dataexport.S3DataExportSpec{
-					BucketName: "example-bucket",
-					RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
-				},
-			)
-			return
-		}
-
-		t.Errorf("could not convert definition to DataExport")
+		require.IsType(t, dataexport.DataExport{}, definitions[0])
+		assert.Equal(
+			t,
+			definitions[0].(dataexport.DataExport).Spec.Spec,
+			&dataexport.S3DataExportSpec{
+				BucketName: "example-bucket",
+				RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
+			},
+		)
 	})
 }
 
