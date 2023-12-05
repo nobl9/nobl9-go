@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-func EqualTo[T comparable](compared T) Rule[T] {
+func EqualTo[T comparable](compared T) SingleRule[T] {
 	return NewSingleRule(func(v T) error {
 		if v != compared {
 			return errors.Errorf(comparisonFmt, cmpEqualTo, compared)
@@ -16,7 +16,7 @@ func EqualTo[T comparable](compared T) Rule[T] {
 	}).WithErrorCode(ErrorCodeEqualTo)
 }
 
-func NotEqualTo[T comparable](compared T) Rule[T] {
+func NotEqualTo[T comparable](compared T) SingleRule[T] {
 	return NewSingleRule(func(v T) error {
 		if v == compared {
 			return errors.Errorf(comparisonFmt, cmpNotEqualTo, compared)
@@ -25,29 +25,29 @@ func NotEqualTo[T comparable](compared T) Rule[T] {
 	}).WithErrorCode(ErrorCodeNotEqualTo)
 }
 
-func GreaterThan[T constraints.Ordered](n T) Rule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpGreaterThan, n)).
+func GreaterThan[T constraints.Ordered](n T) SingleRule[T] {
+	return NewSingleRule(orderedComparisonSingleRule(cmpGreaterThan, n)).
 		WithErrorCode(ErrorCodeGreaterThan)
 }
 
-func GreaterThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpGreaterThanOrEqual, n)).
+func GreaterThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
+	return NewSingleRule(orderedComparisonSingleRule(cmpGreaterThanOrEqual, n)).
 		WithErrorCode(ErrorCodeGreaterThanOrEqualTo)
 }
 
-func LessThan[T constraints.Ordered](n T) Rule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpLessThan, n)).
+func LessThan[T constraints.Ordered](n T) SingleRule[T] {
+	return NewSingleRule(orderedComparisonSingleRule(cmpLessThan, n)).
 		WithErrorCode(ErrorCodeLessThan)
 }
 
-func LessThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpLessThanOrEqual, n)).
+func LessThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
+	return NewSingleRule(orderedComparisonSingleRule(cmpLessThanOrEqual, n)).
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }
 
 var comparisonFmt = "should be %s '%v'"
 
-func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
+func orderedComparisonSingleRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
 	return func(v T) error {
 		var passed bool
 		//nolint: exhaustive

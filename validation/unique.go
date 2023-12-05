@@ -17,7 +17,7 @@ func SelfHashFunc[H comparable]() HashFunction[H, H] {
 // SliceUnique validates that a slice contains unique elements based on a provided HashFunction.
 // You can optionally specify constraints which will be included in the error message to further
 // clarify the reason for breaking uniqueness.
-func SliceUnique[S []V, V any, H comparable](hashFunc HashFunction[V, H], constraints ...string) SingleRule[S] {
+func SliceUnique[S []V, V any, H comparable](hashFunc HashFunction[V, H], constraints ...string) Rule[S] {
 	return NewSingleRule(func(slice S) error {
 		unique := make(map[H]int)
 		for i := range slice {

@@ -41,6 +41,13 @@ func (e PropertyErrors) Error() string {
 	return b.String()
 }
 
+func (e PropertyErrors) HideValue() PropertyErrors {
+	for _, err := range e {
+		_ = err.HideValue()
+	}
+	return e
+}
+
 func NewPropertyError(propertyName string, propertyValue interface{}, errs ...error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
@@ -77,6 +84,16 @@ func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	return e
 }
 
+// HideValue hides the property value from [PropertyError.Error] and also hides it from.
+func (e *PropertyError) HideValue() *PropertyError {
+	sv := propertyValueString(e.PropertyValue)
+	e.PropertyValue = ""
+	for _, err := range e.Errors {
+		_ = err.HideValue(sv)
+	}
+	return e
+}
+
 // NewRuleError creates a new [RuleError] with the given message and optional error codes.
 // Error codes are added according to the rules defined by [RuleError.AddCode].
 func NewRuleError(message string, codes ...ErrorCode) *RuleError {
@@ -107,6 +124,12 @@ const ErrorCodeSeparator = ":"
 // This will result in 'last:another:code' [ErrorCode].
 func (r *RuleError) AddCode(code ErrorCode) *RuleError {
 	r.Code = concatStrings(code, r.Code, ErrorCodeSeparator)
+	return r
+}
+
+// HideValue replaces all occurrences of stringValue in the [RuleError.Message] with an '*' characters.
+func (r *RuleError) HideValue(stringValue string) *RuleError {
+	r.Message = strings.ReplaceAll(r.Message, stringValue, strings.Repeat("*", len(stringValue)))
 	return r
 }
 
