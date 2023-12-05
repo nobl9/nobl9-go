@@ -2,10 +2,12 @@ package alertpolicy
 
 import (
 	"encoding/json"
+	"strconv"
+
 	"github.com/goccy/go-yaml"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"strconv"
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go AlertPolicy
