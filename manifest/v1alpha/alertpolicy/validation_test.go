@@ -37,6 +37,36 @@ func TestValidate_AllErrors(t *testing.T) {
 	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
 }
 
+func TestValidate_Metadata_Labels(t *testing.T) {
+	t.Run("passes, no labels", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Metadata.Labels = nil
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+
+	t.Run("passes, valid label", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Metadata.Labels = v1alpha.Labels{
+			"label-key": []string{"label-1", "label-2"},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+
+	t.Run("fails, invalid label", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Metadata.Labels = v1alpha.Labels{
+			"L O L": []string{"dip", "dip"},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop:    "metadata.labels",
+			Message: "label key 'L O L' does not match the regex: ^\\p{L}([_\\-0-9\\p{L}]*[0-9\\p{L}])?$",
+		})
+	})
+}
+
 func TestValidate_Metadata_Project(t *testing.T) {
 	t.Run("passes, no project", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
