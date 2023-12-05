@@ -74,7 +74,6 @@ type RuleSet[T any] struct {
 	rules     []Rule[T]
 	errorCode ErrorCode
 	details   string
-	hideValue bool
 }
 
 // Validate works the same way as [SingleRule.Validate],
