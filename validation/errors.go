@@ -77,7 +77,10 @@ func (e *PropertyError) Error() string {
 	return b.String()
 }
 
-const propertyNameSeparator = "."
+const (
+	propertyNameSeparator = "."
+	hiddenValue           = "[hidden]"
+)
 
 func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
@@ -129,7 +132,7 @@ func (r *RuleError) AddCode(code ErrorCode) *RuleError {
 
 // HideValue replaces all occurrences of stringValue in the [RuleError.Message] with an '*' characters.
 func (r *RuleError) HideValue(stringValue string) *RuleError {
-	r.Message = strings.ReplaceAll(r.Message, stringValue, strings.Repeat("*", len(stringValue)))
+	r.Message = strings.ReplaceAll(r.Message, stringValue, hiddenValue)
 	return r
 }
 

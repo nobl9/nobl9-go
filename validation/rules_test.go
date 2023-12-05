@@ -157,7 +157,7 @@ func TestPropertyRules(t *testing.T) {
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "",
-			Errors:        []*RuleError{{Message: "oh no! here's the value: '******'"}},
+			Errors:        []*RuleError{{Message: "oh no! here's the value: '[hidden]'"}},
 		}, errs[0])
 	})
 }
