@@ -1,11 +1,6 @@
 package alertpolicy
 
 import (
-	"encoding/json"
-	"strconv"
-
-	"github.com/goccy/go-yaml"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -68,52 +63,4 @@ type AlertMethodsRef struct {
 type AlertMethodsRefMetadata struct {
 	Name    string `json:"name" validate:"required,objectName"`
 	Project string `json:"project,omitempty" validate:"objectName"`
-}
-
-// UnmarshalYAMLALT Using json unmarshal allows us to correctly receive float64 value in Value field
-// https://nobl9.atlassian.net/browse/PC-11300
-func (d *AlertCondition) UnmarshalYAMLALT(bytes []byte) error {
-	jsonByte, err := yaml.YAMLToJSON(bytes)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(jsonByte, &d); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// UnmarshalYAML TODO handle correct Value parsing https://nobl9.atlassian.net/browse/PC-11300
-func (d *AlertCondition) UnmarshalYAML(bytes []byte) error {
-	var tempCondition struct {
-		Measurement      string `json:"measurement"`
-		Value            string `json:"value"`
-		AlertingWindow   string `json:"alertingWindow,omitempty"`
-		LastsForDuration string `json:"lastsFor,omitempty"`
-		Operator         string `json:"op,omitempty"`
-	}
-	if err := yaml.Unmarshal(bytes, &tempCondition); err != nil {
-		return err
-	}
-	d.Measurement = tempCondition.Measurement
-	d.AlertingWindow = tempCondition.AlertingWindow
-	d.LastsForDuration = tempCondition.LastsForDuration
-	d.Operator = tempCondition.Operator
-
-	if tempCondition.Measurement == v1alpha.MeasurementAverageBurnRate.String() ||
-		tempCondition.Measurement == v1alpha.MeasurementBurnedBudget.String() {
-		val, err := strconv.ParseFloat(tempCondition.Value, 64)
-		if err != nil {
-			return err
-		}
-		d.Value = val
-
-		return nil
-	}
-
-	d.Value = tempCondition.Value
-
-	return nil
 }
