@@ -305,6 +305,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		{Name: "service_and_agent", ManifestSrc: workingDir("test_data/reader/inputs/service_and_agent.yaml")},
 		{Name: "projects_and_direct", ManifestSrc: workingDir("test_data/reader/inputs/projects_and_direct.yml")},
 		{Name: "annotations", ManifestSrc: workingDir("test_data/reader/inputs/annotations.yaml")},
+		{Name: "dataexport", ManifestSrc: workingDir("test_data/reader/inputs/dataexport.yaml")},
 		{Name: "project", ManifestSrc: workingDir("test_data/reader/inputs/project.json")},
 	}
 
