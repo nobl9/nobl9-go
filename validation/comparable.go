@@ -26,28 +26,28 @@ func NotEqualTo[T comparable](compared T) SingleRule[T] {
 }
 
 func GreaterThan[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonSingleRule(cmpGreaterThan, n)).
+	return NewSingleRule(orderedComparisonRule(cmpGreaterThan, n)).
 		WithErrorCode(ErrorCodeGreaterThan)
 }
 
 func GreaterThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonSingleRule(cmpGreaterThanOrEqual, n)).
+	return NewSingleRule(orderedComparisonRule(cmpGreaterThanOrEqual, n)).
 		WithErrorCode(ErrorCodeGreaterThanOrEqualTo)
 }
 
 func LessThan[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonSingleRule(cmpLessThan, n)).
+	return NewSingleRule(orderedComparisonRule(cmpLessThan, n)).
 		WithErrorCode(ErrorCodeLessThan)
 }
 
 func LessThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonSingleRule(cmpLessThanOrEqual, n)).
+	return NewSingleRule(orderedComparisonRule(cmpLessThanOrEqual, n)).
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }
 
 var comparisonFmt = "should be %s '%v'"
 
-func orderedComparisonSingleRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
+func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
 	return func(v T) error {
 		var passed bool
 		//nolint: exhaustive
