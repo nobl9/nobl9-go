@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -96,14 +97,6 @@ func TestResolveSources(t *testing.T) {
 }
 
 func TestReadDefinitions_FromReader(t *testing.T) {
-	t.Run("dataexport", func(t *testing.T) {
-		definitions, err := ReadObjectsFromSources(
-			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
-		require.NoError(t, err)
-		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
-	})
-
 	t.Run("read definitions from reader", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
@@ -148,6 +141,31 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 			})
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrSourceTypeReaderPath)
+	})
+}
+
+func TestReadDefinitions_UsingCustomizedUnmarshalling(t *testing.T) {
+	t.Run("report an error when unexpected structure was returned", func(t *testing.T) {
+		definitions, err := ReadObjectsFromSources(
+			context.Background(),
+			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
+		require.NoError(t, err)
+
+		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
+
+		if appliedDataExport, ok := definitions[0].(dataexport.DataExport); ok {
+			assert.Equal(
+				t,
+				appliedDataExport.Spec.Spec,
+				&dataexport.S3DataExportSpec{
+					BucketName: "examplebucket",
+					RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
+				},
+			)
+			return
+		}
+
+		t.Errorf("could not convert defintion to DataExport")
 	})
 }
 
