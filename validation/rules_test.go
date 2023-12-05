@@ -147,17 +147,17 @@ func TestPropertyRules(t *testing.T) {
 	})
 
 	t.Run("hide value", func(t *testing.T) {
-		expectedErrs := errors.New("'secret' value")
-		r := For(GetSelf[mockStruct]()).
+		expectedErr := errors.New("oh no! here's the value: 'secret'")
+		r := For(func(m mockStruct) string { return "secret" }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v mockStruct) error { return expectedErrs }))
-		object := mockStruct{Field: "this"}
-		errs := r.Validate(object)
+			HideValue().
+			Rules(NewSingleRule(func(v string) error { return expectedErr }))
+		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path",
 			PropertyValue: "",
-			Errors:        []*RuleError{{Message: "'******' value"}},
+			Errors:        []*RuleError{{Message: "oh no! here's the value: '******'"}},
 		}, errs[0])
 	})
 }
