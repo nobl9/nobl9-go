@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 )
 
 //go:embed test_data/reader
@@ -140,6 +141,27 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 			})
 		require.Error(t, err)
 		assert.ErrorIs(t, err, ErrSourceTypeReaderPath)
+	})
+}
+
+func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
+	t.Run("report an error when unexpected structure was returned", func(t *testing.T) {
+		definitions, err := ReadObjectsFromSources(
+			context.Background(),
+			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
+		require.NoError(t, err)
+
+		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
+
+		require.IsType(t, dataexport.DataExport{}, definitions[0])
+		assert.Equal(
+			t,
+			definitions[0].(dataexport.DataExport).Spec.Spec,
+			dataexport.S3DataExportSpec{
+				BucketName: "example-bucket",
+				RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
+			},
+		)
 	})
 }
 
@@ -279,6 +301,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		{Name: "service_and_agent", ManifestSrc: workingDir("test_data/reader/inputs/service_and_agent.yaml")},
 		{Name: "projects_and_direct", ManifestSrc: workingDir("test_data/reader/inputs/projects_and_direct.yml")},
 		{Name: "annotations", ManifestSrc: workingDir("test_data/reader/inputs/annotations.yaml")},
+		{Name: "dataexport", ManifestSrc: workingDir("test_data/reader/inputs/dataexport.yaml")},
 		{Name: "project", ManifestSrc: workingDir("test_data/reader/inputs/project.json")},
 	}
 

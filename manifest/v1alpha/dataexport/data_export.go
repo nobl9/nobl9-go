@@ -82,14 +82,17 @@ func (d *Spec) UnmarshalJSON(bytes []byte) error {
 	d.ExportType = genericSpec.ExportType
 	switch d.ExportType {
 	case DataExportTypeS3, DataExportTypeSnowflake:
-		d.Spec = &S3DataExportSpec{}
-	case DataExportTypeGCS:
-		d.Spec = &GCSDataExportSpec{}
-	}
-	if genericSpec.Spec != nil {
-		if err := json.Unmarshal(genericSpec.Spec, &d.Spec); err != nil {
+		var s3Spec S3DataExportSpec
+		if err := json.Unmarshal(genericSpec.Spec, &s3Spec); err != nil {
 			return err
 		}
+		d.Spec = s3Spec
+	case DataExportTypeGCS:
+		var gcsSpec GCSDataExportSpec
+		if err := json.Unmarshal(genericSpec.Spec, &gcsSpec); err != nil {
+			return err
+		}
+		d.Spec = gcsSpec
 	}
 	return nil
 }
