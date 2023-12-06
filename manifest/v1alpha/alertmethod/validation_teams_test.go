@@ -41,7 +41,7 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.msteams.url",
-					Code: validation.ErrorCodeStringURL,
+					Code: validation.ErrorCodeURL,
 				},
 			},
 			AlertMethod: TeamsAlertMethod{
@@ -52,8 +52,8 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.msteams.url",
-					Code: validation.ErrorCodeStringURL,
+					Prop:    "spec.msteams.url",
+					Message: "requires https scheme",
 				},
 			},
 			AlertMethod: TeamsAlertMethod{

@@ -65,9 +65,7 @@ func TestValidate_Spec(t *testing.T) {
 	})
 }
 
-func getStringPointer(value string) *string {
-	return &value
-}
+func ptr[T any](v T) *T { return &v }
 
 func validAlertMethod() AlertMethod {
 	return New(

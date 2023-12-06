@@ -1,6 +1,7 @@
 package alertmethod
 
 import (
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -14,10 +15,11 @@ const (
 	expectedNumberOfAlertMethodTypes = 1
 	maxDescriptionLength             = 1050
 	maxWebhookHeaders                = 10
-	maxEmailReceipients              = 10
+	maxEmailRecipients               = 10
 )
 
-var HeaderNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
+var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
+var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
 
 var alertMethodValidation = validation.New[AlertMethod](
 	validation.For(func(a AlertMethod) Metadata { return a.Metadata }).
@@ -106,10 +108,10 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		Rules(
 			validation.NewSingleRule(func(w WebhookAlertMethod) error {
 				if w.Template != nil && len(w.TemplateFields) > 0 {
-					return errors.New("must not contain both template and templateFields")
+					return errors.New("must not contain both 'template' and 'templateFields'")
 				}
 				if w.Template == nil && len(w.TemplateFields) == 0 {
-					return errors.New("must contain either template or templateFields")
+					return errors.New("must contain either 'template' or 'templateFields'")
 				}
 				return nil
 			})),
@@ -118,14 +120,14 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		Include(optionalUrlValidation()),
 	validation.ForPointer(func(w WebhookAlertMethod) *string { return w.Template }).
 		WithName("template").
-		When(func(w WebhookAlertMethod) bool { return w.Template != nil }).
-		Rules(webhookTemplateValidationRule()),
+		Rules(validation.NewSingleRule(func(v string) error {
+			fields := extractTemplateFields(v)
+			return validateTemplateFields(fields)
+		})),
 	validation.For(func(w WebhookAlertMethod) []string { return w.TemplateFields }).
 		WithName("templateFields").
-		When(func(w WebhookAlertMethod) bool { return w.Template == nil }).
-		Rules(validation.SliceMinLength[[]string](1)).
-		StopOnError().
-		Rules(webhookTemplateFieldsValidationRule()),
+		OmitEmpty().
+		Rules(validation.NewSingleRule(validateTemplateFields)),
 	validation.ForEach(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
 		WithName("headers").
 		Rules(validation.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
@@ -163,12 +165,22 @@ var discordValidation = validation.New[DiscordAlertMethod](
 )
 
 var opsgenieValidation = validation.New[OpsgenieAlertMethod](
-	validation.For(func(s OpsgenieAlertMethod) string { return s.URL }).
+	validation.For(func(o OpsgenieAlertMethod) string { return o.URL }).
 		WithName("url").
 		Include(optionalUrlValidation()),
-	validation.For(func(s OpsgenieAlertMethod) string { return s.Auth }).
+	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
-		Include(opsgenieAuthValidation),
+		When(func(o OpsgenieAlertMethod) bool {
+			return o.Auth != "" && o.Auth != v1alpha.HiddenValue
+		}).
+		Rules(
+			validation.NewSingleRule(func(v string) error {
+				if !strings.HasPrefix(v, "Basic") &&
+					!strings.HasPrefix(v, "GenieKey") {
+					return errors.New("invalid auth format, should start with either GenieKey or Basic")
+				}
+				return nil
+			})),
 )
 
 var serviceNowValidation = validation.New[ServiceNowAlertMethod](
@@ -181,10 +193,19 @@ var serviceNowValidation = validation.New[ServiceNowAlertMethod](
 )
 
 var jiraValidation = validation.New[JiraAlertMethod](
-	validation.For(func(s JiraAlertMethod) string { return s.URL }).
+	validation.Transform(func(j JiraAlertMethod) string { return j.URL }, url.Parse).
 		WithName("url").
 		Required().
-		Rules(validation.StringURL(validation.RequireHttps)),
+		Rules(validation.URL()).
+		StopOnError().
+		Rules(
+			validation.NewSingleRule(func(u *url.URL) error {
+				if u.Scheme != "https" {
+					return errors.New("requires https scheme")
+				}
+				return nil
+			}),
+		),
 	validation.For(func(s JiraAlertMethod) string { return s.Username }).
 		WithName("username").
 		Required(),
@@ -194,10 +215,19 @@ var jiraValidation = validation.New[JiraAlertMethod](
 )
 
 var teamsValidation = validation.New[TeamsAlertMethod](
-	validation.For(func(s TeamsAlertMethod) string { return s.URL }).
+	validation.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
-		Include(optionalUrlValidation(validation.RequireHttps)),
-)
+		Rules(validation.URL()).
+		StopOnError().
+		Rules(
+			validation.NewSingleRule(func(u *url.URL) error {
+				if u.Scheme != "https" {
+					return errors.New("requires https scheme")
+				}
+				return nil
+			}),
+		),
+).When(func(v TeamsAlertMethod) bool { return v.URL != "" && v.URL != v1alpha.HiddenValue })
 
 var emailValidation = validation.New[EmailAlertMethod](
 	validation.For(validation.GetSelf[EmailAlertMethod]()).
@@ -210,40 +240,21 @@ var emailValidation = validation.New[EmailAlertMethod](
 			})),
 	validation.For(func(s EmailAlertMethod) []string { return s.To }).
 		WithName("to").
-		Rules(validation.SliceMaxLength[[]string](maxEmailReceipients)),
+		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
 	validation.For(func(s EmailAlertMethod) []string { return s.Cc }).
 		WithName("cc").
-		Rules(validation.SliceMaxLength[[]string](maxEmailReceipients)),
+		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
 	validation.For(func(s EmailAlertMethod) []string { return s.Bcc }).
 		WithName("bcc").
-		Rules(validation.SliceMaxLength[[]string](maxEmailReceipients)),
+		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
 )
 
-func optionalUrlValidation(options ...validation.StringURLOption) validation.Validator[string] {
+func optionalUrlValidation() validation.Validator[string] {
 	return validation.New[string](
 		validation.For(validation.GetSelf[string]()).
 			When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
-			Rules(validation.StringURL(options...)),
+			Rules(validation.StringURL()),
 	)
-}
-
-func webhookTemplateValidationRule() validation.SingleRule[string] {
-	return validation.NewSingleRule(func(v string) error {
-		templateFields := extractTemplateFields(v)
-		if !hasValidTemplateFields(templateFields, notificationTemplateAllowedFields) {
-			return errors.New("contains invalid template fields")
-		}
-		return nil
-	})
-}
-
-func webhookTemplateFieldsValidationRule() validation.SingleRule[[]string] {
-	return validation.NewSingleRule(func(v []string) error {
-		if !hasValidTemplateFields(v, notificationTemplateAllowedFields) {
-			return errors.New("contains invalid template fields")
-		}
-		return nil
-	})
 }
 
 var webhookHeaderValidation = validation.New[WebhookHeader](
@@ -252,7 +263,7 @@ var webhookHeaderValidation = validation.New[WebhookHeader](
 		Required().
 		Rules(
 			validation.StringNotEmpty(),
-			validation.StringMatchRegexp(HeaderNameRegex).
+			validation.StringMatchRegexp(headerNameRegex).
 				WithDetails("must be a valid header name")),
 	validation.For(func(h WebhookHeader) string { return h.Value }).
 		WithName("value").
@@ -261,7 +272,7 @@ var webhookHeaderValidation = validation.New[WebhookHeader](
 )
 
 func extractTemplateFields(template string) []string {
-	matches := regexp.MustCompile(`\$([a-z_]+(\[])?)`).FindAllStringSubmatch(template, -1)
+	matches := templateFieldsRegex.FindAllStringSubmatch(template, -1)
 	templateFields := make([]string, len(matches))
 	for i, match := range matches {
 		templateFields[i] = match[1]
@@ -269,26 +280,14 @@ func extractTemplateFields(template string) []string {
 	return templateFields
 }
 
-func hasValidTemplateFields(templateFields []string, allowedFields map[string]struct{}) bool {
+func validateTemplateFields(templateFields []string) error {
 	for _, field := range templateFields {
-		if _, ok := allowedFields[field]; !ok {
-			return false
+		if _, ok := notificationTemplateAllowedFields[field]; !ok {
+			return errors.New("contains invalid template field: " + field)
 		}
 	}
-	return true
+	return nil
 }
-
-var opsgenieAuthValidation = validation.New[string](
-	validation.For(validation.GetSelf[string]()).
-		When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
-		Rules(
-			validation.NewSingleRule(func(v string) error {
-				if !strings.HasPrefix(v, "Basic") &&
-					!strings.HasPrefix(v, "GenieKey") {
-					return errors.New("invalid auth format")
-				}
-				return nil
-			})))
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertMethodValidation, a)

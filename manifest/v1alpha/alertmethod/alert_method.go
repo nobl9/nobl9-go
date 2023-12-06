@@ -37,7 +37,7 @@ type Metadata struct {
 
 // Spec holds detailed information specific to AlertMethod.
 type Spec struct {
-	Description string                 `json:"description" validate:"description"`
+	Description string                 `json:"description"`
 	Webhook     *WebhookAlertMethod    `json:"webhook,omitempty"`
 	PagerDuty   *PagerDutyAlertMethod  `json:"pagerduty,omitempty"`
 	Slack       *SlackAlertMethod      `json:"slack,omitempty"`
@@ -106,14 +106,14 @@ type JiraAlertMethod struct {
 
 // TeamsAlertMethod represents a set of properties required create Microsoft Teams notifications.
 type TeamsAlertMethod struct {
-	URL string `json:"url" validate:"httpsURL"`
+	URL string `json:"url"`
 }
 
 // EmailAlertMethod represents a set of properties required to send an email.
 type EmailAlertMethod struct {
 	To  []string `json:"to,omitempty"`
 	Cc  []string `json:"cc,omitempty"`
-	Bcc []string `json:"bcc,omitempty" validate:"omitempty,max=10,emails"`
+	Bcc []string `json:"bcc,omitempty"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Subject string `json:"subject,omitempty"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.

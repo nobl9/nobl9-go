@@ -67,7 +67,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.opsgenie.auth",
-					Message: "invalid auth format",
+					Message: "invalid auth format, should start with either GenieKey or Basic",
 				},
 			},
 			AlertMethod: OpsgenieAlertMethod{

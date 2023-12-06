@@ -48,7 +48,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.jira.url",
-					Code: validation.ErrorCodeStringURL,
+					Code: validation.ErrorCodeURL,
 				},
 			},
 			AlertMethod: JiraAlertMethod{
@@ -61,8 +61,8 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.jira.url",
-					Code: validation.ErrorCodeStringURL,
+					Prop:    "spec.jira.url",
+					Message: "requires https scheme",
 				},
 			},
 			AlertMethod: JiraAlertMethod{

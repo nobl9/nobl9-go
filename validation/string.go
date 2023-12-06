@@ -78,13 +78,7 @@ func StringDescription() SingleRule[string] {
 	return StringLength(0, 1050).WithErrorCode(ErrorCodeStringDescription)
 }
 
-type StringURLOption byte
-
-const (
-	RequireHttps StringURLOption = 1 << iota
-)
-
-func StringURL(options ...StringURLOption) SingleRule[string] {
+func StringURL() SingleRule[string] {
 	return NewSingleRule(func(v string) error {
 		u, err := url.Parse(v)
 		if err != nil {
@@ -95,14 +89,6 @@ func StringURL(options ...StringURLOption) SingleRule[string] {
 		}
 		if u.Host == "" && u.Fragment == "" && u.Opaque == "" {
 			return errors.New("valid URL must contain either host, fragment or opaque data")
-		}
-		for _, option := range options {
-			switch option {
-			case RequireHttps:
-				if u.Scheme != "https" {
-					return errors.New("URL must use HTTPS")
-				}
-			}
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringURL)
