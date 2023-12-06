@@ -157,7 +157,7 @@ func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
 		assert.Equal(
 			t,
 			definitions[0].(dataexport.DataExport).Spec.Spec,
-			&dataexport.S3DataExportSpec{
+			dataexport.S3DataExportSpec{
 				BucketName: "example-bucket",
 				RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
 			},
