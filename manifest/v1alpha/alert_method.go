@@ -119,3 +119,45 @@ type AlertMethodWithAlertPolicy struct {
 	AlertMethod   PublicAlertMethod `json:"alertMethod"`
 	AlertPolicies []AlertPolicy     `json:"alertPolicies"`
 }
+
+// AlertPolicy represents a set of conditions that can trigger an alert.
+// TODO to remove
+type AlertPolicy struct {
+	APIVersion     string              `json:"apiVersion"`
+	Kind           manifest.Kind       `json:"kind"`
+	Metadata       AlertPolicyMetadata `json:"metadata"`
+	Spec           AlertPolicySpec     `json:"spec"`
+	Organization   string              `json:"organization,omitempty"`
+	ManifestSource string              `json:"manifestSrc,omitempty"`
+}
+
+// AlertPolicyMetadata TODO to remove
+type AlertPolicyMetadata struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+	Project     string `json:"project,omitempty"`
+	Labels      Labels `json:"labels,omitempty"`
+}
+
+// AlertPolicySpec represents content of AlertPolicy's Spec.
+// TODO to remove
+type AlertPolicySpec struct {
+	Description      string              `json:"description"`
+	Severity         string              `json:"severity"`
+	CoolDownDuration string              `json:"coolDown,omitempty"`
+	Conditions       []AlertCondition    `json:"conditions"`
+	AlertMethods     []PublicAlertMethod `json:"alertMethods"`
+}
+
+func (spec AlertPolicySpec) GetAlertMethods() []PublicAlertMethod {
+	return spec.AlertMethods
+}
+
+// AlertCondition represents a condition to meet to trigger an alert.
+// TODO to remove
+type AlertCondition struct {
+	Measurement      string      `json:"measurement"`
+	Value            interface{} `json:"value"`
+	AlertingWindow   string      `json:"alertingWindow,omitempty"`
+	LastsForDuration string      `json:"lastsFor,omitempty"`
+}
