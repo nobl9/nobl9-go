@@ -1,6 +1,7 @@
 package alertpolicy
 
 import (
+	"fmt"
 	"github.com/nobl9/nobl9-go/validation"
 )
 
@@ -30,6 +31,15 @@ func (m Severity) String() string {
 		}
 	}
 	return "Unknown"
+}
+
+// ParseSeverity parses string to Severity
+func ParseSeverity(value string) (Severity, error) {
+	result, ok := getSeverityLevels()[value]
+	if !ok {
+		return result, fmt.Errorf("'%s' is not valid severity", value)
+	}
+	return result, nil
 }
 
 func SeverityValidation() validation.SingleRule[string] {
