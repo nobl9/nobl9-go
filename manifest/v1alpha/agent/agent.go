@@ -7,7 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Agent
+//go:generate go run ../../../scripts/generate-object-impl.go Agent
 
 // New creates new Agent instance.
 func New(metadata Metadata, spec Spec) Agent {

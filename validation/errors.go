@@ -163,7 +163,8 @@ var newLineReplacer = strings.NewReplacer("\n", "\\n", "\r", "\\r")
 // - limiting the string to 100 characters
 // - removing leading and trailing whitespaces
 // - escaping newlines
-// If a struct
+// If value is a struct implementing [fmt.Stringer] String method will be used
+// only if the struct does not contain any JSON tags.
 func propertyValueString(v interface{}) string {
 	if v == nil {
 		return ""
