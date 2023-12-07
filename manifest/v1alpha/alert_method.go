@@ -121,7 +121,7 @@ type AlertMethodWithAlertPolicy struct {
 }
 
 // AlertPolicy represents a set of conditions that can trigger an alert.
-// TODO to remove
+// TODO to remove when alert method is merged
 type AlertPolicy struct {
 	APIVersion     string              `json:"apiVersion"`
 	Kind           manifest.Kind       `json:"kind"`

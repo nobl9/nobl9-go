@@ -3,6 +3,7 @@ package alert
 import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go Alert
@@ -35,18 +36,18 @@ type Metadata struct {
 
 // Spec represents content of Alert's Spec
 type Spec struct {
-	AlertPolicy         ObjectMetadata `json:"alertPolicy"`
-	SLO                 ObjectMetadata `json:"slo"`
-	Service             ObjectMetadata `json:"service"`
-	Objective           Objective      `json:"objective"`
-	Severity            string         `json:"severity"`
-	Status              string         `json:"status"`
-	TriggeredMetricTime string         `json:"triggeredMetricTime"`
-	TriggeredClockTime  string         `json:"triggeredClockTime"`
-	ResolvedClockTime   *string        `json:"resolvedClockTime,omitempty"`
-	ResolvedMetricTime  *string        `json:"resolvedMetricTime,omitempty"`
-	CoolDown            string         `json:"coolDown"`
-	Conditions          []Condition    `json:"conditions"`
+	AlertPolicy         ObjectMetadata               `json:"alertPolicy"`
+	SLO                 ObjectMetadata               `json:"slo"`
+	Service             ObjectMetadata               `json:"service"`
+	Objective           Objective                    `json:"objective"`
+	Severity            string                       `json:"severity"`
+	Status              string                       `json:"status"`
+	TriggeredMetricTime string                       `json:"triggeredMetricTime"`
+	TriggeredClockTime  string                       `json:"triggeredClockTime"`
+	ResolvedClockTime   *string                      `json:"resolvedClockTime,omitempty"`
+	ResolvedMetricTime  *string                      `json:"resolvedMetricTime,omitempty"`
+	CoolDown            string                       `json:"coolDown"`
+	Conditions          []alertpolicy.AlertCondition `json:"conditions"`
 }
 
 type Objective struct {
@@ -60,12 +61,4 @@ type ObjectMetadata struct {
 	DisplayName string         `json:"displayName,omitempty"`
 	Project     string         `json:"project,omitempty"`
 	Labels      v1alpha.Labels `json:"labels,omitempty"`
-}
-
-type Condition struct {
-	Measurement      string      `json:"measurement"`
-	Value            interface{} `json:"value"`
-	AlertingWindow   string      `json:"alertingWindow,omitempty"`
-	LastsForDuration string      `json:"lastsFor,omitempty"`
-	Operator         string      `json:"op,omitempty"`
 }
