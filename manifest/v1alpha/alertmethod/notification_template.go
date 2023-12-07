@@ -1,4 +1,4 @@
-package v1alpha
+package alertmethod
 
 // TemplateVariable can be used with MessageRenderer to override how variables are rendered.
 type TemplateVariable = string
