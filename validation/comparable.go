@@ -7,7 +7,7 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-func EqualTo[T comparable](compared T) Rule[T] {
+func EqualTo[T comparable](compared T) SingleRule[T] {
 	return NewSingleRule(func(v T) error {
 		if v != compared {
 			return errors.Errorf(comparisonFmt, cmpEqualTo, compared)
@@ -16,7 +16,7 @@ func EqualTo[T comparable](compared T) Rule[T] {
 	}).WithErrorCode(ErrorCodeEqualTo)
 }
 
-func NotEqualTo[T comparable](compared T) Rule[T] {
+func NotEqualTo[T comparable](compared T) SingleRule[T] {
 	return NewSingleRule(func(v T) error {
 		if v == compared {
 			return errors.Errorf(comparisonFmt, cmpNotEqualTo, compared)
@@ -25,22 +25,22 @@ func NotEqualTo[T comparable](compared T) Rule[T] {
 	}).WithErrorCode(ErrorCodeNotEqualTo)
 }
 
-func GreaterThan[T constraints.Ordered](n T) Rule[T] {
+func GreaterThan[T constraints.Ordered](n T) SingleRule[T] {
 	return NewSingleRule(orderedComparisonRule(cmpGreaterThan, n)).
 		WithErrorCode(ErrorCodeGreaterThan)
 }
 
-func GreaterThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
+func GreaterThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
 	return NewSingleRule(orderedComparisonRule(cmpGreaterThanOrEqual, n)).
 		WithErrorCode(ErrorCodeGreaterThanOrEqualTo)
 }
 
-func LessThan[T constraints.Ordered](n T) Rule[T] {
+func LessThan[T constraints.Ordered](n T) SingleRule[T] {
 	return NewSingleRule(orderedComparisonRule(cmpLessThan, n)).
 		WithErrorCode(ErrorCodeLessThan)
 }
 
-func LessThanOrEqualTo[T constraints.Ordered](n T) Rule[T] {
+func LessThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
 	return NewSingleRule(orderedComparisonRule(cmpLessThanOrEqual, n)).
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }

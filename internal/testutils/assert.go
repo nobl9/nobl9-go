@@ -64,29 +64,36 @@ func AssertContainsErrors(
 	// Find and match expected errors.
 	for _, expected := range expectedErrors {
 		found := false
-	searchErrors:
 		for _, actual := range objErr.Errors {
+			var failedMessage, failedContainsMessage, failedCode bool
+
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
-				if expected.Message != "" && expected.Message == actualRuleErr.Message {
-					found = true
-					break searchErrors
+				if expected.Message != "" && expected.Message != actualRuleErr.Message {
+					failedMessage = true
+					break
 				}
-				if expected.ContainsMessage != "" && strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
-					found = true
-					break searchErrors
+				if expected.ContainsMessage != "" &&
+					!strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					failedContainsMessage = true
+					break
 				}
 				if expected.Code != "" &&
-					(expected.Code == actualRuleErr.Code || validation.HasErrorCode(actualRuleErr, expected.Code)) {
-					found = true
-					break searchErrors
+					(expected.Code != actualRuleErr.Code && !validation.HasErrorCode(actualRuleErr, expected.Code)) {
+					failedCode = true
+					break
 				}
 			}
+
+			if !failedMessage && !failedContainsMessage && !failedCode {
+				found = true
+			}
 		}
+
 		// Pretty print the diff.
 		encExpected, _ := json.MarshalIndent(expected, "", " ")
 		encActual, _ := json.MarshalIndent(objErr.Errors, "", " ")

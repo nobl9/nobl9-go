@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Alert
+metadata:
+  name: 6fbc76bc-ff8a-40a2-8ac6-65d7d7a2686e
+  project: alerting-test
+spec:
+  alertPolicy:
+    name: burn-rate-is-4x-immediately
+    project: alerting-test
+  service:
+    name: triggering-alerts-service
+    project: alerting-test
+  objective:
+    value: 99.0
+    name: ok
+    displayName: ok
+  severity: Medium
+  slo:
+    name: prometheus-rolling-timeslices-threshold
+    project: alerting-test
+  status: Triggered
+  triggeredClockTime: "2022-01-16T00:28:05Z
