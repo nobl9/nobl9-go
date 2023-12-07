@@ -29,7 +29,7 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Spec(t *testing.T) {
-	t.Run("fails with empty spec", func(t *testing.T) {
+	t.Run("fails with too long description", func(t *testing.T) {
 		alertMethod := validAlertMethod()
 		alertMethod.Spec.Description = strings.Repeat("l", 1051)
 		err := validate(alertMethod)
