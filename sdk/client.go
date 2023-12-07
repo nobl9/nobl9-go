@@ -19,6 +19,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 // DefaultProject is a value of the default project.
@@ -294,7 +295,7 @@ func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, 
 }
 
 func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName string) (
-	*v1alpha.AWSIAMRoleAuthExternalIDs,
+	*models.AWSIAMRoleAuthExternalIDs,
 	error,
 ) {
 	getUrl := fmt.Sprintf("data-sources/iam-role-auth-data/%s", directName)
@@ -311,7 +312,7 @@ func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName st
 		return nil, err
 	}
 
-	var response v1alpha.AWSIAMRoleAuthExternalIDs
+	var response models.AWSIAMRoleAuthExternalIDs
 
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")

@@ -13,6 +13,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
@@ -60,7 +61,7 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindAgent:
 		return genericParseObject[agent.Agent](unmarshal)
 	case manifest.KindDirect:
-		return genericParseObject[v1alpha.Direct](unmarshal)
+		return genericParseObject[direct.Direct](unmarshal)
 	case manifest.KindAlert:
 		return genericParseObject[v1alpha.Alert](unmarshal)
 	case manifest.KindAlertMethod:
