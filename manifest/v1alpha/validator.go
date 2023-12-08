@@ -114,6 +114,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("severity", isValidSeverity)
 	_ = val.RegisterValidation("operator", isValidOperator)
 	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
+	_ = val.RegisterValidation("httpsURL", isHTTPS)
 	_ = val.RegisterValidation("durationMinutePrecision", isDurationMinutePrecision)
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
@@ -323,6 +324,17 @@ func validateURLDynatrace(validateURL string) bool {
 func areLabelsValid(fl v.FieldLevel) bool {
 	lbl := fl.Field().Interface().(Labels)
 	return lbl.Validate() == nil
+}
+
+func isHTTPS(fl v.FieldLevel) bool {
+	if !isNotEmpty(fl) || fl.Field().String() == HiddenValue {
+		return true
+	}
+	val, err := url.Parse(fl.Field().String())
+	if err != nil || val.Scheme != "https" {
+		return false
+	}
+	return true
 }
 
 func prometheusConfigValidation(pc *PrometheusAgentConfig, sl v.StructLevel) {
