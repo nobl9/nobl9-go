@@ -721,7 +721,6 @@ type valuesWithCodeExpect struct {
 	values          []string
 	expectedCode    string
 	expectedMessage string
-	expectedErrors  int
 }
 
 type measurementDetermined struct {
