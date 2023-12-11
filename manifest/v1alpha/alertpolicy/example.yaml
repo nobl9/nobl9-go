@@ -1,0 +1,20 @@
+apiVersion: n9/v1alpha
+kind: AlertPolicy
+metadata:
+  name: my-alert-policy
+  displayName: My Alert Policy
+  project: default
+  labels:
+    team: [ green, orange ]
+    region: [ eu-central-1 ]
+spec:
+  description: Example alert policy
+  severity: High
+  coolDown: "5m"
+  conditions:
+    - measurement: burnedBudget
+      value: 0.80
+  alertMethods:
+    - metadata:
+        name: my-alert-method
+        project: my-project

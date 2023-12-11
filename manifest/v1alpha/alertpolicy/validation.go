@@ -53,15 +53,11 @@ var conditionValidation = validation.New[AlertCondition](
 		Required().
 		Rules(MeasurementValidation()),
 	validation.For(validation.GetSelf[AlertCondition]()).
+		Include(alertingWindowOrLastsForValidation).
 		Include(measurementWithAlertingWindowValidation).
 		Include(timeToBurnBudgetValueValidation).
 		Include(burnedAndAverageBudgetValueValidation).
 		Include(averageBudgetWithAlertingWindowValueValidation),
-	validation.For(validation.GetSelf[AlertCondition]()).
-		Rules(validation.MutuallyExclusive(true, map[string]func(c AlertCondition) any{
-			"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
-			"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
-		})),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
 		WithName("alertingWindow").
 		OmitEmpty().
@@ -84,6 +80,7 @@ const (
 	errorCodeDurationFullMinutePrecision                     validation.ErrorCode = "duration_full_minute_precision"
 	errorCodeOperatorAppropriateOperatorRegardingMeasurement validation.ErrorCode = "operator_regarding_measurement"
 	errorCodeMeasurementWithAlertingWindow                   validation.ErrorCode = "measurement_regarding_alerting_window"
+	errorCodeAlertingWindowOrLastsFor                        validation.ErrorCode = "alerting_window_or_lasts_for"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
@@ -97,6 +94,20 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 
 		return nil
 	},
+)
+
+var alertingWindowOrLastsForValidation = validation.New[AlertCondition](
+	validation.For(validation.GetSelf[AlertCondition]()).
+		Rules(
+			validation.NewSingleRule(func(c AlertCondition) error {
+				if c.AlertingWindow != "" && c.LastsForDuration != "" {
+					return &validation.RuleError{
+						Message: "only on of alertingWindow or lastsFor must be defined for alertCondition",
+						Code:    errorCodeAlertingWindowOrLastsFor,
+					}
+				}
+				return nil
+			})),
 )
 
 var timeToBurnBudgetValueValidation = validation.New[AlertCondition](

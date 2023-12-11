@@ -162,29 +162,23 @@ func TestValidate_Spec_Conditions(t *testing.T) {
 }
 
 func TestValidate_Spec_Condition(t *testing.T) {
-	t.Run("fields mutual exclusion", func(t *testing.T) {
-		tests := map[string]AlertCondition{
-			"fails, both alertingWindow and lastsFor": {
-				AlertingWindow:   "6m",
-				LastsForDuration: "16m",
-			},
-			"fails, no alertingWindow and no lastsFor": {
-				AlertingWindow:   "",
-				LastsForDuration: "",
-			},
-		}
-		for name, testCase := range tests {
-			t.Run(name, func(t *testing.T) {
-				alertPolicy := validAlertPolicy()
-				alertPolicy.Spec.Conditions[0].AlertingWindow = testCase.AlertingWindow
-				alertPolicy.Spec.Conditions[0].LastsForDuration = testCase.LastsForDuration
-				err := validate(alertPolicy)
-				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop: "spec.conditions[0]",
-					Code: validation.ErrorCodeMutuallyExclusive,
-				})
-			})
-		}
+	t.Run("passes, alertingWindows and lastsFor can be empty", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		alertPolicy.Spec.Conditions[0].LastsForDuration = ""
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+
+	t.Run("fails, only alertingWindow or lastsFor can be defined", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].AlertingWindow = "6m"
+		alertPolicy.Spec.Conditions[0].LastsForDuration = "10m"
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0]",
+			Code: errorCodeAlertingWindowOrLastsFor,
+		})
 	})
 }
 

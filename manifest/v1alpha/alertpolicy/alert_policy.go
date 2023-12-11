@@ -36,14 +36,14 @@ type Metadata struct {
 
 // Spec represents content of AlertPolicy's Spec.
 type Spec struct {
-	Description      string                      `json:"description"`
-	Severity         string                      `json:"severity"`
-	CoolDownDuration string                      `json:"coolDown,omitempty"`
-	Conditions       []AlertCondition            `json:"conditions"`
-	AlertMethods     []v1alpha.PublicAlertMethod `json:"alertMethods"`
+	Description      string           `json:"description"`
+	Severity         string           `json:"severity"`
+	CoolDownDuration string           `json:"coolDown,omitempty"`
+	Conditions       []AlertCondition `json:"conditions"`
+	AlertMethods     []AlertMethodRef `json:"alertMethods"`
 }
 
-func (spec Spec) GetAlertMethods() []v1alpha.PublicAlertMethod {
+func (spec Spec) GetAlertMethods() []AlertMethodRef {
 	return spec.AlertMethods
 }
 
@@ -56,10 +56,11 @@ type AlertCondition struct {
 	Operator         string      `json:"op,omitempty"`
 }
 
-type AlertMethodsRef struct {
+type AlertMethodRef struct {
 	Metadata AlertMethodsRefMetadata `json:"metadata"`
 }
 
+// TODO validate it
 type AlertMethodsRefMetadata struct {
 	Name    string `json:"name" validate:"required,objectName"`
 	Project string `json:"project,omitempty" validate:"objectName"`

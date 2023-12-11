@@ -2,6 +2,7 @@ package alertmethod
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go AlertMethod
@@ -23,6 +24,7 @@ type AlertMethod struct {
 	Kind       manifest.Kind `json:"kind"`
 	Metadata   Metadata      `json:"metadata"`
 	Spec       Spec          `json:"spec"`
+	Status     *Status       `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`
@@ -33,6 +35,12 @@ type Metadata struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName,omitempty"`
 	Project     string `json:"project,omitempty"`
+}
+
+// Status represents content of Status optional for AlertMethod Object
+type Status struct {
+	LastTestDate       string `json:"lastTestDate,omitempty" example:"2021-02-09T10:43:07Z"`
+	NextTestPossibleAt string `json:"nextTestPossibleAt,omitempty" example:"2021-02-09T10:43:07Z"`
 }
 
 // Spec holds detailed information specific to AlertMethod.
@@ -118,4 +126,10 @@ type EmailAlertMethod struct {
 	Subject string `json:"subject,omitempty"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Body string `json:"body,omitempty"`
+}
+
+// WithAlertPolicies represents an AlertPolicies assigned to AlertMethod.
+type WithAlertPolicies struct {
+	AlertMethod   AlertMethod               `json:"alertMethod"`
+	AlertPolicies []alertpolicy.AlertPolicy `json:"alertPolicies"`
 }
