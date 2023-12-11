@@ -590,7 +590,6 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 			LastsForDuration: "5m",
 		},
 	}
-
 	for _, alertCondition := range testCases {
 		t.Run("operator with a reference to Measurement", func(t *testing.T) {
 			measurement, _ := ParseMeasurement(alertCondition.Measurement)
@@ -630,6 +629,70 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
+			{
+				AlertMethodsRefMetadata{
+					Name:    "my-alert-method",
+					Project: "my-project",
+				},
+			},
+			{
+				AlertMethodsRefMetadata{
+					Name: "my-alert-method-2",
+				},
+			},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertNoError(t, alertPolicy, err)
+	})
+	t.Run("fails, invalid name", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
+			{
+				AlertMethodsRefMetadata{
+					Name: strings.Repeat("MY AlertMethodName", 20),
+				},
+			},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.alertMethods[0].name",
+				Code: validation.ErrorCodeStringIsDNSSubdomain,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.alertMethods[0].name",
+				Code: validation.ErrorCodeStringIsDNSSubdomain,
+			},
+		)
+	})
+	t.Run("fails, invalid project", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
+			{
+				AlertMethodsRefMetadata{
+					Name:    "alert-method-name",
+					Project: strings.Repeat("MY AlertMethodName", 20),
+				},
+			},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.alertMethods[0].project",
+				Code: validation.ErrorCodeStringIsDNSSubdomain,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.alertMethods[0].project",
+				Code: validation.ErrorCodeStringIsDNSSubdomain,
+			},
+		)
+	})
+}
+
 func validAlertPolicy() AlertPolicy {
 	return New(
 		Metadata{
@@ -658,6 +721,7 @@ type valuesWithCodeExpect struct {
 	values          []string
 	expectedCode    string
 	expectedMessage string
+	expectedErrors  int
 }
 
 type measurementDetermined struct {

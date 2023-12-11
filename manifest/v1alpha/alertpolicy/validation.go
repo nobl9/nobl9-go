@@ -45,6 +45,9 @@ var specValidation = validation.New[Spec](
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
 		StopOnError().
 		IncludeForEach(conditionValidation),
+	validation.ForEach(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
+		WithName("alertMethods").
+		IncludeForEach(alertMethodRefValidation),
 )
 
 var conditionValidation = validation.New[AlertCondition](
@@ -74,6 +77,17 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("lastsFor").
 		OmitEmpty().
 		Rules(validation.GreaterThanOrEqualTo[time.Duration](0)),
+)
+
+var alertMethodRefValidation = validation.New[AlertMethodRef](
+	validation.For(func(m AlertMethodRef) string { return m.Metadata.Name }).
+		WithName("name").
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 const (

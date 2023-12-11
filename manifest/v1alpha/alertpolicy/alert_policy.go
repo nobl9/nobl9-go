@@ -60,8 +60,7 @@ type AlertMethodRef struct {
 	Metadata AlertMethodsRefMetadata `json:"metadata"`
 }
 
-// TODO validate it
 type AlertMethodsRefMetadata struct {
-	Name    string `json:"name" validate:"required,objectName"`
-	Project string `json:"project,omitempty" validate:"objectName"`
+	Name    string `json:"name"`
+	Project string `json:"project,omitempty"`
 }
