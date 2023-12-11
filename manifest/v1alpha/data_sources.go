@@ -82,7 +82,7 @@ var historicalRetrievalDurationValidation = validation.New[HistoricalRetrievalDu
 	validation.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
 		WithName("value").
 		Required().
-		Rules(validation.GreaterThan(0), validation.LessThan(43200)),
+		Rules(validation.GreaterThanOrEqualTo(0), validation.LessThanOrEqualTo(43200)),
 	validation.For(func(h HistoricalRetrievalDuration) HistoricalRetrievalDurationUnit { return h.Unit }).
 		WithName("unit").
 		Required().
@@ -100,7 +100,7 @@ var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
 				"defaultDuration",
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
-					"must be smaller than or equal to 'maxDuration' (%d %s)",
+					"must be less than or equal to 'maxDuration' (%d %s)",
 					maxDurationValue, dataRetrieval.MaxDuration.Unit))
 		}
 		return nil
@@ -121,14 +121,14 @@ func QueryDelayValidation() validation.Validator[QueryDelay] {
 		validation.For(func(q QueryDelay) Duration { return q.Duration }).
 			Rules(validation.NewSingleRule(func(d Duration) error {
 				if d.Duration() > maxQueryDelay.Duration() {
-					return errors.Errorf("must be smaller than or equal to %s", maxQueryDelay)
+					return errors.Errorf("must be less than or equal to %s", maxQueryDelay)
 				}
 				return nil
 			})),
+		// Value's max and min are validated through [GetQueryDelayDefaults] and [maxQueryDelay].
 		validation.ForPointer(func(q QueryDelay) *int { return q.Value }).
 			WithName("value").
-			Required().
-			Rules(validation.GreaterThan(0), validation.LessThan(86400)),
+			Required(),
 		validation.For(func(q QueryDelay) DurationUnit { return q.Unit }).
 			WithName("unit").
 			Required().

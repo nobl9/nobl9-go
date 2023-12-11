@@ -106,37 +106,6 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			},
 		)
 	})
-	t.Run("value too small", func(t *testing.T) {
-		agent := validAgent(v1alpha.Prometheus)
-		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
-			Value: ptr(-1),
-			Unit:  v1alpha.Minute,
-		}}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.queryDelay",
-				Message: "should be greater than or equal to " +
-					v1alpha.GetQueryDelayDefaults()[v1alpha.Prometheus.String()].String(),
-			},
-			testutils.ExpectedError{
-				Prop: "spec.queryDelay.value",
-				Code: validation.ErrorCodeGreaterThan,
-			},
-		)
-	})
-	t.Run("value too large", func(t *testing.T) {
-		agent := validAgent(v1alpha.Prometheus)
-		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
-			Value: ptr(86400),
-			Unit:  v1alpha.Second,
-		}}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.queryDelay.value",
-			Code: validation.ErrorCodeLessThan,
-		})
-	})
 	t.Run("valid units", func(t *testing.T) {
 		for _, unit := range []v1alpha.DurationUnit{
 			v1alpha.Minute,
@@ -178,12 +147,44 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 			Prop:    "spec.queryDelay",
-			Message: "must be smaller than or equal to 1440m",
+			Message: "must be less than or equal to 1440m",
 		})
+	})
+	t.Run("delay less than default", func(t *testing.T) {
+		for _, typ := range v1alpha.DataSourceTypeValues() {
+			t.Run(typ.String(), func(t *testing.T) {
+				agent := validAgent(typ)
+				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ.String()]
+				agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+					Value: ptr(*defaultDelay.Value - 1),
+					Unit:  defaultDelay.Unit,
+				}}
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.queryDelay",
+					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
+				})
+			})
+		}
 	})
 }
 
 func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
+	t.Run("valid units", func(t *testing.T) {
+		for _, unit := range []v1alpha.HistoricalRetrievalDurationUnit{
+			v1alpha.HRDMinute,
+			v1alpha.HRDHour,
+			v1alpha.HRDDay,
+		} {
+			agent := validAgent(v1alpha.Prometheus)
+			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+			}
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
+	})
 	t.Run("required", func(t *testing.T) {
 		agent := validAgent(v1alpha.Prometheus)
 		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{}
@@ -237,27 +238,27 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.value",
-					Code: validation.ErrorCodeGreaterThan,
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
 					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
-					Code: validation.ErrorCodeGreaterThan,
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
 		},
 		"value too large": {
 			Duration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(43200),
+				Value: ptr(43201),
 				Unit:  v1alpha.HRDHour,
 			},
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.value",
-					Code: validation.ErrorCodeLessThan,
+					Code: validation.ErrorCodeLessThanOrEqualTo,
 				},
 				{
 					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
-					Code: validation.ErrorCodeLessThan,
+					Code: validation.ErrorCodeLessThanOrEqualTo,
 				},
 			},
 		},
@@ -336,7 +337,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 			Prop:    "spec.historicalDataRetrieval.defaultDuration",
-			Message: "must be smaller than or equal to 'maxDuration' (1 Hour)",
+			Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 		})
 	})
 }
