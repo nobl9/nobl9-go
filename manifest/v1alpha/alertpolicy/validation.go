@@ -80,15 +80,6 @@ var conditionValidation = validation.New[AlertCondition](
 )
 
 var alertMethodRefValidation = validation.New[AlertMethodRef](
-	validation.For(func(m AlertMethodRef) string { return m.Metadata.Name }).
-		WithName("name").
-		Required().
-		Rules(validation.StringIsDNSSubdomain()),
-	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
-		WithName("project").
-		OmitEmpty().
-		Rules(validation.StringIsDNSSubdomain()),
-
 	v1alpha.FieldRuleMetadataName(func(m AlertMethodRef) string { return m.Metadata.Name }),
 	v1alpha.FieldRuleMetadataDisplayName(func(m AlertMethodRef) string { return m.Metadata.DisplayName }),
 	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).

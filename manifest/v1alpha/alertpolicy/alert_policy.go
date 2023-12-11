@@ -70,5 +70,4 @@ type AlertMethodRefMetadata struct {
 	Project string `json:"project,omitempty"`
 	// Deprecated: Temporary solution to keep backward compatibility to return all AlertMethod details.
 	DisplayName string `json:"displayName,omitempty"`
-	Some        alertmethodref.Status
 }

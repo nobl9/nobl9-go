@@ -667,11 +667,11 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].name",
+				Prop: "spec.alertMethods[0].metadata.name",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].name",
+				Prop: "spec.alertMethods[0].metadata.name",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
 			},
 		)
@@ -689,11 +689,11 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].project",
+				Prop: "spec.alertMethods[0].metadata.project",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].project",
+				Prop: "spec.alertMethods[0].metadata.project",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
 			},
 		)
