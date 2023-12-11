@@ -2,6 +2,7 @@ package alertpolicy_test
 
 import (
 	"context"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref"
 	"log"
 
 	"github.com/nobl9/nobl9-go/internal/examples"
@@ -38,6 +39,12 @@ func ExampleAlertPolicy() {
 						Name:    "my-alert-method",
 						Project: "my-project",
 					},
+					LegacyAlertMethodRef: alertmethodref.LegacyAlertMethodRef{
+						APIVersion: v1alpha.APIVersion,
+						Kind:       manifest.KindAlertMethod,
+						Spec:       alertmethodref.Spec{},
+						Status:     nil,
+					},
 				},
 			},
 		},
@@ -72,7 +79,11 @@ func ExampleAlertPolicy() {
 	//   - measurement: burnedBudget
 	//     value: 0.8
 	//   alertMethods:
-	//   - metadata:
+	//   - apiVersion: n9/v1alpha
+	//     kind: AlertMethod
+	//     spec:
+	//       description: ""
+	//     metadata:
 	//       name: my-alert-method
 	//       project: my-project
 }

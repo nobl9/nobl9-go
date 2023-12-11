@@ -634,13 +634,13 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				AlertMethodsRefMetadata{
+				Metadata: AlertMethodsRefMetadata{
 					Name:    "my-alert-method",
 					Project: "my-project",
 				},
 			},
 			{
-				AlertMethodsRefMetadata{
+				Metadata: AlertMethodsRefMetadata{
 					Name: "my-alert-method-2",
 				},
 			},
@@ -652,7 +652,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				AlertMethodsRefMetadata{
+				Metadata: AlertMethodsRefMetadata{
 					Name: strings.Repeat("MY AlertMethodName", 20),
 				},
 			},
@@ -673,7 +673,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				AlertMethodsRefMetadata{
+				Metadata: AlertMethodsRefMetadata{
 					Name:    "alert-method-name",
 					Project: strings.Repeat("MY AlertMethodName", 20),
 				},

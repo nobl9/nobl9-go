@@ -3,6 +3,7 @@ package alertpolicy
 import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref"
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go AlertPolicy
@@ -57,6 +58,10 @@ type AlertCondition struct {
 }
 
 type AlertMethodRef struct {
+	// Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
+	// These objects will be dropped.
+	alertmethodref.LegacyAlertMethodRef `json:",inline"`
+
 	Metadata AlertMethodsRefMetadata `json:"metadata"`
 }
 
