@@ -88,6 +88,13 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 		WithName("project").
 		OmitEmpty().
 		Rules(validation.StringIsDNSSubdomain()),
+
+	v1alpha.FieldRuleMetadataName(func(m AlertMethodRef) string { return m.Metadata.Name }),
+	v1alpha.FieldRuleMetadataDisplayName(func(m AlertMethodRef) string { return m.Metadata.DisplayName }),
+	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
+		WithName("metadata.project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 const (

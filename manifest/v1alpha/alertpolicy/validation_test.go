@@ -634,13 +634,20 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				Metadata: AlertMethodsRefMetadata{
+				Metadata: AlertMethodRefMetadata{
+					Name:        "my-alert-method",
+					Project:     "my-project",
+					DisplayName: "My ALERT method",
+				},
+			},
+			{
+				Metadata: AlertMethodRefMetadata{
 					Name:    "my-alert-method",
 					Project: "my-project",
 				},
 			},
 			{
-				Metadata: AlertMethodsRefMetadata{
+				Metadata: AlertMethodRefMetadata{
 					Name: "my-alert-method-2",
 				},
 			},
@@ -652,7 +659,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				Metadata: AlertMethodsRefMetadata{
+				Metadata: AlertMethodRefMetadata{
 					Name: strings.Repeat("MY AlertMethodName", 20),
 				},
 			},
@@ -673,7 +680,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
-				Metadata: AlertMethodsRefMetadata{
+				Metadata: AlertMethodRefMetadata{
 					Name:    "alert-method-name",
 					Project: strings.Repeat("MY AlertMethodName", 20),
 				},
@@ -688,6 +695,24 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].project",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
+			},
+		)
+	})
+	t.Run("fails, invalid display name", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
+			{
+				Metadata: AlertMethodRefMetadata{
+					Name:        "alert-method-name",
+					DisplayName: strings.Repeat("MY AlertMethodName", 20),
+				},
+			},
+		}
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.alertMethods[0].metadata.displayName",
+				Code: validation.ErrorCodeStringLength,
 			},
 		)
 	})

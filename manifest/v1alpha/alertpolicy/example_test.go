@@ -35,7 +35,7 @@ func ExampleAlertPolicy() {
 			},
 			AlertMethods: []alertpolicy.AlertMethodRef{
 				{
-					Metadata: alertpolicy.AlertMethodsRefMetadata{
+					Metadata: alertpolicy.AlertMethodRefMetadata{
 						Name:    "my-alert-method",
 						Project: "my-project",
 					},
