@@ -59,8 +59,7 @@ type AlertCondition struct {
 
 type AlertMethodRef struct {
 	// Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
-	// These objects will be dropped.
-	// nolint: go
+	// These object and their details will be dropped.
 	alertmethodref.LegacyAlertMethodRef `json:",inline"`
 
 	Metadata AlertMethodsRefMetadata `json:"metadata"`
