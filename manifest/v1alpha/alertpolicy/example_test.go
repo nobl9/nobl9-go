@@ -2,13 +2,13 @@ package alertpolicy_test
 
 import (
 	"context"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref"
 	"log"
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref"
 )
 
 func ExampleAlertPolicy() {
