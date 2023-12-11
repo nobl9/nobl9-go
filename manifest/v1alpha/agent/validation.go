@@ -355,8 +355,20 @@ var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec S
 		return nil
 	}
 	typ, _ := spec.GetType()
-	if _, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err != nil {
+	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
+	if err != nil {
 		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
+	}
+	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
+		Value: maxDuration.Value,
+		Unit:  maxDuration.Unit,
+	}
+	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
+		return validation.NewPropertyError(
+			"historicalDataRetrieval.maxDuration",
+			spec.HistoricalDataRetrieval.MaxDuration,
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}
 	return nil
 })
