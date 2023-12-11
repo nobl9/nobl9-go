@@ -8,6 +8,9 @@ import (
 // APIVersion is a value of valid apiVersions
 const APIVersion = "n9/v1alpha"
 
+// HiddenValue can be used as a value of a secret field and is ignored during saving
+const HiddenValue = "[hidden]"
+
 // ObjectContext defines method for interacting with contextual details of the Object
 // which are not directly part of its manifest and are, from the users perspective, read only.
 type ObjectContext interface {
