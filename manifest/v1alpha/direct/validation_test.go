@@ -93,7 +93,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
 	t.Run("required", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
+		direct := validDirect(v1alpha.BigQuery)
 		direct.Spec.QueryDelay = &v1alpha.QueryDelay{}
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
@@ -107,43 +107,12 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			},
 		)
 	})
-	t.Run("value too small", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
-			Value: ptr(-1),
-			Unit:  v1alpha.Minute,
-		}}
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.queryDelay",
-				Message: "should be greater than or equal to " +
-					v1alpha.GetQueryDelayDefaults()[v1alpha.Datadog.String()].String(),
-			},
-			testutils.ExpectedError{
-				Prop: "spec.queryDelay.value",
-				Code: validation.ErrorCodeGreaterThan,
-			},
-		)
-	})
-	t.Run("value too large", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
-			Value: ptr(86400),
-			Unit:  v1alpha.Second,
-		}}
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.queryDelay.value",
-			Code: validation.ErrorCodeLessThan,
-		})
-	})
 	t.Run("valid units", func(t *testing.T) {
 		for _, unit := range []v1alpha.DurationUnit{
 			v1alpha.Minute,
 			v1alpha.Second,
 		} {
-			direct := validDirect(v1alpha.Datadog)
+			direct := validDirect(v1alpha.BigQuery)
 			direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 				Value: ptr(10),
 				Unit:  unit,
@@ -158,7 +127,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			v1alpha.Hour,
 			"invalid",
 		} {
-			direct := validDirect(v1alpha.Datadog)
+			direct := validDirect(v1alpha.BigQuery)
 			direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 				Value: ptr(10),
 				Unit:  unit,
@@ -179,12 +148,44 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop:    "spec.queryDelay",
-			Message: "must be smaller than or equal to 1440m",
+			Message: "must be less than or equal to 1440m",
 		})
+	})
+	t.Run("delay less than default", func(t *testing.T) {
+		for typ := range validDirectTypes {
+			t.Run(typ.String(), func(t *testing.T) {
+				agent := validDirect(typ)
+				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ.String()]
+				agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+					Value: ptr(*defaultDelay.Value - 1),
+					Unit:  defaultDelay.Unit,
+				}}
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.queryDelay",
+					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
+				})
+			})
+		}
 	})
 }
 
 func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
+	t.Run("valid units", func(t *testing.T) {
+		for _, unit := range []v1alpha.HistoricalRetrievalDurationUnit{
+			v1alpha.HRDMinute,
+			v1alpha.HRDHour,
+			v1alpha.HRDDay,
+		} {
+			agent := validDirect(v1alpha.Datadog)
+			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+			}
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
+	})
 	t.Run("required", func(t *testing.T) {
 		direct := validDirect(v1alpha.Datadog)
 		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{}
@@ -201,11 +202,13 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		)
 	})
 	for name, test := range map[string]struct {
-		Duration v1alpha.HistoricalRetrievalDuration
-		Errors   []testutils.ExpectedError
+		Duration    v1alpha.HistoricalRetrievalDuration
+		Errors      []testutils.ExpectedError
+		ErrorsCount int
 	}{
 		"required unit": {
-			Duration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10)},
+			Duration:    v1alpha.HistoricalRetrievalDuration{Value: ptr(10)},
+			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
@@ -218,7 +221,8 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			},
 		},
 		"required value": {
-			Duration: v1alpha.HistoricalRetrievalDuration{Unit: v1alpha.HRDHour},
+			Duration:    v1alpha.HistoricalRetrievalDuration{Unit: v1alpha.HRDHour},
+			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.value",
@@ -235,30 +239,32 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				Value: ptr(-1),
 				Unit:  v1alpha.HRDHour,
 			},
+			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.value",
-					Code: validation.ErrorCodeGreaterThan,
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
 					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
-					Code: validation.ErrorCodeGreaterThan,
+					Code: validation.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
 		},
 		"value too large": {
 			Duration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(43200),
+				Value: ptr(43201),
 				Unit:  v1alpha.HRDHour,
 			},
+			ErrorsCount: 3,
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.value",
-					Code: validation.ErrorCodeLessThan,
+					Code: validation.ErrorCodeLessThanOrEqualTo,
 				},
 				{
 					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
-					Code: validation.ErrorCodeLessThan,
+					Code: validation.ErrorCodeLessThanOrEqualTo,
 				},
 			},
 		},
@@ -267,6 +273,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				Value: ptr(200),
 				Unit:  "invalid",
 			},
+			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
 					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
@@ -286,7 +293,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				DefaultDuration: test.Duration,
 			}
 			err := validate(direct)
-			testutils.AssertContainsErrors(t, direct, err, len(test.Errors), test.Errors...)
+			testutils.AssertContainsErrors(t, direct, err, test.ErrorsCount, test.Errors...)
 		})
 	}
 	t.Run("valid units", func(t *testing.T) {
@@ -305,7 +312,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		}
 	})
 	t.Run("data retrieval disabled for data source type", func(t *testing.T) {
-		direct := validDirect(v1alpha.Generic)
+		direct := validDirect(v1alpha.Instana)
 		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
 			MaxDuration: v1alpha.HistoricalRetrievalDuration{
 				Value: ptr(20),
@@ -319,7 +326,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop:    "spec.historicalDataRetrieval",
-			Message: "historical data retrieval is not supported for Generic direct",
+			Message: "historical data retrieval is not supported for Instana Direct",
 		})
 	})
 	t.Run("data retrieval default larger than max", func(t *testing.T) {
@@ -337,8 +344,36 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop:    "spec.historicalDataRetrieval.defaultDuration",
-			Message: "must be smaller than or equal to 'maxDuration' (1 Hour)",
+			Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 		})
+	})
+	t.Run("data retrieval max greater than max allowed", func(t *testing.T) {
+		for typ := range validDirectTypes {
+			maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
+			// Skip unsupported types.
+			if err != nil {
+				continue
+			}
+			t.Run(typ.String(), func(t *testing.T) {
+				agent := validDirect(typ)
+				agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+					MaxDuration: v1alpha.HistoricalRetrievalDuration{
+						Value: ptr(*maxDuration.Value + 1),
+						Unit:  maxDuration.Unit,
+					},
+					DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+						Value: ptr(0),
+						Unit:  maxDuration.Unit,
+					},
+				}
+				objErr := validate(agent)
+				testutils.AssertContainsErrors(t, agent, objErr, 1, testutils.ExpectedError{
+					Prop: "spec.historicalDataRetrieval.maxDuration",
+					Message: fmt.Sprintf("must be less than or equal to %d %s",
+						*maxDuration.Value, maxDuration.Unit),
+				})
+			})
+		}
 	})
 }
 

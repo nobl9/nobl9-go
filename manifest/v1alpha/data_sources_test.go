@@ -113,62 +113,6 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 	}
 }
 
-func TestQueryDelayDurationValidation(t *testing.T) {
-	v := NewValidator()
-	for _, test := range []struct {
-		desc  string
-		qd    Duration
-		valid bool
-	}{
-		{
-			desc:  "query delay cannot be greater than the maximum",
-			qd:    Duration{Value: ptr(maxQueryDelayDuration + 1), Unit: maxQueryDelayDurationUnit},
-			valid: false,
-		},
-		{
-			desc:  "query delay can be defined in seconds",
-			qd:    Duration{Value: ptr(600), Unit: Second},
-			valid: true,
-		},
-		{
-			desc:  "query delay can be defined in minutes",
-			qd:    Duration{Value: ptr(10), Unit: Minute},
-			valid: true,
-		},
-		{
-			desc:  "query delay cannot be defined in hours",
-			qd:    Duration{Value: ptr(1), Unit: Hour},
-			valid: false,
-		},
-		{
-			desc:  "query delay cannot be lesser than the minimum query delay for the data source",
-			qd:    Duration{Value: ptr(1), Unit: Minute},
-			valid: false,
-		},
-	} {
-		t.Run(test.desc, func(t *testing.T) {
-			testDirectSpec := DirectSpec{
-				QueryDelay: &QueryDelay{
-					MinimumAgentVersion: "0.69.0-beta04",
-					Duration:            test.qd,
-				},
-				Lightstep: &LightstepDirectConfig{
-					Organization: "test",
-					Project:      "test",
-					AppToken:     "secret",
-				},
-				SourceOf: []string{"Metrics"},
-			}
-			err := v.Check(testDirectSpec)
-			if test.valid {
-				require.NoError(t, err)
-			} else {
-				assert.Error(t, err)
-			}
-		})
-	}
-}
-
 func TestGetStrAndStdDurationFromDuration(t *testing.T) {
 	for _, tc := range []struct {
 		duration       Duration
