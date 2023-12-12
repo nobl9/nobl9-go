@@ -27,19 +27,19 @@ func ForPointer[T, S any](getter PropertyGetter[*T, S]) PropertyRules[T, S] {
 // [Transformer] is only called if [PropertyGetter] returns a non-zero value.
 func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T, N]) PropertyRules[N, S] {
 	return PropertyRules[N, S]{
-		getter: func(s S) (transformed N, err error) {
+		transformGetter: func(s S) (transformed N, original any, err error) {
 			v := getter(s)
 			if err != nil {
-				return transformed, err
+				return transformed, nil, err
 			}
 			if isEmptyFunc(v) {
-				return transformed, emptyErr{}
+				return transformed, nil, emptyErr{}
 			}
 			transformed, err = transform(v)
 			if err != nil {
-				return transformed, NewPropertyError("", v, NewRuleError(err.Error(), ErrorCodeTransform))
+				return transformed, v, NewRuleError(err.Error(), ErrorCodeTransform)
 			}
-			return transformed, nil
+			return transformed, v, nil
 		},
 	}
 }
@@ -56,18 +56,21 @@ type Predicate[S any] func(S) bool
 type PropertyGetter[T, S any] func(S) T
 
 type internalPropertyGetter[T, S any] func(S) (v T, err error)
+type internalTransformPropertyGetter[T, S any] func(S) (transformed T, original any, err error)
 type emptyErr struct{}
 
 func (emptyErr) Error() string { return "" }
 
 // PropertyRules is responsible for validating a single property.
 type PropertyRules[T, S any] struct {
-	name      string
-	getter    internalPropertyGetter[T, S]
-	steps     []interface{}
-	required  bool
-	omitEmpty bool
-	isPointer bool
+	name            string
+	getter          internalPropertyGetter[T, S]
+	transformGetter internalTransformPropertyGetter[T, S]
+	steps           []interface{}
+	required        bool
+	omitEmpty       bool
+	hideValue       bool
+	isPointer       bool
 }
 
 // Validate validates the property value using provided rules.
@@ -80,6 +83,9 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	)
 	propValue, skip, err := r.getValue(st)
 	if err != nil {
+		if r.hideValue {
+			err = err.HideValue()
+		}
 		return err
 	}
 	if skip {
@@ -122,6 +128,9 @@ loop:
 		allErrors = append(allErrors, NewPropertyError(r.name, propValue, ruleErrors...))
 	}
 	if len(allErrors) > 0 {
+		if r.hideValue {
+			allErrors = allErrors.HideValue()
+		}
 		return allErrors
 	}
 	return nil
@@ -157,6 +166,11 @@ func (r PropertyRules[T, S]) OmitEmpty() PropertyRules[T, S] {
 	return r
 }
 
+func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
+	r.hideValue = true
+	return r
+}
+
 type stopOnErrorStep uint8
 
 func (r PropertyRules[T, S]) StopOnError() PropertyRules[T, S] {
@@ -172,16 +186,26 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 }
 
 func (r PropertyRules[T, S]) getValue(st S) (v T, skip bool, errs PropertyErrors) {
-	v, err := r.getter(st)
+	var (
+		err           error
+		originalValue any
+	)
+	if r.transformGetter != nil {
+		v, originalValue, err = r.transformGetter(st)
+	} else {
+		v, err = r.getter(st)
+	}
 	_, isEmptyError := err.(emptyErr)
 	// Any error other than [emptyErr] is considered critical, we don't proceed with validation.
 	if err != nil && !isEmptyError {
-		if propErr, ok := err.(*PropertyError); ok {
-			// Make sure the name is set to the current property name.
-			propErr.PropertyName = r.name
-			return v, false, PropertyErrors{propErr}
+		// If the value was transformed, we need to set the property value to the original, pre-transformed one.
+		var propValue interface{}
+		if HasErrorCode(err, ErrorCodeTransform) {
+			propValue = originalValue
+		} else {
+			propValue = v
 		}
-		return v, false, PropertyErrors{NewPropertyError(r.name, nil, err)}
+		return v, false, PropertyErrors{NewPropertyError(r.name, propValue, err)}
 	}
 	isEmpty := isEmptyError || (!r.isPointer && isEmptyFunc(v))
 	if r.required && isEmpty {

@@ -1,0 +1,10 @@
+apiVersion: n9/v1alpha
+kind: AlertMethod
+metadata:
+  name: my-alert-method
+    displayName: My Alert Method
+    project: default
+  spec:
+    description: Example alert method
+    pagerduty:
+      integrationKey: ABC12345

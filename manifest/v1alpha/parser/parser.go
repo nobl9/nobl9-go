@@ -11,6 +11,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alert"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
@@ -63,9 +65,9 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 	case manifest.KindDirect:
 		return genericParseObject[direct.Direct](unmarshal)
 	case manifest.KindAlert:
-		return genericParseObject[v1alpha.Alert](unmarshal)
+		return genericParseObject[alert.Alert](unmarshal)
 	case manifest.KindAlertMethod:
-		return genericParseObject[v1alpha.AlertMethod](unmarshal)
+		return genericParseObject[alertmethod.AlertMethod](unmarshal)
 	case manifest.KindAlertPolicy:
 		return genericParseObject[v1alpha.AlertPolicy](unmarshal)
 	case manifest.KindAlertSilence:
@@ -88,16 +90,16 @@ func parseGenericObject(unmarshal unmarshalFunc) (manifest.Object, error) {
 }
 
 func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc, error) {
-	var unmarshal unmarshalFunc
+	jsonUnmarshal := func(v interface{}) error {
+		dec := json.NewDecoder(bytes.NewReader(data))
+		if UseStrictDecodingMode {
+			dec.DisallowUnknownFields()
+		}
+		return dec.Decode(v)
+	}
 	switch format {
 	case manifest.ObjectFormatJSON:
-		unmarshal = func(v interface{}) error {
-			dec := json.NewDecoder(bytes.NewReader(data))
-			if UseStrictDecodingMode {
-				dec.DisallowUnknownFields()
-			}
-			return dec.Decode(v)
-		}
+		return jsonUnmarshal, nil
 	case manifest.ObjectFormatYAML:
 		// Workaround for https://github.com/goccy/go-yaml/issues/313.
 		// If the library changes its interpretation of empty pointer fields,
@@ -107,17 +109,10 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to convert YAML to JSON")
 		}
-		var opts []yaml.DecodeOption
-		if UseStrictDecodingMode {
-			opts = append(opts, yaml.Strict())
-		}
-		unmarshal = func(v interface{}) error {
-			return yaml.UnmarshalWithOptions(data, v, opts...)
-		}
+		return jsonUnmarshal, nil
 	default:
 		return nil, errors.Errorf("unsupported format: %s", format)
 	}
-	return unmarshal, nil
 }
 
 func genericParseObject[T manifest.Object](unmarshal unmarshalFunc) (T, error) {

@@ -36,7 +36,6 @@ const (
 	//nolint:lll
 	//cspell:ignore FFFD
 	RoleARNRegex         string = `^[\x{0009}\x{000A}\x{000D}\x{0020}-\x{007E}\x{0085}\x{00A0}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]+$`
-	HeaderNameRegex      string = `^([a-zA-Z0-9]+[_-]?)+$`
 	AzureResourceIDRegex string = `^\/subscriptions\/[a-zA-Z0-9-]+\/resourceGroups\/[a-zA-Z0-9-]+\/providers\/[a-zA-Z0-9-\._]+\/[a-zA-Z0-9-_]+\/[a-zA-Z0-9-_]+$` //nolint:lll
 )
 
@@ -52,9 +51,6 @@ const (
 	PingdomTypeUptime      = "uptime"
 	PingdomTypeTransaction = "transaction"
 )
-
-// HiddenValue can be used as a value of a secret field and is ignored during saving
-const HiddenValue = "[hidden]"
 
 //nolint:golint
 var (
@@ -98,9 +94,6 @@ func NewValidator() *Validate {
 	})
 
 	val.RegisterStructValidation(alertPolicyConditionStructLevelValidation, AlertCondition{})
-	val.RegisterStructValidation(alertMethodSpecStructLevelValidation, AlertMethodSpec{})
-	val.RegisterStructValidation(webhookAlertMethodValidation, WebhookAlertMethod{})
-	val.RegisterStructValidation(emailAlertMethodValidation, EmailAlertMethod{})
 	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
 	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
 
@@ -115,12 +108,7 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("severity", isValidSeverity)
 	_ = val.RegisterValidation("operator", isValidOperator)
 	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
-	_ = val.RegisterValidation("opsgenieApiKey", isValidOpsgenieAPIKey)
-	_ = val.RegisterValidation("pagerDutyIntegrationKey", isValidPagerDutyIntegrationKey)
 	_ = val.RegisterValidation("httpsURL", isHTTPS)
-	_ = val.RegisterValidation("allowedWebhookTemplateFields", isValidWebhookTemplate)
-	_ = val.RegisterValidation("allowedAlertMethodEmailSubjectFields", isValidAlertMethodEmailSubject)
-	_ = val.RegisterValidation("allowedAlertMethodEmailBodyFields", isValidAlertMethodEmailBody)
 	_ = val.RegisterValidation("durationMinutePrecision", isDurationMinutePrecision)
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
@@ -129,16 +117,13 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("objectNameWithStringInterpolation", isValidObjectNameWithStringInterpolation)
 	_ = val.RegisterValidation("url", isValidURL)
 	_ = val.RegisterValidation("labels", areLabelsValid)
-	_ = val.RegisterValidation("optionalURL", isEmptyOrValidURL)
 	_ = val.RegisterValidation("urlDynatrace", isValidURLDynatrace)
 	_ = val.RegisterValidation("urlElasticsearch", isValidURL)
-	_ = val.RegisterValidation("urlDiscord", isValidURLDiscord)
 	_ = val.RegisterValidation("prometheusLabelName", isValidPrometheusLabelName)
 	_ = val.RegisterValidation("roleARN", isValidRoleARN)
 	_ = val.RegisterValidation("metricSourceKind", isValidMetricSourceKind)
 	_ = val.RegisterValidation("emails", hasValidEmails)
 	_ = val.RegisterValidation("notBlank", notBlank)
-	_ = val.RegisterValidation("headerName", isValidHeaderName)
 	_ = val.RegisterValidation("pingdomCheckTypeFieldValid", pingdomCheckTypeFieldValid)
 	_ = val.RegisterValidation("pingdomStatusValid", pingdomStatusValid)
 	_ = val.RegisterValidation("urlAllowedSchemes", hasValidURLScheme)
@@ -189,75 +174,6 @@ func regexError(msg, format string, examples ...string) string {
 	}
 	msg += "regex used for validation is '" + format + "')"
 	return msg
-}
-
-func isValidWebhookTemplate(fl v.FieldLevel) bool {
-	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
-}
-
-// Deprecated: Email Subject is no longer needed and is ignored by notificationsemail.
-// This validation is kept for backwards compatibility and will be removed in the future.
-// Ref. PC-9759
-func isValidAlertMethodEmailSubject(fl v.FieldLevel) bool {
-	emailSubjectAllowedFields := make(map[string]struct{})
-	for k, v := range notificationTemplateAllowedFields {
-		if k == TplVarAlertPolicyConditionsArray {
-			continue
-		}
-		emailSubjectAllowedFields[k] = v
-	}
-	return hasValidTemplateFields(fl, emailSubjectAllowedFields)
-}
-
-// Deprecated: Email Body is no longer needed and is ignored by notificationsemail.
-// This validation is kept for backwards compatibility and will be removed in the future.
-// Ref. PC-9759
-func isValidAlertMethodEmailBody(fl v.FieldLevel) bool {
-	return hasValidTemplateFields(fl, notificationTemplateAllowedFields)
-}
-
-func hasValidTemplateFields(fl v.FieldLevel, allowedFields map[string]struct{}) bool {
-	var templateFields []string
-	switch field := fl.Field().Interface().(type) {
-	case []string:
-		templateFields = field
-	case string:
-		matches := regexp.MustCompile(`\$([a-z_]+(\[])?)`).FindAllStringSubmatch(field, -1)
-		templateFields = make([]string, len(matches))
-		for i, match := range matches {
-			templateFields[i] = match[1]
-		}
-	}
-
-	for _, field := range templateFields {
-		if _, ok := allowedFields[field]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
-func webhookAlertMethodValidation(sl v.StructLevel) {
-	webhook := sl.Current().Interface().(WebhookAlertMethod)
-
-	if webhook.Template != nil && len(webhook.TemplateFields) > 0 {
-		sl.ReportError(webhook.Template, "template", "Template", "oneOfTemplateOrTemplateFields", "")
-		sl.ReportError(webhook.TemplateFields, "templateFields", "TemplateFields", "oneOfTemplateOrTemplateFields", "")
-	}
-	if webhook.Template == nil && len(webhook.TemplateFields) == 0 {
-		sl.ReportError(webhook.Template, "template", "Template", "oneOfTemplateOrTemplateFields", "")
-		sl.ReportError(webhook.TemplateFields, "templateFields", "TemplateFields", "oneOfTemplateOrTemplateFields", "")
-	}
-}
-
-func emailAlertMethodValidation(sl v.StructLevel) {
-	email := sl.Current().Interface().(EmailAlertMethod)
-
-	if len(email.To) == 0 && len(email.Cc) == 0 && len(email.Bcc) == 0 {
-		sl.ReportError(email.To, "to", "To", "atLeastOneRecipientRequired", "")
-		sl.ReportError(email.Cc, "cc", "Cc", "atLeastOneRecipientRequired", "")
-		sl.ReportError(email.Bcc, "bcc", "Bcc", "atLeastOneRecipientRequired", "")
-	}
 }
 
 func hasValidEmails(fl v.FieldLevel) bool {
@@ -318,34 +234,8 @@ func isValidURL(fl v.FieldLevel) bool {
 	return validateURL(fl.Field().String())
 }
 
-func isEmptyOrValidURL(fl v.FieldLevel) bool {
-	value := fl.Field().String()
-	return value == "" || value == HiddenValue || validateURL(value)
-}
-
 func isValidURLDynatrace(fl v.FieldLevel) bool {
 	return validateURLDynatrace(fl.Field().String())
-}
-
-func isValidURLDiscord(fl v.FieldLevel) bool {
-	key := fl.Field().String()
-	if strings.HasSuffix(strings.ToLower(key), "/slack") || strings.HasSuffix(strings.ToLower(key), "/github") {
-		return false
-	}
-	return isEmptyOrValidURL(fl)
-}
-
-func isValidOpsgenieAPIKey(fl v.FieldLevel) bool {
-	key := fl.Field().String()
-	return key == "" ||
-		key == HiddenValue ||
-		(strings.HasPrefix(key, "Basic") ||
-			strings.HasPrefix(key, "GenieKey"))
-}
-
-func isValidPagerDutyIntegrationKey(fl v.FieldLevel) bool {
-	key := fl.Field().String()
-	return key == "" || key == HiddenValue || len(key) == 32
 }
 
 func validateURL(validateURL string) bool {
@@ -622,51 +512,6 @@ func isValidPrometheusLabelName(fl v.FieldLevel) bool {
 	return validLabel.MatchString(fl.Field().String())
 }
 
-func alertMethodSpecStructLevelValidation(sl v.StructLevel) {
-	alertMethod := sl.Current().Interface().(AlertMethodSpec)
-
-	const expectedNumberOfAlertMethodTypes = 1
-	alertMethodCounter := 0
-	if alertMethod.Webhook != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.PagerDuty != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Slack != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Discord != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Opsgenie != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.ServiceNow != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Jira != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Teams != nil {
-		alertMethodCounter++
-	}
-	if alertMethod.Email != nil {
-		alertMethodCounter++
-	}
-	if alertMethodCounter != expectedNumberOfAlertMethodTypes {
-		sl.ReportError(alertMethod, "webhook", "webhook", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "pagerduty", "pagerduty", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "slack", "slack", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "discord", "discord", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "opsgenie", "opsgenie", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "servicenow", "servicenow", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "jira", "jira", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "msteams", "msteams", "exactlyOneAlertMethodConfigurationIsRequired", "")
-		sl.ReportError(alertMethod, "email", "email", "exactlyOneAlertMethodConfigurationIsRequired", "")
-	}
-}
-
 func isValidAzureResourceID(fl v.FieldLevel) bool {
 	validAzureResourceIDRegex := regexp.MustCompile(AzureResourceIDRegex)
 	return validAzureResourceIDRegex.MatchString(fl.Field().String())
@@ -770,12 +615,6 @@ func notBlank(fl v.FieldLevel) bool {
 	default:
 		return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
 	}
-}
-
-func isValidHeaderName(fl v.FieldLevel) bool {
-	headerName := fl.Field().String()
-	validHeaderNameRegex := regexp.MustCompile(HeaderNameRegex)
-	return validHeaderNameRegex.MatchString(headerName)
 }
 
 func alertSilencePeriodValidation(sl v.StructLevel) {

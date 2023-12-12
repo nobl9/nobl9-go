@@ -41,6 +41,13 @@ func (e PropertyErrors) Error() string {
 	return b.String()
 }
 
+func (e PropertyErrors) HideValue() PropertyErrors {
+	for _, err := range e {
+		_ = err.HideValue()
+	}
+	return e
+}
+
 func NewPropertyError(propertyName string, propertyValue interface{}, errs ...error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
@@ -70,10 +77,23 @@ func (e *PropertyError) Error() string {
 	return b.String()
 }
 
-const propertyNameSeparator = "."
+const (
+	propertyNameSeparator = "."
+	hiddenValue           = "[hidden]"
+)
 
 func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
 	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
+	return e
+}
+
+// HideValue hides the property value from [PropertyError.Error] and also hides it from.
+func (e *PropertyError) HideValue() *PropertyError {
+	sv := propertyValueString(e.PropertyValue)
+	e.PropertyValue = ""
+	for _, err := range e.Errors {
+		_ = err.HideValue(sv)
+	}
 	return e
 }
 
@@ -107,6 +127,12 @@ const ErrorCodeSeparator = ":"
 // This will result in 'last:another:code' [ErrorCode].
 func (r *RuleError) AddCode(code ErrorCode) *RuleError {
 	r.Code = concatStrings(code, r.Code, ErrorCodeSeparator)
+	return r
+}
+
+// HideValue replaces all occurrences of stringValue in the [RuleError.Message] with an '*' characters.
+func (r *RuleError) HideValue(stringValue string) *RuleError {
+	r.Message = strings.ReplaceAll(r.Message, stringValue, hiddenValue)
 	return r
 }
 
@@ -163,7 +189,8 @@ var newLineReplacer = strings.NewReplacer("\n", "\\n", "\r", "\\r")
 // - limiting the string to 100 characters
 // - removing leading and trailing whitespaces
 // - escaping newlines
-// If a struct
+// If value is a struct implementing [fmt.Stringer] String method will be used
+// only if the struct does not contain any JSON tags.
 func propertyValueString(v interface{}) string {
 	if v == nil {
 		return ""

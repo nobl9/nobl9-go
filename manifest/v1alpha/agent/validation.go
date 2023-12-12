@@ -201,7 +201,10 @@ var (
 	honeycombValidation    = validation.New[HoneycombConfig]()
 )
 
-const errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
+const (
+	errCodeExactlyOneDataSourceType              = "exactly_one_data_source_type"
+	errCodeQueryDelayGreaterThanOrEqualToDefault = "query_delay_greater_than_or_equal_to_default"
+)
 
 var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec Spec) error {
 	var onlyType v1alpha.DataSourceType
@@ -352,8 +355,20 @@ var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec S
 		return nil
 	}
 	typ, _ := spec.GetType()
-	if _, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err != nil {
+	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
+	if err != nil {
 		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
+	}
+	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
+		Value: maxDuration.Value,
+		Unit:  maxDuration.Unit,
+	}
+	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
+		return validation.NewPropertyError(
+			"historicalDataRetrieval.maxDuration",
+			spec.HistoricalDataRetrieval.MaxDuration,
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}
 	return nil
 })
@@ -372,7 +387,7 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 		)
 	}
 	return nil
-})
+}).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field validation.
 func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validation.Validator[S] {
