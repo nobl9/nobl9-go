@@ -2,6 +2,7 @@ package direct
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -379,9 +380,26 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 
 func TestValidateSpec_Datadog(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
+		for name, direct := range map[string]Direct{
+			"with secrets": validDirect(v1alpha.Datadog),
+			"empty secrets": func() Direct {
+				d := validDirect(v1alpha.Datadog)
+				d.Spec.Datadog.ApplicationKey = ""
+				d.Spec.Datadog.APIKey = ""
+				return d
+			}(),
+			"hidden secrets": func() Direct {
+				d := validDirect(v1alpha.Datadog)
+				d.Spec.Datadog.ApplicationKey = v1alpha.HiddenValue
+				d.Spec.Datadog.APIKey = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
 	})
 	t.Run("required site", func(t *testing.T) {
 		direct := validDirect(v1alpha.Datadog)
@@ -405,9 +423,24 @@ func TestValidateSpec_Datadog(t *testing.T) {
 
 func TestValidateSpec_NewRelic(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.NewRelic)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
+		for name, direct := range map[string]Direct{
+			"with secrets": validDirect(v1alpha.NewRelic),
+			"empty secrets": func() Direct {
+				d := validDirect(v1alpha.NewRelic)
+				d.Spec.NewRelic.InsightsQueryKey = ""
+				return d
+			}(),
+			"hidden secrets": func() Direct {
+				d := validDirect(v1alpha.NewRelic)
+				d.Spec.NewRelic.InsightsQueryKey = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
 	})
 	t.Run("required account id", func(t *testing.T) {
 		direct := validDirect(v1alpha.NewRelic)
@@ -425,6 +458,15 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop: "spec.newRelic.accountId",
 			Code: validation.ErrorCodeGreaterThanOrEqualTo,
+		})
+	})
+	t.Run("invalid insights key", func(t *testing.T) {
+		direct := validDirect(v1alpha.NewRelic)
+		direct.Spec.NewRelic.InsightsQueryKey = "123"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.newRelic.insightsQueryKey",
+			Code: validation.ErrorCodeStringStartsWith,
 		})
 	})
 }
@@ -576,7 +618,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 }
 
 func validDirect(typ v1alpha.DataSourceType) Direct {
-	spec := validDirectSpecs[typ]
+	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
 	spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	return New(Metadata{
@@ -586,20 +628,33 @@ func validDirect(typ v1alpha.DataSourceType) Direct {
 	}, spec)
 }
 
+func validDirectSpec(typ v1alpha.DataSourceType) Spec {
+	ms := validDirectSpecs[typ]
+	var clone Spec
+	data, _ := json.Marshal(ms)
+	_ = json.Unmarshal(data, &clone)
+	return clone
+}
+
 var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
 	v1alpha.Datadog: {
 		Datadog: &DatadogConfig{
-			Site: "datadoghq.com",
+			Site:           "datadoghq.com",
+			APIKey:         "secret",
+			ApplicationKey: "secret",
 		},
 	},
 	v1alpha.NewRelic: {
 		NewRelic: &NewRelicConfig{
-			AccountID: 123,
+			AccountID:        123,
+			InsightsQueryKey: "NRIQ-123",
 		},
 	},
 	v1alpha.AppDynamics: {
 		AppDynamics: &AppDynamicsConfig{
-			URL: "https://nobl9.saas.appdynamics.com",
+			URL:         "https://nobl9.saas.appdynamics.com",
+			ClientName:  "client-name",
+			AccountName: "account-name",
 		},
 	},
 	v1alpha.Splunk: {

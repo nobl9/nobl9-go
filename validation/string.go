@@ -99,17 +99,37 @@ func StringJSON() SingleRule[string] {
 
 func StringContains(substrings ...string) SingleRule[string] {
 	return NewSingleRule(func(s string) error {
-		var notContains []string
+		matched := true
 		for _, substr := range substrings {
 			if !strings.Contains(s, substr) {
-				notContains = append(notContains, "'"+substr+"'")
+				matched = false
+				break
 			}
 		}
-		if len(notContains) > 0 {
-			return errors.New("string must contain the following substrings: " + strings.Join(notContains, ", "))
+		if !matched {
+			return errors.New("string must contain the following substrings: " + prettyStringList(substrings))
 		}
 		return nil
 	}).WithErrorCode(ErrorCodeStringContains)
+}
+
+func StringStartsWith(prefixes ...string) SingleRule[string] {
+	return NewSingleRule(func(s string) error {
+		matched := false
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(s, prefix) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			if len(prefixes) == 1 {
+				return errors.Errorf("string must start with '%s' prefix", prefixes[0])
+			}
+			return errors.New("string must start with one of the following prefixes: " + prettyStringList(prefixes))
+		}
+		return nil
+	}).WithErrorCode(ErrorCodeStringStartsWith)
 }
 
 func prettyExamples(examples []string) string {
@@ -118,14 +138,29 @@ func prettyExamples(examples []string) string {
 	}
 	b := strings.Builder{}
 	b.WriteString("(e.g. ")
-	for i := range examples {
+	prettyStringListBuilder(&b, examples, true)
+	b.WriteString(")")
+	return b.String()
+}
+
+func prettyStringList[T any](values []T) string {
+	b := new(strings.Builder)
+	prettyStringListBuilder(b, values, true)
+	return b.String()
+}
+
+func prettyStringListBuilder[T any](b *strings.Builder, values []T, surroundInSingleQuotes bool) {
+	b.Grow(len(values))
+	for i := range values {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		b.WriteString("'")
-		b.WriteString(examples[i])
-		b.WriteString("'")
+		if surroundInSingleQuotes {
+			b.WriteString("'")
+		}
+		b.WriteString(fmt.Sprint(values[i]))
+		if surroundInSingleQuotes {
+			b.WriteString("'")
+		}
 	}
-	b.WriteString(")")
-	return b.String()
 }

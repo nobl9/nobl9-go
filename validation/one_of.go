@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,7 +15,7 @@ func OneOf[T comparable](values ...T) SingleRule[T] {
 				return nil
 			}
 		}
-		return errors.New("must be one of " + prettyStringList(values))
+		return errors.New("must be one of " + prettyOneOfList(values))
 	}).WithErrorCode(ErrorCodeOneOf)
 }
 
@@ -42,28 +41,23 @@ func MutuallyExclusive[S any](required bool, getters map[string]func(s S) any) S
 			slices.Sort(keys)
 			return errors.Errorf(
 				"one of %s properties must be set, none was provided",
-				prettyStringList(keys))
+				prettyOneOfList(keys))
 		case 1:
 			return nil
 		default:
 			slices.Sort(nonEmpty)
 			return errors.Errorf(
 				"%s properties are mutually exclusive, provide only one of them",
-				prettyStringList(nonEmpty))
+				prettyOneOfList(nonEmpty))
 		}
 	}).WithErrorCode(ErrorCodeMutuallyExclusive)
 }
 
-func prettyStringList[T any](values []T) string {
+func prettyOneOfList[T any](values []T) string {
 	b := strings.Builder{}
 	b.Grow(2 + len(values))
 	b.WriteString("[")
-	for i := range values {
-		b.WriteString(fmt.Sprint(values[i]))
-		if i != len(values)-1 {
-			b.WriteString(", ")
-		}
-	}
+	prettyStringListBuilder(&b, values, false)
 	b.WriteString("]")
 	return b.String()
 }

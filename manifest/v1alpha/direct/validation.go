@@ -107,6 +107,32 @@ var (
 			WithName("accountId").
 			Required().
 			Rules(validation.GreaterThanOrEqualTo(1)),
+		validation.For(func(n NewRelicConfig) string { return n.InsightsQueryKey }).
+			WithName("insightsQueryKey").
+			HideValue().
+			When(func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) }).
+			Rules(validation.StringStartsWith("NRIQ-")),
+	)
+	appDynamicsValidation = validation.New[AppDynamicsConfig](
+		validation.Transform(func(a AppDynamicsConfig) string { return a.URL }, url.Parse).
+			WithName("url").
+			Required().
+			Rules(validation.URL()).
+			StopOnError().
+			Rules(
+				validation.NewSingleRule(func(u *url.URL) error {
+					if u.Scheme != "https" {
+						return errors.New("requires https scheme")
+					}
+					return nil
+				}),
+			),
+		validation.For(func(a AppDynamicsConfig) string { return a.ClientName }).
+			WithName("clientName").
+			Required(),
+		validation.For(func(a AppDynamicsConfig) string { return a.AccountName }).
+			WithName("accountName").
+			Required(),
 	)
 	lightstepValidation = validation.New[LightstepConfig](
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
@@ -149,11 +175,10 @@ var (
 			Rules(validation.StringUUID()),
 	)
 	// URL only.
-	appDynamicsValidation = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
-	splunkValidation      = newURLValidator(func(s SplunkConfig) string { return s.URL })
-	sumoLogicValidation   = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
-	instanaValidation     = newURLValidator(func(i InstanaConfig) string { return i.URL })
-	influxDBValidation    = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	splunkValidation    = newURLValidator(func(s SplunkConfig) string { return s.URL })
+	sumoLogicValidation = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
+	instanaValidation   = newURLValidator(func(i InstanaConfig) string { return i.URL })
+	influxDBValidation  = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
 	// Empty configs.
 	thousandEyesValidation = validation.New[ThousandEyesConfig]()
 	bigQueryValidation     = validation.New[BigQueryConfig]()
@@ -326,6 +351,8 @@ func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validat
 			Rules(validation.StringURL()),
 	)
 }
+
+func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
 
 func validate(d Direct) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(directValidation, d)

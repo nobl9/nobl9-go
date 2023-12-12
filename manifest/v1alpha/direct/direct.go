@@ -140,98 +140,26 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 	return 0, errors.New("BUG: unknown direct type")
 }
 
-// PublicDirect struct which mapped one to one with kind: Direct yaml definition without secrets
-type PublicDirect struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       PublicSpec    `json:"spec"`
-	Status     *Status       `json:"status,omitempty"`
-
-	ManifestSource string `json:"manifestSrc,omitempty"`
-}
-
-// PublicSpec represents content of Spec typical for Direct Object without secrets
-type PublicSpec struct {
-	Description             string                           `json:"description,omitempty"`
-	ReleaseChannel          v1alpha.ReleaseChannel           `json:"releaseChannel,omitempty"`
-	LogCollectionEnabled    bool                             `json:"logCollectionEnabled,omitempty"`
-	Datadog                 *PublicDatadogConfig             `json:"datadog,omitempty"`
-	NewRelic                *PublicNewRelicConfig            `json:"newRelic,omitempty"`
-	SplunkObservability     *PublicSplunkObservabilityConfig `json:"splunkObservability,omitempty"`
-	AppDynamics             *PublicAppDynamicsConfig         `json:"appDynamics,omitempty"`
-	ThousandEyes            *PublicThousandEyesConfig        `json:"thousandEyes,omitempty"`
-	BigQuery                *PublicBigQueryConfig            `json:"bigQuery,omitempty"`
-	Splunk                  *PublicSplunkConfig              `json:"splunk,omitempty"`
-	CloudWatch              *PublicCloudWatchConfig          `json:"cloudWatch,omitempty"`
-	Pingdom                 *PublicPingdomConfig             `json:"pingdom,omitempty"`
-	Redshift                *PublicRedshiftConfig            `json:"redshift,omitempty"`
-	SumoLogic               *PublicSumoLogicConfig           `json:"sumoLogic,omitempty"`
-	Instana                 *PublicInstanaConfig             `json:"instana,omitempty"`
-	InfluxDB                *PublicInfluxDBConfig            `json:"influxdb,omitempty"`
-	GCM                     *PublicGCMConfig                 `json:"gcm,omitempty"`
-	Lightstep               *PublicLightstepConfig           `json:"lightstep,omitempty"`
-	Dynatrace               *PublicDynatraceConfig           `json:"dynatrace,omitempty"`
-	AzureMonitor            *PublicAzureMonitorConfig        `json:"azureMonitor,omitempty"`
-	Honeycomb               *PublicHoneycombConfig           `json:"honeycomb,omitempty"`
-	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
-	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
-}
-
 // DatadogConfig represents content of Datadog Configuration typical for Direct Object.
 type DatadogConfig struct {
 	Site           string `json:"site"`
-	APIKey         string `json:"apiKey,omitempty"`
-	ApplicationKey string `json:"applicationKey,omitempty"`
-}
-
-// PublicDatadogConfig represents content of Datadog Configuration typical for Direct Object without secrets.
-type PublicDatadogConfig struct {
-	Site                 string `json:"site"`
-	HiddenAPIKey         string `json:"apiKey,omitempty"`
-	HiddenApplicationKey string `json:"applicationKey,omitempty"`
+	APIKey         string `json:"apiKey"`
+	ApplicationKey string `json:"applicationKey"`
 }
 
 // NewRelicConfig represents content of NewRelic Configuration typical for Direct Object.
 type NewRelicConfig struct {
 	AccountID        int    `json:"accountId"`
-	InsightsQueryKey string `json:"insightsQueryKey" validate:"newRelicApiKey" example:"secret"`
-}
-
-// PublicNewRelicConfig represents content of NewRelic Configuration typical for Direct Object without secrets.
-type PublicNewRelicConfig struct {
-	AccountID              int    `json:"accountId"`
-	HiddenInsightsQueryKey string `json:"insightsQueryKey"`
-}
-
-// PublicAppDynamicsConfig represents public content of AppDynamics Configuration
-// typical for Direct Object without secrets.
-type PublicAppDynamicsConfig struct {
-	URL                string `json:"url,omitempty" example:"https://nobl9.saas.appdynamics.com"`
-	ClientID           string `json:"clientID,omitempty" example:"apiClientID@accountID"`
-	ClientName         string `json:"clientName,omitempty" example:"apiClientID"`
-	AccountName        string `json:"accountName,omitempty" example:"accountID"`
-	HiddenClientSecret string `json:"clientSecret,omitempty" example:"[hidden]"`
-}
-
-// GenerateMissingFields checks if there is no ClientName and AccountName
-// and then separates ClientID into ClientName and AccountName.
-func (a *PublicAppDynamicsConfig) GenerateMissingFields() {
-	if a.ClientName == "" && a.AccountName == "" {
-		at := strings.LastIndex(a.ClientID, "@")
-		if at >= 0 {
-			a.ClientName, a.AccountName = a.ClientID[:at], a.ClientID[at+1:]
-		}
-	}
+	InsightsQueryKey string `json:"insightsQueryKey"`
 }
 
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for Direct Object.
 type AppDynamicsConfig struct {
-	URL          string `json:"url,omitempty" validate:"httpsURL"`
-	ClientID     string `json:"clientID,omitempty" example:"apiClientID@accountID"`
-	ClientName   string `json:"clientName,omitempty" example:"apiClientID"`
-	AccountName  string `json:"accountName,omitempty" example:"accountID"`
-	ClientSecret string `json:"clientSecret,omitempty" example:"secret"`
+	URL          string `json:"url" validate:"httpsURL"`
+	ClientID     string `json:"clientID" example:"apiClientID@accountID"`
+	ClientName   string `json:"clientName" example:"apiClientID"`
+	AccountName  string `json:"accountName" example:"accountID"`
+	ClientSecret string `json:"clientSecret" example:"secret"`
 }
 
 // GenerateMissingFields - this function is responsible for generating ClientID from AccountName and ClientName
@@ -253,22 +181,10 @@ type SplunkConfig struct {
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
-// PublicSplunkConfig represents content of Splunk Configuration typical for Direct Object.
-type PublicSplunkConfig struct {
-	URL               string `json:"url,omitempty" example:"https://api.eu0.signalfx.com"`
-	HiddenAccessToken string `json:"accessToken,omitempty"`
-}
-
 type LightstepConfig struct {
 	Organization string `json:"organization,omitempty" validate:"required" example:"LightStep-Play"`
 	Project      string `json:"project,omitempty" validate:"required" example:"play"`
 	AppToken     string `json:"appToken"`
-}
-
-type PublicLightstepConfig struct {
-	Organization   string `json:"organization,omitempty" example:"LightStep-Play"`
-	Project        string `json:"project,omitempty" example:"play"`
-	HiddenAppToken string `json:"appToken"`
 }
 
 // SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Direct Object.
@@ -277,22 +193,9 @@ type SplunkObservabilityConfig struct {
 	AccessToken string `json:"accessToken,omitempty"`
 }
 
-// PublicSplunkObservabilityConfig represents content of SplunkObservability
-// Configuration typical for Direct Object.
-type PublicSplunkObservabilityConfig struct {
-	Realm             string `json:"realm,omitempty" example:"us1"`
-	HiddenAccessToken string `json:"accessToken,omitempty"`
-}
-
 // ThousandEyesConfig represents content of ThousandEyes Configuration typical for Direct Object.
 type ThousandEyesConfig struct {
 	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
-}
-
-// PublicThousandEyesConfig content of ThousandEyes
-// Configuration typical for Direct Object
-type PublicThousandEyesConfig struct {
-	HiddenOauthBearerToken string `json:"oauthBearerToken,omitempty"`
 }
 
 // BigQueryConfig represents content of BigQuery configuration typical for Direct Object.
@@ -300,31 +203,15 @@ type BigQueryConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
 }
 
-// PublicBigQueryConfig represents content of BigQuery configuration typical for Direct Object without secrets.
-type PublicBigQueryConfig struct {
-	HiddenServiceAccountKey string `json:"serviceAccountKey,omitempty"`
-}
-
 // GCMConfig represents content of GCM configuration typical for Direct Object.
 type GCMConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
-}
-
-// PublicGCMConfig represents content of GCM configuration typical for Direct Object without secrets.
-type PublicGCMConfig struct {
-	HiddenServiceAccountKey string `json:"serviceAccountKey,omitempty"`
 }
 
 // DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
 type DynatraceConfig struct {
 	URL            string `json:"url,omitempty" validate:"required,url,httpsURL" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
 	DynatraceToken string `json:"dynatraceToken,omitempty"`
-}
-
-// PublicDynatraceConfig represents content of Dynatrace configuration typical for Direct Object without secrets.
-type PublicDynatraceConfig struct {
-	URL                  string `json:"url,omitempty" validate:"required,url,httpsURL" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
-	HiddenDynatraceToken string `json:"dynatraceToken,omitempty"`
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Direct Object.
@@ -334,21 +221,9 @@ type CloudWatchConfig struct {
 	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
-// PublicCloudWatchConfig represents content of CloudWatch Configuration typical for Direct Object
-// without secrets.
-type PublicCloudWatchConfig struct {
-	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
-	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
-	HiddenRoleARN         string `json:"roleARN,omitempty"`
-}
-
 // PingdomConfig represents content of Pingdom Configuration typical for Direct Object.
 type PingdomConfig struct {
 	APIToken string `json:"apiToken"`
-}
-
-type PublicPingdomConfig struct {
-	HiddenAPIToken string `json:"apiToken"`
 }
 
 // InstanaConfig represents content of Instana configuration typical for Direct Object.
@@ -357,24 +232,11 @@ type InstanaConfig struct {
 	URL      string `json:"url" validate:"required,url,httpsURL"`
 }
 
-// PublicInstanaConfig represents content of Instana configuration typical for Direct Object without secrets.
-type PublicInstanaConfig struct {
-	HiddenAPIToken string `json:"apiToken"`
-	URL            string `json:"url"`
-}
-
 // InfluxDBConfig represents content of InfluxDB configuration typical for Direct Object.
 type InfluxDBConfig struct {
 	URL            string `json:"url" validate:"required,url"`
 	APIToken       string `json:"apiToken"`
 	OrganizationID string `json:"organizationID"`
-}
-
-// PublicInfluxDBConfig represents content of InfluxDB configuration typical for Direct Object without secrets.
-type PublicInfluxDBConfig struct {
-	URL                  string `json:"url"`
-	HiddenAPIToken       string `json:"apiToken"`
-	HiddenOrganizationID string `json:"organizationID"`
 }
 
 // RedshiftConfig represents content of Redshift configuration typical for Direct Object.
@@ -385,26 +247,11 @@ type RedshiftConfig struct {
 	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
 }
 
-// PublicRedshiftConfig represents content of Redshift configuration typical for Direct Object without secrets.
-type PublicRedshiftConfig struct {
-	HiddenAccessKeyID     string `json:"accessKeyID,omitempty"`
-	HiddenSecretAccessKey string `json:"secretAccessKey,omitempty"`
-	SecretARN             string `json:"secretARN"`
-	HiddenRoleARN         string `json:"roleARN,omitempty"`
-}
-
 // SumoLogicConfig represents content of SumoLogic configuration typical for Direct Object.
 type SumoLogicConfig struct {
 	AccessID  string `json:"accessID"`
 	AccessKey string `json:"accessKey"`
 	URL       string `json:"url" validate:"required,url"`
-}
-
-// PublicSumoLogicConfig represents content of SumoLogic configuration typical for Direct Object without secrets.
-type PublicSumoLogicConfig struct {
-	HiddenAccessID  string `json:"accessID"`
-	HiddenAccessKey string `json:"accessKey"`
-	URL             string `json:"url"`
 }
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Direct Object.
@@ -414,20 +261,7 @@ type AzureMonitorConfig struct {
 	ClientSecret string `json:"clientSecret"`
 }
 
-// PublicAzureMonitorConfig represents content of AzureMonitor Configuration
-// typical for Direct Object without secrets.
-type PublicAzureMonitorConfig struct {
-	TenantID           string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"` //nolint: lll
-	HiddenClientID     string `json:"clientId"`
-	HiddenClientSecret string `json:"clientSecret"`
-}
-
 // HoneycombConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombConfig struct {
 	APIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
-}
-
-// PublicHoneycombConfig represents content of Honeycomb Configuration typical for Direct Object without secrets.
-type PublicHoneycombConfig struct {
-	HiddenAPIKey string `json:"apiKey,omitempty"`
 }
