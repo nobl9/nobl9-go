@@ -8,7 +8,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref" // nolint:staticcheck
 )
 
 func ExampleAlertPolicy() {
@@ -38,12 +37,6 @@ func ExampleAlertPolicy() {
 					Metadata: alertpolicy.AlertMethodRefMetadata{
 						Name:    "my-alert-method",
 						Project: "my-project",
-					},
-					LegacyAlertMethodRef: alertmethodref.LegacyAlertMethodRef{
-						APIVersion: v1alpha.APIVersion,
-						Kind:       manifest.KindAlertMethod,
-						Spec:       alertmethodref.Spec{},
-						Status:     nil,
 					},
 				},
 			},
@@ -79,11 +72,7 @@ func ExampleAlertPolicy() {
 	//   - measurement: burnedBudget
 	//     value: 0.8
 	//   alertMethods:
-	//   - apiVersion: n9/v1alpha
-	//     kind: AlertMethod
-	//     spec:
-	//       description: ""
-	//     metadata:
+	//   - metadata:
 	//       name: my-alert-method
 	//       project: my-project
 }

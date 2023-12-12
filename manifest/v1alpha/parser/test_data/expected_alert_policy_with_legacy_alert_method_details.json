@@ -1,0 +1,27 @@
+{
+  "apiVersion": "n9/v1alpha",
+  "kind": "AlertPolicy",
+  "metadata": {
+    "name": "this",
+    "displayName": "This",
+    "project": "default"
+  },
+  "spec": {
+    "description": "test",
+    "severity": "low",
+    "coolDown": "5m",
+    "conditions": null,
+    "alertMethods": [
+      {
+        "apiVersion": "n9/v1alpha",
+        "kind": "AlertMethod",
+        "metadata": {
+          "name": "this"
+        },
+        "spec": {
+          "description": ""
+        }
+      }
+    ]
+  }
+}

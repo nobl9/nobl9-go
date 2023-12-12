@@ -1,9 +1,10 @@
 package alertpolicy
 
 import (
+	"encoding/json"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy/alertmethodref" // nolint:staticcheck
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go AlertPolicy
@@ -58,16 +59,32 @@ type AlertCondition struct {
 }
 
 type AlertMethodRef struct {
+	Metadata AlertMethodRefMetadata `json:"metadata"`
+
 	// Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
 	// These object and their details will be dropped.
-	alertmethodref.LegacyAlertMethodRef `json:",inline"`
-
-	Metadata AlertMethodRefMetadata `json:"metadata"`
+	legacyAlertMethodRef interface{}
 }
 
 type AlertMethodRefMetadata struct {
 	Name    string `json:"name"`
 	Project string `json:"project,omitempty"`
-	// Deprecated: Temporary solution to keep backward compatibility to return all AlertMethod details.
-	DisplayName string `json:"displayName,omitempty"`
+}
+
+// SetAlertMethodRef sets AlertMethodRef to an arbitrary value.
+// Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
+// These objects and their details will be dropped.
+func (a *AlertMethodRef) SetAlertMethodRef(ref interface{}) {
+	a.legacyAlertMethodRef = ref
+}
+
+func (a *AlertMethodRef) MarshalJSON() ([]byte, error) {
+	if a.legacyAlertMethodRef != nil {
+		return json.Marshal(a.legacyAlertMethodRef)
+	}
+	return json.Marshal(struct {
+		Metadata AlertMethodRefMetadata `json:"metadata"`
+	}{
+		Metadata: a.Metadata,
+	})
 }

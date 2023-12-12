@@ -2,6 +2,8 @@ package parser
 
 import (
 	"embed"
+	"encoding/json"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
 //go:embed test_data
@@ -93,6 +96,42 @@ func TestParseObjectUsingGenericObject(t *testing.T) {
 			"fake": "fake",
 		},
 	}, jsonObject)
+}
+
+func TestParseAlertPolicyWithLegacyAlertMethodDetails(t *testing.T) {
+	ap := alertpolicy.AlertPolicy{
+		APIVersion: v1alpha.APIVersion,
+		Kind:       manifest.KindAlertPolicy,
+		Metadata: alertpolicy.Metadata{
+			Name:        "this",
+			DisplayName: "This",
+			Project:     "default",
+		},
+		Spec: alertpolicy.Spec{
+			Description:      "test",
+			Severity:         "low",
+			CoolDownDuration: "5m",
+			Conditions:       nil,
+			AlertMethods: []alertpolicy.AlertMethodRef{{
+				Metadata: alertpolicy.AlertMethodRefMetadata{
+					Name:    "this",
+					Project: "default",
+				},
+			}},
+		},
+	}
+	ap.Spec.AlertMethods[0].SetAlertMethodRef(alertmethod.AlertMethod{
+		APIVersion: v1alpha.APIVersion,
+		Kind:       manifest.KindAlertMethod,
+		Metadata: alertmethod.Metadata{
+			Name: "this",
+		},
+	})
+	marshalledJson, err := json.MarshalIndent(ap, "", "  ")
+	jsonData, _ := readParserTestFile(t, "expected_alert_policy_with_legacy_alert_method_details.json")
+	require.NoError(t, err)
+
+	assert.Equal(t, marshalledJson, jsonData)
 }
 
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
