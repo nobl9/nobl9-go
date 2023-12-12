@@ -35,7 +35,7 @@ var specValidation = validation.New[Spec](
 	validation.For(func(s Spec) string { return s.Severity }).
 		WithName("severity").
 		Required().
-		Rules(SeverityValidation()),
+		Rules(severityValidation()),
 	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		OmitEmpty().

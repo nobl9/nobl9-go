@@ -96,7 +96,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.severity",
-			Code: ErrorCodeSeverity,
+			Code: validation.ErrorCodeOneOf,
 		})
 	})
 }
@@ -214,7 +214,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
-			Code: ErrorCodeMeasurement,
+			Code: validation.ErrorCodeOneOf,
 		})
 	})
 	failTests := map[string]measurementDetermined{

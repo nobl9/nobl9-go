@@ -15,8 +15,6 @@ const (
 	SeverityHigh
 )
 
-const ErrorCodeSeverity validation.ErrorCode = "severity"
-
 func getSeverityLevels() map[string]Severity {
 	return map[string]Severity{
 		"Low":    SeverityLow,
@@ -43,7 +41,6 @@ func ParseSeverity(value string) (Severity, error) {
 	return result, nil
 }
 
-func SeverityValidation() validation.SingleRule[string] {
-	return validation.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String()).
-		WithErrorCode(ErrorCodeSeverity)
+func severityValidation() validation.SingleRule[string] {
+	return validation.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String())
 }
