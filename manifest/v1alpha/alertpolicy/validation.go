@@ -54,7 +54,7 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) string { return c.Measurement }).
 		WithName("measurement").
 		Required().
-		Rules(MeasurementValidation()),
+		Rules(measurementValidation()),
 	validation.For(validation.GetSelf[AlertCondition]()).
 		Include(alertingWindowOrLastsForValidation).
 		Include(measurementWithAlertingWindowValidation).

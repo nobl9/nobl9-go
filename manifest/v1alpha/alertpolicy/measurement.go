@@ -19,8 +19,6 @@ const (
 	MeasurementTimeToBurnEntireBudget
 )
 
-const ErrorCodeMeasurement validation.ErrorCode = "measurement"
-
 func getMeasurements() map[string]Measurement {
 	return map[string]Measurement{
 		"burnedBudget":           MeasurementBurnedBudget,
@@ -65,11 +63,11 @@ func GetExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operato
 	}
 }
 
-func MeasurementValidation() validation.SingleRule[string] {
+func measurementValidation() validation.SingleRule[string] {
 	return validation.OneOf(
 		MeasurementBurnedBudget.String(),
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),
 		MeasurementTimeToBurnEntireBudget.String(),
-	).WithErrorCode(ErrorCodeMeasurement)
+	)
 }

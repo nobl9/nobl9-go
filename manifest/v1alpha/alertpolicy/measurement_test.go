@@ -9,14 +9,14 @@ import (
 func TestMeasurement_Validation(t *testing.T) {
 	for _, value := range getMeasurements() {
 		t.Run("passes", func(t *testing.T) {
-			rule := MeasurementValidation()
+			rule := measurementValidation()
 			err := rule.Validate(value.String())
 			assert.NoError(t, err)
 		})
 	}
 
 	t.Run("not valid", func(t *testing.T) {
-		rule := MeasurementValidation()
+		rule := measurementValidation()
 		err := rule.Validate("not valid enum")
 		assert.Error(t, err)
 	})
