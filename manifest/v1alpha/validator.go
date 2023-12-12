@@ -870,7 +870,7 @@ func isValidMetricSourceKind(fl v.FieldLevel) bool {
 
 func isValidNewRelicInsightsAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
-	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == ""
+	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == "" || apiKey == HiddenValue
 }
 
 func hasValidURLScheme(fl v.FieldLevel) bool {
