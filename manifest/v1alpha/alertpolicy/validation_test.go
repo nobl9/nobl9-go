@@ -635,9 +635,8 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
 			{
 				Metadata: AlertMethodRefMetadata{
-					Name:        "my-alert-method",
-					Project:     "my-project",
-					DisplayName: "My ALERT method",
+					Name:    "my-alert-method",
+					Project: "my-project",
 				},
 			},
 			{
@@ -695,24 +694,6 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.project",
 				Code: validation.ErrorCodeStringIsDNSSubdomain,
-			},
-		)
-	})
-	t.Run("fails, invalid display name", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.AlertMethods = []AlertMethodRef{
-			{
-				Metadata: AlertMethodRefMetadata{
-					Name:        "alert-method-name",
-					DisplayName: strings.Repeat("MY AlertMethodName", 20),
-				},
-			},
-		}
-		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
-			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].metadata.displayName",
-				Code: validation.ErrorCodeStringLength,
 			},
 		)
 	})

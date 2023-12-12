@@ -81,7 +81,6 @@ var conditionValidation = validation.New[AlertCondition](
 
 var alertMethodRefValidation = validation.New[AlertMethodRef](
 	v1alpha.FieldRuleMetadataName(func(m AlertMethodRef) string { return m.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(m AlertMethodRef) string { return m.Metadata.DisplayName }),
 	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
 		WithName("metadata.project").
 		OmitEmpty().
@@ -192,10 +191,6 @@ func transformFloat64Value(v interface{}) (float64, error) {
 	return parsedVal, nil
 }
 
-// TODO discuss - using WHEN here does not give us much
-// also: there is one method returning operator depending on measurement GetExpectedOperatorForMeasurement,
-// so logic in every included rule will be the same
-// there is no need to present relations in validation if we have one func defining expected value
 var appropriateOperatorToMeasurement = validation.NewSingleRule(
 	func(v AlertCondition) error {
 		if v.Operator != "" {
