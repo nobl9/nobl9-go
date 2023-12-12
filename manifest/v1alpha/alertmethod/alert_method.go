@@ -2,7 +2,6 @@ package alertmethod
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
 //go:generate go run ../../../scripts/generate-object-impl.go AlertMethod
@@ -126,10 +125,4 @@ type EmailAlertMethod struct {
 	Subject string `json:"subject,omitempty"`
 	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
 	Body string `json:"body,omitempty"`
-}
-
-// WithAlertPolicies represents an AlertPolicies assigned to AlertMethod.
-type WithAlertPolicies struct {
-	AlertMethod   AlertMethod               `json:"alertMethod"`
-	AlertPolicies []alertpolicy.AlertPolicy `json:"alertPolicies"`
 }
