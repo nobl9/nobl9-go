@@ -117,6 +117,7 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 			})),
 	validation.For(func(w WebhookAlertMethod) string { return w.URL }).
 		WithName("url").
+		HideValue().
 		Include(optionalUrlValidation()),
 	validation.ForPointer(func(w WebhookAlertMethod) *string { return w.Template }).
 		WithName("template").
@@ -138,6 +139,7 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
+		HideValue().
 		When(func(p PagerDutyAlertMethod) bool {
 			return p.IntegrationKey != "" && p.IntegrationKey != v1alpha.HiddenValue
 		}).
@@ -147,12 +149,14 @@ var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 var slackValidation = validation.New[SlackAlertMethod](
 	validation.For(func(s SlackAlertMethod) string { return s.URL }).
 		WithName("url").
+		HideValue().
 		Include(optionalUrlValidation()),
 )
 
 var discordValidation = validation.New[DiscordAlertMethod](
 	validation.For(func(s DiscordAlertMethod) string { return s.URL }).
 		WithName("url").
+		HideValue().
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if strings.HasSuffix(strings.ToLower(v), "/slack") || strings.HasSuffix(strings.ToLower(v), "/github") {
@@ -167,9 +171,11 @@ var discordValidation = validation.New[DiscordAlertMethod](
 var opsgenieValidation = validation.New[OpsgenieAlertMethod](
 	validation.For(func(o OpsgenieAlertMethod) string { return o.URL }).
 		WithName("url").
+		HideValue().
 		Include(optionalUrlValidation()),
 	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
+		HideValue().
 		When(func(o OpsgenieAlertMethod) bool {
 			return o.Auth != "" && o.Auth != v1alpha.HiddenValue
 		}).
@@ -217,6 +223,7 @@ var jiraValidation = validation.New[JiraAlertMethod](
 var teamsValidation = validation.New[TeamsAlertMethod](
 	validation.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
+		HideValue().
 		Rules(validation.URL()).
 		StopOnError().
 		Rules(
@@ -265,11 +272,26 @@ var webhookHeaderValidation = validation.New[WebhookHeader](
 			validation.StringNotEmpty(),
 			validation.StringMatchRegexp(headerNameRegex).
 				WithDetails("must be a valid header name")),
+	validation.For(validation.GetSelf[WebhookHeader]()).
+		Include(
+			webhookHeaderValueValidation,
+			webhookHeaderSecretValueValidation),
+)
+
+var webhookHeaderValueValidation = validation.New[WebhookHeader](
 	validation.For(func(h WebhookHeader) string { return h.Value }).
 		WithName("value").
 		Required().
 		Rules(validation.StringNotEmpty()),
-)
+).When(func(h WebhookHeader) bool { return !h.IsSecret })
+
+var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
+	validation.For(func(h WebhookHeader) string { return h.Value }).
+		WithName("value").
+		HideValue().
+		When(func(h WebhookHeader) bool { return h.Value != "" && h.Value != v1alpha.HiddenValue }).
+		Rules(validation.StringNotEmpty()),
+).When(func(h WebhookHeader) bool { return h.IsSecret })
 
 func extractTemplateFields(template string) []string {
 	matches := templateFieldsRegex.FindAllStringSubmatch(template, -1)
