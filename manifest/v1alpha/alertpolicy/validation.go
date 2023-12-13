@@ -87,9 +87,8 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 )
 
 const (
-	errorCodeDurationFullMinutePrecision                     = "duration_full_minute_precision"
-	errorCodeOperatorAppropriateOperatorRegardingMeasurement = "operator_regarding_measurement"
-	errorCodeMeasurementWithAlertingWindow                   = "measurement_regarding_alerting_window"
+	errorCodeDurationFullMinutePrecision   = "duration_full_minute_precision"
+	errorCodeMeasurementWithAlertingWindow = "measurement_regarding_alerting_window"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
@@ -198,7 +197,6 @@ var operatorValidationRule = validation.NewSingleRule(
 		if err != nil {
 			return validation.NewRuleError(
 				err.Error(),
-				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 			)
 		}
 
@@ -206,7 +204,6 @@ var operatorValidationRule = validation.NewSingleRule(
 		if operatorErr != nil {
 			return validation.NewRuleError(
 				operatorErr.Error(),
-				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 			)
 		}
 
@@ -216,7 +213,6 @@ var operatorValidationRule = validation.NewSingleRule(
 					`measurement '%s' determines operator must be defined with '%s' or left empty`,
 					measurement.String(), expectedOperator.String(),
 				),
-				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 			)
 		}
 

@@ -643,7 +643,6 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 							`measurement '%s' determines operator must be defined with '%s' or left empty`,
 							measurement.String(), expectedOperator,
 						),
-						Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 					})
 				}
 			}
@@ -656,7 +655,6 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop:    "spec.conditions[0].operator",
 			Message: "'noop' is not valid operator",
-			Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 		})
 	})
 }
