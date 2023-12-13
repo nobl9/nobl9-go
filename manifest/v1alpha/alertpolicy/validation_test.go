@@ -76,10 +76,12 @@ func TestValidate_Metadata_Project(t *testing.T) {
 
 func TestValidate_Spec_Severity(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Severity = SeverityHigh.String()
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
+		for _, severity := range getSeverityLevels() {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Severity = severity.String()
+			err := validate(alertPolicy)
+			testutils.AssertNoError(t, alertPolicy, err)
+		}
 	})
 	t.Run("fails, required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
@@ -189,6 +191,36 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
+	testCases := map[string]measurementDetermined{
+		"passes, lastsFor is defined": {
+			values: []interface{}{
+				"10m",
+			},
+			measurements: []Measurement{MeasurementTimeToBurnEntireBudget, MeasurementTimeToBurnBudget},
+		},
+		"passes, lastsFor defined with numeric value": {
+			values: []interface{}{
+				0.97,
+			},
+			measurements: []Measurement{MeasurementBurnedBudget, MeasurementAverageBurnRate},
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				for _, measurement := range testCase.measurements {
+					alertPolicy := validAlertPolicy()
+					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
+					alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+					alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
+					alertPolicy.Spec.Conditions[0].Value = value
+					err := validate(alertPolicy)
+					testutils.AssertNoError(t, alertPolicy, err)
+				}
+			}
+		})
+	}
+
 	t.Run("passes, with lastsFor defined", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBurnedBudget.String()
@@ -217,7 +249,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			Code: validation.ErrorCodeOneOf,
 		})
 	})
-	failTests := map[string]measurementDetermined{
+	testCases = map[string]measurementDetermined{
 		"fails, alertingWindow is defined": {
 			measurements: []Measurement{
 				MeasurementTimeToBurnBudget,
@@ -231,7 +263,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			),
 		},
 	}
-	for name, testCase := range failTests {
+	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				for _, measurement := range testCase.measurements {
