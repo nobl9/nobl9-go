@@ -95,7 +95,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 			Code: validation.ErrorCodeRequired,
 		})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails, invalid", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Severity = "Highest"
 		err := validate(alertPolicy)
