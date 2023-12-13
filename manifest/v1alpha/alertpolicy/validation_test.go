@@ -66,11 +66,14 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
-	t.Run("passes, no project", func(t *testing.T) {
+	t.Run("fails, project required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Metadata.Project = ""
 		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeRequired,
+		})
 	})
 }
 

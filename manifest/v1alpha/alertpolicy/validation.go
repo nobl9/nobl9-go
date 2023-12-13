@@ -21,10 +21,7 @@ var alertPolicyValidation = validation.New[AlertPolicy](
 var metadataValidation = validation.New[Metadata](
 	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
-	validation.For(func(m Metadata) string { return m.Project }).
-		WithName("metadata.project").
-		OmitEmpty().
-		Rules(validation.StringIsDNSSubdomain()),
+	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
