@@ -145,14 +145,6 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			Template: &template,
 			Headers:  generateHeaders(10),
 		},
-		"secret passes with empty value": {
-			Template: &template,
-			Headers: []WebhookHeader{{
-				Name:     "Origin",
-				Value:    "",
-				IsSecret: true,
-			}},
-		},
 		"secret passes with hidden value": {
 			Template: &template,
 			Headers: []WebhookHeader{{
@@ -236,12 +228,12 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 				},
 			},
 		},
-		"fails with empty header secret value": {
+		"fails with empty secret header value": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers[0].value",
-					Code: validation.ErrorCodeStringNotEmpty,
+					Code: validation.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -250,8 +242,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 				Headers: []WebhookHeader{
 					{
 						Name:     "Origin",
-						Value:    "  ",
-						IsSecret: true,
+						IsSecret: false,
 					},
 				},
 			},

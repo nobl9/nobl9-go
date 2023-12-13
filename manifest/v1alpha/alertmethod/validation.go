@@ -289,7 +289,7 @@ var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
 	validation.For(func(h WebhookHeader) string { return h.Value }).
 		WithName("value").
 		HideValue().
-		When(func(h WebhookHeader) bool { return h.Value != "" && h.Value != v1alpha.HiddenValue }).
+		Required().
 		Rules(validation.StringNotEmpty()),
 ).When(func(h WebhookHeader) bool { return h.IsSecret })
 
