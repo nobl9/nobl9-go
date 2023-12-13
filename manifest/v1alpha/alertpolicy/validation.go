@@ -160,12 +160,12 @@ var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c Al
 func transformDurationValue(v interface{}) (time.Duration, error) {
 	valueDuration, ok := v.(string)
 	if !ok {
-		return 0, errors.Errorf("time: invalid duration '%v'", v)
+		return 0, errors.Errorf("string expected, got '%T' instead", v)
 	}
 
 	duration, err := time.ParseDuration(valueDuration)
 	if err != nil {
-		return 0, errors.Errorf("time: invalid duration '%v'", v)
+		return 0, errors.Wrap(err, fmt.Sprintf("duration expected, got '%T' instead", v))
 	}
 
 	return duration, nil
