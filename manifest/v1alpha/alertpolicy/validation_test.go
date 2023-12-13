@@ -179,7 +179,7 @@ func TestValidate_Spec_Condition(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0]",
-			Code: errorCodeAlertingWindowOrLastsFor,
+			Code: validation.ErrorCodeMutuallyExclusive,
 		})
 	})
 }

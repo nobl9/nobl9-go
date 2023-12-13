@@ -90,7 +90,6 @@ const (
 	errorCodeDurationFullMinutePrecision                     = "duration_full_minute_precision"
 	errorCodeOperatorAppropriateOperatorRegardingMeasurement = "operator_regarding_measurement"
 	errorCodeMeasurementWithAlertingWindow                   = "measurement_regarding_alerting_window"
-	errorCodeAlertingWindowOrLastsFor                        = "alerting_window_or_lasts_for"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
@@ -106,14 +105,9 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 	},
 )
 
-var alertingWindowOrLastsForValidation = validation.NewSingleRule(func(c AlertCondition) error {
-	if c.AlertingWindow != "" && c.LastsForDuration != "" {
-		return &validation.RuleError{
-			Message: "only on of alertingWindow or lastsFor must be defined for alertCondition",
-			Code:    errorCodeAlertingWindowOrLastsFor,
-		}
-	}
-	return nil
+var alertingWindowOrLastsForValidation = validation.MutuallyExclusive(false, map[string]func(c AlertCondition) any{
+	"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
+	"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
 })
 
 var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
