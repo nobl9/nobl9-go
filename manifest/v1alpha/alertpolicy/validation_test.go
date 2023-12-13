@@ -243,7 +243,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			Code: validation.ErrorCodeRequired,
 		})
 	})
-	t.Run("fails", func(t *testing.T) {
+	t.Run("fails, invalid measurement", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = "Unknown"
 		err := validate(alertPolicy)
@@ -252,37 +252,26 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			Code: validation.ErrorCodeOneOf,
 		})
 	})
-	testCases = map[string]measurementDetermined{
-		"fails, alertingWindow is defined": {
-			measurements: []Measurement{
-				MeasurementTimeToBurnBudget,
-				MeasurementTimeToBurnEntireBudget,
-				MeasurementBurnedBudget,
-			},
-			expectedCode: errorCodeMeasurementWithAlertingWindow,
-			expectedMessage: fmt.Sprintf(
-				`measurement must be set to '%s' when alertingWindow is defined`,
-				MeasurementAverageBurnRate.String(),
-			),
-		},
-	}
-	for name, testCase := range testCases {
-		t.Run(name, func(t *testing.T) {
-			for _, value := range testCase.values {
-				for _, measurement := range testCase.measurements {
-					alertPolicy := validAlertPolicy()
-					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
-					alertPolicy.Spec.Conditions[0].Value = value
-					err := validate(alertPolicy)
-					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-						Prop:            "spec.conditions[0]",
-						ContainsMessage: testCase.expectedMessage,
-						Code:            testCase.expectedCode,
-					})
-				}
-			}
-		})
-	}
+	t.Run("fails, alertingWindow is defined", func(t *testing.T) {
+		for _, measurement := range []Measurement{
+			MeasurementTimeToBurnBudget,
+			MeasurementTimeToBurnEntireBudget,
+			MeasurementBurnedBudget,
+		} {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
+			alertPolicy.Spec.Conditions[0].Value = "10m"
+			err := validate(alertPolicy)
+			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+				Prop: "spec.conditions[0].measurement",
+				ContainsMessage: fmt.Sprintf(
+					`must be equal to '%s' when 'alertingWindow' is defined`,
+					MeasurementAverageBurnRate.String(),
+				),
+				Code: errorCodeMeasurementWithAlertingWindow,
+			})
+		}
+	})
 }
 
 func TestValidate_Spec_Condition_Value(t *testing.T) {
