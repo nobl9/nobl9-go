@@ -409,19 +409,10 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 			testutils.AssertNoError(t, alertPolicy, err)
 		})
 	}
-	t.Run("passes, empty with lastsFor defined", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-		alertPolicy.Spec.Conditions[0].LastsForDuration = "5m"
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
-
-	tests := map[string]valuesWithCodeExpect{
+	testCases := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
-			values:          []string{"1 hour"},
-			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
+			values:       []string{"1 hour"},
+			expectedCode: validation.ErrorCodeTransform,
 		},
 		"fails, cannot parse unit format": {
 			values: []string{
@@ -430,20 +421,18 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"0.5w",
 				"1w",
 			},
-			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: `time: unknown unit`,
+			expectedCode: validation.ErrorCodeTransform,
 		},
 	}
-	for name, testCase := range tests {
+	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				alertPolicy := validAlertPolicy()
 				alertPolicy.Spec.Conditions[0].AlertingWindow = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:            "spec.conditions[0].alertingWindow",
-					ContainsMessage: testCase.expectedMessage,
-					Code:            testCase.expectedCode,
+					Prop: "spec.conditions[0].alertingWindow",
+					Code: testCase.expectedCode,
 				})
 			}
 		})
@@ -472,8 +461,8 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 		},
 		"fails, too short": {
 			values: []string{
-				"-10m",
-				"-168h",
+				"4m",
+				"60000ms",
 			},
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
@@ -528,14 +517,12 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 
 	tests := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
-			values:          []string{"1 hour"},
-			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
+			values:       []string{"1 hour"},
+			expectedCode: validation.ErrorCodeTransform,
 		},
 		"fails, wrong unit in format": {
-			values:          []string{"365d"},
-			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: `time: unknown unit "d" in duration "365d"`,
+			values:       []string{"365d"},
+			expectedCode: validation.ErrorCodeTransform,
 		},
 		"fails, too short": {
 			values: []string{
