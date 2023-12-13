@@ -468,6 +468,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"1h5m5s",
 				"0.21h",
 				"555s",
+				"360001ms",
 			},
 			expectedCode:    errorCodeDurationFullMinutePrecision,
 			expectedMessage: "duration must be defined with minute precision",

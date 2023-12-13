@@ -96,7 +96,7 @@ const (
 
 var durationFullMinutePrecision = validation.NewSingleRule(
 	func(v time.Duration) error {
-		if int64(v.Seconds())%int64(time.Minute.Seconds()) != 0 {
+		if v.Nanoseconds()%int64(time.Minute) != 0 {
 			return validation.NewRuleError(
 				"duration must be defined with minute precision",
 				errorCodeDurationFullMinutePrecision,
