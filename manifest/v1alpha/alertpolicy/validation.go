@@ -87,10 +87,10 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 )
 
 const (
-	errorCodeDurationFullMinutePrecision                     validation.ErrorCode = "duration_full_minute_precision"
-	errorCodeOperatorAppropriateOperatorRegardingMeasurement validation.ErrorCode = "operator_regarding_measurement"
-	errorCodeMeasurementWithAlertingWindow                   validation.ErrorCode = "measurement_regarding_alerting_window"
-	errorCodeAlertingWindowOrLastsFor                        validation.ErrorCode = "alerting_window_or_lasts_for"
+	errorCodeDurationFullMinutePrecision                     = "duration_full_minute_precision"
+	errorCodeOperatorAppropriateOperatorRegardingMeasurement = "operator_regarding_measurement"
+	errorCodeMeasurementWithAlertingWindow                   = "measurement_regarding_alerting_window"
+	errorCodeAlertingWindowOrLastsFor                        = "alerting_window_or_lasts_for"
 )
 
 var durationFullMinutePrecision = validation.NewSingleRule(
