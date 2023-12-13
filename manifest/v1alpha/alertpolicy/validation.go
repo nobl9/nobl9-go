@@ -182,39 +182,41 @@ func transformFloat64Value(v interface{}) (float64, error) {
 
 var operatorValidationRule = validation.NewSingleRule(
 	func(v AlertCondition) error {
-		if v.Operator != "" {
-			measurement, measurementErr := ParseMeasurement(v.Measurement)
-			if measurementErr != nil {
-				return &validation.RuleError{
-					Message: measurementErr.Error(),
-					Code:    validation.ErrorCodeTransform,
-				}
-			}
+		if v.Operator == "" {
+			return nil
+		}
 
-			expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
-			if err != nil {
-				return &validation.RuleError{
-					Message: measurementErr.Error(),
-					Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-				}
+		measurement, measurementErr := ParseMeasurement(v.Measurement)
+		if measurementErr != nil {
+			return &validation.RuleError{
+				Message: measurementErr.Error(),
+				Code:    validation.ErrorCodeTransform,
 			}
+		}
 
-			operator, operatorErr := v1alpha.ParseOperator(v.Operator)
-			if operatorErr != nil {
-				return &validation.RuleError{
-					Message: operatorErr.Error(),
-					Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-				}
+		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
+		if err != nil {
+			return &validation.RuleError{
+				Message: measurementErr.Error(),
+				Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 			}
+		}
 
-			if operator != expectedOperator {
-				return &validation.RuleError{
-					Message: fmt.Sprintf(
-						`measurement '%s' determines operator must be defined with '%s' or left empty`,
-						measurement.String(), expectedOperator.String(),
-					),
-					Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-				}
+		operator, operatorErr := v1alpha.ParseOperator(v.Operator)
+		if operatorErr != nil {
+			return &validation.RuleError{
+				Message: operatorErr.Error(),
+				Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+			}
+		}
+
+		if operator != expectedOperator {
+			return &validation.RuleError{
+				Message: fmt.Sprintf(
+					`measurement '%s' determines operator must be defined with '%s' or left empty`,
+					measurement.String(), expectedOperator.String(),
+				),
+				Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
 			}
 		}
 
