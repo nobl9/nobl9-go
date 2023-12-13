@@ -213,7 +213,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 			},
 		)
 	})
-	t.Run("required query token - n9_value", func(t *testing.T) {
+	t.Run("required query token - n9_time", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.
@@ -221,13 +221,13 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Message: "string does not match regular expression: '(?m)\\\\bn9_time\\\\b'; n9_time is required",
-				Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code:    validation.ErrorCodeStringMatchRegexp,
+				Prop:            "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code:            validation.ErrorCodeStringMatchRegexp,
+				ContainsMessage: "string does not match regular expression: '(?m)\\bn9_time\\b'; n9_time is required", // nolint: lll
 			},
 		)
 	})
-	t.Run("required query token - n9_time", func(t *testing.T) {
+	t.Run("required query token - n9_value", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.
@@ -235,9 +235,9 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Message: "string does not match regular expression: '(?m)\\\\bn9_time\\\\b'; n9_value is required",
-				Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code:    validation.ErrorCodeStringMatchRegexp,
+				Prop:            "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code:            validation.ErrorCodeStringMatchRegexp,
+				ContainsMessage: "string does not match regular expression: '(?m)\\bn9_value\\b'; n9_value is required", // nolint: lll
 			},
 		)
 	})
