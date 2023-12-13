@@ -71,7 +71,7 @@ var conditionValidation = validation.New[AlertCondition](
 	validation.For(validation.GetSelf[AlertCondition]()).
 		WithName("operator").
 		OmitEmpty().
-		Rules(appropriateOperatorToMeasurement),
+		Rules(operatorValidationRule),
 	validation.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).
 		WithName("lastsFor").
 		OmitEmpty().
@@ -180,7 +180,7 @@ func transformFloat64Value(v interface{}) (float64, error) {
 	return parsedVal, nil
 }
 
-var appropriateOperatorToMeasurement = validation.NewSingleRule(
+var operatorValidationRule = validation.NewSingleRule(
 	func(v AlertCondition) error {
 		if v.Operator != "" {
 			measurement, measurementErr := ParseMeasurement(v.Measurement)
