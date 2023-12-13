@@ -56,8 +56,7 @@ var conditionValidation = validation.New[AlertCondition](
 		Required().
 		Rules(measurementValidation()),
 	validation.For(validation.GetSelf[AlertCondition]()).
-		Include(alertingWindowOrLastsForValidation).
-		Include(measurementWithAlertingWindowValidation).
+		Rules(alertingWindowOrLastsForValidation, measurementWithAlertingWindowValidation).
 		Include(timeToBurnBudgetValueValidation).
 		Include(burnedAndAverageBudgetValueValidation).
 		Include(averageBudgetWithAlertingWindowValueValidation),
@@ -107,19 +106,15 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 	},
 )
 
-var alertingWindowOrLastsForValidation = validation.New[AlertCondition](
-	validation.For(validation.GetSelf[AlertCondition]()).
-		Rules(
-			validation.NewSingleRule(func(c AlertCondition) error {
-				if c.AlertingWindow != "" && c.LastsForDuration != "" {
-					return &validation.RuleError{
-						Message: "only on of alertingWindow or lastsFor must be defined for alertCondition",
-						Code:    errorCodeAlertingWindowOrLastsFor,
-					}
-				}
-				return nil
-			})),
-)
+var alertingWindowOrLastsForValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	if c.AlertingWindow != "" && c.LastsForDuration != "" {
+		return &validation.RuleError{
+			Message: "only on of alertingWindow or lastsFor must be defined for alertCondition",
+			Code:    errorCodeAlertingWindowOrLastsFor,
+		}
+	}
+	return nil
+})
 
 var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
@@ -151,22 +146,18 @@ var averageBudgetWithAlertingWindowValueValidation = validation.New[AlertConditi
 			c.Measurement == MeasurementAverageBurnRate.String()
 	})
 
-var measurementWithAlertingWindowValidation = validation.New[AlertCondition](
-	validation.For(validation.GetSelf[AlertCondition]()).
-		Rules(
-			validation.NewSingleRule(func(c AlertCondition) error {
-				if c.AlertingWindow != "" && c.Measurement != MeasurementAverageBurnRate.String() {
-					return &validation.RuleError{
-						Message: fmt.Sprintf(
-							`measurement must be set to '%s' when alertingWindow is defined`,
-							MeasurementAverageBurnRate.String(),
-						),
-						Code: errorCodeMeasurementWithAlertingWindow,
-					}
-				}
-				return nil
-			})),
-)
+var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	if c.AlertingWindow != "" && c.Measurement != MeasurementAverageBurnRate.String() {
+		return &validation.RuleError{
+			Message: fmt.Sprintf(
+				`measurement must be set to '%s' when alertingWindow is defined`,
+				MeasurementAverageBurnRate.String(),
+			),
+			Code: errorCodeMeasurementWithAlertingWindow,
+		}
+	}
+	return nil
+})
 
 func transformDurationValue(v interface{}) (time.Duration, error) {
 	valueDuration, ok := v.(string)
