@@ -38,8 +38,8 @@ type Metadata struct {
 
 // Status represents content of Status optional for AlertMethod Object
 type Status struct {
-	LastTestDate       string `json:"lastTestDate,omitempty" example:"2021-02-09T10:43:07Z"`
-	NextTestPossibleAt string `json:"nextTestPossibleAt,omitempty" example:"2021-02-09T10:43:07Z"`
+	LastTestDate       string `json:"lastTestDate,omitempty"`
+	NextTestPossibleAt string `json:"nextTestPossibleAt,omitempty"`
 }
 
 // Spec holds detailed information specific to AlertMethod.
