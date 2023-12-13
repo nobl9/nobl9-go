@@ -189,6 +189,8 @@ var newLineReplacer = strings.NewReplacer("\n", "\\n", "\r", "\\r")
 // - limiting the string to 100 characters
 // - removing leading and trailing whitespaces
 // - escaping newlines
+// If value is a struct implementing [fmt.Stringer] String method will be used
+// only if the struct does not contain any JSON tags.
 func propertyValueString(v interface{}) string {
 	if v == nil {
 		return ""
@@ -197,11 +199,22 @@ func propertyValueString(v interface{}) string {
 	ft := reflect.Indirect(rv)
 	var s string
 	switch ft.Kind() {
-	case reflect.Interface, reflect.Map, reflect.Slice, reflect.Struct:
-		if !reflect.ValueOf(v).IsZero() {
-			raw, _ := json.Marshal(v)
-			s = string(raw)
+	case reflect.Interface, reflect.Map, reflect.Slice:
+		if reflect.ValueOf(v).IsZero() {
+			break
 		}
+		raw, _ := json.Marshal(v)
+		s = string(raw)
+	case reflect.Struct:
+		if reflect.ValueOf(v).IsZero() {
+			break
+		}
+		if stringer, ok := v.(fmt.Stringer); ok && !hasJSONTags(v, rv.Kind() == reflect.Pointer) {
+			s = stringer.String()
+			break
+		}
+		raw, _ := json.Marshal(v)
+		s = string(raw)
 	case reflect.Invalid:
 		return ""
 	default:
@@ -211,6 +224,20 @@ func propertyValueString(v interface{}) string {
 	s = strings.TrimSpace(s)
 	s = newLineReplacer.Replace(s)
 	return s
+}
+
+func hasJSONTags(v interface{}, isPointer bool) bool {
+	t := reflect.TypeOf(v)
+	if isPointer {
+		t = t.Elem()
+	}
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if _, hasTag := field.Tag.Lookup("json"); hasTag {
+			return true
+		}
+	}
+	return false
 }
 
 // ruleSetError is a container for transferring multiple errors reported by [RuleSet].

@@ -265,7 +265,7 @@ func TestTransform(t *testing.T) {
 		assert.Len(t, errs, 1)
 		assert.True(t, HasErrorCode(errs, ErrorCodeGreaterThan))
 	})
-	t.Run("fail transformation", func(t *testing.T) {
+	t.Run("fails transformation", func(t *testing.T) {
 		getter := func(s string) string { return s }
 		transformed := Transform(getter, strconv.Atoi).
 			WithName("prop").

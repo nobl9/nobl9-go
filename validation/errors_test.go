@@ -156,8 +156,22 @@ my-table WHERE value = "abc"
 	}
 }
 
+type (
+	stringerWithTags struct {
+		This string `json:"this"`
+		That string `json:"THAT"`
+	}
+	stringerWithoutTags struct {
+		This string
+		That string
+	}
+)
+
+func (s stringerWithTags) String() string    { return s.This + "_" + s.That }
+func (s stringerWithoutTags) String() string { return s.This + "_" + s.That }
+
 func TestPropertyError(t *testing.T) {
-	for typ, value := range map[string]interface{}{
+	for name, value := range map[string]interface{}{
 		"string": "default",
 		"slice":  []string{"this", "that"},
 		"map":    map[string]string{"this": "that"},
@@ -165,8 +179,17 @@ func TestPropertyError(t *testing.T) {
 			This string `json:"this"`
 			That string `json:"THAT"`
 		}{This: "this", That: "that"},
+		"stringer_with_json_tags": stringerWithTags{
+			This: "this", That: "that",
+		},
+		"stringer_without_json_tags": stringerWithoutTags{
+			This: "this", That: "that",
+		},
+		"stringer_pointer": &stringerWithoutTags{
+			This: "this", That: "that",
+		},
 	} {
-		t.Run(typ, func(t *testing.T) {
+		t.Run(name, func(t *testing.T) {
 			err := &PropertyError{
 				PropertyName:  "metadata.name",
 				PropertyValue: propertyValueString(value),
@@ -176,7 +199,7 @@ func TestPropertyError(t *testing.T) {
 					{Message: "here's another error"},
 				},
 			}
-			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", typ)))
+			assert.EqualError(t, err, expectedErrorOutput(t, fmt.Sprintf("property_error_%s.txt", name)))
 		})
 	}
 	t.Run("no name provided", func(t *testing.T) {
