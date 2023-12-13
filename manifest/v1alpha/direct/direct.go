@@ -155,15 +155,16 @@ type NewRelicConfig struct {
 
 // AppDynamicsConfig represents content of AppDynamics Configuration typical for Direct Object.
 type AppDynamicsConfig struct {
-	URL          string `json:"url" validate:"httpsURL"`
-	ClientID     string `json:"clientID" example:"apiClientID@accountID"`
-	ClientName   string `json:"clientName" example:"apiClientID"`
-	AccountName  string `json:"accountName" example:"accountID"`
-	ClientSecret string `json:"clientSecret" example:"secret"`
+	URL          string `json:"url"`
+	ClientID     string `json:"clientID"`
+	ClientName   string `json:"clientName"`
+	AccountName  string `json:"accountName"`
+	ClientSecret string `json:"clientSecret"`
 }
 
 // GenerateMissingFields - this function is responsible for generating ClientID from AccountName and ClientName
 // when provided with new, also it generates AccountName and ClientName for old already existing configs.
+// TODO: what to do with this?
 func (a *AppDynamicsConfig) GenerateMissingFields() {
 	if a.AccountName != "" && a.ClientName != "" {
 		a.ClientID = fmt.Sprintf("%s@%s", a.ClientName, a.AccountName)
@@ -175,10 +176,10 @@ func (a *AppDynamicsConfig) GenerateMissingFields() {
 	}
 }
 
-// SplunkConfig represents content of Splunk Configuration typical for Direct Object.
-type SplunkConfig struct {
-	URL         string `json:"url,omitempty" validate:"httpsURL" example:"https://api.eu0.signalfx.com"`
-	AccessToken string `json:"accessToken,omitempty"`
+// SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Direct Object.
+type SplunkObservabilityConfig struct {
+	Realm       string `json:"realm"`
+	AccessToken string `json:"accessToken"`
 }
 
 type LightstepConfig struct {
@@ -187,9 +188,9 @@ type LightstepConfig struct {
 	AppToken     string `json:"appToken"`
 }
 
-// SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Direct Object.
-type SplunkObservabilityConfig struct {
-	Realm       string `json:"realm,omitempty" validate:"required" example:"us1"`
+// SplunkConfig represents content of Splunk Configuration typical for Direct Object.
+type SplunkConfig struct {
+	URL         string `json:"url,omitempty" validate:"httpsURL" example:"https://api.eu0.signalfx.com"`
 	AccessToken string `json:"accessToken,omitempty"`
 }
 

@@ -495,6 +495,54 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 	})
 }
 
+// TODO: Figure out how the logic around GenerateMissingFields should influence validation.
+func TestValidateSpec_AppDynamics(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.AppDynamics)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		direct := validDirect(v1alpha.AppDynamics)
+		direct.Spec.AppDynamics.URL = ""
+		direct.Spec.AppDynamics.ClientName = ""
+		direct.Spec.AppDynamics.AccountName = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 3,
+			testutils.ExpectedError{
+				Prop: "spec.appDynamics.url",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.appDynamics.clientName",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.appDynamics.accountName",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.AppDynamics)
+		direct.Spec.AppDynamics.URL = "nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.appDynamics.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.AppDynamics)
+		direct.Spec.AppDynamics.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop:    "spec.appDynamics.url",
+			Message: "requires https scheme",
+		})
+	})
+}
+
 func TestValidateSpec_SplunkObservability(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)

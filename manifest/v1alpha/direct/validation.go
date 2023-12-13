@@ -134,17 +134,17 @@ var (
 			WithName("accountName").
 			Required(),
 	)
+	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
+		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
+			WithName("realm").
+			Required(),
+	)
 	lightstepValidation = validation.New[LightstepConfig](
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").
 			Required(),
 		validation.For(func(l LightstepConfig) string { return l.Project }).
 			WithName("project").
-			Required(),
-	)
-	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
-		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
-			WithName("realm").
 			Required(),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
