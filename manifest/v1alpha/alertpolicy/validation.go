@@ -95,10 +95,10 @@ const (
 var durationFullMinutePrecision = validation.NewSingleRule(
 	func(v time.Duration) error {
 		if int64(v.Seconds())%int64(time.Minute.Seconds()) != 0 {
-			return &validation.RuleError{
-				Message: "duration must be defined with minute precision",
-				Code:    errorCodeDurationFullMinutePrecision,
-			}
+			return validation.NewRuleError(
+				"duration must be defined with minute precision",
+				errorCodeDurationFullMinutePrecision,
+			)
 		}
 
 		return nil
@@ -188,36 +188,36 @@ var operatorValidationRule = validation.NewSingleRule(
 
 		measurement, measurementErr := ParseMeasurement(v.Measurement)
 		if measurementErr != nil {
-			return &validation.RuleError{
-				Message: measurementErr.Error(),
-				Code:    validation.ErrorCodeTransform,
-			}
+			return validation.NewRuleError(
+				measurementErr.Error(),
+				validation.ErrorCodeTransform,
+			)
 		}
 
 		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
 		if err != nil {
-			return &validation.RuleError{
-				Message: measurementErr.Error(),
-				Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-			}
+			return validation.NewRuleError(
+				err.Error(),
+				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+			)
 		}
 
 		operator, operatorErr := v1alpha.ParseOperator(v.Operator)
 		if operatorErr != nil {
-			return &validation.RuleError{
-				Message: operatorErr.Error(),
-				Code:    errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-			}
+			return validation.NewRuleError(
+				operatorErr.Error(),
+				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+			)
 		}
 
 		if operator != expectedOperator {
-			return &validation.RuleError{
-				Message: fmt.Sprintf(
+			return validation.NewRuleError(
+				fmt.Sprintf(
 					`measurement '%s' determines operator must be defined with '%s' or left empty`,
 					measurement.String(), expectedOperator.String(),
 				),
-				Code: errorCodeOperatorAppropriateOperatorRegardingMeasurement,
-			}
+				errorCodeOperatorAppropriateOperatorRegardingMeasurement,
+			)
 		}
 
 		return nil
