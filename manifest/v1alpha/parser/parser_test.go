@@ -3,7 +3,6 @@ package parser
 import (
 	"embed"
 	"encoding/json"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
