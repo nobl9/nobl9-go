@@ -178,7 +178,7 @@ func TestForPointer(t *testing.T) {
 	})
 }
 
-func TestRequiredAndOmitempty(t *testing.T) {
+func TestRequiredAndOmitEmpty(t *testing.T) {
 	t.Run("nil pointer", func(t *testing.T) {
 		rules := ForPointer(func(s *string) *string { return s }).
 			Rules(StringMinLength(10))

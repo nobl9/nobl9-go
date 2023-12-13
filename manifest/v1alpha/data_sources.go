@@ -512,6 +512,8 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 
 func DataDogSiteValidationRule() validation.SingleRule[string] {
 	return validation.OneOf(
+		"eu",
+		"com",
 		"datadoghq.com",
 		"us3.datadoghq.com",
 		"us5.datadoghq.com",
