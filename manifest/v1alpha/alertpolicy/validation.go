@@ -164,7 +164,7 @@ func transformDurationValue(v interface{}) (time.Duration, error) {
 
 	duration, err := time.ParseDuration(valueDuration)
 	if err != nil {
-		return 0, errors.Wrap(err, fmt.Sprintf("duration expected, got '%T' instead", v))
+		return 0, errors.Wrap(err, "expected valid time.Duration")
 	}
 
 	return duration, nil

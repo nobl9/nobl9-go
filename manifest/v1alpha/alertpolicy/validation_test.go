@@ -360,7 +360,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				MeasurementBurnedBudget,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: "must be valid float64",
+			expectedMessage: "float64 expected, got ",
 		},
 		"fails, unexpected format when measurement is burnedBudget or averageBurnRate": {
 			values: []interface{}{
@@ -373,7 +373,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				MeasurementBurnedBudget,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: "must be valid float64",
+			expectedMessage: "float64 expected, got ",
 		},
 	}
 	for name, testCase := range failTests {
