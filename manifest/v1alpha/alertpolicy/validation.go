@@ -173,7 +173,7 @@ func transformDurationValue(v interface{}) (time.Duration, error) {
 func transformFloat64Value(v interface{}) (float64, error) {
 	parsedVal, ok := v.(float64)
 	if !ok {
-		return 0, errors.Errorf("'%v' must be valid float64", v)
+		return 0, errors.Errorf("float64 expected, got '%T' instead", v)
 	}
 
 	return parsedVal, nil
