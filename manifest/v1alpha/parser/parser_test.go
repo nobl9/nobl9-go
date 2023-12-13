@@ -120,7 +120,7 @@ func TestParseAlertPolicyWithLegacyAlertMethodDetails(t *testing.T) {
 			}},
 		},
 	}
-	ap.Spec.AlertMethods[0].SetAlertMethodRef(alertmethod.AlertMethod{
+	ap.Spec.AlertMethods[0].EmbedAlertMethodRef(alertmethod.AlertMethod{
 		APIVersion: v1alpha.APIVersion,
 		Kind:       manifest.KindAlertMethod,
 		Metadata: alertmethod.Metadata{

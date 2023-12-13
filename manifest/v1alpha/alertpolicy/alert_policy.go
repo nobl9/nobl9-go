@@ -71,10 +71,10 @@ type AlertMethodRefMetadata struct {
 	Project string `json:"project,omitempty"`
 }
 
-// SetAlertMethodRef sets AlertMethodRef to an arbitrary value.
+// EmbedAlertMethodRef sets AlertMethodRef to an arbitrary value.
 // Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
 // These objects and their details will be dropped.
-func (a *AlertMethodRef) SetAlertMethodRef(ref interface{}) {
+func (a *AlertMethodRef) EmbedAlertMethodRef(ref interface{}) {
 	a.legacyAlertMethodRef = ref
 }
 
