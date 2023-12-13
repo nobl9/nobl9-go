@@ -39,7 +39,7 @@ var specValidation = validation.New[Spec](
 	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		OmitEmpty().
-		Rules(validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5)),
+		Rules(validation.GreaterThanOrEqualTo(time.Minute*5)),
 	validation.ForEach(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
@@ -66,8 +66,8 @@ var conditionValidation = validation.New[AlertCondition](
 		OmitEmpty().
 		Rules(
 			durationFullMinutePrecision,
-			validation.GreaterThanOrEqualTo[time.Duration](time.Minute*5),
-			validation.LessThanOrEqualTo[time.Duration](time.Hour*24*7),
+			validation.GreaterThanOrEqualTo(time.Minute*5),
+			validation.LessThanOrEqualTo(time.Hour*24*7),
 		),
 	validation.For(validation.GetSelf[AlertCondition]()).
 		WithName("operator").
