@@ -56,7 +56,13 @@ var conditionValidation = validation.New[AlertCondition](
 		Required().
 		Rules(measurementValidation()),
 	validation.For(validation.GetSelf[AlertCondition]()).
-		Rules(alertingWindowOrLastsForValidation, measurementWithAlertingWindowValidation).
+		Rules(
+			validation.MutuallyExclusive(false, map[string]func(c AlertCondition) any{
+				"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
+				"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
+			}),
+			measurementWithAlertingWindowValidation,
+		).
 		Include(timeToBurnBudgetValueValidation).
 		Include(burnedAndAverageBudgetValueValidation).
 		Include(averageBudgetWithAlertingWindowValueValidation),
@@ -103,11 +109,6 @@ var durationFullMinutePrecision = validation.NewSingleRule(
 		return nil
 	},
 )
-
-var alertingWindowOrLastsForValidation = validation.MutuallyExclusive(false, map[string]func(c AlertCondition) any{
-	"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
-	"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
-})
 
 var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
