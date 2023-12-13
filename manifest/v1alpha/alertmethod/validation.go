@@ -171,7 +171,6 @@ var discordValidation = validation.New[DiscordAlertMethod](
 var opsgenieValidation = validation.New[OpsgenieAlertMethod](
 	validation.For(func(o OpsgenieAlertMethod) string { return o.URL }).
 		WithName("url").
-		HideValue().
 		Include(optionalUrlValidation()),
 	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
