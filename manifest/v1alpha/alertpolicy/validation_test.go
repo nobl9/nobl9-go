@@ -126,7 +126,7 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
 		},
-		"fails, not greater or equal to 5m": {
+		"fails, value too small": {
 			values:          []string{"-10m", "4m"},
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
