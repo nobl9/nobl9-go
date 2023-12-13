@@ -142,13 +142,17 @@ var averageBudgetWithAlertingWindowValueValidation = validation.New[AlertConditi
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
 	if c.AlertingWindow != "" && c.Measurement != MeasurementAverageBurnRate.String() {
-		return &validation.RuleError{
-			Message: fmt.Sprintf(
-				`measurement must be set to '%s' when alertingWindow is defined`,
-				MeasurementAverageBurnRate.String(),
+		return validation.NewPropertyError(
+			"measurement",
+			c.Measurement,
+			validation.NewRuleError(
+				fmt.Sprintf(
+					`must be equal to '%s' when 'alertingWindow' is defined`,
+					MeasurementAverageBurnRate.String(),
+				),
+				errorCodeMeasurementWithAlertingWindow,
 			),
-			Code: errorCodeMeasurementWithAlertingWindow,
-		}
+		)
 	}
 	return nil
 })
