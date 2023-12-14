@@ -327,7 +327,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 		})
 	})
 
-	failTests := map[string]measurementDetermined{
+	testCases := map[string]measurementDetermined{
 		"fails, greater than 0 when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
 			values: []interface{}{
 				"-1ms",
@@ -368,7 +368,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			expectedMessage: "float64 expected, got ",
 		},
 	}
-	for name, testCase := range failTests {
+	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				for _, measurement := range testCase.measurements {

@@ -98,8 +98,42 @@ func TestParseObjectUsingGenericObject(t *testing.T) {
 	}, jsonObject)
 }
 
-func TestParseAlertPolicyWithLegacyAlertMethodDetails(t *testing.T) {
-	ap := alertpolicy.AlertPolicy{
+func TestParseAlertPolicy(t *testing.T) {
+	testCases := map[string]struct {
+		alertPolicy alertpolicy.AlertPolicy
+		expected    string
+	}{
+		"passes, simple AlertMethodRef declared": {
+			alertPolicy: validAlertPolicy(),
+			expected:    "expected_alert_policy_with_alert_method_ref.json",
+		},
+		"passes, embed legacy alert method": {
+			alertPolicy: withLegacyAlertMethodEmbedded(),
+			expected:    "expected_alert_policy_with_legacy_alert_method_details.json",
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			marshalledJson, err := json.MarshalIndent(testCase.alertPolicy, "", "  ")
+			jsonData, _ := readParserTestFile(t, testCase.expected)
+			require.NoError(t, err)
+
+			assert.Equal(t, marshalledJson, jsonData)
+		})
+	}
+}
+
+func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
+	t.Helper()
+	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))
+	require.NoError(t, err)
+	format, err := manifest.ParseObjectFormat(filepath.Ext(filename)[1:])
+	require.NoError(t, err)
+	return data, format
+}
+
+func validAlertPolicy() alertpolicy.AlertPolicy {
+	return alertpolicy.AlertPolicy{
 		APIVersion: v1alpha.APIVersion,
 		Kind:       manifest.KindAlertPolicy,
 		Metadata: alertpolicy.Metadata{
@@ -120,25 +154,18 @@ func TestParseAlertPolicyWithLegacyAlertMethodDetails(t *testing.T) {
 			}},
 		},
 	}
-	ap.Spec.AlertMethods[0].EmbedAlertMethodRef(alertmethod.AlertMethod{
+}
+
+func withLegacyAlertMethodEmbedded() alertpolicy.AlertPolicy {
+	alertPolicy := validAlertPolicy()
+	alertPolicy.Spec.AlertMethods[0].EmbedAlertMethodRef(alertmethod.AlertMethod{
 		APIVersion: v1alpha.APIVersion,
 		Kind:       manifest.KindAlertMethod,
 		Metadata: alertmethod.Metadata{
-			Name: "this",
+			Name:    "this",
+			Project: "default",
 		},
 	})
-	marshalledJson, err := json.MarshalIndent(ap, "", "  ")
-	jsonData, _ := readParserTestFile(t, "expected_alert_policy_with_legacy_alert_method_details.json")
-	require.NoError(t, err)
 
-	assert.Equal(t, marshalledJson, jsonData)
-}
-
-func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
-	t.Helper()
-	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))
-	require.NoError(t, err)
-	format, err := manifest.ParseObjectFormat(filepath.Ext(filename)[1:])
-	require.NoError(t, err)
-	return data, format
+	return alertPolicy
 }
