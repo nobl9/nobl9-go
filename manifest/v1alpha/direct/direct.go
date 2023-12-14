@@ -182,44 +182,29 @@ type SplunkObservabilityConfig struct {
 	AccessToken string `json:"accessToken"`
 }
 
-type LightstepConfig struct {
-	Organization string `json:"organization,omitempty" validate:"required" example:"LightStep-Play"`
-	Project      string `json:"project,omitempty" validate:"required" example:"play"`
-	AppToken     string `json:"appToken"`
-}
-
-// SplunkConfig represents content of Splunk Configuration typical for Direct Object.
-type SplunkConfig struct {
-	URL         string `json:"url,omitempty" validate:"httpsURL" example:"https://api.eu0.signalfx.com"`
-	AccessToken string `json:"accessToken,omitempty"`
-}
-
 // ThousandEyesConfig represents content of ThousandEyes Configuration typical for Direct Object.
 type ThousandEyesConfig struct {
-	OauthBearerToken string `json:"oauthBearerToken,omitempty"`
+	OauthBearerToken string `json:"oauthBearerToken"`
 }
 
 // BigQueryConfig represents content of BigQuery configuration typical for Direct Object.
 type BigQueryConfig struct {
-	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
+	ServiceAccountKey string `json:"serviceAccountKey"`
 }
 
-// GCMConfig represents content of GCM configuration typical for Direct Object.
-type GCMConfig struct {
-	ServiceAccountKey string `json:"serviceAccountKey,omitempty"`
-}
-
-// DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
-type DynatraceConfig struct {
-	URL            string `json:"url,omitempty" validate:"required,url,httpsURL" example:"https://{your-environment-id}.live.dynatrace.com or https://{your-domain}/e/{your-environment-id}"` //nolint: lll
-	DynatraceToken string `json:"dynatraceToken,omitempty"`
+// SplunkConfig represents content of Splunk Configuration typical for Direct Object.
+type SplunkConfig struct {
+	URL         string `json:"url"`
+	AccessToken string `json:"accessToken"`
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Direct Object.
 type CloudWatchConfig struct {
+	// TODO: Ask bees what if user provides all of these? Shouldn't we fail on static validation?
+	// CAN I REMOVE THESE??
 	AccessKeyID     string `json:"accessKeyID,omitempty"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
+	RoleARN         string `json:"roleARN,omitempty"`
 }
 
 // PingdomConfig represents content of Pingdom Configuration typical for Direct Object.
@@ -227,32 +212,53 @@ type PingdomConfig struct {
 	APIToken string `json:"apiToken"`
 }
 
-// InstanaConfig represents content of Instana configuration typical for Direct Object.
-type InstanaConfig struct {
-	APIToken string `json:"apiToken"`
-	URL      string `json:"url" validate:"required,url,httpsURL"`
-}
-
-// InfluxDBConfig represents content of InfluxDB configuration typical for Direct Object.
-type InfluxDBConfig struct {
-	URL            string `json:"url" validate:"required,url"`
-	APIToken       string `json:"apiToken"`
-	OrganizationID string `json:"organizationID"`
-}
-
 // RedshiftConfig represents content of Redshift configuration typical for Direct Object.
 type RedshiftConfig struct {
 	AccessKeyID     string `json:"accessKeyID,omitempty"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	SecretARN       string `json:"secretARN"`
-	RoleARN         string `json:"roleARN,omitempty" example:"arn:aws:iam::123456789012:role/SomeAccessRole"` //nolint: lll
+	// TODO: What's up with that? Why is it called "secret"?
+	SecretARN string `json:"secretARN"`
+	RoleARN   string `json:"roleARN,omitempty"`
 }
 
 // SumoLogicConfig represents content of SumoLogic configuration typical for Direct Object.
 type SumoLogicConfig struct {
 	AccessID  string `json:"accessID"`
 	AccessKey string `json:"accessKey"`
-	URL       string `json:"url" validate:"required,url"`
+	// TODO: Check on prod and make sure no one has http scheme.
+	URL string `json:"url"`
+}
+
+// InstanaConfig represents content of Instana configuration typical for Direct Object.
+type InstanaConfig struct {
+	APIToken string `json:"apiToken"`
+	URL      string `json:"url"`
+}
+
+// InfluxDBConfig represents content of InfluxDB configuration typical for Direct Object.
+type InfluxDBConfig struct {
+	// TODO: Check on prod and make sure no one has http scheme.
+	URL            string `json:"url"`
+	APIToken       string `json:"apiToken"`
+	OrganizationID string `json:"organizationID"`
+}
+
+// GCMConfig represents content of GCM configuration typical for Direct Object.
+type GCMConfig struct {
+	// TODO: Shouldn't we check if it's a JSON?
+	ServiceAccountKey string `json:"serviceAccountKey"`
+}
+
+type LightstepConfig struct {
+	Organization string `json:"organization"`
+	Project      string `json:"project"`
+	AppToken     string `json:"appToken"`
+}
+
+// DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
+type DynatraceConfig struct {
+	URL            string `json:"url"`
+	DynatraceToken string `json:"dynatraceToken"`
 }
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Direct Object.
@@ -264,5 +270,5 @@ type AzureMonitorConfig struct {
 
 // HoneycombConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombConfig struct {
-	APIKey string `json:"apiKey,omitempty" example:"lwPoPt20Gmdi4dwTdW9dTR"`
+	APIKey string `json:"apiKey"`
 }

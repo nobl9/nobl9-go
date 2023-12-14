@@ -155,14 +155,14 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 	t.Run("delay less than default", func(t *testing.T) {
 		for typ := range validDirectTypes {
 			t.Run(typ.String(), func(t *testing.T) {
-				agent := validDirect(typ)
+				direct := validDirect(typ)
 				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ.String()]
-				agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+				direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 					Value: ptr(*defaultDelay.Value - 1),
 					Unit:  defaultDelay.Unit,
 				}}
-				err := validate(agent)
-				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 					Prop: "spec.queryDelay",
 					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
 				})
@@ -178,13 +178,13 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			v1alpha.HRDHour,
 			v1alpha.HRDDay,
 		} {
-			agent := validDirect(v1alpha.Datadog)
-			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			direct := validDirect(v1alpha.Datadog)
+			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
 				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 			}
-			err := validate(agent)
-			testutils.AssertNoError(t, agent, err)
+			err := validate(direct)
+			testutils.AssertNoError(t, direct, err)
 		}
 	})
 	t.Run("required", func(t *testing.T) {
@@ -350,14 +350,14 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 	})
 	t.Run("data retrieval max greater than max allowed", func(t *testing.T) {
 		for typ := range validDirectTypes {
-			maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
+			maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ)
 			// Skip unsupported types.
 			if err != nil {
 				continue
 			}
 			t.Run(typ.String(), func(t *testing.T) {
-				agent := validDirect(typ)
-				agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				direct := validDirect(typ)
+				direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
 					MaxDuration: v1alpha.HistoricalRetrievalDuration{
 						Value: ptr(*maxDuration.Value + 1),
 						Unit:  maxDuration.Unit,
@@ -367,8 +367,8 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 						Unit:  maxDuration.Unit,
 					},
 				}
-				objErr := validate(agent)
-				testutils.AssertContainsErrors(t, agent, objErr, 1, testutils.ExpectedError{
+				objErr := validate(direct)
+				testutils.AssertContainsErrors(t, direct, objErr, 1, testutils.ExpectedError{
 					Prop: "spec.historicalDataRetrieval.maxDuration",
 					Message: fmt.Sprintf("must be less than or equal to %d %s",
 						*maxDuration.Value, maxDuration.Unit),
@@ -471,30 +471,6 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 	})
 }
 
-func TestValidateSpec_Lightstep(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.Lightstep)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
-	})
-	t.Run("required fields", func(t *testing.T) {
-		direct := validDirect(v1alpha.Lightstep)
-		direct.Spec.Lightstep.Organization = ""
-		direct.Spec.Lightstep.Project = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.lightstep.organization",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.lightstep.project",
-				Code: validation.ErrorCodeRequired,
-			},
-		)
-	})
-}
-
 // TODO: Figure out how the logic around GenerateMissingFields should influence validation.
 func TestValidateSpec_AppDynamics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
@@ -537,8 +513,8 @@ func TestValidateSpec_AppDynamics(t *testing.T) {
 		direct.Spec.AppDynamics.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.appDynamics.url",
-			Message: "requires https scheme",
+			Prop: "spec.appDynamics.url",
+			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
 }
@@ -549,7 +525,7 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
-	t.Run("required fields", func(t *testing.T) {
+	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
@@ -557,6 +533,187 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 			Prop: "spec.splunkObservability.realm",
 			Code: validation.ErrorCodeRequired,
 		})
+	})
+}
+
+func TestValidateSpec_Splunk(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.Splunk)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Splunk)
+		direct.Spec.Splunk.URL = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.splunk.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Splunk)
+		direct.Spec.Splunk.URL = "nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.splunk.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.Splunk)
+		direct.Spec.Splunk.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.splunk.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_Redshift(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.Redshift)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required secretARN", func(t *testing.T) {
+		direct := validDirect(v1alpha.Redshift)
+		direct.Spec.Redshift.SecretARN = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.redshift.secretARN",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_SumoLogic(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.SumoLogic)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		direct := validDirect(v1alpha.SumoLogic)
+		direct.Spec.SumoLogic.URL = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.sumoLogic.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.SumoLogic)
+		direct.Spec.SumoLogic.URL = "nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.sumoLogic.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.SumoLogic)
+		direct.Spec.SumoLogic.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.sumoLogic.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_Instana(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.Instana)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Instana)
+		direct.Spec.Instana.URL = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.instana.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Instana)
+		direct.Spec.Instana.URL = "nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.instana.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.Instana)
+		direct.Spec.Instana.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.instana.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_Influxdb(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.InfluxDB)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		direct := validDirect(v1alpha.InfluxDB)
+		direct.Spec.InfluxDB.URL = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.influxdb.url",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.InfluxDB)
+		direct.Spec.InfluxDB.URL = "nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.influxdb.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.InfluxDB)
+		direct.Spec.InfluxDB.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.influxdb.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_Lightstep(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.Lightstep)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		direct := validDirect(v1alpha.Lightstep)
+		direct.Spec.Lightstep.Organization = ""
+		direct.Spec.Lightstep.Project = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.lightstep.organization",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.lightstep.project",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
 	})
 }
 
@@ -584,59 +741,15 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 			Code: validation.ErrorCodeURL,
 		})
 	})
-	urlTests := map[string]struct {
-		url     string
-		isValid bool
-	}{
-		"valid SaaS": {
-			url:     "https://test.live.dynatrace.com",
-			isValid: true,
-		},
-		"SaaS with port explicit speciefed": {
-			url:     "https://test.live.dynatrace.com:433",
-			isValid: true,
-		},
-		"valid SaaS multiple trailing /": {
-			url:     "https://test.live.dynatrace.com///",
-			isValid: true,
-		},
-		"invalid SaaS lack of https": {
-			url:     "http://test.live.dynatrace.com",
-			isValid: false,
-		},
-		"valid Managed/Environment ActiveGate lack of https": {
-			url:     "http://test.com/e/environment-id",
-			isValid: true,
-		},
-		"valid Managed/Environment ActiveGate wrong environment-id": {
-			url:     "https://test.com/e/environment-id",
-			isValid: true,
-		},
-		"valid Managed/Environment ActiveGate IP": {
-			url:     "https://127.0.0.1/e/environment-id",
-			isValid: true,
-		},
-		"valid Managed/Environment ActiveGate wrong environment-id, multiple /": {
-			url:     "https://test.com///some-devops-path///e///environment-id///",
-			isValid: true,
-		},
-	}
-	for name, test := range urlTests {
-		t.Run(name, func(t *testing.T) {
-			direct := validDirect(v1alpha.Dynatrace)
-			direct.Spec.Dynatrace.URL = test.url
-			err := validate(direct)
-			if test.isValid {
-				testutils.AssertNoError(t, direct, err)
-			} else {
-				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-					Prop: "spec.dynatrace.url",
-					ContainsMessage: "Dynatrace SaaS URL (live.dynatrace.com)" +
-						" requires https scheme and empty URL path",
-				})
-			}
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.url",
+			Code: errorCodeHTTPSSchemeRequired,
 		})
-	}
+	})
 }
 
 func TestValidateSpec_AzureMonitor(t *testing.T) {
@@ -707,13 +820,8 @@ var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
 	},
 	v1alpha.Splunk: {
 		Splunk: &SplunkConfig{
-			URL: "https://localhost:8089/servicesNS/admin/",
-		},
-	},
-	v1alpha.Lightstep: {
-		Lightstep: &LightstepConfig{
-			Organization: "LightStep-Play",
-			Project:      "play",
+			URL:         "https://localhost:8089/servicesNS/admin/",
+			AccessToken: "secret",
 		},
 	},
 	v1alpha.SplunkObservability: {
@@ -721,51 +829,78 @@ var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
 			Realm: "us-1",
 		},
 	},
-	v1alpha.Dynatrace: {
-		Dynatrace: &DynatraceConfig{
-			URL: "https://rxh70845.live.dynatrace.com/",
+	v1alpha.ThousandEyes: {
+		ThousandEyes: &ThousandEyesConfig{
+			OauthBearerToken: "secret",
 		},
 	},
-	v1alpha.ThousandEyes: {
-		ThousandEyes: &ThousandEyesConfig{},
-	},
 	v1alpha.BigQuery: {
-		BigQuery: &BigQueryConfig{},
+		BigQuery: &BigQueryConfig{
+			ServiceAccountKey: "secret",
+		},
 	},
 	v1alpha.CloudWatch: {
-		CloudWatch: &CloudWatchConfig{},
+		CloudWatch: &CloudWatchConfig{
+			RoleARN: "arn:partition:service:region:account-id:resource-id",
+		},
 	},
 	v1alpha.Pingdom: {
-		Pingdom: &PingdomConfig{},
+		Pingdom: &PingdomConfig{
+			APIToken: "secret",
+		},
 	},
 	v1alpha.Redshift: {
-		Redshift: &RedshiftConfig{},
+		Redshift: &RedshiftConfig{
+			SecretARN: "secret",
+			RoleARN:   "arn:partition:service:region:account-id:resource-id",
+		},
 	},
 	v1alpha.SumoLogic: {
 		SumoLogic: &SumoLogicConfig{
-			URL: "https://sumologic-service.monitoring:443",
+			AccessID:  "secret",
+			AccessKey: "secret",
+			URL:       "https://sumologic-service.monitoring:443",
 		},
 	},
 	v1alpha.Instana: {
 		Instana: &InstanaConfig{
-			URL: "https://instana-service.monitoring:443",
+			APIToken: "secret",
+			URL:      "https://instana-service.monitoring:443",
 		},
 	},
 	v1alpha.InfluxDB: {
 		InfluxDB: &InfluxDBConfig{
-			URL: "https://influxdb-service.monitoring:8086",
+			URL:            "https://influxdb-service.monitoring:8086",
+			APIToken:       "secret",
+			OrganizationID: "secret",
 		},
 	},
 	v1alpha.GCM: {
 		GCM: &GCMConfig{},
 	},
+	v1alpha.Lightstep: {
+		Lightstep: &LightstepConfig{
+			Organization: "LightStep-Play",
+			Project:      "play",
+		},
+	},
+	v1alpha.Dynatrace: {
+		Dynatrace: &DynatraceConfig{
+			URL:            "https://rxh70845.live.dynatrace.com/",
+			DynatraceToken: "secret",
+		},
+	},
 	v1alpha.AzureMonitor: {
 		AzureMonitor: &AzureMonitorConfig{
-			TenantID: "abf988bf-86f1-41af-91ab-2d7cd011db46",
+			TenantID:     "abf988bf-86f1-41af-91ab-2d7cd011db46",
+			ClientID:     "secret",
+			ClientSecret: "secret",
 		},
 	},
 	v1alpha.Honeycomb: {
-		Honeycomb: &HoneycombConfig{},
+		Honeycomb: &HoneycombConfig{
+			APIKey: "secret",
+		},
 	},
 }
 

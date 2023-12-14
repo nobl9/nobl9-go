@@ -2,8 +2,6 @@ package direct
 
 import (
 	"net/url"
-	"path"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -48,24 +46,18 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *AppDynamicsConfig { return s.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
-	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
-		WithName("splunk").
-		Include(splunkValidation),
-	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
-		WithName("lightstep").
-		Include(lightstepValidation),
 	validation.ForPointer(func(s Spec) *SplunkObservabilityConfig { return s.SplunkObservability }).
 		WithName("splunkObservability").
 		Include(splunkObservabilityValidation),
-	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
-		WithName("dynatrace").
-		Include(dynatraceValidation),
 	validation.ForPointer(func(s Spec) *ThousandEyesConfig { return s.ThousandEyes }).
 		WithName("thousandEyes").
 		Include(thousandEyesValidation),
 	validation.ForPointer(func(s Spec) *BigQueryConfig { return s.BigQuery }).
 		WithName("bigQuery").
 		Include(bigQueryValidation),
+	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
+		WithName("splunk").
+		Include(splunkValidation),
 	validation.ForPointer(func(s Spec) *CloudWatchConfig { return s.CloudWatch }).
 		WithName("cloudWatch").
 		Include(cloudWatchValidation),
@@ -84,12 +76,18 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *InfluxDBConfig { return s.InfluxDB }).
 		WithName("influxdb").
 		Include(influxDBValidation),
-	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
-		WithName("azureMonitor").
-		Include(azureMonitorValidation),
 	validation.ForPointer(func(s Spec) *GCMConfig { return s.GCM }).
 		WithName("gcm").
 		Include(gcmValidation),
+	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
+		WithName("lightstep").
+		Include(lightstepValidation),
+	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
+		WithName("dynatrace").
+		Include(dynatraceValidation),
+	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
+		WithName("azureMonitor").
+		Include(azureMonitorValidation),
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
@@ -114,19 +112,7 @@ var (
 			Rules(validation.StringStartsWith("NRIQ-")),
 	)
 	appDynamicsValidation = validation.New[AppDynamicsConfig](
-		validation.Transform(func(a AppDynamicsConfig) string { return a.URL }, url.Parse).
-			WithName("url").
-			Required().
-			Rules(validation.URL()).
-			StopOnError().
-			Rules(
-				validation.NewSingleRule(func(u *url.URL) error {
-					if u.Scheme != "https" {
-						return errors.New("requires https scheme")
-					}
-					return nil
-				}),
-			),
+		urlPropertyRules(func(a AppDynamicsConfig) string { return a.URL }),
 		validation.For(func(a AppDynamicsConfig) string { return a.ClientName }).
 			WithName("clientName").
 			Required(),
@@ -139,6 +125,29 @@ var (
 			WithName("realm").
 			Required(),
 	)
+	thousandEyesValidation = validation.New[ThousandEyesConfig]()
+	// TODO: discuss if we should harden validation to check if a string is valid JSON (front does).
+	bigQueryValidation = validation.New[BigQueryConfig]()
+	splunkValidation   = validation.New[SplunkConfig](
+		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
+	)
+	cloudWatchValidation = validation.New[CloudWatchConfig]()
+	pingdomValidation    = validation.New[PingdomConfig]()
+	redshiftValidation   = validation.New[RedshiftConfig](
+		validation.For(func(r RedshiftConfig) string { return r.SecretARN }).
+			WithName("secretARN").
+			Required(),
+	)
+	sumoLogicValidation = validation.New[SumoLogicConfig](
+		urlPropertyRules(func(s SumoLogicConfig) string { return s.URL }),
+	)
+	instanaValidation = validation.New[InstanaConfig](
+		urlPropertyRules(func(i InstanaConfig) string { return i.URL }),
+	)
+	influxDBValidation = validation.New[InfluxDBConfig](
+		urlPropertyRules(func(i InfluxDBConfig) string { return i.URL }),
+	)
+	gcmValidation       = validation.New[GCMConfig]()
 	lightstepValidation = validation.New[LightstepConfig](
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").
@@ -148,25 +157,7 @@ var (
 			Required(),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
-		validation.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
-			WithName("url").
-			Required().
-			Rules(
-				validation.URL(),
-				validation.NewSingleRule(func(u *url.URL) error {
-					// For SaaS type enforce https and land lack of path.
-					// - Join instead of Clean (to avoid getting . for empty path),
-					// - Trim to get rid of root.
-					pathURL := strings.Trim(path.Join(u.Path), "/")
-					if strings.HasSuffix(u.Host, "live.dynatrace.com") &&
-						(u.Scheme != "https" || pathURL != "") {
-						return errors.New(
-							"Dynatrace SaaS URL (live.dynatrace.com) requires https scheme and empty URL path" +
-								"; example: https://rxh50243.live.dynatrace.com/")
-					}
-					return nil
-				}),
-			),
+		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
 	)
 	azureMonitorValidation = validation.New[AzureMonitorConfig](
 		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -174,19 +165,7 @@ var (
 			Required().
 			Rules(validation.StringUUID()),
 	)
-	// URL only.
-	splunkValidation    = newURLValidator(func(s SplunkConfig) string { return s.URL })
-	sumoLogicValidation = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
-	instanaValidation   = newURLValidator(func(i InstanaConfig) string { return i.URL })
-	influxDBValidation  = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
-	// Empty configs.
-	thousandEyesValidation = validation.New[ThousandEyesConfig]()
-	bigQueryValidation     = validation.New[BigQueryConfig]()
-	cloudWatchValidation   = validation.New[CloudWatchConfig]()
-	pingdomValidation      = validation.New[PingdomConfig]()
-	redshiftValidation     = validation.New[RedshiftConfig]()
-	gcmValidation          = validation.New[GCMConfig]()
-	honeycombValidation    = validation.New[HoneycombConfig]()
+	honeycombValidation = validation.New[HoneycombConfig]()
 )
 
 const (
@@ -331,25 +310,31 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 		return nil
 	}
 	typ, _ := spec.GetType()
-	agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
-	if spec.QueryDelay.LessThan(agentDefault) {
+	directDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
+	if spec.QueryDelay.LessThan(directDefault) {
 		return validation.NewPropertyError(
 			"queryDelay",
 			spec.QueryDelay,
-			errors.Errorf("should be greater than or equal to %s", agentDefault),
+			errors.Errorf("should be greater than or equal to %s", directDefault),
 		)
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
 
-// newURLValidator is a helper construct for Agent which only have a simple 'url' field validation.
-func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validation.Validator[S] {
-	return validation.New[S](
-		validation.For(getter).
-			WithName("url").
-			Required().
-			Rules(validation.StringURL()),
-	)
+const errorCodeHTTPSSchemeRequired = "https_scheme_required"
+
+func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) validation.PropertyRules[*url.URL, S] {
+	return validation.Transform(getter, url.Parse).
+		WithName("url").
+		Required().
+		Rules(validation.URL()).
+		StopOnError().
+		Rules(validation.NewSingleRule(func(u *url.URL) error {
+			if u.Scheme != "https" {
+				return errors.New("requires https scheme")
+			}
+			return nil
+		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
 }
 
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }

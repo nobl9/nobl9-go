@@ -1,2 +1,2 @@
-// Package agent defines Agent object definitions.
+// Package direct defines Direct object definitions.
 package direct
