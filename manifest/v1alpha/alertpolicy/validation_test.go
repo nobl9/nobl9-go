@@ -728,11 +728,9 @@ func validAlertPolicy() AlertPolicy {
 
 func validAlertCondition() AlertCondition {
 	return AlertCondition{
-		Measurement:      MeasurementAverageBurnRate.String(),
-		Value:            0.97,
-		AlertingWindow:   "10m",
-		LastsForDuration: "",
-		Operator:         "",
+		Measurement:    MeasurementAverageBurnRate.String(),
+		Value:          0.97,
+		AlertingWindow: "10m",
 	}
 }
 
