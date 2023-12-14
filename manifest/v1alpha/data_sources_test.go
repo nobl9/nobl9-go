@@ -168,6 +168,6 @@ func TestGetStrAndStdDurationFromDuration(t *testing.T) {
 func TestGetQueryDelayDefaults_AllDataSourcesAreDefined(t *testing.T) {
 	defaults := GetQueryDelayDefaults()
 	for _, typ := range DataSourceTypeValues() {
-		assert.Contains(t, defaults, typ.String())
+		assert.Contains(t, defaults, typ)
 	}
 }

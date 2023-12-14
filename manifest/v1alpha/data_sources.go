@@ -337,14 +337,10 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (Histor
 		errors.Errorf("historical data retrieval is not supported for %s %s", typ, kind)
 }
 
-type QueryDelayDefaults map[string]Duration
+type QueryDelayDefaults map[DataSourceType]Duration
 
-func (q QueryDelayDefaults) GetByName(name string) string {
-	return q[name].String()
-}
-
-func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
-	return q[at.String()].String()
+func (q QueryDelayDefaults) Get(at DataSourceType) string {
+	return q[at].String()
 }
 
 // GetQueryDelayDefaults serves an exported, single source of truth map that is now a part of v1alpha contract.
@@ -354,103 +350,103 @@ func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
 // WARNING: All string values of this map must satisfy the "customDuration" regex pattern.
 func GetQueryDelayDefaults() QueryDelayDefaults {
 	return QueryDelayDefaults{
-		AmazonPrometheus.String(): {
+		AmazonPrometheus: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		Prometheus.String(): {
+		Prometheus: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		AppDynamics.String(): {
+		AppDynamics: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		BigQuery.String(): {
+		BigQuery: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		CloudWatch.String(): {
+		CloudWatch: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Datadog.String(): {
+		Datadog: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Dynatrace.String(): {
+		Dynatrace: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		Elasticsearch.String(): {
+		Elasticsearch: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		GCM.String(): {
+		GCM: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		GrafanaLoki.String(): {
+		GrafanaLoki: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Graphite.String(): {
+		Graphite: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		InfluxDB.String(): {
+		InfluxDB: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Instana.String(): {
+		Instana: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Lightstep.String(): {
+		Lightstep: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		NewRelic.String(): {
+		NewRelic: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		OpenTSDB.String(): {
+		OpenTSDB: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Pingdom.String(): {
+		Pingdom: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Redshift.String(): {
+		Redshift: {
 			Value: ptr(30),
 			Unit:  Second,
 		},
-		Splunk.String(): {
+		Splunk: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		SplunkObservability.String(): {
+		SplunkObservability: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		SumoLogic.String(): {
+		SumoLogic: {
 			Value: ptr(4),
 			Unit:  Minute,
 		},
-		ThousandEyes.String(): {
+		ThousandEyes: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		AzureMonitor.String(): {
+		AzureMonitor: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		Generic.String(): {
+		Generic: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		Honeycomb.String(): {
+		Honeycomb: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},

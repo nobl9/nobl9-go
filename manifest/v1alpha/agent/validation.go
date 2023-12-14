@@ -378,7 +378,7 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 		return nil
 	}
 	typ, _ := spec.GetType()
-	agentDefault := v1alpha.GetQueryDelayDefaults()[typ.String()]
+	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
 		return validation.NewPropertyError(
 			"queryDelay",

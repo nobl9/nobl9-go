@@ -156,7 +156,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		for typ := range validDirectTypes {
 			t.Run(typ.String(), func(t *testing.T) {
 				direct := validDirect(typ)
-				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ.String()]
+				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ]
 				direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 					Value: ptr(*defaultDelay.Value - 1),
 					Unit:  defaultDelay.Unit,
