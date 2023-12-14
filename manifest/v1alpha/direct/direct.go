@@ -1,9 +1,6 @@
 package direct
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -160,20 +157,6 @@ type AppDynamicsConfig struct {
 	ClientName   string `json:"clientName"`
 	AccountName  string `json:"accountName"`
 	ClientSecret string `json:"clientSecret"`
-}
-
-// GenerateMissingFields - this function is responsible for generating ClientID from AccountName and ClientName
-// when provided with new, also it generates AccountName and ClientName for old already existing configs.
-// TODO: what to do with this?
-func (a *AppDynamicsConfig) GenerateMissingFields() {
-	if a.AccountName != "" && a.ClientName != "" {
-		a.ClientID = fmt.Sprintf("%s@%s", a.ClientName, a.AccountName)
-	} else if a.ClientID != "" {
-		at := strings.LastIndex(a.ClientID, "@")
-		if at >= 0 {
-			a.ClientName, a.AccountName = a.ClientID[:at], a.ClientID[at+1:]
-		}
-	}
 }
 
 // SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Direct Object.

@@ -471,7 +471,6 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 	})
 }
 
-// TODO: Figure out how the logic around GenerateMissingFields should influence validation.
 func TestValidateSpec_AppDynamics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.AppDynamics)
