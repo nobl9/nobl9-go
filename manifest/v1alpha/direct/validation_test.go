@@ -519,6 +519,38 @@ func TestValidateSpec_AppDynamics(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_BigQuery(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for name, direct := range map[string]Direct{
+			"with secrets": validDirect(v1alpha.BigQuery),
+			"empty secrets": func() Direct {
+				d := validDirect(v1alpha.BigQuery)
+				d.Spec.BigQuery.ServiceAccountKey = ""
+				return d
+			}(),
+			"hidden secrets": func() Direct {
+				d := validDirect(v1alpha.BigQuery)
+				d.Spec.BigQuery.ServiceAccountKey = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
+	t.Run("serviceAccountKey must be a valid JSON", func(t *testing.T) {
+		direct := validDirect(v1alpha.BigQuery)
+		direct.Spec.BigQuery.ServiceAccountKey = "{["
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.bigQuery.serviceAccountKey",
+			Code: validation.ErrorCodeStringJSON,
+		})
+	})
+}
+
 func TestValidateSpec_SplunkObservability(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
@@ -658,7 +690,7 @@ func TestValidateSpec_Instana(t *testing.T) {
 	})
 }
 
-func TestValidateSpec_Influxdb(t *testing.T) {
+func TestValidateSpec_InfluxDB(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.InfluxDB)
 		err := validate(direct)
@@ -689,6 +721,38 @@ func TestValidateSpec_Influxdb(t *testing.T) {
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop: "spec.influxdb.url",
 			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_GCM(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for name, direct := range map[string]Direct{
+			"with secrets": validDirect(v1alpha.GCM),
+			"empty secrets": func() Direct {
+				d := validDirect(v1alpha.GCM)
+				d.Spec.GCM.ServiceAccountKey = ""
+				return d
+			}(),
+			"hidden secrets": func() Direct {
+				d := validDirect(v1alpha.GCM)
+				d.Spec.GCM.ServiceAccountKey = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
+	t.Run("serviceAccountKey must be a valid JSON", func(t *testing.T) {
+		direct := validDirect(v1alpha.GCM)
+		direct.Spec.GCM.ServiceAccountKey = "{["
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.gcm.serviceAccountKey",
+			Code: validation.ErrorCodeStringJSON,
 		})
 	})
 }
@@ -836,7 +900,7 @@ var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
 	},
 	v1alpha.BigQuery: {
 		BigQuery: &BigQueryConfig{
-			ServiceAccountKey: "secret",
+			ServiceAccountKey: `{"secret": "key"}`,
 		},
 	},
 	v1alpha.CloudWatch: {
@@ -876,7 +940,9 @@ var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
 		},
 	},
 	v1alpha.GCM: {
-		GCM: &GCMConfig{},
+		GCM: &GCMConfig{
+			ServiceAccountKey: `{"secret": "key"}`,
+		},
 	},
 	v1alpha.Lightstep: {
 		Lightstep: &LightstepConfig{

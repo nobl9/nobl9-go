@@ -126,9 +126,14 @@ var (
 			Required(),
 	)
 	thousandEyesValidation = validation.New[ThousandEyesConfig]()
-	// TODO: discuss if we should harden validation to check if a string is valid JSON (front does).
-	bigQueryValidation = validation.New[BigQueryConfig]()
-	splunkValidation   = validation.New[SplunkConfig](
+	bigQueryValidation     = validation.New[BigQueryConfig](
+		validation.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
+			WithName("serviceAccountKey").
+			HideValue().
+			When(func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) }).
+			Rules(validation.StringJSON()),
+	)
+	splunkValidation = validation.New[SplunkConfig](
 		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
 	)
 	cloudWatchValidation = validation.New[CloudWatchConfig]()
@@ -147,7 +152,13 @@ var (
 	influxDBValidation = validation.New[InfluxDBConfig](
 		urlPropertyRules(func(i InfluxDBConfig) string { return i.URL }),
 	)
-	gcmValidation       = validation.New[GCMConfig]()
+	gcmValidation = validation.New[GCMConfig](
+		validation.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
+			WithName("serviceAccountKey").
+			HideValue().
+			When(func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) }).
+			Rules(validation.StringJSON()),
+	)
 	lightstepValidation = validation.New[LightstepConfig](
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").

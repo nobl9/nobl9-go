@@ -200,8 +200,6 @@ type SplunkConfig struct {
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Direct Object.
 type CloudWatchConfig struct {
-	// TODO: Ask bees what if user provides all of these? Shouldn't we fail on static validation?
-	// CAN I REMOVE THESE??
 	AccessKeyID     string `json:"accessKeyID,omitempty"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
 	RoleARN         string `json:"roleARN,omitempty"`
@@ -216,17 +214,15 @@ type PingdomConfig struct {
 type RedshiftConfig struct {
 	AccessKeyID     string `json:"accessKeyID,omitempty"`
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	// TODO: What's up with that? Why is it called "secret"?
-	SecretARN string `json:"secretARN"`
-	RoleARN   string `json:"roleARN,omitempty"`
+	SecretARN       string `json:"secretARN"`
+	RoleARN         string `json:"roleARN,omitempty"`
 }
 
 // SumoLogicConfig represents content of SumoLogic configuration typical for Direct Object.
 type SumoLogicConfig struct {
 	AccessID  string `json:"accessID"`
 	AccessKey string `json:"accessKey"`
-	// TODO: Check on prod and make sure no one has http scheme.
-	URL string `json:"url"`
+	URL       string `json:"url"`
 }
 
 // InstanaConfig represents content of Instana configuration typical for Direct Object.
@@ -237,7 +233,6 @@ type InstanaConfig struct {
 
 // InfluxDBConfig represents content of InfluxDB configuration typical for Direct Object.
 type InfluxDBConfig struct {
-	// TODO: Check on prod and make sure no one has http scheme.
 	URL            string `json:"url"`
 	APIToken       string `json:"apiToken"`
 	OrganizationID string `json:"organizationID"`
@@ -245,7 +240,6 @@ type InfluxDBConfig struct {
 
 // GCMConfig represents content of GCM configuration typical for Direct Object.
 type GCMConfig struct {
-	// TODO: Shouldn't we check if it's a JSON?
 	ServiceAccountKey string `json:"serviceAccountKey"`
 }
 
