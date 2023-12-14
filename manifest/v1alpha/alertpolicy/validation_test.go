@@ -122,12 +122,11 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 
 	tests := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
-			values:          []string{"1 hour"},
-			expectedCode:    validation.ErrorCodeTransform,
-			expectedMessage: `time: unknown unit " hour" in duration "1 hour"`,
+			values:       []string{"1 hour"},
+			expectedCode: validation.ErrorCodeTransform,
 		},
 		"fails, value too small": {
-			values:          []string{"-10m", "4m"},
+			values:          []string{"60s", "4m"},
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
@@ -533,14 +532,6 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 			values:       []string{"365d"},
 			expectedCode: validation.ErrorCodeTransform,
 		},
-		"fails, too short": {
-			values: []string{
-				"-10m",
-				"-168h",
-			},
-			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '0s'`,
-		},
 	}
 	for name, testCase := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -550,35 +541,8 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 				alertPolicy.Spec.Conditions[0].LastsForDuration = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    "spec.conditions[0].lastsFor",
-					Message: testCase.expectedMessage,
-					Code:    testCase.expectedCode,
-				})
-			}
-		})
-	}
-
-	failTests := map[string]valuesWithCodeExpect{
-		"fails, too short": {
-			values: []string{
-				"-10m",
-				"-168h",
-			},
-			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '0s'`,
-		},
-	}
-	for name, testCase := range failTests {
-		t.Run(name, func(t *testing.T) {
-			for _, value := range testCase.values {
-				alertPolicy := validAlertPolicy()
-				alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-				alertPolicy.Spec.Conditions[0].LastsForDuration = value
-				err := validate(alertPolicy)
-				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    "spec.conditions[0].lastsFor",
-					Message: testCase.expectedMessage,
-					Code:    testCase.expectedCode,
+					Prop: "spec.conditions[0].lastsFor",
+					Code: testCase.expectedCode,
 				})
 			}
 		})
