@@ -185,24 +185,17 @@ var operatorValidationRule = validation.NewSingleRule(
 
 		measurement, measurementErr := ParseMeasurement(v.Measurement)
 		if measurementErr != nil {
-			return validation.NewRuleError(
-				measurementErr.Error(),
-				validation.ErrorCodeTransform,
-			)
+			return measurementErr
 		}
 
 		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
 		if err != nil {
-			return validation.NewRuleError(
-				err.Error(),
-			)
+			return err
 		}
 
 		operator, operatorErr := v1alpha.ParseOperator(v.Operator)
 		if operatorErr != nil {
-			return validation.NewRuleError(
-				operatorErr.Error(),
-			)
+			return operatorErr
 		}
 
 		if operator != expectedOperator {
