@@ -53,8 +53,6 @@ type DataSourceType int
 // Eventually we should solve this inconsistency between the enum name and its string representation.
 const GCM = GoogleCloudMonitoring
 
-const DatasourceStableChannel = "stable"
-
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {
@@ -134,49 +132,6 @@ func QueryDelayValidation() validation.Validator[QueryDelay] {
 			Required().
 			Rules(validation.OneOf(Minute, Second)),
 	)
-}
-
-type SourceOf int
-
-const (
-	SourceOfServices SourceOf = iota + 1
-	SourceOfMetrics
-)
-
-const (
-	sourceOfServicesStr = "Services"
-	sourceOfMetricsStr  = "Metrics"
-)
-
-func getSourceOfNames() map[string]SourceOf {
-	return map[string]SourceOf{
-		sourceOfServicesStr: SourceOfServices,
-		sourceOfMetricsStr:  SourceOfMetrics,
-	}
-}
-
-func MustParseSourceOf(sourceOf string) SourceOf {
-	result, ok := getSourceOfNames()[sourceOf]
-	if !ok {
-		panic(fmt.Sprintf("'%s' is not valid source of", sourceOf))
-	}
-	return result
-}
-
-func SourceOfToStringSlice(isMetrics, isServices bool) []string {
-	var sourceOf []string
-	if isMetrics {
-		sourceOf = append(sourceOf, sourceOfMetricsStr)
-	}
-	if isServices {
-		sourceOf = append(sourceOf, sourceOfServicesStr)
-	}
-	return sourceOf
-}
-
-func IsValidSourceOf(sourceOf string) bool {
-	_, ok := getSourceOfNames()[sourceOf]
-	return ok
 }
 
 // HistoricalRetrievalDuration struct was previously called Duration. However, this name was too generic
