@@ -72,7 +72,7 @@ var conditionValidation = validation.New[AlertCondition](
 			validation.LessThanOrEqualTo(time.Hour*24*7),
 		),
 	validation.For(validation.GetSelf[AlertCondition]()).
-		WithName("operator").
+		WithName("op").
 		OmitEmpty().
 		Rules(operatorValidationRule),
 	validation.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).

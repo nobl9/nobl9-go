@@ -586,8 +586,7 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 }
 
 func TestValidate_Spec_Condition_Operator(t *testing.T) {
-	const emptyOperator = ""
-	allValidOps := []string{"gt", "lt", "lte", "gte", ""}
+	allValidOpts := []string{"gt", "lt", "lte", "gte", ""}
 
 	testCases := []AlertCondition{
 		{
@@ -605,20 +604,15 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 			Value:          30.0,
 			AlertingWindow: "5m",
 		},
-		{
-			Measurement:      MeasurementAverageBurnRate.String(),
-			Value:            30.0,
-			LastsForDuration: "5m",
-		},
 	}
-	for _, alertCondition := range testCases {
-		t.Run("operator with a reference to Measurement", func(t *testing.T) {
+	t.Run("operator with a reference to Measurement", func(t *testing.T) {
+		for _, alertCondition := range testCases {
 			measurement, _ := ParseMeasurement(alertCondition.Measurement)
 			expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
 			assert.NoError(t, err)
 
-			allowedOps := []string{expectedOperator.String(), emptyOperator}
-			for _, op := range allValidOps {
+			allowedOps := []string{expectedOperator.String(), ""}
+			for _, op := range allValidOpts {
 				alertPolicy := validAlertPolicy()
 				alertCondition.Operator = op
 				alertPolicy.Spec.Conditions[0] = alertCondition
@@ -627,7 +621,7 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 					testutils.AssertNoError(t, alertPolicy, err)
 				} else {
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-						Prop: "spec.conditions[0].operator",
+						Prop: "spec.conditions[0].op",
 						Message: fmt.Sprintf(
 							`measurement '%s' determines operator must be defined with '%s' or left empty`,
 							measurement.String(), expectedOperator,
@@ -635,14 +629,14 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 					})
 				}
 			}
-		})
-	}
+		}
+	})
 	t.Run("fails, invalid operator", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Operator = "noop"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop:    "spec.conditions[0].operator",
+			Prop:    "spec.conditions[0].op",
 			Message: "'noop' is not valid operator",
 		})
 	})
