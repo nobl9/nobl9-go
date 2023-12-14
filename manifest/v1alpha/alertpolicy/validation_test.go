@@ -194,44 +194,54 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertNoError(t, alertPolicy, err)
 	})
-	testCases := map[string]measurementDetermined{
+	testCases := map[string][]AlertCondition{
 		"passes, lastsFor is defined": {
-			values: []interface{}{
-				"10m",
+			{
+				Measurement:      MeasurementTimeToBurnEntireBudget.String(),
+				Value:            "10m",
+				AlertingWindow:   "",
+				LastsForDuration: "8m",
 			},
-			measurements: []Measurement{MeasurementTimeToBurnEntireBudget, MeasurementTimeToBurnBudget},
+			{
+				Measurement:      MeasurementTimeToBurnBudget.String(),
+				Value:            "10m",
+				AlertingWindow:   "",
+				LastsForDuration: "8m",
+			},
 		},
 		"passes, lastsFor defined with numeric value": {
-			values: []interface{}{
-				0.97,
+			{
+				Measurement:      MeasurementBurnedBudget.String(),
+				Value:            0.97,
+				AlertingWindow:   "",
+				LastsForDuration: "8m",
 			},
-			measurements: []Measurement{MeasurementBurnedBudget, MeasurementAverageBurnRate},
+			{
+				Measurement:      MeasurementAverageBurnRate.String(),
+				Value:            0.97,
+				AlertingWindow:   "",
+				LastsForDuration: "8m",
+			},
+		},
+		"passes, lastsFor defined, numeric value allowed for burnedBudget": {
+			{
+				Measurement:      MeasurementBurnedBudget.String(),
+				Value:            0.97,
+				AlertingWindow:   "",
+				LastsForDuration: "8m",
+			},
 		},
 	}
-	for name, testCase := range testCases {
+	for name, alertConditionCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			for _, value := range testCase.values {
-				for _, measurement := range testCase.measurements {
-					alertPolicy := validAlertPolicy()
-					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
-					alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-					alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
-					alertPolicy.Spec.Conditions[0].Value = value
-					err := validate(alertPolicy)
-					testutils.AssertNoError(t, alertPolicy, err)
-				}
+			for _, condition := range alertConditionCase {
+				alertPolicy := validAlertPolicy()
+				alertPolicy.Spec.Conditions[0] = condition
+				err := validate(alertPolicy)
+				testutils.AssertNoError(t, alertPolicy, err)
 			}
 		})
 	}
-
-	t.Run("passes, with lastsFor defined", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBurnedBudget.String()
-		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-		alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
 	t.Run("fails, required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = ""
@@ -256,7 +266,6 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		for _, measurement := range []Measurement{
 			MeasurementTimeToBurnBudget,
 			MeasurementTimeToBurnEntireBudget,
-			MeasurementBurnedBudget,
 		} {
 			alertPolicy := validAlertPolicy()
 			alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
