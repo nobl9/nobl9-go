@@ -266,6 +266,16 @@ func (d Duration) Duration() time.Duration {
 	return value * d.Unit.Duration()
 }
 
+func DurationUnitFromString(unit string) (DurationUnit, error) {
+	switch cases.Title(language.Und).String(unit) {
+	case string(Minute), minuteAlias:
+		return Minute, nil
+	case string(Second), secondAlias:
+		return Second, nil
+	}
+	return Second, errors.Errorf("'%s' is not a valid DurationUnit", unit)
+}
+
 func (d DurationUnit) Duration() time.Duration {
 	switch d {
 	case Millisecond:
