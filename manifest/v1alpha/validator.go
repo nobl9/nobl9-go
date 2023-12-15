@@ -484,6 +484,7 @@ func notBlank(fl v.FieldLevel) bool {
 	}
 }
 
+// TODO rewrite to rule/s
 func alertSilencePeriodValidation(sl v.StructLevel) {
 	period, ok := sl.Current().Interface().(AlertSilencePeriod)
 	if !ok {
