@@ -31,15 +31,14 @@ type Direct struct {
 }
 
 type Metadata struct {
-	Name        string         `json:"name" validate:"required,objectName"`
-	DisplayName string         `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string         `json:"project,omitempty" validate:"objectName"`
-	Labels      v1alpha.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName,omitempty"`
+	Project     string `json:"project,omitempty"`
 }
 
 // Spec represents content of Spec typical for Direct Object
 type Spec struct {
-	Description             string                           `json:"description,omitempty" validate:"description"`
+	Description             string                           `json:"description,omitempty"`
 	ReleaseChannel          v1alpha.ReleaseChannel           `json:"releaseChannel,omitempty"`
 	LogCollectionEnabled    *bool                            `json:"logCollectionEnabled,omitempty"`
 	Datadog                 *DatadogConfig                   `json:"datadog,omitempty"`
@@ -183,7 +182,9 @@ type SplunkConfig struct {
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Direct Object.
 type CloudWatchConfig struct {
-	AccessKeyID     string `json:"accessKeyID,omitempty"`
+	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
+	AccessKeyID string `json:"accessKeyID,omitempty"`
+	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
 	RoleARN         string `json:"roleARN,omitempty"`
 }
@@ -195,7 +196,9 @@ type PingdomConfig struct {
 
 // RedshiftConfig represents content of Redshift configuration typical for Direct Object.
 type RedshiftConfig struct {
-	AccessKeyID     string `json:"accessKeyID,omitempty"`
+	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
+	AccessKeyID string `json:"accessKeyID,omitempty"`
+	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
 	SecretARN       string `json:"secretARN"`
 	RoleARN         string `json:"roleARN,omitempty"`
@@ -240,7 +243,7 @@ type DynatraceConfig struct {
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Direct Object.
 type AzureMonitorConfig struct {
-	TenantID     string `json:"tenantId" validate:"required,uuid_rfc4122" example:"abf988bf-86f1-41af-91ab-2d7cd011db46"`
+	TenantID     string `json:"tenantId"`
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 }

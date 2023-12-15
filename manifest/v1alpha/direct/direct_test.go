@@ -21,7 +21,7 @@ func TestDirect_Spec_GetType(t *testing.T) {
 			setZeroValue(t, &spec, directTypeStr)
 			typ, err := spec.GetType()
 			require.NoError(t, err)
-			assert.Equal(t, typ.String(), direct.String())
+			assert.Equal(t, typ, direct)
 		})
 	}
 }
