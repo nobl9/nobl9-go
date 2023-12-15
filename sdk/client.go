@@ -108,10 +108,12 @@ func NewClient(config *Config) (*Client, error) {
 }
 
 const (
-	apiApply     = "apply"
-	apiDelete    = "delete"
-	apiGet       = "get"
-	apiGetGroups = "/usrmgmt/groups"
+	apiApply                   = "apply"
+	apiDelete                  = "delete"
+	apiGet                     = "get"
+	apiGetGroups               = "usrmgmt/groups"
+	apiGetDataExportIAMRoleIDs = "get/dataexport/aws-external-id"
+	apiGetDirectIAMRoleIDs     = "data-sources/iam-role-auth-data"
 )
 
 // GetObjects returns array of supported type of Objects, when names are passed - query for these names
@@ -248,57 +250,16 @@ func (c *Client) applyOrDeleteObjects(
 	return c.processResponseErrors(resp)
 }
 
-func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
-	org, err := c.credentials.GetOrganization(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for i := range objects {
-		objCtx, ok := objects[i].(v1alpha.ObjectContext)
-		if !ok {
-			continue
-		}
-		objects[i] = objCtx.SetOrganization(org)
-	}
-	return objects, nil
+func (c *Client) GetDataExportIAMRoleIDs(ctx context.Context) (*v1alpha.IAMRoleIDs, error) {
+	return c.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (c *Client) GetAWSExternalID(ctx context.Context, project string) (string, error) {
-	req, err := c.CreateRequest(ctx, http.MethodGet, "/get/dataexport/aws-external-id", project, nil, nil)
-	if err != nil {
-		return "", err
-	}
-	resp, err := c.HTTP.Do(req)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to execute request")
-	}
-	defer func() { _ = resp.Body.Close() }()
-	if err = c.processResponseErrors(resp); err != nil {
-		return "", err
-	}
-
-	var jsonMap map[string]interface{}
-	if err = json.NewDecoder(resp.Body).Decode(&jsonMap); err != nil {
-		return "", errors.Wrap(err, "failed to decode response body")
-	}
-	const field = "awsExternalID"
-	externalID, ok := jsonMap[field]
-	if !ok {
-		return "", fmt.Errorf("missing field: %s", field)
-	}
-	externalIDString, ok := externalID.(string)
-	if !ok {
-		return "", fmt.Errorf("field: %s is not a string", field)
-	}
-	return externalIDString, nil
+func (c *Client) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*v1alpha.IAMRoleIDs, error) {
+	return c.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
-func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName string) (
-	*v1alpha.AWSIAMRoleAuthExternalIDs,
-	error,
-) {
-	getUrl := fmt.Sprintf("data-sources/iam-role-auth-data/%s", directName)
-	req, err := c.CreateRequest(ctx, http.MethodGet, getUrl, "", nil, nil)
+func (c *Client) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*v1alpha.IAMRoleIDs, error) {
+	req, err := c.CreateRequest(ctx, http.MethodGet, endpoint, project, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -310,13 +271,10 @@ func (c *Client) GetAWSIAMRoleAuthExternalIDs(ctx context.Context, directName st
 	if err = c.processResponseErrors(resp); err != nil {
 		return nil, err
 	}
-
-	var response v1alpha.AWSIAMRoleAuthExternalIDs
-
+	var response v1alpha.IAMRoleIDs
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")
 	}
-
 	return &response, nil
 }
 
@@ -373,12 +331,6 @@ func (c *Client) GetAgentCredentials(
 	return creds, nil
 }
 
-// WithDryRun configures the Client to run all supported state changing operations in dry-run mode.
-func (c *Client) WithDryRun() *Client {
-	c.dryRun = true
-	return c
-}
-
 // CreateRequest creates a new http.Request pointing at the Nobl9 API URL.
 // It also adds all the mandatory headers to the request and encodes query parameters.
 func (c *Client) CreateRequest(
@@ -412,6 +364,12 @@ func (c *Client) CreateRequest(
 	return req, nil
 }
 
+// WithDryRun configures the Client to run all supported state changing operations in dry-run mode.
+func (c *Client) WithDryRun() *Client {
+	c.dryRun = true
+	return c
+}
+
 // GetOrganization returns the organization read from JWT token claims.
 func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
@@ -420,6 +378,21 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 // SetUserAgent will set HeaderUserAgent to the provided value.
 func (c *Client) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
+}
+
+func (c *Client) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
+	org, err := c.credentials.GetOrganization(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i := range objects {
+		objCtx, ok := objects[i].(v1alpha.ObjectContext)
+		if !ok {
+			continue
+		}
+		objects[i] = objCtx.SetOrganization(org)
+	}
+	return objects, nil
 }
 
 // urlScheme is exported into var purely for testing purposes.

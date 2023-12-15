@@ -425,8 +425,8 @@ type PublicHoneycombDirectConfig struct {
 	HiddenAPIKey string `json:"apiKey,omitempty"`
 }
 
-// AWSIAMRoleAuthExternalIDs struct which is used for exposing AWS IAM role auth data
-type AWSIAMRoleAuthExternalIDs struct {
+// IAMRoleIDs struct which is used for exposing AWS IAM role identifiers.
+type IAMRoleIDs struct {
 	ExternalID string `json:"externalID"`
 	AccountID  string `json:"accountID"`
 }
