@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -27,7 +26,6 @@ const DefaultProject = "default"
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
 const ProjectsWildcard = "*"
 
-// HTTP headers keys used across app
 const (
 	HeaderOrganization      = "Organization"
 	HeaderProject           = "Project"
@@ -35,31 +33,6 @@ const (
 	HeaderUserAgent         = "User-Agent"
 	HeaderTruncatedLimitMax = "Truncated-Limit-Max"
 	HeaderTraceID           = "Trace-Id"
-)
-
-// HTTP GET query keys used across app
-const (
-	QueryKeyName              = "name"
-	QueryKeyTime              = "t"
-	QueryKeyFrom              = "from"
-	QueryKeyTo                = "to"
-	QueryKeySeries            = "series"
-	QueryKeySteps             = "steps"
-	QueryKeySlo               = "slo"
-	QueryKeyTimeWindow        = "window"
-	QueryKeyPercentiles       = "q"
-	QueryKeyPermissionFilter  = "pf"
-	QueryKeyLabelsFilter      = "labels"
-	QueryKeyServiceName       = "service_name"
-	QueryKeyDryRun            = "dry_run"
-	QueryKeyTextSearch        = "text_search"
-	QueryKeySystemAnnotations = "system_annotations"
-	QueryKeyUserAnnotations   = "user_annotations"
-	QueryKeyAlertPolicy       = "alert_policy"
-	QueryKeyObjective         = "objective"
-	QueryKeyObjectiveValue    = "objective_value"
-	QueryKeyResolved          = "resolved"
-	QueryKeyTriggered         = "triggered"
 )
 
 type Response struct {
@@ -114,36 +87,28 @@ const (
 	apiGetGroups = "/usrmgmt/groups"
 )
 
-// GetObjects returns array of supported type of Objects, when names are passed - query for these names
-// otherwise returns list of all available objects.
-func (c *Client) GetObjects(
-	ctx context.Context,
-	project string,
-	kind manifest.Kind,
-	filterLabel map[string][]string,
-	names ...string,
-) ([]manifest.Object, error) {
-	q := url.Values{}
-	if len(names) > 0 {
-		q[QueryKeyName] = names
-	}
-	if len(filterLabel) > 0 {
-		q.Set(QueryKeyLabelsFilter, c.prepareFilterLabelsString(filterLabel))
-	}
-	response, err := c.GetObjectsWithParams(ctx, project, kind, q)
-	if err != nil {
-		return nil, err
-	}
-	return response.Objects, nil
+type ClientRequestOption interface {
+	Apply(*http.Request) error
 }
 
-func (c *Client) GetObjectsWithParams(
+func (c *Client) GetProjects(ctx context.Context, options ...ClientRequestOption) ([]manifest.Object, error) {
+	return c.getObjects(ctx, manifest.KindProject, options)
+}
+
+func (c *Client) GetServices(ctx context.Context, options ...ClientRequestOption) ([]manifest.Object, error) {
+	return c.getObjects(ctx, manifest.KindService, options)
+}
+
+func (c *Client) GetAlerts(ctx context.Context, options ...ClientRequestOption) ([]manifest.Object, error) {
+	return c.getObjects(ctx, manifest.KindAlert, options)
+}
+
+func (c *Client) getObjects(
 	ctx context.Context,
-	project string,
 	kind manifest.Kind,
-	q url.Values,
-) (response Response, err error) {
-	response = Response{TruncatedMax: -1}
+	options []ClientRequestOption,
+) ([]manifest.Object, error) {
+	response := Response{TruncatedMax: -1}
 	req, err := c.CreateRequest(ctx, http.MethodGet, c.resolveGetObjectEndpoint(kind), project, q, nil)
 	if err != nil {
 		return response, err
@@ -185,20 +150,6 @@ func (c *Client) resolveGetObjectEndpoint(kind manifest.Kind) string {
 	default:
 		return path.Join(apiGet, kind.ToLower())
 	}
-}
-
-func (c *Client) prepareFilterLabelsString(filterLabel map[string][]string) string {
-	var labels []string
-	for key, values := range filterLabel {
-		if len(values) > 0 {
-			for _, value := range values {
-				labels = append(labels, fmt.Sprintf("%s:%s", key, value))
-			}
-		} else {
-			labels = append(labels, key)
-		}
-	}
-	return strings.Join(labels, ",")
 }
 
 // ApplyObjects applies (create or update) list of objects passed as argument via API.
