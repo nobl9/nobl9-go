@@ -1,6 +1,7 @@
 package alertsilence
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -68,4 +69,26 @@ type Status struct {
 	To        string `json:"to"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
+}
+
+func (p *Period) MarshalJSON() ([]byte, error) {
+	startTimeStr := ""
+	if p.StartTime != nil {
+		startTimeStr = p.StartTime.Format(time.RFC3339)
+	}
+
+	endTimeStr := ""
+	if p.EndTime != nil {
+		endTimeStr = p.EndTime.Format(time.RFC3339)
+	}
+
+	return json.Marshal(struct {
+		StartTime string `json:"startTime,omitempty"`
+		EndTime   string `json:"endTime,omitempty"`
+		Duration  string `json:"duration,omitempty"`
+	}{
+		StartTime: startTimeStr,
+		EndTime:   endTimeStr,
+		Duration:  p.Duration,
+	})
 }
