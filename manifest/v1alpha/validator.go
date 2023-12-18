@@ -93,13 +93,8 @@ func NewValidator() *Validate {
 		return name
 	})
 
-	val.RegisterStructValidation(alertPolicyConditionStructLevelValidation, AlertCondition{})
-	val.RegisterStructValidation(directSpecStructLevelValidation, DirectSpec{})
 	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
 	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
-	val.RegisterStructValidation(directSpecHistoricalRetrievalValidation, Direct{})
-	val.RegisterStructValidation(historicalDataRetrievalValidation, HistoricalDataRetrieval{})
-	val.RegisterStructValidation(historicalDataRetrievalDurationValidation, HistoricalRetrievalDuration{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
@@ -109,7 +104,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("notEmpty", isNotEmpty)
 	_ = val.RegisterValidation("objectName", isValidObjectName)
 	_ = val.RegisterValidation("description", isValidDescription)
-	_ = val.RegisterValidation("severity", isValidSeverity)
 	_ = val.RegisterValidation("operator", isValidOperator)
 	_ = val.RegisterValidation("unambiguousAppDynamicMetricPath", isUnambiguousAppDynamicMetricPath)
 	_ = val.RegisterValidation("httpsURL", isHTTPS)
@@ -117,7 +111,6 @@ func NewValidator() *Validate {
 	_ = val.RegisterValidation("validDuration", isValidDuration)
 	_ = val.RegisterValidation("durationAtLeast", isDurationAtLeast)
 	_ = val.RegisterValidation("nonNegativeDuration", isNonNegativeDuration)
-	_ = val.RegisterValidation("alertPolicyMeasurement", isValidAlertPolicyMeasurement)
 	_ = val.RegisterValidation("objectNameWithStringInterpolation", isValidObjectNameWithStringInterpolation)
 	_ = val.RegisterValidation("url", isValidURL)
 	_ = val.RegisterValidation("labels", areLabelsValid)
@@ -279,155 +272,6 @@ func isHTTPS(fl v.FieldLevel) bool {
 	return true
 }
 
-func directSpecStructLevelValidation(sl v.StructLevel) {
-	sa := sl.Current().Interface().(DirectSpec)
-
-	directTypeValidation(sa, sl)
-	directQueryDelayValidation(sa, sl)
-	sourceOfValidation(sa.SourceOf, sl)
-
-	if !isValidReleaseChannel(sa.ReleaseChannel) {
-		sl.ReportError(sa, "ReleaseChannel", "ReleaseChannel", "unknownReleaseChannel", "")
-	}
-}
-
-func directTypeValidation(sa DirectSpec, sl v.StructLevel) {
-	const expectedNumberOfDirectTypes = 1
-	var directTypesCount int
-	if sa.Datadog != nil {
-		directTypesCount++
-	}
-	if sa.NewRelic != nil {
-		directTypesCount++
-	}
-	if sa.AppDynamics != nil {
-		directTypesCount++
-	}
-	if sa.SplunkObservability != nil {
-		directTypesCount++
-	}
-	if sa.ThousandEyes != nil {
-		directTypesCount++
-	}
-	if sa.BigQuery != nil {
-		directTypesCount++
-	}
-	if sa.Splunk != nil {
-		directTypesCount++
-	}
-	if sa.CloudWatch != nil {
-		directTypesCount++
-	}
-	if sa.Pingdom != nil {
-		directTypesCount++
-	}
-	if sa.Redshift != nil {
-		directTypesCount++
-	}
-	if sa.SumoLogic != nil {
-		directTypesCount++
-	}
-	if sa.Instana != nil {
-		directTypesCount++
-	}
-	if sa.InfluxDB != nil {
-		directTypesCount++
-	}
-	if sa.GCM != nil {
-		directTypesCount++
-	}
-	if sa.Lightstep != nil {
-		directTypesCount++
-	}
-	if sa.Dynatrace != nil {
-		directTypesCount++
-	}
-	if sa.AzureMonitor != nil {
-		directTypesCount++
-	}
-	if sa.Honeycomb != nil {
-		directTypesCount++
-	}
-	if directTypesCount != expectedNumberOfDirectTypes {
-		sl.ReportError(sa, "datadog", "Datadog", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "newrelic", "NewRelic", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "appDynamics", "AppDynamics", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "splunkObservability", "SplunkObservability", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "thousandEyes", "ThousandEyes", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "bigQuery", "BigQuery", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "splunk", "Splunk", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "cloudWatch", "CloudWatch", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "pingdom", "Pingdom", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "redshift", "Redshift", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "sumoLogic", "SumoLogic", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "instana", "Instana", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "influxdb", "InfluxDB", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "gcm", "GCM", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "lightstep", "Lightstep", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "dynatrace", "Dynatrace", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "azureMonitor", "AzureMonitor", "exactlyOneDirectTypeRequired", "")
-		sl.ReportError(sa, "honeycomb", "Honeycomb", "exactlyOneDirectTypeRequired", "")
-	}
-}
-
-func directQueryDelayValidation(sd DirectSpec, sl v.StructLevel) {
-	dt, err := sd.GetType()
-	if err != nil {
-		sl.ReportError(sd, "", "", "unknownDirectType", "")
-		return
-	}
-
-	if sd.QueryDelay == nil {
-		return
-	}
-
-	queryDelay := sd.QueryDelay.Duration
-	if !isValidQueryDelayUnit(queryDelay) {
-		sl.ReportError(
-			queryDelay.Unit,
-			"unit",
-			"Unit",
-			"invalidUnit",
-			"",
-		)
-	}
-	directDefault := GetQueryDelayDefaults()[dt]
-	if queryDelay.LessThan(directDefault) {
-		sl.ReportError(
-			sd,
-			"QueryDelayDuration",
-			"QueryDelayDuration",
-			"queryDelayDurationLesserThanDefaultDataSourceQueryDelay",
-			"",
-		)
-	}
-	if isBiggerThanMaxQueryDelayDuration(queryDelay) {
-		sl.ReportError(
-			sd,
-			"QueryDelayDuration",
-			"QueryDelayDuration",
-			"queryDelayDurationBiggerThanMaximumAllowed",
-			"",
-		)
-	}
-}
-
-func sourceOfValidation(sourceOf []string, sl v.StructLevel) {
-	if len(sourceOf) == 0 {
-		sl.ReportError(sourceOf, "sourceOf", "SourceOf", "oneSourceOfRequired", "")
-	}
-	sourceOfItemsValidation(sourceOf, sl)
-}
-
-func sourceOfItemsValidation(sourceOf []string, sl v.StructLevel) bool {
-	for _, so := range sourceOf {
-		if !IsValidSourceOf(so) {
-			sl.ReportError(so, "sourceOf", "SourceOf", "validSourceOfRequired", "")
-		}
-	}
-	return true
-}
-
 func isValidReleaseChannel(releaseChannel ReleaseChannel) bool {
 	if releaseChannel == 0 {
 		return true
@@ -496,11 +340,6 @@ func isValidDescription(fl v.FieldLevel) bool {
 	return utf8.RuneCountInString(fl.Field().String()) <= 1050
 }
 
-func isValidSeverity(fl v.FieldLevel) bool {
-	_, err := ParseSeverity(fl.Field().String())
-	return err == nil
-}
-
 func isValidOperator(fl v.FieldLevel) bool {
 	_, err := ParseOperator(fl.Field().String())
 	return err == nil
@@ -517,131 +356,6 @@ func isUnambiguousAppDynamicMetricPath(fl v.FieldLevel) bool {
 		}
 	}
 	return true
-}
-
-func isValidAlertPolicyMeasurement(fl v.FieldLevel) bool {
-	_, err := ParseMeasurement(fl.Field().String())
-	return err == nil
-}
-
-func alertPolicyConditionStructLevelValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl)
-	alertPolicyConditionOperatorLimitsValidation(sl)
-
-	if condition.AlertingWindow != "" {
-		alertPolicyConditionWithAlertingWindowMeasurementValidation(sl)
-		alertPolicyConditionAlertingWindowLengthValidation(sl)
-	} else {
-		alertPolicyConditionWithLastsForMeasurementValidation(sl)
-	}
-}
-
-func alertPolicyConditionOnlyLastsForOrAlertingWindowValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-	if condition.LastsForDuration != "" && condition.AlertingWindow != "" {
-		sl.ReportError(condition, "lastsFor", "lastsFor", "onlyOneAlertingWindowOrLastsFor", "")
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", "onlyOneAlertingWindowOrLastsFor", "")
-	}
-}
-
-func alertPolicyConditionWithLastsForMeasurementValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	switch condition.Measurement {
-	case MeasurementTimeToBurnBudget.String(),
-		MeasurementTimeToBurnEntireBudget.String():
-		valueDuration, ok := condition.Value.(string)
-		if !ok {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValueDuration", "")
-		}
-
-		duration, err := time.ParseDuration(valueDuration)
-		if err != nil {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValueDuration", "")
-		}
-		if duration <= 0 {
-			sl.ReportError(condition, "measurement", "Measurement", "negativeOrZeroValueDuration", "")
-		}
-	case MeasurementBurnedBudget.String(),
-		MeasurementAverageBurnRate.String():
-		_, ok := condition.Value.(float64)
-		if !ok {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidValue", "")
-		}
-	default:
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-}
-
-func alertPolicyConditionWithAlertingWindowMeasurementValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	switch condition.Measurement {
-	case MeasurementAverageBurnRate.String():
-		_, ok := condition.Value.(float64)
-		if !ok {
-			sl.ReportError(condition, "value", "Value", "invalidValue", "")
-		}
-	case MeasurementTimeToBurnEntireBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "timeToBurnEntireBudgetNotSupportedWithAlertingWindow", "")
-	case MeasurementTimeToBurnBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "timeToBurnBudgetNotSupportedWithAlertingWindow", "")
-	case MeasurementBurnedBudget.String():
-		sl.ReportError(condition, "measurement", "Measurement", "burnedBudgetNotSupportedWithAlertingWindow", "")
-	default:
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-}
-
-func alertPolicyConditionAlertingWindowLengthValidation(sl v.StructLevel) {
-	const (
-		minDuration = time.Minute * 5    // 5m
-		maxDuration = time.Hour * 24 * 7 // 7d
-	)
-	condition := sl.Current().Interface().(AlertCondition)
-
-	durationToValidate, err := time.ParseDuration(condition.AlertingWindow)
-	if err != nil {
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", "errorParsingAlertingWindowDuration", "")
-		return
-	}
-
-	if durationToValidate < minDuration {
-		minDurationTag := fmt.Sprintf("minimumAlertingWindowDuration=%s", minDuration)
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", minDurationTag, "")
-	}
-
-	if durationToValidate > maxDuration {
-		maxDurationTag := fmt.Sprintf("maximumAlertingWindowDuration=%s", maxDuration)
-		sl.ReportError(condition, "alertingWindow", "alertingWindow", maxDurationTag, "")
-	}
-}
-
-func alertPolicyConditionOperatorLimitsValidation(sl v.StructLevel) {
-	condition := sl.Current().Interface().(AlertCondition)
-
-	measurement, measurementErr := ParseMeasurement(condition.Measurement)
-	if measurementErr != nil {
-		sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-	}
-
-	if condition.Operator != "" {
-		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
-		if err != nil {
-			sl.ReportError(condition, "measurement", "Measurement", "invalidMeasurementType", "")
-		}
-
-		operator, operatorErr := ParseOperator(condition.Operator)
-		if operatorErr != nil {
-			sl.ReportError(condition, "op", "Operator", "invalidOperatorType", "")
-		}
-
-		if operator != expectedOperator {
-			sl.ReportError(condition, "op", "Operator", "invalidOperatorTypeForProvidedMeasurement", "")
-		}
-	}
 }
 
 // stringInterpolationPlaceholder common symbol to use in strings for interpolation e.g. "My amazing {} Service"
@@ -695,7 +409,7 @@ func isValidMetricSourceKind(fl v.FieldLevel) bool {
 
 func isValidNewRelicInsightsAPIKey(fl v.FieldLevel) bool {
 	apiKey := fl.Field().String()
-	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == "" || apiKey == HiddenValue
+	return strings.HasPrefix(apiKey, "NRIQ-") || apiKey == ""
 }
 
 func hasValidURLScheme(fl v.FieldLevel) bool {
@@ -753,100 +467,6 @@ func pingdomStatusValid(fl v.FieldLevel) bool {
 	}
 
 	return true
-}
-
-func directSpecHistoricalRetrievalValidation(sl v.StructLevel) {
-	validatedDirect, ok := sl.Current().Interface().(Direct)
-	if !ok {
-		sl.ReportError(validatedDirect, "", "", "structConversion", "")
-		return
-	}
-	if validatedDirect.Spec.HistoricalDataRetrieval == nil {
-		return
-	}
-	integrationType, err := validatedDirect.Spec.GetType()
-	if err != nil {
-		sl.ReportError(
-			validatedDirect.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"historicalDataRetrievalNotAvailable",
-			"")
-		return
-	}
-
-	typ, err := ParseDataSourceType(integrationType)
-	if err != nil {
-		sl.ReportError(
-			validatedDirect.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"historicalDataRetrievalNotAvailable",
-			"")
-		return
-	}
-
-	maxDuration, err := GetDataRetrievalMaxDuration(validatedDirect.Kind, typ)
-	if err != nil {
-		sl.ReportError(
-			validatedDirect.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"historicalDataRetrievalNotAvailable",
-			"")
-		return
-	}
-
-	maxDurationAllowed := HistoricalRetrievalDuration{
-		Value: maxDuration.Value,
-		Unit:  maxDuration.Unit,
-	}
-
-	if validatedDirect.Spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		sl.ReportError(
-			validatedDirect.Spec.HistoricalDataRetrieval,
-			"historicalDataRetrieval",
-			"HistoricalDataRetrieval",
-			"dataRetrievalMaxDurationExceeded",
-			"")
-		return
-	}
-}
-
-func historicalDataRetrievalValidation(sl v.StructLevel) {
-	config, ok := sl.Current().Interface().(HistoricalDataRetrieval)
-	if !ok {
-		sl.ReportError(config, "", "", "structConversion", "")
-		return
-	}
-
-	if config.DefaultDuration.BiggerThan(config.MaxDuration) {
-		sl.ReportError(
-			config.DefaultDuration,
-			"defaultDuration",
-			"DefaultDuration",
-			"biggerThanMaxDuration",
-			"",
-		)
-	}
-}
-
-func historicalDataRetrievalDurationValidation(sl v.StructLevel) {
-	duration, ok := sl.Current().Interface().(HistoricalRetrievalDuration)
-	if !ok {
-		sl.ReportError(duration, "", "", "structConversion", "")
-		return
-	}
-
-	if !duration.Unit.IsValid() {
-		sl.ReportError(
-			duration.Unit,
-			"unit",
-			"Unit",
-			"invalidUnit",
-			"",
-		)
-	}
 }
 
 func notBlank(fl v.FieldLevel) bool {

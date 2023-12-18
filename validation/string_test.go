@@ -198,3 +198,27 @@ func TestStringContains(t *testing.T) {
 		assert.True(t, HasErrorCode(err, ErrorCodeStringContains))
 	})
 }
+
+func TestStringStartsWith(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for _, prefixes := range [][]string{
+			{"th"},
+			{"is", "th"},
+		} {
+			err := StringStartsWith(prefixes...).Validate("this")
+			assert.NoError(t, err)
+		}
+	})
+	t.Run("fails with single prefix", func(t *testing.T) {
+		err := StringStartsWith("th").Validate("one")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "string must start with 'th' prefix")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringStartsWith))
+	})
+	t.Run("fails with multiple prefixes", func(t *testing.T) {
+		err := StringStartsWith("th", "ht").Validate("one")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "string must start with one of the following prefixes: 'th', 'ht'")
+		assert.True(t, HasErrorCode(err, ErrorCodeStringStartsWith))
+	})
+}

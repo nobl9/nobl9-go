@@ -26,6 +26,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -258,7 +259,7 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 }
 
 func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
-	expectedData := v1alpha.IAMRoleIDs{
+	expectedData := models.IAMRoleIDs{
 		ExternalID: "external-id",
 	}
 
@@ -286,7 +287,7 @@ func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
 }
 
 func TestClient_GetDirectIAMRoleIDs(t *testing.T) {
-	expectedData := v1alpha.IAMRoleIDs{
+	expectedData := models.IAMRoleIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
 	}

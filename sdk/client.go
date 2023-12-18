@@ -19,6 +19,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 // DefaultProject is a value of the default project.
@@ -250,15 +251,15 @@ func (c *Client) applyOrDeleteObjects(
 	return c.processResponseErrors(resp)
 }
 
-func (c *Client) GetDataExportIAMRoleIDs(ctx context.Context) (*v1alpha.IAMRoleIDs, error) {
+func (c *Client) GetDataExportIAMRoleIDs(ctx context.Context) (*models.IAMRoleIDs, error) {
 	return c.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (c *Client) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*v1alpha.IAMRoleIDs, error) {
+func (c *Client) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*models.IAMRoleIDs, error) {
 	return c.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
-func (c *Client) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*v1alpha.IAMRoleIDs, error) {
+func (c *Client) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*models.IAMRoleIDs, error) {
 	req, err := c.CreateRequest(ctx, http.MethodGet, endpoint, project, nil, nil)
 	if err != nil {
 		return nil, err
@@ -271,7 +272,7 @@ func (c *Client) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*
 	if err = c.processResponseErrors(resp); err != nil {
 		return nil, err
 	}
-	var response v1alpha.IAMRoleIDs
+	var response models.IAMRoleIDs
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")
 	}
