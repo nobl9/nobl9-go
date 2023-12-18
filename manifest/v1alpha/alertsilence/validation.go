@@ -39,30 +39,12 @@ var specValidation = validation.New[Spec](
 		Include(alertPolicySourceValidation),
 	validation.For(func(s Spec) Period { return s.Period }).
 		WithName("period").
-		Include(periodValidation),
-)
-
-var alertPolicySourceValidation = validation.New[AlertPolicySource](
-	v1alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
-		WithName("name"),
-	validation.For(func(s AlertPolicySource) string { return s.Project }).
-		WithName("project").
-		OmitEmpty().
-		Rules(validation.StringIsDNSSubdomain()),
-)
-
-// TODO can simplify? check
-var periodValidation = validation.New[Period](
-	validation.For(validation.GetSelf[Period]()).
-		Include(validation.New[Period](
-			validation.For(validation.GetSelf[Period]()).
-				Rules(
-					validation.MutuallyExclusive(true, map[string]func(p Period) any{
-						"duration": func(p Period) any { return p.Duration },
-						"endTime":  func(p Period) any { return p.EndTime },
-					}),
-				),
-		)).
+		Rules(
+			validation.MutuallyExclusive(true, map[string]func(p Period) any{
+				"duration": func(p Period) any { return p.Duration },
+				"endTime":  func(p Period) any { return p.EndTime },
+			}),
+		).
 		StopOnError().
 		Include(
 			validation.New[Period](
@@ -77,6 +59,15 @@ var periodValidation = validation.New[Period](
 					Rules(endTimeNotBeforeStartTime),
 			).When(func(p Period) bool { return p.EndTime != nil }),
 		),
+)
+
+var alertPolicySourceValidation = validation.New[AlertPolicySource](
+	v1alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
+		WithName("name"),
+	validation.For(func(s AlertPolicySource) string { return s.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 const errorCodeEndTimeNotBeforeOrNotEqualStartTime validation.ErrorCode = "end_time_not_before_or_not_equal_start_time"

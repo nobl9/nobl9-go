@@ -247,7 +247,6 @@ func TestValidate_Spec_EndTime(t *testing.T) {
 			})
 		})
 	}
-
 }
 
 func validAlertSilence() AlertSilence {
