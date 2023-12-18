@@ -121,7 +121,7 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
-		Required(),
+		OmitEmpty(),
 ).
 	When(func(c AlertCondition) bool {
 		return c.Measurement == MeasurementBurnedBudget.String() ||

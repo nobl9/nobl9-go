@@ -296,13 +296,20 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				MeasurementTimeToBurnEntireBudget,
 			},
 		},
-		"passes, valid float measurement is burnedBudget or averageBurnRate and lastsFor is defined": {
+		"passes, valid float, measurement is burnedBudget or averageBurnRate and lastsFor is defined": {
 			values: []interface{}{
 				0.000000020,
 				0.97,
 				2.00,
 				157.00,
 			},
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBurnedBudget,
+			},
+		},
+		"passes, allows empty values, measurement is burnedBudget or averageBurnRate": {
+			values: []interface{}{""},
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
@@ -324,16 +331,6 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			}
 		})
 	}
-	t.Run("fails, required", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].Value = ""
-		alertPolicy.Spec.Conditions[0].Measurement = MeasurementAverageBurnRate.String()
-		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: "spec.conditions[0].value",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
 
 	testCases := map[string]measurementDetermined{
 		"fails, greater than 0 when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
