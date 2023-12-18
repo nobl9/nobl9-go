@@ -1,6 +1,10 @@
-package v1alpha
+package alertpolicy
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/nobl9/nobl9-go/validation"
+)
 
 // Severity level describe importance of triggered alert
 type Severity int16
@@ -35,4 +39,8 @@ func ParseSeverity(value string) (Severity, error) {
 		return result, fmt.Errorf("'%s' is not valid severity", value)
 	}
 	return result, nil
+}
+
+func severityValidation() validation.SingleRule[string] {
+	return validation.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String())
 }

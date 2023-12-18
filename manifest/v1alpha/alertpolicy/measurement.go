@@ -1,9 +1,12 @@
-package v1alpha
+package alertpolicy
 
 import (
 	"fmt"
 
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/validation"
 )
 
 // Measurement is allowed measurement types used for comparing values and triggering alerts
@@ -45,17 +48,26 @@ func ParseMeasurement(value string) (Measurement, error) {
 }
 
 // GetExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
-func GetExpectedOperatorForMeasurement(measurement Measurement) (Operator, error) {
+func GetExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operator, error) {
 	switch measurement {
 	case MeasurementBurnedBudget:
-		return GreaterThanEqual, nil
+		return v1alpha.GreaterThanEqual, nil
 	case MeasurementAverageBurnRate:
-		return GreaterThanEqual, nil
+		return v1alpha.GreaterThanEqual, nil
 	case MeasurementTimeToBurnBudget:
-		return LessThan, nil
+		return v1alpha.LessThan, nil
 	case MeasurementTimeToBurnEntireBudget:
-		return LessThanEqual, nil
+		return v1alpha.LessThanEqual, nil
 	default:
 		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
 	}
+}
+
+func measurementValidation() validation.SingleRule[string] {
+	return validation.OneOf(
+		MeasurementBurnedBudget.String(),
+		MeasurementAverageBurnRate.String(),
+		MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String(),
+	)
 }
