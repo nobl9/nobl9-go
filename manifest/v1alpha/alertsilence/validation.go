@@ -29,6 +29,18 @@ var specValidation = validation.New[Spec](
 	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
+	validation.For(func(s Spec) AlertPolicySource { return s.AlertPolicy }).
+		WithName("alertPolicy").
+		Include(alertPolicySourceValidation),
+)
+
+var alertPolicySourceValidation = validation.New[AlertPolicySource](
+	v1alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
+		WithName("name"),
+	validation.For(func(s AlertPolicySource) string { return s.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 func validate(s AlertSilence) *v1alpha.ObjectError {

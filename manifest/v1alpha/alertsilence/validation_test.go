@@ -78,6 +78,54 @@ func TestValidate_Spec_Slo(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_AlertPolicy(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{
+			Name:    "alert-policy-name",
+			Project: "project",
+		}
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("passes, empty project", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{
+			Name:    "alert-policy-name",
+			Project: "",
+		}
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("fails, invalid name", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy.Name = "not valid NAME !!"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.alertPolicy.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		})
+	})
+	t.Run("fails, required", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy.Name = ""
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.alertPolicy.name",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("fails, invalid project", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy.Project = "not valid NAME !!"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.alertPolicy.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		})
+	})
+}
+
 func validAlertSilence() AlertSilence {
 	periodStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 
