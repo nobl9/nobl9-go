@@ -9,30 +9,21 @@ import (
 )
 
 var alertSilenceValidation = validation.New[AlertSilence](
-	v1alpha.FieldRuleMetadataName(func(s AlertSilence) string { return s.Metadata.Name }),
 	validation.For(validation.GetSelf[AlertSilence]()).
-		Rules(
-			validation.NewSingleRule(func(p AlertSilence) error {
-				if p.Metadata.Project == "" {
-					return nil
-				}
-				err := validation.StringIsDNSSubdomain().Validate(p.Metadata.Project)
-				if err != nil {
-					return validation.NewPropertyError(
-						"metadata.project",
-						p.Metadata.Project,
-						err,
-					)
-				}
-
-				return nil
-			}),
-		).
+		Include(metadataValidation).
 		StopOnError().
 		Rules(alertPolicyProjectConsistent),
 	validation.For(func(s AlertSilence) Spec { return s.Spec }).
 		WithName("spec").
 		Include(specValidation),
+)
+
+var metadataValidation = validation.New[AlertSilence](
+	v1alpha.FieldRuleMetadataName(func(s AlertSilence) string { return s.Metadata.Name }),
+	validation.For(func(s AlertSilence) string { return s.Metadata.Project }).
+		WithName("metadata.project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 var specValidation = validation.New[Spec](
