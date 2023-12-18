@@ -91,6 +91,7 @@ func AssertContainsErrors(
 
 			if !failedMessage && !failedContainsMessage && !failedCode {
 				found = true
+				break
 			}
 		}
 
