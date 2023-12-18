@@ -79,8 +79,6 @@ func (val *Validate) Check(s interface{}) error {
 	return val.validate.Struct(s)
 }
 
-var validator = NewValidator()
-
 // NewValidator returns an instance of preconfigured Validator for all available objects
 func NewValidator() *Validate {
 	val := v.New()
