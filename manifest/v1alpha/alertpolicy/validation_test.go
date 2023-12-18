@@ -309,7 +309,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			},
 		},
 		"passes, allows empty values, measurement is burnedBudget or averageBurnRate": {
-			values: []interface{}{""},
+			values: []interface{}{"", 0.0},
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
