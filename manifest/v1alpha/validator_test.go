@@ -7,65 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateURLDynatrace(t *testing.T) {
-	testCases := []struct {
-		desc    string
-		url     string
-		isValid bool
-	}{
-		{
-			desc:    "valid SaaS",
-			url:     "https://test.live.dynatrace.com",
-			isValid: true,
-		},
-		{
-			desc:    "valid SaaS with port explicit speciefed",
-			url:     "https://test.live.dynatrace.com:433",
-			isValid: true,
-		},
-		{
-			desc:    "valid SaaS multiple trailing /",
-			url:     "https://test.live.dynatrace.com///",
-			isValid: true,
-		},
-		{
-			desc:    "invalid SaaS lack of https",
-			url:     "http://test.live.dynatrace.com",
-			isValid: false,
-		},
-		{
-			desc:    "valid Managed/Environment ActiveGate lack of https",
-			url:     "http://test.com/e/environment-id",
-			isValid: true,
-		},
-		{
-			desc:    "valid Managed/Environment ActiveGate wrong environment-id",
-			url:     "https://test.com/e/environment-id",
-			isValid: true,
-		},
-		{
-			desc:    "valid Managed/Environment ActiveGate IP",
-			url:     "https://127.0.0.1/e/environment-id",
-			isValid: true,
-		},
-		{
-			desc:    "valid Managed/Environment ActiveGate wrong environment-id",
-			url:     "https://test.com/some-devops-path/e/environment-id",
-			isValid: true,
-		},
-		{
-			desc:    "valid Managed/Environment ActiveGate wrong environment-id, multiple /",
-			url:     "https://test.com///some-devops-path///e///environment-id///",
-			isValid: true,
-		},
-	}
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			assert.Equal(t, tC.isValid, validateURLDynatrace(tC.url))
-		})
-	}
-}
-
 func TestAlertSilencePeriodValidation(t *testing.T) {
 	validate := v.New()
 	validate.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})

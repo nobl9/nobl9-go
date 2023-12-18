@@ -1,9 +1,7 @@
-package agent
+package direct
 
 import (
 	"net/url"
-	"path"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -12,12 +10,12 @@ import (
 	"github.com/nobl9/nobl9-go/validation"
 )
 
-var agentValidation = validation.New[Agent](
-	v1alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
-	v1alpha.FieldRuleSpecDescription(func(a Agent) string { return a.Spec.Description }),
-	validation.For(func(a Agent) Spec { return a.Spec }).
+var directValidation = validation.New[Direct](
+	v1alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
+	v1alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
+	v1alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
+	v1alpha.FieldRuleSpecDescription(func(d Direct) string { return d.Spec.Description }),
+	validation.For(func(d Direct) Spec { return d.Spec }).
 		WithName("spec").
 		Include(specValidation),
 )
@@ -39,9 +37,6 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
 		WithName("queryDelay").
 		Include(v1alpha.QueryDelayValidation()),
-	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
-		WithName("prometheus").
-		Include(prometheusValidation),
 	validation.ForPointer(func(s Spec) *DatadogConfig { return s.Datadog }).
 		WithName("datadog").
 		Include(datadogValidation),
@@ -51,45 +46,24 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *AppDynamicsConfig { return s.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
-	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
-		WithName("splunk").
-		Include(splunkValidation),
-	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
-		WithName("lightstep").
-		Include(lightstepValidation),
 	validation.ForPointer(func(s Spec) *SplunkObservabilityConfig { return s.SplunkObservability }).
 		WithName("splunkObservability").
 		Include(splunkObservabilityValidation),
-	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
-		WithName("dynatrace").
-		Include(dynatraceValidation),
-	validation.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
-		WithName("elasticsearch").
-		Include(elasticsearchValidation),
 	validation.ForPointer(func(s Spec) *ThousandEyesConfig { return s.ThousandEyes }).
 		WithName("thousandEyes").
 		Include(thousandEyesValidation),
-	validation.ForPointer(func(s Spec) *GraphiteConfig { return s.Graphite }).
-		WithName("graphite").
-		Include(graphiteValidation),
 	validation.ForPointer(func(s Spec) *BigQueryConfig { return s.BigQuery }).
 		WithName("bigQuery").
 		Include(bigQueryValidation),
-	validation.ForPointer(func(s Spec) *OpenTSDBConfig { return s.OpenTSDB }).
-		WithName("opentsdb").
-		Include(openTSDBValidation),
-	validation.ForPointer(func(s Spec) *GrafanaLokiConfig { return s.GrafanaLoki }).
-		WithName("grafanaLoki").
-		Include(grafanaLokiValidation),
+	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
+		WithName("splunk").
+		Include(splunkValidation),
 	validation.ForPointer(func(s Spec) *CloudWatchConfig { return s.CloudWatch }).
 		WithName("cloudWatch").
 		Include(cloudWatchValidation),
 	validation.ForPointer(func(s Spec) *PingdomConfig { return s.Pingdom }).
 		WithName("pingdom").
 		Include(pingdomValidation),
-	validation.ForPointer(func(s Spec) *AmazonPrometheusConfig { return s.AmazonPrometheus }).
-		WithName("amazonPrometheus").
-		Include(amazonPrometheusValidation),
 	validation.ForPointer(func(s Spec) *RedshiftConfig { return s.Redshift }).
 		WithName("redshift").
 		Include(redshiftValidation),
@@ -102,15 +76,18 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *InfluxDBConfig { return s.InfluxDB }).
 		WithName("influxdb").
 		Include(influxDBValidation),
-	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
-		WithName("azureMonitor").
-		Include(azureMonitorValidation),
 	validation.ForPointer(func(s Spec) *GCMConfig { return s.GCM }).
 		WithName("gcm").
 		Include(gcmValidation),
-	validation.ForPointer(func(s Spec) *GenericConfig { return s.Generic }).
-		WithName("generic").
-		Include(genericValidation),
+	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
+		WithName("lightstep").
+		Include(lightstepValidation),
+	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
+		WithName("dynatrace").
+		Include(dynatraceValidation),
+	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
+		WithName("azureMonitor").
+		Include(azureMonitorValidation),
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
@@ -128,6 +105,59 @@ var (
 			WithName("accountId").
 			Required().
 			Rules(validation.GreaterThanOrEqualTo(1)),
+		validation.For(func(n NewRelicConfig) string { return n.InsightsQueryKey }).
+			WithName("insightsQueryKey").
+			HideValue().
+			When(func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) }).
+			Rules(validation.StringStartsWith("NRIQ-")),
+	)
+	appDynamicsValidation = validation.New[AppDynamicsConfig](
+		urlPropertyRules(func(a AppDynamicsConfig) string { return a.URL }),
+		validation.For(func(a AppDynamicsConfig) string { return a.ClientName }).
+			WithName("clientName").
+			Required(),
+		validation.For(func(a AppDynamicsConfig) string { return a.AccountName }).
+			WithName("accountName").
+			Required(),
+	)
+	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
+		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
+			WithName("realm").
+			Required(),
+	)
+	thousandEyesValidation = validation.New[ThousandEyesConfig]()
+	bigQueryValidation     = validation.New[BigQueryConfig](
+		validation.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
+			WithName("serviceAccountKey").
+			HideValue().
+			When(func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) }).
+			Rules(validation.StringJSON()),
+	)
+	splunkValidation = validation.New[SplunkConfig](
+		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
+	)
+	cloudWatchValidation = validation.New[CloudWatchConfig]()
+	pingdomValidation    = validation.New[PingdomConfig]()
+	redshiftValidation   = validation.New[RedshiftConfig](
+		validation.For(func(r RedshiftConfig) string { return r.SecretARN }).
+			WithName("secretARN").
+			Required(),
+	)
+	sumoLogicValidation = validation.New[SumoLogicConfig](
+		urlPropertyRules(func(s SumoLogicConfig) string { return s.URL }),
+	)
+	instanaValidation = validation.New[InstanaConfig](
+		urlPropertyRules(func(i InstanaConfig) string { return i.URL }),
+	)
+	influxDBValidation = validation.New[InfluxDBConfig](
+		urlPropertyRules(func(i InfluxDBConfig) string { return i.URL }),
+	)
+	gcmValidation = validation.New[GCMConfig](
+		validation.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
+			WithName("serviceAccountKey").
+			HideValue().
+			When(func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) }).
+			Rules(validation.StringJSON()),
 	)
 	lightstepValidation = validation.New[LightstepConfig](
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
@@ -137,41 +167,8 @@ var (
 			WithName("project").
 			Required(),
 	)
-	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
-		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
-			WithName("realm").
-			Required(),
-	)
 	dynatraceValidation = validation.New[DynatraceConfig](
-		validation.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
-			WithName("url").
-			Required().
-			Rules(
-				validation.URL(),
-				validation.NewSingleRule(func(u *url.URL) error {
-					// For SaaS type enforce https and land lack of path.
-					// - Join instead of Clean (to avoid getting . for empty path),
-					// - Trim to get rid of root.
-					pathURL := strings.Trim(path.Join(u.Path), "/")
-					if strings.HasSuffix(u.Host, "live.dynatrace.com") &&
-						(u.Scheme != "https" || pathURL != "") {
-						return errors.New(
-							"Dynatrace SaaS URL (live.dynatrace.com) requires https scheme and empty URL path" +
-								"; example: https://rxh50243.live.dynatrace.com/")
-					}
-					return nil
-				}),
-			),
-	)
-	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig](
-		validation.For(func(a AmazonPrometheusConfig) string { return a.URL }).
-			WithName("url").
-			Required().
-			Rules(validation.StringURL()),
-		validation.For(func(a AmazonPrometheusConfig) string { return a.Region }).
-			WithName("region").
-			Required().
-			Rules(validation.StringMaxLength(255)),
+		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
 	)
 	azureMonitorValidation = validation.New[AzureMonitorConfig](
 		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -179,26 +176,7 @@ var (
 			Required().
 			Rules(validation.StringUUID()),
 	)
-	// URL only.
-	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
-	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
-	splunkValidation        = newURLValidator(func(s SplunkConfig) string { return s.URL })
-	elasticsearchValidation = newURLValidator(func(e ElasticsearchConfig) string { return e.URL })
-	graphiteValidation      = newURLValidator(func(g GraphiteConfig) string { return g.URL })
-	openTSDBValidation      = newURLValidator(func(o OpenTSDBConfig) string { return o.URL })
-	grafanaLokiValidation   = newURLValidator(func(g GrafanaLokiConfig) string { return g.URL })
-	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
-	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
-	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
-	// Empty configs.
-	thousandEyesValidation = validation.New[ThousandEyesConfig]()
-	bigQueryValidation     = validation.New[BigQueryConfig]()
-	cloudWatchValidation   = validation.New[CloudWatchConfig]()
-	pingdomValidation      = validation.New[PingdomConfig]()
-	redshiftValidation     = validation.New[RedshiftConfig]()
-	gcmValidation          = validation.New[GCMConfig]()
-	genericValidation      = validation.New[GenericConfig]()
-	honeycombValidation    = validation.New[HoneycombConfig]()
+	honeycombValidation = validation.New[HoneycombConfig]()
 )
 
 const (
@@ -218,11 +196,6 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 				onlyType, typ)
 		}
 		return nil
-	}
-	if spec.Prometheus != nil {
-		if err := typesMatch(v1alpha.Prometheus); err != nil {
-			return err
-		}
 	}
 	if spec.Datadog != nil {
 		if err := typesMatch(v1alpha.Datadog); err != nil {
@@ -264,28 +237,8 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 			return err
 		}
 	}
-	if spec.Elasticsearch != nil {
-		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
-			return err
-		}
-	}
-	if spec.Graphite != nil {
-		if err := typesMatch(v1alpha.Graphite); err != nil {
-			return err
-		}
-	}
 	if spec.BigQuery != nil {
 		if err := typesMatch(v1alpha.BigQuery); err != nil {
-			return err
-		}
-	}
-	if spec.OpenTSDB != nil {
-		if err := typesMatch(v1alpha.OpenTSDB); err != nil {
-			return err
-		}
-	}
-	if spec.GrafanaLoki != nil {
-		if err := typesMatch(v1alpha.GrafanaLoki); err != nil {
 			return err
 		}
 	}
@@ -296,11 +249,6 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	if spec.Pingdom != nil {
 		if err := typesMatch(v1alpha.Pingdom); err != nil {
-			return err
-		}
-	}
-	if spec.AmazonPrometheus != nil {
-		if err := typesMatch(v1alpha.AmazonPrometheus); err != nil {
 			return err
 		}
 	}
@@ -334,11 +282,6 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 			return err
 		}
 	}
-	if spec.Generic != nil {
-		if err := typesMatch(v1alpha.Generic); err != nil {
-			return err
-		}
-	}
 	if spec.Honeycomb != nil {
 		if err := typesMatch(v1alpha.Honeycomb); err != nil {
 			return err
@@ -355,7 +298,7 @@ var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec S
 		return nil
 	}
 	typ, _ := spec.GetType()
-	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
+	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ)
 	if err != nil {
 		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
 	}
@@ -378,27 +321,35 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 		return nil
 	}
 	typ, _ := spec.GetType()
-	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
-	if spec.QueryDelay.LessThan(agentDefault) {
+	directDefault := v1alpha.GetQueryDelayDefaults()[typ]
+	if spec.QueryDelay.LessThan(directDefault) {
 		return validation.NewPropertyError(
 			"queryDelay",
 			spec.QueryDelay,
-			errors.Errorf("should be greater than or equal to %s", agentDefault),
+			errors.Errorf("should be greater than or equal to %s", directDefault),
 		)
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
 
-// newURLValidator is a helper construct for Agent which only have a simple 'url' field validation.
-func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validation.Validator[S] {
-	return validation.New[S](
-		validation.For(getter).
-			WithName("url").
-			Required().
-			Rules(validation.StringURL()),
-	)
+const errorCodeHTTPSSchemeRequired = "https_scheme_required"
+
+func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) validation.PropertyRules[*url.URL, S] {
+	return validation.Transform(getter, url.Parse).
+		WithName("url").
+		Required().
+		Rules(validation.URL()).
+		StopOnError().
+		Rules(validation.NewSingleRule(func(u *url.URL) error {
+			if u.Scheme != "https" {
+				return errors.New("requires https scheme")
+			}
+			return nil
+		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
 }
 
-func validate(a Agent) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(agentValidation, a)
+func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
+
+func validate(d Direct) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(directValidation, d)
 }

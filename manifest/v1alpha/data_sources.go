@@ -53,8 +53,6 @@ type DataSourceType int
 // Eventually we should solve this inconsistency between the enum name and its string representation.
 const GCM = GoogleCloudMonitoring
 
-const DatasourceStableChannel = "stable"
-
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {
@@ -134,49 +132,6 @@ func QueryDelayValidation() validation.Validator[QueryDelay] {
 			Required().
 			Rules(validation.OneOf(Minute, Second)),
 	)
-}
-
-type SourceOf int
-
-const (
-	SourceOfServices SourceOf = iota + 1
-	SourceOfMetrics
-)
-
-const (
-	sourceOfServicesStr = "Services"
-	sourceOfMetricsStr  = "Metrics"
-)
-
-func getSourceOfNames() map[string]SourceOf {
-	return map[string]SourceOf{
-		sourceOfServicesStr: SourceOfServices,
-		sourceOfMetricsStr:  SourceOfMetrics,
-	}
-}
-
-func MustParseSourceOf(sourceOf string) SourceOf {
-	result, ok := getSourceOfNames()[sourceOf]
-	if !ok {
-		panic(fmt.Sprintf("'%s' is not valid source of", sourceOf))
-	}
-	return result
-}
-
-func SourceOfToStringSlice(isMetrics, isServices bool) []string {
-	var sourceOf []string
-	if isMetrics {
-		sourceOf = append(sourceOf, sourceOfMetricsStr)
-	}
-	if isServices {
-		sourceOf = append(sourceOf, sourceOfServicesStr)
-	}
-	return sourceOf
-}
-
-func IsValidSourceOf(sourceOf string) bool {
-	_, ok := getSourceOfNames()[sourceOf]
-	return ok
 }
 
 // HistoricalRetrievalDuration struct was previously called Duration. However, this name was too generic
@@ -311,14 +266,6 @@ func (d Duration) Duration() time.Duration {
 	return value * d.Unit.Duration()
 }
 
-func isBiggerThanMaxQueryDelayDuration(duration Duration) bool {
-	return duration.Duration() > maxQueryDelay.Duration()
-}
-
-func isValidQueryDelayUnit(queryDelay Duration) bool {
-	return queryDelay.Unit == Second || queryDelay.Unit == Minute
-}
-
 func DurationUnitFromString(unit string) (DurationUnit, error) {
 	switch cases.Title(language.Und).String(unit) {
 	case string(Minute), minuteAlias:
@@ -390,14 +337,10 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (Histor
 		errors.Errorf("historical data retrieval is not supported for %s %s", typ, kind)
 }
 
-type QueryDelayDefaults map[string]Duration
+type QueryDelayDefaults map[DataSourceType]Duration
 
-func (q QueryDelayDefaults) GetByName(name string) string {
-	return q[name].String()
-}
-
-func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
-	return q[at.String()].String()
+func (q QueryDelayDefaults) Get(at DataSourceType) string {
+	return q[at].String()
 }
 
 // GetQueryDelayDefaults serves an exported, single source of truth map that is now a part of v1alpha contract.
@@ -407,103 +350,103 @@ func (q QueryDelayDefaults) GetByType(at DataSourceType) string {
 // WARNING: All string values of this map must satisfy the "customDuration" regex pattern.
 func GetQueryDelayDefaults() QueryDelayDefaults {
 	return QueryDelayDefaults{
-		AmazonPrometheus.String(): {
+		AmazonPrometheus: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		Prometheus.String(): {
+		Prometheus: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		AppDynamics.String(): {
+		AppDynamics: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		BigQuery.String(): {
+		BigQuery: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		CloudWatch.String(): {
+		CloudWatch: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Datadog.String(): {
+		Datadog: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Dynatrace.String(): {
+		Dynatrace: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		Elasticsearch.String(): {
+		Elasticsearch: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		GCM.String(): {
+		GCM: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		GrafanaLoki.String(): {
+		GrafanaLoki: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Graphite.String(): {
+		Graphite: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		InfluxDB.String(): {
+		InfluxDB: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Instana.String(): {
+		Instana: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Lightstep.String(): {
+		Lightstep: {
 			Value: ptr(2),
 			Unit:  Minute,
 		},
-		NewRelic.String(): {
+		NewRelic: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		OpenTSDB.String(): {
+		OpenTSDB: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Pingdom.String(): {
+		Pingdom: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		Redshift.String(): {
+		Redshift: {
 			Value: ptr(30),
 			Unit:  Second,
 		},
-		Splunk.String(): {
+		Splunk: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		SplunkObservability.String(): {
+		SplunkObservability: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		SumoLogic.String(): {
+		SumoLogic: {
 			Value: ptr(4),
 			Unit:  Minute,
 		},
-		ThousandEyes.String(): {
+		ThousandEyes: {
 			Value: ptr(1),
 			Unit:  Minute,
 		},
-		AzureMonitor.String(): {
+		AzureMonitor: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},
-		Generic.String(): {
+		Generic: {
 			Value: ptr(0),
 			Unit:  Second,
 		},
-		Honeycomb.String(): {
+		Honeycomb: {
 			Value: ptr(5),
 			Unit:  Minute,
 		},

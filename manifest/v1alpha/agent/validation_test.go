@@ -154,7 +154,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		for _, typ := range v1alpha.DataSourceTypeValues() {
 			t.Run(typ.String(), func(t *testing.T) {
 				agent := validAgent(typ)
-				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ.String()]
+				defaultDelay := v1alpha.GetQueryDelayDefaults()[typ]
 				agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 					Value: ptr(*defaultDelay.Value - 1),
 					Unit:  defaultDelay.Unit,

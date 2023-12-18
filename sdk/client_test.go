@@ -26,6 +26,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -283,7 +284,7 @@ func TestClient_GetAWSExternalID(t *testing.T) {
 }
 
 func TestClient_GetAWSIAMRoleAuthExternalIDs(t *testing.T) {
-	expectedData := v1alpha.AWSIAMRoleAuthExternalIDs{
+	expectedData := models.AWSIAMRoleAuthExternalIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
 	}

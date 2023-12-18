@@ -9,10 +9,6 @@
     },
     "spec": {
       "description": "direct integration with Newrelic",
-      "sourceOf": [
-        "Metrics",
-        "Services"
-      ],
       "newRelic": {
         "accountId": 1437038,
         "insightsQueryKey": ""
