@@ -3,85 +3,8 @@ package v1alpha
 import (
 	"testing"
 
-	v "github.com/go-playground/validator/v10"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestAlertSilencePeriodValidation(t *testing.T) {
-	validate := v.New()
-	validate.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
-
-	testCases := []struct {
-		desc    string
-		spec    AlertSilencePeriod
-		isValid bool
-	}{
-		{
-			desc: "endTime before starTime",
-			spec: AlertSilencePeriod{
-				StartTime: "2006-01-02T17:04:05Z",
-				EndTime:   "2006-01-02T17:00:05Z",
-			},
-			isValid: false,
-		},
-		{
-			desc: "endTime equals starTime",
-			spec: AlertSilencePeriod{
-				StartTime: "2006-01-02T17:00:05Z",
-				EndTime:   "2006-01-02T17:00:05Z",
-			},
-			isValid: false,
-		},
-		{
-			desc: "endTime after starTime",
-			spec: AlertSilencePeriod{
-				StartTime: "2006-01-02T17:00:05Z",
-				EndTime:   "2006-01-02T17:04:05Z",
-			},
-			isValid: true,
-		},
-		{
-			desc: "both endTime and duration are provided",
-			spec: AlertSilencePeriod{
-				EndTime:  "2006-01-02T17:04:05Z",
-				Duration: "1h",
-			},
-			isValid: false,
-		},
-		{
-			desc: "both endTime and duration are missing",
-			spec: AlertSilencePeriod{
-				StartTime: "2006-01-02T17:04:05Z",
-			},
-			isValid: false,
-		},
-		{
-			desc: "negative value for duration",
-			spec: AlertSilencePeriod{
-				Duration: "-1h",
-			},
-			isValid: false,
-		},
-		{
-			desc: "zero value for duration",
-			spec: AlertSilencePeriod{
-				Duration: "0",
-			},
-			isValid: false,
-		},
-	}
-
-	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			err := validate.Struct(tC.spec)
-			if tC.isValid {
-				assert.Nil(t, err)
-			} else {
-				assert.Error(t, err)
-			}
-		})
-	}
-}
 
 func TestIsReleaseChannelValid(t *testing.T) {
 	for name, test := range map[string]struct {

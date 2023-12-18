@@ -17,8 +17,6 @@ import (
 var expectedError string
 
 func TestValidate_Metadata(t *testing.T) {
-	periodStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
-
 	err := validate(AlertSilence{
 		Kind: manifest.KindAlertSilence,
 		Metadata: Metadata{
@@ -33,8 +31,10 @@ func TestValidate_Metadata(t *testing.T) {
 			},
 			Description: strings.Repeat("l", 2000),
 			Period: Period{
-				StartTime: &periodStart,
-				Duration:  "10m",
+				StartTime: ptr(
+					time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+				),
+				Duration: "10m",
 			},
 		},
 		ManifestSource: "/home/me/alertsilence.yaml",
@@ -43,9 +43,10 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
-	t.Run("passes, no project", func(t *testing.T) {
+	t.Run("passes, no project, consistent with alertPolicy project", func(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Metadata.Project = ""
+		alertSilence.Spec.AlertPolicy.Project = ""
 		err := validate(alertSilence)
 		testutils.AssertNoError(t, alertSilence, err)
 	})
@@ -81,6 +82,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 func TestValidate_Spec_AlertPolicy(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		alertSilence := validAlertSilence()
+		alertSilence.Metadata.Project = "project"
 		alertSilence.Spec.AlertPolicy = AlertPolicySource{
 			Name:    "alert-policy-name",
 			Project: "project",
@@ -93,6 +95,16 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence.Spec.AlertPolicy = AlertPolicySource{
 			Name:    "alert-policy-name",
 			Project: "",
+		}
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("passes, consistent project with metadata", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Metadata.Project = "default"
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{
+			Name:    "alert-policy-name",
+			Project: "default",
 		}
 		err := validate(alertSilence)
 		testutils.AssertNoError(t, alertSilence, err)
@@ -119,16 +131,126 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Spec.AlertPolicy.Project = "not valid NAME !!"
 		err := validate(alertSilence)
-		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, alertSilence, err, 2, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.project",
 			Code: validation.ErrorCodeStringIsDNSSubdomain,
 		})
 	})
+	t.Run("fails, inconsistent project", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Metadata.Project = "project-1"
+		alertSilence.Spec.AlertPolicy.Project = "project-2"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.alertPolicy.project",
+			Code: errorCodeInconsistentProject,
+		})
+	})
+}
+
+func TestValidate_Spec_Period(t *testing.T) {
+	t.Run("fails, no endTime and duration provided", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.EndTime = nil
+		alertSilence.Spec.Period.Duration = ""
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.period",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("fails, both endTime and duration provided", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.EndTime = ptr(
+			time.Date(2023, 5, 11, 17, 10, 5, 0, time.UTC),
+		)
+		alertSilence.Spec.Period.Duration = "10m"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.period",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		})
+	})
+}
+
+func TestValidate_Spec_Period_Duration(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.StartTime = nil
+		alertSilence.Spec.Period.EndTime = nil
+		alertSilence.Spec.Period.Duration = "3m"
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("passes, allowed empty", func(t *testing.T) {
+		endTime := time.Now()
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.EndTime = &endTime
+		alertSilence.Spec.Period.Duration = ""
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("fails, invalid format", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.StartTime = nil
+		alertSilence.Spec.Period.EndTime = nil
+		alertSilence.Spec.Period.Duration = "3 months"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.period.duration",
+			Code: validation.ErrorCodeTransform,
+		})
+	})
+	t.Run("fails, invalid too small", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.StartTime = nil
+		alertSilence.Spec.Period.EndTime = nil
+		alertSilence.Spec.Period.Duration = "0s"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.period.duration",
+			Code: validation.ErrorCodeGreaterThan,
+		})
+	})
+}
+
+func TestValidate_Spec_EndTime(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.Period.StartTime = nil
+		alertSilence.Spec.Period.Duration = ""
+		alertSilence.Spec.Period.EndTime = ptr(
+			time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
+		)
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+
+	testsCases := map[string]Period{
+		"fails, end time before start time": {
+			StartTime: ptr(time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)),
+			EndTime:   ptr(time.Date(2023, 5, 11, 17, 10, 5, 0, time.UTC)),
+		},
+		"fails, end time equals start time": {
+			StartTime: ptr(time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)),
+			EndTime:   ptr(time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)),
+		},
+	}
+	for name, testCase := range testsCases {
+		t.Run(name, func(t *testing.T) {
+			alertSilence := validAlertSilence()
+			alertSilence.Spec.Period = testCase
+			err := validate(alertSilence)
+			testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+				Prop: "spec.period",
+				Code: errorCodeEndTimeNotBeforeOrNotEqualStartTime,
+			})
+		})
+	}
+
 }
 
 func validAlertSilence() AlertSilence {
-	periodStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
-
 	return New(
 		Metadata{
 			Name:    "alert-silence",
@@ -142,9 +264,11 @@ func validAlertSilence() AlertSilence {
 				Project: "default",
 			},
 			Period: Period{
-				StartTime: &periodStart,
+				StartTime: ptr(time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)),
 				Duration:  "10m",
 			},
 		},
 	)
 }
+
+func ptr[T any](v T) *T { return &v }
