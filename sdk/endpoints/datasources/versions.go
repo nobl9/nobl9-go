@@ -1,9 +1,18 @@
-package objects
+package datasources
 
-import v1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasources/v1"
+import (
+	"github.com/nobl9/nobl9-go/internal/endpoints"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/datasources/v1"
+)
 
-type Versions struct{}
+func NewVersions(client endpoints.Client) Versions {
+	return Versions{client: client}
+}
+
+type Versions struct {
+	client endpoints.Client
+}
 
 func (v Versions) V1() v1.Endpoints {
-
+	return v1.NewEndpoints(v.client)
 }

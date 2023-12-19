@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -60,8 +61,8 @@ func TestClient_GetObjects(t *testing.T) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "non-default", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{
-				QueryKeyName:         {"service1", "service2"},
-				QueryKeyLabelsFilter: {"team:green,team:purple"},
+				sdk.QueryKeyName:         {"service1", "service2"},
+				sdk.QueryKeyLabelsFilter: {"team:green,team:purple"},
 			}, r.URL.Query())
 		},
 	})
@@ -164,7 +165,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
+			assert.Equal(t, url.Values{sdk.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
@@ -205,7 +206,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
+			assert.Equal(t, url.Values{sdk.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
@@ -235,8 +236,8 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "my-project", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{
-				QueryKeyName:   {"service1", "service2"},
-				QueryKeyDryRun: {"true"},
+				sdk.QueryKeyName:   {"service1", "service2"},
+				sdk.QueryKeyDryRun: {"true"},
 			}, r.URL.Query())
 		},
 	})
@@ -331,7 +332,7 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "agent-project", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyName: {"my-agent"}}, r.URL.Query())
+			assert.Equal(t, url.Values{sdk.QueryKeyName: {"my-agent"}}, r.URL.Query())
 		},
 	})
 

@@ -1,15 +1,14 @@
-package sdk
+package v1alpha
 
 import (
 	"fmt"
+	"github.com/nobl9/nobl9-go/internal/sdk"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 const (
@@ -42,8 +41,12 @@ func FilterBy() *Filters {
 }
 
 func (f *Filters) Project(project string) *Filters {
-	f.header.Set(HeaderProject, project)
+	f.header.Set(sdk.HeaderProject, project)
 	return f
+}
+
+func (f *Filters) DryRun() {
+	f.query.Set(QueryKeyDryRun, strconv.FormatBool(true))
 }
 
 func (f *Filters) Names(names ...string) *Filters {
@@ -121,20 +124,4 @@ func (f *Filters) ResolvedAlerts() *Filters {
 func (f *Filters) TriggeredAlerts() *Filters {
 	f.query.Add(QueryKeyTriggered, "true")
 	return f
-}
-
-func (f *Filters) validate(allowedQueries, allowedHeaders []string) error {
-	for _, query := range allowedQueries {
-		if _, ok := f.query[query]; !ok {
-			return errors.Errorf("invalid query: %s, valid queries are: %s",
-				query, strings.Join(allowedQueries, ","))
-		}
-	}
-	for _, header := range allowedHeaders {
-		if _, ok := f.header[header]; !ok {
-			return errors.Errorf("invalid header: %s, valid headers are: %s",
-				header, strings.Join(allowedHeaders, ","))
-		}
-	}
-	return nil
 }
