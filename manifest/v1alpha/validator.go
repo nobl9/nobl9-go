@@ -79,8 +79,6 @@ func (val *Validate) Check(s interface{}) error {
 	return val.validate.Struct(s)
 }
 
-var validator = NewValidator()
-
 // NewValidator returns an instance of preconfigured Validator for all available objects
 func NewValidator() *Validate {
 	val := v.New()
@@ -92,9 +90,6 @@ func NewValidator() *Validate {
 		}
 		return name
 	})
-
-	val.RegisterStructValidation(alertSilencePeriodValidation, AlertSilencePeriod{})
-	val.RegisterStructValidation(alertSilenceAlertPolicyProjectValidation, AlertSilenceAlertPolicySource{})
 
 	_ = val.RegisterValidation("timeUnit", isTimeUnitValid)
 	_ = val.RegisterValidation("dateWithTime", isDateWithTimeValid)
@@ -481,71 +476,5 @@ func notBlank(fl v.FieldLevel) bool {
 		return !field.IsNil()
 	default:
 		return field.IsValid() && field.Interface() != reflect.Zero(field.Type()).Interface()
-	}
-}
-
-func alertSilencePeriodValidation(sl v.StructLevel) {
-	period, ok := sl.Current().Interface().(AlertSilencePeriod)
-	if !ok {
-		sl.ReportError(period, "", "", "couldNotConverse", "")
-		return
-	}
-
-	if (period.Duration == "" && period.EndTime == "") || (period.Duration != "" && period.EndTime != "") {
-		msg := "exactly one value of duration or endTime is required"
-		sl.ReportError(period.Duration, "duration", "Duration", msg, "")
-		sl.ReportError(period.EndTime, "endTime", "EndTime", msg, "")
-	}
-
-	if period.Duration != "" {
-		duration, err := time.ParseDuration(period.Duration)
-		if err != nil || duration <= 0 {
-			sl.ReportError(period.Duration, "duration", "Duration",
-				"expected valid duration greater than zero", "")
-		}
-	}
-
-	var startTime, endTime time.Time
-	var err error
-
-	invalidTimeMsg := "expected valid RFC3339 time format"
-	if period.StartTime != "" {
-		startTime, err = time.Parse(time.RFC3339, period.StartTime)
-		if err != nil {
-			sl.ReportError(period.StartTime, "startTime", "StartTime", invalidTimeMsg, "")
-		}
-	}
-
-	if period.EndTime != "" {
-		endTime, err = time.Parse(time.RFC3339, period.EndTime)
-		if err != nil {
-			sl.ReportError(period.EndTime, "endTime", "EndTime", invalidTimeMsg, "")
-		}
-	}
-
-	if !startTime.IsZero() && !endTime.IsZero() && !endTime.After(startTime) {
-		sl.ReportError(period.EndTime, "endTime", "EndTime",
-			"startTime should be before endTime", "")
-	}
-}
-
-// alertSilenceAlertPolicyProjectValidation validates if user provide the same project (or empty) for the alert policy
-// as declared in metadata for AlertSilence. Should be removed when cross-project Alert Policy is allowed PI-622.
-func alertSilenceAlertPolicyProjectValidation(sl v.StructLevel) {
-	alertPolicySource, ok := sl.Current().Interface().(AlertSilenceAlertPolicySource)
-	if !ok {
-		sl.ReportError(alertPolicySource, "", "", "couldNotConverse", "")
-		return
-	}
-	alertSilence, ok := sl.Top().Interface().(AlertSilence)
-	if !ok {
-		sl.ReportError(alertSilence, "", "", "couldNotConverse", "")
-		return
-	}
-
-	if alertPolicySource.Project != "" && alertSilence.Metadata.Project != alertPolicySource.Project {
-		sl.ReportError(alertSilence, "project", "project",
-			"alert policy should be assigned to the same project as alert silence", "")
-		return
 	}
 }
