@@ -26,6 +26,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -257,17 +258,20 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClient_GetAWSExternalID(t *testing.T) {
+func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
+	expectedData := models.IAMRoleIDs{
+		ExternalID: "external-id",
+	}
+
 	client, srv := prepareTestClient(t, endpointConfig{
 		// Define endpoint response.
 		Path: "api/get/dataexport/aws-external-id",
 		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(map[string]interface{}{"awsExternalID": "external-id"}))
+			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
 		},
 		// Verify request parameters.
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodGet, r.Method)
-			assert.Equal(t, "my-project", r.Header.Get(HeaderProject))
 		},
 	})
 
@@ -276,14 +280,14 @@ func TestClient_GetAWSExternalID(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	externalID, err := client.GetAWSExternalID(context.Background(), "my-project")
+	response, err := client.GetDataExportIAMRoleIDs(context.Background())
 	// Verify response handling.
 	require.NoError(t, err)
-	assert.Equal(t, "external-id", externalID)
+	assert.Equal(t, expectedData, *response)
 }
 
-func TestClient_GetAWSIAMRoleAuthExternalIDs(t *testing.T) {
-	expectedData := v1alpha.AWSIAMRoleAuthExternalIDs{
+func TestClient_GetDirectIAMRoleIDs(t *testing.T) {
+	expectedData := models.IAMRoleIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
 	}
@@ -305,7 +309,7 @@ func TestClient_GetAWSIAMRoleAuthExternalIDs(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.GetAWSIAMRoleAuthExternalIDs(context.Background(), "test-direct-name")
+	response, err := client.GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)

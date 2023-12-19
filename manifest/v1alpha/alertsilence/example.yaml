@@ -1,0 +1,12 @@
+apiVersion: n9/v1alpha
+kind: AlertSilence
+metadata:
+  name: 5661613e-0e3d-11ed-861d-randomx1
+  project: default
+spec:
+  description: Example alert silence
+  slo: existing-slo
+  alertPolicy:
+    name: my-alert-policy
+  period:
+    duration: 1h

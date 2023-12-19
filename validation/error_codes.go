@@ -22,6 +22,7 @@ const (
 	ErrorCodeStringUUID           ErrorCode = "string_uuid"
 	ErrorCodeStringJSON           ErrorCode = "string_json"
 	ErrorCodeStringContains       ErrorCode = "string_contains"
+	ErrorCodeStringStartsWith     ErrorCode = "string_starts_with"
 	ErrorCodeStringLength         ErrorCode = "string_length"
 	ErrorCodeStringMinLength      ErrorCode = "string_min_length"
 	ErrorCodeStringMaxLength      ErrorCode = "string_max_length"
