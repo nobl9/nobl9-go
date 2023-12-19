@@ -61,8 +61,10 @@ var specValidation = validation.New[Spec](
 var alertPolicySourceValidation = validation.New[AlertPolicySource](
 	v1alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
 		WithName("name"),
-	v1alpha.FieldRuleMetadataProject(func(s AlertPolicySource) string { return s.Project }).
-		WithName("project"),
+	validation.For(func(s AlertPolicySource) string { return s.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 const errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"

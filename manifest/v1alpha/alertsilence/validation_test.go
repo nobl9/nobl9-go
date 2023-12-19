@@ -92,6 +92,15 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertNoError(t, alertSilence, err)
 	})
+	t.Run("passes, empty project", func(t *testing.T) {
+		alertSilence := validAlertSilence()
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{
+			Name:    "alert-policy-name",
+			Project: "",
+		}
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
 	t.Run("passes, consistent project with metadata", func(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Metadata.Project = "default"
@@ -127,15 +136,6 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertSilence, err, 2, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.project",
 			Code: validation.ErrorCodeStringIsDNSSubdomain,
-		})
-	})
-	t.Run("fails, required project", func(t *testing.T) {
-		alertSilence := validAlertSilence()
-		alertSilence.Spec.AlertPolicy.Project = ""
-		err := validate(alertSilence)
-		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.project",
-			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails, inconsistent project", func(t *testing.T) {
