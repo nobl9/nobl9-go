@@ -3,6 +3,7 @@ package alertsilence_test
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -10,6 +11,7 @@ import (
 )
 
 func ExampleAlertSilence() {
+	startTime := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 	// Create the object:
 	myAlertSilence := alertsilence.New(
 		alertsilence.Metadata{
@@ -24,7 +26,8 @@ func ExampleAlertSilence() {
 				Project: "default",
 			},
 			Period: alertsilence.Period{
-				Duration: "10m",
+				Duration:  "10m",
+				StartTime: &startTime,
 			},
 		},
 	)
@@ -50,5 +53,6 @@ func ExampleAlertSilence() {
 	//     name: my-alert-policy
 	//     project: default
 	//   period:
+	//     startTime: 2023-05-01T17:10:05Z
 	//     duration: 10m
 }
