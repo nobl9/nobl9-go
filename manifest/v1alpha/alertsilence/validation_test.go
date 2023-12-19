@@ -24,7 +24,7 @@ func TestValidate_Metadata(t *testing.T) {
 			Project: strings.Repeat("MY PROJECT", 20),
 		},
 		Spec: Spec{
-			Slo: "slo-name",
+			SLO: "slo-name",
 			AlertPolicy: AlertPolicySource{
 				Name:    "my-alert-policy",
 				Project: "default",
@@ -43,25 +43,27 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
-	t.Run("passes, no project, consistent with alertPolicy project", func(t *testing.T) {
+	t.Run("fails, project required", func(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Metadata.Project = ""
-		alertSilence.Spec.AlertPolicy.Project = ""
 		err := validate(alertSilence)
-		testutils.AssertNoError(t, alertSilence, err)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeRequired,
+		})
 	})
 }
 
 func TestValidate_Spec_Slo(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		alertSilence := validAlertSilence()
-		alertSilence.Spec.Slo = "my-slo"
+		alertSilence.Spec.SLO = "my-slo"
 		err := validate(alertSilence)
 		testutils.AssertNoError(t, alertSilence, err)
 	})
 	t.Run("fails", func(t *testing.T) {
 		alertSilence := validAlertSilence()
-		alertSilence.Spec.Slo = "MY SLO"
+		alertSilence.Spec.SLO = "MY SLO"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
@@ -70,7 +72,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 	})
 	t.Run("fails, required", func(t *testing.T) {
 		alertSilence := validAlertSilence()
-		alertSilence.Spec.Slo = ""
+		alertSilence.Spec.SLO = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
@@ -257,7 +259,7 @@ func validAlertSilence() AlertSilence {
 		},
 		Spec{
 			Description: "Example alert silence",
-			Slo:         "existing-slo",
+			SLO:         "existing-slo",
 			AlertPolicy: AlertPolicySource{
 				Name:    "alert-policy",
 				Project: "default",

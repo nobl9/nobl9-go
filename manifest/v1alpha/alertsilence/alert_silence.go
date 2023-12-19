@@ -40,19 +40,23 @@ type Metadata struct {
 // Spec represents content of AlertSilence's Spec.
 type Spec struct {
 	Description string            `json:"description"`
-	Slo         string            `json:"slo"`
+	SLO         string            `json:"slo"`
 	AlertPolicy AlertPolicySource `json:"alertPolicy"`
 	Period      Period            `json:"period"`
-}
-
-func (a Spec) GetParsedDuration() (time.Duration, error) {
-	return time.ParseDuration(a.Period.Duration)
 }
 
 // AlertPolicySource represents AlertPolicy attached to the SLO.
 type AlertPolicySource struct {
 	Name    string `json:"name"`
 	Project string `json:"project,omitempty"`
+}
+
+// Status represents content of Status optional for AlertSilence object.
+type Status struct {
+	From      string `json:"from"`
+	To        string `json:"to"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
 
 // Period represents time range configuration for AlertSilence.
@@ -62,10 +66,6 @@ type Period struct {
 	Duration  string     `json:"duration,omitempty"`
 }
 
-// Status represents content of Status optional for AlertSilence object.
-type Status struct {
-	From      string `json:"from"`
-	To        string `json:"to"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+func (p Period) GetParsedDuration() (time.Duration, error) {
+	return time.ParseDuration(p.Duration)
 }

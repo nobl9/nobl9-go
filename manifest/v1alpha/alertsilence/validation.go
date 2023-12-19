@@ -12,7 +12,7 @@ var alertSilenceValidation = validation.New[AlertSilence](
 	validation.For(validation.GetSelf[AlertSilence]()).
 		Include(metadataValidation).
 		StopOnError().
-		Rules(alertPolicyProjectConsistent),
+		Rules(alertPolicyProjectConsistencyRule),
 	validation.For(func(s AlertSilence) Spec { return s.Spec }).
 		WithName("spec").
 		Include(specValidation),
@@ -20,14 +20,11 @@ var alertSilenceValidation = validation.New[AlertSilence](
 
 var metadataValidation = validation.New[AlertSilence](
 	v1alpha.FieldRuleMetadataName(func(s AlertSilence) string { return s.Metadata.Name }),
-	validation.For(func(s AlertSilence) string { return s.Metadata.Project }).
-		WithName("metadata.project").
-		OmitEmpty().
-		Rules(validation.StringIsDNSSubdomain()),
+	v1alpha.FieldRuleMetadataProject(func(s AlertSilence) string { return s.Metadata.Project }),
 )
 
 var specValidation = validation.New[Spec](
-	validation.For(func(s Spec) string { return s.Slo }).
+	validation.For(func(s Spec) string { return s.SLO }).
 		WithName("slo").
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
@@ -56,7 +53,7 @@ var specValidation = validation.New[Spec](
 		Include(
 			validation.New[Period](
 				validation.For(validation.GetSelf[Period]()).
-					Rules(endTimeNotBeforeStartTime),
+					Rules(endTimeNotBeforeStartTimeRule),
 			).When(func(p Period) bool { return p.EndTime != nil }),
 		),
 )
@@ -70,10 +67,10 @@ var alertPolicySourceValidation = validation.New[AlertPolicySource](
 		Rules(validation.StringIsDNSSubdomain()),
 )
 
-const errorCodeEndTimeNotBeforeOrNotEqualStartTime validation.ErrorCode = "end_time_not_before_or_not_equal_start_time"
-const errorCodeInconsistentProject validation.ErrorCode = "alert_policy_project_inconsistent"
+const errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
+const errorCodeInconsistentProject = "alert_policy_project_inconsistent"
 
-var endTimeNotBeforeStartTime = validation.NewSingleRule(func(p Period) error {
+var endTimeNotBeforeStartTimeRule = validation.NewSingleRule(func(p Period) error {
 	if p.EndTime != nil && p.StartTime != nil && !p.EndTime.After(*p.StartTime) {
 		return validation.NewRuleError(
 			fmt.Sprintf(`endTime '%s' must be after startTime '%s'`, p.EndTime, p.StartTime),
@@ -84,9 +81,9 @@ var endTimeNotBeforeStartTime = validation.NewSingleRule(func(p Period) error {
 	return nil
 })
 
-// alertPolicyProjectConsistent validates if user provide the same project (or empty) for the alert policy
+// alertPolicyProjectConsistencyRule validates if user provide the same project (or empty) for the alert policy
 // as declared in metadata for AlertSilence. Should be removed when cross-project Alert Policy is allowed PI-622.
-var alertPolicyProjectConsistent = validation.NewSingleRule(func(s AlertSilence) error {
+var alertPolicyProjectConsistencyRule = validation.NewSingleRule(func(s AlertSilence) error {
 	if s.Spec.AlertPolicy.Project != "" && s.Spec.AlertPolicy.Project != s.Metadata.Project {
 		return validation.NewPropertyError(
 			"spec.alertPolicy.project",
