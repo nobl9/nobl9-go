@@ -41,26 +41,15 @@ type Metadata struct {
 // Spec represents content of AlertSilence's Spec.
 type Spec struct {
 	Description string            `json:"description"`
-	Slo         string            `json:"slo"`
+	SLO         string            `json:"slo"`
 	AlertPolicy AlertPolicySource `json:"alertPolicy"`
 	Period      Period            `json:"period"`
-}
-
-func (a Spec) GetParsedDuration() (time.Duration, error) {
-	return time.ParseDuration(a.Period.Duration)
 }
 
 // AlertPolicySource represents AlertPolicy attached to the SLO.
 type AlertPolicySource struct {
 	Name    string `json:"name"`
 	Project string `json:"project,omitempty"`
-}
-
-// Period represents time range configuration for AlertSilence.
-type Period struct {
-	StartTime *time.Time `json:"startTime,omitempty"`
-	EndTime   *time.Time `json:"endTime,omitempty"`
-	Duration  string     `json:"duration,omitempty"`
 }
 
 // Status represents content of Status optional for AlertSilence object.
@@ -71,7 +60,18 @@ type Status struct {
 	UpdatedAt string `json:"updatedAt"`
 }
 
-func (p *Period) MarshalJSON() ([]byte, error) {
+// Period represents time range configuration for AlertSilence.
+type Period struct {
+	StartTime *time.Time `json:"startTime,omitempty"`
+	EndTime   *time.Time `json:"endTime,omitempty"`
+	Duration  string     `json:"duration,omitempty"`
+}
+
+func (p Period) GetParsedDuration() (time.Duration, error) {
+	return time.ParseDuration(p.Duration)
+}
+
+func (p Period) MarshalJSON() ([]byte, error) {
 	startTimeStr := ""
 	if p.StartTime != nil {
 		startTimeStr = p.StartTime.Format(time.RFC3339)

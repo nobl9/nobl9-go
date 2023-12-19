@@ -18,7 +18,7 @@ func ExampleAlertSilence() {
 		},
 		alertsilence.Spec{
 			Description: "Example alert silence",
-			Slo:         "my-slo",
+			SLO:         "my-slo",
 			AlertPolicy: alertsilence.AlertPolicySource{
 				Name:    "my-alert-policy",
 				Project: "default",
