@@ -334,7 +334,8 @@ func (c *Client) WithDryRun() *Client {
 // It also adds all the mandatory headers to the request and encodes query parameters.
 func (c *Client) CreateRequest(
 	ctx context.Context,
-	method, endpoint, project string,
+	method, endpoint string,
+	headers http.Header,
 	q url.Values,
 	body io.Reader,
 ) (*http.Request, error) {
@@ -346,6 +347,11 @@ func (c *Client) CreateRequest(
 	if err != nil {
 		return nil, err
 	}
+	// Setup headers.
+	if headers == nil {
+		headers = make(http.Header)
+	}
+	req.Header = headers
 	// Mandatory headers for all API requests.
 	org, err := c.credentials.GetOrganization(ctx)
 	if err != nil {
@@ -353,12 +359,13 @@ func (c *Client) CreateRequest(
 	}
 	req.Header.Set(HeaderOrganization, org)
 	req.Header.Set(HeaderUserAgent, c.userAgent)
-	// Optional headers.
-	if project != "" {
-		req.Header.Set(HeaderProject, project)
+	// Encode parameters.
+	if q == nil {
+		q = make(url.Values)
 	}
-	// Add query parameters to request, to pass array, convention of repeated entries is used.
-	// For example: /dummy?name=test1&name=test2&name=test3 == name = [test1, test2, test3].
+	if c.dryRun && method != http.MethodGet {
+		q.Set(QueryKeyDryRun, strconv.FormatBool(c.dryRun))
+	}
 	req.URL.RawQuery = q.Encode()
 	return req, nil
 }
