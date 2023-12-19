@@ -12,7 +12,7 @@ var alertSilenceValidation = validation.New[AlertSilence](
 	validation.For(validation.GetSelf[AlertSilence]()).
 		Include(metadataValidation).
 		StopOnError().
-		Rules(alertPolicyProjectConsistentRule),
+		Rules(alertPolicyProjectConsistencyRule),
 	validation.For(func(s AlertSilence) Spec { return s.Spec }).
 		WithName("spec").
 		Include(specValidation),
@@ -81,9 +81,9 @@ var endTimeNotBeforeStartTimeRule = validation.NewSingleRule(func(p Period) erro
 	return nil
 })
 
-// alertPolicyProjectConsistentRule validates if user provide the same project (or empty) for the alert policy
+// alertPolicyProjectConsistencyRule validates if user provide the same project (or empty) for the alert policy
 // as declared in metadata for AlertSilence. Should be removed when cross-project Alert Policy is allowed PI-622.
-var alertPolicyProjectConsistentRule = validation.NewSingleRule(func(s AlertSilence) error {
+var alertPolicyProjectConsistencyRule = validation.NewSingleRule(func(s AlertSilence) error {
 	if s.Spec.AlertPolicy.Project != "" && s.Spec.AlertPolicy.Project != s.Metadata.Project {
 		return validation.NewPropertyError(
 			"spec.alertPolicy.project",
