@@ -1,4 +1,4 @@
-package v1alpha
+package v1
 
 import "github.com/nobl9/nobl9-go/manifest/v1alpha/alert"
 

@@ -1,8 +1,8 @@
-package datasources
+package authdata
 
 import (
 	"github.com/nobl9/nobl9-go/internal/endpoints"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/datasources/v1"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 )
 
 func NewVersions(client endpoints.Client) Versions {

@@ -4,15 +4,18 @@ package sdk
 import (
 	"context"
 	"fmt"
-	internal "github.com/nobl9/nobl9-go/internal/sdk"
-	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/datasources"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"io"
 	"net/http"
 	"net/url"
 	"runtime"
 	"runtime/debug"
+
+	"github.com/pkg/errors"
+
+	internal "github.com/nobl9/nobl9-go/internal/sdk"
+	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
@@ -67,11 +70,22 @@ func NewClient(config *Config) (*Client, error) {
 }
 
 func (c *Client) Objects() objects.Versions {
-	return objects.NewVersions(c)
+	return objects.NewVersions(
+		c,
+		c.credentials,
+		func(ctx context.Context, reader io.Reader) ([]manifest.Object, error) {
+			o, err := ReadObjectsFromSources(ctx, NewObjectSourceReader(reader, ""))
+			if err != nil && !errors.Is(err, ErrNoDefinitionsFound) {
+				return nil, fmt.Errorf("cannot decode response from API: %w", err)
+			}
+			return o, nil
+		},
+		c.dryRun,
+	)
 }
 
-func (c *Client) DataSources() datasources.Versions {
-	return datasources.NewVersions(c)
+func (c *Client) Helpers() authdata.Versions {
+	return authdata.NewVersions(c)
 }
 
 // CreateRequest creates a new http.Request pointing at the Nobl9 API URL.
@@ -114,7 +128,11 @@ func (c *Client) CreateRequest(
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	return c.http.Do(req)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute request")
+	}
+	return resp, nil
 }
 
 // WithDryRun configures the Client to run all supported state changing operations in dry-run mode.

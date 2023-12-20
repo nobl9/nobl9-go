@@ -7,8 +7,6 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"github.com/nobl9/nobl9-go/internal/sdk"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +15,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/nobl9/nobl9-go/internal/sdk"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/lestrrat-go/jwx/jwk"
@@ -27,7 +27,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
-	"github.com/nobl9/nobl9-go/sdk/models"
+	authDataV1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
+	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
 func TestClient_GetObjects(t *testing.T) {
@@ -165,7 +166,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{sdk.QueryKeyDryRun: {"true"}}, r.URL.Query())
+			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
@@ -178,7 +179,7 @@ func TestClient_ApplyObjects(t *testing.T) {
 
 	// Run the API method.
 	client.WithDryRun()
-	err := client.ApplyObjects(context.Background(), requestPayload)
+	err := client.Objects().V1alpha().Apply(context.Background(), requestPayload)
 	// Verify response handling.
 	require.NoError(t, err)
 }
@@ -206,7 +207,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{sdk.QueryKeyDryRun: {"true"}}, r.URL.Query())
+			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
@@ -219,7 +220,7 @@ func TestClient_DeleteObjects(t *testing.T) {
 
 	// Run the API method.
 	client.WithDryRun()
-	err := client.DeleteObjects(context.Background(), requestPayload)
+	err := client.Objects().V1alpha().Delete(context.Background(), requestPayload)
 	// Verify response handling.
 	require.NoError(t, err)
 }
@@ -236,8 +237,8 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, "my-project", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{
-				sdk.QueryKeyName:   {"service1", "service2"},
-				sdk.QueryKeyDryRun: {"true"},
+				objectsV1.QueryKeyName:   {"service1", "service2"},
+				objectsV1.QueryKeyDryRun: {"true"},
 			}, r.URL.Query())
 		},
 	})
@@ -247,11 +248,10 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	err := client.DeleteObjectsByName(
+	err := client.Objects().V1alpha().DeleteObjectsByName(
 		context.Background(),
 		"my-project",
 		manifest.KindService,
-		true,
 		"service1",
 		"service2",
 	)
@@ -260,7 +260,7 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 }
 
 func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
-	expectedData := models.IAMRoleIDs{
+	expectedData := authDataV1.IAMRoleIDs{
 		ExternalID: "external-id",
 	}
 
@@ -281,14 +281,14 @@ func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.GetDataExportIAMRoleIDs(context.Background())
+	response, err := client.Helpers().V1().GetDataExportIAMRoleIDs(context.Background())
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)
 }
 
-func TestClient_GetDirectIAMRoleIDs(t *testing.T) {
-	expectedData := models.IAMRoleIDs{
+func TestClient_DataSources_V1_GetDirectIAMRoleIDs(t *testing.T) {
+	expectedData := authDataV1.IAMRoleIDs{
 		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
 		AccountID:  "123456789012",
 	}
@@ -310,14 +310,14 @@ func TestClient_GetDirectIAMRoleIDs(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
+	response, err := client.Helpers().V1().GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)
 }
 
-func TestClient_GetAgentCredentials(t *testing.T) {
-	responsePayload := M2MAppCredentials{
+func TestClient_DataSources_V1_GetAgentCredentials(t *testing.T) {
+	responsePayload := authDataV1.M2MAppCredentials{
 		ClientID:     "agent-client-id",
 		ClientSecret: "agent-client-secret",
 	}
@@ -332,7 +332,7 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "agent-project", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{sdk.QueryKeyName: {"my-agent"}}, r.URL.Query())
+			assert.Equal(t, url.Values{authDataV1.QueryKeyName: {"my-agent"}}, r.URL.Query())
 		},
 	})
 
@@ -341,7 +341,7 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	objects, err := client.GetAgentCredentials(
+	objects, err := client.Helpers().V1().GetAgentCredentials(
 		context.Background(),
 		"agent-project",
 		"my-agent",
@@ -351,7 +351,7 @@ func TestClient_GetAgentCredentials(t *testing.T) {
 	assert.Equal(t, responsePayload, objects)
 }
 
-func TestCreateRequest(t *testing.T) {
+func TestClient_CreateRequest(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{})
 
 	// Start and close the test server.
@@ -364,7 +364,7 @@ func TestCreateRequest(t *testing.T) {
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"my-project",
+			http.Header{HeaderProject: []string{"my-project"}},
 			values,
 			bytes.NewBufferString("foo"),
 		)
@@ -388,7 +388,7 @@ func TestCreateRequest(t *testing.T) {
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"my-project",
+			http.Header{HeaderProject: []string{"my-project"}},
 			nil,
 			nil,
 		)
@@ -402,60 +402,12 @@ func TestCreateRequest(t *testing.T) {
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"",
+			nil,
 			nil,
 			nil,
 		)
 		require.NoError(t, err)
 		assert.NotContains(t, req.Header, HeaderProject)
-	})
-}
-
-func TestProcessResponseErrors(t *testing.T) {
-	t.Parallel()
-	c := Client{}
-
-	t.Run("status code smaller than 300, no error", func(t *testing.T) {
-		t.Parallel()
-		for code := 200; code < 300; code++ {
-			require.NoError(t, c.processResponseErrors(&http.Response{StatusCode: code}))
-		}
-	})
-
-	t.Run("status code between 300 and 399", func(t *testing.T) {
-		t.Parallel()
-		for code := 300; code < 400; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t, err, fmt.Sprintf("bad status code response: %d, body: error!", code))
-		}
-	})
-
-	t.Run("user errors", func(t *testing.T) {
-		t.Parallel()
-		for code := 400; code < 500; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t, err, "error!")
-		}
-	})
-
-	t.Run("server errors", func(t *testing.T) {
-		t.Parallel()
-		for code := 500; code < 600; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Header:     http.Header{HeaderTraceID: []string{"123"}},
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t,
-				err,
-				fmt.Sprintf("%s error message: error! error id: 123", http.StatusText(code)))
-		}
 	})
 }
 

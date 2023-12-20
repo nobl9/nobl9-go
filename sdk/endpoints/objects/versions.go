@@ -2,17 +2,30 @@ package objects
 
 import (
 	"github.com/nobl9/nobl9-go/internal/endpoints"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
-func NewVersions(client endpoints.Client) Versions {
-	return Versions{client: client}
+func NewVersions(
+	client endpoints.Client,
+	orgGetter endpoints.OrganizationGetter,
+	readObjects endpoints.ReadObjectsFunc,
+	dryRun bool,
+) Versions {
+	return Versions{
+		client:      client,
+		orgGetter:   orgGetter,
+		readObjects: readObjects,
+		dryRun:      dryRun,
+	}
 }
 
 type Versions struct {
-	client endpoints.Client
+	client      endpoints.Client
+	orgGetter   endpoints.OrganizationGetter
+	readObjects endpoints.ReadObjectsFunc
+	dryRun      bool
 }
 
-func (v Versions) V1alpha() v1alpha.Endpoints {
-	return v1alpha.NewEndpoints(v.client)
+func (v Versions) V1alpha() v1.Endpoints {
+	return v1.NewEndpoints(v.client, v.orgGetter, v.readObjects, v.dryRun)
 }

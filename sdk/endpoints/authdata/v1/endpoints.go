@@ -3,13 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
-	"github.com/nobl9/nobl9-go/internal/endpoints"
-	"github.com/nobl9/nobl9-go/internal/sdk"
-	"github.com/nobl9/nobl9-go/sdk/models"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 	"path"
+
+	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/internal/endpoints"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 const (
@@ -25,11 +26,11 @@ type Endpoints struct {
 	client endpoints.Client
 }
 
-func (e Endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*models.IAMRoleIDs, error) {
+func (e Endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (e Endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*models.IAMRoleIDs, error) {
+func (e Endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
@@ -62,7 +63,7 @@ func (e Endpoints) GetAgentCredentials(
 	return creds, nil
 }
 
-func (e Endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*models.IAMRoleIDs, error) {
+func (e Endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
@@ -82,7 +83,7 @@ func (e Endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) 
 	if err = sdk.ProcessResponseErrors(resp); err != nil {
 		return nil, err
 	}
-	var response models.IAMRoleIDs
+	var response IAMRoleIDs
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")
 	}
