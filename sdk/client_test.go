@@ -27,7 +27,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
-	authDataV1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
@@ -259,98 +258,6 @@ func TestClient_DeleteObjectsByName(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
-	expectedData := authDataV1.IAMRoleIDs{
-		ExternalID: "external-id",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/get/dataexport/aws-external-id",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	response, err := client.Helpers().V1().GetDataExportIAMRoleIDs(context.Background())
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, expectedData, *response)
-}
-
-func TestClient_DataSources_V1_GetDirectIAMRoleIDs(t *testing.T) {
-	expectedData := authDataV1.IAMRoleIDs{
-		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
-		AccountID:  "123456789012",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/data-sources/iam-role-auth-data/test-direct-name",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	response, err := client.Helpers().V1().GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, expectedData, *response)
-}
-
-func TestClient_DataSources_V1_GetAgentCredentials(t *testing.T) {
-	responsePayload := authDataV1.M2MAppCredentials{
-		ClientID:     "agent-client-id",
-		ClientSecret: "agent-client-secret",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/internal/agent/clientcreds",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-			assert.Equal(t, "agent-project", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{authDataV1.QueryKeyName: {"my-agent"}}, r.URL.Query())
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	objects, err := client.Helpers().V1().GetAgentCredentials(
-		context.Background(),
-		"agent-project",
-		"my-agent",
-	)
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, responsePayload, objects)
-}
-
 func TestClient_CreateRequest(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{})
 
@@ -431,12 +338,6 @@ func TestDefaultUserAgent(t *testing.T) {
 	assert.Contains(t, string(out), "sdk/(devel)")
 }
 
-type endpointConfig struct {
-	Path            string
-	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
-	TestRequestFunc func(*testing.T, *http.Request)
-}
-
 func addOrganization(objects []manifest.Object, org string) []manifest.Object {
 	result := make([]manifest.Object, 0, len(objects))
 	for _, obj := range objects {
@@ -445,6 +346,12 @@ func addOrganization(objects []manifest.Object, org string) []manifest.Object {
 		}
 	}
 	return result
+}
+
+type endpointConfig struct {
+	Path            string
+	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
+	TestRequestFunc func(*testing.T, *http.Request)
 }
 
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {

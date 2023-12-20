@@ -13,17 +13,17 @@ import (
 	"github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alert"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
+	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
+	v1alphaAlert "github.com/nobl9/nobl9-go/manifest/v1alpha/alert"
+	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
+	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
+	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
+	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
+	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
+	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
+	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
+	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
@@ -66,7 +66,10 @@ func (e Endpoints) Delete(ctx context.Context, objects []manifest.Object) error 
 	return e.applyOrDeleteObjects(ctx, objects, apiDelete)
 }
 
-func (e Endpoints) GetV1alphaProjects(ctx context.Context, params GetProjectsRequest) ([]project.Project, error) {
+func (e Endpoints) GetV1alphaProjects(
+	ctx context.Context,
+	params GetProjectsRequest,
+) ([]project.Project, error) {
 	f := filterBy().
 		Labels(params.Labels).
 		Strings(QueryKeyName, params.Names)
@@ -77,7 +80,10 @@ func (e Endpoints) GetV1alphaProjects(ctx context.Context, params GetProjectsReq
 	return manifest.FilterByKind[project.Project](objects), err
 }
 
-func (e Endpoints) GetV1alphaServices(ctx context.Context, params GetServicesRequest) ([]service.Service, error) {
+func (e Endpoints) GetV1alphaServices(
+	ctx context.Context,
+	params GetServicesRequest,
+) ([]service.Service, error) {
 	f := filterBy().
 		Project(params.Project).
 		Labels(params.Labels).
@@ -89,7 +95,10 @@ func (e Endpoints) GetV1alphaServices(ctx context.Context, params GetServicesReq
 	return manifest.FilterByKind[service.Service](objects), err
 }
 
-func (e Endpoints) GetV1alphaSLOs(ctx context.Context, params GetSLOsRequest) ([]slo.SLO, error) {
+func (e Endpoints) GetV1alphaSLOs(
+	ctx context.Context,
+	params GetSLOsRequest,
+) ([]v1alphaSLO.SLO, error) {
 	f := filterBy().
 		Project(params.Project).
 		Labels(params.Labels).
@@ -98,10 +107,13 @@ func (e Endpoints) GetV1alphaSLOs(ctx context.Context, params GetSLOsRequest) ([
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[slo.SLO](objects), err
+	return manifest.FilterByKind[v1alphaSLO.SLO](objects), err
 }
 
-func (e Endpoints) GetV1alphaAgents(ctx context.Context, params GetAgentsRequest) ([]agent.Agent, error) {
+func (e Endpoints) GetV1alphaAgents(
+	ctx context.Context,
+	params GetAgentsRequest,
+) ([]v1alphaAgent.Agent, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -109,13 +121,13 @@ func (e Endpoints) GetV1alphaAgents(ctx context.Context, params GetAgentsRequest
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[agent.Agent](objects), err
+	return manifest.FilterByKind[v1alphaAgent.Agent](objects), err
 }
 
 func (e Endpoints) GetV1alphaAlertPolicies(
 	ctx context.Context,
 	params GetAlertPolicyRequest,
-) ([]alertpolicy.AlertPolicy, error) {
+) ([]v1alphaAlertPolicy.AlertPolicy, error) {
 	f := filterBy().
 		Project(params.Project).
 		Labels(params.Labels).
@@ -124,13 +136,13 @@ func (e Endpoints) GetV1alphaAlertPolicies(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[alertpolicy.AlertPolicy](objects), err
+	return manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](objects), err
 }
 
 func (e Endpoints) GetV1alphaAlertSilences(
 	ctx context.Context,
 	params GetAlertSilencesRequest,
-) ([]alertsilence.AlertSilence, error) {
+) ([]v1alphaAlertSilence.AlertSilence, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -138,13 +150,13 @@ func (e Endpoints) GetV1alphaAlertSilences(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[alertsilence.AlertSilence](objects), err
+	return manifest.FilterByKind[v1alphaAlertSilence.AlertSilence](objects), err
 }
 
 func (e Endpoints) GetV1alphaAlertMethods(
 	ctx context.Context,
 	params GetAlertMethodsRequest,
-) ([]alertmethod.AlertMethod, error) {
+) ([]v1alphaAlertMethod.AlertMethod, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -152,7 +164,7 @@ func (e Endpoints) GetV1alphaAlertMethods(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[alertmethod.AlertMethod](objects), err
+	return manifest.FilterByKind[v1alphaAlertMethod.AlertMethod](objects), err
 }
 
 func (e Endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest) (*GetAlertsResponse, error) {
@@ -171,7 +183,10 @@ func (e Endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest
 	return e.getAlerts(ctx, f.header, f.query)
 }
 
-func (e Endpoints) GetV1alphaDirects(ctx context.Context, params GetDirectsRequest) ([]direct.Direct, error) {
+func (e Endpoints) GetV1alphaDirects(
+	ctx context.Context,
+	params GetDirectsRequest,
+) ([]v1alphaDirect.Direct, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -179,10 +194,13 @@ func (e Endpoints) GetV1alphaDirects(ctx context.Context, params GetDirectsReque
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[direct.Direct](objects), err
+	return manifest.FilterByKind[v1alphaDirect.Direct](objects), err
 }
 
-func (e Endpoints) GetV1alphaDataExports(ctx context.Context, params GetDataExportsRequest) ([]dataexport.DataExport, error) {
+func (e Endpoints) GetV1alphaDataExports(
+	ctx context.Context,
+	params GetDataExportsRequest,
+) ([]v1alphaDataExport.DataExport, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -190,13 +208,13 @@ func (e Endpoints) GetV1alphaDataExports(ctx context.Context, params GetDataExpo
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[dataexport.DataExport](objects), err
+	return manifest.FilterByKind[v1alphaDataExport.DataExport](objects), err
 }
 
 func (e Endpoints) GetV1alphaRoleBindings(
 	ctx context.Context,
 	params GetRoleBindingsRequest,
-) ([]rolebinding.RoleBinding, error) {
+) ([]v1alphaRoleBinding.RoleBinding, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -204,13 +222,13 @@ func (e Endpoints) GetV1alphaRoleBindings(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[rolebinding.RoleBinding](objects), err
+	return manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](objects), err
 }
 
 func (e Endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
-) ([]annotation.Annotation, error) {
+) ([]v1alphaAnnotation.Annotation, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names).
@@ -223,13 +241,13 @@ func (e Endpoints) GetV1alphaAnnotations(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[annotation.Annotation](objects), err
+	return manifest.FilterByKind[v1alphaAnnotation.Annotation](objects), err
 }
 
 func (e Endpoints) GetV1alphaUserGroups(
 	ctx context.Context,
 	params GetAnnotationsRequest,
-) ([]usergroup.UserGroup, error) {
+) ([]v1alphaUserGroup.UserGroup, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
@@ -237,7 +255,7 @@ func (e Endpoints) GetV1alphaUserGroups(
 	if err != nil {
 		return nil, err
 	}
-	return manifest.FilterByKind[usergroup.UserGroup](objects), err
+	return manifest.FilterByKind[v1alphaUserGroup.UserGroup](objects), err
 }
 
 func (e Endpoints) DeleteObjectsByName(
@@ -337,7 +355,11 @@ func (e Endpoints) applyOrDeleteObjects(
 	return sdk.ProcessResponseErrors(resp)
 }
 
-func (e Endpoints) getAlerts(ctx context.Context, header http.Header, query url.Values) (*GetAlertsResponse, error) {
+func (e Endpoints) getAlerts(
+	ctx context.Context,
+	header http.Header,
+	query url.Values,
+) (*GetAlertsResponse, error) {
 	response := GetAlertsResponse{TruncatedMax: -1}
 	req, err := e.client.CreateRequest(
 		ctx,
@@ -364,7 +386,7 @@ func (e Endpoints) getAlerts(ctx context.Context, header http.Header, query url.
 	if err != nil {
 		return nil, err
 	}
-	response.Alerts = manifest.FilterByKind[alert.Alert](objects)
+	response.Alerts = manifest.FilterByKind[v1alphaAlert.Alert](objects)
 	if _, exists := resp.Header[sdk.HeaderTruncatedLimitMax]; !exists {
 		return nil, nil
 	}
@@ -381,7 +403,10 @@ func (e Endpoints) getAlerts(ctx context.Context, header http.Header, query url.
 	return &response, nil
 }
 
-func (e Endpoints) setOrganizationForObjects(ctx context.Context, objects []manifest.Object) ([]manifest.Object, error) {
+func (e Endpoints) setOrganizationForObjects(
+	ctx context.Context,
+	objects []manifest.Object,
+) ([]manifest.Object, error) {
 	org, err := e.orgGetter.GetOrganization(ctx)
 	if err != nil {
 		return nil, err
