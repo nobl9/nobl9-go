@@ -54,8 +54,8 @@ func (e Endpoints) Delete(ctx context.Context, objects []manifest.Object) error 
 
 func (e Endpoints) DeleteByName(
 	ctx context.Context,
-	project string,
 	kind manifest.Kind,
+	project string,
 	names ...string,
 ) error {
 	req, err := e.client.CreateRequest(

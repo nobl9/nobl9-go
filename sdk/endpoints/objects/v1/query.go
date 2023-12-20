@@ -17,7 +17,7 @@ const (
 	QueryKeyFrom              = "from"
 	QueryKeyTo                = "to"
 	QueryKeySLOName           = "slo"
-	QueryKeyLabelsFilter      = "labels"
+	QueryKeyLabels            = "labels"
 	QueryKeyServiceName       = "service_name"
 	QueryKeyDryRun            = "dry_run"
 	QueryKeyAlertPolicyName   = "alert_policy"
@@ -63,7 +63,7 @@ func (f *filters) Labels(labels v1alpha.Labels) *filters {
 			strLabels = append(strLabels, key)
 		}
 	}
-	f.query.Add(QueryKeyLabelsFilter, strings.Join(strLabels, ","))
+	f.query.Add(QueryKeyLabels, strings.Join(strLabels, ","))
 	return f
 }
 

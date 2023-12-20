@@ -47,8 +47,8 @@ func TestClient_Objects_V1_Get(t *testing.T) {
 			assert.Equal(t, http.MethodGet, r.Method)
 			assert.Equal(t, "non-default", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{
-				objectsV1.QueryKeyName:         {"service1", "service2"},
-				objectsV1.QueryKeyLabelsFilter: {"team:green,team:purple"},
+				objectsV1.QueryKeyName:   {"service1", "service2"},
+				objectsV1.QueryKeyLabels: {"team:green,team:purple"},
 			}, r.URL.Query())
 		},
 	})
@@ -63,8 +63,8 @@ func TestClient_Objects_V1_Get(t *testing.T) {
 		manifest.KindService,
 		http.Header{HeaderProject: []string{"non-default"}},
 		url.Values{
-			objectsV1.QueryKeyName:         {"service1", "service2"},
-			objectsV1.QueryKeyLabelsFilter: {"team:green,team:purple"},
+			objectsV1.QueryKeyName:   {"service1", "service2"},
+			objectsV1.QueryKeyLabels: {"team:green,team:purple"},
 		},
 	)
 	// Verify response handling.
@@ -208,8 +208,8 @@ func TestClient_Objects_V1_DeleteByName(t *testing.T) {
 	client.WithDryRun()
 	err := client.Objects().V1().DeleteByName(
 		context.Background(),
-		"my-project",
 		manifest.KindService,
+		"my-project",
 		"service1",
 		"service2",
 	)
