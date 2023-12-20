@@ -1,6 +1,10 @@
+// Package v1alpha exposes predefined rules for metadata fields
 package v1alpha
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+)
 
 func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRules[string, S] {
 	return validation.For(getter).
@@ -22,10 +26,10 @@ func FieldRuleMetadataProject[S any](getter func(S) string) validation.PropertyR
 		Rules(validation.StringIsDNSSubdomain())
 }
 
-func FieldRuleMetadataLabels[S any](getter func(S) Labels) validation.PropertyRules[Labels, S] {
+func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) validation.PropertyRules[v1alpha.Labels, S] {
 	return validation.For(getter).
 		WithName("metadata.labels").
-		Rules(ValidationRuleLabels())
+		Rules(v1alpha.ValidationRuleLabels())
 }
 
 func FieldRuleSpecDescription[S any](getter func(S) string) validation.PropertyRules[string, S] {

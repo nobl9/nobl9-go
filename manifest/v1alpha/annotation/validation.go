@@ -3,6 +3,7 @@ package annotation
 import (
 	"fmt"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -16,7 +17,7 @@ var annotationValidation = validation.New[Annotation](
 )
 
 var metadataValidation = validation.New[Metadata](
-	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
+	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validation.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
 		OmitEmpty().

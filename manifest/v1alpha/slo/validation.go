@@ -3,6 +3,7 @@ package slo
 import (
 	"fmt"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -17,10 +18,10 @@ var sloValidation = validation.New[SLO](
 )
 
 var metadataValidation = validation.New[Metadata](
-	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
-	v1alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
+	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
+	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
+	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
+	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
 var specValidation = validation.New[Spec](

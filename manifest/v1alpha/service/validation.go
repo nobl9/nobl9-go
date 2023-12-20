@@ -1,16 +1,17 @@
 package service
 
 import (
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 var serviceValidation = validation.New[Service](
-	v1alpha.FieldRuleMetadataName(func(s Service) string { return s.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(s Service) string { return s.Metadata.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(s Service) string { return s.Metadata.Project }),
-	v1alpha.FieldRuleMetadataLabels(func(s Service) v1alpha.Labels { return s.Metadata.Labels }),
-	v1alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
+	validationV1Alpha.FieldRuleMetadataName(func(s Service) string { return s.Metadata.Name }),
+	validationV1Alpha.FieldRuleMetadataDisplayName(func(s Service) string { return s.Metadata.DisplayName }),
+	validationV1Alpha.FieldRuleMetadataProject(func(s Service) string { return s.Metadata.Project }),
+	validationV1Alpha.FieldRuleMetadataLabels(func(s Service) v1alpha.Labels { return s.Metadata.Labels }),
+	validationV1Alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
 )
 
 func validate(s Service) *v1alpha.ObjectError {

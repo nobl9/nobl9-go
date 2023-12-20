@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -19,8 +20,8 @@ var alertSilenceValidation = validation.New[AlertSilence](
 )
 
 var metadataValidation = validation.New[AlertSilence](
-	v1alpha.FieldRuleMetadataName(func(s AlertSilence) string { return s.Metadata.Name }),
-	v1alpha.FieldRuleMetadataProject(func(s AlertSilence) string { return s.Metadata.Project }),
+	validationV1Alpha.FieldRuleMetadataName(func(s AlertSilence) string { return s.Metadata.Name }),
+	validationV1Alpha.FieldRuleMetadataProject(func(s AlertSilence) string { return s.Metadata.Project }),
 )
 
 var specValidation = validation.New[Spec](
@@ -59,7 +60,7 @@ var specValidation = validation.New[Spec](
 )
 
 var alertPolicySourceValidation = validation.New[AlertPolicySource](
-	v1alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
+	validationV1Alpha.FieldRuleMetadataName(func(s AlertPolicySource) string { return s.Name }).
 		WithName("name"),
 	validation.For(func(s AlertPolicySource) string { return s.Project }).
 		WithName("project").
