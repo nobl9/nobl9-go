@@ -11,7 +11,7 @@ import (
 
 func New(metadata Metadata, spec Spec) AlertPolicy {
 	return AlertPolicy{
-		APIVersion: v1alpha.APIVersion,
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindAlertPolicy,
 		Metadata:   metadata,
 		Spec:       spec,
@@ -20,10 +20,10 @@ func New(metadata Metadata, spec Spec) AlertPolicy {
 
 // AlertPolicy represents a set of conditions that can trigger an alert.
 type AlertPolicy struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

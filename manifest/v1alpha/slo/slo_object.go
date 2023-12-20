@@ -12,7 +12,7 @@ var _ manifest.Object = SLO{}
 var _ manifest.ProjectScopedObject = SLO{}
 var _ v1alpha.ObjectContext = SLO{}
 
-func (s SLO) GetVersion() string {
+func (s SLO) GetVersion() manifest.Version {
 	return s.APIVersion
 }
 

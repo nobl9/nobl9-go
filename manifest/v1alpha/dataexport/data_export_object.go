@@ -12,7 +12,7 @@ var _ manifest.Object = DataExport{}
 var _ manifest.ProjectScopedObject = DataExport{}
 var _ v1alpha.ObjectContext = DataExport{}
 
-func (d DataExport) GetVersion() string {
+func (d DataExport) GetVersion() manifest.Version {
 	return d.APIVersion
 }
 

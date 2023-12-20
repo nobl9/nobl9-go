@@ -12,7 +12,7 @@ var _ manifest.Object = Agent{}
 var _ manifest.ProjectScopedObject = Agent{}
 var _ v1alpha.ObjectContext = Agent{}
 
-func (a Agent) GetVersion() string {
+func (a Agent) GetVersion() manifest.Version {
 	return a.APIVersion
 }
 

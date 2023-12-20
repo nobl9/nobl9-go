@@ -17,10 +17,10 @@ func New(metadata Metadata, spec Spec) UserGroup {
 }
 
 type UserGroup struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

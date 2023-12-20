@@ -154,7 +154,7 @@ type customObject struct {
 	validationError error
 }
 
-func (c customObject) GetVersion() string              { return "" }
+func (c customObject) GetVersion() Version             { return "" }
 func (c customObject) GetKind() Kind                   { return c.kind }
 func (c customObject) GetName() string                 { return c.name }
 func (c customObject) Validate() error                 { return c.validationError }

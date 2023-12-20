@@ -12,7 +12,7 @@ import (
 // New creates new Agent instance.
 func New(metadata Metadata, spec Spec) Agent {
 	return Agent{
-		APIVersion: v1alpha.APIVersion,
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindAgent,
 		Metadata:   metadata,
 		Spec:       spec,
@@ -21,11 +21,11 @@ func New(metadata Metadata, spec Spec) Agent {
 
 // Agent struct which mapped one to one with kind: Agent yaml definition
 type Agent struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
-	Status     *Status       `json:"status,omitempty"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
+	Status     *Status          `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

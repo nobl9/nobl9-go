@@ -20,11 +20,11 @@ func New(metadata Metadata, spec Spec) Direct {
 
 // Direct struct which mapped one to one with kind: Direct yaml definition
 type Direct struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
-	Status     *Status       `json:"status,omitempty"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
+	Status     *Status          `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`
