@@ -8,8 +8,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 //go:generate ../../bin/go-enum  --values --noprefix

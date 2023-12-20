@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
