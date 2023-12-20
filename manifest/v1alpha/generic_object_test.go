@@ -10,7 +10,9 @@ import (
 
 func TestGenericObject_GetVersion(t *testing.T) {
 	t.Run("returns version", func(t *testing.T) {
-		assert.Equal(t, manifest.Version(APIVersion), GenericObject{genericFieldVersion: APIVersion}.GetVersion())
+		assert.Equal(
+			t, manifest.VersionV1alpha, GenericObject{genericFieldVersion: manifest.VersionV1alpha.String()}.GetVersion(),
+		)
 	})
 	t.Run("empty, not panics", func(t *testing.T) {
 		assert.NotPanics(t, func() { GenericObject{}.GetVersion() })

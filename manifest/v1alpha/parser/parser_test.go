@@ -134,7 +134,7 @@ func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectF
 
 func validAlertPolicy() alertpolicy.AlertPolicy {
 	return alertpolicy.AlertPolicy{
-		APIVersion: v1alpha.APIVersion,
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindAlertPolicy,
 		Metadata: alertpolicy.Metadata{
 			Name:        "this",
@@ -159,7 +159,7 @@ func validAlertPolicy() alertpolicy.AlertPolicy {
 func withLegacyAlertMethodEmbedded() alertpolicy.AlertPolicy {
 	alertPolicy := validAlertPolicy()
 	alertPolicy.Spec.AlertMethods[0].EmbedAlertMethodRef(alertmethod.AlertMethod{
-		APIVersion: v1alpha.APIVersion,
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindAlertMethod,
 		Metadata: alertmethod.Metadata{
 			Name:    "this",

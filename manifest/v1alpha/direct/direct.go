@@ -11,7 +11,7 @@ import (
 
 func New(metadata Metadata, spec Spec) Direct {
 	return Direct{
-		APIVersion: v1alpha.APIVersion,
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindDirect,
 		Metadata:   metadata,
 		Spec:       spec,
