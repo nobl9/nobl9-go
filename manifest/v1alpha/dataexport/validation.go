@@ -3,8 +3,9 @@ package dataexport
 import (
 	"regexp"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 const (
@@ -26,9 +27,9 @@ var dataExportValidation = validation.New[DataExport](
 )
 
 var metadataValidation = validation.New[Metadata](
-	v1alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
+	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
+	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
+	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 )
 
 var specValidation = validation.New[Spec](

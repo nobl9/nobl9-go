@@ -1,6 +1,6 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/validation"
+import "github.com/nobl9/nobl9-go/internal/validation"
 
 // SplunkObservabilityMetric represents metric from SplunkObservability
 type SplunkObservabilityMetric struct {

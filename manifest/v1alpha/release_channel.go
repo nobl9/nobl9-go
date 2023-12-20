@@ -3,7 +3,7 @@ package v1alpha
 import (
 	"fmt"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 //go:generate ../../bin/go-enum --nocase --names --lower --values

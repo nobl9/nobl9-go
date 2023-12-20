@@ -7,16 +7,17 @@ import (
 
 	"github.com/pkg/errors"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 var agentValidation = validation.New[Agent](
-	v1alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
-	v1alpha.FieldRuleSpecDescription(func(a Agent) string { return a.Spec.Description }),
+	validationV1Alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
+	validationV1Alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
+	validationV1Alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
+	validationV1Alpha.FieldRuleSpecDescription(func(a Agent) string { return a.Spec.Description }),
 	validation.For(func(a Agent) Spec { return a.Spec }).
 		WithName("spec").
 		Include(specValidation),
