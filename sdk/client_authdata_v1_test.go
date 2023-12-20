@@ -35,7 +35,7 @@ func TestClient_AuthData_V1_GetDataExportIAMRoleIDs(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.Helpers().V1().GetDataExportIAMRoleIDs(context.Background())
+	response, err := client.AuthData().V1().GetDataExportIAMRoleIDs(context.Background())
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)
@@ -64,7 +64,7 @@ func TestClient_AuthData_V1_GetDirectIAMRoleIDs(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	response, err := client.Helpers().V1().GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
+	response, err := client.AuthData().V1().GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
 	// Verify response handling.
 	require.NoError(t, err)
 	assert.Equal(t, expectedData, *response)
@@ -95,7 +95,7 @@ func TestClient_AuthData_V1_GetAgentCredentials(t *testing.T) {
 	defer srv.Close()
 
 	// Run the API method.
-	objects, err := client.Helpers().V1().GetAgentCredentials(
+	objects, err := client.AuthData().V1().GetAgentCredentials(
 		context.Background(),
 		"agent-project",
 		"my-agent",

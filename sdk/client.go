@@ -84,7 +84,7 @@ func (c *Client) Objects() objects.Versions {
 	)
 }
 
-func (c *Client) Helpers() authdata.Versions {
+func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
 }
 
