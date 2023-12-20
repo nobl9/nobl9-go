@@ -38,8 +38,8 @@ type Response struct {
 // Client represents API high level client.
 type Client struct {
 	Config *Config
+	HTTP   *http.Client
 
-	http        *http.Client
 	credentials *credentials
 	userAgent   string
 	dryRun      bool
@@ -58,7 +58,7 @@ func DefaultClient() (*Client, error) {
 func NewClient(config *Config) (*Client, error) {
 	creds := newCredentials(config)
 	client := &Client{
-		http:        newRetryableHTTPClient(config.Timeout, creds),
+		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
@@ -117,9 +117,6 @@ func (c *Client) CreateRequest(
 	}
 	req.Header.Set(HeaderOrganization, org)
 	req.Header.Set(HeaderUserAgent, c.userAgent)
-	if project := req.Header.Get(HeaderProject); project == "" {
-		req.Header.Set(HeaderProject, c.Config.Project)
-	}
 	// Encode parameters.
 	if q != nil {
 		req.URL.RawQuery = q.Encode()
@@ -128,7 +125,7 @@ func (c *Client) CreateRequest(
 }
 
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	resp, err := c.http.Do(req)
+	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute request")
 	}

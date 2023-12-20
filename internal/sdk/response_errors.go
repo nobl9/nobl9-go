@@ -3,9 +3,10 @@ package sdk
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 func ProcessResponseErrors(resp *http.Response) error {

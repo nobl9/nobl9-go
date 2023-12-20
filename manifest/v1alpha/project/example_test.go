@@ -31,7 +31,7 @@ func ExampleProject() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{myProject}); err != nil {
+	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myProject}); err != nil {
 		log.Fatalf("failed to apply project, err: %v", err)
 	}
 	// Output:
