@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 type (

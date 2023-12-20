@@ -3,7 +3,7 @@ package slo
 import (
 	"golang.org/x/exp/slices"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 // HoneycombMetric represents metric from Honeycomb. To access this integration, contact support@nobl9.com.

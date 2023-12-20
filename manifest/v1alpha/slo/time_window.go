@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 // TimeWindow represents content of time window

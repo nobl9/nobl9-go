@@ -1,8 +1,8 @@
 package project
 
 import (
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 var projectValidation = validation.New[Project](

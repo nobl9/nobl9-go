@@ -1,6 +1,6 @@
 package v1alpha
 
-import "github.com/nobl9/nobl9-go/validation"
+import "github.com/nobl9/nobl9-go/internal/validation"
 
 func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRules[string, S] {
 	return validation.For(getter).

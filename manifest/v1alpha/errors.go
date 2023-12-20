@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 func ValidateObject[T manifest.Object](validator validation.Validator[T], s T) *ObjectError {

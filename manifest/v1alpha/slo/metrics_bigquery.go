@@ -3,8 +3,8 @@ package slo
 import (
 	"regexp"
 
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 // BigQueryMetric represents metric from BigQuery
