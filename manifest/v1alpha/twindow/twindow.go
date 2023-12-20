@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 const (

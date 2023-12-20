@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {

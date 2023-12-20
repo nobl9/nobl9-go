@@ -5,16 +5,17 @@ import (
 
 	"github.com/pkg/errors"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/validation"
 )
 
 var directValidation = validation.New[Direct](
-	v1alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
-	v1alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
-	v1alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
-	v1alpha.FieldRuleSpecDescription(func(d Direct) string { return d.Spec.Description }),
+	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
+	validationV1Alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
+	validationV1Alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
+	validationV1Alpha.FieldRuleSpecDescription(func(d Direct) string { return d.Spec.Description }),
 	validation.For(func(d Direct) Spec { return d.Spec }).
 		WithName("spec").
 		Include(specValidation),

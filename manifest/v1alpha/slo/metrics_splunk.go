@@ -3,7 +3,7 @@ package slo
 import (
 	"regexp"
 
-	"github.com/nobl9/nobl9-go/validation"
+	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 // SplunkMetric represents metric from Splunk
