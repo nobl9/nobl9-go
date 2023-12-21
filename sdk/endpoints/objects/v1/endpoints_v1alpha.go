@@ -249,7 +249,7 @@ func (e Endpoints) getAlerts(
 	}
 	response.Alerts = manifest.FilterByKind[v1alphaAlert.Alert](objects)
 	if _, exists := resp.Header[sdk.HeaderTruncatedLimitMax]; !exists {
-		return nil, nil
+		return &response, nil
 	}
 	truncatedValue := resp.Header.Get(sdk.HeaderTruncatedLimitMax)
 	truncatedMax, err := strconv.Atoi(truncatedValue)
