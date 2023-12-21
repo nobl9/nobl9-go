@@ -69,9 +69,10 @@ func TestClient_CreateRequest(t *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, req.URL.Query())
 		assert.Empty(t, req.Body)
+		assert.Equal(t, "my-project", req.Header.Get(HeaderProject))
 	})
 
-	t.Run("no project", func(t *testing.T) {
+	t.Run("no project header, use default", func(t *testing.T) {
 		req, err := client.CreateRequest(
 			context.Background(),
 			http.MethodGet,
@@ -81,7 +82,7 @@ func TestClient_CreateRequest(t *testing.T) {
 			nil,
 		)
 		require.NoError(t, err)
-		assert.NotContains(t, req.Header, HeaderProject)
+		assert.Equal(t, client.Config.Project, req.Header.Get(HeaderProject))
 	})
 }
 
