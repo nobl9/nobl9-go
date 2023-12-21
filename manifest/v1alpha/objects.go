@@ -5,9 +5,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-// APIVersion is a value of valid apiVersions
-const APIVersion = "n9/v1alpha"
-
 // HiddenValue can be used as a value of a secret field and is ignored during saving
 const HiddenValue = "[hidden]"
 

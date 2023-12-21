@@ -11,7 +11,7 @@ import (
 var _ manifest.Object = UserGroup{}
 var _ v1alpha.ObjectContext = UserGroup{}
 
-func (u UserGroup) GetVersion() string {
+func (u UserGroup) GetVersion() manifest.Version {
 	return u.APIVersion
 }
 

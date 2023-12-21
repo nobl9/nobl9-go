@@ -12,7 +12,7 @@ import (
 // All Nobl9 objects implement this interface.
 type Object interface {
 	// GetVersion returns the API version of the Object.
-	GetVersion() string
+	GetVersion() Version
 	// GetKind returns the Kind of the Object.
 	GetKind() Kind
 	// GetName returns the name of the Object (RFC 1123 compliant DNS).

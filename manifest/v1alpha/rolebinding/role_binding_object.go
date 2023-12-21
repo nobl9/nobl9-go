@@ -11,7 +11,7 @@ import (
 var _ manifest.Object = RoleBinding{}
 var _ v1alpha.ObjectContext = RoleBinding{}
 
-func (r RoleBinding) GetVersion() string {
+func (r RoleBinding) GetVersion() manifest.Version {
 	return r.APIVersion
 }
 

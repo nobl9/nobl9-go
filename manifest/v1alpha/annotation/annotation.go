@@ -11,7 +11,7 @@ import (
 // New creates a new Annotation based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) Annotation {
 	return Annotation{
-		APIVersion: manifest.VersionV1alpha.String(),
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindAnnotation,
 		Metadata:   metadata,
 		Spec:       spec,
@@ -19,11 +19,11 @@ func New(metadata Metadata, spec Spec) Annotation {
 }
 
 type Annotation struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
-	Status     *Status       `json:"status,omitempty"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
+	Status     *Status          `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

@@ -11,29 +11,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
 func TestClient_Objects_V1_Get(t *testing.T) {
 	responsePayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
+		v1alphaService.New(
+			v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
-		},
-		v1alphaService.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
+			v1alphaService.Spec{},
+		),
+		v1alphaService.New(
+			v1alphaService.Metadata{
 				Name:    "service2",
 				Project: "default",
 			},
-		},
+			v1alphaService.Spec{},
+		),
 	}
 
 	client, srv := prepareTestClient(t, endpointConfig{
@@ -102,14 +99,13 @@ func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
 
 func TestClient_Objects_V1_Apply(t *testing.T) {
 	requestPayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
+		v1alphaService.New(
+			v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
-		},
+			v1alphaService.Spec{},
+		),
 	}
 	expected := addOrganization(requestPayload, "my-org")
 
@@ -142,14 +138,13 @@ func TestClient_Objects_V1_Apply(t *testing.T) {
 
 func TestClient_Objects_V1_Delete(t *testing.T) {
 	requestPayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: v1alpha.APIVersion,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
+		v1alphaService.New(
+			v1alphaService.Metadata{
 				Name:    "service1",
 				Project: "default",
 			},
-		},
+			v1alphaService.Spec{},
+		),
 	}
 	expected := addOrganization(requestPayload, "my-org")
 

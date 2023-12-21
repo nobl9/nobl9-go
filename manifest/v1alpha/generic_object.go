@@ -19,8 +19,9 @@ const (
 // v1alpha versions.
 type GenericObject map[string]interface{}
 
-func (g GenericObject) GetVersion() string {
-	version, _ := g[genericFieldVersion].(string)
+func (g GenericObject) GetVersion() manifest.Version {
+	name, _ := g[genericFieldVersion].(string)
+	version, _ := manifest.ParseVersion(name)
 	return version
 }
 

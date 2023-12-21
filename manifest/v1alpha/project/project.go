@@ -10,7 +10,7 @@ import (
 // New creates a new Project based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) Project {
 	return Project{
-		APIVersion: manifest.VersionV1alpha.String(),
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindProject,
 		Metadata:   metadata,
 		Spec:       spec,
@@ -20,10 +20,10 @@ func New(metadata Metadata, spec Spec) Project {
 // Project is the primary grouping primitive for manifest.Object.
 // Most objects are scoped to a certain Project.
 type Project struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

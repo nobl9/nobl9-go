@@ -12,7 +12,7 @@ var _ manifest.Object = Service{}
 var _ manifest.ProjectScopedObject = Service{}
 var _ v1alpha.ObjectContext = Service{}
 
-func (s Service) GetVersion() string {
+func (s Service) GetVersion() manifest.Version {
 	return s.APIVersion
 }
 
