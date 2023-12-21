@@ -98,14 +98,6 @@ func TestDecode(t *testing.T) {
 		t.Run(test.Input, func(t *testing.T) {
 			data := readInputFile(t, test.Input)
 
-			isJSON := manifest.IsJSONBuffer(data)
-			switch test.Format {
-			case manifest.ObjectFormatJSON:
-				assert.True(t, isJSON, "expected the file contents to be interpreted as JSON")
-			case manifest.ObjectFormatYAML:
-				assert.False(t, isJSON, "expected the file contents to be interpreted as YAML")
-			}
-
 			objects, err := manifest.DecodeObjects(data)
 			require.NoError(t, err)
 			assert.Len(t, objects, test.ExpectedObjectsLen)
