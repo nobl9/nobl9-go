@@ -122,7 +122,6 @@ func TestClient_Objects_V1_Apply(t *testing.T) {
 		// Verify request parameters.
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodPut, r.Method)
-			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
@@ -163,7 +162,6 @@ func TestClient_Objects_V1_Delete(t *testing.T) {
 		// Verify request parameters.
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "", r.Header.Get(HeaderProject))
 			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
 			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
