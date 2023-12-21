@@ -115,7 +115,7 @@ func (c *Client) CreateRequest(
 	if err != nil {
 		return nil, err
 	}
-	if _, ok := req.Header[HeaderProject]; !ok {
+	if project := req.Header.Get(HeaderProject); project == "" {
 		req.Header.Set(HeaderProject, c.Config.Project)
 	}
 	req.Header.Set(HeaderOrganization, org)
