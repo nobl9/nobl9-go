@@ -124,3 +124,7 @@ func genericParseObject[T manifest.Object](unmarshal unmarshalFunc) (T, error) {
 	}
 	return object, nil
 }
+
+func init() {
+	manifest.RegisterParser(manifest.VersionV1alpha, ParseObject)
+}

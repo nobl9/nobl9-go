@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"sync"
 	"time"
@@ -129,7 +130,7 @@ var cleanCredentialsHTTPClient = &http.Client{}
 func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
-		return nil, httpNonRetryableError{Err: err}
+		return nil, sdk.httpNonRetryableError{Err: err}
 	}
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
 		c.setAuthorizationHeader(req)

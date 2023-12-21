@@ -119,7 +119,7 @@ func TestClient_Objects_V1_Apply(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodPut, r.Method)
 			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
+			objects, err := manifest.ReadObjectsFromSources(context.Background(), manifest.NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},
@@ -158,7 +158,7 @@ func TestClient_Objects_V1_Delete(t *testing.T) {
 		TestRequestFunc: func(t *testing.T, r *http.Request) {
 			assert.Equal(t, http.MethodDelete, r.Method)
 			assert.Equal(t, url.Values{objectsV1.QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
+			objects, err := manifest.ReadObjectsFromSources(context.Background(), manifest.NewObjectSourceReader(r.Body, ""))
 			require.NoError(t, err)
 			assert.Equal(t, expected, objects)
 		},

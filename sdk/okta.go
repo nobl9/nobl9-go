@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 	"io"
 	"net/http"
 	"net/url"
@@ -43,7 +44,7 @@ type oktaClient struct {
 
 func newOktaClient(getTokenEndpoint getTokenEndpointFunc) *oktaClient {
 	return &oktaClient{
-		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, nil),
+		HTTP:             sdk.NewRetryableHTTPClient(oktaRequestTimeout, nil),
 		getTokenEndpoint: getTokenEndpoint,
 	}
 }

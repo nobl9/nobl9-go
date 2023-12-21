@@ -26,8 +26,8 @@ type httpNonRetryableError struct{ Err error }
 
 func (n httpNonRetryableError) Error() string { return n.Err.Error() }
 
-// newRetryableHTTPClient returns http.Client with preconfigured retry feature.
-func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
+// NewRetryableHTTPClient returns http.Client with preconfigured retry feature.
+func NewRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
 	rc.Logger = httpNoopLogger{}
 	rc.ErrorHandler = retryablehttp.PassthroughErrorHandler

@@ -1,4 +1,4 @@
-package sdk
+package manifest
 
 import (
 	"bufio"
@@ -12,12 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
-//go:embed test_data/parser
+//go:embed ../sdk/test_data/parser
 var parserTestData embed.FS
 
 func TestDecode(t *testing.T) {
@@ -25,73 +24,73 @@ func TestDecode(t *testing.T) {
 		Input              string
 		ExpectedObjectsLen int
 		ExpectedNames      []string
-		Format             manifest.ObjectFormat
+		Format             ObjectFormat
 	}{
 		{
 			Input:              "list_of_objects.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "list_of_objects_with_whitespace.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "list_of_objects_with_comments.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "multiple_documents.yaml",
 			ExpectedObjectsLen: 3,
 			ExpectedNames:      []string{"default0", "default1", "default2"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document_with_document_separators.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             manifest.ObjectFormatYAML,
+			Format:             ObjectFormatYAML,
 		},
 		{
 			Input:              "compacted_list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatJSON,
+			Format:             ObjectFormatJSON,
 		},
 		{
 			Input:              "compacted_single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             manifest.ObjectFormatJSON,
+			Format:             ObjectFormatJSON,
 		},
 		{
 			Input:              "list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatJSON,
+			Format:             ObjectFormatJSON,
 		},
 		{
 			Input:              "list_of_objects_with_whitespace.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             manifest.ObjectFormatJSON,
+			Format:             ObjectFormatJSON,
 		},
 		{
 			Input:              "single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             manifest.ObjectFormatJSON,
+			Format:             ObjectFormatJSON,
 		},
 	} {
 		t.Run(test.Input, func(t *testing.T) {
@@ -99,9 +98,9 @@ func TestDecode(t *testing.T) {
 
 			isJSON := isJSONBuffer(data)
 			switch test.Format {
-			case manifest.ObjectFormatJSON:
+			case ObjectFormatJSON:
 				assert.True(t, isJSON, "expected the file contents to be interpreted as JSON")
-			case manifest.ObjectFormatYAML:
+			case ObjectFormatYAML:
 				assert.False(t, isJSON, "expected the file contents to be interpreted as YAML")
 			}
 
@@ -122,7 +121,7 @@ func TestDecode(t *testing.T) {
 	t.Run("scanner token size overflow", func(t *testing.T) {
 		// Generate objects.
 		objectsNum := 800
-		expectedObjects := make([]manifest.Object, 0, objectsNum)
+		expectedObjects := make([]Object, 0, objectsNum)
 		for i := 0; i < objectsNum; i++ {
 			expectedObjects = append(expectedObjects, project.New(
 				project.Metadata{

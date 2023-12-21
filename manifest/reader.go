@@ -1,4 +1,4 @@
-package sdk
+package manifest
 
 import (
 	"context"
@@ -12,9 +12,8 @@ import (
 	"strings"
 	"time"
 
+	internalSDK "github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/manifest"
 )
 
 const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
@@ -40,7 +39,7 @@ type (
 
 // ReadObjects resolves the RawObjectSource(s) it receives and calls
 // ReadObjectsFromSources on the resolved ObjectSource(s).
-func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]manifest.Object, error) {
+func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]Object, error) {
 	sources, err := ResolveObjectSources(rawSources...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to resolve all raw sources")
@@ -60,7 +59,7 @@ const unknownSource = "-"
 // type ObjectSourceTypeGlobPattern or ObjectSourceTypeDirectory and a file does not
 // contain the required APIVersionRegex, it is skipped. However in case
 // of ObjectSourceTypeFile, it will thrown ErrInvalidFile error.
-func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]manifest.Object, error) {
+func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]Object, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})
@@ -144,7 +143,7 @@ func readFromReader(in io.Reader) ([]byte, error) {
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.
 var httpClientFactory = func(url string) *http.Client {
-	return newRetryableHTTPClient(10*time.Second, nil)
+	return internalSDK.NewRetryableHTTPClient(10*time.Second, nil)
 }
 
 func readFromURL(ctx context.Context, url string) ([]byte, error) {

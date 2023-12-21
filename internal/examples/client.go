@@ -2,6 +2,7 @@ package examples
 
 import (
 	"fmt"
+	"github.com/nobl9/nobl9-go/manifest"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -17,7 +18,7 @@ import (
 func GetOfflineEchoClient() *sdk.Client {
 	// Offline server:
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		objects, err := sdk.ReadObjectsFromSources(r.Context(), sdk.NewObjectSourceReader(r.Body, ""))
+		objects, err := manifest.ReadObjectsFromSources(r.Context(), manifest.NewObjectSourceReader(r.Body, ""))
 		if err != nil {
 			panic(err)
 		}

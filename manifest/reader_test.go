@@ -1,4 +1,4 @@
-package sdk
+package manifest
 
 import (
 	"bytes"
@@ -16,11 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 )
 
-//go:embed test_data/reader
+//go:embed ../sdk/test_data/reader
 var readerTestData embed.FS
 var templates *template.Template
 
@@ -422,7 +421,7 @@ type expectedMeta struct {
 	ManifestSrc string
 }
 
-func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta ...expectedMeta) {
+func definitionsMatchExpected(t *testing.T, definitions []Object, meta ...expectedMeta) {
 	t.Helper()
 
 	rawActual, err := json.Marshal(definitions)

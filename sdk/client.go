@@ -58,7 +58,7 @@ func DefaultClient() (*Client, error) {
 func NewClient(config *Config) (*Client, error) {
 	creds := newCredentials(config)
 	client := &Client{
-		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
+		HTTP:        internal.NewRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,
 		credentials: creds,
 		userAgent:   getDefaultUserAgent(),
@@ -74,8 +74,8 @@ func (c *Client) Objects() objects.Versions {
 		c,
 		c.credentials,
 		func(ctx context.Context, reader io.Reader) ([]manifest.Object, error) {
-			o, err := ReadObjectsFromSources(ctx, NewObjectSourceReader(reader, ""))
-			if err != nil && !errors.Is(err, ErrNoDefinitionsFound) {
+			o, err := manifest.ReadObjectsFromSources(ctx, manifest.NewObjectSourceReader(reader, ""))
+			if err != nil && !errors.Is(err, manifest.ErrNoDefinitionsFound) {
 				return nil, fmt.Errorf("cannot decode response from API: %w", err)
 			}
 			return o, nil

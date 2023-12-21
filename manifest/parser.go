@@ -1,4 +1,4 @@
-package sdk
+package manifest
 
 import (
 	"bufio"
@@ -6,19 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"sync"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-
-	"github.com/nobl9/nobl9-go/manifest"
-	v1alphaParser "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 )
 
 var ErrNoDefinitionsFound = errors.New("no definitions in input")
 
 // DecodeObjects reads objects from the provided bytes slice.
 // It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
-func DecodeObjects(data []byte) ([]manifest.Object, error) {
+func DecodeObjects(data []byte) ([]Object, error) {
 	if isJSONBuffer(data) {
 		return decodeJSON(data)
 	}
@@ -27,7 +25,7 @@ func DecodeObjects(data []byte) ([]manifest.Object, error) {
 
 // DecodeObject returns a single, concrete object implementing manifest.Object.
 // It expects exactly one object in the decoded byte slice.
-func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
+func DecodeObject[T Object](data []byte) (object T, err error) {
 	objects, err := DecodeObjects(data)
 	if err != nil {
 		return object, err
@@ -44,8 +42,8 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 }
 
 // processRawDefinitions function converts raw definitions to a slice of manifest.Object.
-func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
-	result := make([]manifest.Object, 0, len(rds))
+func processRawDefinitions(rds rawDefinitions) ([]Object, error) {
+	result := make([]Object, 0, len(rds))
 	for _, rd := range rds {
 		objects, err := DecodeObjects(rd.Definition)
 		if err != nil {
@@ -62,14 +60,14 @@ func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 }
 
 // annotateWithManifestSource annotates manifest.Object with the manifest definition source.
-func annotateWithManifestSource(object manifest.Object, source string) manifest.Object {
+func annotateWithManifestSource(object Object, source string) Object {
 	if object.GetManifestSource() == "" && source != "" {
 		object = object.SetManifestSource(source)
 	}
 	return object
 }
 
-func decodeJSON(data []byte) ([]manifest.Object, error) {
+func decodeJSON(data []byte) ([]Object, error) {
 	var res []genericObject
 	switch getJsonIdent(data) {
 	case identArray:
@@ -86,14 +84,14 @@ func decodeJSON(data []byte) ([]manifest.Object, error) {
 	if len(res) == 0 {
 		return nil, ErrNoDefinitionsFound
 	}
-	objects := make([]manifest.Object, 0, len(res))
+	objects := make([]Object, 0, len(res))
 	for i := range res {
 		objects = append(objects, res[i].Object)
 	}
 	return objects, nil
 }
 
-func decodeYAML(data []byte) ([]manifest.Object, error) {
+func decodeYAML(data []byte) ([]Object, error) {
 	scanner := bufio.NewScanner(bytes.NewBuffer(data))
 	// Documents can have any size, at most it will be the whole data.
 	// This means sometimes we might exceed the limit imposed by bufio.Scanner.
@@ -127,7 +125,7 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 	if len(res) == 0 {
 		return nil, ErrNoDefinitionsFound
 	}
-	objects := make([]manifest.Object, 0, len(res))
+	objects := make([]Object, 0, len(res))
 	for i := range res {
 		objects = append(objects, res[i].Object)
 	}
@@ -136,47 +134,46 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 
 // genericObject is a container for manifest.Object which helps in decoding process.
 type genericObject struct {
-	Object manifest.Object
+	Object Object
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (o *genericObject) UnmarshalJSON(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.ObjectFormatJSON)
+	return o.unmarshalGeneric(data, ObjectFormatJSON)
 }
 
 // UnmarshalYAML implements yaml.BytesUnmarshaler.
 func (o *genericObject) UnmarshalYAML(data []byte) error {
-	return o.unmarshalGeneric(data, manifest.ObjectFormatYAML)
+	return o.unmarshalGeneric(data, ObjectFormatYAML)
 }
 
 // unmarshalGeneric decodes a single raw manifest.Object representation into respective manifest.ObjectFormat.
 // It uses an intermediate decoding step to extract manifest.Version and manifest.Kind from the object.
 // Decoding is then delegated to the parser for specific manifest.Version.
-func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectFormat) error {
+func (o *genericObject) unmarshalGeneric(data []byte, format ObjectFormat) error {
 	var object struct {
-		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
-		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
+		ApiVersion Version `json:"apiVersion" yaml:"apiVersion"`
+		Kind       Kind    `json:"kind" yaml:"kind"`
 	}
 	var unmarshal func(data []byte, v interface{}) error
 	//exhaustive: enforce
 	switch format {
-	case manifest.ObjectFormatJSON:
+	case ObjectFormatJSON:
 		unmarshal = json.Unmarshal
-	case manifest.ObjectFormatYAML:
+	case ObjectFormatYAML:
 		unmarshal = yaml.Unmarshal
 	}
 	if err := unmarshal(data, &object); err != nil {
 		return err
 	}
-	switch object.ApiVersion {
-	case manifest.VersionV1alpha:
-		parsed, err := v1alphaParser.ParseObject(data, object.Kind, format)
-		if err != nil {
-			return err
-		}
-		o.Object = parsed
-	default:
-		return manifest.ErrInvalidVersion
+	parser, found := parsers[object.ApiVersion]
+	if !found {
+		return ErrInvalidVersion
+	}
+	var err error
+	o.Object, err = parser(data, object.Kind, format)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -248,4 +245,22 @@ func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err 
 	}
 	// Request more data.
 	return 0, nil, nil
+}
+
+var (
+	mu      sync.Mutex
+	parsers = make(map[Version]ParserFunc)
+)
+
+type ParserFunc func(data []byte, kind Kind, format ObjectFormat) (Object, error)
+
+// RegisterParser registers a new ParserFunc for a given manifest.Version.
+// It's intended exclusively for internal usage.
+func RegisterParser(version Version, parser ParserFunc) {
+	mu.Lock()
+	defer mu.Unlock()
+	if _, found := parsers[version]; found {
+		panic(fmt.Sprintf("parser for version %s already registered", version))
+	}
+	parsers[version] = parser
 }

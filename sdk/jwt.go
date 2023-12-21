@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"reflect"
 	"sync"
@@ -83,7 +84,7 @@ type jwtParser struct {
 
 func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) *jwtParser {
 	return &jwtParser{
-		HTTP:           newRetryableHTTPClient(jwtKeysRequestTimeout, nil),
+		HTTP:           sdk.NewRetryableHTTPClient(jwtKeysRequestTimeout, nil),
 		jwksCache:      cache.New(time.Hour, time.Hour),
 		jwkSetMu:       new(sync.Mutex),
 		getJWKFetchURL: jwkFetchURL,

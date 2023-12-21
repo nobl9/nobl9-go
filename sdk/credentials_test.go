@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"testing"
 	"time"
@@ -349,7 +350,7 @@ func TestClient_RoundTrip(t *testing.T) {
 		req := &http.Request{}
 		_, err := creds.RoundTrip(req)
 		require.Error(t, err)
-		_, isNonRetryableError := err.(httpNonRetryableError)
+		_, isNonRetryableError := err.(sdk.httpNonRetryableError)
 		assert.True(t, isNonRetryableError, "err is of type httpNonRetryableError")
 	})
 
