@@ -27,7 +27,7 @@ func TestProcessResponseErrors(t *testing.T) {
 				StatusCode: code,
 				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
 			require.Error(t, err)
-			require.EqualError(t, err, fmt.Sprintf("bad status code response: %d, body: error!", code))
+			require.EqualError(t, err, fmt.Sprintf("unexpected status code response: %d, body: error!", code))
 		}
 	})
 
