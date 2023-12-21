@@ -17,7 +17,7 @@ var ErrNoDefinitionsFound = errors.New("no definitions in input")
 // DecodeObjects reads objects from the provided bytes slice.
 // It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
 func DecodeObjects(data []byte) ([]Object, error) {
-	if isJSONBuffer(data) {
+	if IsJSONBuffer(data) {
 		return decodeJSON(data)
 	}
 	return decodeYAML(data)
@@ -180,10 +180,10 @@ func (o *genericObject) unmarshalGeneric(data []byte, format ObjectFormat) error
 
 var jsonBufferRegex = regexp.MustCompile(`^\s*\[?\s*{`)
 
-// isJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
+// IsJSONBuffer scans the provided buffer, looking for an open brace indicating this is JSON.
 // While a simple list like ["a", "b", "c"] is still a valid JSON,
 // it does not really concern us when processing complex objects.
-func isJSONBuffer(buf []byte) bool {
+func IsJSONBuffer(buf []byte) bool {
 	return jsonBufferRegex.Match(buf)
 }
 

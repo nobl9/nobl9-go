@@ -1,4 +1,4 @@
-package manifest
+package manifest_test
 
 import (
 	"bufio"
@@ -12,11 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/manifest"
+	_ "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
-//go:embed ../sdk/test_data/parser
+//go:embed test_data/parser
 var parserTestData embed.FS
 
 func TestDecode(t *testing.T) {
@@ -24,87 +26,87 @@ func TestDecode(t *testing.T) {
 		Input              string
 		ExpectedObjectsLen int
 		ExpectedNames      []string
-		Format             ObjectFormat
+		Format             manifest.ObjectFormat
 	}{
 		{
 			Input:              "list_of_objects.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "list_of_objects_with_whitespace.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "list_of_objects_with_comments.yaml",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "multiple_documents.yaml",
 			ExpectedObjectsLen: 3,
 			ExpectedNames:      []string{"default0", "default1", "default2"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "single_document_with_document_separators.yaml",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             ObjectFormatYAML,
+			Format:             manifest.ObjectFormatYAML,
 		},
 		{
 			Input:              "compacted_list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatJSON,
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "compacted_single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             ObjectFormatJSON,
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "list_of_objects.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatJSON,
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "list_of_objects_with_whitespace.json",
 			ExpectedObjectsLen: 2,
 			ExpectedNames:      []string{"default0", "default1"},
-			Format:             ObjectFormatJSON,
+			Format:             manifest.ObjectFormatJSON,
 		},
 		{
 			Input:              "single_object.json",
 			ExpectedObjectsLen: 1,
 			ExpectedNames:      []string{"default"},
-			Format:             ObjectFormatJSON,
+			Format:             manifest.ObjectFormatJSON,
 		},
 	} {
 		t.Run(test.Input, func(t *testing.T) {
 			data := readInputFile(t, test.Input)
 
-			isJSON := isJSONBuffer(data)
+			isJSON := manifest.IsJSONBuffer(data)
 			switch test.Format {
-			case ObjectFormatJSON:
+			case manifest.ObjectFormatJSON:
 				assert.True(t, isJSON, "expected the file contents to be interpreted as JSON")
-			case ObjectFormatYAML:
+			case manifest.ObjectFormatYAML:
 				assert.False(t, isJSON, "expected the file contents to be interpreted as YAML")
 			}
 
-			objects, err := DecodeObjects(data)
+			objects, err := manifest.DecodeObjects(data)
 			require.NoError(t, err)
 			assert.Len(t, objects, test.ExpectedObjectsLen)
 			assert.IsType(t, project.Project{}, objects[0])
@@ -121,7 +123,7 @@ func TestDecode(t *testing.T) {
 	t.Run("scanner token size overflow", func(t *testing.T) {
 		// Generate objects.
 		objectsNum := 800
-		expectedObjects := make([]Object, 0, objectsNum)
+		expectedObjects := make([]manifest.Object, 0, objectsNum)
 		for i := 0; i < objectsNum; i++ {
 			expectedObjects = append(expectedObjects, project.New(
 				project.Metadata{
@@ -147,7 +149,7 @@ func TestDecode(t *testing.T) {
 		data, err := os.ReadFile(filename)
 		require.NoError(t, err)
 
-		objects, err := DecodeObjects(data)
+		objects, err := manifest.DecodeObjects(data)
 		require.NoError(t, err)
 		assert.Len(t, expectedObjects, objectsNum)
 		assert.IsType(t, project.Project{}, expectedObjects[0])
@@ -164,20 +166,20 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeSingle(t *testing.T) {
 	t.Run("golden path", func(t *testing.T) {
-		proj, err := DecodeObject[project.Project](readInputFile(t, "single_project.yaml"))
+		proj, err := manifest.DecodeObject[project.Project](readInputFile(t, "single_project.yaml"))
 		require.NoError(t, err)
 		assert.NotZero(t, proj)
 		assert.Equal(t, "default", proj.GetName())
 	})
 
 	t.Run("multiple objects, return error", func(t *testing.T) {
-		_, err := DecodeObject[project.Project](readInputFile(t, "two_projects.yaml"))
+		_, err := manifest.DecodeObject[project.Project](readInputFile(t, "two_projects.yaml"))
 		require.Error(t, err)
 		assert.EqualError(t, err, "unexpected number of objects: 2, expected exactly one")
 	})
 
 	t.Run("invalid type, return error", func(t *testing.T) {
-		_, err := DecodeObject[v1alphaService.Service](readInputFile(t, "single_project.yaml"))
+		_, err := manifest.DecodeObject[v1alphaService.Service](readInputFile(t, "single_project.yaml"))
 		require.Error(t, err)
 		assert.EqualError(t, err, "object of type project.Project is not of type service.Service")
 	})

@@ -1,4 +1,4 @@
-package manifest
+package manifest_test
 
 import (
 	"bytes"
@@ -16,10 +16,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 )
 
-//go:embed ../sdk/test_data/reader
+//go:embed test_data/reader
 var readerTestData embed.FS
 var templates *template.Template
 
@@ -40,7 +41,7 @@ func TestResolveSources(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	rawSources := []RawObjectSource{
+	rawSources := []manifest.RawObjectSource{
 		"http://insecure.com",
 		"https://secure.com",
 		tmp,
@@ -48,19 +49,19 @@ func TestResolveSources(t *testing.T) {
 		filepath.Join(tmp, "slo.json"),
 	}
 
-	expected := []*ObjectSource{
+	expected := []*manifest.ObjectSource{
 		{
-			Type:  ObjectSourceTypeURL,
+			Type:  manifest.ObjectSourceTypeURL,
 			Paths: []string{"http://insecure.com"},
 			Raw:   "http://insecure.com",
 		},
 		{
-			Type:  ObjectSourceTypeURL,
+			Type:  manifest.ObjectSourceTypeURL,
 			Paths: []string{"https://secure.com"},
 			Raw:   "https://secure.com",
 		},
 		{
-			Type: ObjectSourceTypeDirectory,
+			Type: manifest.ObjectSourceTypeDirectory,
 			Paths: []string{
 				filepath.Join(tmp, "slo.json"),
 				filepath.Join(tmp, "slo.yaml"),
@@ -69,7 +70,7 @@ func TestResolveSources(t *testing.T) {
 			Raw: tmp,
 		},
 		{
-			Type: ObjectSourceTypeGlobPattern,
+			Type: manifest.ObjectSourceTypeGlobPattern,
 			Paths: []string{
 				filepath.Join(tmp, "slo.json"),
 				filepath.Join(tmp, "slo.yaml"),
@@ -78,36 +79,36 @@ func TestResolveSources(t *testing.T) {
 			Raw: filepath.Join(tmp, "**"),
 		},
 		{
-			Type:  ObjectSourceTypeFile,
+			Type:  manifest.ObjectSourceTypeFile,
 			Paths: []string{filepath.Join(tmp, "slo.json")},
 			Raw:   filepath.Join(tmp, "slo.json"),
 		},
 	}
 
 	for _, raw := range rawSources {
-		source, err := ResolveObjectSource(raw)
+		source, err := manifest.ResolveObjectSource(raw)
 		require.NoError(t, err)
 		assert.Contains(t, expected, source)
 	}
 
-	sources, err := ResolveObjectSources(rawSources...)
+	sources, err := manifest.ResolveObjectSources(rawSources...)
 	require.NoError(t, err)
 	assert.ElementsMatch(t, expected, sources)
 }
 
 func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader", func(t *testing.T) {
-		definitions, err := ReadObjectsFromSources(
+		definitions, err := manifest.ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "stdin"))
+			manifest.NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "stdin"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: "stdin"})
 	})
 
 	t.Run("read definitions from reader for empty source", func(t *testing.T) {
-		definitions, err := ReadObjectsFromSources(
+		definitions, err := manifest.ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "test"))
+			manifest.NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "test"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
@@ -115,39 +116,42 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	})
 
 	t.Run("fill in path for empty ObjectSource.Paths", func(t *testing.T) {
-		definitions, err := ReadObjectsFromSources(
+		definitions, err := manifest.ReadObjectsFromSources(
 			context.Background(),
-			&ObjectSource{
+			&manifest.ObjectSource{
 				Reader: readTestFile(t, "service_and_agent.yaml"),
-				Type:   ObjectSourceTypeReader,
+				Type:   manifest.ObjectSourceTypeReader,
 			})
 		require.NoError(t, err)
-		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: unknownSource})
+		definitionsMatchExpected(
+			// TODO consider better approach than exporting UnknownSource
+			t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: manifest.UnknownSource},
+		)
 	})
 
 	t.Run("report an error when io.Reader is nil", func(t *testing.T) {
-		_, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(nil, "nil"))
+		_, err := manifest.ReadObjectsFromSources(context.Background(), manifest.NewObjectSourceReader(nil, "nil"))
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrIoReaderIsNil)
+		assert.ErrorIs(t, err, manifest.ErrIoReaderIsNil)
 	})
 
 	t.Run("report an error when more than one ObjectSource.Path provided", func(t *testing.T) {
-		_, err := ReadObjectsFromSources(context.Background(),
-			&ObjectSource{
+		_, err := manifest.ReadObjectsFromSources(context.Background(),
+			&manifest.ObjectSource{
 				Reader: readTestFile(t, "service_and_agent.yaml"),
-				Type:   ObjectSourceTypeReader,
+				Type:   manifest.ObjectSourceTypeReader,
 				Paths:  []string{"this", "that"},
 			})
 		require.Error(t, err)
-		assert.ErrorIs(t, err, ErrSourceTypeReaderPath)
+		assert.ErrorIs(t, err, manifest.ErrSourceTypeReaderPath)
 	})
 }
 
 func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
 	t.Run("report an error when unexpected structure was returned", func(t *testing.T) {
-		definitions, err := ReadObjectsFromSources(
+		definitions, err := manifest.ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
+			manifest.NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
 		require.NoError(t, err)
 
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
@@ -174,7 +178,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		defer srv.Close()
 		require.Regexp(t, "^http://", srv.URL)
 
-		definitions, err := ReadObjects(context.Background(), srv.URL)
+		definitions, err := manifest.ReadObjects(context.Background(), srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "annotations", ManifestSrc: srv.URL})
 	})
@@ -186,10 +190,11 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
-		httpClientFactory = func(url string) *http.Client { return srv.Client() }
+		// TODO consider anything but no export
+		manifest.HttpClientFactory = func(url string) *http.Client { return srv.Client() }
 		require.Regexp(t, "^https://", srv.URL)
 
-		definitions, err := ReadObjects(context.Background(), srv.URL)
+		definitions, err := manifest.ReadObjects(context.Background(), srv.URL)
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
@@ -201,10 +206,10 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "some error reason", http.StatusForbidden)
 		}))
-		httpClientFactory = func(url string) *http.Client { return srv.Client() }
+		manifest.HttpClientFactory = func(url string) *http.Client { return srv.Client() }
 		defer srv.Close()
 
-		_, err := ReadObjects(context.Background(), srv.URL)
+		_, err := manifest.ReadObjects(context.Background(), srv.URL)
 		require.Error(t, err)
 		assert.ErrorContains(t, err, fmt.Sprintf("GET %s response: 403 some error reason", srv.URL))
 	})
@@ -218,7 +223,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		var err error
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		_, err = ReadObjects(ctx, srv.URL)
+		_, err = manifest.ReadObjects(ctx, srv.URL)
 
 		require.Error(t, err)
 		assert.ErrorIs(t, err, context.Canceled)
@@ -305,79 +310,79 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 	}
 
 	for name, test := range map[string]struct {
-		Sources  []RawObjectSource
+		Sources  []manifest.RawObjectSource
 		Expected []expectedMeta
 	}{
 		"read single file by name": {
-			Sources:  []RawObjectSource{tmpDir("slo.yaml")},
+			Sources:  []manifest.RawObjectSource{tmpDir("slo.yaml")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: tmpDir("slo.yaml")}},
 		},
 		"multiple single file sources by name": {
-			Sources: []RawObjectSource{tmpDir("slo.yaml"), tmpDir("more-yaml/service_and_agent.yaml")},
+			Sources: []manifest.RawObjectSource{tmpDir("slo.yaml"), tmpDir("more-yaml/service_and_agent.yaml")},
 			Expected: []expectedMeta{
 				{Name: "slo", ManifestSrc: tmpDir("slo.yaml")},
 				{Name: "service_and_agent", ManifestSrc: tmpDir("more-yaml/service_and_agent.yaml")},
 			},
 		},
 		"read immediate directory files with a dot": {
-			Sources:  []RawObjectSource{tmpDir(".")},
+			Sources:  []manifest.RawObjectSource{tmpDir(".")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: tmpDir("slo.yaml")}},
 		},
 		"read immediate directory files with a wildcard": {
-			Sources:  []RawObjectSource{tmpDir("*")},
+			Sources:  []manifest.RawObjectSource{tmpDir("*")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: tmpDir("slo.yaml")}},
 		},
 		"read all the files starting with 'slo'": {
-			Sources:  []RawObjectSource{tmpDir("**/slo*")},
+			Sources:  []manifest.RawObjectSource{tmpDir("**/slo*")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: tmpDir("slo.yaml")}},
 		},
 		"read directory files with a glob pattern": {
-			Sources:  []RawObjectSource{tmpDir("*/*.yml")},
+			Sources:  []manifest.RawObjectSource{tmpDir("*/*.yml")},
 			Expected: []expectedMeta{{Name: "projects_and_direct", ManifestSrc: tmpDir("more-yaml/projects_and_direct.yml")}},
 		},
 		"read test_data directory files with a relative path": {
-			Sources:  []RawObjectSource{"test_data/reader/inputs"},
+			Sources:  []manifest.RawObjectSource{"test_data/reader/inputs"},
 			Expected: allNobl9RelFiles,
 		},
 		"read a single directory by name": {
-			Sources: []RawObjectSource{tmpDir("more-yaml/even-more-definitions")},
+			Sources: []manifest.RawObjectSource{tmpDir("more-yaml/even-more-definitions")},
 			Expected: []expectedMeta{
 				{Name: "annotations", ManifestSrc: tmpDir("more-yaml/even-more-definitions/annotations.yaml")},
 				{Name: "project", ManifestSrc: tmpDir("more-yaml/even-more-definitions/project.json")},
 			},
 		},
 		"recurse the whole FS tree with a wildcard": {
-			Sources:  []RawObjectSource{tmpDir("**")},
+			Sources:  []manifest.RawObjectSource{tmpDir("**")},
 			Expected: allNobl9TmpFiles,
 		},
 		"recurse the whole relative FS tree with a wildcard": {
-			Sources:  []RawObjectSource{workingDir("test_data/reader/inputs/**")},
+			Sources:  []manifest.RawObjectSource{workingDir("test_data/reader/inputs/**")},
 			Expected: allNobl9RelFiles,
 		},
 		"double wildcard inside the pattern": {
-			Sources: []RawObjectSource{tmpDir("**/even-more-definitions/*")},
+			Sources: []manifest.RawObjectSource{tmpDir("**/even-more-definitions/*")},
 			Expected: []expectedMeta{
 				{Name: "annotations", ManifestSrc: tmpDir("more-yaml/even-more-definitions/annotations.yaml")},
 				{Name: "project", ManifestSrc: tmpDir("more-yaml/even-more-definitions/project.json")},
 			},
 		},
 		"duplicated sources with the same content are allowed": {
-			Sources:  []RawObjectSource{tmpDir("slo.yaml"), tmpDir(".")},
+			Sources:  []manifest.RawObjectSource{tmpDir("slo.yaml"), tmpDir(".")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: tmpDir("slo.yaml")}},
 		},
 		"read a symlink to file": {
-			Sources:  []RawObjectSource{symlinkDir("slo-symlink.yml")},
+			Sources:  []manifest.RawObjectSource{symlinkDir("slo-symlink.yml")},
 			Expected: []expectedMeta{{Name: "slo", ManifestSrc: symlinkDir("slo-symlink.yml")}},
 		},
 		"read a symlink to directory with a wildcard": {
-			Sources: []RawObjectSource{symlinkDir("more-yaml-symlink/*")},
+			Sources: []manifest.RawObjectSource{symlinkDir("more-yaml-symlink/*")},
 			Expected: []expectedMeta{
 				{Name: "service_and_agent", ManifestSrc: symlinkDir("more-yaml-symlink/service_and_agent.yaml")},
 				{Name: "projects_and_direct", ManifestSrc: symlinkDir("more-yaml-symlink/projects_and_direct.yml")},
 			},
 		},
 		"read all directory symlinks through double wildcard": {
-			Sources: []RawObjectSource{symlinkDir("**")},
+			Sources: []manifest.RawObjectSource{symlinkDir("**")},
 			Expected: []expectedMeta{
 				{Name: "slo", ManifestSrc: symlinkDir("slo-symlink.yml")},
 				{Name: "service_and_agent", ManifestSrc: symlinkDir("more-yaml-symlink/service_and_agent.yaml")},
@@ -388,7 +393,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			definitions, err := ReadObjects(ctx, test.Sources...)
+			definitions, err := manifest.ReadObjects(ctx, test.Sources...)
 			require.NoError(t, err)
 
 			definitionsMatchExpected(t, definitions, test.Expected...)
@@ -396,20 +401,20 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 	}
 
 	for name, test := range map[string]struct {
-		Sources  []RawObjectSource
+		Sources  []manifest.RawObjectSource
 		Expected error
 	}{
 		"missing file pattern for wildcard directory": {
-			Sources:  []RawObjectSource{tmpDir("**/even-more-definitions")},
-			Expected: ErrNoFilesMatchingPattern,
+			Sources:  []manifest.RawObjectSource{tmpDir("**/even-more-definitions")},
+			Expected: manifest.ErrNoFilesMatchingPattern,
 		},
 		"no files found under selected directory": {
-			Sources:  []RawObjectSource{tmpDir("empty-dir")},
-			Expected: ErrNoFilesInPath,
+			Sources:  []manifest.RawObjectSource{tmpDir("empty-dir")},
+			Expected: manifest.ErrNoFilesInPath,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			_, err = ReadObjects(ctx, test.Sources...)
+			_, err = manifest.ReadObjects(ctx, test.Sources...)
 			require.Error(t, err)
 			assert.ErrorIs(t, err, test.Expected)
 		})
@@ -421,7 +426,7 @@ type expectedMeta struct {
 	ManifestSrc string
 }
 
-func definitionsMatchExpected(t *testing.T, definitions []Object, meta ...expectedMeta) {
+func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta ...expectedMeta) {
 	t.Helper()
 
 	rawActual, err := json.Marshal(definitions)

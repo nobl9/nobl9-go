@@ -47,7 +47,7 @@ func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]Object, 
 	return ReadObjectsFromSources(ctx, sources...)
 }
 
-const unknownSource = "-"
+const UnknownSource = "-"
 
 // ReadObjectsFromSources reads from the provided ObjectSource(s) based on the
 // ObjectSourceType. For ObjectSourceTypeReader it will read directly from ObjectSource.Reader,
@@ -72,7 +72,7 @@ func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]Ob
 		if src.Type == ObjectSourceTypeReader {
 			switch len(src.Paths) {
 			case 0:
-				src.Paths = []string{unknownSource}
+				src.Paths = []string{UnknownSource}
 			case 1:
 				break
 			default:
@@ -142,7 +142,7 @@ func readFromReader(in io.Reader) ([]byte, error) {
 // HTTP clients should be reused whenever possible as they cache TCP connections, they are also
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.
-var httpClientFactory = func(url string) *http.Client {
+var HttpClientFactory = func(url string) *http.Client {
 	return internalSDK.NewRetryableHTTPClient(10*time.Second, nil)
 }
 
@@ -151,7 +151,7 @@ func readFromURL(ctx context.Context, url string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "error creating new GET %s request", url)
 	}
-	resp, err := httpClientFactory(url).Do(req)
+	resp, err := HttpClientFactory(url).Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "error receiving GET %s response", url)
 	}
