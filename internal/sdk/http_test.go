@@ -26,7 +26,7 @@ func TestCheckRetry(t *testing.T) {
 		errs := []error{
 			errors.New("stopped after 10 redirects"),
 			x509.UnknownAuthorityError{},
-			httpNonRetryableError{},
+			HttpNonRetryableError{},
 		}
 		for _, vErr := range urlVerificationErrors {
 			errs = append(errs, errors.New(vErr))

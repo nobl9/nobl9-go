@@ -21,10 +21,10 @@ var (
 	}
 )
 
-// httpNonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
-type httpNonRetryableError struct{ Err error }
+// HttpNonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
+type HttpNonRetryableError struct{ Err error }
 
-func (n httpNonRetryableError) Error() string { return n.Err.Error() }
+func (n HttpNonRetryableError) Error() string { return n.Err.Error() }
 
 // NewRetryableHTTPClient returns http.Client with preconfigured retry feature.
 func NewRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
@@ -73,7 +73,7 @@ func httpShouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry boo
 			// Don't retry if the error is not retryable.
 			// This error type is returned by from round trippers to inform the retryable client which calls them,
 			// that the error should be permanent.
-			if _, isNotRetryable := v.Err.(httpNonRetryableError); isNotRetryable {
+			if _, isNotRetryable := v.Err.(HttpNonRetryableError); isNotRetryable {
 				return false
 			}
 		}

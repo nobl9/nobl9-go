@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/nobl9/nobl9-go/internal/sdk"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 const (

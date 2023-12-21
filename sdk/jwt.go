@@ -3,7 +3,6 @@ package sdk
 import (
 	"context"
 	"encoding/json"
-	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"reflect"
 	"sync"
@@ -16,6 +15,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 const (

@@ -3,13 +3,14 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 // accessTokenParser parses and verifies fetched access token.
@@ -130,7 +131,7 @@ var cleanCredentialsHTTPClient = &http.Client{}
 func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
-		return nil, sdk.httpNonRetryableError{Err: err}
+		return nil, sdk.HttpNonRetryableError{Err: err}
 	}
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
 		c.setAuthorizationHeader(req)

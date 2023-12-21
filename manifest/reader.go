@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
-	internalSDK "github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/pkg/errors"
+
+	internalSDK "github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
@@ -138,7 +139,7 @@ func readFromReader(in io.Reader) ([]byte, error) {
 	return io.ReadAll(in)
 }
 
-// TODO: in the future if we'd run sloctl daemon or web server, this should become a pool instead.
+// HttpClientFactory TODO: in the future if we'd run sloctl daemon or web server, this should become a pool instead.
 // HTTP clients should be reused whenever possible as they cache TCP connections, they are also
 // concurrently safe by design.
 // The factory is defined in a package variable to allow testing of HTTPS requests with httptest package.

@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"context"
-	"github.com/nobl9/nobl9-go/internal/sdk"
 	"net/http"
 	"testing"
 	"time"
@@ -11,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 func TestCredentials_SetAuthorizationHeader(t *testing.T) {
@@ -350,7 +351,7 @@ func TestClient_RoundTrip(t *testing.T) {
 		req := &http.Request{}
 		_, err := creds.RoundTrip(req)
 		require.Error(t, err)
-		_, isNonRetryableError := err.(sdk.httpNonRetryableError)
+		_, isNonRetryableError := err.(sdk.HttpNonRetryableError)
 		assert.True(t, isNonRetryableError, "err is of type httpNonRetryableError")
 	})
 
