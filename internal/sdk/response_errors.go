@@ -13,7 +13,7 @@ func ProcessResponseErrors(resp *http.Response) error {
 	switch {
 	case resp.StatusCode >= 300 && resp.StatusCode < 400:
 		rawErr, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("bad status code response: %d, body: %s", resp.StatusCode, string(rawErr))
+		return fmt.Errorf("unexpected status code response: %d, body: %s", resp.StatusCode, string(rawErr))
 	case resp.StatusCode >= 400 && resp.StatusCode < 500:
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("%s", bytes.TrimSpace(body))

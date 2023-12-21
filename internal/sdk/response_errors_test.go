@@ -55,4 +55,14 @@ func TestProcessResponseErrors(t *testing.T) {
 				fmt.Sprintf("%s error message: error! error id: 123", http.StatusText(code)))
 		}
 	})
+
+	t.Run("concurrency issue", func(t *testing.T) {
+		t.Parallel()
+		err := ProcessResponseErrors(&http.Response{
+			StatusCode: 500,
+			Body: io.NopCloser(bytes.NewBufferString(
+				"operation failed due to concurrency issue but can be retried"))})
+		require.Error(t, err)
+		require.Equal(t, ErrConcurrencyIssue, err)
+	})
 }
