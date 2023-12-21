@@ -11,7 +11,7 @@ import (
 var _ manifest.Object = Project{}
 var _ v1alpha.ObjectContext = Project{}
 
-func (p Project) GetVersion() string {
+func (p Project) GetVersion() manifest.Version {
 	return p.APIVersion
 }
 

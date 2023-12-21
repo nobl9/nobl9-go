@@ -12,7 +12,7 @@ var _ manifest.Object = Annotation{}
 var _ manifest.ProjectScopedObject = Annotation{}
 var _ v1alpha.ObjectContext = Annotation{}
 
-func (a Annotation) GetVersion() string {
+func (a Annotation) GetVersion() manifest.Version {
 	return a.APIVersion
 }
 

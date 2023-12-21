@@ -12,7 +12,7 @@ var _ manifest.Object = Direct{}
 var _ manifest.ProjectScopedObject = Direct{}
 var _ v1alpha.ObjectContext = Direct{}
 
-func (d Direct) GetVersion() string {
+func (d Direct) GetVersion() manifest.Version {
 	return d.APIVersion
 }
 

@@ -10,7 +10,7 @@ import (
 // New creates a new SLO based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) SLO {
 	return SLO{
-		APIVersion: manifest.VersionV1alpha.String(),
+		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindSLO,
 		Metadata:   metadata,
 		Spec:       spec,
@@ -19,11 +19,11 @@ func New(metadata Metadata, spec Spec) SLO {
 
 // SLO struct which mapped one to one with kind: slo yaml definition, external usage
 type SLO struct {
-	APIVersion string        `json:"apiVersion"`
-	Kind       manifest.Kind `json:"kind"`
-	Metadata   Metadata      `json:"metadata"`
-	Spec       Spec          `json:"spec"`
-	Status     *Status       `json:"status,omitempty"`
+	APIVersion manifest.Version `json:"apiVersion"`
+	Kind       manifest.Kind    `json:"kind"`
+	Metadata   Metadata         `json:"metadata"`
+	Spec       Spec             `json:"spec"`
+	Status     *Status          `json:"status,omitempty"`
 
 	Organization   string `json:"organization,omitempty"`
 	ManifestSource string `json:"manifestSrc,omitempty"`

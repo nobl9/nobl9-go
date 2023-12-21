@@ -12,7 +12,7 @@ var _ manifest.Object = Alert{}
 var _ manifest.ProjectScopedObject = Alert{}
 var _ v1alpha.ObjectContext = Alert{}
 
-func (a Alert) GetVersion() string {
+func (a Alert) GetVersion() manifest.Version {
 	return a.APIVersion
 }
 
