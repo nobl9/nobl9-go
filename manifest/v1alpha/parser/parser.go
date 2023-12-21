@@ -125,6 +125,7 @@ func genericParseObject[T manifest.Object](unmarshal unmarshalFunc) (T, error) {
 	return object, nil
 }
 
+// nolint: gochecknoinits
 func init() {
 	manifest.RegisterParser(manifest.VersionV1alpha, ParseObject)
 }
