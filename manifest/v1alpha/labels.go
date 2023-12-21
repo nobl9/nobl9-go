@@ -10,10 +10,10 @@ import (
 )
 
 type (
-	Labels map[Key][]Value
+	Labels map[labelKey][]labelValue
 
-	Key   = string
-	Value = string
+	labelKey   = string
+	labelValue = string
 )
 
 func ValidationRuleLabels() validation.SingleRule[Labels] {
@@ -55,7 +55,7 @@ var (
 	hasUpperCaseLettersRegexp = regexp.MustCompile(`[A-Z]+`)
 )
 
-func (l Labels) validateKey(key Key) error {
+func (l Labels) validateKey(key labelKey) error {
 	if len(key) > maxLabelKeyLength || len(key) < minLabelKeyLength {
 		return errors.Errorf("label key '%s' length must be between %d and %d",
 			key, minLabelKeyLength, maxLabelKeyLength)
@@ -69,7 +69,7 @@ func (l Labels) validateKey(key Key) error {
 	return nil
 }
 
-func (l Labels) validateValue(key Key, value Value) error {
+func (l Labels) validateValue(key labelKey, value labelValue) error {
 	if utf8.RuneCountInString(value) >= minLabelValueLength &&
 		utf8.RuneCountInString(value) <= maxLabelValueLength {
 		return nil
@@ -78,7 +78,7 @@ func (l Labels) validateValue(key Key, value Value) error {
 		value, key, minLabelValueLength, maxLabelValueLength)
 }
 
-func (l Labels) ensureValuesUniqueness(key Key, labelValues []Value) error {
+func (l Labels) ensureValuesUniqueness(key labelKey, labelValues []labelValue) error {
 	uniqueValues := make(map[string]struct{})
 	for _, value := range labelValues {
 		if _, exists := uniqueValues[value]; exists {
