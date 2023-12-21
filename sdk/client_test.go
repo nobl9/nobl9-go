@@ -7,7 +7,6 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -24,333 +23,9 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
-	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
-	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
-func TestClient_GetObjects(t *testing.T) {
-	responsePayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: manifest.VersionV1alpha,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
-				Name:    "service1",
-				Project: "default",
-			},
-		},
-		v1alphaService.Service{
-			APIVersion: manifest.VersionV1alpha,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
-				Name:    "service2",
-				Project: "default",
-			},
-		},
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/get/service",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-			assert.Equal(t, "non-default", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{
-				QueryKeyName:         {"service1", "service2"},
-				QueryKeyLabelsFilter: {"team:green,team:purple"},
-			}, r.URL.Query())
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	objects, err := client.GetObjects(
-		context.Background(),
-		"non-default",
-		manifest.KindService,
-		map[string][]string{"team": {"green", "purple"}},
-		"service1", "service2",
-	)
-	// Verify response handling.
-	require.NoError(t, err)
-	require.Len(t, objects, 2)
-	assert.Equal(t, responsePayload, objects)
-}
-
-func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
-	responsePayload := make([]manifest.Object, 0)
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/get/service",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	objects, err := client.GetObjects(
-		context.Background(),
-		ProjectsWildcard,
-		manifest.KindService,
-		nil,
-		"service1",
-	)
-	// Verify response handling.
-	require.NoError(t, err)
-	require.Len(t, objects, 0)
-}
-
-func TestClient_GetObjects_UserGroupsEndpoint(t *testing.T) {
-	responsePayload := []manifest.Object{
-		v1alphaUserGroup.New(v1alphaUserGroup.Metadata{Name: "service1"}, v1alphaUserGroup.Spec{}),
-	}
-
-	calledTimes := 0
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/usrmgmt/groups",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			calledTimes++
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	_, err := client.GetObjects(context.Background(), "", manifest.KindUserGroup, nil)
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, 1, calledTimes)
-}
-
-func TestClient_ApplyObjects(t *testing.T) {
-	requestPayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: manifest.VersionV1alpha,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
-				Name:    "service1",
-				Project: "default",
-			},
-		},
-	}
-	expected := addOrganization(requestPayload, "my-org")
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/apply",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			w.WriteHeader(http.StatusOK)
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodPut, r.Method)
-			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
-			require.NoError(t, err)
-			assert.Equal(t, expected, objects)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	client.WithDryRun()
-	err := client.ApplyObjects(context.Background(), requestPayload)
-	// Verify response handling.
-	require.NoError(t, err)
-}
-
-func TestClient_DeleteObjects(t *testing.T) {
-	requestPayload := []manifest.Object{
-		v1alphaService.Service{
-			APIVersion: manifest.VersionV1alpha,
-			Kind:       manifest.KindService,
-			Metadata: v1alphaService.Metadata{
-				Name:    "service1",
-				Project: "default",
-			},
-		},
-	}
-	expected := addOrganization(requestPayload, "my-org")
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/delete",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			w.WriteHeader(http.StatusOK)
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyDryRun: {"true"}}, r.URL.Query())
-			objects, err := ReadObjectsFromSources(context.Background(), NewObjectSourceReader(r.Body, ""))
-			require.NoError(t, err)
-			assert.Equal(t, expected, objects)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	client.WithDryRun()
-	err := client.DeleteObjects(context.Background(), requestPayload)
-	// Verify response handling.
-	require.NoError(t, err)
-}
-
-func TestClient_DeleteObjectsByName(t *testing.T) {
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/delete/service",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			w.WriteHeader(http.StatusOK)
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodDelete, r.Method)
-			assert.Equal(t, "my-project", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{
-				QueryKeyName:   {"service1", "service2"},
-				QueryKeyDryRun: {"true"},
-			}, r.URL.Query())
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	err := client.DeleteObjectsByName(
-		context.Background(),
-		"my-project",
-		manifest.KindService,
-		true,
-		"service1",
-		"service2",
-	)
-	// Verify response handling.
-	require.NoError(t, err)
-}
-
-func TestClient_GetDataExportIAMRoleIDs(t *testing.T) {
-	expectedData := models.IAMRoleIDs{
-		ExternalID: "external-id",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/get/dataexport/aws-external-id",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	response, err := client.GetDataExportIAMRoleIDs(context.Background())
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, expectedData, *response)
-}
-
-func TestClient_GetDirectIAMRoleIDs(t *testing.T) {
-	expectedData := models.IAMRoleIDs{
-		ExternalID: "N9-1AE8AC4A-33A909BC-2D0483BE-2874FCD1",
-		AccountID:  "123456789012",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/data-sources/iam-role-auth-data/test-direct-name",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(expectedData))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	response, err := client.GetDirectIAMRoleIDs(context.Background(), "default", "test-direct-name")
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, expectedData, *response)
-}
-
-func TestClient_GetAgentCredentials(t *testing.T) {
-	responsePayload := M2MAppCredentials{
-		ClientID:     "agent-client-id",
-		ClientSecret: "agent-client-secret",
-	}
-
-	client, srv := prepareTestClient(t, endpointConfig{
-		// Define endpoint response.
-		Path: "api/internal/agent/clientcreds",
-		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
-			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
-		},
-		// Verify request parameters.
-		TestRequestFunc: func(t *testing.T, r *http.Request) {
-			assert.Equal(t, http.MethodGet, r.Method)
-			assert.Equal(t, "agent-project", r.Header.Get(HeaderProject))
-			assert.Equal(t, url.Values{QueryKeyName: {"my-agent"}}, r.URL.Query())
-		},
-	})
-
-	// Start and close the test server.
-	srv.Start()
-	defer srv.Close()
-
-	// Run the API method.
-	objects, err := client.GetAgentCredentials(
-		context.Background(),
-		"agent-project",
-		"my-agent",
-	)
-	// Verify response handling.
-	require.NoError(t, err)
-	assert.Equal(t, responsePayload, objects)
-}
-
-func TestCreateRequest(t *testing.T) {
+func TestClient_CreateRequest(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{})
 
 	// Start and close the test server.
@@ -363,7 +38,7 @@ func TestCreateRequest(t *testing.T) {
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"my-project",
+			http.Header{HeaderProject: []string{"my-project"}},
 			values,
 			bytes.NewBufferString("foo"),
 		)
@@ -387,78 +62,30 @@ func TestCreateRequest(t *testing.T) {
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"my-project",
+			http.Header{HeaderProject: []string{"my-project"}},
 			nil,
 			nil,
 		)
 		require.NoError(t, err)
 		assert.Empty(t, req.URL.Query())
 		assert.Empty(t, req.Body)
+		assert.Equal(t, "my-project", req.Header.Get(HeaderProject))
 	})
 
-	t.Run("no project", func(t *testing.T) {
+	t.Run("no project header, use default", func(t *testing.T) {
 		req, err := client.CreateRequest(
 			context.Background(),
 			http.MethodGet,
 			"/test",
-			"",
+			nil,
 			nil,
 			nil,
 		)
 		require.NoError(t, err)
-		assert.NotContains(t, req.Header, HeaderProject)
+		assert.Equal(t, client.Config.Project, req.Header.Get(HeaderProject))
 	})
 }
 
-func TestProcessResponseErrors(t *testing.T) {
-	t.Parallel()
-	c := Client{}
-
-	t.Run("status code smaller than 300, no error", func(t *testing.T) {
-		t.Parallel()
-		for code := 200; code < 300; code++ {
-			require.NoError(t, c.processResponseErrors(&http.Response{StatusCode: code}))
-		}
-	})
-
-	t.Run("status code between 300 and 399", func(t *testing.T) {
-		t.Parallel()
-		for code := 300; code < 400; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t, err, fmt.Sprintf("bad status code response: %d, body: error!", code))
-		}
-	})
-
-	t.Run("user errors", func(t *testing.T) {
-		t.Parallel()
-		for code := 400; code < 500; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t, err, "error!")
-		}
-	})
-
-	t.Run("server errors", func(t *testing.T) {
-		t.Parallel()
-		for code := 500; code < 600; code++ {
-			err := c.processResponseErrors(&http.Response{
-				StatusCode: code,
-				Header:     http.Header{HeaderTraceID: []string{"123"}},
-				Body:       io.NopCloser(bytes.NewBufferString("error!"))})
-			require.Error(t, err)
-			require.EqualError(t,
-				err,
-				fmt.Sprintf("%s error message: error! error id: 123", http.StatusText(code)))
-		}
-	})
-}
-
-// TODO: Once the new tag is released, convert change the simple_module go.mod to point at concrete SDK version.
 func TestDefaultUserAgent(t *testing.T) {
 	getStderrFromExec := func(err error) string {
 		if v, ok := err.(*exec.ExitError); ok {
@@ -478,12 +105,6 @@ func TestDefaultUserAgent(t *testing.T) {
 	assert.Contains(t, string(out), "sdk/(devel)")
 }
 
-type endpointConfig struct {
-	Path            string
-	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
-	TestRequestFunc func(*testing.T, *http.Request)
-}
-
 func addOrganization(objects []manifest.Object, org string) []manifest.Object {
 	result := make([]manifest.Object, 0, len(objects))
 	for _, obj := range objects {
@@ -492,6 +113,12 @@ func addOrganization(objects []manifest.Object, org string) []manifest.Object {
 		}
 	}
 	return result
+}
+
+type endpointConfig struct {
+	Path            string
+	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
+	TestRequestFunc func(*testing.T, *http.Request)
 }
 
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {

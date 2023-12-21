@@ -32,7 +32,7 @@ func ExampleDirect() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{myDirect}); err != nil {
+	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myDirect}); err != nil {
 		log.Fatalf("failed to apply direct, err: %v", err)
 	}
 	// Output:

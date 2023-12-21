@@ -31,7 +31,7 @@ func ExampleDataExport() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{dataExport}); err != nil {
+	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{dataExport}); err != nil {
 		log.Fatal("failed to apply data export err: %w", err)
 	}
 	// Output:

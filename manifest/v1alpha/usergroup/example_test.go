@@ -29,7 +29,7 @@ func ExampleUserGroup() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{myUserGroup}); err != nil {
+	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myUserGroup}); err != nil {
 		log.Fatalf("failed to apply user group, err: %v", err)
 	}
 	// Output:

@@ -2,7 +2,7 @@ module simple_module
 
 go 1.20
 
-require github.com/nobl9/nobl9-go v0.66.1
+require github.com/nobl9/nobl9-go v0.73.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect

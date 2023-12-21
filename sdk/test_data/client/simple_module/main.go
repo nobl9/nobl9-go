@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 	client.HTTP = &http.Client{Transport: rt}
-	if err = client.ApplyObjects(context.Background(), []manifest.Object{}); err != nil {
+	if err = client.Objects().V1().Apply(context.Background(), []manifest.Object{}); err != nil {
 		panic(err)
 	}
 	fmt.Print(rt.UserAgent)

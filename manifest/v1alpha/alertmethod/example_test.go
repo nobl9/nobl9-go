@@ -30,7 +30,7 @@ func ExampleAlertMethod() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.ApplyObjects(context.Background(), []manifest.Object{myAlertMethod}); err != nil {
+	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myAlertMethod}); err != nil {
 		log.Fatalf("failed to apply alert method, err: %v", err)
 	}
 	// Output:

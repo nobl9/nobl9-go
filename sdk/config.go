@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	EnvPrefix = "NOBL9_SDK_"
+	EnvPrefix      = "NOBL9_SDK_"
+	DefaultProject = "default"
 
 	defaultContext              = "default"
 	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
