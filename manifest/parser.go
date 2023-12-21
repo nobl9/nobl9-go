@@ -249,14 +249,14 @@ func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err 
 
 var (
 	mu      sync.Mutex
-	parsers = make(map[Version]ParserFunc)
+	parsers = make(map[Version]parserFunc)
 )
 
-type ParserFunc func(data []byte, kind Kind, format ObjectFormat) (Object, error)
+type parserFunc = func(data []byte, kind Kind, format ObjectFormat) (Object, error)
 
-// RegisterParser registers a new ParserFunc for a given manifest.Version.
+// RegisterParser registers a new parserFunc for a given manifest.Version.
 // It's intended exclusively for internal usage.
-func RegisterParser(version Version, parser ParserFunc) {
+func RegisterParser(version Version, parser parserFunc) {
 	mu.Lock()
 	defer mu.Unlock()
 	if _, found := parsers[version]; found {
