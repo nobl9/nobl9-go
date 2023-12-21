@@ -75,8 +75,11 @@ func (f *filters) Time(key string, t time.Time) *filters {
 	return f
 }
 
-func (f *filters) Bool(k string, b bool) *filters {
-	f.query.Set(k, strconv.FormatBool(b))
+func (f *filters) Bool(k string, b *bool) *filters {
+	if b == nil {
+		return f
+	}
+	f.query.Set(k, strconv.FormatBool(*b))
 	return f
 }
 

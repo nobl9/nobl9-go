@@ -52,8 +52,8 @@ type GetAlertsRequest struct {
 	AlertPolicyNames []string
 	ObjectiveNames   []string
 	ObjectiveValues  []float64
-	Resolved         bool
-	Triggered        bool
+	Resolved         *bool
+	Triggered        *bool
 	From             time.Time
 	To               time.Time
 }
@@ -79,8 +79,8 @@ type GetAnnotationsRequest struct {
 	SLOName           string
 	From              time.Time
 	To                time.Time
-	SystemAnnotations bool
-	UserAnnotations   bool
+	SystemAnnotations *bool
+	UserAnnotations   *bool
 }
 
 type GetUserGroupsRequest struct {

@@ -138,7 +138,14 @@ func (e Endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest
 		Bool(QueryKeyTriggered, params.Triggered).
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To)
-	return e.getAlerts(ctx, f.header, f.query)
+	objects, truncatedMax, err := e.GetAlerts(ctx, f.header, f.query)
+	if err != nil {
+		return nil, err
+	}
+	return &GetAlertsResponse{
+		Alerts:       manifest.FilterByKind[v1alphaAlert.Alert](objects),
+		TruncatedMax: truncatedMax,
+	}, nil
 }
 
 func (e Endpoints) GetV1alphaDirects(
@@ -190,11 +197,13 @@ func (e Endpoints) GetV1alphaAnnotations(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names).
-		Strings(QueryKeySLOName, []string{params.SLOName}).
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
 		Bool(QueryKeySystemAnnotations, params.SystemAnnotations).
 		Bool(QueryKeyUserAnnotations, params.UserAnnotations)
+	if params.SLOName != "" {
+		f.Strings(QueryKeySLOName, []string{params.SLOName})
+	}
 	objects, err := e.Get(ctx, manifest.KindAnnotation, f.header, f.query)
 	if err != nil {
 		return nil, err
@@ -216,12 +225,13 @@ func (e Endpoints) GetV1alphaUserGroups(
 	return manifest.FilterByKind[v1alphaUserGroup.UserGroup](objects), err
 }
 
-func (e Endpoints) getAlerts(
+// GetAlerts is exported for internal usage, use methods returning
+// concrete manifest.Version instead, like GetV1alphaAlerts
+func (e Endpoints) GetAlerts(
 	ctx context.Context,
 	header http.Header,
 	query url.Values,
-) (*GetAlertsResponse, error) {
-	response := GetAlertsResponse{TruncatedMax: -1}
+) ([]manifest.Object, int, error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
@@ -231,35 +241,33 @@ func (e Endpoints) getAlerts(
 		nil,
 	)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	objects, err := e.readObjects(ctx, resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	response.Alerts = manifest.FilterByKind[v1alphaAlert.Alert](objects)
 	if _, exists := resp.Header[sdk.HeaderTruncatedLimitMax]; !exists {
-		return &response, nil
+		return objects, 0, nil
 	}
 	truncatedValue := resp.Header.Get(sdk.HeaderTruncatedLimitMax)
 	truncatedMax, err := strconv.Atoi(truncatedValue)
 	if err != nil {
-		return nil, fmt.Errorf(
+		return nil, 0, fmt.Errorf(
 			"'%s' header value: '%s' is not a valid integer",
 			sdk.HeaderTruncatedLimitMax,
 			truncatedValue,
 		)
 	}
-	response.TruncatedMax = truncatedMax
-	return &response, nil
+	return objects, truncatedMax, nil
 }
