@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	_ "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )

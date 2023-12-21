@@ -9,6 +9,7 @@ import (
 	"github.com/goccy/go-yaml"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	_ "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
