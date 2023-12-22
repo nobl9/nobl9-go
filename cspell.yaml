@@ -42,6 +42,7 @@ words:
   - clientcreds
   - codeowners
   - consumergroup
+  - cooldown
   - datacenter
   - datadoghq
   - dataexport
@@ -67,6 +68,7 @@ words:
   - hrdu
   - instana
   - iowait
+  - jsonyaml
   - jwks
   - lightstep
   - logfmt
@@ -83,6 +85,8 @@ words:
   - nriq
   - nrql
   - opentsdb
+  - opsgenie
+  - pagerduty
   - plantuml
   - preconfigured
   - promql
@@ -98,6 +102,7 @@ words:
   - slis
   - sloctl
   - sloerrorbudgetstatus
+  - sloname
   - slos
   - sourcetype
   - stablebetaalpha
