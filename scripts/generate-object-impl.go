@@ -39,7 +39,7 @@ type StructTemplate struct {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) != 2 {
 		errFatal("you must provide struct name or csv of struct names")
 	}
 
@@ -113,7 +113,6 @@ func (g *generator) genDecl(node ast.Node) bool {
 	if !matched {
 		return false
 	}
-
 	g.Structs = append(g.Structs, StructTemplate{
 		Receiver:                     string(strings.ToLower(spec.Name.Name)[0]),
 		Name:                         spec.Name.Name,
