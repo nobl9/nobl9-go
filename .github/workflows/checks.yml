@@ -42,5 +42,3 @@ jobs:
         run: make check/lint
       - name: Run Gosec Security Scanner
         run: make check/gosec
-      - name: Run renovate-config-validator
-        run: make check/renovate

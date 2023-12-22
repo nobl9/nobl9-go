@@ -45,9 +45,9 @@ test/record:
 	NOBL9_SDK_TEST_RECORD_FILE="$$RECORD_FILE" go test ./... ; \
 	jq -s < "$$RECORD_FILE" > "$$RECORD_FILE.json"
 
-.PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/renovate check/format check/generate check/vulns
+.PHONY: check check/vet check/lint check/gosec check/spell check/trailing check/markdown check/format check/generate check/vulns
 ## Run all checks.
-check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/renovate check/format check/generate check/vulns
+check: check/vet check/lint check/gosec check/spell check/trailing check/markdown check/format check/generate check/vulns
 
 ## Run 'go vet' on the whole project.
 check/vet:
@@ -94,12 +94,6 @@ check/generate:
 	echo "TODO: Turn the step back once all objects were migrated to separate packages"
 #	$(call _print_check_step,Checking if generated code matches the provided definitions)
 #	./scripts/check-generate.sh
-
-## Validate Renovate configuration.
-check/renovate:
-	$(call _print_check_step,Validating Renovate configuration)
-	$(call _ensure_installed,yarn,renovate)
-	yarn --silent renovate-config-validator
 
 ## Verify if the files are formatted.
 ## You must first commit the changes, otherwise it won't detect the diffs.
