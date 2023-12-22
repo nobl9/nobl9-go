@@ -91,9 +91,8 @@ check/vulns:
 
 ## Verify if the auto generated code has been committed.
 check/generate:
-	echo "TODO: Turn the step back once all objects were migrated to separate packages"
-#	$(call _print_check_step,Checking if generated code matches the provided definitions)
-#	./scripts/check-generate.sh
+	$(call _print_check_step,Checking if generated code matches the provided definitions)
+	./scripts/check-generate.sh
 
 ## Verify if the files are formatted.
 ## You must first commit the changes, otherwise it won't detect the diffs.

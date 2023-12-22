@@ -2,7 +2,10 @@
 
 package {{ .Package }}
 
-import "github.com/nobl9/nobl9-go/manifest"
+import (
+    "github.com/nobl9/nobl9-go/manifest"
+    "github.com/nobl9/nobl9-go/manifest/v1alpha"
+)
 
 {{- range .Structs }}
 // Ensure interfaces are implemented.
@@ -11,12 +14,12 @@ var _ manifest.Object = {{ .Name }}{}
 var _ manifest.ProjectScopedObject = {{ .Name }}{}
 {{- end }}
 {{- if .GenerateV1alphaObjectContext }}
-var _ ObjectContext = {{ .Name }}{}
+var _ v1alpha.ObjectContext = {{ .Name }}{}
 {{- end }}
 
 {{- if .GenerateObject }}
 
-func ({{ .Receiver }} {{ .Name }}) GetVersion() string {
+func ({{ .Receiver }} {{ .Name }}) GetVersion() manifest.Version {
   return {{ .Receiver }}.APIVersion
 }
 
@@ -29,7 +32,10 @@ func ({{ .Receiver }} {{ .Name }}) GetName() string {
 }
 
 func ({{ .Receiver }} {{ .Name }}) Validate() error {
-  return validator.Check({{ .Receiver }})
+  	if err := validate({{ .Receiver }}); err != nil {
+  		return err
+  	}
+  	return nil
 }
 
 func ({{ .Receiver }} {{ .Name }}) GetManifestSource() string {
