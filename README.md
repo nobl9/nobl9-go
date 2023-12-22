@@ -30,7 +30,7 @@ Checkout [release notes](https://github.com/nobl9/nobl9-go/releases)
 for details on the latest bug fixes, updates, and features.
 
 ⚠️ Until v1.0.0 is released we expect some minor breaking API changes
-to occur.
+to be introduced.
 
 ---
 
