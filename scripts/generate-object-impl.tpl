@@ -32,12 +32,10 @@ func ({{ .Receiver }} {{ .Name }}) GetName() string {
 }
 
 func ({{ .Receiver }} {{ .Name }}) Validate() error {
-{{- if .GenerateValidate }}
   	if err := validate({{ .Receiver }}); err != nil {
   		return err
   	}
 
-{{- end }}
   	return nil
 }
 

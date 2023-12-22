@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go Alert -no-validate
+//go:generate go run ../../../scripts/generate-object-impl.go Alert
 
 // New creates a new Alert based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) Alert {
@@ -69,3 +69,5 @@ type Condition struct {
 	LastsForDuration string      `json:"lastsFor,omitempty"`
 	Operator         string      `json:"op,omitempty"`
 }
+
+func validate(a Alert) *v1alpha.ObjectError { return nil }
