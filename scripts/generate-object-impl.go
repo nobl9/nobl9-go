@@ -33,7 +33,6 @@ type StructTemplate struct {
 	Receiver                     string
 	Name                         string
 	GenerateObject               bool
-	GenerateValidate             bool
 	GenerateProjectScopedObject  bool
 	GenerateV1alphaObjectContext bool
 }
@@ -42,7 +41,6 @@ func main() {
 	if len(os.Args) != 2 {
 		errFatal("you must provide struct name or csv of struct names")
 	}
-
 	g := &generator{StructNames: strings.Split(strings.TrimFunc(os.Args[1], unicode.IsSpace), ",")}
 
 	filename := os.Getenv("GOFILE")
