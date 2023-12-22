@@ -175,7 +175,7 @@ func main() {
        └── version (e.g. v1alpha)
            └── object (e.g. slo)
    ```
-   
+
     - [manifest](./manifest) defines general contracts and generic methods
       for all objects.
     - Version-specific packages, such as [v1alpha](./manifest/v1alpha), define
