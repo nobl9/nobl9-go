@@ -28,6 +28,7 @@ func (s SLO) Validate() error {
 	if err := validate(s); err != nil {
 		return err
 	}
+
 	return nil
 }
 
