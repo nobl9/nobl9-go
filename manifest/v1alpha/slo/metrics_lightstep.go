@@ -39,7 +39,7 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 		Rules(validation.EqualTo(false)),
 ).When(whenCountMetricsIs(v1alpha.Lightstep))
 
-// createLightstepMetricSpecValidation constructs a new MetriSpec level validation for Lightstep.
+// createLightstepMetricSpecValidation constructs a new MetricSpec level validation for Lightstep.
 func createLightstepMetricSpecValidation(
 	include validation.Validator[LightstepMetric],
 ) validation.Validator[MetricSpec] {
@@ -98,7 +98,7 @@ var lightstepLatencyDataTypeValidation = validation.New[LightstepMetric](
 		return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType
 	})
 
-var ligstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
+var lightstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
 
 var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
@@ -110,7 +110,7 @@ var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.UQL }).
 		WithName("uql").
 		Required().
-		Rules(validation.StringDenyRegexp(ligstepUQLRegexp)),
+		Rules(validation.StringDenyRegexp(lightstepUQLRegexp)),
 ).
 	When(func(m LightstepMetric) bool {
 		return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType

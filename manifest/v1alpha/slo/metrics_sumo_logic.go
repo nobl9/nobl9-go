@@ -136,19 +136,20 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		return m.Type != nil && *m.Type == sumoLogicTypeLogs
 	})
 
+/* cspell:disable-next-line */
 var sumoLogicTimeSliceRegexp = regexp.MustCompile(`(?m)\stimeslice\s(\d+\w+)\s`)
 
 func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, error) {
-	submatches := sumoLogicTimeSliceRegexp.FindAllStringSubmatch(query, 2)
-	if len(submatches) != 1 {
+	subMatches := sumoLogicTimeSliceRegexp.FindAllStringSubmatch(query, 2)
+	if len(subMatches) != 1 {
 		return 0, fmt.Errorf("exactly one timeslice declaration is required in the query")
 	}
-	submatch := submatches[0]
-	if len(submatch) != 2 {
-		return 0, fmt.Errorf("timeslice declaration must matche regular expression: %s", sumoLogicTimeSliceRegexp)
+	subMatch := subMatches[0]
+	if len(subMatch) != 2 {
+		return 0, fmt.Errorf("timeslice declaration must match regular expression: %s", sumoLogicTimeSliceRegexp)
 	}
 	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	timeslice, err := time.ParseDuration(submatch[1])
+	timeslice, err := time.ParseDuration(subMatch[1])
 	if err != nil {
 		return 0, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
 	}

@@ -217,7 +217,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.
-			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_missingtime, 1 as n9_value"
+			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_missing_time, 1 as n9_value"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
@@ -231,7 +231,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.
-			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_time, 1 as n9_missingvalue"
+			AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_time, 1 as n9_missing_value"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
@@ -342,7 +342,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 			},
 			{
 				desc:          "valid azure resource group 3",
-				resourceGroup: "MC-azure-monitor-test-sources_aks-cluster_westeurope",
+				resourceGroup: "MC-azure-monitor-test-sources_aks-cluster_west_europe",
 				isValid:       true,
 			},
 		}
@@ -378,7 +378,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 			},
 			{
 				desc:        "non hex number used",
-				workspaceId: "AXAXAXAX-0000-0000-0000-00000000000",
+				workspaceId: "XXXXXXX-0000-0000-0000-00000000000",
 				isValid:     false,
 			},
 			{

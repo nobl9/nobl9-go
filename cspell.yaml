@@ -27,19 +27,28 @@ ignorePaths:
   - cspell.yaml
   - CODEOWNERS
   - bin/**
-  # TODO: Remove this exclusion after cleanup is done.
-  - manifest/**
+  - "**/test_data/**"
 words:
+  - aggs
+  - alertmethod
+  - alertpolicy
+  - alertsilence
   - apiurl
+  - appingress
   - atoi
   - auseg9kiegwketjzc416
   - authdata
   - awsiam
   - clientcreds
   - codeowners
+  - consumergroup
+  - datacenter
+  - datadoghq
   - dataexport
   - datasource
+  - datetime
   - devel
+  - dnssec
   - doublestar
   - dynatrace
   - endef
@@ -54,15 +63,24 @@ words:
   - goreleaser
   - gosec
   - govulncheck
+  - groupmy
+  - hrdu
+  - instana
+  - iowait
   - jwks
+  - lightstep
+  - logfmt
   - logql
   - mapstructure
+  - memstats
   - mktemp
   - msgf
   - msteams
   - nobl
   - nocase
   - nocomments
+  - noprefix
+  - nriq
   - nrql
   - opentsdb
   - plantuml
@@ -72,18 +90,31 @@ words:
   - retryable
   - retryablehttp
   - retryhttp
+  - rolebinding
   - rollup
+  - rollups
   - rtmp
+  - serviceruntime
   - slis
   - sloctl
   - sloerrorbudgetstatus
   - slos
+  - sourcetype
+  - stablebetaalpha
   - startuml
   - strconv
   - structs
+  - sumologic
   - testutils
+  - timeseries
+  - timeslice
+  - timeslices
   - tpng
   - tsdb
+  - twindow
+  - unmarshaller
+  - upsert
+  - usergroup
   - usrmgmt
   - vuln
   - vulns

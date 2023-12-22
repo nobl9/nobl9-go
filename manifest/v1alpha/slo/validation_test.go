@@ -457,7 +457,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 			},
 			"invalid unit": {
 				TimeWindows: []TimeWindow{{
-					Unit:  "dayz",
+					Unit:  "not-valid",
 					Count: 1,
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
@@ -1285,7 +1285,7 @@ builtin:synthetic.http.duration.geo
 		Location:  "EU",
 		Query: `
 SELECT http_code AS n9value, created AS n9date
-FROM 'bdwtest-256112.metrics.http_response'
+FROM 'test-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
 	}},
 	v1alpha.Elasticsearch: {Elasticsearch: &ElasticsearchMetric{
@@ -1297,7 +1297,7 @@ WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n
       "must": [
         {
           "match": {
-            "service.name": "weloveourpets_xyz"
+            "service.name": "service"
           }
         },
         {

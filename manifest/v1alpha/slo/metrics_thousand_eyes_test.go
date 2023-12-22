@@ -62,7 +62,7 @@ func TestThousandEyes(t *testing.T) {
 		)
 	})
 	t.Run("valid testType", func(t *testing.T) {
-		for _, testType := range supportedThousandEeyesTestTypes {
+		for _, testType := range supportedThousandEyesTestTypes {
 			slo := validRawMetricSLO(v1alpha.ThousandEyes)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.ThousandEyes.TestType = ptr(testType)
 			err := validate(slo)

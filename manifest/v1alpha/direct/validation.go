@@ -193,7 +193,7 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 		}
 		if onlyType != typ {
 			return errors.Errorf(
-				"must have exactly one datas source type, detected both %s and %s",
+				"must have exactly one data source type, detected both %s and %s",
 				onlyType, typ)
 		}
 		return nil
