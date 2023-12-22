@@ -44,6 +44,7 @@ words:
   - dynatrace
   - endef
   - enduml
+  - fatalf
   - gobin
   - gofile
   - goimports
