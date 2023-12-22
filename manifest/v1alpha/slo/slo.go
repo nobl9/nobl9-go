@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go SLO
+//go:generate go run ../../../scripts/generate-object-impl.go SLO
 
 // New creates a new SLO based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) SLO {
