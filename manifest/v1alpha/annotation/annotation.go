@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Annotation
+//go:generate go run ../../../scripts/generate-object-impl.go Annotation
 
 // New creates a new Annotation based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) Annotation {

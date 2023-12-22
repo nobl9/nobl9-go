@@ -25,6 +25,9 @@ func (a Alert) GetName() string {
 }
 
 func (a Alert) Validate() error {
+	if err := validate(a); err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -7,7 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../scripts/generate-object-impl.go Direct,PublicDirect
+//go:generate go run ../../../scripts/generate-object-impl.go Direct
 
 func New(metadata Metadata, spec Spec) Direct {
 	return Direct{

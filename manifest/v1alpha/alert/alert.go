@@ -69,3 +69,5 @@ type Condition struct {
 	LastsForDuration string      `json:"lastsFor,omitempty"`
 	Operator         string      `json:"op,omitempty"`
 }
+
+func validate(_ Alert) *v1alpha.ObjectError { return nil }
