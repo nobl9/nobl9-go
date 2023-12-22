@@ -24,7 +24,7 @@
 </div>
 <!-- markdownlint-enable line-length html -->
 
-Nobl9 SDK for the Go programming language.
+[Nobl9](https://www.nobl9.com/) SDK for the Go programming language.
 
 Checkout [release notes](https://github.com/nobl9/nobl9-go/releases)
 for details on the latest bug fixes, updates, and features.
@@ -170,6 +170,12 @@ func main() {
    objects, such as SLO or Project. It is divided into three package
    levels:
 
+   ```text
+   └── manifest
+       └── version (e.g. v1alpha)
+           └── object (e.g. slo)
+   ```
+
     - [manifest](./manifest) defines general contracts and generic methods
       for all objects.
     - Version-specific packages, such as [v1alpha](./manifest/v1alpha), define
@@ -177,12 +183,6 @@ func main() {
       objects.
     - Object-specific packages, like [slo](./manifest/v1alpha/slo), provide
       object definition for specific object versions.
-
-   ```text
-   └── manifest
-       └── version (e.g. v1alpha)
-           └── object (e.g. slo)
-   ```
 
 # Contributing
 
