@@ -136,7 +136,6 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		return m.Type != nil && *m.Type == sumoLogicTypeLogs
 	})
 
-/* cspell:disable-next-line */
 var sumoLogicTimeSliceRegexp = regexp.MustCompile(`(?m)\stimeslice\s(\d+\w+)\s`)
 
 func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, error) {

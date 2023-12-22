@@ -23,7 +23,6 @@ func AWSRegions() []AWSRegion {
 		{RegionName: "Asia Pacific (Tokyo)", Code: "ap-northeast-1"},
 		{RegionName: "Canada (Central)", Code: "ca-central-1"},
 		{RegionName: "China (Beijing)", Code: "cn-north-1"},
-		/* cspell:disable-next-line */
 		{RegionName: "China (Ningxia)", Code: "cn-northwest-1"},
 		{RegionName: "Europe (Frankfurt)", Code: "eu-central-1"},
 		{RegionName: "Europe (Ireland)", Code: "eu-west-1"},

@@ -78,6 +78,7 @@ words:
   - mktemp
   - msgf
   - msteams
+  - ningxia
   - nobl
   - nocase
   - nocomments
@@ -107,6 +108,7 @@ words:
   - sourcetype
   - stablebetaalpha
   - startuml
+  - stimeslice
   - strconv
   - structs
   - sumologic
