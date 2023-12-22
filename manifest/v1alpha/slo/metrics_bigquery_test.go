@@ -60,19 +60,19 @@ func TestBigQuery(t *testing.T) {
 		for expectedDetails, query := range map[string]string{
 			"must contain 'n9date'": `
 SELECT http_code AS n9value
-FROM 'bdwtest-256112.metrics.http_response'
+FROM 'test-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
 			"must contain 'n9value'": `
 SELECT created AS n9date
-FROM 'bdwtest-256112.metrics.http_response'
+FROM 'test-256112.metrics.http_response'
 WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`,
 			"must have DATETIME placeholder with '@n9date_from'": `
 SELECT http_code AS n9value, created AS n9date
-FROM 'bdwtest-256112.metrics.http_response'
+FROM 'test-256112.metrics.http_response'
 WHERE http_code = 200 AND created = DATETIME(@n9date_to)`,
 			"must have DATETIME placeholder with '@n9date_to'": `
 SELECT http_code AS n9value, created AS n9date
-FROM 'bdwtest-256112.metrics.http_response'
+FROM 'test-256112.metrics.http_response'
 WHERE http_code = 200 AND created = DATETIME(@n9date_from)`,
 		} {
 			slo := validRawMetricSLO(v1alpha.BigQuery)

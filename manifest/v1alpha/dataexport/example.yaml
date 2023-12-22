@@ -7,5 +7,5 @@ metadata:
 spec:
   exportType: S3
   spec:
-    bucketName: examplebucket
+    bucketName: example-bucket
     roleArn: arn:aws:iam::341861879477:role/n9-access

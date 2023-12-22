@@ -16,7 +16,7 @@ func ExampleRoleBinding() {
 			Name: "my-binding",
 		},
 		rolebinding.Spec{
-			User:       ptr("00uatx49j46yVPKx04x7"),
+			User:       ptr("some-user-id"),
 			RoleRef:    "project-editor",
 			ProjectRef: "default",
 		},
@@ -36,7 +36,7 @@ func ExampleRoleBinding() {
 	// metadata:
 	//   name: my-binding
 	// spec:
-	//   user: 00uatx49j46yVPKx04x7
+	//   user: some-user-id
 	//   roleRef: project-editor
 	//   projectRef: default
 }

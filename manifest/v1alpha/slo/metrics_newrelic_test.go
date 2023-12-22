@@ -43,43 +43,43 @@ func TestNewRelic_Query(t *testing.T) {
 		{
 			name: "basic good query",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
 			isValid: true,
 		},
 		{
 			name: "query with since in quotation marks",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric 'SINCE'
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
 			isValid: true,
 		},
 		{
 			name: "query with until in quotation marks",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric "UNTIL"
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'Other') LIMIT MAX TIMESERIES`,
 			isValid: true,
 		},
 		{
 			name: "query with 'since' in a word",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'sinceThis')`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'sinceThis')`,
 			isValid: true,
 		},
 		{
 			name: "query with case insensitive since",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'Other') LIMIT MAX SiNCE`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'Other') LIMIT MAX SiNCE`,
 			isValid: false,
 		},
 		{
 			name: "query with case insensitive until",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric
-	WHERE (entity.guid = 'somekey') AND (transactionType = 'Other') uNtIL LIMIT MAX TIMESERIES`,
+	WHERE (entity.guid = 'key') AND (transactionType = 'Other') uNtIL LIMIT MAX TIMESERIES`,
 			isValid: false,
 		},
 		{
 			name: "until at new line",
 			query: `SELECT average(test.duration)*1000 AS 'Response time' FROM Metric
-WHERE (entity.guid = 'somekey') AND (transactionType = 'Other')
+WHERE (entity.guid = 'key') AND (transactionType = 'Other')
 uNtIL LIMIT MAX TIMESERIES`,
 			isValid: false,
 		},

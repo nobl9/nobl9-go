@@ -5,4 +5,4 @@ metadata:
 spec:
     projectRef: default
     roleRef: project-editor
-    user: 00uatx49j46yVPKx04x7
+    user: some-user-id

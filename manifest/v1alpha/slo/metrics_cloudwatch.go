@@ -125,7 +125,7 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		StopOnError().
 		IncludeForEach(cloudwatchMetricDimensionValidation).
 		StopOnError().
-		// We don't want to check names uniqueness if for exsample names are empty.
+		// We don't want to check names uniqueness if for example names are empty.
 		Rules(validation.SliceUnique(func(c CloudWatchMetricDimension) string {
 			if c.Name == nil {
 				return ""

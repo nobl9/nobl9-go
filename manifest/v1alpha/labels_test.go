@@ -50,9 +50,9 @@ func TestValidateLabels(t *testing.T) {
 		},
 		"invalid: label key is too long": {
 			Labels: map[labelKey][]labelValue{
-				"netnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnet": {},
+				"net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net": {},
 			},
-			Error: errors.New("label key 'netnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnetnet' length must be between 1 and 63"),
+			Error: errors.New("label key 'net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net-net' length must be between 1 and 63"),
 		},
 		"invalid: label key starts with non letter": {
 			Labels: map[labelKey][]labelValue{
@@ -75,12 +75,12 @@ func TestValidateLabels(t *testing.T) {
 		"invalid: label value is to long (over 200 chars)": {
 			Labels: map[labelKey][]labelValue{
 				"net": {`
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
-					labellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel
+					label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-
+					label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-
+					label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label
 				`},
 			},
-			Error: errors.New("label value '\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t\tlabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabellabel\n\t\t\t\t' length for key 'net' must be between 1 and 200"),
+			Error: errors.New("label value '\n\t\t\t\t\tlabel-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-\n\t\t\t\t\tlabel-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label-\n\t\t\t\t\tlabel-label-label-label-label-label-label-label-label-label-label-label-label-label-label-label\n\t\t\t\t' length for key 'net' must be between 1 and 200"),
 		},
 		"valid: label value with uppercase characters": {
 			Labels: map[labelKey][]labelValue{

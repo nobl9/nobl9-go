@@ -20,7 +20,7 @@ func ExampleDataExport() {
 		dataexport.Spec{
 			ExportType: "S3",
 			Spec: dataexport.S3DataExportSpec{
-				BucketName: "examplebucket",
+				BucketName: "example-bucket",
 				RoleARN:    "arn:aws:iam::341861879477:role/n9-access",
 			},
 		},
@@ -44,7 +44,7 @@ func ExampleDataExport() {
 	// spec:
 	//   exportType: S3
 	//   spec:
-	//     bucketName: examplebucket
+	//     bucketName: example-bucket
 	//     roleArn: arn:aws:iam::341861879477:role/n9-access
 	// status: null
 }

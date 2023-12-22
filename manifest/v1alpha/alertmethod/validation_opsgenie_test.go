@@ -12,7 +12,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 	for name, spec := range map[string]OpsgenieAlertMethod{
 		"passes with valid http url": {
 			URL:  "http://example.com",
-			Auth: "Basic dXNlcjpwYXNzd29yZA==",
+			Auth: "Basic token",
 		},
 		"passes with valid https url": {
 			URL: "https://example.com",
@@ -29,10 +29,10 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			Auth: "",
 		},
 		"passes with Basic auth": {
-			Auth: "Basic dXNlcjpwYXNzd29yZA==",
+			Auth: "Basic token",
 		},
 		"passes with GenieKey auth": {
-			Auth: "GenieKey dXNlcjpwYXNzd29yZA==",
+			Auth: "GenieKey token",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

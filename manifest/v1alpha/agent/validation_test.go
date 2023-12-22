@@ -560,7 +560,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 			url:     "https://test.live.dynatrace.com",
 			isValid: true,
 		},
-		"SaaS with port explicit speciefed": {
+		"SaaS with port explicit specified": {
 			url:     "https://test.live.dynatrace.com:433",
 			isValid: true,
 		},

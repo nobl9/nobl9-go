@@ -33,7 +33,7 @@ var thousandEyesRawMetricValidation = validation.New[MetricSpec](
 		Include(thousandEyesValidation),
 )
 
-var supportedThousandEeyesTestTypes = []string{
+var supportedThousandEyesTestTypes = []string{
 	ThousandEyesNetLatency,
 	ThousandEyesNetLoss,
 	ThousandEyesWebPageLoad,
@@ -54,5 +54,5 @@ var thousandEyesValidation = validation.New[ThousandEyesMetric](
 	validation.ForPointer(func(m ThousandEyesMetric) *string { return m.TestType }).
 		WithName("testType").
 		Required().
-		Rules(validation.OneOf(supportedThousandEeyesTestTypes...)),
+		Rules(validation.OneOf(supportedThousandEyesTestTypes...)),
 )

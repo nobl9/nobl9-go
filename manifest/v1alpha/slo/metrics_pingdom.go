@@ -51,7 +51,7 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 		),
 ).When(whenCountMetricsIs(v1alpha.Pingdom))
 
-// createPingdomMetricSpecValidation constructs a new MetriSpec level validation for Pingdom.
+// createPingdomMetricSpecValidation constructs a new MetricSpec level validation for Pingdom.
 func createPingdomMetricSpecValidation(
 	include validation.Validator[PingdomMetric],
 ) validation.Validator[MetricSpec] {
