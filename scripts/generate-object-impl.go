@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	_ "embed"
-	"flag"
 	"fmt"
 	"go/ast"
 	"go/format"
@@ -21,7 +20,6 @@ var templateStr string
 
 type generator struct {
 	StructNames []string
-	NoValidate  bool
 	Structs     []StructTemplate
 }
 
@@ -38,7 +36,6 @@ type StructTemplate struct {
 	GenerateValidate             bool
 	GenerateProjectScopedObject  bool
 	GenerateV1alphaObjectContext bool
-	NoValidate                   bool
 }
 
 func main() {
@@ -46,17 +43,7 @@ func main() {
 		errFatal("you must provide struct name or csv of struct names")
 	}
 
-	cmd := flag.NewFlagSet("", flag.ExitOnError)
-	noValidate := cmd.Bool("no-validate", false, "determine if validate method should be created")
-	err := cmd.Parse(os.Args[2:])
-	if err != nil {
-		errFatal(err.Error())
-	}
-
-	g := &generator{
-		StructNames: strings.Split(strings.TrimFunc(os.Args[1], unicode.IsSpace), ","),
-		NoValidate:  *noValidate,
-	}
+	g := &generator{StructNames: strings.Split(strings.TrimFunc(os.Args[1], unicode.IsSpace), ",")}
 
 	filename := os.Getenv("GOFILE")
 	pkg := os.Getenv("GOPACKAGE")
@@ -126,15 +113,11 @@ func (g *generator) genDecl(node ast.Node) bool {
 	if !matched {
 		return false
 	}
-	validate := true
-	if g.NoValidate {
-		validate = false
-	}
+
 	g.Structs = append(g.Structs, StructTemplate{
 		Receiver:                     string(strings.ToLower(spec.Name.Name)[0]),
 		Name:                         spec.Name.Name,
 		GenerateObject:               true,
-		GenerateValidate:             validate,
 		GenerateProjectScopedObject:  g.hasProjectInMetadata(structType.Fields),
 		GenerateV1alphaObjectContext: g.hasOrganizationAndManifestSource(structType.Fields),
 	})
