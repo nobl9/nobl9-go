@@ -28,7 +28,6 @@ func (d Direct) Validate() error {
 	if err := validate(d); err != nil {
 		return err
 	}
-
 	return nil
 }
 

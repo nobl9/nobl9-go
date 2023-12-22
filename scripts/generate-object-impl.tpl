@@ -35,7 +35,6 @@ func ({{ .Receiver }} {{ .Name }}) Validate() error {
   	if err := validate({{ .Receiver }}); err != nil {
   		return err
   	}
-
   	return nil
 }
 

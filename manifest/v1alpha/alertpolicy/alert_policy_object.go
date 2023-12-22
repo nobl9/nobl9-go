@@ -28,7 +28,6 @@ func (a AlertPolicy) Validate() error {
 	if err := validate(a); err != nil {
 		return err
 	}
-
 	return nil
 }
 
