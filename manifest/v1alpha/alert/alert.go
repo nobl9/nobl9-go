@@ -70,4 +70,4 @@ type Condition struct {
 	Operator         string      `json:"op,omitempty"`
 }
 
-func validate(a Alert) *v1alpha.ObjectError { return nil }
+func validate(_ Alert) *v1alpha.ObjectError { return nil }
