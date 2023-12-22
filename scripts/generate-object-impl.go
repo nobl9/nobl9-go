@@ -127,7 +127,7 @@ func (g *generator) genDecl(node ast.Node) bool {
 		return false
 	}
 	validate := true
-	if g.NoValidate == true {
+	if g.NoValidate {
 		validate = false
 	}
 	g.Structs = append(g.Structs, StructTemplate{
