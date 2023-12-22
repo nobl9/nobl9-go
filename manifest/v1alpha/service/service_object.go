@@ -28,7 +28,6 @@ func (s Service) Validate() error {
 	if err := validate(s); err != nil {
 		return err
 	}
-
 	return nil
 }
 

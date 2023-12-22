@@ -28,7 +28,6 @@ func (d DataExport) Validate() error {
 	if err := validate(d); err != nil {
 		return err
 	}
-
 	return nil
 }
 

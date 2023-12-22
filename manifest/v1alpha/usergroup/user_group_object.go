@@ -27,7 +27,6 @@ func (u UserGroup) Validate() error {
 	if err := validate(u); err != nil {
 		return err
 	}
-
 	return nil
 }
 

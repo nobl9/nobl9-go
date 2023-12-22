@@ -27,7 +27,6 @@ func (p Project) Validate() error {
 	if err := validate(p); err != nil {
 		return err
 	}
-
 	return nil
 }
 

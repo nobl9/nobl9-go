@@ -27,7 +27,6 @@ func (r RoleBinding) Validate() error {
 	if err := validate(r); err != nil {
 		return err
 	}
-
 	return nil
 }
 
