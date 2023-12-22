@@ -29,7 +29,7 @@ Nobl9 SDK for the Go programming language.
 Checkout [release notes](https://github.com/nobl9/nobl9-go/releases)
 for details on the latest bug fixes, updates, and features.
 
-⚠️ Until v1.0.0 is released we expect some minor breaking API changes
+⚠️ Until v1.0.0 is released, we expect some minor breaking API changes
 to be introduced.
 
 ---
@@ -162,7 +162,7 @@ func main() {
     - `Client` which exposes methods for interacting with
       different Nobl9 web APIs.
     - Methods for reading and managing Nobl9
-      configuration (including `config.toml` file) used by tools
+      configuration (including the `config.toml` file) used by tools
       such as `sloctl` or the SDK itself.
     - Methods for fetching and parsing Nobl9 configuration objects.
 
@@ -172,10 +172,11 @@ func main() {
 
     - [manifest](./manifest) defines general contracts and generic methods
       for all objects.
-    - Version specific packages, like [v1alpha](./manifest/v1alpha), define
-      version specific API shared by multiple objects.
-    - Object specific packages, like [slo](./manifest/v1alpha/slo), provide
-      object definition for specific object version.
+    - Version-specific packages, such as [v1alpha](./manifest/v1alpha), define
+      version-specific APIs, functions and structures shared by multiple
+      objects.
+    - Object-specific packages, like [slo](./manifest/v1alpha/slo), provide
+      object definition for specific object versions.
 
    ```text
    └── manifest
