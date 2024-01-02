@@ -268,6 +268,28 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 			},
 		)
 	})
+	t.Run("forbidden fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeMetrics)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Workspace = &AzureMonitorMetricLogAnalyticsWorkspace{
+			SubscriptionID: "00000000-0000-0000-0000-000000000000",
+			ResourceGroup:  "rg1",
+			WorkspaceID:    "00000000-0000-0000-0000-000000000001",
+		}
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.KQLQuery =
+			"logs | project TimeGenerated as n9_time, 1 as n9_value"
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace",
+				Code: validation.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code: validation.ErrorCodeForbidden,
+			},
+		)
+	})
 	t.Run("valid aggregations", func(t *testing.T) {
 		for _, agg := range supportedAzureMonitorAggregations {
 			slo := validRawMetricSLO(v1alpha.AzureMonitor)
@@ -299,6 +321,43 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
 				Code: validation.ErrorCodeRequired,
+			})
+	})
+	t.Run("forbidden fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.ResourceID =
+			"/subscriptions/1/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.MetricName = "HttpResponseTime"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Aggregation = "Avg"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.MetricNamespace = "Microsoft.Web/sites"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Dimensions = []AzureMonitorMetricDimension{
+			{
+				Name:  ptr("that"),
+				Value: ptr("value-1"),
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 5,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
+				Code: validation.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
+				Code: validation.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricNamespace",
+				Code: validation.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
+				Code: validation.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
+				Code: validation.ErrorCodeForbidden,
 			})
 	})
 	t.Run("subscriptionId must be uuid if defined validation", func(t *testing.T) {
