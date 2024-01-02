@@ -85,6 +85,12 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 			}
 			return *d.Name
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
+	validation.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
+		WithName("workspace").
+		Rules(validation.Forbidden[AzureMonitorMetricLogAnalyticsWorkspace]()),
+	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
+		WithName("kqlQuery").
+		Rules(validation.Forbidden[string]()),
 ).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics })
 
 var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
@@ -118,6 +124,21 @@ var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric
 			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
 		),
+	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
+		WithName("resourceId").
+		Rules(validation.Forbidden[string]()),
+	validation.For(func(a AzureMonitorMetric) string { return a.MetricNamespace }).
+		WithName("metricNamespace").
+		Rules(validation.Forbidden[string]()),
+	validation.For(func(a AzureMonitorMetric) string { return a.MetricName }).
+		WithName("metricName").
+		Rules(validation.Forbidden[string]()),
+	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
+		WithName("aggregation").
+		Rules(validation.Forbidden[string]()),
+	validation.ForEach(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
+		WithName("dimensions").
+		Rules(validation.Forbidden[[]AzureMonitorMetricDimension]()),
 ).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs })
 
 var azureMonitorMetricDimensionValidation = validation.New[AzureMonitorMetricDimension](
