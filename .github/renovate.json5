@@ -39,14 +39,8 @@
       "addLabels": ["javascript"],
     },
   ],
-  // Manager-specific configs:
   // This will run go mod tidy after each go.mod update.
   "postUpdateOptions": ["gomodTidy"],
-  "allowedPostUpgradeCommands": ["^make .*"],
-  "postUpgradeTasks": {
-    "commands": ["make generate/code"],
-    "executionMode": "update"
-  },
   // Custom version extraction from Makefile.
   "regexManagers": [
     {
