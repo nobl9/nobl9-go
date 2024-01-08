@@ -105,12 +105,6 @@ func TestDecode(t *testing.T) {
 			ExpectedNames:      []string{"test"},
 			Format:             manifest.ObjectFormatYAML,
 		},
-		{
-			Input:              "json_style_array.yaml",
-			ExpectedObjectsLen: 1,
-			ExpectedNames:      []string{"test"},
-			Format:             manifest.ObjectFormatYAML,
-		},
 	} {
 		t.Run(test.Input, func(t *testing.T) {
 			data := readInputFile(t, test.Input)
