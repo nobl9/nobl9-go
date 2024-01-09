@@ -98,11 +98,11 @@ var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
 var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
 		WithName("subscriptionId").
-		OmitEmpty(). //TODO: replace this with Required() when log analytics discovery (PC-11169) is implemented
+		Required().
 		Rules(validation.StringUUID()),
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.ResourceGroup }).
 		WithName("resourceGroup").
-		OmitEmpty(). //TODO: replace this with Required() when log analytics discovery (PC-11169) is implemented
+		Required().
 		Rules(validation.StringMatchRegexp(validAzureResourceGroupRegex)),
 	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
 		WithName("workspaceId").
