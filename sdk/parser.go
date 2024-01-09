@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
@@ -206,13 +207,26 @@ func getJsonIdent(data []byte) ident {
 	return identObject
 }
 
-var yamlArrayIdentRegex = regexp.MustCompile(`(?m)^- `)
-
+// For a valid array, the first non-whitespace, non-comment character must be a dash or a bracket.
 func getYamlIdent(data []byte) ident {
-	// If we encounter square brackets array syntax, well... let's still recognize it's a valid array
-	// but obviously it cannot be a complex object as this syntax won't allow it.
-	if yamlArrayIdentRegex.Match(data) || jsonArrayIdentRegex.Match(data) {
-		return identArray
+	scanner := bufio.NewScanner(bytes.NewBuffer(data))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if len(line) == 0 {
+			continue
+		}
+		switch line[0] {
+		case '#':
+			continue
+		case '[':
+			return identArray
+		case '-':
+			if line == "---" {
+				continue
+			}
+			return identArray
+		}
+		break
 	}
 	return identObject
 }

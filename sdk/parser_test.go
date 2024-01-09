@@ -93,6 +93,18 @@ func TestDecode(t *testing.T) {
 			ExpectedNames:      []string{"default"},
 			Format:             manifest.ObjectFormatJSON,
 		},
+		{
+			Input:              "multiline_double_quoted_description.yaml",
+			ExpectedObjectsLen: 1,
+			ExpectedNames:      []string{"test"},
+			Format:             manifest.ObjectFormatYAML,
+		},
+		{
+			Input:              "multiline_double_quoted_description_square_bracket_array.yaml",
+			ExpectedObjectsLen: 1,
+			ExpectedNames:      []string{"test"},
+			Format:             manifest.ObjectFormatYAML,
+		},
 	} {
 		t.Run(test.Input, func(t *testing.T) {
 			data := readInputFile(t, test.Input)
