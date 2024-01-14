@@ -4,12 +4,12 @@ go 1.21
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.49.16
+	github.com/aws/aws-sdk-go v1.49.21
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.11.2
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
-	github.com/lestrrat-go/jwx v1.2.27
+	github.com/lestrrat-go/jwx v1.2.28
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
