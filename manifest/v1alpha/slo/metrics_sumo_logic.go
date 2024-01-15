@@ -145,18 +145,17 @@ func validateSumoLogicTimeslice(query string) error {
 	return nil
 }
 
-func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, string, bool, error) {
+func getTimeSliceFromSumoLogicQuery(query string) (
+	tsDuration time.Duration, durationString string, containsAlias bool, err error,
+) {
 	r := regexp.MustCompile(`\stimeslice\s([-+]?(\d+[a-z]+\s?)+)\s(?:as n9_time)?`)
 	matchResults := r.FindAllStringSubmatch(query, 2)
-
 	if len(matchResults) == 0 {
 		return 0, "", false, fmt.Errorf("query must contain a 'timeslice' operator")
 	}
-
 	if len(matchResults) > 1 {
 		return 0, "", false, fmt.Errorf("exactly one 'timeslice' declaration is required in the query")
 	}
-
 	submatches := matchResults[0]
 
 	if submatches[1] != submatches[2] {
@@ -164,12 +163,12 @@ func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, string, bool, 
 	}
 
 	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	durationString := strings.TrimSpace(submatches[1])
-	containsAlias := strings.Contains(submatches[0][1:], "as n9_time")
-	timeslice, err := time.ParseDuration(durationString)
+	durationString = strings.TrimSpace(submatches[1])
+	containsAlias = strings.Contains(submatches[0][1:], "as n9_time")
+	tsDuration, err = time.ParseDuration(durationString)
 	if err != nil {
 		return 0, "", containsAlias, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
 	}
 
-	return timeslice, durationString, containsAlias, nil
+	return tsDuration, durationString, containsAlias, nil
 }

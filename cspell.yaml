@@ -111,6 +111,7 @@ words:
   - stimeslice
   - strconv
   - structs
+  - submatches
   - sumologic
   - testutils
   - timeseries

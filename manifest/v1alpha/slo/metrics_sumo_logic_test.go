@@ -314,7 +314,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by time asc`,
 			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				ContainsMessage: "imeslice operator requires an n9_time alias",
+				ContainsMessage: "timeslice operator requires an n9_time alias",
 			},
 		},
 		"missing aggregation function": {
