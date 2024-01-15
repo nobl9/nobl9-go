@@ -202,7 +202,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				Message: "exactly one timeslice declaration is required in the query",
+				Message: "exactly one 'timeslice' declaration is required in the query",
 			},
 		},
 		"leading zeros in timeslice value": {
@@ -303,18 +303,18 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 				ContainsMessage: "n9_value is required",
 			},
 		},
-		"missing n9_time": {
+		"missing n9_time alias": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s
+  | timeslice 30s
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by time
   | sort by time asc`,
 			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				ContainsMessage: "n9_time is required",
+				ContainsMessage: "imeslice operator requires an n9_time alias",
 			},
 		},
 		"missing aggregation function": {
