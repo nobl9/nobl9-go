@@ -15,10 +15,13 @@
   "rebaseWhen": "conflicted",
   "rangeStrategy": "pin",
   "branchPrefix": "renovate_",
+  "commitMessagePrefix": "chore:",
   // PR approval is required.
   // We're not using any bot to approve Renovate PRs, we're doing it ourselves.
   // This effectively works as a convenience that skips pressing merge button manually.
   "automerge": true,
+  // This will run go mod tidy after each go.mod update.
+  "postUpdateOptions": ["gomodTidy"],
   "packageRules": [
     // Groups:
     {
@@ -43,8 +46,6 @@
       "addLabels": ["javascript"],
     },
   ],
-  // This will run go mod tidy after each go.mod update.
-  "postUpdateOptions": ["gomodTidy"],
   // Custom version extraction from Makefile.
   "regexManagers": [
     {
