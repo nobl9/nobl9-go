@@ -15,6 +15,10 @@
   "rebaseWhen": "conflicted",
   "rangeStrategy": "pin",
   "branchPrefix": "renovate_",
+  // PR approval is required.
+  // We're not using any bot to approve Renovate PRs, we're doing it ourselves.
+  // This effectively works as a convenience that skips pressing merge button manually.
+  "automerge": true,
   "packageRules": [
     // Groups:
     {
