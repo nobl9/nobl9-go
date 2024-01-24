@@ -15,6 +15,9 @@
   "rebaseWhen": "conflicted",
   "rangeStrategy": "pin",
   "branchPrefix": "renovate_",
+  "commitMessagePrefix": "chore:",
+  // This will run go mod tidy after each go.mod update.
+  "postUpdateOptions": ["gomodTidy"],
   "packageRules": [
     // Groups:
     {
@@ -39,8 +42,6 @@
       "addLabels": ["javascript"],
     },
   ],
-  // This will run go mod tidy after each go.mod update.
-  "postUpdateOptions": ["gomodTidy"],
   // Custom version extraction from Makefile.
   "regexManagers": [
     {
