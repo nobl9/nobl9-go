@@ -45,15 +45,15 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if *good.Type != "logs" || *total.Type != "logs" {
 					return nil
 				}
-				goodTS, _, _, err := getTimeSliceFromSumoLogicQuery(*good.Query)
+				goodTimeSlice, err := getTimeSliceFromSumoLogicQuery(*good.Query)
 				if err != nil {
 					return nil
 				}
-				totalTS, _, _, err := getTimeSliceFromSumoLogicQuery(*total.Query)
+				totalTimeSlice, err := getTimeSliceFromSumoLogicQuery(*total.Query)
 				if err != nil {
 					return nil
 				}
-				if goodTS != totalTS {
+				if goodTimeSlice.duration != totalTimeSlice.duration {
 					return errors.Errorf(
 						"'sumologic.query' with segment 'timeslice ${duration}', " +
 							"${duration} must be the same for both 'good' and 'total' metrics")
@@ -126,49 +126,53 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 	})
 
 func validateSumoLogicTimeslice(query string) error {
-	timeslice, timesliceString, containsAlias, err := getTimeSliceFromSumoLogicQuery(query)
+	timeSlice, err := getTimeSliceFromSumoLogicQuery(query)
 	if err != nil {
 		return err
 	}
 
-	if seconds := int(timeslice.Seconds()); seconds != 15 && seconds != 30 && seconds != 60 ||
-		strings.HasPrefix(timesliceString, "0") || // Sumo Logic doesn't support leading zeros in query body
-		strings.HasPrefix(timesliceString, "+") ||
-		strings.HasPrefix(timesliceString, "-") ||
-		strings.HasSuffix(timesliceString, "ms") {
-		return errors.Errorf("timeslice value must be 15, 30, or 60 seconds, got: [%s]", timesliceString)
+	if seconds := int(timeSlice.duration.Seconds()); seconds != 15 && seconds != 30 && seconds != 60 ||
+		strings.HasPrefix(timeSlice.durationStr, "0") || // Sumo Logic doesn't support leading zeros in query body
+		strings.HasPrefix(timeSlice.durationStr, "+") ||
+		strings.HasPrefix(timeSlice.durationStr, "-") ||
+		strings.HasSuffix(timeSlice.durationStr, "ms") {
+		return errors.Errorf("timeslice value must be 15, 30, or 60 seconds, got: [%s]", timeSlice.durationStr)
 	}
 
-	if !containsAlias {
+	if !timeSlice.containsAlias {
 		return errors.New("timeslice operator requires an n9_time alias")
 	}
 	return nil
 }
 
-func getTimeSliceFromSumoLogicQuery(query string) (
-	tsDuration time.Duration, durationString string, containsAlias bool, err error,
-) {
+type parsedSumoLogicSlice struct {
+	containsAlias bool
+	duration      time.Duration
+	durationStr   string
+}
+
+func getTimeSliceFromSumoLogicQuery(query string) (parsedSumoLogicSlice, error) {
 	r := regexp.MustCompile(`\stimeslice\s([-+]?(\d+[a-z]+\s?)+)\s(?:as n9_time)?`)
 	matchResults := r.FindAllStringSubmatch(query, 2)
 	if len(matchResults) == 0 {
-		return 0, "", false, fmt.Errorf("query must contain a 'timeslice' operator")
+		return parsedSumoLogicSlice{}, errors.New("query must contain a 'timeslice' operator")
 	}
 	if len(matchResults) > 1 {
-		return 0, "", false, fmt.Errorf("exactly one 'timeslice' declaration is required in the query")
+		return parsedSumoLogicSlice{}, errors.New("exactly one 'timeslice' usage is required in the query")
 	}
 	submatches := matchResults[0]
 
 	if submatches[1] != submatches[2] {
-		return 0, "", false, fmt.Errorf("timeslice interval must be in a NumberUnit form - for example '30s'")
+		return parsedSumoLogicSlice{}, errors.New("timeslice interval must be in a NumberUnit form - for example '30s'")
 	}
 
 	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	durationString = strings.TrimSpace(submatches[1])
-	containsAlias = strings.Contains(submatches[0][1:], "as n9_time")
-	tsDuration, err = time.ParseDuration(durationString)
+	durationString := strings.TrimSpace(submatches[1])
+	containsAlias := strings.Contains(submatches[0][1:], "as n9_time")
+	tsDuration, err := time.ParseDuration(durationString)
 	if err != nil {
-		return 0, "", containsAlias, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
+		return parsedSumoLogicSlice{}, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
 	}
 
-	return tsDuration, durationString, containsAlias, nil
+	return parsedSumoLogicSlice{duration: tsDuration, durationStr: durationString, containsAlias: containsAlias}, nil
 }
