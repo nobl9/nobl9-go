@@ -314,10 +314,20 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Workspace = &AzureMonitorMetricLogAnalyticsWorkspace{
-			WorkspaceID: "",
+			SubscriptionID: "",
+			ResourceGroup:  "",
+			WorkspaceID:    "",
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1,
+		testutils.AssertContainsErrors(t, slo, err, 3,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
+				Code: validation.ErrorCodeRequired,
+			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
 				Code: validation.ErrorCodeRequired,
