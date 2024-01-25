@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea to help us improve the SDK
+about: Suggest an idea to help us improve the SDK.
 title: "[FEAT]"
 labels: enhancement
 assignees: ''
