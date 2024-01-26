@@ -202,7 +202,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				Message: "exactly one 'timeslice' declaration is required in the query",
+				Message: "exactly one 'timeslice' usage is required in the query",
 			},
 		},
 		"leading zeros in timeslice value": {

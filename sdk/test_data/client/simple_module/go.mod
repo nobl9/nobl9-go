@@ -8,7 +8,7 @@ require github.com/nobl9/nobl9-go v0.73.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/aws/aws-sdk-go v1.49.21 // indirect
+	github.com/aws/aws-sdk-go v1.50.3 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
