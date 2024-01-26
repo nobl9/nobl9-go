@@ -4,9 +4,9 @@ go 1.21
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/aws/aws-sdk-go v1.50.3
+	github.com/aws/aws-sdk-go v1.50.4
 	github.com/bmatcuk/doublestar/v4 v4.6.1
-	github.com/goccy/go-yaml v1.11.2
+	github.com/goccy/go-yaml v1.11.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/lestrrat-go/jwx v1.2.28
