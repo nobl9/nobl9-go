@@ -8,6 +8,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.11.3
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/lestrrat-go/jwx v1.2.28
 	github.com/mitchellh/mapstructure v1.5.0
