@@ -36,7 +36,7 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s as n9_time
+  | timeslice 15s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
@@ -47,7 +47,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 25s as n9_time
+  | timeslice 30s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
@@ -153,7 +153,7 @@ func TestSumoLogic_LogsType(t *testing.T) {
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s as n9_time
+  | timeslice 15s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
@@ -173,7 +173,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			},
 		)
 	})
-	tests := map[string]struct {
+	invalidCases := map[string]struct {
 		Query string
 		Error testutils.ExpectedError
 	}{
@@ -187,22 +187,78 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				Message: "exactly one timeslice declaration is required in the query",
+				Message: "query must contain a 'timeslice' operator",
 			},
 		},
 		"two timeslice segments": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 30s
-  | timeslice 20s as n9_time
+  | timeslice 30s as n9_time
+  | timeslice 15s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				Message: "exactly one timeslice declaration is required in the query",
+				Message: "exactly one 'timeslice' usage is required in the query",
+			},
+		},
+		"leading zeros in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 015s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Message: "timeslice value must be 15, 30, or 60 seconds, got: [015s]",
+			},
+		},
+		"+ sign in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice +15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
+			},
+		},
+		"- sign in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice -15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
+			},
+		},
+		"milliseconds in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15000ms as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Message: "timeslice value must be 15, 30, or 60 seconds, got: [15000ms]",
 			},
 		},
 		"invalid timeslice segment": {
@@ -219,7 +275,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 				Message: `error parsing timeslice duration: time: unknown unit "x" in duration "20x"`,
 			},
 		},
-		"minimum timeslice value": {
+		"unsupported timeslice value": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
@@ -230,14 +286,14 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				Message: `minimum timeslice value is [15s], got: [14s]`,
+				Message: `timeslice value must be 15, 30, or 60 seconds, got: [14s]`,
 			},
 		},
 		"missing n9_value": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s as n9_time
+  | timeslice 15s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) by n9_time
@@ -247,25 +303,25 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 				ContainsMessage: "n9_value is required",
 			},
 		},
-		"missing n9_time": {
+		"missing n9_time alias": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s
+  | timeslice 30s
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value by time
   | sort by time asc`,
 			Error: testutils.ExpectedError{
 				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
-				ContainsMessage: "n9_time is required",
+				ContainsMessage: "timeslice operator requires an n9_time alias",
 			},
 		},
 		"missing aggregation function": {
 			Query: `
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
-  | timeslice 20s as n9_time
+  | timeslice 15s as n9_time
   | parse "level=* *" as (log_level, tail)
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value`,
@@ -275,7 +331,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			},
 		},
 	}
-	for name, test := range tests {
+	for name, test := range invalidCases {
 		t.Run(name, func(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.SumoLogic)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
@@ -284,6 +340,52 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, test.Error)
+		})
+	}
+	validCases := map[string]struct {
+		Query string
+		Error testutils.ExpectedError
+	}{
+		"valid timeslice [15s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+		},
+		"valid timeslice [30s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 30s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+		},
+		"valid timeslice [60s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 60s as n9_time
+  | parse "level=* *" as (log_level, tail)
+  | if (log_level matches "error" ,0,1) as log_level_not_error
+  | sum(log_level_not_error) as n9_value by n9_time
+  | sort by n9_time asc`,
+		},
+	}
+	for name, test := range validCases {
+		t.Run(name, func(t *testing.T) {
+			slo := validRawMetricSLO(v1alpha.SumoLogic)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+				Type:  ptr(sumoLogicTypeLogs),
+				Query: ptr(test.Query),
+			}
+			err := validate(slo)
+			testutils.AssertNoError(t, slo, err)
 		})
 	}
 }

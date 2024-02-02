@@ -3,6 +3,7 @@ package slo
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -44,15 +45,15 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				if *good.Type != "logs" || *total.Type != "logs" {
 					return nil
 				}
-				goodTS, err := getTimeSliceFromSumoLogicQuery(*good.Query)
+				goodTimeSlice, err := getTimeSliceFromSumoLogicQuery(*good.Query)
 				if err != nil {
 					return nil
 				}
-				totalTS, err := getTimeSliceFromSumoLogicQuery(*total.Query)
+				totalTimeSlice, err := getTimeSliceFromSumoLogicQuery(*total.Query)
 				if err != nil {
 					return nil
 				}
-				if goodTS != totalTS {
+				if goodTimeSlice.duration != totalTimeSlice.duration {
 					return errors.Errorf(
 						"'sumologic.query' with segment 'timeslice ${duration}', " +
 							"${duration} must be the same for both 'good' and 'total' metrics")
@@ -107,21 +108,9 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		WithName("query").
 		Required().
 		Rules(
-			validation.NewSingleRule(func(s string) error {
-				const minTimeSliceSeconds = 15
-				timeslice, err := getTimeSliceFromSumoLogicQuery(s)
-				if err != nil {
-					return err
-				}
-				if timeslice.Seconds() < minTimeSliceSeconds {
-					return errors.Errorf("minimum timeslice value is [%ds], got: [%s]", minTimeSliceSeconds, timeslice)
-				}
-				return nil
-			}),
+			validation.NewSingleRule(validateSumoLogicTimeslice),
 			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
-				WithDetails("n9_time is required"),
 			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
 				WithDetails("aggregation function is required"),
 		),
@@ -136,21 +125,54 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		return m.Type != nil && *m.Type == sumoLogicTypeLogs
 	})
 
-var sumoLogicTimeSliceRegexp = regexp.MustCompile(`(?m)\stimeslice\s(\d+\w+)\s`)
-
-func getTimeSliceFromSumoLogicQuery(query string) (time.Duration, error) {
-	subMatches := sumoLogicTimeSliceRegexp.FindAllStringSubmatch(query, 2)
-	if len(subMatches) != 1 {
-		return 0, fmt.Errorf("exactly one timeslice declaration is required in the query")
-	}
-	subMatch := subMatches[0]
-	if len(subMatch) != 2 {
-		return 0, fmt.Errorf("timeslice declaration must match regular expression: %s", sumoLogicTimeSliceRegexp)
-	}
-	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
-	timeslice, err := time.ParseDuration(subMatch[1])
+func validateSumoLogicTimeslice(query string) error {
+	timeSlice, err := getTimeSliceFromSumoLogicQuery(query)
 	if err != nil {
-		return 0, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
+		return err
 	}
-	return timeslice, nil
+
+	if seconds := int(timeSlice.duration.Seconds()); seconds != 15 && seconds != 30 && seconds != 60 ||
+		strings.HasPrefix(timeSlice.durationStr, "0") || // Sumo Logic doesn't support leading zeros in query body
+		strings.HasPrefix(timeSlice.durationStr, "+") ||
+		strings.HasPrefix(timeSlice.durationStr, "-") ||
+		strings.HasSuffix(timeSlice.durationStr, "ms") {
+		return errors.Errorf("timeslice value must be 15, 30, or 60 seconds, got: [%s]", timeSlice.durationStr)
+	}
+
+	if !timeSlice.containsAlias {
+		return errors.New("timeslice operator requires an n9_time alias")
+	}
+	return nil
+}
+
+type parsedSumoLogicSlice struct {
+	containsAlias bool
+	duration      time.Duration
+	durationStr   string
+}
+
+func getTimeSliceFromSumoLogicQuery(query string) (parsedSumoLogicSlice, error) {
+	r := regexp.MustCompile(`\stimeslice\s([-+]?(\d+[a-z]+\s?)+)\s(?:as n9_time)?`)
+	matchResults := r.FindAllStringSubmatch(query, 2)
+	if len(matchResults) == 0 {
+		return parsedSumoLogicSlice{}, errors.New("query must contain a 'timeslice' operator")
+	}
+	if len(matchResults) > 1 {
+		return parsedSumoLogicSlice{}, errors.New("exactly one 'timeslice' usage is required in the query")
+	}
+	submatches := matchResults[0]
+
+	if submatches[1] != submatches[2] {
+		return parsedSumoLogicSlice{}, errors.New("timeslice interval must be in a NumberUnit form - for example '30s'")
+	}
+
+	// https://help.sumologic.com/05Search/Search-Query-Language/Search-Operators/timeslice#syntax
+	durationString := strings.TrimSpace(submatches[1])
+	containsAlias := strings.Contains(submatches[0][1:], "as n9_time")
+	tsDuration, err := time.ParseDuration(durationString)
+	if err != nil {
+		return parsedSumoLogicSlice{}, fmt.Errorf("error parsing timeslice duration: %s", err.Error())
+	}
+
+	return parsedSumoLogicSlice{duration: tsDuration, durationStr: durationString, containsAlias: containsAlias}, nil
 }
