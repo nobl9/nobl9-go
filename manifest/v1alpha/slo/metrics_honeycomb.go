@@ -9,7 +9,7 @@ import (
 // HoneycombMetric represents metric from Honeycomb. To access this integration, contact support@nobl9.com.
 type HoneycombMetric struct {
 	Calculation string `json:"calculation"`
-	Attribute   string `json:"attribute"`
+	Attribute   string `json:"attribute,omitempty"`
 }
 
 var honeycombValidation = validation.New[HoneycombMetric](
