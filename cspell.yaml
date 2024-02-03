@@ -99,6 +99,7 @@ words:
   - rollup
   - rollups
   - rtmp
+  - serdeutil
   - serviceruntime
   - slis
   - sloctl
