@@ -1,0 +1,4 @@
+Validation for BudgetAdjustment 'my-budget-adjustement' has failed for the following fields:
+  - 'spec.filters.slos[0].name':
+    - property is required but was empty
+Manifest source: /home/me/budgetadjustment.yaml

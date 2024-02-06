@@ -1,0 +1,4 @@
+Validation for BudgetAdjustment 'my-budget-adjustement' has failed for the following fields:
+  - 'spec.rrule' with value 'FREQ=WEKLY;INTERVAL=2':
+    - invalid rrule: undefined frequency: WEKLY
+Manifest source: /home/me/budgetadjustment.yaml

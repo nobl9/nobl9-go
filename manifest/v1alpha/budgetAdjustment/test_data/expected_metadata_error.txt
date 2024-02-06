@@ -1,0 +1,13 @@
+Validation for BudgetAdjustment 'MY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENST' has failed for the following fields:
+  - 'metadata.name' with value 'MY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUSTMENSTMY BUDGET ADJUST...':
+    - length must be between 1 and 63
+    - string does not match regular expression: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$' (e.g. 'my-name', '123-abc'); a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character
+  - 'metadata.displayName' with value 'my-budgetadjustmentmy-budgetadjustmentmy-budgetadjustmentmy-budgetadjustmentmy-budgetadjustmentmy-bu...':
+    - length must be between 0 and 63
+  - 'spec.firstEventStart':
+    - property is required but was empty
+  - 'spec.duration':
+    - property is required but was empty
+  - 'spec.filters.slos':
+    - length must be greater than or equal to 1
+Manifest source: /home/me/budgetadjustment.yaml
