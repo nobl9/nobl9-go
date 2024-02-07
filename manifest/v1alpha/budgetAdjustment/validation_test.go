@@ -31,8 +31,8 @@ func TestValidate_Metadata(t *testing.T) {
 	budgetAdjustment := BudgetAdjustment{
 		Kind: manifest.KindBudgetAdjustment,
 		Metadata: Metadata{
-			Name:        strings.Repeat("MY BUDGET ADJUSTMENT", 20),
-			DisplayName: strings.Repeat("my-budget-adjustment", 10),
+			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 20),
+			DisplayName: strings.Repeat("my-budget-adjustment-", 10),
 		},
 		Spec:           Spec{},
 		ManifestSource: "/home/me/budget-adjustment.yaml",
@@ -138,7 +138,7 @@ func TestValidate_Spec(t *testing.T) {
 			spec: Spec{
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
-				Rrule:           "FREQ=WEKLY;INTERVAL=2",
+				Rrule:           "FREQ=TEST;INTERVAL=2",
 				Filters: Filters{
 					Slos: []Slo{{
 						Name:    "test",
