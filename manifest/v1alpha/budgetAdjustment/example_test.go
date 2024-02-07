@@ -18,7 +18,7 @@ func ExampleBudgetAdjustment() {
 		},
 		Spec{
 			Description:     "Example budget adjustment",
-			FirstEventStart: time.Date(2024, 02, 05, 5, 0, 0, 0, time.UTC),
+			FirstEventStart: time.Date(2024, 2, 5, 5, 0, 0, 0, time.UTC),
 			Duration:        time.Hour,
 			Rrule:           "FREQ=WEEKLY;INTERVAL=1",
 			Filters: Filters{
