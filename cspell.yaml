@@ -39,6 +39,7 @@ words:
   - auseg9kiegwketjzc416
   - authdata
   - awsiam
+  - budgetadjustment
   - clientcreds
   - codeowners
   - consumergroup
@@ -98,6 +99,7 @@ words:
   - rolebinding
   - rollup
   - rollups
+  - rrule
   - rtmp
   - serviceruntime
   - slis

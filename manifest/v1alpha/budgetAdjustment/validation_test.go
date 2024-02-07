@@ -31,11 +31,11 @@ func TestValidate_Metadata(t *testing.T) {
 	budgetAdjustment := BudgetAdjustment{
 		Kind: manifest.KindBudgetAdjustment,
 		Metadata: Metadata{
-			Name:        strings.Repeat("MY BUDGET ADJUSTMENST", 20),
-			DisplayName: strings.Repeat("my-budgetadjustment", 10),
+			Name:        strings.Repeat("MY BUDGET ADJUSTMENT", 20),
+			DisplayName: strings.Repeat("my-budget-adjustment", 10),
 		},
 		Spec:           Spec{},
-		ManifestSource: "/home/me/budgetadjustment.yaml",
+		ManifestSource: "/home/me/budget-adjustment.yaml",
 	}
 	err := validate(budgetAdjustment)
 	assert.Error(t, err)
@@ -171,10 +171,10 @@ func TestValidate_Spec(t *testing.T) {
 			alertMethod := BudgetAdjustment{
 				Kind: manifest.KindBudgetAdjustment,
 				Metadata: Metadata{
-					Name: "my-budget-adjustement",
+					Name: "my-budget-adjustment",
 				},
 				Spec:           test.spec,
-				ManifestSource: "/home/me/budgetadjustment.yaml",
+				ManifestSource: "/home/me/budget-adjustment.yaml",
 			}
 			err := validate(alertMethod)
 			if test.expectedError {
