@@ -1,4 +1,0 @@
-Validation for BudgetAdjustment 'my-budget-adjustment' has failed for the following fields:
-  - 'spec.rrule' with value 'FREQ=TEST;INTERVAL=2':
-    - invalid rrule: undefined frequency: TEST
-Manifest source: /home/me/budget-adjustment.yaml

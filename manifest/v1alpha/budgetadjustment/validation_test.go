@@ -1,37 +1,23 @@
 package budgetadjustment
 
 import (
-	"embed"
 	_ "embed"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
-
-//go:embed test_data
-var testData embed.FS
-
-func getTestDataFileContent(t *testing.T, name string) string {
-	t.Helper()
-	path := filepath.Join("test_data", name)
-	data, err := testData.ReadFile(path)
-	if err != nil || len(data) == 0 {
-		t.Errorf("error on loading %s file", path)
-	}
-
-	return strings.TrimSuffix(string(data), "\n")
-}
 
 func TestValidate_Metadata(t *testing.T) {
 	budgetAdjustment := BudgetAdjustment{
 		Kind: manifest.KindBudgetAdjustment,
 		Metadata: Metadata{
-			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 20),
+			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 3),
 			DisplayName: strings.Repeat("my-budget-adjustment-", 10),
 		},
 		Spec:           Spec{},
@@ -39,15 +25,38 @@ func TestValidate_Metadata(t *testing.T) {
 	}
 	err := validate(budgetAdjustment)
 	assert.Error(t, err)
-	assert.Equal(t, getTestDataFileContent(t, "expected_metadata_error.txt"), err.Error())
+
+	expectedErrors := []testutils.ExpectedError{
+		{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain + ":" + validation.ErrorCodeStringMatchRegexp,
+		},
+		{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		{
+			Prop: "spec.firstEventStart",
+			Code: validation.ErrorCodeRequired,
+		},
+		{
+			Prop: "spec.duration",
+			Code: validation.ErrorCodeRequired,
+		},
+		{
+			Prop: "spec.filters.slos",
+			Code: validation.ErrorCodeSliceMinLength,
+		},
+	}
+
+	testutils.AssertContainsErrors(t, budgetAdjustment, err, len(expectedErrors), expectedErrors...)
 }
 
 func TestValidate_Spec(t *testing.T) {
 	tests := []struct {
-		name              string
-		spec              Spec
-		expectedError     bool
-		expectedErrorFile string
+		name           string
+		spec           Spec
+		expectedErrors []testutils.ExpectedError
 	}{
 		{
 			name: "no slo filters",
@@ -56,8 +65,12 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Filters:         Filters{},
 			},
-			expectedError:     true,
-			expectedErrorFile: "no-slo-filters.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.filters.slos",
+					Message: "length must be greater than or equal to 1",
+				},
+			},
 		},
 		{
 			name: "too short duration",
@@ -71,8 +84,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "too-short-duration.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.duration",
+					Message: "duration must be in whole minutes without seconds",
+				},
+			},
 		},
 		{
 			name: "duration contains seconds",
@@ -86,8 +103,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "invalid-duration-resolution.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.duration",
+					Message: "duration must be in whole minutes without seconds",
+				},
+			},
 		},
 		{
 			name: "slo is defined without name",
@@ -100,8 +121,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "slo-without-name.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].name",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
 		},
 		{
 			name: "slo is defined without project",
@@ -114,8 +139,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "slo-without-project.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].project",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
 		},
 		{
 			name: "wrong rrule format",
@@ -130,8 +159,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "wrong-rrule-format.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.rrule",
+					Message: "invalid rrule: wrong format",
+				},
+			},
 		},
 		{
 			name: "invalid rrule",
@@ -146,8 +179,12 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError:     true,
-			expectedErrorFile: "invalid-rrule.txt",
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.rrule",
+					Message: "invalid rrule: undefined frequency: TEST",
+				},
+			},
 		},
 		{
 			name: "proper spec",
@@ -162,7 +199,6 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedError: false,
 		},
 	}
 
@@ -177,11 +213,11 @@ func TestValidate_Spec(t *testing.T) {
 				ManifestSource: "/home/me/budget-adjustment.yaml",
 			}
 			err := validate(alertMethod)
-			if test.expectedError {
-				assert.NotNil(t, err)
-				assert.Equal(t, getTestDataFileContent(t, test.expectedErrorFile), err.Error())
+
+			if len(test.expectedErrors) == 0 {
+				testutils.AssertNoError(t, test.spec, err)
 			} else {
-				assert.Nil(t, err)
+				testutils.AssertContainsErrors(t, test.spec, err, len(test.expectedErrors), test.expectedErrors...)
 			}
 		})
 	}

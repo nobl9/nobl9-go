@@ -1,4 +1,0 @@
-Validation for BudgetAdjustment 'my-budget-adjustment' has failed for the following fields:
-  - 'spec.duration' with value '1m1s':
-    - duration must be in whole minutes without seconds
-Manifest source: /home/me/budget-adjustment.yaml

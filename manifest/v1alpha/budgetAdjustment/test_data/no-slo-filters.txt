@@ -1,4 +1,0 @@
-Validation for BudgetAdjustment 'my-budget-adjustment' has failed for the following fields:
-  - 'spec.filters.slos':
-    - length must be greater than or equal to 1
-Manifest source: /home/me/budget-adjustment.yaml

@@ -16,7 +16,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
-	budgetadjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetAdjustment"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"

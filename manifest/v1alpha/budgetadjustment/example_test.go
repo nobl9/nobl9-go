@@ -1,4 +1,4 @@
-package budgetadjustment
+package budgetadjustment_test
 
 import (
 	"context"
@@ -7,22 +7,23 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 )
 
 func ExampleBudgetAdjustment() {
 	// Create the object:
-	budgetAdjustment := New(
-		Metadata{
+	budgetAdjustment := budgetadjustment.New(
+		budgetadjustment.Metadata{
 			Name:        "budget-adjustment",
 			DisplayName: "My budget adjustment",
 		},
-		Spec{
+		budgetadjustment.Spec{
 			Description:     "Example budget adjustment",
 			FirstEventStart: time.Date(2024, 2, 5, 5, 0, 0, 0, time.UTC),
 			Duration:        time.Hour,
 			Rrule:           "FREQ=WEEKLY;INTERVAL=1",
-			Filters: Filters{
-				Slos: []Slo{
+			Filters: budgetadjustment.Filters{
+				Slos: []budgetadjustment.Slo{
 					{
 						Name:    "slo-name",
 						Project: "default",
@@ -49,10 +50,10 @@ func ExampleBudgetAdjustment() {
 	// spec:
 	//  description: Example budget adjustment
 	//  firstEventStart: 2024-02-05T05:00:00Z
-	//  duration: 1h
+	//  duration: 1h0m0s
 	//  rrule: FREQ=WEEKLY;INTERVAL=1
 	//  filters:
 	//    slos:
-	//	   - name: slo-name
-	//       project: default
+	//    - name: slo-name
+	//      project: default
 }

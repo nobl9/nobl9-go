@@ -1,4 +1,0 @@
-Validation for BudgetAdjustment 'my-budget-adjustment' has failed for the following fields:
-  - 'spec.rrule' with value 'some test':
-    - invalid rrule: wrong format
-Manifest source: /home/me/budget-adjustment.yaml
