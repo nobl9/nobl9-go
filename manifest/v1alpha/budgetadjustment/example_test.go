@@ -45,15 +45,15 @@ func ExampleBudgetAdjustment() {
 	// apiVersion: n9/v1alpha
 	// kind: BudgetAdjustment
 	// metadata:
-	//  name: budget-adjustment
-	//  displayName: My budget adjustment
+	//   name: budget-adjustment
+	//   displayName: My budget adjustment
 	// spec:
-	//  description: Example budget adjustment
-	//  firstEventStart: 2024-02-05T05:00:00Z
-	//  duration: 1h0m0s
-	//  rrule: FREQ=WEEKLY;INTERVAL=1
-	//  filters:
-	//    slos:
-	//    - name: slo-name
-	//      project: default
+	//   description: Example budget adjustment
+	//   firstEventStart: 2024-02-05T05:00:00Z
+	//   duration: 1h0m0s
+	//   rrule: FREQ=WEEKLY;INTERVAL=1
+	//   filters:
+	//     slos:
+	//     - name: slo-name
+	//       project: default
 }
