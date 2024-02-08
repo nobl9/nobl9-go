@@ -43,18 +43,18 @@ var specValidation = validation.New[Spec](
 )
 
 var filtersValidationRule = validation.New[Filters](
-	validation.ForEach(func(f Filters) []SLO { return f.SLOs }).
+	validation.ForEach(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
-		Rules(validation.SliceMinLength[[]SLO](1)).
+		Rules(validation.SliceMinLength[[]SLORef](1)).
 		IncludeForEach(sloValidationRule),
 )
 
-var sloValidationRule = validation.New[SLO](
-	validation.For(func(s SLO) string { return s.Project }).
+var sloValidationRule = validation.New[SLORef](
+	validation.For(func(s SLORef) string { return s.Project }).
 		WithName("project").
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
-	validation.For(func(s SLO) string { return s.Name }).
+	validation.For(func(s SLORef) string { return s.Name }).
 		WithName("name").
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),

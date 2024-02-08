@@ -78,7 +78,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Second,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "test",
 						Project: "test",
 					}},
@@ -97,7 +97,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute + time.Second,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "test",
 						Project: "test",
 					}},
@@ -116,7 +116,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Project: "test",
 					}},
 				},
@@ -134,7 +134,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "Test name",
 						Project: "test",
 					}},
@@ -153,7 +153,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name: "test",
 					}},
 				},
@@ -171,7 +171,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "name",
 						Project: "Project name",
 					}},
@@ -191,7 +191,7 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Rrule:           "some test",
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "test",
 						Project: "project",
 					}},
@@ -211,7 +211,7 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Rrule:           "FREQ=TEST;INTERVAL=2",
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "test",
 						Project: "project",
 					}},
@@ -231,7 +231,7 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
-					SLOs: []SLO{{
+					SLOs: []SLORef{{
 						Name:    "test",
 						Project: "project",
 					}},
