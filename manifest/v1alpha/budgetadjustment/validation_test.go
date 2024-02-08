@@ -78,7 +78,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Second,
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name:    "test",
 						Project: "test",
 					}},
@@ -87,7 +87,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.duration",
-					Message: "duration must be in whole minutes without seconds",
+					Message: "duration must be defined with minutes precision",
 				},
 			},
 		},
@@ -97,7 +97,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute + time.Second,
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name:    "test",
 						Project: "test",
 					}},
@@ -106,7 +106,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.duration",
-					Message: "duration must be in whole minutes without seconds",
+					Message: "duration must be defined with minutes precision",
 				},
 			},
 		},
@@ -116,7 +116,7 @@ func TestValidate_Spec(t *testing.T) {
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Project: "test",
 					}},
 				},
@@ -129,12 +129,31 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
+			name: "slo is defined with invalid slo name",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        time.Minute,
+				Filters: Filters{
+					SLOs: []SLO{{
+						Name:    "Test name",
+						Project: "test",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].name",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+		},
+		{
 			name: "slo is defined without project",
 			spec: Spec{
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name: "test",
 					}},
 				},
@@ -147,13 +166,32 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
+			name: "slo is defined with invalid project name",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        time.Minute,
+				Filters: Filters{
+					SLOs: []SLO{{
+						Name:    "name",
+						Project: "Project name",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].project",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+		},
+		{
 			name: "wrong rrule format",
 			spec: Spec{
 				FirstEventStart: time.Now(),
 				Duration:        time.Minute,
 				Rrule:           "some test",
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name:    "test",
 						Project: "project",
 					}},
@@ -162,7 +200,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.rrule",
-					Message: "invalid rrule: wrong format",
+					Message: "wrong format",
 				},
 			},
 		},
@@ -173,7 +211,7 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Rrule:           "FREQ=TEST;INTERVAL=2",
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name:    "test",
 						Project: "project",
 					}},
@@ -182,7 +220,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.rrule",
-					Message: "invalid rrule: undefined frequency: TEST",
+					Message: "undefined frequency: TEST",
 				},
 			},
 		},
@@ -193,7 +231,7 @@ func TestValidate_Spec(t *testing.T) {
 				Duration:        time.Minute,
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
-					Slos: []Slo{{
+					SLOs: []SLO{{
 						Name:    "test",
 						Project: "project",
 					}},

@@ -35,49 +35,35 @@ var specValidation = validation.New[Spec](
 		WithName("duration").
 		Required().
 		Rules(durationValidationRule()),
-	validation.For(func(s Spec) string { return s.Rrule }).
-		WithName("rrule").
-		Rules(rruleValidationRule()),
+	validation.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
+		WithName("rrule"),
 	validation.For(func(s Spec) Filters { return s.Filters }).
 		WithName("filters").
 		Include(filtersValidationRule),
 )
 
 var filtersValidationRule = validation.New[Filters](
-	validation.ForEach(func(f Filters) []Slo { return f.Slos }).
+	validation.ForEach(func(f Filters) []SLO { return f.SLOs }).
 		WithName("slos").
-		Rules(validation.SliceMinLength[[]Slo](1)).
+		Rules(validation.SliceMinLength[[]SLO](1)).
 		IncludeForEach(sloValidationRule),
 )
 
-var sloValidationRule = validation.New[Slo](
-	validation.For(func(s Slo) string { return s.Project }).
+var sloValidationRule = validation.New[SLO](
+	validation.For(func(s SLO) string { return s.Project }).
 		WithName("project").
-		Required(),
-	validation.For(func(s Slo) string { return s.Name }).
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(s SLO) string { return s.Name }).
 		WithName("name").
-		Required(),
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
 func durationValidationRule() validation.SingleRule[time.Duration] {
 	return validation.NewSingleRule(func(v time.Duration) error {
 		if v.Truncate(time.Minute) != v {
-			return errors.New("duration must be in whole minutes without seconds")
-		}
-
-		return nil
-	})
-}
-
-func rruleValidationRule() validation.SingleRule[string] {
-	return validation.NewSingleRule(func(v string) error {
-		if len(v) == 0 {
-			return nil
-		}
-
-		_, err := rrule.StrToRRule(v)
-		if err != nil {
-			return errors.Wrap(err, "invalid rrule")
+			return errors.New("duration must be defined with minutes precision")
 		}
 
 		return nil

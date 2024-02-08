@@ -43,10 +43,10 @@ type Spec struct {
 }
 
 type Filters struct {
-	Slos []Slo `json:"slos"`
+	SLOs []SLO `json:"slos"`
 }
 
-type Slo struct {
+type SLO struct {
 	Name    string `json:"name"`
 	Project string `json:"project"`
 }

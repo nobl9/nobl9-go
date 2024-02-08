@@ -23,7 +23,7 @@ func ExampleBudgetAdjustment() {
 			Duration:        time.Hour,
 			Rrule:           "FREQ=WEEKLY;INTERVAL=1",
 			Filters: budgetadjustment.Filters{
-				Slos: []budgetadjustment.Slo{
+				SLOs: []budgetadjustment.SLO{
 					{
 						Name:    "slo-name",
 						Project: "default",
