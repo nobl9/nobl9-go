@@ -87,7 +87,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.duration",
-					Code: validation.ErrorCodeDurationFullMinutePrecision,
+					Code: validation.ErrorCodeDurationPrecision,
 				},
 			},
 		},
@@ -106,7 +106,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.duration",
-					Code: validation.ErrorCodeDurationFullMinutePrecision,
+					Code: validation.ErrorCodeDurationPrecision,
 				},
 			},
 		},

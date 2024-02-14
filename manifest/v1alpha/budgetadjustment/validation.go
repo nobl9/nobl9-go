@@ -33,9 +33,7 @@ var specValidation = validation.New[Spec](
 	validation.Transform(func(s Spec) string { return s.Duration }, time.ParseDuration).
 		WithName("duration").
 		Required().
-		Rules(
-			validation.DurationFullMinutePrecision(),
-		),
+		Rules(validation.DurationPrecision(time.Minute)),
 	validation.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
 		WithName("rrule"),
 	validation.For(func(s Spec) Filters { return s.Filters }).

@@ -68,7 +68,7 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("alertingWindow").
 		OmitEmpty().
 		Rules(
-			validation.DurationFullMinutePrecision(),
+			validation.DurationPrecision(time.Minute),
 			validation.GreaterThanOrEqualTo(time.Minute*5),
 			validation.LessThanOrEqualTo(time.Hour*24*7),
 		),

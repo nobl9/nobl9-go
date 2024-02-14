@@ -1,6 +1,6 @@
 package validation
 
-// write unit test for function DurationFullMinutePrecision
+// write unit test for function DurationPrecision
 // must cover all cases
 // must cover all nil cases
 // must be in table driven format
