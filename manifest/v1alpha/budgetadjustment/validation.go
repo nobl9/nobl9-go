@@ -3,7 +3,6 @@ package budgetadjustment
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -31,10 +30,12 @@ var specValidation = validation.New[Spec](
 	validation.For(func(s Spec) time.Time { return s.FirstEventStart }).
 		WithName("firstEventStart").
 		Required(),
-	validation.For(func(s Spec) time.Duration { return s.Duration }).
+	validation.Transform(func(s Spec) string { return s.Duration }, time.ParseDuration).
 		WithName("duration").
 		Required().
-		Rules(durationValidationRule()),
+		Rules(
+			validation.DurationFullMinutePrecision(),
+		),
 	validation.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
 		WithName("rrule"),
 	validation.For(func(s Spec) Filters { return s.Filters }).
@@ -59,16 +60,6 @@ var sloValidationRule = validation.New[SLORef](
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
 )
-
-func durationValidationRule() validation.SingleRule[time.Duration] {
-	return validation.NewSingleRule(func(v time.Duration) error {
-		if v.Truncate(time.Minute) != v {
-			return errors.New("duration must be defined with minutes precision")
-		}
-
-		return nil
-	})
-}
 
 func validate(b BudgetAdjustment) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(budgetAdjustmentValidation, b)

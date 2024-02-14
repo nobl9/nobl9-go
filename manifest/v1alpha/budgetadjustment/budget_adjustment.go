@@ -35,11 +35,11 @@ type Metadata struct {
 
 // Spec represents content of BudgetAdjustment's Spec.
 type Spec struct {
-	Description     string        `json:"description,omitempty"`
-	FirstEventStart time.Time     `json:"firstEventStart"`
-	Duration        time.Duration `json:"duration"`
-	Rrule           string        `json:"rrule,omitempty"`
-	Filters         Filters       `json:"filters"`
+	Description     string    `json:"description,omitempty"`
+	FirstEventStart time.Time `json:"firstEventStart"`
+	Duration        string    `json:"duration"`
+	Rrule           string    `json:"rrule,omitempty"`
+	Filters         Filters   `json:"filters"`
 }
 
 type Filters struct {

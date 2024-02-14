@@ -20,7 +20,7 @@ func ExampleBudgetAdjustment() {
 		budgetadjustment.Spec{
 			Description:     "Example budget adjustment",
 			FirstEventStart: time.Date(2024, 2, 5, 5, 0, 0, 0, time.UTC),
-			Duration:        time.Hour,
+			Duration:        "1h",
 			Rrule:           "FREQ=WEEKLY;INTERVAL=1",
 			Filters: budgetadjustment.Filters{
 				SLOs: []budgetadjustment.SLORef{
@@ -50,7 +50,7 @@ func ExampleBudgetAdjustment() {
 	// spec:
 	//   description: Example budget adjustment
 	//   firstEventStart: 2024-02-05T05:00:00Z
-	//   duration: 1h0m0s
+	//   duration: 1h
 	//   rrule: FREQ=WEEKLY;INTERVAL=1
 	//   filters:
 	//     slos:

@@ -62,7 +62,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "no slo filters",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Filters:         Filters{},
 			},
 			expectedErrors: []testutils.ExpectedError{
@@ -76,7 +76,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "too short duration",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Second,
+				Duration:        "1s",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Name:    "test",
@@ -86,8 +86,8 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.duration",
-					Message: "duration must be defined with minutes precision",
+					Prop: "spec.duration",
+					Code: validation.ErrorCodeDurationFullMinutePrecision,
 				},
 			},
 		},
@@ -95,7 +95,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "duration contains seconds",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute + time.Second,
+				Duration:        "1m1s",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Name:    "test",
@@ -105,8 +105,8 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.duration",
-					Message: "duration must be defined with minutes precision",
+					Prop: "spec.duration",
+					Code: validation.ErrorCodeDurationFullMinutePrecision,
 				},
 			},
 		},
@@ -114,7 +114,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "slo is defined without name",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Project: "test",
@@ -132,7 +132,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "slo is defined with invalid slo name",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Name:    "Test name",
@@ -151,7 +151,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "slo is defined without project",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Name: "test",
@@ -169,7 +169,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "slo is defined with invalid project name",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
 						Name:    "name",
@@ -188,7 +188,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "wrong rrule format",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Rrule:           "some test",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -208,7 +208,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "invalid rrule",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Rrule:           "FREQ=TEST;INTERVAL=2",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -228,7 +228,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "proper spec",
 			spec: Spec{
 				FirstEventStart: time.Now(),
-				Duration:        time.Minute,
+				Duration:        "1m",
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
 					SLOs: []SLORef{{
