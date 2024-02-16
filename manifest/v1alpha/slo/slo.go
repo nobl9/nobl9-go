@@ -84,7 +84,9 @@ type Objective struct {
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	Operator        *string           `json:"op,omitempty"`
+	// Composite is not yet supported
+	Composite *CompositeSpec `json:"composite,omitempty"`
+	Operator  *string        `json:"op,omitempty"`
 }
 
 func (o Objective) GetBudgetTarget() float64 {
@@ -93,6 +95,10 @@ func (o Objective) GetBudgetTarget() float64 {
 		v = *o.BudgetTarget
 	}
 	return v
+}
+
+func (o Objective) IsComposite() bool {
+	return o.Composite != nil
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage

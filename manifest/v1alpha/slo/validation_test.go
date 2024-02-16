@@ -925,6 +925,19 @@ func TestValidate_Spec(t *testing.T) {
 			Code: errCodeExactlyOneMetricType,
 		})
 	})
+	//t.Run("composite slo mixed with raw metric type", func(t *testing.T) {
+	//	slo := validCompositeSLO()
+	//	//slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
+	//	//	MetricQuery: validMetricSpec(v1alpha.Prometheus),
+	//	//}
+	//	//slo.Spec.Objectives[0].CountMetrics = nil
+	//	err := validate(slo)
+	//	fmt.Printf("%+v\n", err)
+	//	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+	//		Prop: "spec",
+	//		Code: errCodeExactlyOneMetricType,
+	//	})
+	//})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Prometheus)
 		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
@@ -1137,6 +1150,99 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 }
 
+func TestValidate_CompositeSLO(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validCompositeSLO()
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("fails - spec.indicator provided", func(t *testing.T) {
+		for _, ind := range []Indicator{
+			{
+				MetricSource: MetricSourceSpec{Name: "name-only"},
+			},
+			{
+				MetricSource: MetricSourceSpec{
+					Name:    "name",
+					Project: "default",
+					Kind:    manifest.KindAgent,
+				},
+			},
+			{
+				MetricSource: MetricSourceSpec{
+					Name:    "name",
+					Project: "default",
+					Kind:    manifest.KindDirect,
+				},
+			},
+		} {
+			slo := validCompositeSLO()
+			slo.Spec.Indicator = ind
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+				Prop:    "spec.indicator",
+				Code:    validation.ErrorCodeForbidden,
+				Message: "property is forbidden; indicator section is forbidden when spec.objectives[0].composite is provided",
+			})
+		}
+	})
+	t.Run("fails - other objective types mixed with composite", func(t *testing.T) {
+		for _, obj := range []Objective{
+			{
+				ObjectiveBase: ObjectiveBase{
+					DisplayName: "Good",
+					Value:       ptr(120.0),
+					Name:        "good",
+				},
+				BudgetTarget:    ptr(0.9),
+				CountMetrics:    nil,
+				RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+				TimeSliceTarget: nil,
+				Operator:        ptr(v1alpha.GreaterThan.String()),
+			},
+		} {
+			slo := validCompositeSLO()
+			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
+			err := validate(slo)
+
+			testutils.AssertContainsErrors(t, slo, err, 2,
+				testutils.ExpectedError{
+					Prop:    "spec.objectives",
+					Code:    validation.ErrorCodeSliceUnique,
+					Message: "elements are not unique, index 0 collides with index 1 based on constraints: objectives[*].value must be different for each objective",
+				},
+				testutils.ExpectedError{
+					Prop:    "spec.objectives",
+					Code:    validation.ErrorCodeForbidden,
+					Message: "composite objective must be the only objective specified",
+				},
+			)
+		}
+	})
+	t.Run("fails - composite section provided", func(t *testing.T) {
+		for _, composite := range []*Composite{
+			{
+				BudgetTarget:      ptr(0.001),
+				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+			},
+			{
+				BudgetTarget:      ptr(0.9999),
+				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
+			},
+		} {
+			slo := validCompositeSLO()
+			slo.Spec.Composite = composite
+			err := validate(slo)
+
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+				Prop:    "spec.composite",
+				Code:    validation.ErrorCodeForbidden,
+				Message: "property is forbidden; composite section is forbidden when spec.objectives[0].composite is provided",
+			})
+		}
+	})
+}
+
 func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
 	s.Spec.Objectives[0].CountMetrics = nil
@@ -1199,6 +1305,73 @@ func validSLO() SLO {
 						GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 					},
 					Operator: ptr(v1alpha.LessThan.String()),
+				},
+			},
+			TimeWindows: []TimeWindow{
+				{
+					Unit:      "Day",
+					Count:     1,
+					IsRolling: true,
+				},
+			},
+		},
+	)
+}
+
+func validCompositeSLO() SLO {
+	return New(
+		Metadata{
+			Name:        "my-composite-slo",
+			DisplayName: "My Composite SLO",
+			Project:     "composite-project",
+			Labels: v1alpha.Labels{
+				"team":          []string{"blue", "red"},
+				"business-unit": []string{"management"},
+			},
+		},
+		Spec{
+			Description:   "Example composite slo",
+			AlertPolicies: []string{"my-policy-name"},
+			Attachments: []Attachment{
+				{
+					DisplayName: ptr("Master report"),
+					URL:         "https://example.com",
+				},
+			},
+			BudgetingMethod: BudgetingMethodOccurrences.String(),
+			Service:         "prometheus",
+			Objectives: []Objective{
+				{
+					ObjectiveBase: ObjectiveBase{
+						DisplayName: "Composite",
+						Value:       ptr(120.),
+						Name:        "composite-1",
+					},
+					BudgetTarget: ptr(0.9),
+					Composite: &CompositeSpec{
+						MaxDelay: v1alpha.Duration{
+							Value: ptr(10),
+							Unit:  v1alpha.Minute,
+						},
+						Components: Components{
+							Objectives: []CompositeObjective{
+								{
+									Project:     "project-alpha",
+									SLO:         "my-slo-alpha",
+									Objective:   "good",
+									Weight:      ptr(1.0),
+									WhenDelayed: CountAsGood.String(),
+								},
+								{
+									Project:     "project-beta",
+									SLO:         "my-slo-beta",
+									Objective:   "average",
+									Weight:      ptr(2.0),
+									WhenDelayed: CountAsBad.String(),
+								},
+							},
+						},
+					},
 				},
 			},
 			TimeWindows: []TimeWindow{

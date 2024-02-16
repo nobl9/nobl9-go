@@ -2,7 +2,6 @@ package slo
 
 import (
 	"fmt"
-
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -14,7 +13,10 @@ var sloValidation = validation.New[SLO](
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
-		Include(specValidation),
+		StopOnError().
+		Include(specValidation).
+		Include(specValidationNonComposite).
+		Include(specValidationComposite),
 )
 
 var metadataValidation = validation.New[Metadata](
@@ -23,6 +25,33 @@ var metadataValidation = validation.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
+
+var specValidationNonComposite = validation.New[Spec](
+	validation.For(func(s Spec) Indicator { return s.Indicator }).
+		WithName("indicator").
+		Required().
+		Include(indicatorValidation),
+).When(func(s Spec) bool { return !s.HasCompositeObjectives() })
+
+var specValidationComposite = validation.New[Spec](
+	validation.For(func(s Spec) Indicator { return s.Indicator }).
+		WithName("indicator").
+		Rules(
+			validation.Forbidden[Indicator]().WithDetails("indicator section is forbidden when spec.objectives[0].composite is provided"),
+		).
+		StopOnError(),
+
+	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
+		WithName("composite").
+		Rules(
+			validation.Forbidden[Composite]().WithDetails("composite section is forbidden when spec.objectives[0].composite is provided"),
+		).
+		StopOnError(),
+
+	validation.For(func(s Spec) Spec { return s }).
+		StopOnError().
+		Rules(specCompositeObjectiveValidationRule),
+).When(func(s Spec) bool { return s.HasCompositeObjectives() })
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
@@ -66,10 +95,6 @@ var specValidation = validation.New[Spec](
 		IncludeForEach(timeWindowsValidation).
 		StopOnError().
 		RulesForEach(timeWindowValidationRule()),
-	validation.For(func(s Spec) Indicator { return s.Indicator }).
-		WithName("indicator").
-		Required().
-		Include(indicatorValidation),
 	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceMinLength[[]Objective](1)).
@@ -138,6 +163,22 @@ var specCompositeValidationRule = validation.NewSingleRule(func(s Spec) error {
 	return nil
 })
 
+// CompositeSpec objective may only occur once, and may not be mixed with CountMetricsSpec or RawMetricSpec
+var specCompositeObjectiveValidationRule = validation.NewSingleRule(func(s Spec) error {
+	if s.HasCompositeObjectives() && len(s.Objectives) > 1 {
+		return validation.NewPropertyError(
+			"objectives",
+			s.Objectives,
+			validation.NewRuleError(
+				fmt.Sprint("composite objective must be the only objective specified"),
+				validation.ErrorCodeForbidden,
+			),
+		)
+	}
+
+	return nil
+})
+
 var anomalyConfigValidation = validation.New[AnomalyConfig](
 	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
@@ -159,6 +200,8 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 				)),
 		)),
 )
+
+//var IndicatorValidationParent :=
 
 var indicatorValidation = validation.New[Indicator](
 	validation.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
