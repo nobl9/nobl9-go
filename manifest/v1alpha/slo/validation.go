@@ -171,7 +171,7 @@ var specCompositeObjectiveValidationRule = validation.NewSingleRule(func(s Spec)
 			"objectives",
 			s.Objectives,
 			validation.NewRuleError(
-				fmt.Sprint("composite objective must be the only objective specified"),
+				"composite objective must be the only objective specified",
 				validation.ErrorCodeForbidden,
 			),
 		)
@@ -201,8 +201,6 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 				)),
 		)),
 )
-
-//var IndicatorValidationParent :=
 
 var indicatorValidation = validation.New[Indicator](
 	validation.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
