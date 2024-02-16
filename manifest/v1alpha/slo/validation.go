@@ -2,6 +2,7 @@ package slo
 
 import (
 	"fmt"
+
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
