@@ -56,7 +56,10 @@ func DefaultClient() (*Client, error) {
 
 // NewClient creates a new Client instance with provided Config.
 func NewClient(config *Config) (*Client, error) {
-	creds := newCredentials(config)
+	creds, err := newCredentials(config)
+	if err != nil {
+		return nil, err
+	}
 	client := &Client{
 		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,

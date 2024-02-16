@@ -7,13 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 )
 
 // accessTokenParser parses and verifies fetched access token.
 type accessTokenParser interface {
-	Parse(token, clientID string) (jwt.MapClaims, error)
+	Parse(token, clientID string) (*jwtClaims, error)
 }
 
 // accessTokenProvider fetches the access token based on client it and client secret.
@@ -25,37 +24,21 @@ type accessTokenProvider interface {
 // It can be used, for example, to update persistent access token storage.
 type accessTokenPostRequestHook = func(token string) error
 
-// accessTokenM2MProfile stores information specific to an Okta M2M application.
-type accessTokenM2MProfile struct {
-	User         string `json:"user"`
-	Organization string `json:"organization"`
-	Environment  string `json:"environment"`
-}
-
-// accessTokenAgentProfile stores information specific to an Okta Agent application.
-type accessTokenAgentProfile struct {
-	User         string `json:"user"`
-	Organization string `json:"organization"`
-	Environment  string `json:"environment"`
-	Name         string `json:"name"`
-	Project      string `json:"project"`
-}
-
-func newCredentials(config *Config) *credentials {
+func newCredentials(config *Config) (*credentials, error) {
+	jwtParser, err := newJWTParser(
+		oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String(),
+		oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String())
+	if err != nil {
+		return nil, err
+	}
 	return &credentials{
-		config: config,
-		tokenParser: newJWTParser(
-			func() string {
-				return oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String()
-			},
-			func() string {
-				return oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
-			}),
+		config:      config,
+		tokenParser: jwtParser,
 		tokenProvider: newOktaClient(func() string {
 			return oktaTokenEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
 		}),
 		postRequestHook: config.saveAccessToken,
-	}
+	}, nil
 }
 
 // credentials stores and manages IDP app credentials and claims.
@@ -72,10 +55,8 @@ type credentials struct {
 	// environment extracted from token claims which is the HTTP host of the Client requests.
 	environment string
 	// Claims.
-	m2mProfile   accessTokenM2MProfile
-	agentProfile accessTokenAgentProfile
-	tokenType    tokenType
-	claims       jwt.MapClaims
+	tokenType tokenType
+	claims    *jwtClaims
 
 	HTTP *http.Client
 	// tokenParser is used to verify the token and its claims.
@@ -184,8 +165,8 @@ const tokenExpiryOffset = 2 * time.Minute
 // shouldRefresh defines token expiry policy for the JWT managed by credentials
 // or if the config.ClientID or config.ClientSecret have been updated.
 func (c *credentials) shouldRefresh() bool {
-	return len(c.claims) == 0 ||
-		!c.claims.VerifyExpiresAt(time.Now().Add(tokenExpiryOffset).Unix(), true) ||
+	return c.claims == nil ||
+		c.claims.ExpiresAt.Before(time.Now().Add(tokenExpiryOffset)) ||
 		c.clientID != c.config.ClientID ||
 		c.clientSecret != c.config.ClientSecret
 }
@@ -209,23 +190,6 @@ func (c *credentials) setNewToken(token string) error {
 	if err != nil {
 		return err
 	}
-	var (
-		m2mProfile   accessTokenM2MProfile
-		agentProfile accessTokenAgentProfile
-	)
-	tokenTyp := tokenTypeFromClaims(claims)
-	switch tokenTyp {
-	case tokenTypeM2M:
-		m2mProfile, err = m2mProfileFromClaims(claims)
-		if err != nil {
-			return errors.Wrap(err, "failed to decode JWT claims to m2m profile object")
-		}
-	case tokenTypeAgent:
-		agentProfile, err = agentProfileFromClaims(claims)
-		if err != nil {
-			return errors.Wrap(err, "failed to decode JWT claims to agent profile object")
-		}
-	}
 	if c.postRequestHook != nil {
 		if err = c.postRequestHook(token); err != nil {
 			return errors.Wrap(err, "failed to execute access token post hook")
@@ -233,17 +197,15 @@ func (c *credentials) setNewToken(token string) error {
 	}
 	// We can now update the token and it's claims.
 	c.accessToken = token
-	switch tokenTyp {
+	c.tokenType = claims.getTokenType()
+	switch c.tokenType {
 	case tokenTypeM2M:
-		c.organization = m2mProfile.Organization
-		c.environment = m2mProfile.Environment
+		c.organization = claims.M2MProfile.Organization
+		c.environment = claims.M2MProfile.Environment
 	case tokenTypeAgent:
-		c.organization = agentProfile.Organization
-		c.environment = agentProfile.Environment
+		c.organization = claims.AgentProfile.Organization
+		c.environment = claims.AgentProfile.Environment
 	}
-	c.tokenType = tokenTyp
-	c.m2mProfile = m2mProfile
-	c.agentProfile = agentProfile
 	c.claims = claims
 	return nil
 }

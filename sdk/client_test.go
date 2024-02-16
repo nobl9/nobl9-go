@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/MicahParks/jwkset"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -143,13 +143,13 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	require.NoError(t, err)
 
 	// Create a JSON Web Key with a key id matching the tokens' kid.
-	JWK := jwk.NewRSAPublicKey()
-	require.NoError(t, JWK.Set(jwk.KeyIDKey, kid))
-	require.NoError(t, JWK.Set(jwk.AlgorithmKey, jwtSigningAlgorithm))
-	require.NoError(t, JWK.FromRaw(&rsaKey.PublicKey))
-	// Create a JWK Set and add a single JWK.
-	jwks := jwk.NewSet()
-	jwks.Add(JWK)
+	jwks, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
+		Marshal: jwkset.JWKMarshalOptions{},
+		Metadata: jwkset.JWKMetadataOptions{
+			ALG: jwkset.ALG(jwtSigningAlgorithm.Alg()),
+			KID: kid,
+		},
+	})
 
 	// Prepare the token.
 	claims := jwt.MapClaims{
@@ -164,7 +164,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 			"user":         "test@nobl9.com",
 		},
 	}
-	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod(jwtSigningAlgorithm.String()), claims)
+	jwtToken := jwt.NewWithClaims(jwtSigningAlgorithm, claims)
 	jwtToken.Header["kid"] = kid
 	token, err := jwtToken.SignedString(rsaKey)
 	require.NoError(t, err)
@@ -179,7 +179,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 				r.Header.Get(HeaderAuthorization))
 			require.NoError(t, json.NewEncoder(w).Encode(oktaTokenResponse{AccessToken: token}))
 		case oktaKeysEndpoint(authServerURL).Path:
-			require.NoError(t, json.NewEncoder(w).Encode(jwks))
+			require.NoError(t, json.NewEncoder(w).Encode(jwks.Marshal()))
 		case endpoint.Path:
 			// Headers we always require.
 			assert.Equal(t, organization, r.Header.Get(HeaderOrganization))
