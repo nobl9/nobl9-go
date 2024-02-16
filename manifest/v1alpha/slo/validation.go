@@ -38,14 +38,18 @@ var specValidationComposite = validation.New[Spec](
 	validation.For(func(s Spec) Indicator { return s.Indicator }).
 		WithName("indicator").
 		Rules(
-			validation.Forbidden[Indicator]().WithDetails("indicator section is forbidden when spec.objectives[0].composite is provided"),
+			validation.Forbidden[Indicator]().WithDetails(
+				"indicator section is forbidden when spec.objectives[0].composite is provided",
+			),
 		).
 		StopOnError(),
 
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
 		Rules(
-			validation.Forbidden[Composite]().WithDetails("composite section is forbidden when spec.objectives[0].composite is provided"),
+			validation.Forbidden[Composite]().WithDetails(
+				"composite section is forbidden when spec.objectives[0].composite is provided",
+			),
 		).
 		StopOnError(),
 
