@@ -2,6 +2,8 @@ package slo
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
+	"time"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -10,6 +12,10 @@ import (
 )
 
 var sloValidation = validation.New[SLO](
+	validation.For(func(s SLO) SLO { return s }).
+		StopOnError().
+		Include(sloValidationComposite),
+
 	validation.For(func(s SLO) Metadata { return s.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
@@ -37,26 +43,95 @@ var specValidationNonComposite = validation.New[Spec](
 var specValidationComposite = validation.New[Spec](
 	validation.For(func(s Spec) Indicator { return s.Indicator }).
 		WithName("indicator").
+		StopOnError().
 		Rules(
 			validation.Forbidden[Indicator]().WithDetails(
 				"indicator section is forbidden when spec.objectives[0].composite is provided",
 			),
-		).
-		StopOnError(),
+		),
 
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
+		StopOnError().
 		Rules(
 			validation.Forbidden[Composite]().WithDetails(
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
-		).
-		StopOnError(),
+		),
 
 	validation.For(func(s Spec) Spec { return s }).
 		StopOnError().
 		Rules(specCompositeObjectiveValidationRule),
+
+	validation.Transform(func(s Spec) string { return s.Objectives[0].Composite.MaxDelay }, time.ParseDuration).
+		WithName("objectives[0].composite.maxDelay").
+		StopOnError().
+		Rules(
+			validation.DurationPrecision(time.Minute),
+			validation.GreaterThanOrEqualTo(time.Minute),
+		),
+
+	validation.For(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
+		WithName("objectives[0].composite.components[0].objectives").
+		StopOnError().
+		Rules(
+			validation.SliceMinLength[[]CompositeObjective](2),
+		),
+
+	// Weights of composite objectives must be greater than zero
+	validation.ForEach(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
+		WithName("objectives[0].composite.components[0].objectives").
+		StopOnError().
+		IncludeForEach(compositeObjectiveRule),
 ).When(func(s Spec) bool { return s.HasCompositeObjectives() })
+
+var sloValidationComposite = validation.New[SLO](
+	validation.For(func(s SLO) SLO { return s }).
+		StopOnError().
+		Rules(
+			validation.NewSingleRule(func(s SLO) error {
+				for _, obj := range s.Spec.Objectives[0].Composite.Objectives {
+					isSameProject := obj.Project == s.Metadata.Project
+					isSameName := obj.Objective == s.Metadata.Name
+
+					if isSameProject && isSameName {
+						return validation.NewPropertyError(
+							"slo",
+							s.Metadata.Name,
+							errors.Errorf("composite SLO cannot have itself as one of its objectives"),
+						)
+					}
+				}
+
+				return nil
+			}).WithErrorCode(validation.ErrorCodeForbidden),
+		),
+
+	validation.For(func(s SLO) []CompositeObjective { return s.Spec.Objectives[0].Composite.Objectives }).
+		StopOnError().
+		Rules(
+			validation.NewSingleRule(func(c []CompositeObjective) error {
+				sloMap := make(map[string]bool)
+
+				for objKey, obj := range c {
+					key := fmt.Sprintf("%s%s%s", obj.Project, obj.SLO, obj.Objective)
+
+					_, exists := sloMap[key]
+					if exists {
+						return validation.NewPropertyError(
+							fmt.Sprintf("spec.objectives[0].composite.components.objectives[%d]", objKey),
+							obj.SLO,
+							errors.Errorf("composite SLO cannot have duplicate SLO as its components"),
+						)
+					}
+
+					sloMap[key] = true
+				}
+
+				return nil
+			}).WithErrorCode(validation.ErrorCodeForbidden),
+		),
+).When(func(s SLO) bool { return s.Spec.HasCompositeObjectives() })
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
@@ -183,6 +258,16 @@ var specCompositeObjectiveValidationRule = validation.NewSingleRule(func(s Spec)
 
 	return nil
 })
+
+var compositeObjectiveRule = validation.New[CompositeObjective](
+	validation.ForPointer(func(c CompositeObjective) *float64 { return c.Weight }).
+		WithName("weight").
+		Required().
+		Rules(validation.GreaterThan(0.0)),
+	//validation.ForPointer(func(a Attachment) *string { return a.DisplayName }).
+	//	WithName("displayName").
+	//	Rules(validation.StringLength(0, 63)),
+)
 
 var anomalyConfigValidation = validation.New[AnomalyConfig](
 	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).

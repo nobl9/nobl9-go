@@ -1,10 +1,8 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/manifest/v1alpha"
-
 // CompositeSpec represents a composite of SLOs and Composite SLOs.
 type CompositeSpec struct {
-	MaxDelay   v1alpha.Duration `json:"maxDelay"`
+	MaxDelay   string `json:"maxDelay"`
 	Components `json:"components"`
 }
 

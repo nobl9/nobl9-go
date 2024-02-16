@@ -1229,6 +1229,99 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			})
 		}
 	})
+	t.Run("passes - maxDelay is a multiple of a minute, expressed in seconds", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.MaxDelay = "120s"
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("fails - maxDelay lower than 1m", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.MaxDelay = "0s"
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].composite.maxDelay",
+				Code:    validation.ErrorCodeGreaterThanOrEqualTo,
+				Message: "should be greater than or equal to '1m0s'",
+			},
+		)
+	})
+	t.Run("fails - maxDelay not a multiple of a minute", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.MaxDelay = "70s"
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.maxDelay",
+			Code:    validation.ErrorCodeDurationPrecision,
+			Message: "duration must be defined with 1m0s precision",
+		})
+	})
+	t.Run("fails - weight is zero for first composite objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives[0].Weight = ptr(0.0)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.components[0].objectives[0].weight",
+			Code:    validation.ErrorCodeGreaterThan,
+			Message: "should be greater than '0'",
+		})
+	})
+	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives[1].Weight = ptr(0.0)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.components[0].objectives[1].weight",
+			Code:    validation.ErrorCodeGreaterThan,
+			Message: "should be greater than '0'",
+		})
+	})
+	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives[0].Project = "composite-project"
+		slo.Spec.Objectives[0].Composite.Objectives[0].Objective = "my-composite-slo"
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "slo",
+			Code:    validation.ErrorCodeForbidden,
+			Message: "composite SLO cannot have itself as one of its objectives",
+		})
+	})
+	t.Run("fails - only one slo as objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives = slo.Spec.Objectives[0].Composite.Objectives[:1]
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.components[0].objectives",
+			Code:    validation.ErrorCodeSliceMinLength,
+			Message: "length must be greater than or equal to 2",
+		})
+	})
+	t.Run("fails - duplicate slo in components", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives = append(
+			slo.Spec.Objectives[0].Composite.Objectives,
+			slo.Spec.Objectives[0].Composite.Objectives[0],
+		)
+
+		err := validate(slo)
+
+		fmt.Printf("%+v\n", err)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.components.objectives[2]",
+			Code:    validation.ErrorCodeForbidden,
+			Message: "composite SLO cannot have duplicate SLO as its components",
+		})
+	})
 }
 
 func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
@@ -1337,10 +1430,7 @@ func validCompositeSLO() SLO {
 					},
 					BudgetTarget: ptr(0.9),
 					Composite: &CompositeSpec{
-						MaxDelay: v1alpha.Duration{
-							Value: ptr(10),
-							Unit:  v1alpha.Minute,
-						},
+						MaxDelay: "10m",
 						Components: Components{
 							Objectives: []CompositeObjective{
 								{
