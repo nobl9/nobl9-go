@@ -2,8 +2,9 @@ package slo
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -264,9 +265,6 @@ var compositeObjectiveRule = validation.New[CompositeObjective](
 		WithName("weight").
 		Required().
 		Rules(validation.GreaterThan(0.0)),
-	//validation.ForPointer(func(a Attachment) *string { return a.DisplayName }).
-	//	WithName("displayName").
-	//	Rules(validation.StringLength(0, 63)),
 )
 
 var anomalyConfigValidation = validation.New[AnomalyConfig](
