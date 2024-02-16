@@ -20,7 +20,7 @@ type CompositeObjective struct {
 	WhenDelayed string   `json:"whenDelayed"`
 }
 
-// WhenDelayedEnum represents enum for behaviour of Composite SLO objectives
+// WhenDelayedEnum represents enum for behavior of Composite SLO objectives
 type WhenDelayedEnum int16
 
 const (
