@@ -39,17 +39,18 @@ type Metadata struct {
 
 // Spec holds detailed information specific to SLO.
 type Spec struct {
-	Description     string         `json:"description"`
-	Indicator       Indicator      `json:"indicator"`
-	BudgetingMethod string         `json:"budgetingMethod"`
-	Objectives      []Objective    `json:"objectives"`
-	Service         string         `json:"service"`
-	TimeWindows     []TimeWindow   `json:"timeWindows"`
-	AlertPolicies   []string       `json:"alertPolicies"`
-	Attachments     []Attachment   `json:"attachments,omitempty"`
-	CreatedAt       string         `json:"createdAt,omitempty"`
-	Composite       *Composite     `json:"composite,omitempty"`
-	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
+	Description     string       `json:"description"`
+	Indicator       Indicator    `json:"indicator"`
+	BudgetingMethod string       `json:"budgetingMethod"`
+	Objectives      []Objective  `json:"objectives"`
+	Service         string       `json:"service"`
+	TimeWindows     []TimeWindow `json:"timeWindows"`
+	AlertPolicies   []string     `json:"alertPolicies"`
+	Attachments     []Attachment `json:"attachments,omitempty"`
+	CreatedAt       string       `json:"createdAt,omitempty"`
+	// old Composite to be removed
+	Composite     *Composite     `json:"composite,omitempty"`
+	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
 // Attachment represents user defined URL attached to SLO
@@ -83,7 +84,9 @@ type Objective struct {
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	Operator        *string           `json:"op,omitempty"`
+	// Composite is not yet supported
+	Composite *CompositeSpec `json:"composite,omitempty"`
+	Operator  *string        `json:"op,omitempty"`
 }
 
 func (o Objective) GetBudgetTarget() float64 {
@@ -92,6 +95,10 @@ func (o Objective) GetBudgetTarget() float64 {
 		v = *o.BudgetTarget
 	}
 	return v
+}
+
+func (o Objective) IsComposite() bool {
+	return o.Composite != nil
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
