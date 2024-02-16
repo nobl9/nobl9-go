@@ -925,19 +925,6 @@ func TestValidate_Spec(t *testing.T) {
 			Code: errCodeExactlyOneMetricType,
 		})
 	})
-	//t.Run("composite slo mixed with raw metric type", func(t *testing.T) {
-	//	slo := validCompositeSLO()
-	//	//slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
-	//	//	MetricQuery: validMetricSpec(v1alpha.Prometheus),
-	//	//}
-	//	//slo.Spec.Objectives[0].CountMetrics = nil
-	//	err := validate(slo)
-	//	fmt.Printf("%+v\n", err)
-	//	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-	//		Prop: "spec",
-	//		Code: errCodeExactlyOneMetricType,
-	//	})
-	//})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Prometheus)
 		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
@@ -1207,8 +1194,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 			testutils.AssertContainsErrors(t, slo, err, 2,
 				testutils.ExpectedError{
-					Prop:    "spec.objectives",
-					Code:    validation.ErrorCodeSliceUnique,
+					Prop: "spec.objectives",
+					Code: validation.ErrorCodeSliceUnique,
+					// nolint:lll
 					Message: "elements are not unique, index 0 collides with index 1 based on constraints: objectives[*].value must be different for each objective",
 				},
 				testutils.ExpectedError{
