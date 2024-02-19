@@ -60,6 +60,21 @@ func TestValidate_CompositeSLO(t *testing.T) {
 				TimeSliceTarget: nil,
 				Operator:        ptr(v1alpha.GreaterThan.String()),
 			},
+			{
+				ObjectiveBase: ObjectiveBase{
+					DisplayName: "Good",
+					Value:       ptr(90.0),
+					Name:        "good",
+				},
+				BudgetTarget: ptr(0.9),
+				CountMetrics: &CountMetricsSpec{
+					Incremental: ptr(false),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+				},
+				TimeSliceTarget: nil,
+				Operator:        ptr(v1alpha.GreaterThan.String()),
+			},
 		} {
 			slo := validCompositeSLO()
 			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
