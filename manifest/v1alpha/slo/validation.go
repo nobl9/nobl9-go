@@ -151,8 +151,8 @@ var specValidation = validation.New[Spec](
 	validation.ForEach(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
-		IncludeForEach(attachmentValidation).
-		StopOnError(),
+		StopOnError().
+		IncludeForEach(attachmentValidation),
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
 		Include(compositeValidation),

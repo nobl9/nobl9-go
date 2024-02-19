@@ -51,7 +51,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			{
 				ObjectiveBase: ObjectiveBase{
 					DisplayName: "Good",
-					Value:       ptr(120.0),
+					Value:       ptr(80.0),
 					Name:        "good",
 				},
 				BudgetTarget:    ptr(0.9),
@@ -80,13 +80,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
 			err := validate(slo)
 
-			testutils.AssertContainsErrors(t, slo, err, 2,
-				testutils.ExpectedError{
-					Prop: "spec.objectives",
-					Code: validation.ErrorCodeSliceUnique,
-					// nolint:lll
-					Message: "elements are not unique, index 0 collides with index 1 based on constraints: objectives[*].value must be different for each objective",
-				},
+			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
 					Prop:    "spec.objectives",
 					Code:    validation.ErrorCodeForbidden,
