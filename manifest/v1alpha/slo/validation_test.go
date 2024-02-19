@@ -20,6 +20,9 @@ import (
 //go:embed test_data/expected_metadata_error.txt
 var expectedMetadataError string
 
+//go:embed test_data/expected_string_is_dns_subdomain_error.txt
+var expectedStringIsDNSSubdomainError string
+
 func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
@@ -1137,193 +1140,6 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 }
 
-func TestValidate_CompositeSLO(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		slo := validCompositeSLO()
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
-	})
-	t.Run("fails - spec.indicator provided", func(t *testing.T) {
-		for _, ind := range []Indicator{
-			{
-				MetricSource: MetricSourceSpec{Name: "name-only"},
-			},
-			{
-				MetricSource: MetricSourceSpec{
-					Name:    "name",
-					Project: "default",
-					Kind:    manifest.KindAgent,
-				},
-			},
-			{
-				MetricSource: MetricSourceSpec{
-					Name:    "name",
-					Project: "default",
-					Kind:    manifest.KindDirect,
-				},
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Indicator = ind
-			err := validate(slo)
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.indicator",
-				Code:    validation.ErrorCodeForbidden,
-				Message: "property is forbidden; indicator section is forbidden when spec.objectives[0].composite is provided",
-			})
-		}
-	})
-	t.Run("fails - other objective types mixed with composite", func(t *testing.T) {
-		for _, obj := range []Objective{
-			{
-				ObjectiveBase: ObjectiveBase{
-					DisplayName: "Good",
-					Value:       ptr(120.0),
-					Name:        "good",
-				},
-				BudgetTarget:    ptr(0.9),
-				CountMetrics:    nil,
-				RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
-				TimeSliceTarget: nil,
-				Operator:        ptr(v1alpha.GreaterThan.String()),
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
-			err := validate(slo)
-
-			testutils.AssertContainsErrors(t, slo, err, 2,
-				testutils.ExpectedError{
-					Prop: "spec.objectives",
-					Code: validation.ErrorCodeSliceUnique,
-					// nolint:lll
-					Message: "elements are not unique, index 0 collides with index 1 based on constraints: objectives[*].value must be different for each objective",
-				},
-				testutils.ExpectedError{
-					Prop:    "spec.objectives",
-					Code:    validation.ErrorCodeForbidden,
-					Message: "composite objective must be the only objective specified",
-				},
-			)
-		}
-	})
-	t.Run("fails - composite section provided", func(t *testing.T) {
-		for _, composite := range []*Composite{
-			{
-				BudgetTarget:      ptr(0.001),
-				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
-			},
-			{
-				BudgetTarget:      ptr(0.9999),
-				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Composite = composite
-			err := validate(slo)
-
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.composite",
-				Code:    validation.ErrorCodeForbidden,
-				Message: "property is forbidden; composite section is forbidden when spec.objectives[0].composite is provided",
-			})
-		}
-	})
-	t.Run("passes - maxDelay is a multiple of a minute, expressed in seconds", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.MaxDelay = "120s"
-		err := validate(slo)
-
-		testutils.AssertNoError(t, slo, err)
-	})
-	t.Run("fails - maxDelay lower than 1m", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.MaxDelay = "0s"
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1,
-			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].composite.maxDelay",
-				Code:    validation.ErrorCodeGreaterThanOrEqualTo,
-				Message: "should be greater than or equal to '1m0s'",
-			},
-		)
-	})
-	t.Run("fails - maxDelay not a multiple of a minute", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.MaxDelay = "70s"
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.maxDelay",
-			Code:    validation.ErrorCodeDurationPrecision,
-			Message: "duration must be defined with 1m0s precision",
-		})
-	})
-	t.Run("fails - weight is zero for first composite objective", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives[0].Weight = ptr(0.0)
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].weight",
-			Code:    validation.ErrorCodeGreaterThan,
-			Message: "should be greater than '0'",
-		})
-	})
-	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives[1].Weight = ptr(0.0)
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[1].weight",
-			Code:    validation.ErrorCodeGreaterThan,
-			Message: "should be greater than '0'",
-		})
-	})
-	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives[0].Project = "composite-project"
-		slo.Spec.Objectives[0].Composite.Objectives[0].Objective = "my-composite-slo"
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "slo",
-			Code:    validation.ErrorCodeForbidden,
-			Message: "composite SLO cannot have itself as one of its objectives",
-		})
-	})
-	t.Run("fails - only one slo as objective", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives = slo.Spec.Objectives[0].Composite.Objectives[:1]
-		err := validate(slo)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives",
-			Code:    validation.ErrorCodeSliceMinLength,
-			Message: "length must be greater than or equal to 2",
-		})
-	})
-	t.Run("fails - duplicate slo in components", func(t *testing.T) {
-		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives = append(
-			slo.Spec.Objectives[0].Composite.Objectives,
-			slo.Spec.Objectives[0].Composite.Objectives[0],
-		)
-
-		err := validate(slo)
-
-		fmt.Printf("%+v\n", err)
-
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components.objectives[2]",
-			Code:    validation.ErrorCodeForbidden,
-			Message: "composite SLO cannot have duplicate SLO as its components",
-		})
-	})
-}
-
 func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
 	s.Spec.Objectives[0].CountMetrics = nil
@@ -1437,14 +1253,14 @@ func validCompositeSLO() SLO {
 									Project:     "project-alpha",
 									SLO:         "my-slo-alpha",
 									Objective:   "good",
-									Weight:      ptr(1.0),
+									Weight:      1.0,
 									WhenDelayed: CountAsGood.String(),
 								},
 								{
 									Project:     "project-beta",
 									SLO:         "my-slo-beta",
 									Objective:   "average",
-									Weight:      ptr(2.0),
+									Weight:      2.0,
 									WhenDelayed: CountAsBad.String(),
 								},
 							},

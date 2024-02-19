@@ -14,7 +14,6 @@ import (
 
 var sloValidation = validation.New[SLO](
 	validation.For(func(s SLO) SLO { return s }).
-		StopOnError().
 		Include(sloValidationComposite),
 
 	validation.For(func(s SLO) Metadata { return s.Metadata }).
@@ -44,51 +43,43 @@ var specValidationNonComposite = validation.New[Spec](
 var specValidationComposite = validation.New[Spec](
 	validation.For(func(s Spec) Indicator { return s.Indicator }).
 		WithName("indicator").
-		StopOnError().
 		Rules(
 			validation.Forbidden[Indicator]().WithDetails(
 				"indicator section is forbidden when spec.objectives[0].composite is provided",
 			),
-		),
+		).
+		StopOnError(),
 
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
-		StopOnError().
 		Rules(
 			validation.Forbidden[Composite]().WithDetails(
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
-		),
+		).
+		StopOnError(),
 
 	validation.For(func(s Spec) Spec { return s }).
-		StopOnError().
-		Rules(specCompositeObjectiveValidationRule),
+		Rules(specCompositeObjectiveValidationRule).
+		StopOnError(),
 
 	validation.Transform(func(s Spec) string { return s.Objectives[0].Composite.MaxDelay }, time.ParseDuration).
 		WithName("objectives[0].composite.maxDelay").
-		StopOnError().
 		Rules(
 			validation.DurationPrecision(time.Minute),
 			validation.GreaterThanOrEqualTo(time.Minute),
-		),
-
-	validation.For(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
-		WithName("objectives[0].composite.components[0].objectives").
-		StopOnError().
-		Rules(
-			validation.SliceMinLength[[]CompositeObjective](2),
-		),
+		).
+		StopOnError(),
 
 	// Weights of composite objectives must be greater than zero
 	validation.ForEach(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
 		WithName("objectives[0].composite.components[0].objectives").
-		StopOnError().
-		IncludeForEach(compositeObjectiveRule),
+		IncludeForEach(compositeObjectiveRule).
+		StopOnError(),
 ).When(func(s Spec) bool { return s.HasCompositeObjectives() })
 
 var sloValidationComposite = validation.New[SLO](
 	validation.For(func(s SLO) SLO { return s }).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(s SLO) error {
 				for _, obj := range s.Spec.Objectives[0].Composite.Objectives {
@@ -106,16 +97,15 @@ var sloValidationComposite = validation.New[SLO](
 
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
-		),
+		).StopOnError(),
 
 	validation.For(func(s SLO) []CompositeObjective { return s.Spec.Objectives[0].Composite.Objectives }).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(c []CompositeObjective) error {
 				sloMap := make(map[string]bool)
 
 				for objKey, obj := range c {
-					key := fmt.Sprintf("%s%s%s", obj.Project, obj.SLO, obj.Objective)
+					key := fmt.Sprintf("%s/%s/%s", obj.Project, obj.SLO, obj.Objective)
 
 					_, exists := sloMap[key]
 					if exists {
@@ -131,7 +121,7 @@ var sloValidationComposite = validation.New[SLO](
 
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
-		),
+		).StopOnError(),
 ).When(func(s SLO) bool { return s.Spec.HasCompositeObjectives() })
 
 var specValidation = validation.New[Spec](
@@ -161,8 +151,8 @@ var specValidation = validation.New[Spec](
 	validation.ForEach(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
-		StopOnError().
-		IncludeForEach(attachmentValidation),
+		IncludeForEach(attachmentValidation).
+		StopOnError(),
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
 		Include(compositeValidation),
@@ -186,7 +176,8 @@ var specValidation = validation.New[Spec](
 			}
 			return *v.Value
 		}, "objectives[*].value must be different for each objective")).
-		IncludeForEach(objectiveValidation),
+		IncludeForEach(objectiveValidation).
+		StopOnError(),
 )
 
 var attachmentValidation = validation.New[Attachment](
@@ -261,10 +252,30 @@ var specCompositeObjectiveValidationRule = validation.NewSingleRule(func(s Spec)
 })
 
 var compositeObjectiveRule = validation.New[CompositeObjective](
-	validation.ForPointer(func(c CompositeObjective) *float64 { return c.Weight }).
+	validation.For(func(c CompositeObjective) string { return c.Project }).
+		WithName("project").
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(c CompositeObjective) string { return c.SLO }).
+		WithName("slo").
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(c CompositeObjective) string { return c.Objective }).
+		WithName("objective").
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(c CompositeObjective) float64 { return c.Weight }).
 		WithName("weight").
 		Required().
 		Rules(validation.GreaterThan(0.0)),
+	validation.For(func(c CompositeObjective) string { return c.WhenDelayed }).
+		WithName("whenDelayed").
+		Required().
+		Rules(validation.OneOf(
+			CountAsGood.String(),
+			CountAsBad.String(),
+			Ignore.String(),
+		)),
 )
 
 var anomalyConfigValidation = validation.New[AnomalyConfig](

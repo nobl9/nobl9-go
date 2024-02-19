@@ -11,11 +11,11 @@ type Components struct {
 }
 
 type CompositeObjective struct {
-	Project     string   `json:"project"`
-	SLO         string   `json:"slo"`
-	Objective   string   `json:"objective"`
-	Weight      *float64 `json:"weight,omitempty"`
-	WhenDelayed string   `json:"whenDelayed"`
+	Project     string  `json:"project"`
+	SLO         string  `json:"slo"`
+	Objective   string  `json:"objective"`
+	Weight      float64 `json:"weight"`
+	WhenDelayed string  `json:"whenDelayed"`
 }
 
 // WhenDelayedEnum represents enum for behavior of Composite SLO objectives
