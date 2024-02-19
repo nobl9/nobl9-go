@@ -1,10 +1,8 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/manifest/v1alpha"
-
 // CompositeSpec represents a composite of SLOs and Composite SLOs.
 type CompositeSpec struct {
-	MaxDelay   v1alpha.Duration `json:"maxDelay"`
+	MaxDelay   string `json:"maxDelay"`
 	Components `json:"components"`
 }
 
@@ -13,11 +11,11 @@ type Components struct {
 }
 
 type CompositeObjective struct {
-	Project     string   `json:"project"`
-	SLO         string   `json:"slo"`
-	Objective   string   `json:"objective"`
-	Weight      *float64 `json:"weight,omitempty"`
-	WhenDelayed string   `json:"whenDelayed"`
+	Project     string  `json:"project"`
+	SLO         string  `json:"slo"`
+	Objective   string  `json:"objective"`
+	Weight      float64 `json:"weight"`
+	WhenDelayed string  `json:"whenDelayed"`
 }
 
 // WhenDelayedEnum represents enum for behavior of Composite SLO objectives

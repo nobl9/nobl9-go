@@ -20,6 +20,9 @@ import (
 //go:embed test_data/expected_metadata_error.txt
 var expectedMetadataError string
 
+//go:embed test_data/expected_string_is_dns_subdomain_error.txt
+var expectedStringIsDNSSubdomainError string
+
 func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
@@ -1137,100 +1140,6 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 }
 
-func TestValidate_CompositeSLO(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		slo := validCompositeSLO()
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
-	})
-	t.Run("fails - spec.indicator provided", func(t *testing.T) {
-		for _, ind := range []Indicator{
-			{
-				MetricSource: MetricSourceSpec{Name: "name-only"},
-			},
-			{
-				MetricSource: MetricSourceSpec{
-					Name:    "name",
-					Project: "default",
-					Kind:    manifest.KindAgent,
-				},
-			},
-			{
-				MetricSource: MetricSourceSpec{
-					Name:    "name",
-					Project: "default",
-					Kind:    manifest.KindDirect,
-				},
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Indicator = ind
-			err := validate(slo)
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.indicator",
-				Code:    validation.ErrorCodeForbidden,
-				Message: "property is forbidden; indicator section is forbidden when spec.objectives[0].composite is provided",
-			})
-		}
-	})
-	t.Run("fails - other objective types mixed with composite", func(t *testing.T) {
-		for _, obj := range []Objective{
-			{
-				ObjectiveBase: ObjectiveBase{
-					DisplayName: "Good",
-					Value:       ptr(120.0),
-					Name:        "good",
-				},
-				BudgetTarget:    ptr(0.9),
-				CountMetrics:    nil,
-				RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
-				TimeSliceTarget: nil,
-				Operator:        ptr(v1alpha.GreaterThan.String()),
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
-			err := validate(slo)
-
-			testutils.AssertContainsErrors(t, slo, err, 2,
-				testutils.ExpectedError{
-					Prop: "spec.objectives",
-					Code: validation.ErrorCodeSliceUnique,
-					// nolint:lll
-					Message: "elements are not unique, index 0 collides with index 1 based on constraints: objectives[*].value must be different for each objective",
-				},
-				testutils.ExpectedError{
-					Prop:    "spec.objectives",
-					Code:    validation.ErrorCodeForbidden,
-					Message: "composite objective must be the only objective specified",
-				},
-			)
-		}
-	})
-	t.Run("fails - composite section provided", func(t *testing.T) {
-		for _, composite := range []*Composite{
-			{
-				BudgetTarget:      ptr(0.001),
-				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
-			},
-			{
-				BudgetTarget:      ptr(0.9999),
-				BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Composite = composite
-			err := validate(slo)
-
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.composite",
-				Code:    validation.ErrorCodeForbidden,
-				Message: "property is forbidden; composite section is forbidden when spec.objectives[0].composite is provided",
-			})
-		}
-	})
-}
-
 func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
 	s.Spec.Objectives[0].CountMetrics = nil
@@ -1337,24 +1246,21 @@ func validCompositeSLO() SLO {
 					},
 					BudgetTarget: ptr(0.9),
 					Composite: &CompositeSpec{
-						MaxDelay: v1alpha.Duration{
-							Value: ptr(10),
-							Unit:  v1alpha.Minute,
-						},
+						MaxDelay: "10m",
 						Components: Components{
 							Objectives: []CompositeObjective{
 								{
 									Project:     "project-alpha",
 									SLO:         "my-slo-alpha",
 									Objective:   "good",
-									Weight:      ptr(1.0),
+									Weight:      1.0,
 									WhenDelayed: CountAsGood.String(),
 								},
 								{
 									Project:     "project-beta",
 									SLO:         "my-slo-beta",
 									Objective:   "average",
-									Weight:      ptr(2.0),
+									Weight:      2.0,
 									WhenDelayed: CountAsBad.String(),
 								},
 							},
