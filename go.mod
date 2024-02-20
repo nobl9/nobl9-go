@@ -10,6 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/lestrrat-go/jwx v1.2.28
+	github.com/lestrrat-go/jwx/v2 v2.0.20
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -35,8 +36,8 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
