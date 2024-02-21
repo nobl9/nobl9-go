@@ -277,7 +277,7 @@ func (e Endpoints) GetBudgetAdjustments(
 	ctx context.Context,
 	params GetBudgetAdjustmentRequest,
 ) ([]budgetadjustment.BudgetAdjustment, error) {
-	f := filterBy().Strings(QueryKeyName, []string{params.Name})
+	f := filterBy().Strings(QueryKeyName, params.Names)
 	objects, err := e.Get(ctx, manifest.KindBudgetAdjustment, f.header, f.query)
 	if err != nil {
 		return nil, err

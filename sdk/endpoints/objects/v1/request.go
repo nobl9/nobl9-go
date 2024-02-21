@@ -89,5 +89,5 @@ type GetUserGroupsRequest struct {
 }
 
 type GetBudgetAdjustmentRequest struct {
-	Name string
+	Names []string
 }
