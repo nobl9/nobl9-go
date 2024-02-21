@@ -175,7 +175,7 @@ var metricSpecValidation = validation.New[MetricSpec](
 		Include(genericValidation),
 	validation.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
 		WithName("honeycomb").
-		Include(honeycombValidation, attributeRequired, attributeDisallowed),
+		Include(honeycombValidation, attributeRequired),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{

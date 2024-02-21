@@ -16,6 +16,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
@@ -82,6 +83,8 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 		return genericParseObject[annotation.Annotation](unmarshal)
 	case manifest.KindUserGroup:
 		return genericParseObject[usergroup.UserGroup](unmarshal)
+	case manifest.KindBudgetAdjustment:
+		return genericParseObject[budgetadjustment.BudgetAdjustment](unmarshal)
 	default:
 		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}

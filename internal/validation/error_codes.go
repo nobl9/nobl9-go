@@ -36,4 +36,5 @@ const (
 	ErrorCodeMutuallyExclusive    ErrorCode = "mutually_exclusive"
 	ErrorCodeSliceUnique          ErrorCode = "slice_unique"
 	ErrorCodeURL                  ErrorCode = "url"
+	ErrorCodeDurationPrecision    ErrorCode = "duration_precision"
 )

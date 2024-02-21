@@ -6,15 +6,17 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/MicahParks/jwkset v0.5.12
 	github.com/MicahParks/keyfunc/v3 v3.2.5
-	github.com/aws/aws-sdk-go v1.50.16
+	github.com/aws/aws-sdk-go v1.50.22
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.11.3
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
+	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 	golang.org/x/text v0.14.0
+	golang.org/x/time v0.5.0
 )
 
 require (
@@ -27,7 +29,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

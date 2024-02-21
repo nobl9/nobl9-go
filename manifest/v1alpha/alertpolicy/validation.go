@@ -68,7 +68,7 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("alertingWindow").
 		OmitEmpty().
 		Rules(
-			durationFullMinutePrecision,
+			validation.DurationPrecision(time.Minute),
 			validation.GreaterThanOrEqualTo(time.Minute*5),
 			validation.LessThanOrEqualTo(time.Hour*24*7),
 		),
@@ -91,21 +91,7 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 )
 
 const (
-	errorCodeDurationFullMinutePrecision   = "duration_full_minute_precision"
 	errorCodeMeasurementWithAlertingWindow = "measurement_regarding_alerting_window"
-)
-
-var durationFullMinutePrecision = validation.NewSingleRule(
-	func(v time.Duration) error {
-		if v.Nanoseconds()%int64(time.Minute) != 0 {
-			return validation.NewRuleError(
-				"duration must be defined with minute precision",
-				errorCodeDurationFullMinutePrecision,
-			)
-		}
-
-		return nil
-	},
 )
 
 var timeToBurnBudgetValueValidation = validation.New[AlertCondition](

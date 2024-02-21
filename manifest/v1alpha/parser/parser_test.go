@@ -123,6 +123,19 @@ func TestParseAlertPolicy(t *testing.T) {
 	}
 }
 
+func Test_ParseObject_EnsureAllKindsAreParsed(t *testing.T) {
+	for _, kind := range manifest.KindValues() {
+		object := map[string]interface{}{
+			"apiVersion": "n9/v1alpha",
+			"kind":       kind.String(),
+		}
+		data, err := json.Marshal(object)
+		require.NoError(t, err)
+		_, err = ParseObject(data, kind, manifest.ObjectFormatJSON)
+		assert.NotErrorIsf(t, err, manifest.ErrInvalidKind, "failed for %s", kind)
+	}
+}
+
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
 	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))
