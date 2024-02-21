@@ -24,21 +24,21 @@ type accessTokenProvider interface {
 // It can be used, for example, to update persistent access token storage.
 type accessTokenPostRequestHook = func(token string) error
 
-func newCredentials(config *Config) (*credentials, error) {
-	jwtParser, err := newJWTParser(
-		oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer).String(),
-		oktaKeysEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String())
-	if err != nil {
-		return nil, err
+func newCredentials(config *Config) *credentials {
+	if config.DisableOkta {
+		return &credentials{config: config}
 	}
+	authServerURL := oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)
 	return &credentials{
-		config:      config,
-		tokenParser: jwtParser,
+		config: config,
+		tokenParser: newJWTParser(
+			authServerURL.String(),
+			oktaKeysEndpoint(authServerURL).String()),
 		tokenProvider: newOktaClient(func() string {
-			return oktaTokenEndpoint(oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)).String()
+			return oktaTokenEndpoint(authServerURL).String()
 		}),
 		postRequestHook: config.saveAccessToken,
-	}, nil
+	}
 }
 
 // credentials stores and manages IDP app credentials and claims.

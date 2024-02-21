@@ -27,9 +27,6 @@ import (
 
 func TestClient_CreateRequest(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	t.Run("all parameters", func(t *testing.T) {
@@ -143,13 +140,13 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 	require.NoError(t, err)
 
 	// Create a JSON Web Key with a key id matching the tokens' kid.
-	jwks, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
-		Marshal: jwkset.JWKMarshalOptions{},
+	jwk, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
 		Metadata: jwkset.JWKMetadataOptions{
-			ALG: jwkset.ALG(jwtSigningAlgorithm.Alg()),
 			KID: kid,
 		},
 	})
+	jwks := jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{jwk.Marshal()}}
+	require.NoError(t, err)
 
 	// Prepare the token.
 	claims := jwt.MapClaims{
@@ -179,7 +176,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 				r.Header.Get(HeaderAuthorization))
 			require.NoError(t, json.NewEncoder(w).Encode(oktaTokenResponse{AccessToken: token}))
 		case oktaKeysEndpoint(authServerURL).Path:
-			require.NoError(t, json.NewEncoder(w).Encode(jwks.Marshal()))
+			require.NoError(t, json.NewEncoder(w).Encode(jwks))
 		case endpoint.Path:
 			// Headers we always require.
 			assert.Equal(t, organization, r.Header.Get(HeaderOrganization))
@@ -196,6 +193,9 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 			t.FailNow()
 		}
 	})}
+
+	// Start test server.
+	srv.Start()
 
 	// Prepare client.
 	config, err := ReadConfig(

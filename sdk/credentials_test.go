@@ -37,7 +37,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.False(t, tokenUpdated)
 	})
 
-	for name, test := range map[string]struct {
+	refreshTests := map[string]struct {
 		// Make sure 'exp' claim is float64, otherwise claims.VerifyExpiresAt will always return false.
 		Claims       *jwtClaims
 		TokenFetched bool
@@ -64,7 +64,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			},
 			TokenFetched: false,
 		},
-	} {
+	}
+	for name, test := range refreshTests {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
@@ -85,7 +86,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		})
 	}
 
-	for name, test := range map[string]struct {
+	credentialsTests := map[string]struct {
 		ClientID     string
 		ClientSecret string
 		CalledTimes  int
@@ -105,7 +106,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			ClientSecret: "old-secret",
 			CalledTimes:  0,
 		},
-	} {
+	}
+	for name, test := range credentialsTests {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
@@ -191,8 +193,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, creds.claims.M2MProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.M2MProfile)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 
 	t.Run("try setting new access token", func(t *testing.T) {
@@ -250,8 +252,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, creds.claims.M2MProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.M2MProfile)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 
 	t.Run("golden path, agent token", func(t *testing.T) {
@@ -297,8 +299,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			Organization: "my-org",
 			Name:         "my-agent",
 			Project:      "default",
-		}, creds.claims.AgentProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.AgentProfile)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 }
 

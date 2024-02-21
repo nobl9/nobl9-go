@@ -28,27 +28,29 @@ func TestJWTParser_Parse(t *testing.T) {
 		assert.Equal(t, errTokenParseMissingArguments, err)
 	})
 
-	t.Run("empty JWK fetch url", func(t *testing.T) {
-		_, err := newJWTParser(testIssuer, "")
-		require.Error(t, err)
-		assert.ErrorContains(t, err, "failed to create a keyfunc.Keyfunc with the server's URL")
-	})
-
 	t.Run("invalid token, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, testJWKFetchURL)
-		require.NoError(t, err)
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
+		}))
+		defer srv.Close()
 
-		_, err = parser.Parse("fake-token", "123")
+		parser := newJWTParser(testIssuer, srv.URL)
+
+		_, err := parser.Parse("fake-token", "123")
 		require.Error(t, err)
 		assert.ErrorIs(t, err, jwt.ErrTokenMalformed)
 	})
 
 	t.Run("invalid algorithm, return error", func(t *testing.T) {
-		parser, err := newJWTParser(testIssuer, testJWKFetchURL)
-		require.NoError(t, err)
+		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
+		}))
+		defer srv.Close()
 
+		parser := newJWTParser(testIssuer, srv.URL)
 		token, _ := signToken(t, jwt.New(jwt.SigningMethodRS512))
-		_, err = parser.Parse(token, "123")
+
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		assert.ErrorIs(t, err, jwt.ErrTokenSignatureInvalid)
 	})
@@ -57,15 +59,14 @@ func TestJWTParser_Parse(t *testing.T) {
 		serverCalled := false
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			serverCalled = true
-			http.Error(w, "some error reason", http.StatusForbidden)
+			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
 		}))
 		defer srv.Close()
 
-		parser, err := newJWTParser(testIssuer, srv.URL)
-		require.NoError(t, err)
+		parser := newJWTParser(testIssuer, srv.URL)
 		token, _ := signToken(t, jwt.New(jwtSigningAlgorithm))
 
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		require.True(t, serverCalled)
 		assert.ErrorIs(t, err, keyfunc.ErrKeyfunc)
@@ -80,17 +81,15 @@ func TestJWTParser_Parse(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		parser, err := newJWTParser(testIssuer, srv.URL)
-		require.NoError(t, err)
+		parser := newJWTParser(testIssuer, srv.URL)
 		jwtToken := jwt.New(jwtSigningAlgorithm)
 		jwtToken.Header["kid"] = "123"
 		token, _ := signToken(t, jwtToken)
 
-		_, err = parser.Parse(token, "123")
+		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		require.True(t, serverCalled)
-		assert.ErrorIs(t, err, keyfunc.ErrKeyfunc)
-		assert.ErrorContains(t, err, `could not read JWK from storage`)
+		assert.ErrorContains(t, err, "invalid HTTP status code: 403")
 	})
 
 	t.Run("golden path", func(t *testing.T) {
@@ -137,8 +136,7 @@ func TestJWTParser_Parse(t *testing.T) {
 		token, err := jwtToken.SignedString(rsaKey)
 		require.NoError(t, err)
 
-		parser, err := newJWTParser(testIssuer, srv.URL+"/lol")
-		require.NoError(t, err)
+		parser := newJWTParser(testIssuer, srv.URL)
 
 		result, err := parser.Parse(token, "123")
 		require.NoError(t, err)
@@ -239,8 +237,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			jwtToken.Header["kid"] = kid
 			token, err := jwtToken.SignedString(rsaKey)
 			require.NoError(t, err)
-			parser, err := newJWTParser(testIssuer, srv.URL)
-			require.NoError(t, err)
+			parser := newJWTParser(testIssuer, srv.URL)
 
 			_, err = parser.Parse(token, "123")
 			require.Error(t, err)
