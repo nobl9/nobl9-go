@@ -15,6 +15,7 @@ import (
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
 	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
@@ -270,4 +271,16 @@ func (e Endpoints) GetAlerts(
 		)
 	}
 	return objects, truncatedMax, nil
+}
+
+func (e Endpoints) GetBudgetAdjustments(
+	ctx context.Context,
+	params GetBudgetAdjustmentRequest,
+) ([]budgetadjustment.BudgetAdjustment, error) {
+	f := filterBy().Strings(QueryKeyName, []string{params.Name})
+	objects, err := e.Get(ctx, manifest.KindBudgetAdjustment, f.header, f.query)
+	if err != nil {
+		return nil, err
+	}
+	return manifest.FilterByKind[budgetadjustment.BudgetAdjustment](objects), err
 }

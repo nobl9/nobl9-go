@@ -87,3 +87,7 @@ type GetUserGroupsRequest struct {
 	Project string
 	Names   []string
 }
+
+type GetBudgetAdjustmentRequest struct {
+	Name string
+}
