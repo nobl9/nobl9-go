@@ -200,11 +200,11 @@ func (c *credentials) setNewToken(token string) error {
 	c.tokenType = claims.getTokenType()
 	switch c.tokenType {
 	case tokenTypeM2M:
-		c.organization = claims.M2MProfile.Organization
-		c.environment = claims.M2MProfile.Environment
+		c.organization = claims.M2MProfile.Value.Organization
+		c.environment = claims.M2MProfile.Value.Environment
 	case tokenTypeAgent:
-		c.organization = claims.AgentProfile.Organization
-		c.environment = claims.AgentProfile.Environment
+		c.organization = claims.AgentProfile.Value.Organization
+		c.environment = claims.AgentProfile.Value.Environment
 	}
 	c.claims = claims
 	return nil

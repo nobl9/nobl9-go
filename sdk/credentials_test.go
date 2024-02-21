@@ -166,11 +166,11 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("set new access token", func(t *testing.T) {
 		tokenParser := &mockTokenParser{
 			claims: jwtClaims{
-				M2MProfile: &jwtClaimM2MProfile{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					User:         "test@user.com",
 					Organization: "my-org",
 					Environment:  "app.nobl9.com",
-				},
+				}},
 			},
 		}
 		tokenProvider := &mockTokenProvider{}
@@ -193,7 +193,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, *creds.claims.M2MProfile)
+		}, *creds.claims.M2MProfile.Value)
 		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 
@@ -219,12 +219,12 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		}
 		tokenParser := &mockTokenParser{
 			claims: jwtClaims{
-				M2MProfile: &jwtClaimM2MProfile{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					User:         "test@user.com",
 					Organization: "my-org",
 					Environment:  "app.nobl9.com",
 				},
-			},
+				}},
 		}
 		hookCalled := false
 		creds := &credentials{
@@ -252,7 +252,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, *creds.claims.M2MProfile)
+		}, *creds.claims.M2MProfile.Value)
 		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 
@@ -262,13 +262,13 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		}
 		tokenParser := &mockTokenParser{
 			claims: jwtClaims{
-				AgentProfile: &jwtClaimAgentProfile{
+				AgentProfile: stringOrObject[jwtClaimAgentProfile]{Value: &jwtClaimAgentProfile{
 					User:         "test@user.com",
 					Organization: "my-org",
 					Environment:  "app.nobl9.com",
 					Name:         "my-agent",
 					Project:      "default",
-				},
+				}},
 			},
 		}
 		hookCalled := false
@@ -299,7 +299,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			Organization: "my-org",
 			Name:         "my-agent",
 			Project:      "default",
-		}, *creds.claims.AgentProfile)
+		}, *creds.claims.AgentProfile.Value)
 		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 }
@@ -419,9 +419,9 @@ func TestCredentials_GetEnvironment(t *testing.T) {
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{
 			claims: jwtClaims{
-				M2MProfile: &jwtClaimM2MProfile{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					Environment: "my-env",
-				},
+				}},
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				},
@@ -448,9 +448,9 @@ func TestCredentials_GetOrganization(t *testing.T) {
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{
 			claims: jwtClaims{
-				M2MProfile: &jwtClaimM2MProfile{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					Organization: "my-org",
-				},
+				}},
 				RegisteredClaims: jwt.RegisteredClaims{
 					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				},

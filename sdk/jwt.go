@@ -29,12 +29,26 @@ var _ jwt.ClaimsValidator = (*jwtClaims)(nil)
 
 type jwtClaims struct {
 	jwt.RegisteredClaims
-	ClaimID      string                `json:"cid"`
-	M2MProfile   *jwtClaimM2MProfile   `json:"m2mProfile,omitempty"`
-	AgentProfile *jwtClaimAgentProfile `json:"agentProfile,omitempty"`
+	ClaimID      string                               `json:"cid"`
+	M2MProfile   stringOrObject[jwtClaimM2MProfile]   `json:"m2mProfile,omitempty"`
+	AgentProfile stringOrObject[jwtClaimAgentProfile] `json:"agentProfile,omitempty"`
 
 	expectedClientID string
 	expectedIssuer   string
+}
+
+// stringOrObject has to be used to wrap our profiles as currently
+// they can either contain the profile object or an empty string.
+// Once PC-12146 is done, it can be removed.
+type stringOrObject[T any] struct {
+	Value *T
+}
+
+func (s *stringOrObject[T]) UnmarshalJSON(data []byte) error {
+	if len(data) == 2 && string(data) == `""` {
+		return nil
+	}
+	return json.Unmarshal(data, &s.Value)
 }
 
 // jwtClaimM2MProfile stores information specific to an Okta M2M application.
@@ -67,11 +81,11 @@ func (j jwtClaims) Validate() error {
 		return errors.Errorf("claim id '%s' does not match '%s' client id, JWT claims: %v",
 			j.ClaimID, j.expectedClientID, claimsJSON())
 	}
-	if j.M2MProfile == nil && j.AgentProfile == nil {
+	if j.M2MProfile.Value == nil && j.AgentProfile.Value == nil {
 		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but none were found")
 	}
-	if j.M2MProfile != nil && j.AgentProfile != nil {
-		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both found")
+	if j.M2MProfile.Value != nil && j.AgentProfile.Value != nil {
+		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found")
 	}
 	return nil
 }
@@ -85,10 +99,10 @@ const (
 )
 
 func (j jwtClaims) getTokenType() tokenType {
-	if j.M2MProfile != nil {
+	if j.M2MProfile.Value != nil {
 		return tokenTypeM2M
 	}
-	if j.AgentProfile != nil {
+	if j.AgentProfile.Value != nil {
 		return tokenTypeAgent
 	}
 	return 0
@@ -107,9 +121,7 @@ func newJWTParser(issuer, jwkFetchURL string) *jwtParser {
 		parser: jwt.NewParser(
 			jwt.WithValidMethods([]string{jwtSigningAlgorithm.Alg()}),
 			// Applies to "exp", "nbf" and "iat" claims.
-			// We're adding negative leeway for a stricter approach which will report expiration
-			// some time before it actually expires.
-			jwt.WithLeeway(-jwtLeeway),
+			jwt.WithLeeway(jwtLeeway),
 			jwt.WithExpirationRequired(),
 			// "exp" amd "nbf" claims are always verified, "iat" is optional as per JWT RFC.
 			jwt.WithIssuedAt(),

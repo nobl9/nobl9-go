@@ -123,11 +123,11 @@ func TestJWTParser_Parse(t *testing.T) {
 				IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Hour)),
 			},
 			ClaimID: "123",
-			M2MProfile: &jwtClaimM2MProfile{
+			M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 				User:         "dev.nobl9.com",
 				Organization: "my-org",
 				Environment:  "test@nobl9.com",
-			},
+			}},
 			expectedIssuer:   "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191",
 			expectedClientID: "123",
 		}
@@ -165,11 +165,19 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 	}))
 	defer srv.Close()
 
+	validAgentProfile := jwtClaimAgentProfile{
+		User:         "John Wick",
+		Organization: "nobl9-dev",
+		Environment:  "dev.nobl9.com",
+		Name:         "test",
+		Project:      "default",
+	}
 	validM2MProfile := jwtClaimM2MProfile{
 		User:         "John Wick",
 		Organization: "nobl9-dev",
 		Environment:  "dev.nobl9.com",
 	}
+
 	tests := map[string]struct {
 		ErrorMessage string
 		ErrorIs      error
@@ -204,7 +212,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			ErrorIs: jwt.ErrTokenExpired,
 			Claims: map[string]interface{}{
 				"iss":        testIssuer,
-				"exp":        time.Now().Unix(),
+				"exp":        time.Now().Add(-2 * time.Minute).Unix(),
 				"cid":        "123",
 				"m2mprofile": validM2MProfile,
 			},
@@ -228,6 +236,40 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iat":        time.Now().Add(-time.Hour).Unix(),
 				"nbf":        time.Now().Add(time.Hour).Unix(),
 				"m2mprofile": validM2MProfile,
+			},
+		},
+		"no profile": {
+			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but none were found",
+			Claims: map[string]interface{}{
+				"iss": testIssuer,
+				"cid": "123",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iat": time.Now().Add(-time.Hour).Unix(),
+				"nbf": time.Now().Add(-time.Hour).Unix(),
+			},
+		},
+		"both profiles set": {
+			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found",
+			Claims: map[string]interface{}{
+				"iss":          testIssuer,
+				"cid":          "123",
+				"exp":          time.Now().Add(time.Hour).Unix(),
+				"iat":          time.Now().Add(-time.Hour).Unix(),
+				"nbf":          time.Now().Add(-time.Hour).Unix(),
+				"m2mprofile":   validM2MProfile,
+				"agentProfile": validAgentProfile,
+			},
+		},
+		"agent profile is empty string": {
+			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found",
+			Claims: map[string]interface{}{
+				"iss":          testIssuer,
+				"cid":          "123",
+				"exp":          time.Now().Add(time.Hour).Unix(),
+				"iat":          time.Now().Add(-time.Hour).Unix(),
+				"nbf":          time.Now().Add(-time.Hour).Unix(),
+				"m2mprofile":   validM2MProfile,
+				"agentProfile": "",
 			},
 		},
 	}
