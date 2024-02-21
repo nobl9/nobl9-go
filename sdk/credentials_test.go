@@ -166,6 +166,9 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("set new access token", func(t *testing.T) {
 		tokenParser := &mockTokenParser{
 			claims: jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				},
 				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					User:         "test@user.com",
 					Organization: "my-org",
@@ -195,6 +198,45 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			Organization: "my-org",
 		}, *creds.claims.M2MProfile.Value)
 		assert.Equal(t, tokenParser.claims, *creds.claims)
+
+		// Make sure we're not refreshing the token anymore.
+		_, err = creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+	})
+
+	t.Run("credentials changed in config, refresh token", func(t *testing.T) {
+		tokenParser := &mockTokenParser{
+			claims: jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				},
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
+					User:         "test@user.com",
+					Organization: "my-org",
+					Environment:  "app.nobl9.com",
+				}},
+			},
+		}
+		tokenProvider := &mockTokenProvider{}
+		conf := &Config{AccessToken: "token"}
+		creds := &credentials{
+			config:        conf,
+			tokenParser:   tokenParser,
+			tokenProvider: tokenProvider,
+		}
+		_, err := creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+		// Change config.
+		conf.ClientID = "new-id"
+		// Verify that we're refreshing the token.
+		_, err = creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 1, tokenProvider.calledTimes)
+		assert.Equal(t, 2, tokenParser.calledTimes)
 	})
 
 	t.Run("try setting new access token", func(t *testing.T) {

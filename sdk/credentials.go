@@ -207,5 +207,7 @@ func (c *credentials) setNewToken(token string) error {
 		c.environment = claims.AgentProfile.Value.Environment
 	}
 	c.claims = claims
+	c.clientID = c.config.ClientID
+	c.clientSecret = c.config.ClientSecret
 	return nil
 }
