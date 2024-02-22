@@ -114,34 +114,57 @@ func TestJWTParser_Parse(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		// Prepare the token.
-		claims := jwtClaims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				Issuer:    testIssuer,
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
-				NotBefore: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
-				IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+		for profile, claims := range map[string]jwtClaims{
+			"m2mProfile": {
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    testIssuer,
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+					NotBefore: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+				},
+				ClaimID: "123",
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
+					User:         "dev.nobl9.com",
+					Organization: "my-org",
+					Environment:  "test@nobl9.com",
+				}},
+				expectedIssuer:   "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191",
+				expectedClientID: "123",
 			},
-			ClaimID: "123",
-			M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
-				User:         "dev.nobl9.com",
-				Organization: "my-org",
-				Environment:  "test@nobl9.com",
-			}},
-			expectedIssuer:   "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191",
-			expectedClientID: "123",
+			"agentProfile": {
+				RegisteredClaims: jwt.RegisteredClaims{
+					Issuer:    testIssuer,
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+					NotBefore: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+					IssuedAt:  jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+				},
+				ClaimID: "123",
+				AgentProfile: stringOrObject[jwtClaimAgentProfile]{Value: &jwtClaimAgentProfile{
+					User:         "dev.nobl9.com",
+					Organization: "my-org",
+					Environment:  "test@nobl9.com",
+					Project:      "default",
+					Name:         "prometheus",
+				}},
+				expectedIssuer:   "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191",
+				expectedClientID: "123",
+			},
+		} {
+			t.Run(profile, func(t *testing.T) {
+				// Prepare the token.
+				jwtToken := jwt.NewWithClaims(jwtSigningAlgorithm, claims)
+				jwtToken.Header["kid"] = kid
+				token, err := jwtToken.SignedString(rsaKey)
+				require.NoError(t, err)
+
+				parser := newJWTParser(testIssuer, srv.URL)
+
+				result, err := parser.Parse(token, "123")
+				require.NoError(t, err)
+				assert.True(t, serverCalled)
+				assert.Equal(t, claims, *result)
+			})
 		}
-		jwtToken := jwt.NewWithClaims(jwtSigningAlgorithm, claims)
-		jwtToken.Header["kid"] = kid
-		token, err := jwtToken.SignedString(rsaKey)
-		require.NoError(t, err)
-
-		parser := newJWTParser(testIssuer, srv.URL)
-
-		result, err := parser.Parse(token, "123")
-		require.NoError(t, err)
-		assert.True(t, serverCalled)
-		assert.Equal(t, claims, *result)
 	})
 }
 
@@ -260,8 +283,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"agentProfile": validAgentProfile,
 			},
 		},
-		"agent profile is empty string": {
-			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found",
+		"agent profile empty string": {
 			Claims: map[string]interface{}{
 				"iss":          testIssuer,
 				"cid":          "123",
@@ -270,6 +292,17 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   validM2MProfile,
 				"agentProfile": "",
+			},
+		},
+		"m2m profile empty string": {
+			Claims: map[string]interface{}{
+				"iss":          testIssuer,
+				"cid":          "123",
+				"exp":          time.Now().Add(time.Hour).Unix(),
+				"iat":          time.Now().Add(-time.Hour).Unix(),
+				"nbf":          time.Now().Add(-time.Hour).Unix(),
+				"m2mprofile":   "",
+				"agentProfile": validAgentProfile,
 			},
 		},
 	}
@@ -282,12 +315,14 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			parser := newJWTParser(testIssuer, srv.URL)
 
 			_, err = parser.Parse(token, "123")
-			require.Error(t, err)
 			if test.ErrorIs != nil {
+				require.Error(t, err)
 				assert.ErrorIs(t, err, test.ErrorIs)
-			}
-			if test.ErrorMessage != "" {
+			} else if test.ErrorMessage != "" {
+				require.Error(t, err)
 				assert.ErrorContains(t, err, test.ErrorMessage)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

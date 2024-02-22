@@ -37,10 +37,14 @@ type jwtClaims struct {
 	expectedIssuer   string
 }
 
+type jwtClaimsProfile interface {
+	jwtClaimAgentProfile | jwtClaimM2MProfile
+}
+
 // stringOrObject has to be used to wrap our profiles as currently
 // they can either contain the profile object or an empty string.
 // Once PC-12146 is done, it can be removed.
-type stringOrObject[T any] struct {
+type stringOrObject[T jwtClaimsProfile] struct {
 	Value *T
 }
 
@@ -49,6 +53,10 @@ func (s *stringOrObject[T]) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	return json.Unmarshal(data, &s.Value)
+}
+
+func (s stringOrObject[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Value)
 }
 
 // jwtClaimM2MProfile stores information specific to an Okta M2M application.
