@@ -20,7 +20,6 @@ var sloValidation = validation.New[SLO](
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
-		StopOnError().
 		Include(specValidation).
 		Include(specValidationNonComposite).
 		Include(specValidationComposite),
@@ -47,8 +46,7 @@ var specValidationComposite = validation.New[Spec](
 			validation.Forbidden[Indicator]().WithDetails(
 				"indicator section is forbidden when spec.objectives[0].composite is provided",
 			),
-		).
-		StopOnError(),
+		),
 
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
@@ -56,26 +54,22 @@ var specValidationComposite = validation.New[Spec](
 			validation.Forbidden[Composite]().WithDetails(
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
-		).
-		StopOnError(),
+		),
 
 	validation.For(func(s Spec) Spec { return s }).
-		Rules(specCompositeObjectiveValidationRule).
-		StopOnError(),
+		Rules(specCompositeObjectiveValidationRule),
 
 	validation.Transform(func(s Spec) string { return s.Objectives[0].Composite.MaxDelay }, time.ParseDuration).
 		WithName("objectives[0].composite.maxDelay").
 		Rules(
 			validation.DurationPrecision(time.Minute),
 			validation.GreaterThanOrEqualTo(time.Minute),
-		).
-		StopOnError(),
+		),
 
 	// Weights of composite objectives must be greater than zero
 	validation.ForEach(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
 		WithName("objectives[0].composite.components[0].objectives").
-		IncludeForEach(compositeObjectiveRule).
-		StopOnError(),
+		IncludeForEach(compositeObjectiveRule),
 ).When(func(s Spec) bool { return s.HasCompositeObjectives() })
 
 var sloValidationComposite = validation.New[SLO](
@@ -97,7 +91,7 @@ var sloValidationComposite = validation.New[SLO](
 
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
-		).StopOnError(),
+		),
 
 	validation.For(func(s SLO) []CompositeObjective { return s.Spec.Objectives[0].Composite.Objectives }).
 		Rules(
@@ -121,7 +115,7 @@ var sloValidationComposite = validation.New[SLO](
 
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
-		).StopOnError(),
+		),
 ).When(func(s SLO) bool { return s.Spec.HasCompositeObjectives() })
 
 var specValidation = validation.New[Spec](
@@ -176,8 +170,7 @@ var specValidation = validation.New[Spec](
 			}
 			return *v.Value
 		}, "objectives[*].value must be different for each objective")).
-		IncludeForEach(objectiveValidation).
-		StopOnError(),
+		IncludeForEach(objectiveValidation),
 )
 
 var attachmentValidation = validation.New[Attachment](
