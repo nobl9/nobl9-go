@@ -52,9 +52,6 @@ autolabeler:
   - label: documentation
     title:
       - "/^doc:/i"
-  - label: breaking-change
-    body:
-      - '/^## Breaking Changes/im'
   - label: release-notes
     body:
       - '/^## Release Notes/im'

@@ -23,9 +23,10 @@ extract_header() {
 	local header_name="$2"
 	awk "
     /^\s?$/ {next}
-    /## $header_name/ {rn=1}
-    rn && !/^##/ {print};
-    /##/ && !/## $header_name/ {rn=0}" <<<"$commit"
+    /^## $header_name/ {rn=1}
+    rn && !/^##/ && !/^--+/ {print};
+    /^--+/ {rn=0};
+    /^##/ && !/^## $header_name/ {rn=0}" <<<"$commit"
 }
 
 indent() {
@@ -77,4 +78,5 @@ done <<<"$RELEASE_NOTES"
 
 echo "Uploading release notes for $VERSION"
 # shellcheck disable=2059
-printf "$new_notes" | gh release edit "$VERSION" --verify-tag -F -
+# printf "$new_notes" | gh release edit "$VERSION" --verify-tag -F -
+printf "$new_notes"
