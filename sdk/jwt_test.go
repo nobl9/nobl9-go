@@ -315,13 +315,14 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			parser := newJWTParser(testIssuer, srv.URL)
 
 			_, err = parser.Parse(token, "123")
-			if test.ErrorIs != nil {
+			switch {
+			case test.ErrorIs != nil:
 				require.Error(t, err)
 				assert.ErrorIs(t, err, test.ErrorIs)
-			} else if test.ErrorMessage != "" {
+			case test.ErrorMessage != "":
 				require.Error(t, err)
 				assert.ErrorContains(t, err, test.ErrorMessage)
-			} else {
+			default:
 				require.NoError(t, err)
 			}
 		})
