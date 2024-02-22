@@ -2,6 +2,10 @@
 
 This document describes the intricacies of nobl9-go development workflow.
 
+## Pull requests
+
+Pull requests TODO.
+
 ## Makefile
 
 Run `make help` to display short description for each target.
@@ -12,6 +16,12 @@ However, it does not detect if the binary you have is up to date with the
 versions declaration located in Makefile.
 If you see any discrepancies between CI and your local runs, remove the
 binaries from `bin` and let Makefile reinstall them with the latest version.
+
+## CI
+
+Continuous integration pipelines utilize the same Makefile commands which
+you can run locally. This ensures consistent behavior of the executed checks
+and makes local debugging easier.
 
 ## Testing
 
@@ -65,4 +75,5 @@ TODO
 
 Renovate is configured to automatically merge minor and patch updates.
 For major versions, which sadly includes GitHub Actions, manual approval
+We recommend a consistent approach
 is required.

@@ -21,13 +21,6 @@ List related changes from other PRs (if any).
 If this change should be part of the Release Notes,
 **replace this entire paragraph** with 1-3 sentences about the changes.
 Otherwise, you **MUST** remove this section entirely.
-Don't separate the summary with blank lines.
-
-## Breaking Changes
 
 Does this PR contain any breaking changes?
-If so **replace this entire paragraph** with a description of these changes.
-Otherwise, you **MUST** remove this section entirely.
-Don't separate the summary with blank lines.
-You **MUST** add `breaking-change` label to this PR,
-it will automatically place your PR in a dedicated section on release notes.
+If so, add `## Breaking Changes` header and list the introduced changes there.
