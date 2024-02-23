@@ -46,10 +46,7 @@ while IFS= read -r line; do
 		fi
 		rls_header="${BASH_REMATCH[1]}"
 	fi
-	if [[ $rls_header == "" ]]; then
-		continue
-	fi
-	if [[ $line != -* ]]; then
+	if [[ $rls_header == "" ]] || [[ $line != -* ]] || [[ $line == *"@renovate"* ]]; then
 		continue
 	fi
 	if ! [[ $line =~ $commit_message_re ]]; then
@@ -78,5 +75,4 @@ done <<<"$RELEASE_NOTES"
 
 echo "Uploading release notes for $VERSION"
 # shellcheck disable=2059
-# printf "$new_notes" | gh release edit "$VERSION" --verify-tag -F -
-printf "$new_notes"
+printf "$new_notes" | gh release edit "$VERSION" --verify-tag -F -

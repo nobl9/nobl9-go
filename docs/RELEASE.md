@@ -8,7 +8,7 @@ platform **production** version.
 
 1. Create release candidate version. \
   Most likely this step is where you can stop.
-  Creating an official version release is only necessary if you want our users alskdjalksd
+  Creating an official version release is only necessary if you want our users
   to have immediate access to the released changes.
   In many scenarios it might not be the case.
   Furthermore, creating release candidate version instead of official release
