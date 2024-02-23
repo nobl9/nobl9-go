@@ -8,13 +8,15 @@ platform **production** version.
 
 1. Create release candidate version. \
   Most likely this step is where you can stop.
-  Creating an official version release is only necessary if we want our users
-  to have immediate access to the released features or fixes.
-  In many scenarios that is not the case, creating release candidate version
-  instead of official release gives us more time to "sit" on the introduced
-  changes which increases a chance for bug detection and gives room to
-  introduce breaking changes.
-2. Create official release version (restricted access).
+  Creating an official version release is only necessary if you want our users alskdjalksd
+  to have immediate access to the released changes.
+  In many scenarios it might not be the case.
+  Furthermore, creating release candidate version instead of official release
+  gives us more time to "sit" on the introduced changes, which in turn
+  increases a chance for bug detection and gives room to introduce breaking
+  changes which might be necessary to address the uncovered issue.
+2. Create official release version (restricted access). \
+  Reach out to Foundations domain If you want to go with the official release.
 
 ## Merging to main
 
@@ -24,11 +26,15 @@ a release is going to happen on X date. There might be bugs or features you're
 not aware of which will require immediate release.
 
 How should I then account for different scenarios in relation to n9 state?
+Below, we're listing the most common scenarios.
+If you find this list lacking in any manner, please reach out so that we can
+discuss your case and eventually write it down in this list.
 
-### The changes do not require to be in sync with n9
+### The changes are not required to be in sync with n9
 
 In this scenario, there's nothing blocking you from merging to main.
 
+<!-- markdownlint-disable-next-line MD001 -->
 ##### Examples
 
 - Bug fix which corrects SDK specific behavior.
@@ -36,7 +42,16 @@ In this scenario, there's nothing blocking you from merging to main.
 - Dependency update.
 - Documentation enhancement.
 
-### The changes require to be in sync with n9 but remain backwards compatible
+### The changes are required to be in sync with n9 (backwards compatible)
+
+This scenario can be divided into two cases, depending on the following
+characteristics of the code you've written:
+
+- Visibility, is it exported (available through the public contract of the SDK)
+  and what it is its magnitude (amount of exported code)?
+- How long is it estimated to stay out of sync with n9?
+  When is the version of n9, which supports these changes estimated to land on
+  production?
 
 #### Release version of n9 is known
 
@@ -108,8 +123,9 @@ remember about removing these annotations.
 
 #### The changes have not yet been released
 
-You **MUST** not communicate these breaking changes with `## Breaking changes`
-header in this scenario.
+You **MUST NOT** communicate these breaking changes with `## Breaking changes`
+header in this scenario. It only makes sense to communicate breaking changes
+if they were introduced between official versions (see next section).
 
 #### The changes have been released with a previous official release
 
@@ -117,7 +133,9 @@ Describe the breaking changes under `## Breaking changes` header.
 
 Do these changes need to be in sync with n9 platform?
 We shouldn't ever be in this position!
-If we get here somehow, we'll figure out a way to address that ad hoc.
+If we get here somehow, we'll most likely need to figure out a custom way of
+communicating these changes, which might involve reaching out to the users
+directly.
 
 ## Ideal vs. real world
 
@@ -126,7 +144,7 @@ be released once n9 has been released.
 In practice, while doable, it proves to be a challenge not worth the trouble.
 Main reason is that feature branches for both n9 and nobl9-go would have to
 be maintained.
-While it might seem to be an acceptable cost for nobl9-go, it could prove to
+While it might seem to be an acceptable cost for nobl9-go, it would prove to
 be a real challenge for n9 where a magnitude and frequency of potentially
 conflicting changes far outranks nobl9-go environment.
 
