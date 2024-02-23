@@ -74,7 +74,7 @@ rules:
 
 - Use `validation` package ([see](#validation)).
 - **ALWAYS** test the whole object and not only its specific fields.
-  *TIP*: Create "valid" object once and the just modify its specific fields
+  *TIP*: Create "valid" object once and then just modify its specific fields
   to validate them.
 - **ALWAYS** use `testutils` package and its `AssertNoError` and
   `AssertContainsErrors`. It not only makes it easier to validate the whole

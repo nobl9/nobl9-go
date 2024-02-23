@@ -16,13 +16,14 @@ platform **production** version.
   increases a chance for bug detection and gives room to introduce breaking
   changes which might be necessary to address the uncovered issue.
 2. Create official release version (restricted access). \
-  Reach out to Foundations domain If you want to go with the official release.
+  Reach out to Foundations domain if you want to go with the official release.
 
 ## Merging to main
 
-**NEVER** merge commits or tags based versions n9 if they are based off of any
-other branch then main. Rephrasing, you can **ONLY** merge SDK reference to n9
-main branch if it points at SDK main branch.
+**NEVER** merge commits or tags based versions of n9 if they are based off of
+any other branch then main.
+Rephrasing, you can **ONLY** merge SDK reference to n9 main branch if it
+points at SDK main branch.
 
 The single, most important rule to keep in mind when merging to nobl9-go main
 branch is that it **MUST** be release ready. You **CANNOT** assume that
@@ -52,9 +53,9 @@ This scenario can be divided into two cases, depending on the following
 characteristics of the code you've written:
 
 - Visibility, is it exported (available through the public contract of the SDK)
-  and what it is its magnitude (amount of exported code)?
+  and what is its magnitude (amount of exported code)?
 - How long is it estimated to stay out of sync with n9?
-  When is the version of n9, which supports these changes estimated to land on
+  When is the version of n9 which supports these changes estimated to land on
   production?
 
 #### Release version of n9 is known
@@ -100,7 +101,7 @@ supported by our API.
 If the code you've introduced is public,
 it will likely sit there for some time.
 Annotate each public code element with a `// experimental:` comment.
-Write down a short detail, that it's not yet supported, explain if using this
+Write down a short detail that it's not yet supported, explain if using this
 struct/function will be ignored or result in an error.
 
 Example:
