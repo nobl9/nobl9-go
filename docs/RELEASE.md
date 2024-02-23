@@ -20,6 +20,10 @@ platform **production** version.
 
 ## Merging to main
 
+**NEVER** merge commits or tags based versions n9 if they are based off of any
+other branch then main. Rephrasing, you can **ONLY** merge SDK reference to n9
+main branch if it points at SDK main branch.
+
 The single, most important rule to keep in mind when merging to nobl9-go main
 branch is that it **MUST** be release ready. You **CANNOT** assume that
 a release is going to happen on X date. There might be bugs or features you're
