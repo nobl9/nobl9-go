@@ -9,7 +9,7 @@ import (
 // HoneycombMetric represents metric from Honeycomb. To access this integration, contact support@nobl9.com.
 type HoneycombMetric struct {
 	Calculation string `json:"calculation"`
-	Attribute   string `json:"attribute"`
+	Attribute   string `json:"attribute,omitempty"`
 }
 
 var honeycombValidation = validation.New[HoneycombMetric](
@@ -34,18 +34,8 @@ var attributeRequired = validation.New[HoneycombMetric](
 			validation.StringNotEmpty()),
 ).When(func(h HoneycombMetric) bool {
 	return slices.Contains([]string{
-		"SUM", "AVG", "COUNT_DISTINCT", "MAX", "MIN",
+		"SUM", "AVG", "CONCURRENCY", "COUNT", "COUNT_DISTINCT", "MAX", "MIN",
 		"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
 		"RATE_AVG", "RATE_SUM", "RATE_MAX",
-	}, h.Calculation)
-})
-
-var attributeDisallowed = validation.New[HoneycombMetric](
-	validation.For(func(h HoneycombMetric) string { return h.Attribute }).
-		WithName("attribute").
-		Rules(validation.Forbidden[string]()),
-).When(func(h HoneycombMetric) bool {
-	return slices.Contains([]string{
-		"CONCURRENCY", "COUNT",
 	}, h.Calculation)
 })
