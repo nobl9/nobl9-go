@@ -65,9 +65,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    "spec",
-				Code:    validation.ErrorCodeMutuallyExclusive,
-				Message: "[objectives.composite, rawMetric] properties are mutually exclusive, provide only one of them",
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "length must be between 1 and 1; there must be only 1 composite objective",
 			},
 		)
 	})
@@ -94,9 +94,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    "spec",
-				Code:    validation.ErrorCodeMutuallyExclusive,
-				Message: "[countMetrics, objectives.composite] properties are mutually exclusive, provide only one of them",
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "length must be between 1 and 1; there must be only 1 composite objective",
 			},
 		)
 	})

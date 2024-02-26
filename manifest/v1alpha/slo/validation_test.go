@@ -910,7 +910,10 @@ func TestValidate_Spec(t *testing.T) {
 			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+			Prop: "spec.objectives[0]",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		}, testutils.ExpectedError{
 			Prop: "spec",
 			Code: errCodeExactlyOneMetricType,
 		})
@@ -920,7 +923,10 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric = nil
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+			Prop: "spec.objectives[0]",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		}, testutils.ExpectedError{
 			Prop: "spec",
 			Code: errCodeExactlyOneMetricType,
 		})

@@ -20,12 +20,6 @@ const (
 
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(validation.MutuallyExclusive(true, map[string]func(s Spec) any{
-			"rawMetric":            func(s Spec) any { return s.HasRawMetric() },
-			"countMetrics":         func(s Spec) any { return s.HasCountMetrics() },
-			"objectives.composite": func(s Spec) any { return s.HasCompositeObjectives() },
-		}).WithErrorCode(validation.ErrorCodeMutuallyExclusive)).
-		StopOnError().
 		Rules(validation.NewSingleRule(func(s Spec) error {
 			if !s.HasCompositeObjectives() {
 				if s.HasRawMetric() == s.HasCountMetrics() {
