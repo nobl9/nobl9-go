@@ -49,6 +49,7 @@ type Spec struct {
 	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
 	UpdatedAt       string         `json:"updatedAt,omitempty"`
+	// deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
@@ -84,7 +85,7 @@ type Objective struct {
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	// Composite is not yet supported
+	// Composite is not yet supported, applying it will have no effect
 	Composite *CompositeSpec `json:"composite,omitempty"`
 	Operator  *string        `json:"op,omitempty"`
 }
@@ -113,6 +114,7 @@ type MetricSourceSpec struct {
 	Kind    manifest.Kind `json:"kind,omitempty"`
 }
 
+// deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 // Composite represents configuration for Composite SLO.
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`

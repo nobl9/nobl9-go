@@ -46,48 +46,60 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			})
 		}
 	})
-	t.Run("fails - other objective types mixed with composite", func(t *testing.T) {
-		for _, obj := range []Objective{
-			{
-				ObjectiveBase: ObjectiveBase{
-					DisplayName: "Good",
-					Value:       ptr(80.0),
-					Name:        "good",
-				},
-				BudgetTarget:    ptr(0.9),
-				CountMetrics:    nil,
-				RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
-				TimeSliceTarget: nil,
-				Operator:        ptr(v1alpha.GreaterThan.String()),
+	t.Run("fails - raw objective type mixed with composite", func(t *testing.T) {
+		obj := Objective{
+			ObjectiveBase: ObjectiveBase{
+				DisplayName: "Good",
+				Value:       ptr(80.0),
+				Name:        "good",
 			},
-			{
-				ObjectiveBase: ObjectiveBase{
-					DisplayName: "Good",
-					Value:       ptr(90.0),
-					Name:        "good",
-				},
-				BudgetTarget: ptr(0.9),
-				CountMetrics: &CountMetricsSpec{
-					Incremental: ptr(false),
-					TotalMetric: validMetricSpec(v1alpha.Prometheus),
-					GoodMetric:  validMetricSpec(v1alpha.Prometheus),
-				},
-				TimeSliceTarget: nil,
-				Operator:        ptr(v1alpha.GreaterThan.String()),
-			},
-		} {
-			slo := validCompositeSLO()
-			slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
-			err := validate(slo)
-
-			testutils.AssertContainsErrors(t, slo, err, 1,
-				testutils.ExpectedError{
-					Prop:    "spec.objectives",
-					Code:    validation.ErrorCodeForbidden,
-					Message: "composite objective must be the only objective specified",
-				},
-			)
+			BudgetTarget:    ptr(0.9),
+			CountMetrics:    nil,
+			RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+			TimeSliceTarget: nil,
+			Operator:        ptr(v1alpha.GreaterThan.String()),
 		}
+
+		slo := validCompositeSLO()
+		slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec",
+				Code:    validation.ErrorCodeMutuallyExclusive,
+				Message: "[objectives.composite, rawMetric] properties are mutually exclusive, provide only one of them",
+			},
+		)
+	})
+	t.Run("fails - count metric objective type mixed with composite", func(t *testing.T) {
+		obj := Objective{
+			ObjectiveBase: ObjectiveBase{
+				DisplayName: "Good",
+				Value:       ptr(90.0),
+				Name:        "good",
+			},
+			BudgetTarget: ptr(0.9),
+			CountMetrics: &CountMetricsSpec{
+				Incremental: ptr(false),
+				TotalMetric: validMetricSpec(v1alpha.Prometheus),
+				GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+			},
+			TimeSliceTarget: nil,
+			Operator:        ptr(v1alpha.GreaterThan.String()),
+		}
+
+		slo := validCompositeSLO()
+		slo.Spec.Objectives = append(slo.Spec.Objectives, obj)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec",
+				Code:    validation.ErrorCodeMutuallyExclusive,
+				Message: "[countMetrics, objectives.composite] properties are mutually exclusive, provide only one of them",
+			},
+		)
 	})
 	t.Run("fails - composite section provided", func(t *testing.T) {
 		for _, composite := range []*Composite{
@@ -182,9 +194,8 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].project",
-			Code:    joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
-			Message: expectedStringIsDNSSubdomainError,
+			Prop: "spec.objectives[0].composite.components[0].objectives[0].project",
+			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -193,9 +204,8 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].slo",
-			Code:    joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
-			Message: expectedStringIsDNSSubdomainError,
+			Prop: "spec.objectives[0].composite.components[0].objectives[0].slo",
+			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -204,9 +214,8 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].objective",
-			Code:    joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
-			Message: expectedStringIsDNSSubdomainError,
+			Prop: "spec.objectives[0].composite.components[0].objectives[0].objective",
+			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {
@@ -252,7 +261,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[2]",
 			Code:    validation.ErrorCodeForbidden,
-			Message: "composite SLO cannot have duplicate SLO as its components",
+			Message: "composite SLO cannot have duplicated SLOs as its objectives",
 		})
 	})
 }

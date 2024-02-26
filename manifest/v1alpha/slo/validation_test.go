@@ -20,9 +20,6 @@ import (
 //go:embed test_data/expected_metadata_error.txt
 var expectedMetadataError string
 
-//go:embed test_data/expected_string_is_dns_subdomain_error.txt
-var expectedStringIsDNSSubdomainError string
-
 func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
@@ -1254,14 +1251,14 @@ func validCompositeSLO() SLO {
 									SLO:         "my-slo-alpha",
 									Objective:   "good",
 									Weight:      1.0,
-									WhenDelayed: CountAsGood.String(),
+									WhenDelayed: WhenDelayedCountAsGood,
 								},
 								{
 									Project:     "project-beta",
 									SLO:         "my-slo-beta",
 									Objective:   "average",
 									Weight:      2.0,
-									WhenDelayed: CountAsBad.String(),
+									WhenDelayed: WhenDelayedCountAsBad,
 								},
 							},
 						},
