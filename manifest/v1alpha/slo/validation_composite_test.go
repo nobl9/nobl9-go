@@ -1,7 +1,6 @@
 package slo
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -160,9 +159,8 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].weight",
-			Code:    validation.ErrorCodeRequired,
-			Message: "property is required but was empty",
+			Prop: "spec.objectives[0].composite.components.objectives[0].weight",
+			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
@@ -171,9 +169,8 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[1].weight",
-			Code:    validation.ErrorCodeRequired,
-			Message: "property is required but was empty",
+			Prop: "spec.objectives[0].composite.components.objectives[1].weight",
+			Code: validation.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
@@ -194,7 +191,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].composite.components[0].objectives[0].project",
+			Prop: "spec.objectives[0].composite.components.objectives[0].project",
 			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
@@ -204,7 +201,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].composite.components[0].objectives[0].slo",
+			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
 			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
@@ -214,17 +211,17 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].composite.components[0].objectives[0].objective",
+			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
 			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.Objectives[0].Weight = -1.0
+		slo.Spec.Objectives[0].Composite.Objectives[0].Weight = -0.1
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].weight",
+			Prop:    "spec.objectives[0].composite.components.objectives[0].weight",
 			Code:    validation.ErrorCodeGreaterThan,
 			Message: "should be greater than '0'",
 		})
@@ -235,7 +232,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].composite.components[0].objectives[0].whenDelayed",
+			Prop:    "spec.objectives[0].composite.components.objectives[0].whenDelayed",
 			Code:    validation.ErrorCodeOneOf,
 			Message: "must be one of [CountAsGood, CountAsBad, Ignore]",
 		})
@@ -255,8 +252,6 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		)
 
 		err := validate(slo)
-
-		fmt.Printf("%+v\n", err)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[2]",

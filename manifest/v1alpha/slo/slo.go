@@ -49,7 +49,7 @@ type Spec struct {
 	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
 	UpdatedAt       string         `json:"updatedAt,omitempty"`
-	// deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
+	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
@@ -114,8 +114,8 @@ type MetricSourceSpec struct {
 	Kind    manifest.Kind `json:"kind,omitempty"`
 }
 
-// deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 // Composite represents configuration for Composite SLO.
+// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`

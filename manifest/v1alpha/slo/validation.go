@@ -347,18 +347,23 @@ var specValidationComposite = validation.New[Spec](
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
 		),
-	validation.For(func(s Spec) []Objective { return s.Objectives }).
+	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceLength[[]Objective](1, 1).
 			WithDetails("there must be only 1 composite objective")).
-		When(func(s Spec) bool { return s.HasCompositeObjectives() }),
-	validation.Transform(func(s Spec) string { return s.Objectives[0].Composite.MaxDelay }, time.ParseDuration).
-		WithName("objectives[0].composite.maxDelay").
-		Rules(
-			validation.DurationPrecision(time.Minute),
-			validation.GreaterThanOrEqualTo(time.Minute),
-		),
-	validation.ForEach(func(s Spec) []CompositeObjective { return s.Objectives[0].Composite.Objectives }).
-		WithName("objectives[0].composite.components[0].objectives").
-		IncludeForEach(compositeObjectiveRule),
+		IncludeForEach(validation.New[Objective](
+			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
+				WithName("composite").
+				Include(validation.New[CompositeSpec](
+					validation.Transform(func(c CompositeSpec) string { return c.MaxDelay }, time.ParseDuration).
+						WithName("maxDelay").
+						Rules(
+							validation.DurationPrecision(time.Minute),
+							validation.GreaterThanOrEqualTo(time.Minute),
+						),
+					validation.ForEach(func(c CompositeSpec) []CompositeObjective { return c.Objectives }).
+						WithName("components.objectives").
+						IncludeForEach(compositeObjectiveRule),
+				)),
+		)),
 ).When(func(s Spec) bool { return s.HasCompositeObjectives() })
