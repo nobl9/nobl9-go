@@ -11,12 +11,12 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **To Reproduce**
-Steps to reproduce the behavior, ideally a minimal working working example `main.go`.
+Steps to reproduce the behavior, ideally a minimal working example `main.go`.
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**System details (please complete the following information):**
+**System details (please complete the following information)**
  - OS (with version): [e.g. OS X 14.2.1, Ubuntu 22.04]
  - SDK Version [e.g. v1.0.2]
 

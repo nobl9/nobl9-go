@@ -19,6 +19,7 @@ DataExport
 RoleBinding
 Annotation
 UserGroup
+BudgetAdjustment
 )*/
 type Kind int
 
