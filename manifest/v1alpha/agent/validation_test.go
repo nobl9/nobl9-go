@@ -56,7 +56,7 @@ func TestValidateSpec(t *testing.T) {
 				continue
 			}
 			agent := validAgent(typ)
-			agent.Spec.Prometheus = validAgentSpecs[v1alpha.Prometheus].Prometheus
+			agent.Spec.Prometheus = validAgentSpec(v1alpha.Prometheus).Prometheus
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 				Prop: "spec",
@@ -490,6 +490,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 func TestValidateSpec_Lightstep(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		agent := validAgent(v1alpha.Lightstep)
+		agent.Spec.Lightstep.URL = ""
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})
@@ -508,6 +509,36 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			},
 		)
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		agent := validAgent(v1alpha.Lightstep)
+		agent.Spec.Lightstep.URL = "h ttp"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.lightstep.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	urlTests := map[string]struct {
+		url     string
+		isValid bool
+	}{
+		"valid .com": {
+			url: "https://api.lightstep.com",
+		},
+		"valid .eu": {
+			url: "https://api.eu.lightstep.com",
+		},
+	}
+	t.Run("test url", func(t *testing.T) {
+		for name, test := range urlTests {
+			t.Run(name, func(t *testing.T) {
+				agent := validAgent(v1alpha.Lightstep)
+				agent.Spec.Lightstep.URL = test.url
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
+		}
 	})
 }
 
@@ -675,7 +706,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 }
 
 func validAgent(typ v1alpha.DataSourceType) Agent {
-	spec := validAgentSpecs[typ]
+	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
 	spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	return New(Metadata{
@@ -685,118 +716,123 @@ func validAgent(typ v1alpha.DataSourceType) Agent {
 	}, spec)
 }
 
-var validAgentSpecs = map[v1alpha.DataSourceType]Spec{
-	v1alpha.Prometheus: {
-		Prometheus: &PrometheusConfig{
-			URL: "https://prometheus-service.monitoring:8080",
+func validAgentSpec(typ v1alpha.DataSourceType) Spec {
+	specs := map[v1alpha.DataSourceType]Spec{
+		v1alpha.Prometheus: {
+			Prometheus: &PrometheusConfig{
+				URL: "https://prometheus-service.monitoring:8080",
+			},
 		},
-	},
-	v1alpha.Datadog: {
-		Datadog: &DatadogConfig{
-			Site: "datadoghq.com",
+		v1alpha.Datadog: {
+			Datadog: &DatadogConfig{
+				Site: "datadoghq.com",
+			},
 		},
-	},
-	v1alpha.NewRelic: {
-		NewRelic: &NewRelicConfig{
-			AccountID: 123,
+		v1alpha.NewRelic: {
+			NewRelic: &NewRelicConfig{
+				AccountID: 123,
+			},
 		},
-	},
-	v1alpha.AppDynamics: {
-		AppDynamics: &AppDynamicsConfig{
-			URL: "https://nobl9.saas.appdynamics.com",
+		v1alpha.AppDynamics: {
+			AppDynamics: &AppDynamicsConfig{
+				URL: "https://nobl9.saas.appdynamics.com",
+			},
 		},
-	},
-	v1alpha.Splunk: {
-		Splunk: &SplunkConfig{
-			URL: "https://localhost:8089/servicesNS/admin/",
+		v1alpha.Splunk: {
+			Splunk: &SplunkConfig{
+				URL: "https://localhost:8089/servicesNS/admin/",
+			},
 		},
-	},
-	v1alpha.Lightstep: {
-		Lightstep: &LightstepConfig{
-			Organization: "LightStep-Play",
-			Project:      "play",
+		v1alpha.Lightstep: {
+			Lightstep: &LightstepConfig{
+				Organization: "LightStep-Play",
+				Project:      "play",
+				URL:          "https://api.lightstep.com",
+			},
 		},
-	},
-	v1alpha.SplunkObservability: {
-		SplunkObservability: &SplunkObservabilityConfig{
-			Realm: "us-1",
+		v1alpha.SplunkObservability: {
+			SplunkObservability: &SplunkObservabilityConfig{
+				Realm: "us-1",
+			},
 		},
-	},
-	v1alpha.Dynatrace: {
-		Dynatrace: &DynatraceConfig{
-			URL: "https://rxh70845.live.dynatrace.com/",
+		v1alpha.Dynatrace: {
+			Dynatrace: &DynatraceConfig{
+				URL: "https://rxh70845.live.dynatrace.com/",
+			},
 		},
-	},
-	v1alpha.Elasticsearch: {
-		Elasticsearch: &ElasticsearchConfig{
-			URL: "https://observability-deployment-946814.es.eu-central-1.aws.cloud.es.io:9243",
+		v1alpha.Elasticsearch: {
+			Elasticsearch: &ElasticsearchConfig{
+				URL: "https://observability-deployment-946814.es.eu-central-1.aws.cloud.es.io:9243",
+			},
 		},
-	},
-	v1alpha.ThousandEyes: {
-		ThousandEyes: &ThousandEyesConfig{},
-	},
-	v1alpha.Graphite: {
-		Graphite: &GraphiteConfig{
-			URL: "http://graphite.example.com",
+		v1alpha.ThousandEyes: {
+			ThousandEyes: &ThousandEyesConfig{},
 		},
-	},
-	v1alpha.BigQuery: {
-		BigQuery: &BigQueryConfig{},
-	},
-	v1alpha.OpenTSDB: {
-		OpenTSDB: &OpenTSDBConfig{
-			URL: "http://opentsdb.example.com",
+		v1alpha.Graphite: {
+			Graphite: &GraphiteConfig{
+				URL: "http://graphite.example.com",
+			},
 		},
-	},
-	v1alpha.GrafanaLoki: {
-		GrafanaLoki: &GrafanaLokiConfig{
-			URL: "http://loki.example.com",
+		v1alpha.BigQuery: {
+			BigQuery: &BigQueryConfig{},
 		},
-	},
-	v1alpha.CloudWatch: {
-		CloudWatch: &CloudWatchConfig{},
-	},
-	v1alpha.Pingdom: {
-		Pingdom: &PingdomConfig{},
-	},
-	v1alpha.AmazonPrometheus: {
-		AmazonPrometheus: &AmazonPrometheusConfig{
-			URL:    "https://prometheus-service.monitoring:8080",
-			Region: "us-east-1",
+		v1alpha.OpenTSDB: {
+			OpenTSDB: &OpenTSDBConfig{
+				URL: "http://opentsdb.example.com",
+			},
 		},
-	},
-	v1alpha.Redshift: {
-		Redshift: &RedshiftConfig{},
-	},
-	v1alpha.SumoLogic: {
-		SumoLogic: &SumoLogicConfig{
-			URL: "https://sumologic-service.monitoring:443",
+		v1alpha.GrafanaLoki: {
+			GrafanaLoki: &GrafanaLokiConfig{
+				URL: "http://loki.example.com",
+			},
 		},
-	},
-	v1alpha.Instana: {
-		Instana: &InstanaConfig{
-			URL: "https://instana-service.monitoring:443",
+		v1alpha.CloudWatch: {
+			CloudWatch: &CloudWatchConfig{},
 		},
-	},
-	v1alpha.InfluxDB: {
-		InfluxDB: &InfluxDBConfig{
-			URL: "https://influxdb-service.monitoring:8086",
+		v1alpha.Pingdom: {
+			Pingdom: &PingdomConfig{},
 		},
-	},
-	v1alpha.GCM: {
-		GCM: &GCMConfig{},
-	},
-	v1alpha.AzureMonitor: {
-		AzureMonitor: &AzureMonitorConfig{
-			TenantID: "abf988bf-86f1-41af-91ab-2d7cd011db46",
+		v1alpha.AmazonPrometheus: {
+			AmazonPrometheus: &AmazonPrometheusConfig{
+				URL:    "https://prometheus-service.monitoring:8080",
+				Region: "us-east-1",
+			},
 		},
-	},
-	v1alpha.Generic: {
-		Generic: &GenericConfig{},
-	},
-	v1alpha.Honeycomb: {
-		Honeycomb: &HoneycombConfig{},
-	},
+		v1alpha.Redshift: {
+			Redshift: &RedshiftConfig{},
+		},
+		v1alpha.SumoLogic: {
+			SumoLogic: &SumoLogicConfig{
+				URL: "https://sumologic-service.monitoring:443",
+			},
+		},
+		v1alpha.Instana: {
+			Instana: &InstanaConfig{
+				URL: "https://instana-service.monitoring:443",
+			},
+		},
+		v1alpha.InfluxDB: {
+			InfluxDB: &InfluxDBConfig{
+				URL: "https://influxdb-service.monitoring:8086",
+			},
+		},
+		v1alpha.GCM: {
+			GCM: &GCMConfig{},
+		},
+		v1alpha.AzureMonitor: {
+			AzureMonitor: &AzureMonitorConfig{
+				TenantID: "abf988bf-86f1-41af-91ab-2d7cd011db46",
+			},
+		},
+		v1alpha.Generic: {
+			Generic: &GenericConfig{},
+		},
+		v1alpha.Honeycomb: {
+			Honeycomb: &HoneycombConfig{},
+		},
+	}
+
+	return specs[typ]
 }
 
 // setURLValue is a help function which sets the value of 'URL' field of the given Agent config.

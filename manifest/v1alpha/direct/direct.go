@@ -233,6 +233,7 @@ type LightstepConfig struct {
 	Organization string `json:"organization"`
 	Project      string `json:"project"`
 	AppToken     string `json:"appToken"`
+	URL          string `json:"url"`
 }
 
 // DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.

@@ -167,6 +167,12 @@ var (
 		validation.For(func(l LightstepConfig) string { return l.Project }).
 			WithName("project").
 			Required(),
+		validation.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
+			WithName("url").
+			OmitEmpty().
+			Rules(
+				validation.URL(),
+			),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
 		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
