@@ -1,27 +1,27 @@
 # Release process
 
 The release process for nobl9-go cannot be discussed without the context of
-our platform releases. In the following document, `n9` will refer to our
+Nobl9 platform releases. In the following document, `n9` will refer to the
 platform **production** version.
 
 ## The process
 
-1. Create release candidate version. \
+1. **Create release candidate version.** \
   Most likely this step is where you can stop.
-  Creating an official version release is only necessary if you want our users
+  Creating an official version release is only necessary if you want Nobl9 users
   to have immediate access to the released changes.
   In many scenarios it might not be the case.
   Furthermore, creating release candidate version instead of official release
   gives us more time to "sit" on the introduced changes, which in turn
   increases a chance for bug detection and gives room to introduce breaking
   changes which might be necessary to address the uncovered issue.
-2. Create official release version (restricted access). \
+2. **Create official release version (restricted access).** \
   Reach out to Foundations domain if you want to go with the official release.
 
 ## Merging to main
 
 **NEVER** merge commits or tags based versions of n9 if they are based off of
-any other branch then main.
+any other branch than main.
 Rephrasing, you can **ONLY** merge SDK reference to n9 main branch if it
 points at SDK main branch.
 
@@ -52,8 +52,8 @@ In this scenario, there's nothing blocking you from merging to main.
 This scenario can be divided into two cases, depending on the following
 characteristics of the code you've written:
 
-- Visibility, is it exported (available through the public contract of the SDK)
-  and what is its magnitude (amount of exported code)?
+- Contract type, is it public (exposed) or private and what is its magnitude
+  (amount of exported code)?
 - How long is it estimated to stay out of sync with n9?
   When is the version of n9 which supports these changes estimated to land on
   production?
@@ -63,7 +63,7 @@ characteristics of the code you've written:
 In this scenario, we're most probably talking about small initiatives, which
 are often easier to estimate time wise. Specific version of n9 which will
 support the feature is most likely determined. The code will sit in nobl9-go
-for a short period of time before it is supported by our API.
+for a short period of time before it is supported by Nobl9 API.
 
 ##### What should I do?
 
@@ -94,7 +94,7 @@ In this scenario, we're most probably talking about large initiatives, which
 are often harder to estimate time wise. Specific version of n9 which will
 support the feature is most likely not yet determined.
 The code will sit in nobl9-go for a longer period of time before it is
-supported by our API.
+supported by Nobl9 API.
 
 ##### What should I do?
 

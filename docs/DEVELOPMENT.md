@@ -69,7 +69,7 @@ func main() {
 
 ### Unit tests
 
-When writing validation for our manifest objects, adhere to the following
+When writing validation for Nobl9 manifest objects, adhere to the following
 rules:
 
 - Use `validation` package ([see](#validation)).
@@ -78,7 +78,7 @@ rules:
   to validate them.
 - **ALWAYS** use `testutils` package and its `AssertNoError` and
   `AssertContainsErrors`. It not only makes it easier to validate the whole
-  object but also it allows us to record tests.
+  object but also it allows recording these tests.
   Recorded tests are planned to be used for regression and dependent
   tools (sloctl, Terraform provider) testing.
 
