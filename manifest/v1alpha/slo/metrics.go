@@ -61,15 +61,12 @@ func (s *Spec) IsComposite() bool {
 
 // HasCompositeObjectives returns true if any SLOSpec Objective is of composite type.
 func (s *Spec) HasCompositeObjectives() bool {
-	hasCompositeObjective := false
-
 	for _, obj := range s.Objectives {
 		if obj.IsComposite() {
-			hasCompositeObjective = true
-			break
+			return true
 		}
 	}
-	return hasCompositeObjective
+	return false
 }
 
 // HasRawMetric returns true if SLOSpec has raw metric.
