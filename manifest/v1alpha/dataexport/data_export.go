@@ -3,6 +3,9 @@ package dataexport
 import (
 	"encoding/json"
 
+	"github.com/goccy/go-yaml"
+
+	"github.com/nobl9/nobl9-go/internal/serdeutil"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -71,28 +74,38 @@ type ExportJobStatus struct {
 	State     string `json:"state"`
 }
 
-func (d *Spec) UnmarshalJSON(bytes []byte) error {
+func (s *Spec) UnmarshalYAML(data []byte) error {
+	return s.unmarshalSpec(data, yaml.Unmarshal)
+}
+
+func (s *Spec) UnmarshalJSON(data []byte) error {
+	return s.unmarshalSpec(data, json.Unmarshal)
+}
+
+type unmarshalFunc = func(data []byte, v any) error
+
+func (s *Spec) unmarshalSpec(bytes []byte, unmarshal unmarshalFunc) error {
 	var genericSpec struct {
-		ExportType string          `json:"exportType" example:"Snowflake"`
-		Spec       json.RawMessage `json:"spec"`
+		ExportType string               `json:"exportType" example:"Snowflake"`
+		Spec       serdeutil.RawMessage `json:"spec"`
 	}
-	if err := json.Unmarshal(bytes, &genericSpec); err != nil {
+	if err := unmarshal(bytes, &genericSpec); err != nil {
 		return err
 	}
-	d.ExportType = genericSpec.ExportType
-	switch d.ExportType {
+	s.ExportType = genericSpec.ExportType
+	switch s.ExportType {
 	case DataExportTypeS3, DataExportTypeSnowflake:
 		var s3Spec S3DataExportSpec
-		if err := json.Unmarshal(genericSpec.Spec, &s3Spec); err != nil {
+		if err := unmarshal(genericSpec.Spec, &s3Spec); err != nil {
 			return err
 		}
-		d.Spec = s3Spec
+		s.Spec = s3Spec
 	case DataExportTypeGCS:
 		var gcsSpec GCSDataExportSpec
-		if err := json.Unmarshal(genericSpec.Spec, &gcsSpec); err != nil {
+		if err := unmarshal(genericSpec.Spec, &gcsSpec); err != nil {
 			return err
 		}
-		d.Spec = gcsSpec
+		s.Spec = gcsSpec
 	}
 	return nil
 }
