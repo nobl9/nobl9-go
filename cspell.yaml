@@ -106,6 +106,7 @@ words:
   - rollups
   - rrule
   - rtmp
+  - serdeutil
   - serviceruntime
   - slis
   - sloctl

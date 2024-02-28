@@ -166,8 +166,8 @@ func readFromURL(ctx context.Context, url string) ([]byte, error) {
 
 var apiVersionRegex = regexp.MustCompile(APIVersionRegex)
 
-// #nosec G304
 func readFromFile(fp string) ([]byte, error) {
+	// #nosec G304
 	data, err := os.ReadFile(fp)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s file", fp)
