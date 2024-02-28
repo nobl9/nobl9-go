@@ -1,7 +1,7 @@
 # Release process
 
-The internal release process is described in great detail on Nobl9 private
-[Confluence page](https://nobl9.atlassian.net/wiki/spaces/FOUNDATIONS/pages/2658861071/nobl9-go+releases).
+The internal release process is described in great detail
+[here](http://go/sdk-release).
 
 ## Release automation details
 
