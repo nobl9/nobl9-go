@@ -52,6 +52,9 @@ autolabeler:
   - label: documentation
     title:
       - "/^doc:/i"
+  - label: breaking-change
+    body:
+      - '/^## Breaking Changes/im'
   # Version labels.
   - label: minor
     title:

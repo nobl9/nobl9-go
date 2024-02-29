@@ -49,9 +49,6 @@ func TestClient_Objects_V1_Get(t *testing.T) {
 			}, r.URL.Query())
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -80,9 +77,6 @@ func TestClient_GetObjects_NoObjectsInResponse(t *testing.T) {
 			require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -124,9 +118,6 @@ func TestClient_Objects_V1_Apply(t *testing.T) {
 			assert.Equal(t, expected, objects)
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -163,9 +154,6 @@ func TestClient_Objects_V1_Delete(t *testing.T) {
 			assert.Equal(t, expected, objects)
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -192,9 +180,6 @@ func TestClient_Objects_V1_DeleteByName(t *testing.T) {
 			}, r.URL.Query())
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
