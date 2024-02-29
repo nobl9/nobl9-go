@@ -3,31 +3,100 @@ package sdk
 import (
 	"context"
 	"encoding/json"
-	"net/http"
-	"reflect"
+	"log/slog"
+	"net/url"
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/lestrrat-go/jwx/jwa"
-	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/lestrrat-go/jwx/jws"
-	"github.com/mitchellh/mapstructure"
-	"github.com/patrickmn/go-cache"
+	"github.com/MicahParks/jwkset"
+	"github.com/MicahParks/keyfunc/v3"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
+	"golang.org/x/time/rate"
 )
 
 const (
-	jwtSigningAlgorithm        = jwa.RS256
-	jwtAllowedClockSkewSeconds = 120
-	jwtKeysRequestTimeout      = 5 * time.Second
-
-	jwtTokenClaimM2MProfile   = "m2mProfile"
-	jwtTokenClaimAgentProfile = "agentProfile"
-	jwtTokenClaimCID          = "cid"
+	jwtLeeway          = 120 * time.Second
+	jwksRequestTimeout = 10 * time.Second
 )
 
+var jwtSigningAlgorithm = jwt.SigningMethodRS256
+
 var errTokenParseMissingArguments = errors.New("token and/or client id missing in jwtParser.Parse call")
+
+// Ensure we implement [jwt.ClaimsValidator] at compile time so we know our custom [jwtClaims.Validate] method is used.
+var _ jwt.ClaimsValidator = (*jwtClaims)(nil)
+
+type jwtClaims struct {
+	jwt.RegisteredClaims
+	ClaimID      string                               `json:"cid"`
+	M2MProfile   stringOrObject[jwtClaimM2MProfile]   `json:"m2mProfile,omitempty"`
+	AgentProfile stringOrObject[jwtClaimAgentProfile] `json:"agentProfile,omitempty"`
+
+	expectedClientID string
+	expectedIssuer   string
+}
+
+type jwtClaimsProfile interface {
+	jwtClaimAgentProfile | jwtClaimM2MProfile
+}
+
+// stringOrObject has to be used to wrap our profiles as currently
+// they can either contain the profile object or an empty string.
+// Once PC-12146 is done, it can be removed.
+type stringOrObject[T jwtClaimsProfile] struct {
+	Value *T
+}
+
+func (s *stringOrObject[T]) UnmarshalJSON(data []byte) error {
+	if len(data) == 2 && string(data) == `""` {
+		return nil
+	}
+	return json.Unmarshal(data, &s.Value)
+}
+
+func (s stringOrObject[T]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.Value)
+}
+
+// jwtClaimM2MProfile stores information specific to an Okta M2M application.
+type jwtClaimM2MProfile struct {
+	User         string `json:"user"`
+	Organization string `json:"organization"`
+	Environment  string `json:"environment"`
+}
+
+// jwtClaimAgentProfile stores information specific to an Okta Agent application.
+type jwtClaimAgentProfile struct {
+	User         string `json:"user"`
+	Organization string `json:"organization"`
+	Environment  string `json:"environment"`
+	Name         string `json:"name"`
+	Project      string `json:"project"`
+}
+
+func (j jwtClaims) Validate() error {
+	claimsJSON := func() string {
+		data, _ := json.Marshal(j)
+		return string(data)
+	}
+	if j.Issuer != j.expectedIssuer {
+		return errors.Errorf("issuer claim '%s' is not equal to '%s', JWT claims: %v",
+			j.Issuer, j.expectedIssuer, claimsJSON())
+	}
+	// We're using 'cid' instead of audience ('aud') for some reason ¯\_(ツ)_/¯.
+	if j.ClaimID != j.expectedClientID {
+		return errors.Errorf("claim id '%s' does not match '%s' client id, JWT claims: %v",
+			j.ClaimID, j.expectedClientID, claimsJSON())
+	}
+	if j.M2MProfile.Value == nil && j.AgentProfile.Value == nil {
+		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but none were found")
+	}
+	if j.M2MProfile.Value != nil && j.AgentProfile.Value != nil {
+		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found")
+	}
+	return nil
+}
 
 // tokenType describes what kind of token and specific claims do we expect.
 type tokenType int
@@ -37,163 +106,104 @@ const (
 	tokenTypeAgent
 )
 
-func tokenTypeFromClaims(claims jwt.MapClaims) (typ tokenType) {
-	isZero := func(v interface{}) bool {
-		vo := reflect.ValueOf(v)
-		if !vo.IsValid() {
-			return true
-		}
-		return vo.IsZero()
+func (j jwtClaims) getTokenType() tokenType {
+	if j.M2MProfile.Value != nil {
+		return tokenTypeM2M
 	}
-	switch {
-	case !isZero(claims[jwtTokenClaimM2MProfile]):
-		typ = tokenTypeM2M
-	case !isZero(claims[jwtTokenClaimAgentProfile]):
-		typ = tokenTypeAgent
+	if j.AgentProfile.Value != nil {
+		return tokenTypeAgent
 	}
-	return
+	return 0
 }
-
-// m2mProfileFromClaims returns accessTokenM2MProfile object parsed from m2mProfile claim of provided token.
-func m2mProfileFromClaims(claims jwt.MapClaims) (accessTokenM2MProfile, error) {
-	var profile accessTokenM2MProfile
-	err := mapstructure.Decode(claims[jwtTokenClaimM2MProfile], &profile)
-	return profile, err
-}
-
-// agentProfileFromClaims returns accessTokenAgentProfile object parsed from agentProfile claim of provided token.
-func agentProfileFromClaims(claims jwt.MapClaims) (accessTokenAgentProfile, error) {
-	var profile accessTokenAgentProfile
-	err := mapstructure.Decode(claims[jwtTokenClaimAgentProfile], &profile)
-	return profile, err
-}
-
-type (
-	getJWTIssuerFunc   = func() string
-	getJWKFetchURLFunc = func() string
-)
 
 type jwtParser struct {
-	HTTP           *http.Client
-	getJWKFetchURL getJWKFetchURLFunc
-	getIssuer      getJWTIssuerFunc
-	jwksCache      *cache.Cache
-	jwkSetMu       *sync.Mutex
+	parser      *jwt.Parser
+	keyfunc     jwt.Keyfunc
+	once        sync.Once
+	issuer      string
+	jwkFetchURL string
 }
 
-func newJWTParser(issuer getJWTIssuerFunc, jwkFetchURL getJWKFetchURLFunc) *jwtParser {
+func newJWTParser(issuer, jwkFetchURL string) *jwtParser {
 	return &jwtParser{
-		HTTP:           newRetryableHTTPClient(jwtKeysRequestTimeout, nil),
-		jwksCache:      cache.New(time.Hour, time.Hour),
-		jwkSetMu:       new(sync.Mutex),
-		getJWKFetchURL: jwkFetchURL,
-		getIssuer:      issuer,
+		parser: jwt.NewParser(
+			jwt.WithValidMethods([]string{jwtSigningAlgorithm.Alg()}),
+			// Applies to "exp", "nbf" and "iat" claims.
+			jwt.WithLeeway(jwtLeeway),
+			jwt.WithExpirationRequired(),
+			// "exp" and "nbf" claims are always verified, "iat" is optional as per JWT RFC.
+			jwt.WithIssuedAt(),
+		),
+		issuer:      issuer,
+		jwkFetchURL: jwkFetchURL,
 	}
 }
 
 // Parse parses provided JWT and performs basic token signature and expiration claim validation.
-func (j *jwtParser) Parse(token, clientID string) (jwt.MapClaims, error) {
-	if token == "" || clientID == "" {
+func (j *jwtParser) Parse(tokenString, clientID string) (*jwtClaims, error) {
+	if tokenString == "" || clientID == "" {
 		return nil, errTokenParseMissingArguments
 	}
-	jwtParser := jwt.NewParser(
-		jwt.WithValidMethods([]string{jwtSigningAlgorithm.String()}),
-		jwt.WithoutClaimsValidation()) // We'll perform claims validation ourselves to account for clock skew.
-	unverifiedJwtToken, _, err := jwtParser.ParseUnverified(token, jwt.MapClaims{})
+	var err error
+	j.once.Do(func() { err = j.initKeyfunc() })
 	if err != nil {
+		return nil, errors.Wrap(err, "failed to initialize JWT parser keyfunc.Keyfunc")
+	}
+	claims := jwtClaims{
+		expectedClientID: clientID,
+		expectedIssuer:   j.issuer,
+	}
+	if _, err := j.parser.ParseWithClaims(tokenString, &claims, j.keyfunc); err != nil {
 		return nil, err
 	}
-	// Parser will also check if 'alg' header is set. We should still be extra cautious here.
-	alg, ok := unverifiedJwtToken.Header[jwk.AlgorithmKey].(string)
-	if !ok || alg != jwtSigningAlgorithm.String() {
-		return nil, errors.Errorf("expecting JWT header field '%s' to contain '%s' algorithm, was: '%s'",
-			jwtSigningAlgorithm, jwk.AlgorithmKey, alg)
-	}
-	kid, ok := unverifiedJwtToken.Header[jwk.KeyIDKey].(string)
-	if !ok || kid == "" {
-		return nil, errors.Errorf("expecting JWT header to contain '%s' field as a string, was: '%s'",
-			jwk.KeyIDKey, kid)
-	}
-	jwkSet, err := j.getJWKSet(kid)
-	if err != nil {
-		return nil, err
-	}
-
-	// This check is only run for clarity, jws.VerifySet will detect 'kid' mismatch too,
-	// but the error it returns is ambiguous.
-	if _, found := jwkSet.LookupKeyID(kid); !found {
-		return nil, errors.Errorf("jwk not found for kid: %s (key id)", kid)
-	}
-	// One might think that it would be useful to cache the error for a given kid. Unfortunately we can't
-	// easily do that because /v1/keys endpoint might return stale information for a bit after signing keys
-	// rotation. /v1/keys docs: "Note: The information returned from this endpoint could lag slightly, but will
-	// eventually be up-to-date."
-	rawClaims, err := jws.VerifySet([]byte(token), jwkSet)
-	if err != nil {
-		return nil, err
-	}
-
-	var claims jwt.MapClaims
-	if err = json.Unmarshal(rawClaims, &claims); err != nil {
-		return nil, err
-	}
-	if err = j.verifyClaims(claims, clientID); err != nil {
-		return nil, err
-	}
-	return claims, err
+	return &claims, nil
 }
 
-var jwksFetchFunction = jwk.Fetch
-
-func (j *jwtParser) getJWKSet(kid string) (jwk.Set, error) {
-	// There are three scenarios under which a token might not be found in the cache:
-	// 1. Cache is empty right after the startup.
-	// 2. Cache expired.
-	// 3. Signing keys have been rotated.
-	if keySet, found := j.jwksCache.Get(kid); found {
-		return keySet.(jwk.Set), nil
-	}
-	// Perform only one concurrent request to Okta's jwks endpoint.
-	j.jwkSetMu.Lock()
-	defer j.jwkSetMu.Unlock()
-	// If a goroutine waited in queue to get the lock there is a chance that another goroutine already did the job.
-	if keySet, found := j.jwksCache.Get(kid); found {
-		return keySet.(jwk.Set), nil
-	}
-
-	// Fetch doesn't perform retries. Use background context because we don't want client disconnects to interrupt
-	// JWKS cache population process while other clients might be waiting for it.
-	jwkSet, err := jwksFetchFunction(context.Background(), j.getJWKFetchURL(), jwk.WithHTTPClient(j.HTTP))
+// initKeyfunc should be called as late as possible, that's why it's placed in [jwtParser.Parse] method.
+// The reason is keyfunc library immediately attempts to fetch keys from the server, otherwise,
+// it might be counter-intuitive that such a resource-intensive operation is executed within constructor.
+func (j *jwtParser) initKeyfunc() error {
+	jwkStorage, err := newJWKStorage(j.jwkFetchURL)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "failed to create a jwkset.Storage with the server's URL: %s", j.jwkFetchURL)
 	}
-	j.jwksCache.SetDefault(kid, jwkSet)
-	return jwkSet, nil
-}
-
-func (j *jwtParser) verifyClaims(claims jwt.MapClaims, clientID string) error {
-	claimsJSON := func() string {
-		data, _ := json.Marshal(claims)
-		return string(data)
+	keyFunc, err := keyfunc.New(keyfunc.Options{Storage: jwkStorage})
+	if err != nil {
+		return errors.Wrap(err, "failed to create a keyfunc.Keyfunc")
 	}
-
-	if !claims.VerifyIssuer(j.getIssuer(), true) {
-		return errors.Errorf("issuer claim validation failed, issuer: %s, claims: %v", j.getIssuer(), claimsJSON())
-	}
-	// We're using 'cid' instead of audience ('aud') for some reason ¯\_(ツ)_/¯.
-	if cid, ok := claims[jwtTokenClaimCID].(string); !ok || cid != clientID {
-		return errors.Errorf("client id does not match token's 'cid' claim, clientID: %s, claims: %v", clientID, claimsJSON())
-	}
-	// By adding the skew we're saying that we might be behind the clock.
-	nowWithOffset := time.Now().Unix() + jwtAllowedClockSkewSeconds
-	if !claims.VerifyExpiresAt(nowWithOffset, true) {
-		return errors.Errorf("exp (expiry) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
-	}
-	if !claims.VerifyIssuedAt(nowWithOffset, true) {
-		return errors.Errorf("iat (issued at) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
-	}
-	if !claims.VerifyNotBefore(nowWithOffset, false) {
-		return errors.Errorf("nbf (not before) claim validation failed, ts: %d, claims: %v", nowWithOffset, claimsJSON())
-	}
+	j.keyfunc = keyFunc.Keyfunc
 	return nil
+}
+
+// newJWKStorage is almost a direct copy of the [jwkset.NewDefaultHTTPClientCtx].
+// One notable change is that we're setting NoErrorReturnFirstHTTPReq to false,
+// this ensures that if an error occurs when fetching keys inside the constructor,
+// it is returned immediately.
+// We also modify the timeout value.
+func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
+	parsed, err := url.ParseRequestURI(jwkFetchURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse given URL %q", jwkFetchURL)
+	}
+	jwkFetchURI := parsed.String()
+	refreshErrorHandler := func(ctx context.Context, err error) {
+		slog.Default().ErrorContext(ctx, "Failed to refresh HTTP JWK Set from remote HTTP resource.",
+			"error", err,
+			"url", jwkFetchURI,
+		)
+	}
+	options := jwkset.HTTPClientStorageOptions{
+		NoErrorReturnFirstHTTPReq: false,
+		RefreshErrorHandler:       refreshErrorHandler,
+		RefreshInterval:           time.Hour,
+		HTTPTimeout:               jwksRequestTimeout,
+	}
+	storage, err := jwkset.NewStorageFromHTTP(parsed, options)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURI)
+	}
+	return jwkset.NewHTTPClient(jwkset.HTTPClientOptions{
+		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURI: storage},
+		RefreshUnknownKID: rate.NewLimiter(rate.Every(5*time.Minute), 1),
+	})
 }
