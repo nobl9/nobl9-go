@@ -107,11 +107,11 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader - composite", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "compositev2slo.yaml"), "stdin"))
+			NewObjectSourceReader(readTestFile(t, "composite_v2_slo.yaml"), "stdin"))
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
-			expectedMeta{Name: "compositev2slo", ManifestSrc: "stdin"})
+			expectedMeta{Name: "composite_v2_slo", ManifestSrc: "stdin"})
 	})
 
 	t.Run("read definitions from reader for empty source", func(t *testing.T) {
@@ -307,7 +307,7 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 	// Prepare expected files located in ./test_data/reader.
 	allNobl9RelFiles := []expectedMeta{
 		{Name: "slo", ManifestSrc: workingDir("test_data/reader/inputs/slo.yaml")},
-		{Name: "compositev2slo", ManifestSrc: workingDir("test_data/reader/inputs/compositev2slo.yaml")},
+		{Name: "composite_v2_slo", ManifestSrc: workingDir("test_data/reader/inputs/composite_v2_slo.yaml")},
 		{Name: "service_and_agent", ManifestSrc: workingDir("test_data/reader/inputs/service_and_agent.yaml")},
 		{Name: "projects_and_direct", ManifestSrc: workingDir("test_data/reader/inputs/projects_and_direct.yml")},
 		{Name: "annotations", ManifestSrc: workingDir("test_data/reader/inputs/annotations.yaml")},
