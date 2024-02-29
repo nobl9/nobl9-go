@@ -36,7 +36,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		} {
 			slo := validCompositeSLO()
-			slo.Spec.Indicator = ind
+			slo.Spec.Indicator = &ind
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop:    "spec.indicator",

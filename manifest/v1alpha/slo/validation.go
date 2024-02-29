@@ -326,14 +326,14 @@ func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 }
 
 var specValidationNonComposite = validation.New[Spec](
-	validation.For(func(s Spec) Indicator { return s.Indicator }).
+	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Required().
 		Include(indicatorValidation),
 ).When(func(s Spec) bool { return !s.HasCompositeObjectives() })
 
 var specValidationComposite = validation.New[Spec](
-	validation.For(func(s Spec) Indicator { return s.Indicator }).
+	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Rules(
 			validation.Forbidden[Indicator]().WithDetails(

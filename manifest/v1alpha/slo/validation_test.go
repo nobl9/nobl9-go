@@ -656,7 +656,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 			},
 		} {
 			slo := validSLO()
-			slo.Spec.Indicator = ind
+			slo.Spec.Indicator = &ind
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
@@ -671,7 +671,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: Indicator{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator",
+						Prop: "spec.indicator.metricSource.name",
 						Code: validation.ErrorCodeRequired,
 					},
 				},
@@ -714,7 +714,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 		} {
 			t.Run(name, func(t *testing.T) {
 				slo := validSLO()
-				slo.Spec.Indicator = test.Indicator
+				slo.Spec.Indicator = &test.Indicator
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})
@@ -1184,7 +1184,7 @@ func validSLO() SLO {
 			},
 			BudgetingMethod: BudgetingMethodOccurrences.String(),
 			Service:         "prometheus",
-			Indicator: Indicator{
+			Indicator: &Indicator{
 				MetricSource: MetricSourceSpec{
 					Project: "default",
 					Name:    "prometheus",
