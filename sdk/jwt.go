@@ -131,7 +131,7 @@ func newJWTParser(issuer, jwkFetchURL string) *jwtParser {
 			// Applies to "exp", "nbf" and "iat" claims.
 			jwt.WithLeeway(jwtLeeway),
 			jwt.WithExpirationRequired(),
-			// "exp" amd "nbf" claims are always verified, "iat" is optional as per JWT RFC.
+			// "exp" and "nbf" claims are always verified, "iat" is optional as per JWT RFC.
 			jwt.WithIssuedAt(),
 		),
 		issuer:      issuer,

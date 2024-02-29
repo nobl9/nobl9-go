@@ -7,9 +7,9 @@ require (
 <<<<<<< HEAD
 	github.com/MicahParks/jwkset v0.5.12
 	github.com/MicahParks/keyfunc/v3 v3.2.5
-	github.com/aws/aws-sdk-go v1.50.22
-=======
 	github.com/aws/aws-sdk-go v1.50.27
+=======
+	github.com/aws/aws-sdk-go v1.50.28
 >>>>>>> origin/main
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.11.3
