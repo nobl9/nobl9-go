@@ -1,0 +1,30 @@
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    displayName: composite-1-slo
+    name: composite-1-slo
+    project: az
+  spec:
+    budgetingMethod: Occurrences
+    objectives:
+      - displayName: composite-obj
+        name: composite-obj
+        target: 0.99
+        composite:
+          maxDelay: 45m
+          components:
+            objectives:
+              - project: az
+                slo: prom-slo-1
+                objective: objective-1
+                weight: 1
+                whenDelayed: CountAsGood
+
+    service: azs
+    timeWindows:
+      - count: 28
+        isRolling: true
+        period:
+          begin: "2024-01-31T09:58:42Z"
+          end: "2024-02-28T09:58:42Z"
+        unit: Day
