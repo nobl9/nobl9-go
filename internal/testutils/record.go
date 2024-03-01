@@ -2,12 +2,11 @@ package testutils
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"sync"
 	"testing"
-
-	"github.com/rs/zerolog/log"
 )
 
 var rec = new(testRecorder)
@@ -44,7 +43,7 @@ func (r *testRecorder) Record(t *testing.T, object interface{}, errorsCount int,
 		rt.IsValid = true
 	}
 	if err := json.NewEncoder(r.output).Encode(rt); err != nil {
-		log.Err(err).Msg("failed to record test")
+		fmt.Fprintf(os.Stderr, "failed to record test: %v", err)
 	}
 }
 
@@ -61,6 +60,6 @@ func (r *testRecorder) Init() {
 			panic(err)
 		}
 		r.output = f
-		log.Info().Msg("test recorder initialized, all test will be recorded in " + path)
+		fmt.Println("test recorder initialized, all test will be recorded in " + path)
 	})
 }
