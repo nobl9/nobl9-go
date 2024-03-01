@@ -29,9 +29,6 @@ func TestClient_AuthData_V1_GetDataExportIAMRoleIDs(t *testing.T) {
 			assert.Equal(t, http.MethodGet, r.Method)
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -58,9 +55,6 @@ func TestClient_AuthData_V1_GetDirectIAMRoleIDs(t *testing.T) {
 			assert.Equal(t, http.MethodGet, r.Method)
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.
@@ -89,9 +83,6 @@ func TestClient_AuthData_V1_GetAgentCredentials(t *testing.T) {
 			assert.Equal(t, url.Values{authDataV1.QueryKeyName: {"my-agent"}}, r.URL.Query())
 		},
 	})
-
-	// Start and close the test server.
-	srv.Start()
 	defer srv.Close()
 
 	// Run the API method.

@@ -1,8 +1,9 @@
 # Validation
 
-Package validation implements a functional API for consistent, type safe validation.
-It puts heavy focus on end user errors readability, providing means of crafting clear
-and information-rich error messages.
+Package validation implements a functional API for consistent,
+type safe validation.
+It puts heavy focus on end user errors readability,
+providing means of crafting clear and information-rich error messages.
 
 Validation pipeline is immutable and lazily loaded.
 
@@ -11,16 +12,19 @@ Validation pipeline is immutable and lazily loaded.
   It allows extended reusability of validation components.
 - Lazily loaded, as properties are extracted through getter functions,
   which are only called when you call the `Validate` method.
-  Functional approach allows validation components to only be called when needed.
+  Functional approach allows validation components to only be called when
+  needed.
   You should define your pipeline once and call it
   whenever you validate instances of your entity.
 
 All that has been made possible by the introduction of generics in Go.
-Prior to that, there wasn't really any viable way to create type safe validation API.
+Prior to that, there wasn't really any viable way to create type safe
+validation API.
 Although the current state of type inference is somewhat clunky,
-the API can only improve in time when generics support in Go is further extended.
+the API can only improve in time when generics support in Go is further
+extended.
 
-## NOTE: Work in progress!
+## NOTE: Work in progress
 
 Although already battle tested through SLO hellfire,
 this library is still a work in progress.
@@ -31,21 +35,22 @@ Contributions and suggestions are most welcome!
 ## Usage
 
 **This README goes through an abstract overview of the library. \
-Refer to [example_test.go](./example_test.go) for a hands-on tutorial with runnable examples.**
+Refer to [example_test.go](./example_test.go)
+for a hands-on tutorial with runnable examples.**
 
 ### Legend
 
 - [Validator](#validator)
 - [Property rules](#property-rules)
-    - [PropertyRules](#propertyrules) _(single property)_
-    - [PropertyRulesForEach](#propertyrulesforeach) _(slice of properties)_
+  - [PropertyRules](#propertyrules) _(single property)_
+  - [PropertyRulesForEach](#propertyrulesforeach) _(slice of properties)_
 - [Rule](#rule)
-    - [SingleRule](#singlerule)
-    - [RuleSet](#ruleset)
+  - [SingleRule](#singlerule)
+  - [RuleSet](#ruleset)
 - [Errors](#errors)
-    - [ValidatorError](#validatorerror)
-    - [PropertyError](#propertyerror)
-    - [RuleError](#ruleerror)
+  - [ValidatorError](#validatorerror)
+  - [PropertyError](#propertyerror)
+  - [RuleError](#ruleerror)
 - [FAQ](#faq)
 
 ### Validator
@@ -147,9 +152,9 @@ It conveys an error message and [ErrorCode](#error-codes).
 
 #### Error codes
 
-To aid the process of testing, `ErrorCode` has been introduced along with a helper functions
-`WithErrorCode` to associate [Rule](#rule) with an error code and `AddCode` to associate multiple
-error codes with a single [Rule](#rule).
+To aid the process of testing, `ErrorCode` has been introduced along
+with a helper functions `WithErrorCode` to associate [Rule](#rule) with an error
+code and `AddCode` to associate multiple error codes with a single [Rule](#rule).
 Multiple error codes are delimited by `:`,
 similar to how wrapped errors are represented in Go.
 
@@ -159,13 +164,16 @@ To check if `ErrorCode` is part if a given validation error, use `HasErrorCode`.
 
 ### Why not use existing validation library?
 
-Existing, established solutions are mostly based on struct tags and heavily utilize reflection.
-This leaves type safety an issue to be solved and handled by developers. For simple use cases,
-covered by predefined validation functions, this solutions works well enough.
-However when adding custom validation rules, type casting has to be heavily utilized,
+Existing, established solutions are mostly based on struct tags and heavily
+utilize reflection.
+This leaves type safety an issue to be solved and handled by developers.
+For simple use cases, covered by predefined validation functions,
+this solutions works well enough.
+However when adding custom validation rules,
+type casting has to be heavily utilized,
 and it becomes increasingly harder to track what exactly is being validated.
-Another issue is the readability of the errors, it's often hard or even impossible to shape
-the error to the developer liking.
+Another issue is the readability of the errors,
+it's often hard or even impossible to shape the error to the developer liking.
 
 ### Acknowledgements
 

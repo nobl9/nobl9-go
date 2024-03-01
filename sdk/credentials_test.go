@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,9 +37,9 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.False(t, tokenUpdated)
 	})
 
-	for name, test := range map[string]struct {
+	refreshTests := map[string]struct {
 		// Make sure 'exp' claim is float64, otherwise claims.VerifyExpiresAt will always return false.
-		Claims       jwt.MapClaims
+		Claims       *jwtClaims
 		TokenFetched bool
 	}{
 		"request new token for the first time": {
@@ -49,14 +49,23 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		},
 		"refresh the token if it's expired": {
 			// If the expiry is set to now, the offset should still catch it.
-			Claims:       jwt.MapClaims{"exp": float64(time.Now().Add(tokenExpiryOffset).Unix())},
+			Claims: &jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(tokenExpiryOffset)),
+				},
+			},
 			TokenFetched: true,
 		},
 		"don't refresh the token if it's not expired": {
-			Claims:       jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
+			Claims: &jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				},
+			},
 			TokenFetched: false,
 		},
-	} {
+	}
+	for name, test := range refreshTests {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
@@ -77,7 +86,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		})
 	}
 
-	for name, test := range map[string]struct {
+	credentialsTests := map[string]struct {
 		ClientID     string
 		ClientSecret string
 		CalledTimes  int
@@ -97,7 +106,8 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			ClientSecret: "old-secret",
 			CalledTimes:  0,
 		},
-	} {
+	}
+	for name, test := range credentialsTests {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
@@ -107,7 +117,11 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 					ClientSecret: test.ClientSecret,
 					DisableOkta:  false,
 				},
-				claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
+				claims: &jwtClaims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+					},
+				},
 				tokenProvider: tokenProvider,
 				tokenParser:   tokenParser,
 				clientID:      "old-id",
@@ -151,12 +165,15 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 
 	t.Run("set new access token", func(t *testing.T) {
 		tokenParser := &mockTokenParser{
-			claims: jwt.MapClaims{
-				"m2mProfile": map[string]interface{}{
-					"user":         "test@user.com",
-					"environment":  "app.nobl9.com",
-					"organization": "my-org",
+			claims: jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				},
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
+					User:         "test@user.com",
+					Organization: "my-org",
+					Environment:  "app.nobl9.com",
+				}},
 			},
 		}
 		tokenProvider := &mockTokenProvider{}
@@ -175,12 +192,51 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "app.nobl9.com", creds.environment)
 		assert.Equal(t, "my-org", creds.organization)
 		assert.Equal(t, tokenTypeM2M, creds.tokenType)
-		assert.Equal(t, accessTokenM2MProfile{
+		assert.Equal(t, jwtClaimM2MProfile{
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, creds.m2mProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.M2MProfile.Value)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
+
+		// Make sure we're not refreshing the token anymore.
+		_, err = creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+	})
+
+	t.Run("credentials changed in config, refresh token", func(t *testing.T) {
+		tokenParser := &mockTokenParser{
+			claims: jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				},
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
+					User:         "test@user.com",
+					Organization: "my-org",
+					Environment:  "app.nobl9.com",
+				}},
+			},
+		}
+		tokenProvider := &mockTokenProvider{}
+		conf := &Config{AccessToken: "token"}
+		creds := &credentials{
+			config:        conf,
+			tokenParser:   tokenParser,
+			tokenProvider: tokenProvider,
+		}
+		_, err := creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 0, tokenProvider.calledTimes)
+		assert.Equal(t, 1, tokenParser.calledTimes)
+		// Change config.
+		conf.ClientID = "new-id"
+		// Verify that we're refreshing the token.
+		_, err = creds.refreshAccessToken(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, 1, tokenProvider.calledTimes)
+		assert.Equal(t, 2, tokenParser.calledTimes)
 	})
 
 	t.Run("try setting new access token", func(t *testing.T) {
@@ -204,13 +260,13 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			token: "access-token",
 		}
 		tokenParser := &mockTokenParser{
-			claims: jwt.MapClaims{
-				"m2mProfile": map[string]interface{}{
-					"user":         "test@user.com",
-					"environment":  "app.nobl9.com",
-					"organization": "my-org",
+			claims: jwtClaims{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
+					User:         "test@user.com",
+					Organization: "my-org",
+					Environment:  "app.nobl9.com",
 				},
-			},
+				}},
 		}
 		hookCalled := false
 		creds := &credentials{
@@ -234,12 +290,12 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "app.nobl9.com", creds.environment)
 		assert.Equal(t, "my-org", creds.organization)
 		assert.Equal(t, tokenTypeM2M, creds.tokenType)
-		assert.Equal(t, accessTokenM2MProfile{
+		assert.Equal(t, jwtClaimM2MProfile{
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
-		}, creds.m2mProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.M2MProfile.Value)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 
 	t.Run("golden path, agent token", func(t *testing.T) {
@@ -247,14 +303,14 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			token: "access-token",
 		}
 		tokenParser := &mockTokenParser{
-			claims: jwt.MapClaims{
-				"agentProfile": map[string]interface{}{
-					"user":         "test@user.com",
-					"environment":  "app.nobl9.com",
-					"organization": "my-org",
-					"name":         "my-agent",
-					"project":      "default",
-				},
+			claims: jwtClaims{
+				AgentProfile: stringOrObject[jwtClaimAgentProfile]{Value: &jwtClaimAgentProfile{
+					User:         "test@user.com",
+					Organization: "my-org",
+					Environment:  "app.nobl9.com",
+					Name:         "my-agent",
+					Project:      "default",
+				}},
 			},
 		}
 		hookCalled := false
@@ -279,14 +335,14 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		assert.Equal(t, "app.nobl9.com", creds.environment)
 		assert.Equal(t, "my-org", creds.organization)
 		assert.Equal(t, tokenTypeAgent, creds.tokenType)
-		assert.Equal(t, accessTokenAgentProfile{
+		assert.Equal(t, jwtClaimAgentProfile{
 			User:         "test@user.com",
 			Environment:  "app.nobl9.com",
 			Organization: "my-org",
 			Name:         "my-agent",
 			Project:      "default",
-		}, creds.agentProfile)
-		assert.Equal(t, tokenParser.claims, creds.claims)
+		}, *creds.claims.AgentProfile.Value)
+		assert.Equal(t, tokenParser.claims, *creds.claims)
 	})
 }
 
@@ -305,21 +361,9 @@ func TestCredentials_setNewToken(t *testing.T) {
 		assert.False(t, hookCalled, "postRequestHook should not be called")
 	})
 
-	t.Run("don't call hook If we can't decode m2mProfile", func(t *testing.T) {
-		hookCalled := false
-		creds := &credentials{
-			config:          &Config{},
-			tokenParser:     &mockTokenParser{claims: jwt.MapClaims{"m2mProfile": "should be a map..."}},
-			postRequestHook: func(token string) error { hookCalled = true; return nil },
-		}
-		err := creds.setNewToken("")
-		assert.Error(t, err)
-		assert.False(t, hookCalled, "postRequestHook should not be called")
-	})
-
 	t.Run("don't update credentials state if hook fails", func(t *testing.T) {
 		tokenParser := &mockTokenParser{
-			claims: jwt.MapClaims{},
+			claims: jwtClaims{},
 		}
 		hookErr := errors.New("hook failed!")
 		creds := &credentials{
@@ -331,7 +375,6 @@ func TestCredentials_setNewToken(t *testing.T) {
 		require.Error(t, err)
 		assert.ErrorIs(t, err, hookErr)
 		assert.Empty(t, creds.accessToken)
-		assert.Empty(t, creds.m2mProfile)
 		assert.Empty(t, creds.claims)
 	})
 }
@@ -355,9 +398,13 @@ func TestClient_RoundTrip(t *testing.T) {
 
 	t.Run("set auth header if not present", func(t *testing.T) {
 		creds := &credentials{
-			config:        &Config{},
-			accessToken:   "my-token",
-			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())},
+			config:      &Config{},
+			accessToken: "my-token",
+			claims: &jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+				},
+			},
 			tokenProvider: &mockTokenProvider{},
 			tokenParser:   &mockTokenParser{},
 		}
@@ -370,9 +417,13 @@ func TestClient_RoundTrip(t *testing.T) {
 
 	t.Run("update auth header if token was updated", func(t *testing.T) {
 		creds := &credentials{
-			config:        &Config{},
-			accessToken:   "my-old-token",
-			claims:        jwt.MapClaims{"exp": float64(time.Now().Unix())}, // expired
+			config:      &Config{},
+			accessToken: "my-old-token",
+			claims: &jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now()), // expired
+				},
+			},
 			tokenProvider: &mockTokenProvider{token: "my-new-token"},
 			tokenParser:   &mockTokenParser{},
 		}
@@ -385,9 +436,13 @@ func TestClient_RoundTrip(t *testing.T) {
 
 	t.Run("don't update auth header if token was not updated", func(t *testing.T) {
 		creds := &credentials{
-			config:        &Config{},
-			accessToken:   "my-old-token",
-			claims:        jwt.MapClaims{"exp": float64(time.Now().Add(time.Hour).Unix())}, // not expired
+			config:      &Config{},
+			accessToken: "my-old-token",
+			claims: &jwtClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)), // not expired
+				},
+			},
 			tokenProvider: &mockTokenProvider{token: "my-new-token"},
 			tokenParser:   &mockTokenParser{},
 		}
@@ -405,11 +460,13 @@ func TestCredentials_GetEnvironment(t *testing.T) {
 		config:        &Config{},
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{
-			claims: jwt.MapClaims{
-				jwtTokenClaimM2MProfile: accessTokenM2MProfile{
+			claims: jwtClaims{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					Environment: "my-env",
+				}},
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				},
-				"exp": float64(time.Now().Add(time.Hour).Unix()),
 			},
 		},
 	}
@@ -432,11 +489,13 @@ func TestCredentials_GetOrganization(t *testing.T) {
 		config:        &Config{},
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{
-			claims: jwt.MapClaims{
-				jwtTokenClaimM2MProfile: accessTokenM2MProfile{
+			claims: jwtClaims{
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
 					Organization: "my-org",
+				}},
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
 				},
-				"exp": float64(time.Now().Add(time.Hour).Unix()),
 			},
 		},
 	}
@@ -477,13 +536,13 @@ type mockTokenParser struct {
 	calledWithClientID string
 	calledWithToken    string
 
-	claims jwt.MapClaims
+	claims jwtClaims
 	err    error
 }
 
-func (m *mockTokenParser) Parse(token, clientID string) (jwt.MapClaims, error) {
+func (m *mockTokenParser) Parse(token, clientID string) (*jwtClaims, error) {
 	m.calledTimes++
 	m.calledWithToken = token
 	m.calledWithClientID = clientID
-	return m.claims, m.err
+	return &m.claims, m.err
 }

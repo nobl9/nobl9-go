@@ -3,14 +3,15 @@ package sdk
 import (
 	"context"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -36,9 +37,9 @@ func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.C
 	rc.RetryWaitMax = 30 * time.Second
 	rc.RetryWaitMin = 1 * time.Second
 	rc.CheckRetry = httpCheckRetry
-	rc.RequestLogHook = func(l retryablehttp.Logger, req *http.Request, c int) {
+	rc.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, c int) {
 		if c > 0 {
-			log.Info().Msgf("%s %s request failed. Retrying.", req.Method, req.URL.Path)
+			fmt.Fprintf(os.Stderr, "%s %s request failed. Retrying.", req.Method, req.URL.Path)
 		}
 	}
 	return rc.StandardClient()

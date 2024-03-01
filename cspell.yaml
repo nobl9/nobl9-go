@@ -68,16 +68,20 @@ words:
   - govulncheck
   - groupmy
   - hrdu
+  - httpurls
   - instana
   - iowait
   - jsonyaml
   - jwks
+  - jwkset
+  - keyfunc
   - lightstep
   - logfmt
   - logql
   - mapstructure
   - memstats
   - mktemp
+  - mprofile
   - msgf
   - msteams
   - ningxia
@@ -102,6 +106,7 @@ words:
   - rollups
   - rrule
   - rtmp
+  - serdeutil
   - serviceruntime
   - slis
   - sloctl
