@@ -117,7 +117,7 @@ type MetricSourceSpec struct {
 }
 
 // Composite represents configuration for Composite SLO.
-// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
+// Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`
