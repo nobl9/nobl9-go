@@ -42,7 +42,7 @@ type Metadata struct {
 // Spec holds detailed information specific to SLO.
 type Spec struct {
 	Description     string         `json:"description"`
-	Indicator       Indicator      `json:"indicator"`
+	Indicator       *Indicator     `json:"indicator,omitempty"`
 	BudgetingMethod string         `json:"budgetingMethod"`
 	Objectives      []Objective    `json:"objectives"`
 	Service         string         `json:"service"`
@@ -54,45 +54,6 @@ type Spec struct {
 	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
-}
-
-// MarshalJSON marshals Spec to JSON.
-// It omits Indicator if it's empty.
-// This is needed to avoid sending empty Indicator with MetricSource to the server,
-// because this field is not needed for new Composite objectives.
-func (s Spec) MarshalJSON() ([]byte, error) {
-	indicator := &s.Indicator
-
-	if indicator.MetricSource.Name == "" {
-		indicator = nil
-	}
-
-	return json.Marshal(struct {
-		Description     string       `json:"description"`
-		Indicator       *Indicator   `json:"indicator,omitempty"`
-		BudgetingMethod string       `json:"budgetingMethod"`
-		Objectives      []Objective  `json:"objectives"`
-		Service         string       `json:"service"`
-		TimeWindows     []TimeWindow `json:"timeWindows"`
-		AlertPolicies   []string     `json:"alertPolicies"`
-		Attachments     []Attachment `json:"attachments,omitempty"`
-		CreatedAt       string       `json:"createdAt,omitempty"`
-		// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
-		Composite     *Composite     `json:"composite,omitempty"`
-		AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
-	}{
-		Description:     s.Description,
-		Indicator:       indicator,
-		BudgetingMethod: s.BudgetingMethod,
-		Objectives:      s.Objectives,
-		Service:         s.Service,
-		TimeWindows:     s.TimeWindows,
-		AlertPolicies:   s.AlertPolicies,
-		Attachments:     s.Attachments,
-		CreatedAt:       s.CreatedAt,
-		Composite:       s.Composite,
-		AnomalyConfig:   s.AnomalyConfig,
-	})
 }
 
 // Attachment represents user defined URL attached to SLO
