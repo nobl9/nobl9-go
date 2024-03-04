@@ -49,7 +49,7 @@ type MetricSpec struct {
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
-	return s.Indicator.RawMetric != nil
+	return s.Indicator != nil && s.Indicator.RawMetric != nil
 }
 
 // IsComposite returns true if SLOSpec contains composite type.

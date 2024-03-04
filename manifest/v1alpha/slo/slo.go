@@ -1,8 +1,6 @@
 package slo
 
 import (
-	"encoding/json"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -41,19 +39,19 @@ type Metadata struct {
 
 // Spec holds detailed information specific to SLO.
 type Spec struct {
-	Description     string         `json:"description"`
-	Indicator       *Indicator     `json:"indicator,omitempty"`
-	BudgetingMethod string         `json:"budgetingMethod"`
-	Objectives      []Objective    `json:"objectives"`
-	Service         string         `json:"service"`
-	TimeWindows     []TimeWindow   `json:"timeWindows"`
-	AlertPolicies   []string       `json:"alertPolicies"`
-	Attachments     []Attachment   `json:"attachments,omitempty"`
-	CreatedAt       string         `json:"createdAt,omitempty"`
-	UpdatedAt       string         `json:"updatedAt,omitempty"`
+	Description     string       `json:"description"`
+	Indicator       *Indicator   `json:"indicator,omitempty"`
+	BudgetingMethod string       `json:"budgetingMethod"`
+	Objectives      []Objective  `json:"objectives"`
+	Service         string       `json:"service"`
+	TimeWindows     []TimeWindow `json:"timeWindows"`
+	AlertPolicies   []string     `json:"alertPolicies"`
+	Attachments     []Attachment `json:"attachments,omitempty"`
+	CreatedAt       string       `json:"createdAt,omitempty"`
+	UpdatedAt       string       `json:"updatedAt,omitempty"`
 	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
-	Composite       *Composite     `json:"composite,omitempty"`
-	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
+	Composite     *Composite     `json:"composite,omitempty"`
+	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
 // Attachment represents user defined URL attached to SLO
