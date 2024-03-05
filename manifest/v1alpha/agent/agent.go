@@ -165,6 +165,7 @@ type SplunkConfig struct {
 type LightstepConfig struct {
 	Organization string `json:"organization"`
 	Project      string `json:"project"`
+	URL          string `json:"url"`
 }
 
 // SplunkObservabilityConfig represents content of SplunkObservability Configuration typical for Agent Object.

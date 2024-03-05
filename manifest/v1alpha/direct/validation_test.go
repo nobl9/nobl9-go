@@ -2,7 +2,6 @@ package direct
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -58,7 +57,7 @@ func TestValidateSpec(t *testing.T) {
 				continue
 			}
 			direct := validDirect(typ)
-			direct.Spec.Datadog = validDirectSpecs[v1alpha.Datadog].Datadog
+			direct.Spec.Datadog = validDirectSpec(v1alpha.Datadog).Datadog
 			err := validate(direct)
 			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 				Prop: "spec",
@@ -759,6 +758,7 @@ func TestValidateSpec_GCM(t *testing.T) {
 func TestValidateSpec_Lightstep(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.Lightstep)
+		direct.Spec.Lightstep.URL = ""
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
@@ -777,6 +777,36 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 				Code: validation.ErrorCodeRequired,
 			},
 		)
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Lightstep)
+		direct.Spec.Lightstep.URL = "h ttp"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.lightstep.url",
+			Code: validation.ErrorCodeURL,
+		})
+	})
+	urlTests := map[string]struct {
+		url     string
+		isValid bool
+	}{
+		"valid .com": {
+			url: "https://api.lightstep.com",
+		},
+		"valid .eu": {
+			url: "https://api.eu.lightstep.com",
+		},
+	}
+	t.Run("test url", func(t *testing.T) {
+		for name, test := range urlTests {
+			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.Lightstep)
+				direct.Spec.Lightstep.URL = test.url
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
 	})
 }
 
@@ -853,120 +883,117 @@ func validDirect(typ v1alpha.DataSourceType) Direct {
 }
 
 func validDirectSpec(typ v1alpha.DataSourceType) Spec {
-	ms := validDirectSpecs[typ]
-	var clone Spec
-	data, _ := json.Marshal(ms)
-	_ = json.Unmarshal(data, &clone)
-	return clone
-}
+	specs := map[v1alpha.DataSourceType]Spec{
+		v1alpha.Datadog: {
+			Datadog: &DatadogConfig{
+				Site:           "datadoghq.com",
+				APIKey:         "secret",
+				ApplicationKey: "secret",
+			},
+		},
+		v1alpha.NewRelic: {
+			NewRelic: &NewRelicConfig{
+				AccountID:        123,
+				InsightsQueryKey: "NRIQ-123",
+			},
+		},
+		v1alpha.AppDynamics: {
+			AppDynamics: &AppDynamicsConfig{
+				URL:         "https://nobl9.saas.appdynamics.com",
+				ClientName:  "client-name",
+				AccountName: "account-name",
+			},
+		},
+		v1alpha.Splunk: {
+			Splunk: &SplunkConfig{
+				URL:         "https://localhost:8089/servicesNS/admin/",
+				AccessToken: "secret",
+			},
+		},
+		v1alpha.SplunkObservability: {
+			SplunkObservability: &SplunkObservabilityConfig{
+				Realm: "us-1",
+			},
+		},
+		v1alpha.ThousandEyes: {
+			ThousandEyes: &ThousandEyesConfig{
+				OauthBearerToken: "secret",
+			},
+		},
+		v1alpha.BigQuery: {
+			BigQuery: &BigQueryConfig{
+				ServiceAccountKey: `{"secret": "key"}`,
+			},
+		},
+		v1alpha.CloudWatch: {
+			CloudWatch: &CloudWatchConfig{
+				RoleARN: "arn:partition:service:region:account-id:resource-id",
+			},
+		},
+		v1alpha.Pingdom: {
+			Pingdom: &PingdomConfig{
+				APIToken: "secret",
+			},
+		},
+		v1alpha.Redshift: {
+			Redshift: &RedshiftConfig{
+				SecretARN: "secret",
+				RoleARN:   "arn:partition:service:region:account-id:resource-id",
+			},
+		},
+		v1alpha.SumoLogic: {
+			SumoLogic: &SumoLogicConfig{
+				AccessID:  "secret",
+				AccessKey: "secret",
+				URL:       "https://sumologic-service.monitoring:443",
+			},
+		},
+		v1alpha.Instana: {
+			Instana: &InstanaConfig{
+				APIToken: "secret",
+				URL:      "https://instana-service.monitoring:443",
+			},
+		},
+		v1alpha.InfluxDB: {
+			InfluxDB: &InfluxDBConfig{
+				URL:            "https://influxdb-service.monitoring:8086",
+				APIToken:       "secret",
+				OrganizationID: "secret",
+			},
+		},
+		v1alpha.GCM: {
+			GCM: &GCMConfig{
+				ServiceAccountKey: `{"secret": "key"}`,
+			},
+		},
+		v1alpha.Lightstep: {
+			Lightstep: &LightstepConfig{
+				Organization: "LightStep-Play",
+				Project:      "play",
+				URL:          "https://api.lightstep.com",
+			},
+		},
+		v1alpha.Dynatrace: {
+			Dynatrace: &DynatraceConfig{
+				URL:            "https://rxh70845.live.dynatrace.com/",
+				DynatraceToken: "secret",
+			},
+		},
+		v1alpha.AzureMonitor: {
+			AzureMonitor: &AzureMonitorConfig{
+				TenantID:     "abf988bf-86f1-41af-91ab-2d7cd011db46",
+				ClientID:     "secret",
+				ClientSecret: "secret",
+			},
+		},
+		v1alpha.Honeycomb: {
+			Honeycomb: &HoneycombConfig{
+				APIKey: "secret",
+			},
+		},
+	}
 
-var validDirectSpecs = map[v1alpha.DataSourceType]Spec{
-	v1alpha.Datadog: {
-		Datadog: &DatadogConfig{
-			Site:           "datadoghq.com",
-			APIKey:         "secret",
-			ApplicationKey: "secret",
-		},
-	},
-	v1alpha.NewRelic: {
-		NewRelic: &NewRelicConfig{
-			AccountID:        123,
-			InsightsQueryKey: "NRIQ-123",
-		},
-	},
-	v1alpha.AppDynamics: {
-		AppDynamics: &AppDynamicsConfig{
-			URL:         "https://nobl9.saas.appdynamics.com",
-			ClientName:  "client-name",
-			AccountName: "account-name",
-		},
-	},
-	v1alpha.Splunk: {
-		Splunk: &SplunkConfig{
-			URL:         "https://localhost:8089/servicesNS/admin/",
-			AccessToken: "secret",
-		},
-	},
-	v1alpha.SplunkObservability: {
-		SplunkObservability: &SplunkObservabilityConfig{
-			Realm: "us-1",
-		},
-	},
-	v1alpha.ThousandEyes: {
-		ThousandEyes: &ThousandEyesConfig{
-			OauthBearerToken: "secret",
-		},
-	},
-	v1alpha.BigQuery: {
-		BigQuery: &BigQueryConfig{
-			ServiceAccountKey: `{"secret": "key"}`,
-		},
-	},
-	v1alpha.CloudWatch: {
-		CloudWatch: &CloudWatchConfig{
-			RoleARN: "arn:partition:service:region:account-id:resource-id",
-		},
-	},
-	v1alpha.Pingdom: {
-		Pingdom: &PingdomConfig{
-			APIToken: "secret",
-		},
-	},
-	v1alpha.Redshift: {
-		Redshift: &RedshiftConfig{
-			SecretARN: "secret",
-			RoleARN:   "arn:partition:service:region:account-id:resource-id",
-		},
-	},
-	v1alpha.SumoLogic: {
-		SumoLogic: &SumoLogicConfig{
-			AccessID:  "secret",
-			AccessKey: "secret",
-			URL:       "https://sumologic-service.monitoring:443",
-		},
-	},
-	v1alpha.Instana: {
-		Instana: &InstanaConfig{
-			APIToken: "secret",
-			URL:      "https://instana-service.monitoring:443",
-		},
-	},
-	v1alpha.InfluxDB: {
-		InfluxDB: &InfluxDBConfig{
-			URL:            "https://influxdb-service.monitoring:8086",
-			APIToken:       "secret",
-			OrganizationID: "secret",
-		},
-	},
-	v1alpha.GCM: {
-		GCM: &GCMConfig{
-			ServiceAccountKey: `{"secret": "key"}`,
-		},
-	},
-	v1alpha.Lightstep: {
-		Lightstep: &LightstepConfig{
-			Organization: "LightStep-Play",
-			Project:      "play",
-		},
-	},
-	v1alpha.Dynatrace: {
-		Dynatrace: &DynatraceConfig{
-			URL:            "https://rxh70845.live.dynatrace.com/",
-			DynatraceToken: "secret",
-		},
-	},
-	v1alpha.AzureMonitor: {
-		AzureMonitor: &AzureMonitorConfig{
-			TenantID:     "abf988bf-86f1-41af-91ab-2d7cd011db46",
-			ClientID:     "secret",
-			ClientSecret: "secret",
-		},
-	},
-	v1alpha.Honeycomb: {
-		Honeycomb: &HoneycombConfig{
-			APIKey: "secret",
-		},
-	},
+	return specs[typ]
 }
 
 func ptr[T any](v T) *T { return &v }

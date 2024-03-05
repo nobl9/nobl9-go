@@ -137,6 +137,12 @@ var (
 		validation.For(func(l LightstepConfig) string { return l.Project }).
 			WithName("project").
 			Required(),
+		validation.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
+			WithName("url").
+			OmitEmpty().
+			Rules(
+				validation.URL(),
+			),
 	)
 	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
 		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
