@@ -104,6 +104,18 @@ var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
 		return nil
 	})
 
+type Interval struct {
+	Duration
+}
+
+type Jitter struct {
+	Duration
+}
+
+type Timeout struct {
+	Duration
+}
+
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
 	Duration

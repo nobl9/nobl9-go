@@ -69,6 +69,9 @@ type Spec struct {
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
+	Interval                *v1alpha.Interval                `json:"interval,omitempty"`
+	Timeout                 *v1alpha.Timeout                 `json:"timeout,omitempty"`
+	Jitter                  *v1alpha.Jitter                  `json:"jitter,omitempty"`
 }
 
 // Status holds dynamic content which is not part of the static Agent definition.
