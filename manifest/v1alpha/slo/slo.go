@@ -48,6 +48,7 @@ type Spec struct {
 	AlertPolicies   []string       `json:"alertPolicies"`
 	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
+	UpdatedAt       string         `json:"updatedAt,omitempty"`
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
