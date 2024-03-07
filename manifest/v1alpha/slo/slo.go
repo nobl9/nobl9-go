@@ -48,7 +48,7 @@ type Spec struct {
 	AlertPolicies   []string       `json:"alertPolicies"`
 	Attachments     []Attachment   `json:"attachments,omitempty"`
 	CreatedAt       string         `json:"createdAt,omitempty"`
-	UpdatedAt       string         `json:"updatedAt,omitempty"`
+	CreatedBy       string         `json:"createdBy,omitempty"`
 	Composite       *Composite     `json:"composite,omitempty"`
 	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
@@ -147,6 +147,7 @@ type AnomalyConfigAlertMethod struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
+	UpdatedAt    string        `json:"updatedAt,omitempty"`
 	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 
