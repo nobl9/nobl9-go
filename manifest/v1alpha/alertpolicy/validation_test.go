@@ -474,6 +474,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 		},
 		"fails, zero value": {
 			values: []string{
+				"0",
 				"0ms",
 				"0s",
 				"0m",
