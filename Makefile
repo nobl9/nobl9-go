@@ -117,9 +117,9 @@ DIAGRAMS_PATH ?= .
 ## Generate PNG diagrams from PlantUML files.
 generate/plantuml: $(PLANTUML_JAR)
 	for path in $$(find $(DIAGRAMS_PATH) -name "*.puml" -type f); do \
-  		echo "Generating PNG file(s) for $$path"; \
+  	echo "Generating PNG file(s) for $$path"; \
 		java -jar $(PLANTUML_JAR) -tpng $$path; \
-  	done
+  done
 
 # If the plantuml.jar file isn't already present, download it.
 $(PLANTUML_JAR):
