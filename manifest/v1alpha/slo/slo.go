@@ -39,18 +39,19 @@ type Metadata struct {
 
 // Spec holds detailed information specific to SLO.
 type Spec struct {
-	Description     string         `json:"description"`
-	Indicator       Indicator      `json:"indicator"`
-	BudgetingMethod string         `json:"budgetingMethod"`
-	Objectives      []Objective    `json:"objectives"`
-	Service         string         `json:"service"`
-	TimeWindows     []TimeWindow   `json:"timeWindows"`
-	AlertPolicies   []string       `json:"alertPolicies"`
-	Attachments     []Attachment   `json:"attachments,omitempty"`
-	CreatedAt       string         `json:"createdAt,omitempty"`
-	CreatedBy       string         `json:"createdBy,omitempty"`
-	Composite       *Composite     `json:"composite,omitempty"`
-	AnomalyConfig   *AnomalyConfig `json:"anomalyConfig,omitempty"`
+	Description     string       `json:"description"`
+	Indicator       *Indicator   `json:"indicator,omitempty"`
+	BudgetingMethod string       `json:"budgetingMethod"`
+	Objectives      []Objective  `json:"objectives"`
+	Service         string       `json:"service"`
+	TimeWindows     []TimeWindow `json:"timeWindows"`
+	AlertPolicies   []string     `json:"alertPolicies"`
+	Attachments     []Attachment `json:"attachments,omitempty"`
+	CreatedAt       string       `json:"createdAt,omitempty"`
+	UpdatedAt       string       `json:"updatedAt,omitempty"`
+	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
+	Composite     *Composite     `json:"composite,omitempty"`
+	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
 // Attachment represents user defined URL attached to SLO
@@ -84,7 +85,9 @@ type Objective struct {
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	Operator        *string           `json:"op,omitempty"`
+	// Composite is not yet supported, applying it will have no effect
+	Composite *CompositeSpec `json:"composite,omitempty"`
+	Operator  *string        `json:"op,omitempty"`
 }
 
 func (o Objective) GetBudgetTarget() float64 {
@@ -93,6 +96,10 @@ func (o Objective) GetBudgetTarget() float64 {
 		v = *o.BudgetTarget
 	}
 	return v
+}
+
+func (o Objective) IsComposite() bool {
+	return o.Composite != nil
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
@@ -108,6 +115,7 @@ type MetricSourceSpec struct {
 }
 
 // Composite represents configuration for Composite SLO.
+// Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`

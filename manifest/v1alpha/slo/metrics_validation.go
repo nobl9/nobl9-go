@@ -21,8 +21,10 @@ const (
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
 		Rules(validation.NewSingleRule(func(s Spec) error {
-			if s.HasRawMetric() == s.HasCountMetrics() {
-				return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
+			if !s.HasCompositeObjectives() {
+				if s.HasRawMetric() == s.HasCountMetrics() {
+					return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
+				}
 			}
 			return nil
 		}).WithErrorCode(errCodeExactlyOneMetricType)).
@@ -192,6 +194,9 @@ var oneOfBadOverTotalValidationRule = validation.NewSingleRule(func(v MetricSpec
 }).WithErrorCode(errCodeBadOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = validation.NewSingleRule(func(v Spec) error {
+	if v.HasCompositeObjectives() {
+		return nil
+	}
 	if v.HasRawMetric() {
 		return validateExactlyOneMetricSpecType(v.RawMetrics()...)
 	}
