@@ -155,6 +155,7 @@ type AnomalyConfigAlertMethod struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
+	UpdatedAt    string        `json:"updatedAt,omitempty"`
 	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 

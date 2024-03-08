@@ -48,6 +48,8 @@ var specValidation = validation.New[Spec](
 		IncludeForEach(alertMethodRefValidation),
 )
 
+var minimalAlertingWindowDurationRule = validation.GreaterThanOrEqualTo(time.Minute * 5)
+
 var conditionValidation = validation.New[AlertCondition](
 	validation.For(func(c AlertCondition) string { return c.Measurement }).
 		WithName("measurement").
@@ -64,12 +66,22 @@ var conditionValidation = validation.New[AlertCondition](
 		Include(timeToBurnBudgetValueValidation).
 		Include(burnedAndAverageBudgetValueValidation).
 		Include(averageBudgetWithAlertingWindowValueValidation),
-	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow }, time.ParseDuration).
+	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow },
+		func(alertingWindow string) (time.Duration, error) {
+			value, err := time.ParseDuration(alertingWindow)
+			if err != nil {
+				return 0, err
+			}
+			if alertingWindow != "" && value == 0 {
+				return 0, minimalAlertingWindowDurationRule.Validate(value)
+			}
+			return value, err
+		}).
 		WithName("alertingWindow").
 		OmitEmpty().
 		Rules(
 			validation.DurationPrecision(time.Minute),
-			validation.GreaterThanOrEqualTo(time.Minute*5),
+			minimalAlertingWindowDurationRule,
 			validation.LessThanOrEqualTo(time.Hour*24*7),
 		),
 	validation.For(validation.GetSelf[AlertCondition]()).
