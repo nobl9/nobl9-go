@@ -656,7 +656,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 			},
 		} {
 			slo := validSLO()
-			slo.Spec.Indicator = ind
+			slo.Spec.Indicator = &ind
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
@@ -671,7 +671,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: Indicator{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator",
+						Prop: "spec.indicator.metricSource.name",
 						Code: validation.ErrorCodeRequired,
 					},
 				},
@@ -714,7 +714,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 		} {
 			t.Run(name, func(t *testing.T) {
 				slo := validSLO()
-				slo.Spec.Indicator = test.Indicator
+				slo.Spec.Indicator = &test.Indicator
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})
@@ -910,7 +910,10 @@ func TestValidate_Spec(t *testing.T) {
 			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+			Prop: "spec.objectives[0]",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		}, testutils.ExpectedError{
 			Prop: "spec",
 			Code: errCodeExactlyOneMetricType,
 		})
@@ -920,7 +923,10 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric = nil
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+			Prop: "spec.objectives[0]",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		}, testutils.ExpectedError{
 			Prop: "spec",
 			Code: errCodeExactlyOneMetricType,
 		})
@@ -1178,7 +1184,7 @@ func validSLO() SLO {
 			},
 			BudgetingMethod: BudgetingMethodOccurrences.String(),
 			Service:         "prometheus",
-			Indicator: Indicator{
+			Indicator: &Indicator{
 				MetricSource: MetricSourceSpec{
 					Project: "default",
 					Name:    "prometheus",
@@ -1199,6 +1205,70 @@ func validSLO() SLO {
 						GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 					},
 					Operator: ptr(v1alpha.LessThan.String()),
+				},
+			},
+			TimeWindows: []TimeWindow{
+				{
+					Unit:      "Day",
+					Count:     1,
+					IsRolling: true,
+				},
+			},
+		},
+	)
+}
+
+func validCompositeSLO() SLO {
+	return New(
+		Metadata{
+			Name:        "my-composite-slo",
+			DisplayName: "My Composite SLO",
+			Project:     "composite-project",
+			Labels: v1alpha.Labels{
+				"team":          []string{"blue", "red"},
+				"business-unit": []string{"management"},
+			},
+		},
+		Spec{
+			Description:   "Example composite slo",
+			AlertPolicies: []string{"my-policy-name"},
+			Attachments: []Attachment{
+				{
+					DisplayName: ptr("Master report"),
+					URL:         "https://example.com",
+				},
+			},
+			BudgetingMethod: BudgetingMethodOccurrences.String(),
+			Service:         "prometheus",
+			Objectives: []Objective{
+				{
+					ObjectiveBase: ObjectiveBase{
+						DisplayName: "Composite",
+						Value:       ptr(120.),
+						Name:        "composite-1",
+					},
+					BudgetTarget: ptr(0.9),
+					Composite: &CompositeSpec{
+						MaxDelay: "10m",
+						Components: Components{
+							Objectives: []CompositeObjective{
+								{
+									Project:     "project-alpha",
+									SLO:         "my-slo-alpha",
+									Objective:   "good",
+									Weight:      1.0,
+									WhenDelayed: WhenDelayedCountAsGood,
+								},
+								{
+									Project:     "project-beta",
+									SLO:         "my-slo-beta",
+									Objective:   "average",
+									Weight:      2.0,
+									WhenDelayed: WhenDelayedCountAsBad,
+								},
+							},
+						},
+					},
 				},
 			},
 			TimeWindows: []TimeWindow{

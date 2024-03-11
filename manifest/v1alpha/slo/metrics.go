@@ -49,12 +49,24 @@ type MetricSpec struct {
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
-	return s.Indicator.RawMetric != nil
+	return s.Indicator != nil && s.Indicator.RawMetric != nil
 }
 
 // IsComposite returns true if SLOSpec contains composite type.
+// Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
+// use HasCompositeObjectives instead for new implementation
 func (s *Spec) IsComposite() bool {
 	return s.Composite != nil
+}
+
+// HasCompositeObjectives returns true if any SLOSpec Objective is of composite type.
+func (s *Spec) HasCompositeObjectives() bool {
+	for _, obj := range s.Objectives {
+		if obj.IsComposite() {
+			return true
+		}
+	}
+	return false
 }
 
 // HasRawMetric returns true if SLOSpec has raw metric.

@@ -472,6 +472,16 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
+		"fails, zero value": {
+			values: []string{
+				"0",
+				"0ms",
+				"0s",
+				"0m",
+			},
+			expectedCode:    validation.ErrorCodeTransform,
+			expectedMessage: `should be greater than or equal to '5m0s'`,
+		},
 	}
 	for name, testCase := range failTests {
 		t.Run(name, func(t *testing.T) {

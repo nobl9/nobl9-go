@@ -33,7 +33,7 @@ func ExampleSLO() {
 			},
 			BudgetingMethod: slo.BudgetingMethodOccurrences.String(),
 			Service:         "prometheus",
-			Indicator: slo.Indicator{
+			Indicator: &slo.Indicator{
 				MetricSource: slo.MetricSourceSpec{
 					Name:    "prometheus",
 					Project: "default",

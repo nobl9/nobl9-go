@@ -45,6 +45,8 @@ words:
   - codeowners
   - consumergroup
   - cooldown
+  - countasbad
+  - countasgood
   - datacenter
   - datadoghq
   - dataexport
