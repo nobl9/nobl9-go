@@ -48,7 +48,7 @@ type Spec struct {
 	AlertPolicies   []string     `json:"alertPolicies"`
 	Attachments     []Attachment `json:"attachments,omitempty"`
 	CreatedAt       string       `json:"createdAt,omitempty"`
-	UpdatedAt       string       `json:"updatedAt,omitempty"`
+	CreatedBy       string       `json:"createdBy,omitempty"`
 	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
