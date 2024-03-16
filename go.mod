@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/MicahParks/jwkset v0.5.15
+	github.com/MicahParks/jwkset v0.5.16
 	github.com/MicahParks/keyfunc/v3 v3.2.9
 	github.com/aws/aws-sdk-go v1.51.1
 	github.com/bmatcuk/doublestar/v4 v4.6.1
