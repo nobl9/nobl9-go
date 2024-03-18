@@ -88,6 +88,7 @@ type Objective struct {
 	// Composite is not yet supported, applying it will have no effect
 	Composite *CompositeSpec `json:"composite,omitempty"`
 	Operator  *string        `json:"op,omitempty"`
+	Primary   bool           `json:"primary,omitempty"`
 }
 
 func (o Objective) GetBudgetTarget() float64 {
