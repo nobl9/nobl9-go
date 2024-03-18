@@ -871,6 +871,103 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Objectives_Primary(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for name, objectives := range map[string][]Objective{
+			"no primary objective": {
+				{
+					ObjectiveBase: ObjectiveBase{Value: ptr(0.1)},
+					BudgetTarget:  ptr(0.9),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr(v1alpha.GreaterThan.String()),
+					Primary:       ptr(false),
+				},
+				{
+					ObjectiveBase: ObjectiveBase{Value: ptr(0.2)},
+					BudgetTarget:  ptr(0.8),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr(v1alpha.GreaterThan.String()),
+				},
+			},
+			"exactly one primary objective": {
+				{
+					ObjectiveBase: ObjectiveBase{Value: ptr(0.1)},
+					BudgetTarget:  ptr(0.9),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr(v1alpha.GreaterThan.String()),
+					Primary:       ptr(true),
+				},
+				{
+					ObjectiveBase: ObjectiveBase{Value: ptr(0.2)},
+					BudgetTarget:  ptr(0.8),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr(v1alpha.GreaterThan.String()),
+					Primary:       ptr(false),
+				},
+				{
+					ObjectiveBase: ObjectiveBase{Value: ptr(0.3)},
+					BudgetTarget:  ptr(0.7),
+					RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+					Operator:      ptr(v1alpha.GreaterThan.String()),
+				},
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = objectives
+				err := validate(slo)
+				testutils.AssertNoError(t, slo, err)
+			})
+		}
+	})
+	t.Run("fails", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			Objectives          []Objective
+			ExpectedErrors      []testutils.ExpectedError
+			ExpectedErrorsCount int
+		}{
+			"more than one primary objective": {
+				Objectives: []Objective{
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(0.1)},
+						BudgetTarget:  ptr(0.9),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
+						Primary:       ptr(true),
+					},
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(0.2)},
+						BudgetTarget:  ptr(0.8),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
+						Primary:       ptr(true),
+					},
+					{
+						ObjectiveBase: ObjectiveBase{Value: ptr(0.3)},
+						BudgetTarget:  ptr(0.7),
+						RawMetric:     &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+						Operator:      ptr(v1alpha.GreaterThan.String()),
+					},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop: "spec.objectives",
+						Code: validation.ErrorCodeForbidden,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives = test.Objectives
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+			})
+		}
+	})
+}
+
 func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 	for name, test := range map[string]struct {
 		Code       string

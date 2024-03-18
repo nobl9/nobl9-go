@@ -131,6 +131,25 @@ var specValidation = validation.New[Spec](
 			return *v.Value
 		}, "objectives[*].value must be different for each objective")).
 		IncludeForEach(objectiveValidation),
+	validation.For(func(s Spec) []Objective { return s.Objectives }).
+		WithName("objectives").
+		Rules(
+			validation.NewSingleRule(func(o []Objective) error {
+				hasPrimary := false
+				for _, obj := range o {
+					if obj.Primary != nil && *obj.Primary {
+						if hasPrimary {
+							return validation.NewRuleError(
+								"there can be max 1 primary objective",
+								validation.ErrorCodeForbidden,
+							)
+						}
+						hasPrimary = true
+					}
+				}
+				return nil
+			}),
+		),
 )
 
 var attachmentValidation = validation.New[Attachment](
