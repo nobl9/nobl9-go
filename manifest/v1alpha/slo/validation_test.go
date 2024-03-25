@@ -1315,6 +1315,38 @@ func validSLO() SLO {
 	)
 }
 
+func validCompositeObjective() Objective {
+	return Objective{
+		ObjectiveBase: ObjectiveBase{
+			DisplayName: "Composite",
+			Value:       ptr(120.),
+			Name:        "composite-1",
+		},
+		BudgetTarget: ptr(0.9),
+		Composite: &CompositeSpec{
+			MaxDelay: "10m",
+			Components: Components{
+				Objectives: []CompositeObjective{
+					{
+						Project:     "project-alpha",
+						SLO:         "my-slo-alpha",
+						Objective:   "good",
+						Weight:      1.0,
+						WhenDelayed: WhenDelayedCountAsGood,
+					},
+					{
+						Project:     "project-beta",
+						SLO:         "my-slo-beta",
+						Objective:   "average",
+						Weight:      2.0,
+						WhenDelayed: WhenDelayedCountAsBad,
+					},
+				},
+			},
+		},
+	}
+}
+
 func validCompositeSLO() SLO {
 	return New(
 		Metadata{
@@ -1338,35 +1370,7 @@ func validCompositeSLO() SLO {
 			BudgetingMethod: BudgetingMethodOccurrences.String(),
 			Service:         "prometheus",
 			Objectives: []Objective{
-				{
-					ObjectiveBase: ObjectiveBase{
-						DisplayName: "Composite",
-						Value:       ptr(120.),
-						Name:        "composite-1",
-					},
-					BudgetTarget: ptr(0.9),
-					Composite: &CompositeSpec{
-						MaxDelay: "10m",
-						Components: Components{
-							Objectives: []CompositeObjective{
-								{
-									Project:     "project-alpha",
-									SLO:         "my-slo-alpha",
-									Objective:   "good",
-									Weight:      1.0,
-									WhenDelayed: WhenDelayedCountAsGood,
-								},
-								{
-									Project:     "project-beta",
-									SLO:         "my-slo-beta",
-									Objective:   "average",
-									Weight:      2.0,
-									WhenDelayed: WhenDelayedCountAsBad,
-								},
-							},
-						},
-					},
-				},
+				validCompositeObjective(),
 			},
 			TimeWindows: []TimeWindow{
 				{
