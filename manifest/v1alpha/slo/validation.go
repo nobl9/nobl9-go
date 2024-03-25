@@ -374,8 +374,12 @@ var specValidationComposite = validation.New[Spec](
 			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
 				Include(validation.New[CompositeSpec](
+					validation.For(func(c CompositeSpec) string { return c.MaxDelay }).
+						WithName("maxDelay").
+						Required(),
 					validation.Transform(func(c CompositeSpec) string { return c.MaxDelay }, time.ParseDuration).
 						WithName("maxDelay").
+						When(func(c CompositeSpec) bool { return len(c.MaxDelay) > 0 }).
 						Rules(
 							validation.DurationPrecision(time.Minute),
 							validation.GreaterThanOrEqualTo(time.Minute),

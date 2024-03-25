@@ -142,6 +142,17 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
+	t.Run("fails - maxDelay not provided", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.MaxDelay = ""
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.maxDelay",
+			Code:    validation.ErrorCodeRequired,
+			Message: "property is required but was empty",
+		})
+	})
 	t.Run("fails - maxDelay not a multiple of a minute", func(t *testing.T) {
 		slo := validCompositeSLO()
 		slo.Spec.Objectives[0].Composite.MaxDelay = "70s"
