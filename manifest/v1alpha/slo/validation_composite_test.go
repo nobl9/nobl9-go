@@ -45,6 +45,21 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			})
 		}
 	})
+	t.Run("fails - composite SLO has more than 1 objectives", func(t *testing.T) {
+		slo := validCompositeSLO()
+		anotherCompositeObjective := validCompositeObjective()
+		anotherCompositeObjective.Name = "another-composite-objective"
+		slo.Spec.Objectives = append(slo.Spec.Objectives, anotherCompositeObjective)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
+			},
+		)
+	})
 	t.Run("fails - raw objective type mixed with composite", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
@@ -67,7 +82,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; there must be only 1 composite objective",
+				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
 			},
 		)
 	})
@@ -96,7 +111,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; there must be only 1 composite objective",
+				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
 			},
 		)
 	})

@@ -124,13 +124,14 @@ var specValidation = validation.New[Spec](
 		WithName("objectives").
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		StopOnError().
+		IncludeForEach(objectiveValidation).
+		When(func(s Spec) bool { return !s.HasCompositeObjectives() }).
 		Rules(validation.SliceUnique(func(v Objective) float64 {
 			if v.Value == nil {
 				return 0
 			}
 			return *v.Value
-		}, "objectives[*].value must be different for each objective")).
-		IncludeForEach(objectiveValidation),
+		}, "objectives[*].value must be different for each objective")),
 	validation.For(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(
@@ -369,7 +370,7 @@ var specValidationComposite = validation.New[Spec](
 	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceLength[[]Objective](1, 1).
-			WithDetails("there must be only 1 composite objective")).
+			WithDetails("composite objective can be the only objective in the SLO")).
 		IncludeForEach(validation.New[Objective](
 			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
