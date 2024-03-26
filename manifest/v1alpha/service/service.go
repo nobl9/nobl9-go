@@ -31,10 +31,11 @@ type Service struct {
 
 // Metadata provides identity information for Service.
 type Metadata struct {
-	Name        string         `json:"name" validate:"required,objectName"`
-	DisplayName string         `json:"displayName,omitempty" validate:"omitempty,min=0,max=63"`
-	Project     string         `json:"project,omitempty" validate:"objectName"`
-	Labels      v1alpha.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string                      `json:"name"`
+	DisplayName string                      `json:"displayName,omitempty"`
+	Project     string                      `json:"project,omitempty"`
+	Labels      v1alpha.Labels              `json:"labels,omitempty"`
+	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
