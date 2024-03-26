@@ -100,7 +100,7 @@ func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
 
 // GetUser first ensures a token has been parsed before returning the user,
 // as it is extracted from the token claims.
-// credentials.m2mProfile.User should not be accessed directly, but rather through this method.
+// credentials.<profile>.User should not be accessed directly, but rather through this method.
 func (c *credentials) GetUser(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get user")
