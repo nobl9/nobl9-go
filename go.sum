@@ -1,11 +1,11 @@
 github.com/BurntSushi/toml v1.3.2 h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8=
 github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
-github.com/MicahParks/jwkset v0.5.16 h1:fViCHyU7d0HVs1oqIqld6CXUR866zLOMHOwtbgs6o3A=
-github.com/MicahParks/jwkset v0.5.16/go.mod h1:q8ptTGn/Z9c4MwbcfeCDssADeVQb3Pk7PnVxrvi+2QY=
-github.com/MicahParks/keyfunc/v3 v3.2.9 h1:juKYzZvb5q4mWnox3439WNq6cusvSdt2fJ5nj+osgCk=
-github.com/MicahParks/keyfunc/v3 v3.2.9/go.mod h1:Yx3jN/pn7ZMCxwFsyIrsmSqRfp0HGHAcyezBlhYi1Ew=
-github.com/aws/aws-sdk-go v1.51.6 h1:Ld36dn9r7P9IjU8WZSaswQ8Y/XUCRpewim5980DwYiU=
-github.com/aws/aws-sdk-go v1.51.6/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/MicahParks/jwkset v0.5.17 h1:DrcwyKwSP5adD0G2XJTvDulnWXjD6gbjROMgMXDbkKA=
+github.com/MicahParks/jwkset v0.5.17/go.mod h1:q8ptTGn/Z9c4MwbcfeCDssADeVQb3Pk7PnVxrvi+2QY=
+github.com/MicahParks/keyfunc/v3 v3.3.2 h1:YTtwc4dxalBZKFqHhqctBWN6VhbLdGhywmne9u5RQVM=
+github.com/MicahParks/keyfunc/v3 v3.3.2/go.mod h1:GJBeEjnv25OnD9y2OYQa7ELU6gYahEMBNXINZb+qm34=
+github.com/aws/aws-sdk-go v1.51.7 h1:RRjxHhx9RCjw5AhgpmmShq3F4JDlleSkyhYMQ2xUAe8=
+github.com/aws/aws-sdk-go v1.51.7/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/bmatcuk/doublestar/v4 v4.6.1 h1:FH9SifrbvJhnlQpztAx++wlkk70QBf0iBWDwNy7PA4I=
 github.com/bmatcuk/doublestar/v4 v4.6.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
