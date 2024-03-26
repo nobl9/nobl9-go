@@ -370,7 +370,7 @@ var specValidationComposite = validation.New[Spec](
 	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceLength[[]Objective](1, 1).
-			WithDetails("composite objective can be the only objective in the SLO")).
+			WithDetails("a composite objective can be the only objective in the SLO")).
 		IncludeForEach(validation.New[Objective](
 			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
