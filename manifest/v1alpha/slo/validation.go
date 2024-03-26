@@ -30,6 +30,7 @@ var metadataValidation = validation.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
+	validationV1Alpha.FieldRuleMetadataAnnotations(func(m Metadata) v1alpha.MetadataAnnotations { return m.Annotations }),
 )
 
 var sloValidationComposite = validation.New[SLO](

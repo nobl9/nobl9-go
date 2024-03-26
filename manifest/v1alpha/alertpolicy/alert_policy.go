@@ -30,10 +30,11 @@ type AlertPolicy struct {
 }
 
 type Metadata struct {
-	Name        string         `json:"name"`
-	DisplayName string         `json:"displayName,omitempty"`
-	Project     string         `json:"project,omitempty"`
-	Labels      v1alpha.Labels `json:"labels,omitempty"`
+	Name        string                      `json:"name"`
+	DisplayName string                      `json:"displayName,omitempty"`
+	Project     string                      `json:"project,omitempty"`
+	Labels      v1alpha.Labels              `json:"labels,omitempty"`
+	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
 // Spec represents content of AlertPolicy's Spec.
