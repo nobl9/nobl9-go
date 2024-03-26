@@ -56,7 +56,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
+				Message: "length must be between 1 and 1; a composite objective can be the only objective in the SLO",
 			},
 		)
 	})
@@ -82,7 +82,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
+				Message: "length must be between 1 and 1; a composite objective can be the only objective in the SLO",
 			},
 		)
 	})
@@ -111,7 +111,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; composite objective can be the only objective in the SLO",
+				Message: "length must be between 1 and 1; a composite objective can be the only objective in the SLO",
 			},
 		)
 	})
