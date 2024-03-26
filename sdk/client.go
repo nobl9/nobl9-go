@@ -146,6 +146,11 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
+// GetUser returns the user read from JWT token claims.
+func (c *Client) GetUser(ctx context.Context) (string, error) {
+	return c.credentials.GetUser(ctx)
+}
+
 // SetUserAgent will set HeaderUserAgent to the provided value.
 func (c *Client) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
