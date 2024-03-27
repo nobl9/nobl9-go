@@ -98,6 +98,22 @@ func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
 	return c.organization, nil
 }
 
+// GetUser first ensures a token has been parsed before returning the user,
+// as it is extracted from the token claims.
+// credentials.<profile>.User should not be accessed directly, but rather through this method.
+func (c *credentials) GetUser(ctx context.Context) (string, error) {
+	if _, err := c.refreshAccessToken(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to get user")
+	}
+	switch c.tokenType {
+	case tokenTypeM2M:
+		return c.claims.M2MProfile.Value.User, nil
+	case tokenTypeAgent:
+		return c.claims.AgentProfile.Value.User, nil
+	}
+	return "", errors.New("unknown token type")
+}
+
 // It's important for this to be clean client, request middleware in Go is kinda clunky
 // and requires chaining multiple HTTP clients, timeouts and retries should be handled
 // by the predecessors of this one.
