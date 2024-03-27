@@ -19,10 +19,12 @@ var sloValidation = validation.New[SLO](
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
-		Include(specValidation).
-		StopOnError().
 		Include(specValidationNonComposite).
-		Include(specValidationComposite),
+		StopOnError().
+		Include(specValidationComposite).
+		StopOnError().
+		Include(specValidation).
+		StopOnError(),
 )
 
 var metadataValidation = validation.New[Metadata](
@@ -80,7 +82,8 @@ var sloValidationComposite = validation.New[SLO](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Include(specMetricsValidation),
+		Include(specMetricsValidation).
+		StopOnError(),
 	validation.For(validation.GetSelf[Spec]()).
 		WithName("composite").
 		When(func(s Spec) bool { return s.Composite != nil }).
@@ -280,12 +283,6 @@ var indicatorValidation = validation.New[Indicator](
 )
 
 var objectiveValidation = validation.New[Objective](
-	validation.For(validation.GetSelf[Objective]()).
-		Rules(validation.MutuallyExclusive(true, map[string]func(o Objective) any{
-			"rawMetric":    func(o Objective) any { return o.RawMetric },
-			"countMetrics": func(o Objective) any { return o.CountMetrics },
-			"composite":    func(o Objective) any { return o.Composite },
-		})),
 	validation.For(validation.GetSelf[Objective]()).
 		Include(rawMetricObjectiveValidation),
 	validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
