@@ -1,0 +1,8 @@
+{
+  "apiVersion": "v1alpha",
+  "kind": "Project",
+  "metadata": {
+    "name": "test-int",
+    "value": 1
+  }
+}
