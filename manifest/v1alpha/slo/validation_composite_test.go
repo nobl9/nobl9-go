@@ -190,7 +190,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].weight",
-			Code: validation.ErrorCodeRequired,
+			Code: validation.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
@@ -200,7 +200,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[1].weight",
-			Code: validation.ErrorCodeRequired,
+			Code: validation.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
