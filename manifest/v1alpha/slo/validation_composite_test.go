@@ -45,6 +45,21 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			})
 		}
 	})
+	t.Run("fails - composite SLO has more than 1 objectives", func(t *testing.T) {
+		slo := validCompositeSLO()
+		anotherCompositeObjective := validCompositeObjective()
+		anotherCompositeObjective.Name = "another-composite-objective"
+		slo.Spec.Objectives = append(slo.Spec.Objectives, anotherCompositeObjective)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
+			},
+		)
+	})
 	t.Run("fails - raw objective type mixed with composite", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
@@ -67,7 +82,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; there must be only 1 composite objective",
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
 	})
@@ -96,7 +111,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
 				Code:    validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; there must be only 1 composite objective",
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
 	})
@@ -116,9 +131,10 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			err := validate(slo)
 
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.composite",
-				Code:    validation.ErrorCodeForbidden,
-				Message: "property is forbidden; composite section is forbidden when spec.objectives[0].composite is provided",
+				Prop: "spec.composite",
+				Code: validation.ErrorCodeForbidden,
+				Message: "property is forbidden; composite section is forbidden " +
+					"when spec.objectives[0].composite is provided",
 			})
 		}
 	})
@@ -171,7 +187,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].weight",
-			Code: validation.ErrorCodeRequired,
+			Code: validation.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
@@ -181,7 +197,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[1].weight",
-			Code: validation.ErrorCodeRequired,
+			Code: validation.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
