@@ -2,17 +2,21 @@ package validation
 
 import "fmt"
 
+// ForMap creates a new [PropertyRulesForMap] instance for a map property
+// which value is extracted through [PropertyGetter] function.
 func ForMap[M ~map[K]V, K comparable, V, S any](getter PropertyGetter[M, S]) PropertyRulesForMap[M, K, V, S] {
 	return PropertyRulesForMap[M, K, V, S]{getter: getter}
 }
 
+// PropertyRulesForMap is responsible for validating a single property.
 type PropertyRulesForMap[M ~map[K]V, K comparable, V, S any] struct {
 	name   string
 	getter PropertyGetter[M, S]
 	steps  []interface{}
 }
 
-type MapKeyValue[K comparable, V any] struct {
+// MapItem is a tuple container for map's key and value pair.
+type MapItem[K comparable, V any] struct {
 	Key   K
 	Value V
 }
@@ -38,18 +42,18 @@ loop:
 			if !stepValue(st) {
 				break loop
 			}
-		case Rule[K], Rule[V], Rule[MapKeyValue[K, V]]:
+		case Rule[K], Rule[V], Rule[MapItem[K, V]]:
 			errorEncountered := false
 			m := r.getter(st)
 			for key := range m {
 				var err error
 				switch stepValue := step.(type) {
-				case validatorI[K]:
+				case Rule[K]:
 					err = stepValue.Validate(key)
-				case validatorI[V]:
+				case Rule[V]:
 					err = stepValue.Validate(m[key])
-				case validatorI[MapKeyValue[K, V]]:
-					err = stepValue.Validate(MapKeyValue[K, V]{Key: key, Value: m[key]})
+				case Rule[MapItem[K, V]]:
+					err = stepValue.Validate(MapItem[K, V]{Key: key, Value: m[key]})
 				}
 				if err == nil {
 					continue
@@ -60,7 +64,7 @@ loop:
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(MapElementName(r.name, key)))
 				default:
-					forEachErrors[key] = forEachElementError{Errors: append(fErrs, err), PropValue: key}
+					forEachErrors[key] = forEachElementError{Errors: append(fErrs, err), PropValue: m[key]}
 				}
 			}
 			previousStepFailed = errorEncountered
@@ -76,7 +80,7 @@ loop:
 				}
 			}
 			previousStepFailed = err != nil
-		case validatorI[K], validatorI[V], validatorI[MapKeyValue[K, V]]:
+		case validatorI[K], validatorI[V], validatorI[MapItem[K, V]]:
 			errorEncountered := false
 			m := r.getter(st)
 			for key := range m {
@@ -86,8 +90,8 @@ loop:
 					err = stepValue.Validate(key)
 				case validatorI[V]:
 					err = stepValue.Validate(m[key])
-				case validatorI[MapKeyValue[K, V]]:
-					err = stepValue.Validate(MapKeyValue[K, V]{Key: key, Value: m[key]})
+				case validatorI[MapItem[K, V]]:
+					err = stepValue.Validate(MapItem[K, V]{Key: key, Value: m[key]})
 				}
 				if err == nil {
 					continue
@@ -131,7 +135,7 @@ func (r PropertyRulesForMap[M, K, V, S]) RulesForValues(rules ...Rule[V]) Proper
 }
 
 func (r PropertyRulesForMap[M, K, V, S]) RulesForItems(
-	rules ...Rule[MapKeyValue[K, V]],
+	rules ...Rule[MapItem[K, V]],
 ) PropertyRulesForMap[M, K, V, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
@@ -158,7 +162,7 @@ func (r PropertyRulesForMap[M, K, V, S]) IncludeForValues(rules ...Validator[V])
 }
 
 func (r PropertyRulesForMap[M, K, V, S]) IncludeForItems(
-	rules ...Validator[MapKeyValue[K, V]],
+	rules ...Validator[MapItem[K, V]],
 ) PropertyRulesForMap[M, K, V, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r

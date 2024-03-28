@@ -47,11 +47,11 @@ loop:
 					continue
 				}
 				errorEncountered = true
-				fErrs := forEachErrors[i].Errors
 				switch ev := err.(type) {
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
 				default:
+					fErrs := forEachErrors[i].Errors
 					forEachErrors[i] = forEachElementError{Errors: append(fErrs, err), PropValue: element}
 				}
 			}
