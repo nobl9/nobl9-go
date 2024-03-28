@@ -38,16 +38,21 @@ var sloValidationComposite = validation.New[SLO](
 	validation.For(validation.GetSelf[SLO]()).
 		Rules(
 			validation.NewSingleRule(func(s SLO) error {
-				for _, obj := range s.Spec.Objectives[0].Composite.Objectives {
-					isSameProject := obj.Project == s.Metadata.Project
-					isSameName := obj.Objective == s.Metadata.Name
+				for _, objective := range s.Spec.Objectives {
+					if objective.Composite == nil {
+						continue
+					}
+					for _, component := range objective.Composite.Objectives {
+						isSameProject := component.Project == s.Metadata.Project
+						isSameName := component.Objective == s.Metadata.Name
 
-					if isSameProject && isSameName {
-						return validation.NewPropertyError(
-							"slo",
-							s.Metadata.Name,
-							errors.Errorf("composite SLO cannot have itself as one of its objectives"),
-						)
+						if isSameProject && isSameName {
+							return validation.NewPropertyError(
+								"slo",
+								s.Metadata.Name,
+								errors.Errorf("composite SLO cannot have itself as one of its objectives"),
+							)
+						}
 					}
 				}
 
