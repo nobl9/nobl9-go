@@ -226,7 +226,6 @@ var compositeObjectiveRule = validation.New[CompositeObjective](
 		Rules(validation.StringIsDNSSubdomain()),
 	validation.For(func(c CompositeObjective) float64 { return c.Weight }).
 		WithName("weight").
-		Required().
 		Rules(validation.GreaterThan(0.0)),
 	validation.For(func(c CompositeObjective) WhenDelayed { return c.WhenDelayed }).
 		WithName("whenDelayed").
