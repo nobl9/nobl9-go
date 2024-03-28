@@ -34,33 +34,49 @@ var metadataValidation = validation.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
+func getCompositeObjective(s SLO) *Objective {
+	for i, objective := range s.Spec.Objectives {
+		if objective.Composite != nil {
+			return &s.Spec.Objectives[i]
+		}
+	}
+	return nil
+}
+
+func getCompositeObjectiveComponents(s SLO) []CompositeObjective {
+	for i, objective := range s.Spec.Objectives {
+		if objective.Composite != nil {
+			return s.Spec.Objectives[i].Composite.Objectives
+		}
+	}
+	return make([]CompositeObjective, 0)
+}
+
 var sloValidationComposite = validation.New[SLO](
 	validation.For(validation.GetSelf[SLO]()).
 		Rules(
 			validation.NewSingleRule(func(s SLO) error {
-				for _, objective := range s.Spec.Objectives {
-					if objective.Composite == nil {
-						continue
-					}
-					for _, component := range objective.Composite.Objectives {
-						isSameProject := component.Project == s.Metadata.Project
-						isSameName := component.Objective == s.Metadata.Name
+				composite := getCompositeObjective(s)
+				if composite == nil {
+					return nil
+				}
+				for _, component := range composite.Composite.Objectives {
+					isSameProject := component.Project == s.Metadata.Project
+					isSameName := component.Objective == s.Metadata.Name
 
-						if isSameProject && isSameName {
-							return validation.NewPropertyError(
-								"slo",
-								s.Metadata.Name,
-								errors.Errorf("composite SLO cannot have itself as one of its objectives"),
-							)
-						}
+					if isSameProject && isSameName {
+						return validation.NewPropertyError(
+							"slo",
+							s.Metadata.Name,
+							errors.Errorf("composite SLO cannot have itself as one of its objectives"),
+						)
 					}
 				}
-
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
 		),
 
-	validation.For(func(s SLO) []CompositeObjective { return s.Spec.Objectives[0].Composite.Objectives }).
+	validation.For(func(s SLO) []CompositeObjective { return getCompositeObjectiveComponents(s) }).
 		Rules(
 			validation.NewSingleRule(func(c []CompositeObjective) error {
 				sloMap := make(map[string]bool)
