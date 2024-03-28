@@ -54,10 +54,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec.objectives",
-				Code: validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; this SLO contains a composite objective. " +
-					"No more objectives can be added to it",
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
 	})
@@ -81,10 +80,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec.objectives",
-				Code: validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; this SLO contains a composite objective. " +
-					"No more objectives can be added to it",
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
 	})
@@ -111,10 +109,9 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec.objectives",
-				Code: validation.ErrorCodeSliceLength,
-				Message: "length must be between 1 and 1; this SLO contains a composite objective. " +
-					"No more objectives can be added to it",
+				Prop:    "spec.objectives",
+				Code:    validation.ErrorCodeSliceLength,
+				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
 	})

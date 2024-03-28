@@ -19,6 +19,7 @@ type SingleRule[T any] struct {
 	validate  func(v T) error
 	errorCode ErrorCode
 	details   string
+	message   string
 }
 
 // Validate runs validation function on the provided value.
@@ -31,6 +32,9 @@ func (r SingleRule[T]) Validate(v T) error {
 	if err := r.validate(v); err != nil {
 		switch ev := err.(type) {
 		case *RuleError:
+			if len(r.message) > 0 {
+				ev.Message = r.message
+			}
 			ev.Message = addDetailsToMessage(ev.Message, r.details)
 			return ev.AddCode(r.errorCode)
 		case *PropertyError:
@@ -39,8 +43,12 @@ func (r SingleRule[T]) Validate(v T) error {
 			}
 			return ev
 		default:
+			msg := ev.Error()
+			if len(r.message) > 0 {
+				msg = r.message
+			}
 			return &RuleError{
-				Message: addDetailsToMessage(ev.Error(), r.details),
+				Message: addDetailsToMessage(msg, r.details),
 				Code:    r.errorCode,
 			}
 		}
@@ -51,6 +59,16 @@ func (r SingleRule[T]) Validate(v T) error {
 // WithErrorCode sets the error code for the returned [RuleError].
 func (r SingleRule[T]) WithErrorCode(code ErrorCode) SingleRule[T] {
 	r.errorCode = code
+	return r
+}
+
+// WithMessage overrides the returned [RuleError] error message with message.
+func (r SingleRule[T]) WithMessage(format string, a ...any) SingleRule[T] {
+	if len(a) == 0 {
+		r.message = format
+	} else {
+		r.message = fmt.Sprintf(format, a...)
+	}
 	return r
 }
 
