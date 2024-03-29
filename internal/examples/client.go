@@ -1,13 +1,12 @@
 package examples
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 
-	"github.com/goccy/go-yaml"
-
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -21,11 +20,9 @@ func GetOfflineEchoClient() *sdk.Client {
 		if err != nil {
 			panic(err)
 		}
-		data, err := yaml.Marshal(objects[0])
-		if err != nil {
+		if err = sdk.PrintObject(objects[0], os.Stdout, manifest.ObjectFormatYAML); err != nil {
 			panic(err)
 		}
-		fmt.Println(string(data))
 	}))
 	// Create sdk.Client:
 	u, _ := url.Parse(srv.URL)

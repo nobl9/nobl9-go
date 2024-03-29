@@ -100,6 +100,7 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 	case manifest.ObjectFormatJSON:
 		unmarshal = func(v interface{}) error {
 			dec := json.NewDecoder(bytes.NewReader(data))
+			dec.UseNumber()
 			if UseStrictDecodingMode {
 				dec.DisallowUnknownFields()
 			}
