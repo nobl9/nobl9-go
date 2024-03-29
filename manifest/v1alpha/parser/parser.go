@@ -36,6 +36,11 @@ var UseGenericObjects = false
 // disallow unknown fields from decoded object definitions.
 var UseStrictDecodingMode = false
 
+// UseJSONNumber is a global flag instructing ParseObject to decode
+// JSON numbers into [json.Number] instead of float64 as is [encoding/json]
+// pkg default.
+var UseJSONNumber = false
+
 func ParseObject(data []byte, kind manifest.Kind, format manifest.ObjectFormat) (manifest.Object, error) {
 	unmarshal, err := getUnmarshalFunc(data, format)
 	if err != nil {
@@ -100,7 +105,9 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 	case manifest.ObjectFormatJSON:
 		unmarshal = func(v interface{}) error {
 			dec := json.NewDecoder(bytes.NewReader(data))
-			dec.UseNumber()
+			if UseJSONNumber {
+				dec.UseNumber()
+			}
 			if UseStrictDecodingMode {
 				dec.DisallowUnknownFields()
 			}
