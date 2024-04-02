@@ -194,7 +194,7 @@ var oneOfBadOverTotalValidationRule = validation.NewSingleRule(func(v MetricSpec
 }).WithErrorCode(errCodeBadOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = validation.NewSingleRule(func(v Spec) error {
-	if v.HasCompositeObjectives() {
+	if v.Indicator == nil {
 		return nil
 	}
 	if v.HasRawMetric() {

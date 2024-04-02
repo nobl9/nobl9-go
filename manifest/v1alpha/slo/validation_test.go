@@ -663,12 +663,22 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		for name, test := range map[string]struct {
-			Indicator           Indicator
+			Indicator           *Indicator
 			ExpectedErrors      []testutils.ExpectedError
 			ExpectedErrorsCount int
 		}{
+			"no indicator": {
+				Indicator: nil,
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop: "spec.indicator",
+						Code: validation.ErrorCodeRequired,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
 			"empty indicator": {
-				Indicator: Indicator{},
+				Indicator: &Indicator{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
@@ -678,7 +688,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrorsCount: 1,
 			},
 			"empty metric source name": {
-				Indicator: Indicator{MetricSource: MetricSourceSpec{Name: "", Project: "default"}},
+				Indicator: &Indicator{MetricSource: MetricSourceSpec{Name: "", Project: "default"}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
@@ -688,7 +698,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrorsCount: 1,
 			},
 			"invalid metric source": {
-				Indicator: Indicator{
+				Indicator: &Indicator{
 					MetricSource: MetricSourceSpec{
 						Name:    "MY NAME",
 						Project: "MY PROJECT",
@@ -714,7 +724,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 		} {
 			t.Run(name, func(t *testing.T) {
 				slo := validSLO()
-				slo.Spec.Indicator = &test.Indicator
+				slo.Spec.Indicator = test.Indicator
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 			})
@@ -1007,23 +1017,18 @@ func TestValidate_Spec(t *testing.T) {
 			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: "spec.objectives[0]",
-			Code: validation.ErrorCodeMutuallyExclusive,
-		}, testutils.ExpectedError{
-			Prop: "spec",
-			Code: errCodeExactlyOneMetricType,
-		})
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec",
+				Code: errCodeExactlyOneMetricType,
+			})
 	})
 	t.Run("exactly one metric type - both missing", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Objectives[0].RawMetric = nil
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: "spec.objectives[0]",
-			Code: validation.ErrorCodeMutuallyExclusive,
-		}, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec",
 			Code: errCodeExactlyOneMetricType,
 		})
@@ -1315,6 +1320,38 @@ func validSLO() SLO {
 	)
 }
 
+func validCompositeObjective() Objective {
+	return Objective{
+		ObjectiveBase: ObjectiveBase{
+			DisplayName: "Composite",
+			Value:       ptr(120.),
+			Name:        "composite-1",
+		},
+		BudgetTarget: ptr(0.9),
+		Composite: &CompositeSpec{
+			MaxDelay: "10m",
+			Components: Components{
+				Objectives: []CompositeObjective{
+					{
+						Project:     "project-alpha",
+						SLO:         "my-slo-alpha",
+						Objective:   "good",
+						Weight:      1.0,
+						WhenDelayed: WhenDelayedCountAsGood,
+					},
+					{
+						Project:     "project-beta",
+						SLO:         "my-slo-beta",
+						Objective:   "average",
+						Weight:      2.0,
+						WhenDelayed: WhenDelayedCountAsBad,
+					},
+				},
+			},
+		},
+	}
+}
+
 func validCompositeSLO() SLO {
 	return New(
 		Metadata{
@@ -1338,35 +1375,7 @@ func validCompositeSLO() SLO {
 			BudgetingMethod: BudgetingMethodOccurrences.String(),
 			Service:         "prometheus",
 			Objectives: []Objective{
-				{
-					ObjectiveBase: ObjectiveBase{
-						DisplayName: "Composite",
-						Value:       ptr(120.),
-						Name:        "composite-1",
-					},
-					BudgetTarget: ptr(0.9),
-					Composite: &CompositeSpec{
-						MaxDelay: "10m",
-						Components: Components{
-							Objectives: []CompositeObjective{
-								{
-									Project:     "project-alpha",
-									SLO:         "my-slo-alpha",
-									Objective:   "good",
-									Weight:      1.0,
-									WhenDelayed: WhenDelayedCountAsGood,
-								},
-								{
-									Project:     "project-beta",
-									SLO:         "my-slo-beta",
-									Objective:   "average",
-									Weight:      2.0,
-									WhenDelayed: WhenDelayedCountAsBad,
-								},
-							},
-						},
-					},
-				},
+				validCompositeObjective(),
 			},
 			TimeWindows: []TimeWindow{
 				{
