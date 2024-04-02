@@ -76,7 +76,7 @@ var sloValidationComposite = validation.New[SLO](
 			}).WithErrorCode(validation.ErrorCodeForbidden),
 		),
 
-	validation.For(func(s SLO) []CompositeObjective { return getCompositeObjectiveComponents(s) }).
+	validation.For(getCompositeObjectiveComponents).
 		Rules(
 			validation.NewSingleRule(func(c []CompositeObjective) error {
 				sloMap := make(map[string]bool)
