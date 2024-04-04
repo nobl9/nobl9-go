@@ -5,14 +5,18 @@ import (
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 )
 
-func NewVersions(client endpoints.Client) Versions {
-	return Versions{client: client}
+type Versions interface {
+	V1() v1.Endpoints
 }
 
-type Versions struct {
+func NewVersions(client endpoints.Client) Versions {
+	return versions{client: client}
+}
+
+type versions struct {
 	client endpoints.Client
 }
 
-func (v Versions) V1() v1.Endpoints {
+func (v versions) V1() v1.Endpoints {
 	return v1.NewEndpoints(v.client)
 }

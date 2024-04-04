@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/endpoints"
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
@@ -27,24 +27,24 @@ type Endpoints interface {
 	) (creds M2MAppCredentials, err error)
 }
 
-func NewEndpoints(client endpoints.Client) endpointsImpl {
-	return endpointsImpl{client: client}
+func NewEndpoints(client endpointsHelpers.Client) endpoints {
+	return endpoints{client: client}
 }
 
-type endpointsImpl struct {
-	client endpoints.Client
+type endpoints struct {
+	client endpointsHelpers.Client
 }
 
-func (e endpointsImpl) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
+func (e endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (e endpointsImpl) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
+func (e endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
 // GetAgentCredentials retrieves manifest.KindAgent credentials.
-func (e endpointsImpl) GetAgentCredentials(
+func (e endpoints) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
 ) (creds M2MAppCredentials, err error) {
@@ -72,7 +72,7 @@ func (e endpointsImpl) GetAgentCredentials(
 	return creds, nil
 }
 
-func (e endpointsImpl) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
+func (e endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,

@@ -10,7 +10,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/nobl9/nobl9-go/internal/endpoints"
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -102,9 +102,9 @@ type Endpoints interface {
 }
 
 func NewEndpoints(
-	client endpoints.Client,
-	orgGetter endpoints.OrganizationGetter,
-	readObjects endpoints.ReadObjectsFunc,
+	client endpointsHelpers.Client,
+	orgGetter endpointsHelpers.OrganizationGetter,
+	readObjects endpointsHelpers.ReadObjectsFunc,
 	dryRun bool,
 ) Endpoints {
 	return endpointsImpl{
@@ -116,9 +116,9 @@ func NewEndpoints(
 }
 
 type endpointsImpl struct {
-	client      endpoints.Client
-	orgGetter   endpoints.OrganizationGetter
-	readObjects endpoints.ReadObjectsFunc
+	client      endpointsHelpers.Client
+	orgGetter   endpointsHelpers.OrganizationGetter
+	readObjects endpointsHelpers.ReadObjectsFunc
 	dryRun      bool
 }
 
