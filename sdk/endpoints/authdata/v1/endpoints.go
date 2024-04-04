@@ -18,24 +18,33 @@ const (
 	apiGetDirectIAMRoleIDs     = "data-sources/iam-role-auth-data"
 )
 
-func NewEndpoints(client endpoints.Client) Endpoints {
-	return Endpoints{client: client}
+type Endpoints interface {
+	GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error)
+	GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error)
+	GetAgentCredentials(
+		ctx context.Context,
+		project, agentsName string,
+	) (creds M2MAppCredentials, err error)
 }
 
-type Endpoints struct {
+func NewEndpoints(client endpoints.Client) endpointsImpl {
+	return endpointsImpl{client: client}
+}
+
+type endpointsImpl struct {
 	client endpoints.Client
 }
 
-func (e Endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
+func (e endpointsImpl) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (e Endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
+func (e endpointsImpl) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
 // GetAgentCredentials retrieves manifest.KindAgent credentials.
-func (e Endpoints) GetAgentCredentials(
+func (e endpointsImpl) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
 ) (creds M2MAppCredentials, err error) {
@@ -63,7 +72,7 @@ func (e Endpoints) GetAgentCredentials(
 	return creds, nil
 }
 
-func (e Endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
+func (e endpointsImpl) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
