@@ -30,7 +30,8 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 		propValue          M
 		previousStepFailed bool
 	)
-	forEachErrors := make(map[K]forEachElementError)
+	valueErrors := make(map[K]mapItemError)
+	keyErrors := make(map[K]mapItemError)
 loop:
 	for _, step := range r.steps {
 		switch stepValue := step.(type) {
@@ -42,13 +43,17 @@ loop:
 			if !stepValue(st) {
 				break loop
 			}
-		case Rule[K], Rule[V], Rule[MapItem[K, V]]:
+		case mapKeyRule[K], Rule[V], Rule[MapItem[K, V]]:
 			errorEncountered := false
 			m := r.getter(st)
 			for key := range m {
-				var err error
+				var (
+					err        error
+					isKeyError bool
+				)
 				switch stepValue := step.(type) {
-				case Rule[K]:
+				case mapKeyRule[K]:
+					isKeyError = true
 					err = stepValue.Validate(key)
 				case Rule[V]:
 					err = stepValue.Validate(m[key])
@@ -59,12 +64,17 @@ loop:
 					continue
 				}
 				errorEncountered = true
-				fErrs := forEachErrors[key].Errors
 				switch ev := err.(type) {
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(MapElementName(r.name, key)))
 				default:
-					forEachErrors[key] = forEachElementError{Errors: append(fErrs, err), PropValue: m[key]}
+					if isKeyError {
+						fErrs := keyErrors[key].Errors
+						keyErrors[key] = mapItemError{Errors: append(fErrs, err), PropValue: key}
+					} else {
+						fErrs := valueErrors[key].Errors
+						valueErrors[key] = mapItemError{Errors: append(fErrs, err), PropValue: m[key]}
+					}
 				}
 			}
 			previousStepFailed = errorEncountered
@@ -107,11 +117,19 @@ loop:
 	if len(mapErrors) > 0 {
 		allErrors = append(allErrors, NewPropertyError(r.name, propValue, mapErrors...))
 	}
-	for key, element := range forEachErrors {
+	for key, item := range valueErrors {
 		allErrors = append(allErrors, NewPropertyError(
 			MapElementName(r.name, key),
-			element.PropValue,
-			element.Errors...))
+			item.PropValue,
+			item.Errors...))
+	}
+	for key, item := range keyErrors {
+		propError := NewPropertyError(
+			MapElementName(r.name, key),
+			key,
+			item.Errors...)
+		propError.IsKeyError = true
+		allErrors = append(allErrors, propError)
 	}
 	if len(allErrors) > 0 {
 		return allErrors
@@ -119,13 +137,26 @@ loop:
 	return nil
 }
 
+type mapItemError struct {
+	PropValue interface{}
+	Errors    []error
+}
+
 func (r PropertyRulesForMap[M, K, V, S]) WithName(name string) PropertyRulesForMap[M, K, V, S] {
 	r.name = name
 	return r
 }
 
+// mapKeyRule wraps Rule for map keys in a custom type in order to discern between rules for keys and values.
+// Otherwise, if key and value have the same type both Rule[K] and Rule[V] would match.
+type mapKeyRule[K comparable] struct{ Rule[K] }
+
 func (r PropertyRulesForMap[M, K, V, S]) RulesForKeys(rules ...Rule[K]) PropertyRulesForMap[M, K, V, S] {
-	r.steps = appendSteps(r.steps, rules)
+	mapKeyRules := make([]mapKeyRule[K], 0, len(rules))
+	for _, rule := range rules {
+		mapKeyRules = append(mapKeyRules, mapKeyRule[K]{rule})
+	}
+	r.steps = appendSteps(r.steps, mapKeyRules)
 	return r
 }
 

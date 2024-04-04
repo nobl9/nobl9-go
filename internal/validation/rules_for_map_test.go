@@ -10,7 +10,8 @@ import (
 
 func TestPropertyRulesForMap(t *testing.T) {
 	type mockStruct struct {
-		Map map[string]string
+		StringMap map[string]string
+		IntMap    map[string]int
 	}
 
 	t.Run("no predicates, no error", func(t *testing.T) {
@@ -30,18 +31,41 @@ func TestPropertyRulesForMap(t *testing.T) {
 		expectedErr := errors.New("ops!")
 		baseRules := ForMap(func(m mockStruct) map[string]string { return map[string]string{"key": "value"} }).
 			WithName("test.path")
-		for _, r := range []PropertyRulesForMap[map[string]string, string, string, mockStruct]{
-			baseRules.RulesForKeys(NewSingleRule(func(v string) error { return expectedErr })),
-			baseRules.RulesForValues(NewSingleRule(func(v string) error { return expectedErr })),
-			baseRules.RulesForItems(NewSingleRule(func(v MapItem[string, string]) error { return expectedErr })),
+		for name, test := range map[string]struct {
+			Rules    PropertyRulesForMap[map[string]string, string, string, mockStruct]
+			Expected *PropertyError
+		}{
+			"keys": {
+				Rules: baseRules.RulesForKeys(NewSingleRule(func(v string) error { return expectedErr })),
+				Expected: &PropertyError{
+					PropertyName:  "test.path.key",
+					PropertyValue: "key",
+					IsKeyError:    true,
+					Errors:        []*RuleError{{Message: expectedErr.Error()}},
+				},
+			},
+			"values": {
+				Rules: baseRules.RulesForValues(NewSingleRule(func(v string) error { return expectedErr })),
+				Expected: &PropertyError{
+					PropertyName:  "test.path.key",
+					PropertyValue: "value",
+					Errors:        []*RuleError{{Message: expectedErr.Error()}},
+				},
+			},
+			"items": {
+				Rules: baseRules.RulesForItems(NewSingleRule(func(v MapItem[string, string]) error { return expectedErr })),
+				Expected: &PropertyError{
+					PropertyName:  "test.path.key",
+					PropertyValue: "value",
+					Errors:        []*RuleError{{Message: expectedErr.Error()}},
+				},
+			},
 		} {
-			errs := r.Validate(mockStruct{})
-			require.Len(t, errs, 1)
-			assert.Equal(t, &PropertyError{
-				PropertyName:  "test.path.key",
-				PropertyValue: "key",
-				Errors:        []*RuleError{{Message: expectedErr.Error()}},
-			}, errs[0])
+			t.Run(name, func(t *testing.T) {
+				errs := test.Rules.Validate(mockStruct{})
+				require.Len(t, errs, 1)
+				assert.Equal(t, test.Expected, errs[0])
+			})
 		}
 	})
 
@@ -50,146 +74,214 @@ func TestPropertyRulesForMap(t *testing.T) {
 			WithName("test.path").
 			When(func(mockStruct) bool { return true }).
 			When(func(mockStruct) bool { return true }).
-			When(func(st mockStruct) bool { return len(st.Map) == 0 })
+			When(func(st mockStruct) bool { return len(st.StringMap) == 0 })
 		for _, r := range []PropertyRulesForMap[map[string]string, string, string, mockStruct]{
 			baseRules.RulesForKeys(NewSingleRule(func(v string) error { return errors.New("ops!") })),
 			baseRules.RulesForValues(NewSingleRule(func(v string) error { return errors.New("ops!") })),
 			baseRules.RulesForItems(NewSingleRule(func(v MapItem[string, string]) error { return errors.New("ops!") })),
 		} {
-			errs := r.Validate(mockStruct{Map: map[string]string{"different": "map"}})
+			errs := r.Validate(mockStruct{StringMap: map[string]string{"different": "map"}})
 			assert.Nil(t, errs)
 		}
 	})
 
 	t.Run("multiple rules for keys, values and items", func(t *testing.T) {
-		err1 := errors.New("rule error")
-		err2 := errors.New("key error")
-		err3 := errors.New("nested key error")
-		err4 := errors.New("value error")
-		err5 := errors.New("nested value error")
-		r := ForMap(func(m mockStruct) map[string]string { return m.Map }).
+		errRule := errors.New("rule error")
+		errKey := errors.New("key error")
+		errNestedKey := errors.New("nested key error")
+		errValue := errors.New("value error")
+		errNestedValue := errors.New("nested value error")
+		errItem := errors.New("value item")
+		errNestedItem := errors.New("nested item error")
+		errNestedRule := errors.New("nested rule error")
+
+		r := ForMap(func(m mockStruct) map[string]string { return m.StringMap }).
 			WithName("test.path").
-			Rules(NewSingleRule(func(v map[string]string) error { return err1 })).
+			Rules(NewSingleRule(func(v map[string]string) error { return errRule })).
 			RulesForKeys(
-				NewSingleRule(func(v string) error { return err2 }),
+				NewSingleRule(func(v string) error { return errKey }),
 				NewSingleRule(func(v string) error {
-					return NewPropertyError("nested", "nestedKey", err3)
+					return NewPropertyError("nested", "nestedKey", errNestedKey)
 				}),
 			).
 			RulesForValues(
-				NewSingleRule(func(v string) error { return err4 }),
+				NewSingleRule(func(v string) error { return errValue }),
 				NewSingleRule(func(v string) error {
-					return NewPropertyError("nested", "nestedValue", err5)
+					return NewPropertyError("nested", "nestedValue", errNestedValue)
 				}),
-			)
-		//RulesForItems(
-		//	NewSingleRule(func(v MapItem[string, string]) error { return err1 }),
-		//).
-		//Rules(NewSingleRule(func(v map[string]string) error {
-		//	return NewPropertyError("nested", "nestedValue", err4)
-		//}))
+			).
+			RulesForItems(
+				NewSingleRule(func(v MapItem[string, string]) error { return errItem }),
+				NewSingleRule(func(v MapItem[string, string]) error {
+					return NewPropertyError("nested", "nestedItem", errNestedItem)
+				}),
+			).
+			Rules(NewSingleRule(func(v map[string]string) error {
+				return NewPropertyError("nested", "nestedRule", errNestedRule)
+			}))
 
-		errs := r.Validate(mockStruct{Map: map[string]string{
+		errs := r.Validate(mockStruct{StringMap: map[string]string{
 			"key1": "value1",
 			"key2": "value2",
 		}})
-		require.Len(t, errs, 7)
+		require.Len(t, errs, 12)
 		assert.ElementsMatch(t, []*PropertyError{
 			{
 				PropertyName:  "test.path",
 				PropertyValue: `{"key1":"value1","key2":"value2"}`,
-				Errors:        []*RuleError{{Message: err1.Error()}},
+				Errors:        []*RuleError{{Message: errRule.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key1",
 				PropertyValue: "key1",
-				Errors:        []*RuleError{{Message: err2.Error()}},
+				IsKeyError:    true,
+				Errors:        []*RuleError{{Message: errKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2",
 				PropertyValue: "key2",
-				Errors:        []*RuleError{{Message: err2.Error()}},
+				IsKeyError:    true,
+				Errors:        []*RuleError{{Message: errKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key1.nested",
 				PropertyValue: "nestedKey",
-				Errors:        []*RuleError{{Message: err3.Error()}},
+				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
 				PropertyValue: "nestedKey",
-				Errors:        []*RuleError{{Message: err3.Error()}},
+				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key1",
 				PropertyValue: "value1",
-				Errors:        []*RuleError{{Message: err4.Error()}},
+				Errors: []*RuleError{
+					{Message: errValue.Error()},
+					{Message: errItem.Error()},
+				},
 			},
 			{
 				PropertyName:  "test.path.key2",
 				PropertyValue: "value2",
-				Errors:        []*RuleError{{Message: err4.Error()}},
+				Errors: []*RuleError{
+					{Message: errValue.Error()},
+					{Message: errItem.Error()},
+				},
 			},
 			{
 				PropertyName:  "test.path.key1.nested",
 				PropertyValue: "nestedValue",
-				Errors:        []*RuleError{{Message: err5.Error()}},
+				Errors:        []*RuleError{{Message: errNestedValue.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
 				PropertyValue: "nestedValue",
-				Errors:        []*RuleError{{Message: err5.Error()}},
+				Errors:        []*RuleError{{Message: errNestedValue.Error()}},
+			},
+			{
+				PropertyName:  "test.path.key1.nested",
+				PropertyValue: "nestedItem",
+				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
+			},
+			{
+				PropertyName:  "test.path.key2.nested",
+				PropertyValue: "nestedItem",
+				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
+			},
+			{
+				PropertyName:  "test.path.nested",
+				PropertyValue: "nestedRule",
+				Errors:        []*RuleError{{Message: errNestedRule.Error()}},
 			},
 		}, errs)
 	})
 
-	//t.Run("stop on error", func(t *testing.T) {
-	//	expectedErr := errors.New("oh no!")
-	//	r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
-	//		WithName("test.path").
-	//		RulesForEach(NewSingleRule(func(v string) error { return expectedErr })).
-	//		StopOnError().
-	//		RulesForEach(NewSingleRule(func(v string) error { return errors.New("no") }))
-	//	errs := r.Validate(mockStruct{})
-	//	require.Len(t, errs, 1)
-	//	assert.Equal(t, &PropertyError{
-	//		PropertyName:  "test.path[0]",
-	//		PropertyValue: "value",
-	//		Errors:        []*RuleError{{Message: expectedErr.Error()}},
-	//	}, errs[0])
-	//})
-	//
-	//t.Run("include for keys validator", func(t *testing.T) {
-	//	err1 := errors.New("oh no!")
-	//	err2 := errors.New("included")
-	//	err3 := errors.New("included again")
-	//	r := ForMap(func(m mockStruct) []string { return m.Map }).
-	//		WithName("test.path").
-	//		Rules(NewSingleRule(func(v string) error { return err1 })).
-	//		IncludeForKeys(New[string](
-	//			For(func(s string) string { return "nested" }).
-	//				WithName("included").
-	//				Rules(
-	//					NewSingleRule(func(v string) error { return err2 }),
-	//					NewSingleRule(func(v string) error { return err3 }),
-	//				),
-	//		))
-	//	errs := r.Validate(mockStruct{Map: map[string]string{"key": "value"}})
-	//	require.Len(t, errs, 2)
-	//	assert.ElementsMatch(t, []*PropertyError{
-	//		{
-	//			PropertyName:  "test.path[0]",
-	//			PropertyValue: "value",
-	//			Errors:        []*RuleError{{Message: err1.Error()}},
-	//		},
-	//		{
-	//			PropertyName:  "test.path[0].included",
-	//			PropertyValue: "nested",
-	//			Errors: []*RuleError{
-	//				{Message: err2.Error()},
-	//				{Message: err3.Error()},
-	//			},
-	//		},
-	//	}, errs)
-	//})
+	t.Run("stop on error", func(t *testing.T) {
+		expectedErr := errors.New("oh no!")
+		r := ForMap(func(m mockStruct) map[string]string { return map[string]string{"key": "value"} }).
+			WithName("test.path").
+			RulesForValues(NewSingleRule(func(v string) error { return expectedErr })).
+			StopOnError().
+			RulesForKeys(NewSingleRule(func(v string) error { return errors.New("no") }))
+		errs := r.Validate(mockStruct{})
+		require.Len(t, errs, 1)
+		assert.Equal(t, &PropertyError{
+			PropertyName:  "test.path.key",
+			PropertyValue: "value",
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
+		}, errs[0])
+	})
+
+	t.Run("include for keys validator", func(t *testing.T) {
+		errRule := errors.New("rule error")
+		errIncludedKey1 := errors.New("included key 1 error")
+		errIncludedKey2 := errors.New("included key 2 error")
+		errIncludedValue1 := errors.New("included value 1 error")
+		errIncludedValue2 := errors.New("included value 2 error")
+		errIncludedItem1 := errors.New("included item 1 error")
+		errIncludedItem2 := errors.New("included item 2 error")
+
+		r := ForMap(func(m mockStruct) map[string]int { return m.IntMap }).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v map[string]int) error { return errRule })).
+			IncludeForKeys(New[string](
+				For(func(s string) string { return s }).
+					WithName("included_key").
+					Rules(
+						NewSingleRule(func(v string) error { return errIncludedKey1 }),
+						NewSingleRule(func(v string) error { return errIncludedKey2 }),
+					),
+			)).
+			IncludeForValues(New[int](
+				For(func(i int) int { return i }).
+					WithName("included_value").
+					Rules(
+						NewSingleRule(func(v int) error { return errIncludedValue1 }),
+						NewSingleRule(func(v int) error { return errIncludedValue2 }),
+					),
+			)).
+			IncludeForItems(New[MapItem[string, int]](
+				For(func(i MapItem[string, int]) MapItem[string, int] { return i }).
+					WithName("included_item").
+					Rules(
+						NewSingleRule(func(v MapItem[string, int]) error { return errIncludedItem1 }),
+						NewSingleRule(func(v MapItem[string, int]) error { return errIncludedItem2 }),
+					),
+			))
+
+		errs := r.Validate(mockStruct{IntMap: map[string]int{"key": 1}})
+		require.Len(t, errs, 4)
+		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName:  "test.path",
+				PropertyValue: `{"key":1}`,
+				Errors:        []*RuleError{{Message: errRule.Error()}},
+			},
+			{
+				PropertyName:  "test.path.key.included_key",
+				PropertyValue: "key",
+				Errors: []*RuleError{
+					{Message: errIncludedKey1.Error()},
+					{Message: errIncludedKey2.Error()},
+				},
+			},
+			{
+				PropertyName:  "test.path.key.included_value",
+				PropertyValue: "1",
+				Errors: []*RuleError{
+					{Message: errIncludedValue1.Error()},
+					{Message: errIncludedValue2.Error()},
+				},
+			},
+			{
+				PropertyName:  "test.path.key.included_item",
+				PropertyValue: `{"Key":"key","Value":1}`,
+				Errors: []*RuleError{
+					{Message: errIncludedItem1.Error()},
+					{Message: errIncludedItem2.Error()},
+				},
+			},
+		}, errs)
+	})
 }
