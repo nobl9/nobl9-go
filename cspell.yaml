@@ -64,6 +64,7 @@ words:
   - goimports
   - golangci
   - gomnd
+  - gomock
   - gopackage
   - goreleaser
   - gosec
@@ -83,6 +84,7 @@ words:
   - mapstructure
   - memstats
   - mktemp
+  - mockgen
   - mprofile
   - msgf
   - msteams
