@@ -13,7 +13,20 @@ import (
 	"mock_example/mocks"
 )
 
-func TestGetProject(t *testing.T) {
+func TestCommand_MustGetOrganization(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	client := mocks.NewMockClient(ctrl)
+	client.
+		EXPECT().
+		GetOrganization(gomock.Any()).
+		Return("test", nil)
+	cmd := command{client: client}
+
+	org := cmd.MustGetOrganization(context.Background())
+	assert.Equal(t, "test", org)
+}
+
+func TestCommand_GetProject(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	v1objects := mocks.NewMockObjectsV1Endpoints(ctrl)
 	v1objects.
