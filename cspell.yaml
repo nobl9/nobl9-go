@@ -28,6 +28,7 @@ ignorePaths:
   - CODEOWNERS
   - bin/**
   - "**/test_data/**"
+  - "docs/mock_example/mocks/*"
 words:
   - aggs
   - alertmethod
