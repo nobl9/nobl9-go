@@ -5,9 +5,7 @@ import (
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 )
 
-type Versions interface {
-	V1() v1.Endpoints
-}
+//go:generate ../../../bin/ifacemaker -y " " -f ./*.go -s versions -i Versions -o versions_interface.go -p "$GOPACKAGE"
 
 func NewVersions(client endpoints.Client) Versions {
 	return versions{client: client}

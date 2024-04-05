@@ -18,16 +18,9 @@ const (
 	apiGetDirectIAMRoleIDs     = "data-sources/iam-role-auth-data"
 )
 
-type Endpoints interface {
-	GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error)
-	GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error)
-	GetAgentCredentials(
-		ctx context.Context,
-		project, agentsName string,
-	) (creds M2MAppCredentials, err error)
-}
+//go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
 
-func NewEndpoints(client endpointsHelpers.Client) endpoints {
+func NewEndpoints(client endpointsHelpers.Client) Endpoints {
 	return endpoints{client: client}
 }
 

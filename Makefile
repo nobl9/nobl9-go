@@ -13,6 +13,8 @@ GOLANGCI_LINT_VERSION := v1.57.2
 GOVULNCHECK_VERSION := v1.0.4
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
 GOIMPORTS_VERSION := v0.20.0
+# renovate datasource=go depName=github.com/vburenin/ifacemaker
+IFACEMAKER_VERSION := v1.2.1
 
 # Check if the program is present in $PATH and install otherwise.
 # ${1} - oneOf{binary,yarn}
@@ -108,6 +110,7 @@ generate: generate/code generate/plantuml
 generate/code:
 	echo "Generating Go code..."
 	$(call _ensure_installed,binary,go-enum)
+	$(call _ensure_installed,binary,ifacemaker)
 	go generate ./...
 
 PLANTUML_JAR_URL := https://sourceforge.net/projects/plantuml/files/plantuml.jar/download
@@ -143,9 +146,9 @@ format/cspell:
 	$(call _ensure_installed,yarn,yaml)
 	yarn --silent format-cspell-config
 
-.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
+.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
 ## Install all dev dependencies.
-install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports
+install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
 
 ## Install JS dependencies with yarn.
 install/yarn:
@@ -179,6 +182,11 @@ install/govulncheck:
 install/goimports:
 	echo "Installing goimports..."
 	$(call _install_go_binary,golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION))
+
+## Install ifacemaker (https://github.com/vburenin/ifacemaker).
+install/ifacemaker:
+	echo "Installing ifacemaker..."
+	$(call _install_go_binary,github.com/vburenin/ifacemaker@$(IFACEMAKER_VERSION))
 
 .PHONY: help
 ## Print this help message.
