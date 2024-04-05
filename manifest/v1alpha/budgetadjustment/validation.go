@@ -42,7 +42,7 @@ var specValidation = validation.New[Spec](
 )
 
 var filtersValidationRule = validation.New[Filters](
-	validation.ForEach(func(f Filters) []SLORef { return f.SLOs }).
+	validation.ForSlice(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
 		Rules(validation.SliceMinLength[[]SLORef](1)).
 		IncludeForEach(sloValidationRule),

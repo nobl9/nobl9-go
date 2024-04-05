@@ -38,12 +38,12 @@ var specValidation = validation.New[Spec](
 		WithName("coolDown").
 		OmitEmpty().
 		Rules(validation.GreaterThanOrEqualTo(time.Minute*5)),
-	validation.ForEach(func(s Spec) []AlertCondition { return s.Conditions }).
+	validation.ForSlice(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
 		StopOnError().
 		IncludeForEach(conditionValidation),
-	validation.ForEach(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
+	validation.ForSlice(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
 		WithName("alertMethods").
 		IncludeForEach(alertMethodRefValidation),
 )

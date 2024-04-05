@@ -57,9 +57,12 @@ func NewPropertyError(propertyName string, propertyValue interface{}, errs ...er
 }
 
 type PropertyError struct {
-	PropertyName  string       `json:"propertyName"`
-	PropertyValue string       `json:"propertyValue"`
-	Errors        []*RuleError `json:"errors"`
+	PropertyName  string `json:"propertyName"`
+	PropertyValue string `json:"propertyValue"`
+	// IsKeyError is set to true if the error was created through map key validation.
+	// PropertyValue in this scenario will be the key value, equal to the last element of PropertyName path.
+	IsKeyError bool         `json:"isKeyError"`
+	Errors     []*RuleError `json:"errors"`
 }
 
 func (e *PropertyError) Error() string {
@@ -68,7 +71,11 @@ func (e *PropertyError) Error() string {
 	if e.PropertyName != "" {
 		fmt.Fprintf(b, "'%s'", e.PropertyName)
 		if e.PropertyValue != "" {
-			fmt.Fprintf(b, " with value '%s'", e.PropertyValue)
+			if e.IsKeyError {
+				fmt.Fprintf(b, " with key '%s'", e.PropertyValue)
+			} else {
+				fmt.Fprintf(b, " with value '%s'", e.PropertyValue)
+			}
 		}
 		b.WriteString(":\n")
 		indent = strings.Repeat(" ", 2)
