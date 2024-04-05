@@ -28,6 +28,7 @@ ignorePaths:
   - CODEOWNERS
   - bin/**
   - "**/test_data/**"
+  - "docs/mock_example/mocks/*"
 words:
   - aggs
   - alertmethod
@@ -64,6 +65,7 @@ words:
   - goimports
   - golangci
   - gomnd
+  - gomock
   - gopackage
   - goreleaser
   - gosec
@@ -71,6 +73,7 @@ words:
   - groupmy
   - hrdu
   - httpurls
+  - ifacemaker
   - instana
   - iowait
   - jsonyaml
@@ -83,6 +86,7 @@ words:
   - mapstructure
   - memstats
   - mktemp
+  - mockgen
   - mprofile
   - msgf
   - msteams

@@ -10,7 +10,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/nobl9/nobl9-go/internal/endpoints"
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -23,13 +23,15 @@ const (
 	apiGetGroups = "usrmgmt/groups"
 )
 
+//go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
+
 func NewEndpoints(
-	client endpoints.Client,
-	orgGetter endpoints.OrganizationGetter,
-	readObjects endpoints.ReadObjectsFunc,
+	client endpointsHelpers.Client,
+	orgGetter endpointsHelpers.OrganizationGetter,
+	readObjects endpointsHelpers.ReadObjectsFunc,
 	dryRun bool,
 ) Endpoints {
-	return Endpoints{
+	return endpoints{
 		client:      client,
 		orgGetter:   orgGetter,
 		readObjects: readObjects,
@@ -37,22 +39,22 @@ func NewEndpoints(
 	}
 }
 
-type Endpoints struct {
-	client      endpoints.Client
-	orgGetter   endpoints.OrganizationGetter
-	readObjects endpoints.ReadObjectsFunc
+type endpoints struct {
+	client      endpointsHelpers.Client
+	orgGetter   endpointsHelpers.OrganizationGetter
+	readObjects endpointsHelpers.ReadObjectsFunc
 	dryRun      bool
 }
 
-func (e Endpoints) Apply(ctx context.Context, objects []manifest.Object) error {
+func (e endpoints) Apply(ctx context.Context, objects []manifest.Object) error {
 	return e.applyOrDeleteObjects(ctx, objects, apiApply)
 }
 
-func (e Endpoints) Delete(ctx context.Context, objects []manifest.Object) error {
+func (e endpoints) Delete(ctx context.Context, objects []manifest.Object) error {
 	return e.applyOrDeleteObjects(ctx, objects, apiDelete)
 }
 
-func (e Endpoints) DeleteByName(
+func (e endpoints) DeleteByName(
 	ctx context.Context,
 	kind manifest.Kind,
 	project string,
@@ -80,7 +82,7 @@ func (e Endpoints) DeleteByName(
 	return sdk.ProcessResponseErrors(resp)
 }
 
-func (e Endpoints) Get(
+func (e endpoints) Get(
 	ctx context.Context,
 	kind manifest.Kind,
 	header http.Header,
@@ -108,7 +110,7 @@ func (e Endpoints) Get(
 	return e.readObjects(ctx, resp.Body)
 }
 
-func (e Endpoints) applyOrDeleteObjects(
+func (e endpoints) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
 	apiMode string,
@@ -149,7 +151,7 @@ func (e Endpoints) applyOrDeleteObjects(
 	return sdk.ProcessResponseErrors(resp)
 }
 
-func (e Endpoints) setOrganizationForObjects(
+func (e endpoints) setOrganizationForObjects(
 	ctx context.Context,
 	objects []manifest.Object,
 ) ([]manifest.Object, error) {

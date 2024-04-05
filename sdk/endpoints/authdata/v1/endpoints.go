@@ -9,7 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/endpoints"
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/internal/sdk"
 )
 
@@ -18,24 +18,26 @@ const (
 	apiGetDirectIAMRoleIDs     = "data-sources/iam-role-auth-data"
 )
 
-func NewEndpoints(client endpoints.Client) Endpoints {
-	return Endpoints{client: client}
+//go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
+
+func NewEndpoints(client endpointsHelpers.Client) Endpoints {
+	return endpoints{client: client}
 }
 
-type Endpoints struct {
-	client endpoints.Client
+type endpoints struct {
+	client endpointsHelpers.Client
 }
 
-func (e Endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
+func (e endpoints) GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, apiGetDataExportIAMRoleIDs, "")
 }
 
-func (e Endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
+func (e endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error) {
 	return e.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
 // GetAgentCredentials retrieves manifest.KindAgent credentials.
-func (e Endpoints) GetAgentCredentials(
+func (e endpoints) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
 ) (creds M2MAppCredentials, err error) {
@@ -63,7 +65,7 @@ func (e Endpoints) GetAgentCredentials(
 	return creds, nil
 }
 
-func (e Endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
+func (e endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) (*IAMRoleIDs, error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
