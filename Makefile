@@ -37,7 +37,7 @@ endef
 .PHONY: test test/record
 ## Run all unit tests.
 test:
-	go test -race -cover ./...
+	go test -race -cover ./... ./docs/mock_example
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:
