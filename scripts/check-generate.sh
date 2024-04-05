@@ -2,7 +2,7 @@
 
 set -e
 
-ENUM_PATH="*_enum.go"
+ENUM_PATH="*.go"
 TMP_DIR=$(mktemp -d)
 
 cleanup_git() {

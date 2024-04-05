@@ -25,7 +25,7 @@ import (
 	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 )
 
-func (e Endpoints) GetV1alphaProjects(
+func (e endpoints) GetV1alphaProjects(
 	ctx context.Context,
 	params GetProjectsRequest,
 ) ([]v1alphaProject.Project, error) {
@@ -39,7 +39,7 @@ func (e Endpoints) GetV1alphaProjects(
 	return manifest.FilterByKind[v1alphaProject.Project](objects), err
 }
 
-func (e Endpoints) GetV1alphaServices(
+func (e endpoints) GetV1alphaServices(
 	ctx context.Context,
 	params GetServicesRequest,
 ) ([]v1alphaService.Service, error) {
@@ -54,7 +54,7 @@ func (e Endpoints) GetV1alphaServices(
 	return manifest.FilterByKind[v1alphaService.Service](objects), err
 }
 
-func (e Endpoints) GetV1alphaSLOs(
+func (e endpoints) GetV1alphaSLOs(
 	ctx context.Context,
 	params GetSLOsRequest,
 ) ([]v1alphaSLO.SLO, error) {
@@ -69,7 +69,7 @@ func (e Endpoints) GetV1alphaSLOs(
 	return manifest.FilterByKind[v1alphaSLO.SLO](objects), err
 }
 
-func (e Endpoints) GetV1alphaAgents(
+func (e endpoints) GetV1alphaAgents(
 	ctx context.Context,
 	params GetAgentsRequest,
 ) ([]v1alphaAgent.Agent, error) {
@@ -83,7 +83,7 @@ func (e Endpoints) GetV1alphaAgents(
 	return manifest.FilterByKind[v1alphaAgent.Agent](objects), err
 }
 
-func (e Endpoints) GetV1alphaAlertPolicies(
+func (e endpoints) GetV1alphaAlertPolicies(
 	ctx context.Context,
 	params GetAlertPolicyRequest,
 ) ([]v1alphaAlertPolicy.AlertPolicy, error) {
@@ -98,7 +98,7 @@ func (e Endpoints) GetV1alphaAlertPolicies(
 	return manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](objects), err
 }
 
-func (e Endpoints) GetV1alphaAlertSilences(
+func (e endpoints) GetV1alphaAlertSilences(
 	ctx context.Context,
 	params GetAlertSilencesRequest,
 ) ([]v1alphaAlertSilence.AlertSilence, error) {
@@ -112,7 +112,7 @@ func (e Endpoints) GetV1alphaAlertSilences(
 	return manifest.FilterByKind[v1alphaAlertSilence.AlertSilence](objects), err
 }
 
-func (e Endpoints) GetV1alphaAlertMethods(
+func (e endpoints) GetV1alphaAlertMethods(
 	ctx context.Context,
 	params GetAlertMethodsRequest,
 ) ([]v1alphaAlertMethod.AlertMethod, error) {
@@ -126,7 +126,7 @@ func (e Endpoints) GetV1alphaAlertMethods(
 	return manifest.FilterByKind[v1alphaAlertMethod.AlertMethod](objects), err
 }
 
-func (e Endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest) (*GetAlertsResponse, error) {
+func (e endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest) (*GetAlertsResponse, error) {
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names).
@@ -149,7 +149,7 @@ func (e Endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest
 	}, nil
 }
 
-func (e Endpoints) GetV1alphaDirects(
+func (e endpoints) GetV1alphaDirects(
 	ctx context.Context,
 	params GetDirectsRequest,
 ) ([]v1alphaDirect.Direct, error) {
@@ -163,7 +163,7 @@ func (e Endpoints) GetV1alphaDirects(
 	return manifest.FilterByKind[v1alphaDirect.Direct](objects), err
 }
 
-func (e Endpoints) GetV1alphaDataExports(
+func (e endpoints) GetV1alphaDataExports(
 	ctx context.Context,
 	params GetDataExportsRequest,
 ) ([]v1alphaDataExport.DataExport, error) {
@@ -177,7 +177,7 @@ func (e Endpoints) GetV1alphaDataExports(
 	return manifest.FilterByKind[v1alphaDataExport.DataExport](objects), err
 }
 
-func (e Endpoints) GetV1alphaRoleBindings(
+func (e endpoints) GetV1alphaRoleBindings(
 	ctx context.Context,
 	params GetRoleBindingsRequest,
 ) ([]v1alphaRoleBinding.RoleBinding, error) {
@@ -191,7 +191,7 @@ func (e Endpoints) GetV1alphaRoleBindings(
 	return manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](objects), err
 }
 
-func (e Endpoints) GetV1alphaAnnotations(
+func (e endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
 ) ([]v1alphaAnnotation.Annotation, error) {
@@ -212,7 +212,7 @@ func (e Endpoints) GetV1alphaAnnotations(
 	return manifest.FilterByKind[v1alphaAnnotation.Annotation](objects), err
 }
 
-func (e Endpoints) GetV1alphaUserGroups(
+func (e endpoints) GetV1alphaUserGroups(
 	ctx context.Context,
 	params GetAnnotationsRequest,
 ) ([]v1alphaUserGroup.UserGroup, error) {
@@ -228,7 +228,7 @@ func (e Endpoints) GetV1alphaUserGroups(
 
 // GetAlerts is exported for internal usage, use methods returning
 // concrete manifest.Version instead, like GetV1alphaAlerts
-func (e Endpoints) GetAlerts(
+func (e endpoints) GetAlerts(
 	ctx context.Context,
 	header http.Header,
 	query url.Values,
@@ -273,7 +273,7 @@ func (e Endpoints) GetAlerts(
 	return objects, truncatedMax, nil
 }
 
-func (e Endpoints) GetBudgetAdjustments(
+func (e endpoints) GetBudgetAdjustments(
 	ctx context.Context,
 	params GetBudgetAdjustmentRequest,
 ) ([]v1alphaBudgetAdjustment.BudgetAdjustment, error) {

@@ -1,0 +1,7 @@
+go 1.22
+
+use (
+	.
+	./docs/mock_example
+	./sdk/test_data/client/simple_module
+)
