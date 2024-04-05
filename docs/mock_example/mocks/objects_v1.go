@@ -15,6 +15,8 @@ import (
 	url "net/url"
 	reflect "reflect"
 
+	gomock "go.uber.org/mock/gomock"
+
 	manifest "github.com/nobl9/nobl9-go/manifest"
 	agent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	alertmethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
@@ -30,7 +32,6 @@ import (
 	slo "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	usergroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	gomock "go.uber.org/mock/gomock"
 )
 
 // MockObjectsV1Endpoints is a mock of Endpoints interface.

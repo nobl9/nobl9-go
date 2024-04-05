@@ -13,8 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	objects "github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	gomock "go.uber.org/mock/gomock"
+
+	objects "github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 )
 
 // MockClient is a mock of Client interface.
