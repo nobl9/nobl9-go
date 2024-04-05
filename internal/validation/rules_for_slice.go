@@ -4,14 +4,14 @@ import (
 	"fmt"
 )
 
-// ForEach creates a new [PropertyRulesForEach] instance for a slice property
+// ForSlice creates a new [PropertyRulesForSlice] instance for a slice property
 // which value is extracted through [PropertyGetter] function.
-func ForEach[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForEach[T, S] {
-	return PropertyRulesForEach[T, S]{getter: getter}
+func ForSlice[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForSlice[T, S] {
+	return PropertyRulesForSlice[T, S]{getter: getter}
 }
 
-// PropertyRulesForEach is responsible for validating a single property.
-type PropertyRulesForEach[T, S any] struct {
+// PropertyRulesForSlice is responsible for validating a single property.
+type PropertyRulesForSlice[T, S any] struct {
 	name   string
 	getter PropertyGetter[[]T, S]
 	steps  []interface{}
@@ -19,14 +19,14 @@ type PropertyRulesForEach[T, S any] struct {
 
 // Validate executes each of the rules sequentially and aggregates the encountered errors.
 // nolint: prealloc, gocognit
-func (r PropertyRulesForEach[T, S]) Validate(st S) PropertyErrors {
+func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 	var (
 		allErrors          PropertyErrors
 		sliceErrors        []error
 		propValue          []T
 		previousStepFailed bool
 	)
-	forEachErrors := make(map[int]forEachElementError)
+	sliceElementErrors := make(map[int]sliceElementError)
 loop:
 	for _, step := range r.steps {
 		switch v := step.(type) {
@@ -51,8 +51,8 @@ loop:
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
 				default:
-					fErrs := forEachErrors[i].Errors
-					forEachErrors[i] = forEachElementError{Errors: append(fErrs, err), PropValue: element}
+					fErrs := sliceElementErrors[i].Errors
+					sliceElementErrors[i] = sliceElementError{Errors: append(fErrs, err), PropValue: element}
 				}
 			}
 			previousStepFailed = errorEncountered
@@ -86,7 +86,7 @@ loop:
 	if len(sliceErrors) > 0 {
 		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors...))
 	}
-	for i, element := range forEachErrors {
+	for i, element := range sliceElementErrors {
 		allErrors = append(allErrors, NewPropertyError(
 			SliceElementName(r.name, i),
 			element.PropValue,
@@ -98,37 +98,37 @@ loop:
 	return nil
 }
 
-type forEachElementError struct {
+type sliceElementError struct {
 	PropValue interface{}
 	Errors    []error
 }
 
-func (r PropertyRulesForEach[T, S]) WithName(name string) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) WithName(name string) PropertyRulesForSlice[T, S] {
 	r.name = name
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) RulesForEach(rules ...Rule[T]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) RulesForEach(rules ...Rule[T]) PropertyRulesForSlice[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForSlice[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) When(predicate Predicate[S]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) When(predicate Predicate[S]) PropertyRulesForSlice[T, S] {
 	r.steps = append(r.steps, predicate)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForSlice[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
 }
 
-func (r PropertyRulesForEach[T, S]) StopOnError() PropertyRulesForEach[T, S] {
+func (r PropertyRulesForSlice[T, S]) StopOnError() PropertyRulesForSlice[T, S] {
 	r.steps = append(r.steps, stopOnErrorStep(0))
 	return r
 }

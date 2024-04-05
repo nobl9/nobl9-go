@@ -74,7 +74,7 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 		WithName("aggregation").
 		Required().
 		Rules(validation.OneOf(supportedAzureMonitorAggregations...)),
-	validation.ForEach(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
+	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		IncludeForEach(azureMonitorMetricDimensionValidation).
 		// We don't want to check names uniqueness if they're empty.
@@ -136,7 +136,7 @@ var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric
 	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
 		Rules(validation.Forbidden[string]()),
-	validation.ForEach(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
+	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		Rules(validation.Forbidden[[]AzureMonitorMetricDimension]()),
 ).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs })

@@ -123,10 +123,10 @@ var specValidation = validation.New[Spec](
 		WithName("service").
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
-	validation.ForEach(func(s Spec) []string { return s.AlertPolicies }).
+	validation.ForSlice(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
 		RulesForEach(validation.StringIsDNSSubdomain()),
-	validation.ForEach(func(s Spec) []Attachment { return s.Attachments }).
+	validation.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
 		StopOnError().
@@ -137,14 +137,14 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *AnomalyConfig { return s.AnomalyConfig }).
 		WithName("anomalyConfig").
 		Include(anomalyConfigValidation),
-	validation.ForEach(func(s Spec) []TimeWindow { return s.TimeWindows }).
+	validation.ForSlice(func(s Spec) []TimeWindow { return s.TimeWindows }).
 		WithName("timeWindows").
 		Rules(validation.SliceLength[[]TimeWindow](1, 1)).
 		StopOnError().
 		IncludeForEach(timeWindowsValidation).
 		StopOnError().
 		RulesForEach(timeWindowValidationRule()),
-	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
+	validation.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		StopOnError().
@@ -262,7 +262,7 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
 		Include(validation.New[AnomalyConfigNoData](
-			validation.ForEach(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
+			validation.ForSlice(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
 				Rules(validation.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
 				StopOnError().
@@ -384,7 +384,7 @@ var specValidationComposite = validation.New[Spec](
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
 		),
-	validation.ForEach(func(s Spec) []Objective { return s.Objectives }).
+	validation.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(validation.SliceLength[[]Objective](1, 1).
 			WithMessage("this SLO contains a composite objective. No more objectives can be added to it")).
@@ -402,7 +402,7 @@ var specValidationComposite = validation.New[Spec](
 							validation.DurationPrecision(time.Minute),
 							validation.GreaterThanOrEqualTo(time.Minute),
 						),
-					validation.ForEach(func(c CompositeSpec) []CompositeObjective { return c.Objectives }).
+					validation.ForSlice(func(c CompositeSpec) []CompositeObjective { return c.Objectives }).
 						WithName("components.objectives").
 						IncludeForEach(compositeObjectiveRule),
 				)),

@@ -25,6 +25,10 @@ type Student struct {
 	Index string `json:"index"`
 }
 
+type Tutoring struct {
+	StudentIndexToTeacher map[string]Teacher `json:"studentIndexToTeacher"`
+}
+
 const year = 24 * 365 * time.Hour
 
 // In order to create a new [Validator] use [New] constructor.
@@ -576,33 +580,33 @@ func ExamplePropertyRules_Include() {
 
 // When dealing with slices we often want to both validate the whole slice
 // and each of its elements.
-// You can use [ForEach] function to do just that.
-// It returns a new struct [PropertyRulesForEach] which behaves exactly
+// You can use [ForSlice] function to do just that.
+// It returns a new struct [PropertyRulesForSlice] which behaves exactly
 // the same as [PropertyRules], but extends its API slightly.
 //
 // To define rules for each element use:
-// - [PropertyRulesForEach.RulesForEach]
-// - [PropertyRulesForEach.IncludeForEach]
+// - [PropertyRulesForSlice.RulesForEach]
+// - [PropertyRulesForSlice.IncludeForEach]
 // These work exactly the same way as [PropertyRules.Rules] and [PropertyRules.Include]
-// on each slice element.
+// verifying each slice element.
 //
-// [PropertyRulesForEach.Rules] is in turn used to define rules for the whole slice.
+// [PropertyRulesForSlice.Rules] is in turn used to define rules for the whole slice.
 //
-// NOTE: [PropertyRulesForEach] does not implement Include function for the whole slice.
+// NOTE: [PropertyRulesForSlice] does not implement Include function for the whole slice.
 //
 // In the below example, we're defining that students slice must have at most 2 elements
 // and that each element's index must be unique.
 // For each element we're also including [Student] [Validator].
-// Notice that property path fro slices has the following format:
+// Notice that property path for slices has the following format:
 // <slice_name>[<index>].<slice_property_name>
-func ExampleForEach() {
+func ExampleForSlice() {
 	studentValidator := validation.New[Student](
 		validation.For(func(s Student) string { return s.Index }).
 			WithName("index").
 			Rules(validation.StringLength(9, 9)),
 	)
 	teacherValidator := validation.New[Teacher](
-		validation.ForEach(func(t Teacher) []Student { return t.Students }).
+		validation.ForSlice(func(t Teacher) []Student { return t.Students }).
 			WithName("students").
 			Rules(
 				validation.SliceMaxLength[[]Student](2),
@@ -631,6 +635,89 @@ func ExampleForEach() {
 	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
 	//     - length must be less than or equal to 2
 	//     - elements are not unique, index 0 collides with index 2
+}
+
+// When dealing with maps there are three forms of iteration:
+// - keys
+// - values
+// - key-value pairs (items)
+//
+// You can use [ForMap] function to define rules for all the aforementioned iterators.
+// It returns a new struct [PropertyRulesForMap] which behaves similar to
+// [PropertyRulesForSlice]..
+//
+// To define rules for keys use:
+// - [PropertyRulesForMap.RulesForKeys]
+// - [PropertyRulesForMap.IncludeForKeys]
+// - [PropertyRulesForMap.RulesForValues]
+// - [PropertyRulesForMap.IncludeForValues]
+// - [PropertyRulesForMap.RulesForItems]
+// - [PropertyRulesForMap.IncludeForItems]
+// These work exactly the same way as [PropertyRules.Rules] and [PropertyRules.Include]
+// verifying each map's key, value or [MapItem].
+//
+// [PropertyRulesForMap.Rules] is in turn used to define rules for the whole map.
+//
+// NOTE: [PropertyRulesForMap] does not implement Include function for the whole map.
+//
+// In the below example, we're defining that student index to [Teacher] map:
+// - Must have at most 2 elements (map).
+// - Keys must have a length of 9 (keys).
+// - Eve cannot be a teacher for any student (values).
+// - Joan cannot be a teacher for student with index 918230013 (items).
+//
+// Notice that property path for maps has the following format:
+// <map_name>.<key>.<map_property_name>
+func ExampleForMap() {
+	teacherValidator := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			Rules(validation.NotEqualTo("Eve")),
+	)
+	tutoringValidator := validation.New[Tutoring](
+		validation.ForMap(func(t Tutoring) map[string]Teacher { return t.StudentIndexToTeacher }).
+			WithName("students").
+			Rules(
+				validation.MapMaxLength[map[string]Teacher](2),
+			).
+			RulesForKeys(
+				validation.StringLength(9, 9),
+			).
+			IncludeForValues(teacherValidator).
+			RulesForItems(validation.NewSingleRule(func(v validation.MapItem[string, Teacher]) error {
+				if v.Key == "918230013" && v.Value.Name == "Joan" {
+					return validation.NewRuleError(
+						"Joan cannot be a teacher for student with index 918230013",
+						"joan_teacher",
+					)
+				}
+				return nil
+			})),
+	)
+
+	tutoring := Tutoring{
+		StudentIndexToTeacher: map[string]Teacher{
+			"918230013":  {Name: "Joan"},
+			"9182300123": {Name: "Eve"},
+			"918230014":  {Name: "Joan"},
+		},
+	}
+
+	err := tutoringValidator.Validate(tutoring)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	// Output:
+	// Validation has failed for the following properties:
+	//   - 'students.9182300123.name' with value 'Eve':
+	//     - should be not equal to 'Eve'
+	//   - 'students' with value '{"9182300123":{"name":"Eve","age":0,"students":null,"university":{"name":"","address":""}},"91823001...':
+	//     - length must be less than or equal to 2
+	//   - 'students.918230013' with value '{"name":"Joan","age":0,"students":null,"university":{"name":"","address":""}}':
+	//     - Joan cannot be a teacher for student with index 918230013
+	//   - 'students.9182300123' with key '9182300123':
+	//     - length must be between 9 and 9
 }
 
 // WARNING!
@@ -722,7 +809,7 @@ func ExampleValidator() {
 			Rules(
 				validation.StringNotEmpty(),
 				validation.OneOf("Jake", "George")),
-		validation.ForEach(func(t Teacher) []Student { return t.Students }).
+		validation.ForSlice(func(t Teacher) []Student { return t.Students }).
 			WithName("students").
 			Rules(
 				validation.SliceMaxLength[[]Student](2),
