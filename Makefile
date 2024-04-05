@@ -112,7 +112,7 @@ generate/code:
 	$(call _ensure_installed,binary,go-enum)
 	$(call _ensure_installed,binary,ifacemaker)
 	go generate ./... ./docs/mock_example
-	${MAKEt } format/go
+	${MAKE} format/go
 
 PLANTUML_JAR_URL := https://sourceforge.net/projects/plantuml/files/plantuml.jar/download
 PLANTUML_JAR :=  $(BIN_DIR)/plantuml.jar
