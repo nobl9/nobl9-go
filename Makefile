@@ -111,7 +111,7 @@ generate/code:
 	echo "Generating Go code..."
 	$(call _ensure_installed,binary,go-enum)
 	$(call _ensure_installed,binary,ifacemaker)
-	go generate ./...
+	go generate ./... ./docs/mock_example
 
 PLANTUML_JAR_URL := https://sourceforge.net/projects/plantuml/files/plantuml.jar/download
 PLANTUML_JAR :=  $(BIN_DIR)/plantuml.jar

@@ -12,9 +12,8 @@ package mocks
 import (
 	reflect "reflect"
 
-	gomock "go.uber.org/mock/gomock"
-
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockObjectsVersions is a mock of Versions interface.
