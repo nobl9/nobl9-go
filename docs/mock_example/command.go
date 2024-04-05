@@ -8,9 +8,9 @@ import (
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
-//go:generate mockgen -destination mocks/client.go -package mocks -typed . Client
-//go:generate mockgen -destination mocks/objects_versions.go -package mocks -mock_names Versions=MockObjectsVersions -typed github.com/nobl9/nobl9-go/sdk/endpoints/objects Versions
-//go:generate mockgen -destination mocks/objects_v1.go -package mocks -mock_names Endpoints=MockObjectsV1Endpoints -typed github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1 Endpoints
+//go:generate go run go.uber.org/mock/mockgen -destination mocks/client.go -package mocks -typed . Client
+//go:generate go run go.uber.org/mock/mockgen -destination mocks/objects_versions.go -package mocks -mock_names Versions=MockObjectsVersions -typed github.com/nobl9/nobl9-go/sdk/endpoints/objects Versions
+//go:generate go run go.uber.org/mock/mockgen -destination mocks/objects_v1.go -package mocks -mock_names Endpoints=MockObjectsV1Endpoints -typed github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1 Endpoints
 
 // Compiler check which ensures that [sdk.Client] implements the [Client] interface.
 var _ Client = (*sdk.Client)(nil)
