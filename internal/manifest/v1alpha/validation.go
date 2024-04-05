@@ -29,7 +29,7 @@ func FieldRuleMetadataProject[S any](getter func(S) string) validation.PropertyR
 func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) validation.PropertyRules[v1alpha.Labels, S] {
 	return validation.For(getter).
 		WithName("metadata.labels").
-		Rules(v1alpha.ValidationRuleLabels())
+		Include(v1alpha.LabelsValidator())
 }
 
 func FieldRuleSpecDescription[S any](getter func(S) string) validation.PropertyRules[string, S] {
