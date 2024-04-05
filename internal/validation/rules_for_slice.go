@@ -49,6 +49,7 @@ loop:
 				errorEncountered = true
 				switch ev := err.(type) {
 				case *PropertyError:
+					ev.IsSliceElementError = true
 					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
 				default:
 					fErrs := sliceElementErrors[i].Errors
@@ -62,6 +63,7 @@ loop:
 			if err != nil {
 				switch ev := err.(type) {
 				case *PropertyError:
+					ev.IsSliceElementError = true
 					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
 				default:
 					sliceErrors = append(sliceErrors, err)
@@ -77,6 +79,7 @@ loop:
 				}
 				errorEncountered = true
 				for _, e := range err.Errors {
+					e.IsSliceElementError = true
 					allErrors = append(allErrors, e.PrependPropertyName(SliceElementName(r.name, i)))
 				}
 			}
@@ -87,10 +90,12 @@ loop:
 		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors...))
 	}
 	for i, element := range sliceElementErrors {
-		allErrors = append(allErrors, NewPropertyError(
+		pErr := NewPropertyError(
 			SliceElementName(r.name, i),
 			element.PropValue,
-			element.Errors...))
+			element.Errors...)
+		pErr.IsSliceElementError = true
+		allErrors = append(allErrors, pErr)
 	}
 	if len(allErrors) > 0 {
 		return allErrors
@@ -134,5 +139,8 @@ func (r PropertyRulesForSlice[T, S]) StopOnError() PropertyRulesForSlice[T, S] {
 }
 
 func SliceElementName(sliceName string, index int) string {
+	if sliceName == "" {
+		return fmt.Sprintf("[%d]", index)
+	}
 	return fmt.Sprintf("%s[%d]", sliceName, index)
 }

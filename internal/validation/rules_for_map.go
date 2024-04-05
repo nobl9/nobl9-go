@@ -205,5 +205,8 @@ func (r PropertyRulesForMap[M, K, V, S]) StopOnError() PropertyRulesForMap[M, K,
 }
 
 func MapElementName(mapName, key any) string {
+	if mapName == "" {
+		return fmt.Sprintf("%v", key)
+	}
 	return fmt.Sprintf("%s.%v", mapName, key)
 }

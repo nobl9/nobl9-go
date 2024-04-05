@@ -22,7 +22,7 @@ const (
 
 var labelKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
-func LabelsValidator() validation.Validator[Labels] {
+func LabelsValidationRules() validation.Validator[Labels] {
 	return validation.New[Labels](
 		validation.ForMap(validation.GetSelf[Labels]()).
 			RulesForKeys(
