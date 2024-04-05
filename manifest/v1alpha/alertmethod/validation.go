@@ -130,7 +130,7 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		WithName("templateFields").
 		OmitEmpty().
 		Rules(validation.NewSingleRule(validateTemplateFields)),
-	validation.ForEach(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
+	validation.ForSlice(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
 		WithName("headers").
 		Rules(validation.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
 		StopOnError().

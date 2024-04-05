@@ -14,7 +14,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	}
 
 	t.Run("no predicates, no error", func(t *testing.T) {
-		r := ForEach(func(m mockStruct) []string { return []string{"path"} }).
+		r := ForSlice(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return nil }))
 		errs := r.Validate(mockStruct{})
@@ -23,7 +23,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 
 	t.Run("no predicates, validate", func(t *testing.T) {
 		expectedErr := errors.New("ops!")
-		r := ForEach(func(m mockStruct) []string { return []string{"path"} }).
+		r := ForSlice(func(m mockStruct) []string { return []string{"path"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
@@ -36,7 +36,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	})
 
 	t.Run("predicate matches, don't validate", func(t *testing.T) {
-		r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
+		r := ForSlice(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
 			When(func(mockStruct) bool { return true }).
 			When(func(mockStruct) bool { return true }).
@@ -51,7 +51,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err2 := errors.New("another error...")
 		err3 := errors.New("rule error")
 		err4 := errors.New("rule error again")
-		r := ForEach(func(m mockStruct) []string { return m.Fields }).
+		r := ForSlice(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v []string) error { return err3 })).
 			RulesForEach(
@@ -102,7 +102,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 
 	t.Run("stop on error", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
-		r := ForEach(func(m mockStruct) []string { return []string{"value"} }).
+		r := ForSlice(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr })).
 			StopOnError().
@@ -120,7 +120,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		err1 := errors.New("oh no!")
 		err2 := errors.New("included")
 		err3 := errors.New("included again")
-		r := ForEach(func(m mockStruct) []string { return m.Fields }).
+		r := ForSlice(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return err1 })).
 			IncludeForEach(New[string](

@@ -118,7 +118,7 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		Rules(validation.StringNotEmpty()).
 		StopOnError().
 		Rules(validation.StringMatchRegexp(cloudWatchStatRegexp, cloudWatchExampleValidStats...)),
-	validation.ForEach(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
+	validation.ForSlice(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
 		WithName("dimensions").
 		Rules(validation.SliceMaxLength[[]CloudWatchMetricDimension](10)).
 		// If the slice is too long, don't proceed with validation.
