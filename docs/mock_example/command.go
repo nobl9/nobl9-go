@@ -22,7 +22,7 @@ type Client interface {
 	Objects() objects.Versions
 }
 
-// command uses only a subset of [Client] interface methods.
+// command operates on [Client] interface instead of concrete [sdk.Client].
 type command struct {
 	client Client
 }
