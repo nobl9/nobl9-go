@@ -2,30 +2,46 @@ package dataexport
 
 import (
 	_ "embed"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
-//go:embed test_data/expected_metadata_error.txt
-var expectedMetadataError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for DataExport '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/dataexport.yaml
+`))
 
 func TestValidate_Metadata(t *testing.T) {
 	dataExport := validDataExport()
 	dataExport.Metadata = Metadata{
 		Name:        strings.Repeat("MY DATAEXPORT", 20),
-		DisplayName: strings.Repeat("my-dataexport", 10),
+		DisplayName: strings.Repeat("my-dataexport", 20),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	dataExport.ManifestSource = "/home/me/dataexport.yaml"
 	err := validate(dataExport)
-	require.Error(t, err)
-	assert.Equal(t, strings.TrimSuffix(expectedMetadataError, "\n"), err.Error())
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, dataExport, err, 5,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidate_Spec_ExportType(t *testing.T) {

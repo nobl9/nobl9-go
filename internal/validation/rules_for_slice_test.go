@@ -29,9 +29,10 @@ func TestPropertyRulesForEach(t *testing.T) {
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, &PropertyError{
-			PropertyName:  "test.path[0]",
-			PropertyValue: "path",
-			Errors:        []*RuleError{{Message: expectedErr.Error()}},
+			PropertyName:        "test.path[0]",
+			PropertyValue:       "path",
+			IsSliceElementError: true,
+			Errors:              []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -73,29 +74,34 @@ func TestPropertyRulesForEach(t *testing.T) {
 				Errors:        []*RuleError{{Message: err3.Error()}},
 			},
 			{
-				PropertyName:  "test.path.nested",
-				PropertyValue: "nestedValue",
-				Errors:        []*RuleError{{Message: err4.Error()}},
+				PropertyName:        "test.path.nested",
+				PropertyValue:       "nestedValue",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err4.Error()}},
 			},
 			{
-				PropertyName:  "test.path[0]",
-				PropertyValue: "1",
-				Errors:        []*RuleError{{Message: err1.Error()}},
+				PropertyName:        "test.path[0]",
+				PropertyValue:       "1",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err1.Error()}},
 			},
 			{
-				PropertyName:  "test.path[1]",
-				PropertyValue: "2",
-				Errors:        []*RuleError{{Message: err1.Error()}},
+				PropertyName:        "test.path[1]",
+				PropertyValue:       "2",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err1.Error()}},
 			},
 			{
-				PropertyName:  "test.path[0].nested",
-				PropertyValue: "made-up",
-				Errors:        []*RuleError{{Message: err2.Error()}},
+				PropertyName:        "test.path[0].nested",
+				PropertyValue:       "made-up",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err2.Error()}},
 			},
 			{
-				PropertyName:  "test.path[1].nested",
-				PropertyValue: "made-up",
-				Errors:        []*RuleError{{Message: err2.Error()}},
+				PropertyName:        "test.path[1].nested",
+				PropertyValue:       "made-up",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err2.Error()}},
 			},
 		}, errs)
 	})
@@ -110,9 +116,10 @@ func TestPropertyRulesForEach(t *testing.T) {
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, &PropertyError{
-			PropertyName:  "test.path[0]",
-			PropertyValue: "value",
-			Errors:        []*RuleError{{Message: expectedErr.Error()}},
+			PropertyName:        "test.path[0]",
+			PropertyValue:       "value",
+			IsSliceElementError: true,
+			Errors:              []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
 
@@ -135,17 +142,53 @@ func TestPropertyRulesForEach(t *testing.T) {
 		require.Len(t, errs, 2)
 		assert.ElementsMatch(t, []*PropertyError{
 			{
-				PropertyName:  "test.path[0]",
-				PropertyValue: "value",
-				Errors:        []*RuleError{{Message: err1.Error()}},
+				PropertyName:        "test.path[0]",
+				PropertyValue:       "value",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: err1.Error()}},
 			},
 			{
-				PropertyName:  "test.path[0].included",
-				PropertyValue: "nested",
+				PropertyName:        "test.path[0].included",
+				PropertyValue:       "nested",
+				IsSliceElementError: true,
 				Errors: []*RuleError{
 					{Message: err2.Error()},
 					{Message: err3.Error()},
 				},
+			},
+		}, errs)
+	})
+
+	t.Run("include nested for slice", func(t *testing.T) {
+		forEachErr := errors.New("oh no!")
+		includedErr := errors.New("oh no!")
+		inc := New[[]string](
+			ForSlice(GetSelf[[]string]()).
+				RulesForEach(NewSingleRule(func(v string) error {
+					if v == "value1" {
+						return forEachErr
+					}
+					return NewPropertyError("nested", "made-up", includedErr)
+				})),
+		)
+		r := For(func(m mockStruct) []string { return m.Fields }).
+			WithName("test.path").
+			Include(inc)
+
+		errs := r.Validate(mockStruct{Fields: []string{"value1", "value2"}})
+		require.Len(t, errs, 2)
+		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName:        "test.path[0]",
+				PropertyValue:       "value1",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: forEachErr.Error()}},
+			},
+			{
+				PropertyName:        "test.path[1].nested",
+				PropertyValue:       "made-up",
+				IsSliceElementError: true,
+				Errors:              []*RuleError{{Message: includedErr.Error()}},
 			},
 		}, errs)
 	})

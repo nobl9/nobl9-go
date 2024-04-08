@@ -284,4 +284,23 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 		}, errs)
 	})
+
+	t.Run("include nested for map", func(t *testing.T) {
+		expectedErr := errors.New("oh no!")
+		inc := New[map[string]string](
+			ForMap(GetSelf[map[string]string]()).
+				RulesForValues(NewSingleRule(func(v string) error { return expectedErr })),
+		)
+		r := For(func(m mockStruct) map[string]string { return m.StringMap }).
+			WithName("test.path").
+			Include(inc)
+
+		errs := r.Validate(mockStruct{StringMap: map[string]string{"key": "value"}})
+		require.Len(t, errs, 1)
+		assert.Equal(t, &PropertyError{
+			PropertyName:  "test.path.key",
+			PropertyValue: "value",
+			Errors:        []*RuleError{{Message: expectedErr.Error()}},
+		}, errs[0])
+	})
 }

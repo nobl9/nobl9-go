@@ -3,6 +3,7 @@ package direct
 import (
 	_ "embed"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -15,19 +16,21 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/expected_error.txt
-var expectedError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for Direct '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/direct.yaml
+`))
 
-func TestValidate_AllErrors(t *testing.T) {
-	err := validate(Direct{
+func TestValidate_Metadata(t *testing.T) {
+	direct := Direct{
 		Kind: manifest.KindDirect,
 		Metadata: Metadata{
 			Name:        strings.Repeat("MY DIRECT", 20),
-			DisplayName: strings.Repeat("my-direct", 10),
+			DisplayName: strings.Repeat("my-direct", 20),
 			Project:     strings.Repeat("MY PROJECT", 20),
 		},
 		Spec: Spec{
-			Description: strings.Repeat("l", 2000),
 			Datadog: &DatadogConfig{
 				Site:           "datadoghq.com",
 				APIKey:         "secret",
@@ -35,11 +38,35 @@ func TestValidate_AllErrors(t *testing.T) {
 			},
 		},
 		ManifestSource: "/home/me/direct.yaml",
-	})
-	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
+	}
+	err := validate(direct)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, direct, err, 5,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidateSpec(t *testing.T) {
+	t.Run("description too long", func(t *testing.T) {
+		direct := validDirect(v1alpha.Datadog)
+		direct.Spec.Description = strings.Repeat("a", 2000)
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: validation.ErrorCodeStringDescription,
+		})
+	})
 	t.Run("exactly one data source - none provided", func(t *testing.T) {
 		direct := validDirect(v1alpha.Datadog)
 		direct.Spec.Datadog = nil
