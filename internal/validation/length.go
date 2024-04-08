@@ -8,7 +8,9 @@ import (
 
 func StringLength(min, max int) SingleRule[string] {
 	return NewSingleRule(
-		func(v string) error { return lengthComparison(utf8.RuneCountInString(v), min, max) }).
+		func(v string) error {
+			return lengthComparison(utf8.RuneCountInString(v), min, max)
+		}).
 		WithErrorCode(ErrorCodeStringLength)
 }
 

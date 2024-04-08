@@ -2,6 +2,7 @@ package alertsilence
 
 import (
 	_ "embed"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,11 +14,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:embed test_data/expected_error.txt
-var expectedError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for AlertSilence '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/alertsilence.yaml
+`))
 
 func TestValidate_Metadata(t *testing.T) {
-	err := validate(AlertSilence{
+	silence := AlertSilence{
 		Kind: manifest.KindAlertSilence,
 		Metadata: Metadata{
 			Name:    strings.Repeat("MY ALERTSILENCE", 20),
@@ -29,7 +33,6 @@ func TestValidate_Metadata(t *testing.T) {
 				Name:    "my-alert-policy",
 				Project: "default",
 			},
-			Description: strings.Repeat("l", 2000),
 			Period: Period{
 				StartTime: ptr(
 					time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
@@ -38,8 +41,19 @@ func TestValidate_Metadata(t *testing.T) {
 			},
 		},
 		ManifestSource: "/home/me/alertsilence.yaml",
-	})
-	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
+	}
+	err := validate(silence)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, silence, err, 4,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
@@ -51,6 +65,16 @@ func TestValidate_Metadata_Project(t *testing.T) {
 			Prop: "metadata.project",
 			Code: validation.ErrorCodeRequired,
 		})
+	})
+}
+
+func TestValidate_Spec_Description(t *testing.T) {
+	alertSilence := validAlertSilence()
+	alertSilence.Spec.Description = strings.Repeat("A", 2000)
+	err := validate(alertSilence)
+	testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+		Prop: "spec.description",
+		Code: validation.ErrorCodeStringDescription,
 	})
 }
 

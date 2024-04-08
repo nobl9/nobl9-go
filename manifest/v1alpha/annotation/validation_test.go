@@ -2,6 +2,7 @@ package annotation
 
 import (
 	_ "embed"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,26 +14,40 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:embed test_data/expected_error.txt
-var expectedError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for Annotation '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/annotation.yaml
+`))
 
-func TestValidate_AllErrors(t *testing.T) {
-	err := validate(Annotation{
+func TestValidate_Metadata(t *testing.T) {
+	annotation := Annotation{
 		Kind: manifest.KindAnnotation,
 		Metadata: Metadata{
 			Name:    strings.Repeat("MY ANNOTATION", 20),
 			Project: strings.Repeat("MY ANNOTATION", 20),
 		},
 		Spec: Spec{
+			Description:   "Example annotation",
 			Slo:           "slo-name",
 			ObjectiveName: "some-obj-name",
-			Description:   strings.Repeat("l", 2000),
 			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
 			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 		},
 		ManifestSource: "/home/me/annotation.yaml",
-	})
-	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
+	}
+	err := validate(annotation)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, annotation, err, 4,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
@@ -41,6 +56,27 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		annotation.Metadata.Project = ""
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
+	})
+}
+
+func TestValidate_Spec_Description(t *testing.T) {
+	t.Run("too long", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Description = strings.Repeat("A", 2000)
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: validation.ErrorCodeStringLength,
+		})
+	})
+	t.Run("required", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Description = ""
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: validation.ErrorCodeRequired,
+		})
 	})
 }
 

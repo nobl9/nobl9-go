@@ -16,7 +16,6 @@ type (
 const (
 	minLabelKeyLength   = 1
 	maxLabelKeyLength   = 63
-	minLabelValueLength = 1
 	maxLabelValueLength = 200
 )
 
@@ -37,6 +36,6 @@ var labelValuesValidation = validation.New[[]labelValue](
 	validation.ForSlice(validation.GetSelf[[]labelValue]()).
 		Rules(validation.SliceUnique(validation.SelfHashFunc[labelValue]())).
 		RulesForEach(
-			validation.StringLength(minLabelValueLength, maxLabelValueLength),
+			validation.StringMaxLength(maxLabelValueLength),
 		),
 )

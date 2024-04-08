@@ -16,6 +16,7 @@ type ExpectedError struct {
 	Code            string `json:"code,omitempty"`
 	Message         string `json:"message,omitempty"`
 	ContainsMessage string `json:"containsMessage,omitempty"`
+	IsKeyError      bool   `json:"isKeyError,omitempty"`
 }
 
 // AssertNoError asserts that the provided v1alpha.ObjectError is nil.
@@ -70,6 +71,9 @@ func AssertContainsErrors(
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
+				continue
+			}
+			if expected.IsKeyError != propErr.IsKeyError {
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {

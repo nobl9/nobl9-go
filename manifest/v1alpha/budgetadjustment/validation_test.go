@@ -2,6 +2,7 @@ package budgetadjustment
 
 import (
 	_ "embed"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,43 +14,45 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for BudgetAdjustment '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/budget-adjustment.yaml
+`))
+
 func TestValidate_Metadata(t *testing.T) {
 	budgetAdjustment := BudgetAdjustment{
 		Kind: manifest.KindBudgetAdjustment,
 		Metadata: Metadata{
-			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 3),
-			DisplayName: strings.Repeat("my-budget-adjustment-", 10),
+			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 20),
+			DisplayName: strings.Repeat("my-budget-adjustment-", 20),
 		},
-		Spec:           Spec{},
+		Spec: Spec{
+			FirstEventStart: time.Now(),
+			Duration:        "5m",
+			Filters: Filters{
+				SLOs: []SLORef{
+					{
+						Name:    "my-slo",
+						Project: "default",
+					},
+				},
+			},
+		},
 		ManifestSource: "/home/me/budget-adjustment.yaml",
 	}
 	err := validate(budgetAdjustment)
-	assert.Error(t, err)
-
-	expectedErrors := []testutils.ExpectedError{
-		{
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, budgetAdjustment, err, 3,
+		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain + ":" + validation.ErrorCodeStringMatchRegexp,
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
 		},
-		{
+		testutils.ExpectedError{
 			Prop: "metadata.displayName",
 			Code: validation.ErrorCodeStringLength,
 		},
-		{
-			Prop: "spec.firstEventStart",
-			Code: validation.ErrorCodeRequired,
-		},
-		{
-			Prop: "spec.duration",
-			Code: validation.ErrorCodeRequired,
-		},
-		{
-			Prop: "spec.filters.slos",
-			Code: validation.ErrorCodeSliceMinLength,
-		},
-	}
-
-	testutils.AssertContainsErrors(t, budgetAdjustment, err, len(expectedErrors), expectedErrors...)
+	)
 }
 
 func TestValidate_Spec(t *testing.T) {
@@ -58,6 +61,47 @@ func TestValidate_Spec(t *testing.T) {
 		spec           Spec
 		expectedErrors []testutils.ExpectedError
 	}{
+		{
+			name: "description too long",
+			spec: Spec{
+				Description:     strings.Repeat("A", 2000),
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Filters:         Filters{SLOs: []SLORef{{Name: "my-slo", Project: "default"}}},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.description",
+					Code: validation.ErrorCodeStringDescription,
+				},
+			},
+		},
+		{
+			name: "first event start required",
+			spec: Spec{
+				Duration: "1m",
+				Filters:  Filters{SLOs: []SLORef{{Name: "my-slo", Project: "default"}}},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.firstEventStart",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+		},
+		{
+			name: "duration required",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Filters:         Filters{SLOs: []SLORef{{Name: "my-slo", Project: "default"}}},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.duration",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+		},
 		{
 			name: "no slo filters",
 			spec: Spec{

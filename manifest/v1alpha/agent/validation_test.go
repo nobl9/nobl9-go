@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -16,11 +17,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/expected_error.txt
-var expectedError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for Agent '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/agent.yaml
+`))
 
-func TestValidate_AllErrors(t *testing.T) {
-	err := validate(Agent{
+func TestValidate_Metadata(t *testing.T) {
+	agent := Agent{
 		Kind: manifest.KindAgent,
 		Metadata: Metadata{
 			Name:        strings.Repeat("MY AGENT", 20),
@@ -28,17 +32,40 @@ func TestValidate_AllErrors(t *testing.T) {
 			Project:     strings.Repeat("MY PROJECT", 20),
 		},
 		Spec: Spec{
-			Description: strings.Repeat("l", 2000),
 			Prometheus: &PrometheusConfig{
 				URL: "https://prometheus-service.monitoring:8080",
 			},
 		},
 		ManifestSource: "/home/me/agent.yaml",
-	})
-	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
+	}
+	err := validate(agent)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, agent, err, 5,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
-func TestValidateSpec(t *testing.T) {
+func TestValidate_Spec(t *testing.T) {
+	t.Run("description is too long", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.Description = strings.Repeat("A", 2000)
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: validation.ErrorCodeStringDescription,
+		})
+	})
 	t.Run("exactly one data source - none provided", func(t *testing.T) {
 		agent := validAgent(v1alpha.Prometheus)
 		agent.Spec.Prometheus = nil

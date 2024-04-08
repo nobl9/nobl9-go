@@ -2,18 +2,21 @@ package alertmethod
 
 import (
 	_ "embed"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
-//go:embed test_data/expected_metadata_error.txt
-var expectedMetadataError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for AlertMethod '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/alertmethod.yaml
+`))
 
 func TestValidate_Metadata(t *testing.T) {
 	alertMethod := validAlertMethod()
@@ -24,8 +27,21 @@ func TestValidate_Metadata(t *testing.T) {
 	}
 	alertMethod.ManifestSource = "/home/me/alertmethod.yaml"
 	err := validate(alertMethod)
-	require.Error(t, err)
-	assert.Equal(t, strings.TrimSuffix(expectedMetadataError, "\n"), err.Error())
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, alertMethod, err, 5,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidate_Spec(t *testing.T) {
