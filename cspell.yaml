@@ -34,6 +34,7 @@ words:
   - alertmethod
   - alertpolicy
   - alertsilence
+  - alphatest
   - apiurl
   - appingress
   - atoi

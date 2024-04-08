@@ -35,7 +35,7 @@ func GetLabelsTestCases[T manifest.Object](propertyPath string) map[string]Label
 			isValid: true,
 		},
 		// FIXME: We're currently not handling empty map keys well when formatting property paths.
-		//"invalid: empty label key": {
+		// "invalid: empty label key": {
 		//	Labels: v1alpha.Labels{
 		//		"": {"vast", "infinite"},
 		//	},
@@ -44,7 +44,7 @@ func GetLabelsTestCases[T manifest.Object](propertyPath string) map[string]Label
 		//		IsKeyError: true,
 		//		Code:       validation.ErrorCodeStringLength,
 		//	},
-		//},
+		// },
 		"valid: one empty label value": {
 			Labels: v1alpha.Labels{
 				"net": {""},
