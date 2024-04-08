@@ -188,10 +188,28 @@ func TestValidate_Spec_Condition(t *testing.T) {
 
 func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 	t.Run("passes, with alertingWindow defined", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Spec.Conditions[0].Measurement = MeasurementAverageBurnRate.String()
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
+		for _, testCase := range []AlertCondition{
+			{
+				Measurement:    MeasurementAverageBurnRate.String(),
+				Value:          10.3,
+				AlertingWindow: "10m",
+			},
+			{
+				Measurement:    MeasurementTimeToBurnBudget.String(),
+				Value:          "1h",
+				AlertingWindow: "10m",
+			},
+			{
+				Measurement:    MeasurementTimeToBurnEntireBudget.String(),
+				Value:          "1h",
+				AlertingWindow: "10m",
+			},
+		} {
+			alertPolicy := validAlertPolicy()
+			alertPolicy.Spec.Conditions = []AlertCondition{testCase}
+			err := validate(alertPolicy)
+			testutils.AssertNoError(t, alertPolicy, err)
+		}
 	})
 	testCases := map[string][]AlertCondition{
 		"passes, lastsFor is defined": {
@@ -262,23 +280,18 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		})
 	})
 	t.Run("fails, alertingWindow is defined", func(t *testing.T) {
-		for _, measurement := range []Measurement{
-			MeasurementTimeToBurnBudget,
-			MeasurementTimeToBurnEntireBudget,
-		} {
-			alertPolicy := validAlertPolicy()
-			alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
-			alertPolicy.Spec.Conditions[0].Value = "10m"
-			err := validate(alertPolicy)
-			testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-				Prop: "spec.conditions[0].measurement",
-				ContainsMessage: fmt.Sprintf(
-					`must be equal to '%s' when 'alertingWindow' is defined`,
-					MeasurementAverageBurnRate.String(),
-				),
-				Code: errorCodeMeasurementWithAlertingWindow,
-			})
-		}
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBurnedBudget.String()
+		alertPolicy.Spec.Conditions[0].Value = 0.1
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0].measurement",
+			ContainsMessage: fmt.Sprintf(
+				`must be equal to one of '%s' when 'alertingWindow' is defined`,
+				strings.Join(alertingWindowSupportedMeasurements(), ","),
+			),
+			Code: errorCodeMeasurementWithAlertingWindow,
+		})
 	})
 }
 

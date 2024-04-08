@@ -2,6 +2,7 @@ package alertpolicy
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -64,8 +65,7 @@ var conditionValidation = validation.New[AlertCondition](
 			measurementWithAlertingWindowValidation,
 		).
 		Include(timeToBurnBudgetValueValidation).
-		Include(burnedAndAverageBudgetValueValidation).
-		Include(averageBudgetWithAlertingWindowValueValidation),
+		Include(burnedAndAverageBudgetValueValidation),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow },
 		func(alertingWindow string) (time.Duration, error) {
 			value, err := time.ParseDuration(alertingWindow)
@@ -127,24 +127,22 @@ var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 			c.Measurement == MeasurementAverageBurnRate.String()
 	})
 
-var averageBudgetWithAlertingWindowValueValidation = validation.New[AlertCondition](
-	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
-		WithName("value"),
-).
-	When(func(c AlertCondition) bool {
-		return c.AlertingWindow != "" &&
-			c.Measurement == MeasurementAverageBurnRate.String()
-	})
-
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
-	if c.AlertingWindow != "" && c.Measurement != MeasurementAverageBurnRate.String() {
+	isAlertingWindowSupported := false
+	for _, allowedMeasurement := range alertingWindowSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isAlertingWindowSupported = true
+			break
+		}
+	}
+	if c.AlertingWindow != "" && !isAlertingWindowSupported {
 		return validation.NewPropertyError(
 			"measurement",
 			c.Measurement,
 			validation.NewRuleError(
 				fmt.Sprintf(
-					`must be equal to '%s' when 'alertingWindow' is defined`,
-					MeasurementAverageBurnRate.String(),
+					`must be equal to one of '%s' when 'alertingWindow' is defined`,
+					strings.Join(alertingWindowSupportedMeasurements(), ","),
 				),
 				errorCodeMeasurementWithAlertingWindow,
 			),
@@ -212,4 +210,12 @@ var operatorValidationRule = validation.NewSingleRule(
 
 func validate(p AlertPolicy) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertPolicyValidation, p)
+}
+
+func alertingWindowSupportedMeasurements() []string {
+	return []string{
+		MeasurementAverageBurnRate.String(),
+		MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String(),
+	}
 }
