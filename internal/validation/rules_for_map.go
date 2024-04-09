@@ -151,11 +151,6 @@ func (r PropertyRulesForMap[M, K, V, S]) WithName(name string) PropertyRulesForM
 // Otherwise, if key and value have the same type both Rule[K] and Rule[V] would match.
 type mapKeyRule[K comparable] struct{ Rule[K] }
 
-// mapKeyValidator wraps Validator for map keys in a custom type in order
-// to discern between validators for keys and values.
-// Otherwise, if key and value have the same type both Validator[K] and Validator[V] would match.
-type mapKeyValidator[K comparable] struct{ Validator[K] }
-
 func (r PropertyRulesForMap[M, K, V, S]) RulesForKeys(rules ...Rule[K]) PropertyRulesForMap[M, K, V, S] {
 	mapKeyRules := make([]mapKeyRule[K], 0, len(rules))
 	for _, rule := range rules {
@@ -186,6 +181,11 @@ func (r PropertyRulesForMap[M, K, V, S]) When(predicate Predicate[S]) PropertyRu
 	r.steps = append(r.steps, predicate)
 	return r
 }
+
+// mapKeyValidator wraps Validator for map keys in a custom type in order
+// to discern between validators for keys and values.
+// Otherwise, if key and value have the same type both Validator[K] and Validator[V] would match.
+type mapKeyValidator[K comparable] struct{ Validator[K] }
 
 func (r PropertyRulesForMap[M, K, V, S]) IncludeForKeys(validators ...Validator[K]) PropertyRulesForMap[M, K, V, S] {
 	mapKeyValidators := make([]mapKeyValidator[K], 0, len(validators))

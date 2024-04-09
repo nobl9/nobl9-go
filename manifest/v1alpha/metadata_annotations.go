@@ -35,7 +35,6 @@ func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotatio
 }
 
 var annotationValueValidator = validation.New[annotationValue](
-	//validation.For(func(value annotationValue) string { return value }).
 	validation.For(validation.GetSelf[string]()).
 		Rules(
 			validation.StringMaxLength(maxAnnotationValueLength),

@@ -32,7 +32,8 @@ func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) validation.Pr
 		Include(v1alpha.LabelsValidationRules())
 }
 
-func FieldRuleMetadataAnnotations[S any](getter func(S) v1alpha.MetadataAnnotations) validation.PropertyRules[v1alpha.MetadataAnnotations, S] {
+func FieldRuleMetadataAnnotations[S any](getter func(S) v1alpha.MetadataAnnotations,
+) validation.PropertyRules[v1alpha.MetadataAnnotations, S] {
 	return validation.For(getter).
 		WithName("metadata.annotations").
 		Include(v1alpha.MetadataAnnotationsValidationRules())
