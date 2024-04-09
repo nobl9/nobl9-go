@@ -24,34 +24,20 @@ var (
 	annotationKeyRegexp = regexp.MustCompile(`^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$`)
 )
 
-var keyValidator = validation.New[string](
-	validation.For(func(key string) string { return key }).
-		WithName("key").
-		Required().
-		Rules(
-			validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
-			validation.StringMatchRegexp(annotationKeyRegexp),
-			validation.StringDenyRegexp(hasUpperCaseLettersRegexp),
-		))
-
 var valueValidator = validation.New[string](
 	validation.For(func(key string) string { return key }).
-		WithName("value").
 		Required().
 		Rules(
 			validation.StringLength(minAnnotationValueLength, maxAnnotationValueLength),
 		))
 
-func ValidationRuleMetadataAnnotations() validation.SingleRule[MetadataAnnotations] {
-	return validation.NewSingleRule(func(a MetadataAnnotations) error {
-		for key, value := range a {
-			if err := keyValidator.Validate(key); err != nil {
-				return err
-			}
-			if err := valueValidator.Validate(value); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotations] {
+	return validation.New[MetadataAnnotations](
+		validation.ForMap(validation.GetSelf[MetadataAnnotations]()).
+			RulesForKeys(validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
+				validation.StringMatchRegexp(annotationKeyRegexp),
+				validation.StringDenyRegexp(hasUpperCaseLettersRegexp),
+			).
+			IncludeForValues(valueValidator),
+	)
 }
