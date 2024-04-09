@@ -11,6 +11,9 @@ var serviceValidation = validation.New[Service](
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(s Service) string { return s.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(s Service) string { return s.Metadata.Project }),
 	validationV1Alpha.FieldRuleMetadataLabels(func(s Service) v1alpha.Labels { return s.Metadata.Labels }),
+	validationV1Alpha.FieldRuleMetadataAnnotations(func(s Service) v1alpha.MetadataAnnotations {
+		return s.Metadata.Annotations
+	}),
 	validationV1Alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
 )
 

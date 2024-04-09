@@ -285,6 +285,78 @@ func TestPropertyRulesForMap(t *testing.T) {
 		}, errs)
 	})
 
+	t.Run("include for keys validator, key and value are same type", func(t *testing.T) {
+		errRule := errors.New("rule error")
+		errIncludedKey1 := errors.New("included key 1 error")
+		errIncludedKey2 := errors.New("included key 2 error")
+		errIncludedValue1 := errors.New("included value 1 error")
+		errIncludedValue2 := errors.New("included value 2 error")
+		errIncludedItem1 := errors.New("included item 1 error")
+		errIncludedItem2 := errors.New("included item 2 error")
+
+		r := ForMap(func(m mockStruct) map[string]string { return m.StringMap }).
+			WithName("test.path").
+			Rules(NewSingleRule(func(v map[string]string) error { return errRule })).
+			IncludeForKeys(New[string](
+				For(func(s string) string { return s }).
+					WithName("included_key").
+					Rules(
+						NewSingleRule(func(v string) error { return errIncludedKey1 }),
+						NewSingleRule(func(v string) error { return errIncludedKey2 }),
+					),
+			)).
+			IncludeForValues(New[string](
+				For(func(i string) string { return i }).
+					WithName("included_value").
+					Rules(
+						NewSingleRule(func(v string) error { return errIncludedValue1 }),
+						NewSingleRule(func(v string) error { return errIncludedValue2 }),
+					),
+			)).
+			IncludeForItems(New[MapItem[string, string]](
+				For(func(i MapItem[string, string]) MapItem[string, string] { return i }).
+					WithName("included_item").
+					Rules(
+						NewSingleRule(func(v MapItem[string, string]) error { return errIncludedItem1 }),
+						NewSingleRule(func(v MapItem[string, string]) error { return errIncludedItem2 }),
+					),
+			))
+
+		errs := r.Validate(mockStruct{StringMap: map[string]string{"key": "1"}})
+		require.Len(t, errs, 4)
+		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName:  "test.path",
+				PropertyValue: `{"key":"1"}`,
+				Errors:        []*RuleError{{Message: errRule.Error()}},
+			},
+			{
+				PropertyName:  "test.path.key.included_key",
+				PropertyValue: "key",
+				Errors: []*RuleError{
+					{Message: errIncludedKey1.Error()},
+					{Message: errIncludedKey2.Error()},
+				},
+			},
+			{
+				PropertyName:  "test.path.key.included_value",
+				PropertyValue: "1",
+				Errors: []*RuleError{
+					{Message: errIncludedValue1.Error()},
+					{Message: errIncludedValue2.Error()},
+				},
+			},
+			{
+				PropertyName:  "test.path.key.included_item",
+				PropertyValue: `{"Key":"key","Value":"1"}`,
+				Errors: []*RuleError{
+					{Message: errIncludedItem1.Error()},
+					{Message: errIncludedItem2.Error()},
+				},
+			},
+		}, errs)
+	})
+
 	t.Run("include nested for map", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		inc := New[map[string]string](

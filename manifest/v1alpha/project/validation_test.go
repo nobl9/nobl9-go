@@ -53,6 +53,16 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 	}
 }
 
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Project]("metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validProject()
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
+}
+
 func TestValidate_Spec(t *testing.T) {
 	project := validProject()
 	project.Spec.Description = strings.Repeat("l", 2000)
