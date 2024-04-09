@@ -60,6 +60,16 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 	}
 }
 
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO]("metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validSLO()
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
+}
+
 func TestValidate_Spec_Description(t *testing.T) {
 	slo := validSLO()
 	slo.Spec.Description = strings.Repeat("a", 2000)

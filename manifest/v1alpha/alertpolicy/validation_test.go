@@ -61,6 +61,16 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 	}
 }
 
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy]("metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validAlertPolicy()
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
+}
+
 func TestValidate_Metadata_Project(t *testing.T) {
 	t.Run("fails, project required", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()

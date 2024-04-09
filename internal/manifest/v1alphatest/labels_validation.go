@@ -115,7 +115,7 @@ func GetLabelsTestCases[T manifest.Object](propertyPath string) map[string]Label
 				Code:       validation.ErrorCodeStringMatchRegexp,
 			},
 		},
-		"invalid: label value is to long (over 200 chars)": {
+		"invalid: label value is too long (over 200 chars)": {
 			Labels: v1alpha.Labels{
 				"net": {strings.Repeat("label-", 40)},
 			},

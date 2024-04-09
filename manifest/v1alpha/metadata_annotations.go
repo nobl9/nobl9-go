@@ -16,28 +16,27 @@ type (
 const (
 	minAnnotationKeyLength   = 1
 	maxAnnotationKeyLength   = 63
-	minAnnotationValueLength = 1
 	maxAnnotationValueLength = 1050
 )
 
 var (
-	annotationKeyRegexp = regexp.MustCompile(`^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$`)
+	annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 )
-
-var valueValidator = validation.New[string](
-	validation.For(func(key string) string { return key }).
-		Required().
-		Rules(
-			validation.StringLength(minAnnotationValueLength, maxAnnotationValueLength),
-		))
 
 func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotations] {
 	return validation.New[MetadataAnnotations](
 		validation.ForMap(validation.GetSelf[MetadataAnnotations]()).
-			RulesForKeys(validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
+			RulesForKeys(
+				validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
 				validation.StringMatchRegexp(annotationKeyRegexp),
-				validation.StringDenyRegexp(hasUpperCaseLettersRegexp),
 			).
-			IncludeForValues(valueValidator),
+			IncludeForValues(annotationValueValidator),
 	)
 }
+
+var annotationValueValidator = validation.New[annotationValue](
+	//validation.For(func(value annotationValue) string { return value }).
+	validation.For(validation.GetSelf[string]()).
+		Rules(
+			validation.StringMaxLength(maxAnnotationValueLength),
+		))
