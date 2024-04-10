@@ -3,7 +3,7 @@ module mock_example
 go 1.22
 
 require (
-	github.com/nobl9/nobl9-go v0.80.0
+	github.com/nobl9/nobl9-go v0.81.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/mock v0.4.0
 )
@@ -12,7 +12,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/MicahParks/jwkset v0.5.17 // indirect
 	github.com/MicahParks/keyfunc/v3 v3.3.2 // indirect
-	github.com/aws/aws-sdk-go v1.51.15 // indirect
+	github.com/aws/aws-sdk-go v1.51.17 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.10.0 // indirect
