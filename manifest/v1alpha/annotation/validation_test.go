@@ -174,7 +174,6 @@ func TestSpec_Category(t *testing.T) {
 			Code: errorCodeCategoryUserDefined,
 		})
 	})
-
 }
 
 func validAnnotation() Annotation {
