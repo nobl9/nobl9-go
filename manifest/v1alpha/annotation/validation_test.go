@@ -158,6 +158,25 @@ func TestSpec_Time(t *testing.T) {
 	})
 }
 
+func TestSpec_Category(t *testing.T) {
+	t.Run("passes, no category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = ""
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("fails, invalid category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = "Invalid"
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: errorCodeCategoryUserDefined,
+		})
+	})
+
+}
+
 func validAnnotation() Annotation {
 	return New(
 		Metadata{
