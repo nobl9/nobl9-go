@@ -46,4 +46,5 @@ type Spec struct {
 type Status struct {
 	UpdatedAt string `json:"updatedAt"`
 	IsSystem  bool   `json:"isSystem"`
+	Category  string `json:"category"`
 }
