@@ -10,6 +10,9 @@ var projectValidation = validation.New[Project](
 	validationV1Alpha.FieldRuleMetadataName(func(p Project) string { return p.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(p Project) string { return p.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataLabels(func(p Project) v1alpha.Labels { return p.Metadata.Labels }),
+	validationV1Alpha.FieldRuleMetadataAnnotations(func(p Project) v1alpha.MetadataAnnotations {
+		return p.Metadata.Annotations
+	}),
 	validationV1Alpha.FieldRuleSpecDescription(func(p Project) string { return p.Spec.Description }),
 )
 

@@ -96,7 +96,7 @@ loop:
 			for key := range m {
 				var err *ValidatorError
 				switch stepValue := step.(type) {
-				case validatorI[K]:
+				case mapKeyValidator[K]:
 					err = stepValue.Validate(key)
 				case validatorI[V]:
 					err = stepValue.Validate(m[key])
@@ -182,8 +182,17 @@ func (r PropertyRulesForMap[M, K, V, S]) When(predicate Predicate[S]) PropertyRu
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) IncludeForKeys(rules ...Validator[K]) PropertyRulesForMap[M, K, V, S] {
-	r.steps = appendSteps(r.steps, rules)
+// mapKeyValidator wraps Validator for map keys in a custom type in order
+// to discern between validators for keys and values.
+// Otherwise, if key and value have the same type both Validator[K] and Validator[V] would match.
+type mapKeyValidator[K comparable] struct{ Validator[K] }
+
+func (r PropertyRulesForMap[M, K, V, S]) IncludeForKeys(validators ...Validator[K]) PropertyRulesForMap[M, K, V, S] {
+	mapKeyValidators := make([]mapKeyValidator[K], 0, len(validators))
+	for _, validator := range validators {
+		mapKeyValidators = append(mapKeyValidators, mapKeyValidator[K]{validator})
+	}
+	r.steps = appendSteps(r.steps, mapKeyValidators)
 	return r
 }
 
@@ -205,5 +214,8 @@ func (r PropertyRulesForMap[M, K, V, S]) StopOnError() PropertyRulesForMap[M, K,
 }
 
 func MapElementName(mapName, key any) string {
+	if mapName == "" {
+		return fmt.Sprintf("%v", key)
+	}
 	return fmt.Sprintf("%s.%v", mapName, key)
 }

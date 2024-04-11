@@ -3,66 +3,72 @@ package alertpolicy
 import (
 	_ "embed"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/expected_error.txt
-var expectedError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for AlertPolicy '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/alertpolicy.yaml
+`))
 
-func TestValidate_AllErrors(t *testing.T) {
-	err := validate(AlertPolicy{
+func TestValidate_Metadata(t *testing.T) {
+	policy := AlertPolicy{
 		Kind: manifest.KindAlertPolicy,
 		Metadata: Metadata{
 			Name:    strings.Repeat("MY ALERTPOLICY", 20),
 			Project: strings.Repeat("MY ALERTPOLICY", 20),
 		},
 		Spec: Spec{
-			Description:      strings.Repeat("l", 2000),
 			Severity:         SeverityHigh.String(),
 			CoolDownDuration: "5m",
 			Conditions:       []AlertCondition{validAlertCondition()},
 			AlertMethods:     nil,
 		},
 		ManifestSource: "/home/me/alertpolicy.yaml",
-	})
-	assert.Equal(t, strings.TrimSuffix(expectedError, "\n"), err.Error())
+	}
+	err := validate(policy)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, policy, err, 4,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	t.Run("passes, no labels", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Metadata.Labels = nil
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
-	t.Run("passes, valid label", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Metadata.Labels = v1alpha.Labels{
-			"label-key": []string{"label-1", "label-2"},
-		}
-		err := validate(alertPolicy)
-		testutils.AssertNoError(t, alertPolicy, err)
-	})
-	t.Run("fails, invalid label", func(t *testing.T) {
-		alertPolicy := validAlertPolicy()
-		alertPolicy.Metadata.Labels = v1alpha.Labels{
-			"L O L": []string{"dip", "dip"},
-		}
-		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop:    "metadata.labels",
-			Message: "label key 'L O L' does not match the regex: ^\\p{L}([_\\-0-9\\p{L}]*[0-9\\p{L}])?$",
+	for name, test := range v1alphatest.GetLabelsTestCases[AlertPolicy]("metadata.labels") {
+		t.Run(name, func(t *testing.T) {
+			svc := validAlertPolicy()
+			svc.Metadata.Labels = test.Labels
+			test.Test(t, svc, validate)
 		})
-	})
+	}
+}
+
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy]("metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validAlertPolicy()
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
 }
 
 func TestValidate_Metadata_Project(t *testing.T) {
@@ -74,6 +80,16 @@ func TestValidate_Metadata_Project(t *testing.T) {
 			Prop: "metadata.project",
 			Code: validation.ErrorCodeRequired,
 		})
+	})
+}
+
+func TestValidate_Spec_Description(t *testing.T) {
+	alertPolicy := validAlertPolicy()
+	alertPolicy.Spec.Description = strings.Repeat("A", 2000)
+	err := validate(alertPolicy)
+	testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+		Prop: "spec.description",
+		Code: validation.ErrorCodeStringDescription,
 	})
 }
 

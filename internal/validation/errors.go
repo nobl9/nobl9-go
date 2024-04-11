@@ -61,8 +61,10 @@ type PropertyError struct {
 	PropertyValue string `json:"propertyValue"`
 	// IsKeyError is set to true if the error was created through map key validation.
 	// PropertyValue in this scenario will be the key value, equal to the last element of PropertyName path.
-	IsKeyError bool         `json:"isKeyError"`
-	Errors     []*RuleError `json:"errors"`
+	IsKeyError bool `json:"isKeyError"`
+	// IsSliceElementError is set to true if the error was created through slice element validation.
+	IsSliceElementError bool         `json:"isSliceElementError"`
+	Errors              []*RuleError `json:"errors"`
 }
 
 func (e *PropertyError) Error() string {
@@ -90,7 +92,11 @@ const (
 )
 
 func (e *PropertyError) PrependPropertyName(name string) *PropertyError {
-	e.PropertyName = concatStrings(name, e.PropertyName, propertyNameSeparator)
+	sep := propertyNameSeparator
+	if e.IsSliceElementError && strings.HasPrefix(e.PropertyName, "[") {
+		sep = ""
+	}
+	e.PropertyName = concatStrings(name, e.PropertyName, sep)
 	return e
 }
 

@@ -4,37 +4,80 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:embed test_data/expected_metadata_error.txt
-var expectedMetadataError string
+var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
+(?s)Validation for SLO '.*' in project '.*' has failed for the following fields:
+.*
+Manifest source: /home/me/slo.yaml
+`))
 
 func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
 		Name:        strings.Repeat("MY SLO", 20),
-		DisplayName: strings.Repeat("my-slo", 10),
+		DisplayName: strings.Repeat("my-slo", 20),
 		Project:     strings.Repeat("MY PROJECT", 20),
-		Labels: v1alpha.Labels{
-			"L O L": []string{"dip", "dip"},
-		},
 	}
-	slo.Spec.Description = strings.Repeat("l", 2000)
 	slo.ManifestSource = "/home/me/slo.yaml"
 	err := validate(slo)
-	require.Error(t, err)
-	assert.Equal(t, strings.TrimSuffix(expectedMetadataError, "\n"), err.Error())
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, slo, err, 5,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.displayName",
+			Code: validation.ErrorCodeStringLength,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.project",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+	)
+}
+
+func TestValidate_Metadata_Labels(t *testing.T) {
+	for name, test := range v1alphatest.GetLabelsTestCases[SLO]("metadata.labels") {
+		t.Run(name, func(t *testing.T) {
+			svc := validSLO()
+			svc.Metadata.Labels = test.Labels
+			test.Test(t, svc, validate)
+		})
+	}
+}
+
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO]("metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validSLO()
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
+}
+
+func TestValidate_Spec_Description(t *testing.T) {
+	slo := validSLO()
+	slo.Spec.Description = strings.Repeat("a", 2000)
+	err := validate(slo)
+	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		Prop: "spec.description",
+		Code: validation.ErrorCodeStringDescription,
+	})
 }
 
 func TestValidate_Spec_BudgetingMethod(t *testing.T) {

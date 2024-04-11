@@ -31,9 +31,10 @@ type Project struct {
 
 // Metadata provides identity information for Project.
 type Metadata struct {
-	Name        string         `json:"name" validate:"required,objectName" example:"name"`
-	DisplayName string         `json:"displayName,omitempty" validate:"omitempty,min=0,max=63" example:"Shopping App"`
-	Labels      v1alpha.Labels `json:"labels,omitempty" validate:"omitempty,labels"`
+	Name        string                      `json:"name"`
+	DisplayName string                      `json:"displayName,omitempty"`
+	Labels      v1alpha.Labels              `json:"labels,omitempty"`
+	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
 // Spec holds detailed information specific to Project.
