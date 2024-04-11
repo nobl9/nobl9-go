@@ -38,7 +38,8 @@ var specValidation = validation.New[Spec](
 		Required().
 		Rules(validation.StringLength(0, 1000)),
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(endTimeNotBeforeStartTime),
+		Rules(endTimeNotBeforeStartTime).
+		Rules(categoryUserDefined),
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
@@ -52,6 +53,19 @@ var endTimeNotBeforeStartTime = validation.NewSingleRule(func(s Spec) error {
 		return &validation.RuleError{
 			Message: fmt.Sprintf(`endTime '%s' must be equal or after startTime '%s'`, s.EndTime, s.StartTime),
 			Code:    errorCodeEndTimeNotBeforeStartTime,
+		}
+	}
+
+	return nil
+})
+
+const errorCodeCategoryUserDefined validation.ErrorCode = "category_user_defined"
+
+var categoryUserDefined = validation.NewSingleRule(func(s Spec) error {
+	if s.Category != "" {
+		return &validation.RuleError{
+			Message: fmt.Sprintf("category can't be defined by user %s", s.Category),
+			Code:    errorCodeCategoryUserDefined,
 		}
 	}
 
