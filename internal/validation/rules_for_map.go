@@ -10,9 +10,10 @@ func ForMap[M ~map[K]V, K comparable, V, S any](getter PropertyGetter[M, S]) Pro
 
 // PropertyRulesForMap is responsible for validating a single property.
 type PropertyRulesForMap[M ~map[K]V, K comparable, V, S any] struct {
-	name   string
-	getter PropertyGetter[M, S]
-	steps  []interface{}
+	name       string
+	getter     PropertyGetter[M, S]
+	steps      []interface{}
+	predicates []Predicate[S]
 }
 
 // MapItem is a tuple container for map's key and value pair.
@@ -30,6 +31,11 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 		propValue          M
 		previousStepFailed bool
 	)
+	for _, predicate := range r.predicates {
+		if !predicate(st) {
+			return nil
+		}
+	}
 	valueErrors := make(map[K]mapItemError)
 	keyErrors := make(map[K]mapItemError)
 loop:
@@ -37,10 +43,6 @@ loop:
 		switch stepValue := step.(type) {
 		case stopOnErrorStep:
 			if previousStepFailed {
-				break loop
-			}
-		case Predicate[S]:
-			if !stepValue(st) {
 				break loop
 			}
 		case mapKeyRule[K], Rule[V], Rule[MapItem[K, V]]:
@@ -177,8 +179,8 @@ func (r PropertyRulesForMap[M, K, V, S]) Rules(rules ...Rule[M]) PropertyRulesFo
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) When(predicate Predicate[S]) PropertyRulesForMap[M, K, V, S] {
-	r.steps = append(r.steps, predicate)
+func (r PropertyRulesForMap[M, K, V, S]) When(predicates ...Predicate[S]) PropertyRulesForMap[M, K, V, S] {
+	r.predicates = append(r.predicates, predicates...)
 	return r
 }
 

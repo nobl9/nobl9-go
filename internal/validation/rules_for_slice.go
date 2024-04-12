@@ -12,9 +12,10 @@ func ForSlice[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForSlice[T, 
 
 // PropertyRulesForSlice is responsible for validating a single property.
 type PropertyRulesForSlice[T, S any] struct {
-	name   string
-	getter PropertyGetter[[]T, S]
-	steps  []interface{}
+	name       string
+	getter     PropertyGetter[[]T, S]
+	steps      []interface{}
+	predicates []Predicate[S]
 }
 
 // Validate executes each of the rules sequentially and aggregates the encountered errors.
@@ -26,6 +27,11 @@ func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 		propValue          []T
 		previousStepFailed bool
 	)
+	for _, predicate := range r.predicates {
+		if !predicate(st) {
+			return nil
+		}
+	}
 	sliceElementErrors := make(map[int]sliceElementError)
 loop:
 	for _, step := range r.steps {
@@ -52,6 +58,9 @@ loop:
 					ev.IsSliceElementError = true
 					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
 				default:
+					if sliceElementErrors == nil {
+						sliceElementErrors = make(map[int]sliceElementError)
+					}
 					fErrs := sliceElementErrors[i].Errors
 					sliceElementErrors[i] = sliceElementError{Errors: append(fErrs, err), PropValue: element}
 				}
@@ -123,8 +132,8 @@ func (r PropertyRulesForSlice[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForS
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) When(predicate Predicate[S]) PropertyRulesForSlice[T, S] {
-	r.steps = append(r.steps, predicate)
+func (r PropertyRulesForSlice[T, S]) When(predicates ...Predicate[S]) PropertyRulesForSlice[T, S] {
+	r.predicates = append(r.predicates, predicates...)
 	return r
 }
 
