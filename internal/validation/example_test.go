@@ -721,25 +721,17 @@ func ExampleForMap() {
 	//     - length must be between 9 and 9
 }
 
-// WARNING!
-// The below examples display the CURRENT state of flow management for rules.
-// It's far from ideal and will be CHANGED IN THE FUTURE.
-
-// To only proceed with further validation on condition, use [PropertyRules.When].
-// Similar to [PropertyRules.Rules] predicates provided through [PropertyRules.When]
-// are evaluated in the order they are provided.
-// If a predicate is not met, proceeding (as defined in code) validation rules are not evaluated.
+// To only run property validation on condition, use [PropertyRules.When].
+// Predicates set through [PropertyRules.When] are evaluated in the order they are provided.
+// If any predicate is not met, validation rules are not evaluated for the whole [PropertyRules].
+//
+// It's recommended to define [PropertyRules.When] before [PropertyRules.Rules] declaration.
 func ExamplePropertyRules_When() {
-	alwaysFailingRule := validation.NewSingleRule(func(string) error {
-		return fmt.Errorf("always fails")
-	})
-
 	v := validation.New[Teacher](
 		validation.For(func(t Teacher) string { return t.Name }).
 			WithName("name").
-			Rules(validation.NotEqualTo("Jerry")).
-			When(func(t Teacher) bool { return t.Name == "Tom" }).
-			Rules(alwaysFailingRule),
+			When(func(t Teacher) bool { return t.Name == "Jerry" }).
+			Rules(validation.NotEqualTo("Jerry")),
 	).WithName("Teacher")
 
 	for _, name := range []string{"Tom", "Jerry", "Mickey"} {
@@ -751,9 +743,6 @@ func ExamplePropertyRules_When() {
 	}
 
 	// Output:
-	// Validation for Teacher has failed for the following properties:
-	//   - 'name' with value 'Tom':
-	//     - always fails
 	// Validation for Teacher has failed for the following properties:
 	//   - 'name' with value 'Jerry':
 	//     - should be not equal to 'Jerry'

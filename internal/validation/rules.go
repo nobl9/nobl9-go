@@ -1,5 +1,7 @@
 package validation
 
+import "github.com/pkg/errors"
+
 // For creates a new [PropertyRules] instance for the property
 // which value is extracted through [PropertyGetter] function.
 func For[T, S any](getter PropertyGetter[T, S]) PropertyRules[T, S] {
@@ -67,6 +69,7 @@ type PropertyRules[T, S any] struct {
 	getter          internalPropertyGetter[T, S]
 	transformGetter internalTransformPropertyGetter[T, S]
 	steps           []interface{}
+	predicates      []Predicate[S]
 	required        bool
 	omitEmpty       bool
 	hideValue       bool
@@ -86,20 +89,21 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 		if r.hideValue {
 			err = err.HideValue()
 		}
-		return err
+		return PropertyErrors{err}
 	}
 	if skip {
 		return nil
+	}
+	for _, predicate := range r.predicates {
+		if !predicate(st) {
+			return nil
+		}
 	}
 loop:
 	for _, step := range r.steps {
 		switch v := step.(type) {
 		case stopOnErrorStep:
 			if previousStepFailed {
-				break loop
-			}
-		case Predicate[S]:
-			if !v(st) {
 				break loop
 			}
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
@@ -152,7 +156,7 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 }
 
 func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.steps = appendSteps(r.steps, predicates)
+	r.predicates = predicates
 	return r
 }
 
@@ -185,33 +189,42 @@ func appendSteps[T any](slice []interface{}, steps []T) []interface{} {
 	return slice
 }
 
-func (r PropertyRules[T, S]) getValue(st S) (v T, skip bool, errs PropertyErrors) {
+// getValue extracts the property value from the provided property.
+// It returns the value, a flag indicating whether the validation should be skipped, and any errors encountered.
+func (r PropertyRules[T, S]) getValue(st S) (v T, skip bool, propErr *PropertyError) {
 	var (
 		err           error
 		originalValue any
 	)
+	// Extract value from the property through correct getter.
 	if r.transformGetter != nil {
 		v, originalValue, err = r.transformGetter(st)
 	} else {
 		v, err = r.getter(st)
 	}
-	_, isEmptyError := err.(emptyErr)
+	isEmptyError := errors.Is(err, emptyErr{})
 	// Any error other than [emptyErr] is considered critical, we don't proceed with validation.
 	if err != nil && !isEmptyError {
-		// If the value was transformed, we need to set the property value to the original, pre-transformed one.
 		var propValue interface{}
+		// If the value was transformed, we need to set the property value to the original, pre-transformed one.
 		if HasErrorCode(err, ErrorCodeTransform) {
 			propValue = originalValue
 		} else {
 			propValue = v
 		}
-		return v, false, PropertyErrors{NewPropertyError(r.name, propValue, err)}
+		return v, false, NewPropertyError(r.name, propValue, err)
 	}
 	isEmpty := isEmptyError || (!r.isPointer && isEmptyFunc(v))
-	if r.required && isEmpty {
-		return v, false, PropertyErrors{NewPropertyError(r.name, nil, NewRequiredError())}
+	// If the value is not empty we simply return it.
+	if !isEmpty {
+		return v, false, nil
 	}
-	if isEmpty && (r.omitEmpty || r.isPointer) {
+	// If the value is empty and the property is required, we return [ErrorCodeRequired].
+	if r.required {
+		return v, false, NewPropertyError(r.name, nil, NewRequiredError())
+	}
+	// If the value is empty and we're skipping empty values or the value is a pointer, we skip the validation.
+	if r.omitEmpty || r.isPointer {
 		return v, true, nil
 	}
 	return v, false, nil
