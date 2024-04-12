@@ -58,9 +58,6 @@ loop:
 					ev.IsSliceElementError = true
 					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
 				default:
-					if sliceElementErrors == nil {
-						sliceElementErrors = make(map[int]sliceElementError)
-					}
 					fErrs := sliceElementErrors[i].Errors
 					sliceElementErrors[i] = sliceElementError{Errors: append(fErrs, err), PropValue: element}
 				}
