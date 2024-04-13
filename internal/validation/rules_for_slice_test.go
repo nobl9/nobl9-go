@@ -74,10 +74,9 @@ func TestPropertyRulesForEach(t *testing.T) {
 				Errors:        []*RuleError{{Message: err3.Error()}},
 			},
 			{
-				PropertyName:        "test.path.nested",
-				PropertyValue:       "nestedValue",
-				IsSliceElementError: true,
-				Errors:              []*RuleError{{Message: err4.Error()}},
+				PropertyName:  "test.path.nested",
+				PropertyValue: "nestedValue",
+				Errors:        []*RuleError{{Message: err4.Error()}},
 			},
 			{
 				PropertyName:        "test.path[0]",

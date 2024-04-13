@@ -48,6 +48,24 @@ func (e PropertyErrors) HideValue() PropertyErrors {
 	return e
 }
 
+func (e PropertyErrors) Aggregate() PropertyErrors {
+	if len(e) == 0 {
+		return nil
+	}
+	agg := make(PropertyErrors, 0, len(e))
+outer:
+	for _, e1 := range e {
+		for _, e2 := range agg {
+			if e1.Equal(e2) {
+				e2.Errors = append(e2.Errors, e1.Errors...)
+				continue outer
+			}
+		}
+		agg = append(agg, e1)
+	}
+	return agg
+}
+
 func NewPropertyError(propertyName string, propertyValue interface{}, errs ...error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
@@ -84,6 +102,13 @@ func (e *PropertyError) Error() string {
 	}
 	JoinErrors(b, e.Errors, indent)
 	return b.String()
+}
+
+func (e *PropertyError) Equal(cmp *PropertyError) bool {
+	return e.PropertyName == cmp.PropertyName &&
+		e.PropertyValue == cmp.PropertyValue &&
+		e.IsKeyError == cmp.IsKeyError &&
+		e.IsSliceElementError == cmp.IsSliceElementError
 }
 
 const (

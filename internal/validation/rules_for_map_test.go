@@ -146,11 +146,13 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key1.nested",
 				PropertyValue: "nestedKey",
+				IsKeyError:    true,
 				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
 				PropertyValue: "nestedKey",
+				IsKeyError:    true,
 				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{

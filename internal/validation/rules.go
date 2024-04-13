@@ -53,8 +53,6 @@ func GetSelf[S any]() PropertyGetter[S, S] {
 
 type Transformer[T, N any] func(T) (N, error)
 
-type Predicate[S any] func(S) bool
-
 type PropertyGetter[T, S any] func(S) T
 
 type internalPropertyGetter[T, S any] func(S) (v T, err error)
@@ -74,6 +72,8 @@ type PropertyRules[T, S any] struct {
 	omitEmpty       bool
 	hideValue       bool
 	isPointer       bool
+
+	predicateMatcher[S]
 }
 
 // Validate validates the property value using provided rules.
@@ -94,10 +94,8 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	if skip {
 		return nil
 	}
-	for _, predicate := range r.predicates {
-		if !predicate(st) {
-			return nil
-		}
+	if !r.matchPredicates(st) {
+		return nil
 	}
 loop:
 	for _, step := range r.steps {
@@ -135,7 +133,7 @@ loop:
 		if r.hideValue {
 			allErrors = allErrors.HideValue()
 		}
-		return allErrors
+		return allErrors.Aggregate()
 	}
 	return nil
 }
@@ -156,7 +154,7 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 }
 
 func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.predicates = predicates
+	r.predicateMatcher = r.predicateMatcher.when(predicates...)
 	return r
 }
 
