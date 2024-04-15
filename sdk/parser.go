@@ -48,7 +48,6 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	result := make([]manifest.Object, 0, len(rds))
 	for _, rd := range rds {
-		fmt.Println(string(rd.Definition))
 		objects, err := DecodeObjects(rd.Definition)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
