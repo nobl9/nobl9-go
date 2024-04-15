@@ -169,7 +169,7 @@ var apiVersionRegex = regexp.MustCompile(APIVersionRegex)
 func readFromFile(fp string) ([]byte, error) {
 	// #nosec G304
 	data, err := os.ReadFile(fp)
-	fmt.Println("From file: ", string(data))
+	fmt.Println("From file: ", fp, " --> ", string(data))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s file", fp)
 	}
