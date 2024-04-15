@@ -119,7 +119,6 @@ func getUnmarshalFunc(data []byte, format manifest.ObjectFormat) (unmarshalFunc,
 			if UseStrictDecodingMode {
 				opts = append(opts, yaml.Strict())
 			}
-			fmt.Println("data", string(data))
 			return yaml.UnmarshalWithOptions(data, v, opts...)
 		}
 	default:
