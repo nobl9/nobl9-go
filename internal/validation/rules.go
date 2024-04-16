@@ -72,6 +72,7 @@ type PropertyRules[T, S any] struct {
 	omitEmpty       bool
 	hideValue       bool
 	isPointer       bool
+	mode            CascadeMode
 
 	predicateMatcher[S]
 }
@@ -80,9 +81,8 @@ type PropertyRules[T, S any] struct {
 // nolint: gocognit
 func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	var (
-		ruleErrors         []error
-		allErrors          PropertyErrors
-		previousStepFailed bool
+		ruleErrors []error
+		allErrors  PropertyErrors
 	)
 	propValue, skip, err := r.getValue(st)
 	if err != nil {
@@ -97,17 +97,14 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	if !r.matchPredicates(st) {
 		return nil
 	}
-loop:
 	for _, step := range r.steps {
+		stepFailed := false
 		switch v := step.(type) {
-		case stopOnErrorStep:
-			if previousStepFailed {
-				break loop
-			}
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
 			err := v.Validate(propValue)
 			if err != nil {
+				stepFailed = true
 				switch ev := err.(type) {
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
@@ -115,15 +112,17 @@ loop:
 					ruleErrors = append(ruleErrors, err)
 				}
 			}
-			previousStepFailed = err != nil
 		case validatorI[T]:
 			err := v.Validate(propValue)
 			if err != nil {
+				stepFailed = true
 				for _, e := range err.Errors {
 					allErrors = append(allErrors, e.PrependPropertyName(r.name))
 				}
 			}
-			previousStepFailed = err != nil
+		}
+		if stepFailed && r.mode == CascadeModeStop {
+			break
 		}
 	}
 	if len(ruleErrors) > 0 {
@@ -173,10 +172,8 @@ func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
 	return r
 }
 
-type stopOnErrorStep uint8
-
-func (r PropertyRules[T, S]) StopOnError() PropertyRules[T, S] {
-	r.steps = append(r.steps, stopOnErrorStep(0))
+func (r PropertyRules[T, S]) CascadeMode(mode CascadeMode) PropertyRules[T, S] {
+	r.mode = mode
 	return r
 }
 

@@ -24,7 +24,7 @@ var directValidation = validation.New[Direct](
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
 		Rules(exactlyOneDataSourceTypeValidationRule).
-		StopOnError().
+		CascadeMode(validation.CascadeModeStop).
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
@@ -344,9 +344,9 @@ const errorCodeHTTPSSchemeRequired = "https_scheme_required"
 func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) validation.PropertyRules[*url.URL, S] {
 	return validation.Transform(getter, url.Parse).
 		WithName("url").
+		CascadeMode(validation.CascadeModeStop).
 		Required().
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(validation.NewSingleRule(func(u *url.URL) error {
 			if u.Scheme != "https" {
 				return errors.New("requires https scheme")

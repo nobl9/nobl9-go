@@ -1,10 +1,11 @@
 package validation
 
+// CascadeMode defines how validation should behave when an error is encountered.
 type CascadeMode uint
 
 const (
-	// CascadeModeContinue will stop validation on first error.
+	// CascadeModeContinue will continue validation after first error.
 	CascadeModeContinue CascadeMode = iota
-	// CascadeModeAll will continue validation after first error.
-	CascadeModeAll
+	// CascadeModeStop will stop validation on first error encountered.
+	CascadeModeStop
 )

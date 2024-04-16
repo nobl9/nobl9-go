@@ -58,6 +58,7 @@ var instanaCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 
 var instanaValidation = validation.ForPointer(func(m MetricSpec) *InstanaMetric { return m.Instana }).
 	WithName("instana").
+	CascadeMode(validation.CascadeModeStop).
 	Rules(validation.NewSingleRule[InstanaMetric](func(v InstanaMetric) error {
 		if v.Application != nil && v.Infrastructure != nil {
 			return errors.New("cannot use both 'instana.application' and 'instana.infrastructure'")
@@ -77,8 +78,7 @@ var instanaValidation = validation.ForPointer(func(m MetricSpec) *InstanaMetric 
 			}
 		}
 		return nil
-	})).
-	StopOnError()
+	}))
 
 var instanaCountMetricsValidation = validation.New[MetricSpec](
 	instanaValidation.

@@ -21,6 +21,7 @@ type PropertyRulesForMap[M ~map[K]V, K comparable, V, S any] struct {
 	forValueRules PropertyRules[V, V]
 	forItemRules  PropertyRules[MapItem[K, V], MapItem[K, V]]
 	getter        PropertyGetter[M, S]
+	mode          CascadeMode
 
 	predicateMatcher[S]
 }
@@ -32,12 +33,14 @@ type MapItem[K comparable, V any] struct {
 }
 
 // Validate executes each of the rules sequentially and aggregates the encountered errors.
-// nolint: prealloc, gocognit
 func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 	if !r.matchPredicates(st) {
 		return nil
 	}
 	err := r.mapRules.Validate(st)
+	if r.mode == CascadeModeStop && err != nil {
+		return err
+	}
 	for k, v := range r.getter(st) {
 		forKeyErr := r.forKeyRules.Validate(k)
 		if forKeyErr != nil {
@@ -45,18 +48,29 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 				e.IsKeyError = true
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 			}
+			if r.mode == CascadeModeStop {
+				break
+			}
 		}
 		forValueErr := r.forValueRules.Validate(v)
 		if forValueErr != nil {
 			for _, e := range forValueErr {
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 			}
+			if r.mode == CascadeModeStop {
+				break
+			}
 		}
 		forItemErr := r.forItemRules.Validate(MapItem[K, V]{Key: k, Value: v})
 		if forItemErr != nil {
 			for _, e := range forItemErr {
+				// TODO: Figure out how to handle custom PropertyErrors.
+				// Custom errors' value for nested item will be overridden by the actual value.
 				e.PropertyValue = propertyValueString(v)
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
+			}
+			if r.mode == CascadeModeStop {
+				break
 			}
 		}
 	}
@@ -110,7 +124,12 @@ func (r PropertyRulesForMap[M, K, V, S]) IncludeForItems(
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) StopOnError() PropertyRulesForMap[M, K, V, S] {
+func (r PropertyRulesForMap[M, K, V, S]) CascadeMode(mode CascadeMode) PropertyRulesForMap[M, K, V, S] {
+	r.mode = mode
+	r.mapRules = r.mapRules.CascadeMode(mode)
+	r.forKeyRules = r.forKeyRules.CascadeMode(mode)
+	r.forValueRules = r.forValueRules.CascadeMode(mode)
+	r.forItemRules = r.forItemRules.CascadeMode(mode)
 	return r
 }
 

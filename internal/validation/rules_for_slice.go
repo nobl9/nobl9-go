@@ -17,6 +17,7 @@ type PropertyRulesForSlice[T, S any] struct {
 	sliceRules   PropertyRules[[]T, []T]
 	forEachRules PropertyRules[T, T]
 	getter       PropertyGetter[[]T, S]
+	mode         CascadeMode
 
 	predicateMatcher[S]
 }
@@ -28,6 +29,9 @@ func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 	}
 	v := r.getter(st)
 	err := r.sliceRules.Validate(v)
+	if r.mode == CascadeModeStop && err != nil {
+		return err
+	}
 	for i, element := range v {
 		forEachErr := r.forEachRules.Validate(element)
 		if forEachErr == nil {
@@ -36,6 +40,9 @@ func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 		for _, e := range forEachErr {
 			e.IsSliceElementError = true
 			err = append(err, e.PrependPropertyName(SliceElementName(r.sliceRules.name, i)))
+		}
+		if r.mode == CascadeModeStop {
+			break
 		}
 	}
 	return err.Aggregate()
@@ -66,7 +73,10 @@ func (r PropertyRulesForSlice[T, S]) IncludeForEach(rules ...Validator[T]) Prope
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) StopOnError() PropertyRulesForSlice[T, S] {
+func (r PropertyRulesForSlice[T, S]) CascadeMode(mode CascadeMode) PropertyRulesForSlice[T, S] {
+	r.mode = mode
+	r.sliceRules = r.sliceRules.CascadeMode(mode)
+	r.forEachRules = r.forEachRules.CascadeMode(mode)
 	return r
 }
 

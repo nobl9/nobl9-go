@@ -105,12 +105,12 @@ func TestPropertyRulesForEach(t *testing.T) {
 		}, errs)
 	})
 
-	t.Run("stop on error", func(t *testing.T) {
+	t.Run("cascade mode stop", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		r := ForSlice(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
+			CascadeMode(CascadeModeStop).
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr })).
-			StopOnError().
 			RulesForEach(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)

@@ -80,12 +80,12 @@ func TestPropertyRules(t *testing.T) {
 		}, errs)
 	})
 
-	t.Run("stop on error", func(t *testing.T) {
+	t.Run("cascade mode stop", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		r := For(func(m mockStruct) string { return "value" }).
 			WithName("test.path").
+			CascadeMode(CascadeModeStop).
 			Rules(NewSingleRule(func(v string) error { return expectedErr })).
-			StopOnError().
 			Rules(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)

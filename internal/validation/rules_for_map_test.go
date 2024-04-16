@@ -183,12 +183,12 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key1.nested",
-				PropertyValue: "nestedItem",
+				PropertyValue: "value1",
 				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
-				PropertyValue: "nestedItem",
+				PropertyValue: "value2",
 				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
 			},
 			{
@@ -199,18 +199,19 @@ func TestPropertyRulesForMap(t *testing.T) {
 		}, errs)
 	})
 
-	t.Run("stop on error", func(t *testing.T) {
+	t.Run("cascade mode stop", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		r := ForMap(func(m mockStruct) map[string]string { return map[string]string{"key": "value"} }).
 			WithName("test.path").
-			RulesForValues(NewSingleRule(func(v string) error { return expectedErr })).
-			StopOnError().
-			RulesForKeys(NewSingleRule(func(v string) error { return errors.New("no") }))
+			CascadeMode(CascadeModeStop).
+			RulesForValues(NewSingleRule(func(v string) error { return errors.New("no") })).
+			RulesForKeys(NewSingleRule(func(v string) error { return expectedErr }))
 		errs := r.Validate(mockStruct{})
 		require.Len(t, errs, 1)
 		assert.Equal(t, &PropertyError{
 			PropertyName:  "test.path.key",
-			PropertyValue: "value",
+			PropertyValue: "key",
+			IsKeyError:    true,
 			Errors:        []*RuleError{{Message: expectedErr.Error()}},
 		}, errs[0])
 	})
@@ -263,6 +264,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key.included_key",
 				PropertyValue: "key",
+				IsKeyError:    true,
 				Errors: []*RuleError{
 					{Message: errIncludedKey1.Error()},
 					{Message: errIncludedKey2.Error()},
@@ -278,7 +280,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key.included_item",
-				PropertyValue: `{"Key":"key","Value":1}`,
+				PropertyValue: "1",
 				Errors: []*RuleError{
 					{Message: errIncludedItem1.Error()},
 					{Message: errIncludedItem2.Error()},
@@ -335,6 +337,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key.included_key",
 				PropertyValue: "key",
+				IsKeyError:    true,
 				Errors: []*RuleError{
 					{Message: errIncludedKey1.Error()},
 					{Message: errIncludedKey2.Error()},
@@ -350,7 +353,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key.included_item",
-				PropertyValue: `{"Key":"key","Value":"1"}`,
+				PropertyValue: "1",
 				Errors: []*RuleError{
 					{Message: errIncludedItem1.Error()},
 					{Message: errIncludedItem2.Error()},

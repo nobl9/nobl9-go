@@ -132,8 +132,8 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		Rules(validation.NewSingleRule(validateTemplateFields)),
 	validation.ForSlice(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
 		WithName("headers").
+		CascadeMode(validation.CascadeModeStop).
 		Rules(validation.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
-		StopOnError().
 		IncludeForEach(webhookHeaderValidation),
 )
 
@@ -158,6 +158,7 @@ var discordValidation = validation.New[DiscordAlertMethod](
 	validation.For(func(s DiscordAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
+		CascadeMode(validation.CascadeModeStop).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if strings.HasSuffix(strings.ToLower(v), "/slack") || strings.HasSuffix(strings.ToLower(v), "/github") {
@@ -165,7 +166,6 @@ var discordValidation = validation.New[DiscordAlertMethod](
 				}
 				return nil
 			})).
-		StopOnError().
 		Include(optionalUrlValidation()),
 )
 
@@ -202,8 +202,8 @@ var jiraValidation = validation.New[JiraAlertMethod](
 	validation.Transform(func(j JiraAlertMethod) string { return j.URL }, url.Parse).
 		WithName("url").
 		Required().
+		CascadeMode(validation.CascadeModeStop).
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(u *url.URL) error {
 				if u.Scheme != "https" {
@@ -224,8 +224,8 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 	validation.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
 		HideValue().
+		CascadeMode(validation.CascadeModeStop).
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(u *url.URL) error {
 				if u.Scheme != "https" {

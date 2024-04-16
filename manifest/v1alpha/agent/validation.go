@@ -25,8 +25,8 @@ var agentValidation = validation.New[Agent](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
+		CascadeMode(validation.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
-		StopOnError().
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),

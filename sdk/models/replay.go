@@ -72,8 +72,8 @@ var replayValidation = validation.New[Replay](
 	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		Required().
+		CascadeMode(validation.CascadeModeStop).
 		Include(replayDurationValidation).
-		StopOnError().
 		Rules(replayDurationValidationRule()),
 )
 

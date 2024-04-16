@@ -15,8 +15,8 @@ var newRelicValidation = validation.New[NewRelicMetric](
 	validation.ForPointer(func(n NewRelicMetric) *string { return n.NRQL }).
 		WithName("nrql").
 		Required().
+		CascadeMode(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(validation.StringDenyRegexp(regexp.MustCompile(`(?i)[\n\s](since|until)([\n\s]|$)`)).
 			WithDetails("query must not contain 'since' or 'until' keywords (case insensitive)")),
 )
