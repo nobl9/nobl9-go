@@ -751,7 +751,7 @@ func ExamplePropertyRules_When() {
 // To customize how [Rule] are evaluated use [PropertyRules.Cascade].
 // Use [CascadeModeStop] to stop validation after the first error.
 // If you wish to revert to the default behavior, use [CascadeModeContinue].
-func ExamplePropertyRules_CascadeMode() {
+func ExamplePropertyRules_Cascade() {
 	alwaysFailingRule := validation.NewSingleRule(func(string) error {
 		return fmt.Errorf("always fails")
 	})

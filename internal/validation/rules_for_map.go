@@ -43,26 +43,20 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 	}
 	for k, v := range r.getter(st) {
 		forKeyErr := r.forKeyRules.Validate(k)
-		if forKeyErr != nil {
-			for _, e := range forKeyErr {
-				e.IsKeyError = true
-				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
-			}
+		for _, e := range forKeyErr {
+			e.IsKeyError = true
+			err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 		}
 		forValueErr := r.forValueRules.Validate(v)
-		if forValueErr != nil {
-			for _, e := range forValueErr {
-				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
-			}
+		for _, e := range forValueErr {
+			err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 		}
 		forItemErr := r.forItemRules.Validate(MapItem[K, V]{Key: k, Value: v})
-		if forItemErr != nil {
-			for _, e := range forItemErr {
-				// TODO: Figure out how to handle custom PropertyErrors.
-				// Custom errors' value for nested item will be overridden by the actual value.
-				e.PropertyValue = propertyValueString(v)
-				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
-			}
+		for _, e := range forItemErr {
+			// TODO: Figure out how to handle custom PropertyErrors.
+			// Custom errors' value for nested item will be overridden by the actual value.
+			e.PropertyValue = propertyValueString(v)
+			err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 		}
 	}
 	return err.Aggregate().Sort()

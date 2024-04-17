@@ -64,7 +64,6 @@ type PropertyRules[T, S any] struct {
 	getter          internalPropertyGetter[T, S]
 	transformGetter internalTransformPropertyGetter[T, S]
 	steps           []interface{}
-	predicates      []Predicate[S]
 	required        bool
 	omitEmpty       bool
 	hideValue       bool
