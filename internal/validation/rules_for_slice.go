@@ -41,9 +41,6 @@ func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 			e.IsSliceElementError = true
 			err = append(err, e.PrependPropertyName(SliceElementName(r.sliceRules.name, i)))
 		}
-		if r.mode == CascadeModeStop {
-			break
-		}
 	}
 	return err.Aggregate()
 }
@@ -64,7 +61,7 @@ func (r PropertyRulesForSlice[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForS
 }
 
 func (r PropertyRulesForSlice[T, S]) When(predicates ...Predicate[S]) PropertyRulesForSlice[T, S] {
-	r.predicateMatcher = r.predicateMatcher.when(predicates...)
+	r.predicateMatcher = r.when(predicates...)
 	return r
 }
 
@@ -73,10 +70,10 @@ func (r PropertyRulesForSlice[T, S]) IncludeForEach(rules ...Validator[T]) Prope
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) CascadeMode(mode CascadeMode) PropertyRulesForSlice[T, S] {
+func (r PropertyRulesForSlice[T, S]) Cascade(mode CascadeMode) PropertyRulesForSlice[T, S] {
 	r.mode = mode
-	r.sliceRules = r.sliceRules.CascadeMode(mode)
-	r.forEachRules = r.forEachRules.CascadeMode(mode)
+	r.sliceRules = r.sliceRules.Cascade(mode)
+	r.forEachRules = r.forEachRules.Cascade(mode)
 	return r
 }
 

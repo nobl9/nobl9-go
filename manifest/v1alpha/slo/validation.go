@@ -19,7 +19,7 @@ var sloValidation = validation.New[SLO](
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Include(specValidationNonComposite).
 		Include(specValidationComposite).
 		Include(specValidation),
@@ -104,7 +104,7 @@ var sloValidationComposite = validation.New[SLO](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Include(specMetricsValidation),
 	validation.For(validation.GetSelf[Spec]()).
 		WithName("composite").
@@ -129,7 +129,7 @@ var specValidation = validation.New[Spec](
 		RulesForEach(validation.StringIsDNSSubdomain()),
 	validation.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
 		IncludeForEach(attachmentValidation),
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
@@ -140,13 +140,13 @@ var specValidation = validation.New[Spec](
 		Include(anomalyConfigValidation),
 	validation.ForSlice(func(s Spec) []TimeWindow { return s.TimeWindows }).
 		WithName("timeWindows").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceLength[[]TimeWindow](1, 1)).
 		IncludeForEach(timeWindowsValidation).
 		RulesForEach(timeWindowValidationRule()),
 	validation.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		IncludeForEach(objectiveValidation).
 		When(func(s Spec) bool { return !s.HasCompositeObjectives() }).
@@ -264,7 +264,7 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 		Include(validation.New[AnomalyConfigNoData](
 			validation.ForSlice(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
-				CascadeMode(validation.CascadeModeStop).
+				Cascade(validation.CascadeModeStop).
 				Rules(validation.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
 				Rules(validation.SliceUnique(validation.SelfHashFunc[AnomalyConfigAlertMethod]())).
 				IncludeForEach(validation.New[AnomalyConfigAlertMethod](

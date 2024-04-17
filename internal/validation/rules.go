@@ -31,9 +31,6 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 	return PropertyRules[N, S]{
 		transformGetter: func(s S) (transformed N, original any, err error) {
 			v := getter(s)
-			if err != nil {
-				return transformed, nil, err
-			}
 			if isEmptyFunc(v) {
 				return transformed, nil, emptyErr{}
 			}
@@ -153,7 +150,7 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 }
 
 func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.predicateMatcher = r.predicateMatcher.when(predicates...)
+	r.predicateMatcher = r.when(predicates...)
 	return r
 }
 
@@ -172,7 +169,7 @@ func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) CascadeMode(mode CascadeMode) PropertyRules[T, S] {
+func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 	r.mode = mode
 	return r
 }

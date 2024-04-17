@@ -48,7 +48,7 @@ func StringDenyRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
 
 func StringIsDNSSubdomain() RuleSet[string] {
-	return NewRuleSet[string](
+	return NewRuleSet(
 		StringLength(1, 63),
 		StringMatchRegexp(dns1123SubdomainRegexp, "my-name", "123-abc").
 			WithDetails("a DNS-1123 compliant name must consist of lower case alphanumeric characters or '-',"+
@@ -158,7 +158,7 @@ func prettyStringListBuilder[T any](b *strings.Builder, values []T, surroundInSi
 		if surroundInSingleQuotes {
 			b.WriteString("'")
 		}
-		b.WriteString(fmt.Sprint(values[i]))
+		fmt.Fprint(b, values[i])
 		if surroundInSingleQuotes {
 			b.WriteString("'")
 		}

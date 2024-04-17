@@ -16,7 +16,7 @@ var elasticsearchValidation = validation.New[ElasticsearchMetric](
 	validation.ForPointer(func(e ElasticsearchMetric) *string { return e.Query }).
 		WithName("query").
 		Required().
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
 		Rules(validation.StringContains("{{.BeginTime}}", "{{.EndTime}}")),
 )

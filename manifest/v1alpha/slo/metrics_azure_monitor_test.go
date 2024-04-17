@@ -525,7 +525,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 8,
+		testutils.AssertContainsErrors(t, slo, err, 9,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name",
 				Code: validation.ErrorCodeRequired,

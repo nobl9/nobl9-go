@@ -84,7 +84,7 @@ func TestPropertyRules(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		r := For(func(m mockStruct) string { return "value" }).
 			WithName("test.path").
-			CascadeMode(CascadeModeStop).
+			Cascade(CascadeModeStop).
 			Rules(NewSingleRule(func(v string) error { return expectedErr })).
 			Rules(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
@@ -103,7 +103,7 @@ func TestPropertyRules(t *testing.T) {
 		r := For(func(m mockStruct) mockStruct { return m }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v mockStruct) error { return err1 })).
-			Include(New[mockStruct](
+			Include(New(
 				For(func(s mockStruct) string { return "value" }).
 					WithName("included").
 					Rules(NewSingleRule(func(v string) error { return err2 })).

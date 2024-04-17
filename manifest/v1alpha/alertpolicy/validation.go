@@ -43,7 +43,7 @@ var specValidation = validation.New[Spec](
 		Rules(validation.GreaterThanOrEqualTo(time.Minute*5)),
 	validation.ForSlice(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
 		IncludeForEach(conditionValidation),
 	validation.ForSlice(func(s Spec) []AlertMethodRef { return s.AlertMethods }).

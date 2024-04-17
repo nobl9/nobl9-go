@@ -48,17 +48,11 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 				e.IsKeyError = true
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 			}
-			if r.mode == CascadeModeStop {
-				break
-			}
 		}
 		forValueErr := r.forValueRules.Validate(v)
 		if forValueErr != nil {
 			for _, e := range forValueErr {
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
-			}
-			if r.mode == CascadeModeStop {
-				break
 			}
 		}
 		forItemErr := r.forItemRules.Validate(MapItem[K, V]{Key: k, Value: v})
@@ -69,12 +63,9 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 				e.PropertyValue = propertyValueString(v)
 				err = append(err, e.PrependPropertyName(MapElementName(r.mapRules.name, k)))
 			}
-			if r.mode == CascadeModeStop {
-				break
-			}
 		}
 	}
-	return err.Aggregate()
+	return err.Aggregate().Sort()
 }
 
 func (r PropertyRulesForMap[M, K, V, S]) WithName(name string) PropertyRulesForMap[M, K, V, S] {
@@ -124,12 +115,12 @@ func (r PropertyRulesForMap[M, K, V, S]) IncludeForItems(
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) CascadeMode(mode CascadeMode) PropertyRulesForMap[M, K, V, S] {
+func (r PropertyRulesForMap[M, K, V, S]) Cascade(mode CascadeMode) PropertyRulesForMap[M, K, V, S] {
 	r.mode = mode
-	r.mapRules = r.mapRules.CascadeMode(mode)
-	r.forKeyRules = r.forKeyRules.CascadeMode(mode)
-	r.forValueRules = r.forValueRules.CascadeMode(mode)
-	r.forItemRules = r.forItemRules.CascadeMode(mode)
+	r.mapRules = r.mapRules.Cascade(mode)
+	r.forKeyRules = r.forKeyRules.Cascade(mode)
+	r.forValueRules = r.forValueRules.Cascade(mode)
+	r.forItemRules = r.forItemRules.Cascade(mode)
 	return r
 }
 

@@ -109,7 +109,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		expectedErr := errors.New("oh no!")
 		r := ForSlice(func(m mockStruct) []string { return []string{"value"} }).
 			WithName("test.path").
-			CascadeMode(CascadeModeStop).
+			Cascade(CascadeModeStop).
 			RulesForEach(NewSingleRule(func(v string) error { return expectedErr })).
 			RulesForEach(NewSingleRule(func(v string) error { return errors.New("no") }))
 		errs := r.Validate(mockStruct{})
@@ -129,7 +129,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 		r := ForSlice(func(m mockStruct) []string { return m.Fields }).
 			WithName("test.path").
 			RulesForEach(NewSingleRule(func(v string) error { return err1 })).
-			IncludeForEach(New[string](
+			IncludeForEach(New(
 				For(func(s string) string { return "nested" }).
 					WithName("included").
 					Rules(
@@ -161,7 +161,7 @@ func TestPropertyRulesForEach(t *testing.T) {
 	t.Run("include nested for slice", func(t *testing.T) {
 		forEachErr := errors.New("oh no!")
 		includedErr := errors.New("oh no!")
-		inc := New[[]string](
+		inc := New(
 			ForSlice(GetSelf[[]string]()).
 				RulesForEach(NewSingleRule(func(v string) error {
 					if v == "value1" {

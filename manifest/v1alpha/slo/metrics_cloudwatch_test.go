@@ -304,10 +304,26 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 			Code: validation.ErrorCodeSliceMaxLength,
 		})
 	})
-	t.Run("invalid fields", func(t *testing.T) {
+	t.Run("required fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Dimensions = []CloudWatchMetricDimension{
 			{},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].name",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].value",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Dimensions = []CloudWatchMetricDimension{
 			{
 				Name:  ptr(""),
 				Value: ptr(""),
@@ -322,37 +338,29 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 8,
+		testutils.AssertContainsErrors(t, slo, err, 6,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].name",
-				Code: validation.ErrorCodeRequired,
+				Code: validation.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].value",
-				Code: validation.ErrorCodeRequired,
+				Code: validation.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[1].name",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: validation.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[1].value",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: validation.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[2].name",
-				Code: validation.ErrorCodeStringMaxLength,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[2].value",
-				Code: validation.ErrorCodeStringMaxLength,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[3].name",
 				Code: validation.ErrorCodeStringASCII,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[3].value",
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[2].value",
 				Code: validation.ErrorCodeStringASCII,
 			},
 		)

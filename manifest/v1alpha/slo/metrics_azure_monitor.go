@@ -76,8 +76,6 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 		Rules(validation.OneOf(supportedAzureMonitorAggregations...)),
 	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
-		// We don't want to check names uniqueness if they're empty.
-		CascadeMode(validation.CascadeModeStop).
 		IncludeForEach(azureMonitorMetricDimensionValidation).
 		Rules(validation.SliceUnique(func(d AzureMonitorMetricDimension) string {
 			if d.Name == nil {

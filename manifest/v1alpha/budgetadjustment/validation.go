@@ -10,7 +10,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var budgetAdjustmentValidation = validation.New[BudgetAdjustment](
+var budgetAdjustmentValidation = validation.New(
 	validation.For(func(b BudgetAdjustment) Metadata { return b.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(b BudgetAdjustment) Spec { return b.Spec }).
@@ -18,12 +18,12 @@ var budgetAdjustmentValidation = validation.New[BudgetAdjustment](
 		Include(specValidation),
 )
 
-var metadataValidation = validation.New[Metadata](
+var metadataValidation = validation.New(
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 )
 
-var specValidation = validation.New[Spec](
+var specValidation = validation.New(
 	validation.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validation.StringDescription()),
@@ -41,14 +41,14 @@ var specValidation = validation.New[Spec](
 		Include(filtersValidationRule),
 )
 
-var filtersValidationRule = validation.New[Filters](
+var filtersValidationRule = validation.New(
 	validation.ForSlice(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
 		Rules(validation.SliceMinLength[[]SLORef](1)).
 		IncludeForEach(sloValidationRule),
 )
 
-var sloValidationRule = validation.New[SLORef](
+var sloValidationRule = validation.New(
 	validation.For(func(s SLORef) string { return s.Project }).
 		WithName("project").
 		Required().

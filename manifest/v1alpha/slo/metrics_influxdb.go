@@ -15,7 +15,7 @@ var influxdbValidation = validation.New[InfluxDBMetric](
 	validation.ForPointer(func(i InfluxDBMetric) *string { return i.Query }).
 		WithName("query").
 		Required().
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
 		Rules(
 			validation.StringMatchRegexp(regexp.MustCompile(`\s*bucket\s*:\s*".+"\s*`)).

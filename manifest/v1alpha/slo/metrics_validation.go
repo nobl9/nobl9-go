@@ -20,7 +20,7 @@ const (
 
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.NewSingleRule(func(s Spec) error {
 			if !s.HasCompositeObjectives() {
 				if s.HasRawMetric() == s.HasCountMetrics() {

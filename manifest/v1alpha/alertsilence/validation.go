@@ -11,7 +11,7 @@ import (
 
 var alertSilenceValidation = validation.New[AlertSilence](
 	validation.For(validation.GetSelf[AlertSilence]()).
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Include(metadataValidation).
 		Rules(alertPolicyProjectConsistencyRule),
 	validation.For(func(s AlertSilence) Spec { return s.Spec }).
@@ -37,7 +37,7 @@ var specValidation = validation.New[Spec](
 		Include(alertPolicySourceValidation),
 	validation.For(func(s Spec) Period { return s.Period }).
 		WithName("period").
-		CascadeMode(validation.CascadeModeStop).
+		Cascade(validation.CascadeModeStop).
 		Rules(
 			validation.MutuallyExclusive(true, map[string]func(p Period) any{
 				"duration": func(p Period) any { return p.Duration },

@@ -10,8 +10,8 @@ import (
 
 func TestValidator(t *testing.T) {
 	t.Run("no errors", func(t *testing.T) {
-		r := New[mockValidatorStruct](
-			For[string](func(m mockValidatorStruct) string { return "test" }).
+		r := New(
+			For(func(m mockValidatorStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return nil })),
 		)
@@ -22,7 +22,7 @@ func TestValidator(t *testing.T) {
 	t.Run("errors", func(t *testing.T) {
 		err1 := errors.New("1")
 		err2 := errors.New("2")
-		r := New[mockValidatorStruct](
+		r := New(
 			For(func(m mockValidatorStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return nil })),
@@ -52,8 +52,8 @@ func TestValidator(t *testing.T) {
 
 func TestValidatorWhen(t *testing.T) {
 	t.Run("when condition is not met, don't validate", func(t *testing.T) {
-		r := New[mockValidatorStruct](
-			For[string](func(m mockValidatorStruct) string { return "test" }).
+		r := New(
+			For(func(m mockValidatorStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return errors.New("test") })),
 		).
@@ -63,8 +63,8 @@ func TestValidatorWhen(t *testing.T) {
 		assert.Nil(t, errs)
 	})
 	t.Run("when condition is met, validate", func(t *testing.T) {
-		r := New[mockValidatorStruct](
-			For[string](func(m mockValidatorStruct) string { return "test" }).
+		r := New(
+			For(func(m mockValidatorStruct) string { return "test" }).
 				WithName("test").
 				Rules(NewSingleRule(func(v string) error { return errors.New("test") })),
 		).
@@ -83,8 +83,8 @@ func TestValidatorWhen(t *testing.T) {
 }
 
 func TestValidatorWithName(t *testing.T) {
-	r := New[mockValidatorStruct](
-		For[string](func(m mockValidatorStruct) string { return "test" }).
+	r := New(
+		For(func(m mockValidatorStruct) string { return "test" }).
 			WithName("test").
 			Rules(NewSingleRule(func(v string) error { return errors.New("test") })),
 	).WithName("validator")
