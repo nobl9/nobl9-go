@@ -147,9 +147,12 @@ var specValidation = validation.New[Spec](
 	validation.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Cascade(validation.CascadeModeStop).
+		When(
+			func(s Spec) bool { return !s.HasCompositeObjectives() },
+			validation.WhenDescription("none of the objectives is of composite type"),
+		).
 		Rules(validation.SliceMinLength[[]Objective](1)).
 		IncludeForEach(objectiveValidation).
-		When(func(s Spec) bool { return !s.HasCompositeObjectives() }).
 		Rules(validation.SliceUnique(func(v Objective) float64 {
 			if v.Value == nil {
 				return 0

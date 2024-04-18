@@ -18,9 +18,10 @@ func New[S any](props ...propertyRulesI[S]) Validator[S] {
 // Validator is the top level validation entity.
 // It serves as an aggregator for [PropertyRules].
 type Validator[S any] struct {
-	props      []propertyRulesI[S]
-	name       string
-	predicates []Predicate[S]
+	props []propertyRulesI[S]
+	name  string
+
+	predicateMatcher[S]
 }
 
 // WithName when a rule fails will pass the provided name to [ValidatorError.WithName].
@@ -30,8 +31,8 @@ func (v Validator[S]) WithName(name string) Validator[S] {
 }
 
 // When defines accepts predicates which will be evaluated BEFORE [Validator] validates ANY rules.
-func (v Validator[S]) When(predicates ...Predicate[S]) Validator[S] {
-	v.predicates = append(v.predicates, predicates...)
+func (v Validator[S]) When(predicate Predicate[S], opts ...WhenOptions) Validator[S] {
+	v.predicateMatcher = v.when(predicate, opts...)
 	return v
 }
 

@@ -75,9 +75,10 @@ var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(validation
 		Rules(validation.OneOf(PingdomTypeUptime, PingdomTypeTransaction)),
 	validation.For(func(p PingdomMetric) *string { return p.Status }).
 		WithName("status").
-		When(func(metric PingdomMetric) bool {
-			return metric.CheckType != nil && *metric.CheckType == PingdomTypeUptime
-		}).
+		When(
+			func(p PingdomMetric) bool { return p.CheckType != nil && *p.CheckType == PingdomTypeUptime },
+			validation.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+		).
 		Rules(validation.Required[*string]()),
 ))
 

@@ -87,8 +87,8 @@ func (r PropertyRulesForMap[M, K, V, S]) Rules(rules ...Rule[M]) PropertyRulesFo
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) When(predicate Predicate[S]) PropertyRulesForMap[M, K, V, S] {
-	r.predicates = append(r.predicates, predicate)
+func (r PropertyRulesForMap[M, K, V, S]) When(predicate Predicate[S], opts ...WhenOptions) PropertyRulesForMap[M, K, V, S] {
+	r.predicateMatcher = r.when(predicate, opts...)
 	return r
 }
 

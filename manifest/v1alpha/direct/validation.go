@@ -109,7 +109,10 @@ var (
 		validation.For(func(n NewRelicConfig) string { return n.InsightsQueryKey }).
 			WithName("insightsQueryKey").
 			HideValue().
-			When(func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) }).
+			When(
+				func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringStartsWith("NRIQ-")),
 	)
 	appDynamicsValidation = validation.New[AppDynamicsConfig](
@@ -131,7 +134,10 @@ var (
 		validation.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
-			When(func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) }).
+			When(
+				func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringJSON()),
 	)
 	splunkValidation = validation.New[SplunkConfig](
@@ -157,7 +163,10 @@ var (
 		validation.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
-			When(func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) }).
+			When(
+				func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringJSON()),
 	)
 	lightstepValidation = validation.New[LightstepConfig](
@@ -170,9 +179,7 @@ var (
 		validation.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
 			WithName("url").
 			OmitEmpty().
-			Rules(
-				validation.URL(),
-			),
+			Rules(validation.URL()),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
 		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),

@@ -141,9 +141,10 @@ var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
 		HideValue().
-		When(func(p PagerDutyAlertMethod) bool {
-			return p.IntegrationKey != "" && p.IntegrationKey != v1alpha.HiddenValue
-		}).
+		When(
+			func(p PagerDutyAlertMethod) bool { return !isHiddenValue(p.IntegrationKey) },
+			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+		).
 		Rules(validation.StringMaxLength(32)),
 )
 
@@ -176,9 +177,10 @@ var opsgenieValidation = validation.New[OpsgenieAlertMethod](
 	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
 		HideValue().
-		When(func(o OpsgenieAlertMethod) bool {
-			return o.Auth != "" && o.Auth != v1alpha.HiddenValue
-		}).
+		When(
+			func(o OpsgenieAlertMethod) bool { return !isHiddenValue(o.Auth) },
+			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+		).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if !strings.HasPrefix(v, "Basic") &&
@@ -259,7 +261,10 @@ var emailValidation = validation.New[EmailAlertMethod](
 func optionalUrlValidation() validation.Validator[string] {
 	return validation.New[string](
 		validation.For(validation.GetSelf[string]()).
-			When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
+			When(
+				func(v string) bool { return !isHiddenValue(v) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringURL()),
 	)
 }
@@ -310,6 +315,8 @@ func validateTemplateFields(templateFields []string) error {
 	}
 	return nil
 }
+
+func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(alertMethodValidation, a)
