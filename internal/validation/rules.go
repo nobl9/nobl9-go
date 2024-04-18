@@ -1,6 +1,8 @@
 package validation
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // For creates a new [PropertyRules] instance for the property
 // which value is extracted through [PropertyGetter] function.
@@ -171,6 +173,17 @@ func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
 func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 	r.mode = mode
 	return r
+}
+
+func (r PropertyRules[T, S]) plan(path planPath) {
+	if r.name != "" {
+		path = path.append(r.name)
+	}
+	for _, step := range r.steps {
+		if p, ok := step.(planner); ok {
+			p.plan(path)
+		}
+	}
 }
 
 func appendSteps[T any](slice []interface{}, steps []T) []interface{} {

@@ -77,6 +77,14 @@ func (r PropertyRulesForSlice[T, S]) Cascade(mode CascadeMode) PropertyRulesForS
 	return r
 }
 
+func (r PropertyRulesForSlice[T, S]) plan(path planPath) {
+	r.sliceRules.plan(path)
+	if r.sliceRules.name != "" {
+		path = path.append(r.sliceRules.name + "[]")
+	}
+	r.forEachRules.plan(path)
+}
+
 func SliceElementName(sliceName string, index int) string {
 	if sliceName == "" {
 		return fmt.Sprintf("[%d]", index)

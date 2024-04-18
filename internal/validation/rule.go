@@ -16,10 +16,11 @@ func NewSingleRule[T any](validate func(v T) error) SingleRule[T] {
 // It evaluates the provided validation function and enhances it
 // with optional [ErrorCode] and arbitrary details.
 type SingleRule[T any] struct {
-	validate  func(v T) error
-	errorCode ErrorCode
-	details   string
-	message   string
+	validate    func(v T) error
+	errorCode   ErrorCode
+	details     string
+	message     string
+	description string
 }
 
 // Validate runs validation function on the provided value.
@@ -82,6 +83,15 @@ func (r SingleRule[T]) WithDetails(format string, a ...any) SingleRule[T] {
 	return r
 }
 
+func (r SingleRule[T]) WithDescription(description string) SingleRule[T] {
+	r.description = description
+	return r
+}
+
+func (r SingleRule[T]) plan(path planPath) {
+	fmt.Println(path.path+": ", r.errorCode)
+}
+
 // NewRuleSet creates a new [RuleSet] instance.
 func NewRuleSet[T any](rules ...Rule[T]) RuleSet[T] {
 	return RuleSet[T]{rules: rules}
@@ -138,6 +148,14 @@ func (r RuleSet[T]) WithDetails(format string, a ...any) RuleSet[T] {
 		r.details = fmt.Sprintf(format, a...)
 	}
 	return r
+}
+
+func (r RuleSet[T]) plan(path planPath) {
+	for _, rule := range r.rules {
+		if p, ok := rule.(planner); ok {
+			p.plan(path)
+		}
+	}
 }
 
 func addDetailsToMessage(msg, details string) string {

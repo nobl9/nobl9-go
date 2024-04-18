@@ -53,3 +53,29 @@ func (v Validator[S]) Validate(st S) *ValidatorError {
 	}
 	return nil
 }
+
+type planner interface {
+	plan(path planPath)
+}
+
+type planPath struct {
+	path string
+	all  *[]planPath
+}
+
+func (p planPath) append(path string) planPath {
+	return planPath{path: p.path + "." + path}
+}
+
+func (v Validator[S]) Plan() {
+	all := make([]planPath, 0)
+	v.plan(planPath{path: "$", all: &all})
+}
+
+func (v Validator[S]) plan(path planPath) {
+	for _, rules := range v.props {
+		if p, ok := rules.(planner); ok {
+			p.plan(path)
+		}
+	}
+}

@@ -7,8 +7,12 @@ import (
 )
 
 func URL() SingleRule[*url.URL] {
-	return NewSingleRule(validateURL).WithErrorCode(ErrorCodeURL)
+	return NewSingleRule(validateURL).
+		WithErrorCode(ErrorCodeURL).
+		WithDescription(urlDescription)
 }
+
+const urlDescription = "valid URL must have a scheme (e.g. https://) and contain either host, fragment or opaque data"
 
 func validateURL(u *url.URL) error {
 	if u.Scheme == "" {

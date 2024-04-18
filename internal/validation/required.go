@@ -2,15 +2,20 @@ package validation
 
 import (
 	"reflect"
+
+	"github.com/pkg/errors"
 )
 
 func Required[T any]() SingleRule[T] {
+	msg := NewRequiredError().Message
 	return NewSingleRule(func(v T) error {
 		if isEmptyFunc(v) {
-			return NewRequiredError()
+			return errors.New(msg)
 		}
 		return nil
-	})
+	}).
+		WithErrorCode(ErrorCodeRequired).
+		WithDescription(msg)
 }
 
 // isEmptyFunc checks only the types which it makes sense for.

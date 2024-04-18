@@ -118,6 +118,16 @@ func (r PropertyRulesForMap[M, K, V, S]) Cascade(mode CascadeMode) PropertyRules
 	return r
 }
 
+func (r PropertyRulesForMap[M, K, V, S]) plan(path planPath) {
+	r.mapRules.plan(path)
+	if r.mapRules.name != "" {
+		path = path.append(r.mapRules.name)
+	}
+	r.forKeyRules.plan(path)
+	r.forValueRules.plan(path)
+	r.forItemRules.plan(path)
+}
+
 func MapElementName(mapName, key any) string {
 	if mapName == "" {
 		return fmt.Sprintf("%v", key)

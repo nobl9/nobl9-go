@@ -8,49 +8,55 @@ import (
 )
 
 func EqualTo[T comparable](compared T) SingleRule[T] {
+	msg := fmt.Sprintf(comparisonFmt, cmpEqualTo, compared)
 	return NewSingleRule(func(v T) error {
 		if v != compared {
-			return errors.Errorf(comparisonFmt, cmpEqualTo, compared)
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeEqualTo)
+	}).
+		WithErrorCode(ErrorCodeEqualTo).
+		WithDescription(msg)
 }
 
 func NotEqualTo[T comparable](compared T) SingleRule[T] {
+	msg := fmt.Sprintf(comparisonFmt, cmpNotEqualTo, compared)
 	return NewSingleRule(func(v T) error {
 		if v == compared {
-			return errors.Errorf(comparisonFmt, cmpNotEqualTo, compared)
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeNotEqualTo)
+	}).
+		WithErrorCode(ErrorCodeNotEqualTo).
+		WithDescription(msg)
 }
 
 func GreaterThan[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpGreaterThan, n)).
+	return orderedComparisonRule(cmpGreaterThan, n).
 		WithErrorCode(ErrorCodeGreaterThan)
 }
 
 func GreaterThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpGreaterThanOrEqual, n)).
+	return orderedComparisonRule(cmpGreaterThanOrEqual, n).
 		WithErrorCode(ErrorCodeGreaterThanOrEqualTo)
 }
 
 func LessThan[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpLessThan, n)).
+	return orderedComparisonRule(cmpLessThan, n).
 		WithErrorCode(ErrorCodeLessThan)
 }
 
 func LessThanOrEqualTo[T constraints.Ordered](n T) SingleRule[T] {
-	return NewSingleRule(orderedComparisonRule(cmpLessThanOrEqual, n)).
+	return orderedComparisonRule(cmpLessThanOrEqual, n).
 		WithErrorCode(ErrorCodeLessThanOrEqualTo)
 }
 
 var comparisonFmt = "should be %s '%v'"
 
-func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) func(T) error {
-	return func(v T) error {
+func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compared T) SingleRule[T] {
+	msg := fmt.Sprintf(comparisonFmt, op, compared)
+	return NewSingleRule(func(v T) error {
 		var passed bool
-		//nolint: exhaustive
 		switch op {
 		case cmpGreaterThan:
 			passed = v > compared
@@ -60,12 +66,14 @@ func orderedComparisonRule[T constraints.Ordered](op comparisonOperator, compare
 			passed = v < compared
 		case cmpLessThanOrEqual:
 			passed = v <= compared
+		default:
+			passed = false
 		}
 		if !passed {
-			return fmt.Errorf(comparisonFmt, op, compared)
+			return errors.New(msg)
 		}
 		return nil
-	}
+	}).WithDescription(msg)
 }
 
 type comparisonOperator uint8

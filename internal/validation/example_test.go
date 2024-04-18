@@ -366,7 +366,7 @@ func ExampleSingleRule_WithDetails() {
 	// Output:
 	// Validation for Teacher has failed for the following properties:
 	//   - 'name' with value 'Jake':
-	//     - string does not match regular expression: '^(Tom|Jerry)$'; Teacher can be either Tom or Jerry :)
+	//     - string must match regular expression: '^(Tom|Jerry)$'; Teacher can be either Tom or Jerry :)
 }
 
 // When testing, it can be tedious to always rely on error messages as these can change over time.
@@ -910,5 +910,5 @@ func ExampleValidator_branchingPattern() {
 	// Output:
 	// Validation for File has failed for the following properties:
 	//   - 'indent' with value 'invalid':
-	//     - string does not match regular expression: '^\s*$'
+	//     - string must match regular expression: '^\s*$'
 }
