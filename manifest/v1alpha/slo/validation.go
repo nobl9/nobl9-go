@@ -201,7 +201,7 @@ var compositeValidation = validation.New[Composite](
 			validation.For(func(b CompositeBurnRateCondition) string { return b.Operator }).
 				WithName("op").
 				Required().
-				Rules(validation.OneOf("gt")),
+				Rules(validation.EqualTo("gt")),
 		)),
 )
 

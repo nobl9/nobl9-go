@@ -10,17 +10,20 @@ import (
 )
 
 func OneOf[T comparable](values ...T) SingleRule[T] {
-	err := errors.New("must be one of " + prettyOneOfList(values))
 	return NewSingleRule(func(v T) error {
 		for i := range values {
 			if v == values[i] {
 				return nil
 			}
 		}
-		return err
+		return errors.New("must be one of " + prettyOneOfList(values))
 	}).
 		WithErrorCode(ErrorCodeOneOf).
-		WithDescription(err.Error())
+		WithDescription(func() string {
+			b := strings.Builder{}
+			prettyStringListBuilder(&b, values, false)
+			return "must be one of: " + b.String()
+		}())
 }
 
 // MutuallyExclusive checks if properties are mutually exclusive.

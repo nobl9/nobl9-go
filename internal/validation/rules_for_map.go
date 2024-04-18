@@ -118,7 +118,7 @@ func (r PropertyRulesForMap[M, K, V, S]) Cascade(mode CascadeMode) PropertyRules
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) plan(path planPath) {
+func (r PropertyRulesForMap[M, K, V, S]) plan(path rulePlanPath) {
 	r.mapRules.plan(path)
 	if r.mapRules.name != "" {
 		path = path.append(r.mapRules.name)

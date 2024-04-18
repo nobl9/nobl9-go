@@ -175,7 +175,7 @@ func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) plan(path planPath) {
+func (r PropertyRules[T, S]) plan(path rulePlanPath) {
 	if r.name != "" {
 		path = path.append(r.name)
 	}

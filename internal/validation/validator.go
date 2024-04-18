@@ -1,5 +1,7 @@
 package validation
 
+import "fmt"
+
 type validatorI[S any] interface {
 	Validate(s S) *ValidatorError
 }
@@ -55,24 +57,42 @@ func (v Validator[S]) Validate(st S) *ValidatorError {
 }
 
 type planner interface {
-	plan(path planPath)
+	plan(path rulePlanPath)
 }
 
-type planPath struct {
+type rulePlanPath struct {
 	path string
-	all  *[]planPath
+	plan rulePlan
+	all  *[]rulePlanPath
 }
 
-func (p planPath) append(path string) planPath {
-	return planPath{path: p.path + "." + path}
+type rulePlan struct {
+	typ         string
+	errorCode   ErrorCode
+	details     string
+	description string
+}
+
+func (p rulePlanPath) append(path string) rulePlanPath {
+	return rulePlanPath{path: p.path + "." + path, all: p.all}
 }
 
 func (v Validator[S]) Plan() {
-	all := make([]planPath, 0)
-	v.plan(planPath{path: "$", all: &all})
+	all := make([]rulePlanPath, 0)
+	v.plan(rulePlanPath{path: "$", all: &all})
+	properties := make(map[string][]rulePlan)
+	for _, p := range all {
+		properties[p.path] = append(properties[p.path], p.plan)
+	}
+	for path, plans := range properties {
+		fmt.Printf("%s:\n", path)
+		for _, plan := range plans {
+			fmt.Printf(" - %s\n", plan.description)
+		}
+	}
 }
 
-func (v Validator[S]) plan(path planPath) {
+func (v Validator[S]) plan(path rulePlanPath) {
 	for _, rules := range v.props {
 		if p, ok := rules.(planner); ok {
 			p.plan(path)
