@@ -6,8 +6,8 @@ type predicateMatcher[S any] struct {
 	predicates []Predicate[S]
 }
 
-func (r predicateMatcher[S]) when(predicates ...Predicate[S]) predicateMatcher[S] {
-	r.predicates = append(r.predicates, predicates...)
+func (r predicateMatcher[S]) when(predicate Predicate[S]) predicateMatcher[S] {
+	r.predicates = append(r.predicates, predicate)
 	return r
 }
 

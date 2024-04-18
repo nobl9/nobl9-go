@@ -287,7 +287,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.burnRateCondition.op",
-					Code: validation.ErrorCodeOneOf,
+					Code: validation.ErrorCodeEqualTo,
 				},
 			},
 		} {

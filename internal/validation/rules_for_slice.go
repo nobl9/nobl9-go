@@ -60,8 +60,8 @@ func (r PropertyRulesForSlice[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForS
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) When(predicates ...Predicate[S]) PropertyRulesForSlice[T, S] {
-	r.predicateMatcher = r.when(predicates...)
+func (r PropertyRulesForSlice[T, S]) When(predicate Predicate[S]) PropertyRulesForSlice[T, S] {
+	r.predicateMatcher = r.when(predicate)
 	return r
 }
 

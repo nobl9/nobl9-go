@@ -150,8 +150,8 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 	return r
 }
 
-func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.predicateMatcher = r.when(predicates...)
+func (r PropertyRules[T, S]) When(predicate Predicate[S]) PropertyRules[T, S] {
+	r.predicateMatcher = r.when(predicate)
 	return r
 }
 
