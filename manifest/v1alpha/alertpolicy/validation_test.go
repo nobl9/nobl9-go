@@ -608,7 +608,7 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 	t.Run("operator with a reference to Measurement", func(t *testing.T) {
 		for _, alertCondition := range testCases {
 			measurement, _ := ParseMeasurement(alertCondition.Measurement)
-			expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
+			expectedOperator, err := getExpectedOperatorForMeasurement(measurement)
 			assert.NoError(t, err)
 
 			allowedOps := []string{expectedOperator.String(), ""}

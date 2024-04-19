@@ -188,14 +188,18 @@ var operatorValidationRule = validation.NewSingleRule(
 			return measurementErr
 		}
 
-		expectedOperator, err := GetExpectedOperatorForMeasurement(measurement)
+		operator, err := v1alpha.ParseOperator(v.Operator)
 		if err != nil {
 			return err
 		}
 
-		operator, operatorErr := v1alpha.ParseOperator(v.Operator)
-		if operatorErr != nil {
-			return operatorErr
+		if anyOperatorSupportedMeasurements(measurement) {
+			return nil
+		}
+
+		expectedOperator, err := getExpectedOperatorForMeasurement(measurement)
+		if err != nil {
+			return err
 		}
 
 		if operator != expectedOperator {
@@ -220,5 +224,14 @@ func alertingWindowSupportedMeasurements() []string {
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),
 		MeasurementTimeToBurnEntireBudget.String(),
+	}
+}
+
+func anyOperatorSupportedMeasurements(measurement Measurement) bool {
+	switch measurement {
+	case MeasurementBurnedBudget:
+		return true
+	default:
+		return false
 	}
 }
