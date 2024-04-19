@@ -588,26 +588,44 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 func TestValidate_Spec_Condition_Operator(t *testing.T) {
 	allValidOpts := []string{"gt", "lt", "lte", "gte", ""}
 
-	testCases := []AlertCondition{
-		{
-			Measurement:      MeasurementTimeToBurnEntireBudget.String(),
-			LastsForDuration: "10m",
-			Value:            "30m",
-		},
-		{
-			Measurement:      MeasurementTimeToBurnBudget.String(),
-			LastsForDuration: "10m",
-			Value:            "30m",
-		},
-		{
-			Measurement:    MeasurementAverageBurnRate.String(),
-			Value:          30.0,
-			AlertingWindow: "5m",
-		},
-	}
-	t.Run("operator with a reference to Measurement", func(t *testing.T) {
+	t.Run("empty operator or only specific operator for measurement", func(t *testing.T) {
+		testCases := []AlertCondition{
+			// based on lasts for
+			{
+				Measurement:      MeasurementTimeToBurnEntireBudget.String(),
+				LastsForDuration: "10m",
+				Value:            "30m",
+			},
+			{
+				Measurement:      MeasurementTimeToBurnBudget.String(),
+				LastsForDuration: "10m",
+				Value:            "30m",
+			},
+			{
+				Measurement:      MeasurementAverageBurnRate.String(),
+				LastsForDuration: "5m",
+				Value:            30.0,
+			},
+			// based on alerting window
+			{
+				Measurement:    MeasurementTimeToBurnEntireBudget.String(),
+				AlertingWindow: "10m",
+				Value:          "30m",
+			},
+			{
+				Measurement:    MeasurementTimeToBurnBudget.String(),
+				AlertingWindow: "10m",
+				Value:          "30m",
+			},
+			{
+				Measurement:    MeasurementAverageBurnRate.String(),
+				AlertingWindow: "5m",
+				Value:          30.0,
+			},
+		}
 		for _, alertCondition := range testCases {
-			measurement, _ := ParseMeasurement(alertCondition.Measurement)
+			measurement, err := ParseMeasurement(alertCondition.Measurement)
+			assert.NoError(t, err)
 			expectedOperator, err := getExpectedOperatorForMeasurement(measurement)
 			assert.NoError(t, err)
 
@@ -631,6 +649,26 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("empty operator or any operator for measurement", func(t *testing.T) {
+		testCases := []AlertCondition{
+			{
+				Measurement:      MeasurementBurnedBudget.String(),
+				LastsForDuration: "10m",
+				Value:            0.3,
+			},
+		}
+		for _, alertCondition := range testCases {
+			for _, op := range allValidOpts {
+				alertPolicy := validAlertPolicy()
+				alertCondition.Operator = op
+				alertPolicy.Spec.Conditions[0] = alertCondition
+				err := validate(alertPolicy)
+				testutils.AssertNoError(t, alertPolicy, err)
+			}
+		}
+	})
+
 	t.Run("fails, invalid operator", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Operator = "noop"
