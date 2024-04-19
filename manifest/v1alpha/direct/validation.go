@@ -23,8 +23,8 @@ var directValidation = validation.New[Direct](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Rules(exactlyOneDataSourceTypeValidationRule).
 		Cascade(validation.CascadeModeStop).
+		Rules(exactlyOneDataSourceTypeValidationRule).
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
