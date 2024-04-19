@@ -20,6 +20,7 @@ const (
 
 var specMetricsValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.NewSingleRule(func(s Spec) error {
 			if !s.HasCompositeObjectives() {
 				if s.HasRawMetric() == s.HasCountMetrics() {
@@ -28,9 +29,7 @@ var specMetricsValidation = validation.New[Spec](
 			}
 			return nil
 		}).WithErrorCode(errCodeExactlyOneMetricType)).
-		StopOnError().
 		Rules(exactlyOneMetricSpecTypeValidationRule).
-		StopOnError().
 		// Each objective should have exactly two count metrics.
 		Rules(validation.NewSingleRule(func(s Spec) error {
 			for i, objective := range s.Objectives {
@@ -49,7 +48,6 @@ var specMetricsValidation = validation.New[Spec](
 			}
 			return nil
 		})).
-		StopOnError().
 		Rules(timeSliceTargetsValidationRule),
 )
 

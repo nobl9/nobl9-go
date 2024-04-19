@@ -15,8 +15,8 @@ var splunkValidation = validation.New[SplunkMetric](
 	validation.ForPointer(func(s SplunkMetric) *string { return s.Query }).
 		WithName("query").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(
 			validation.StringContains("n9time", "n9value"),
 			validation.StringMatchRegexp(

@@ -66,8 +66,6 @@ func AssertContainsErrors(
 	for _, expected := range expectedErrors {
 		found := false
 		for _, actual := range objErr.Errors {
-			var failedMessage, failedContainsMessage, failedCode bool
-
 			var propErr *validation.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
@@ -77,24 +75,25 @@ func AssertContainsErrors(
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
-				if expected.Message != "" && expected.Message != actualRuleErr.Message {
-					failedMessage = true
-					break
+				matchedCtr := 0
+				if expected.Message == "" || expected.Message == actualRuleErr.Message {
+					matchedCtr++
 				}
-				if expected.ContainsMessage != "" &&
-					!strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
-					failedContainsMessage = true
-					break
+				if expected.ContainsMessage == "" ||
+					strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					matchedCtr++
 				}
-				if expected.Code != "" &&
-					(expected.Code != actualRuleErr.Code && !validation.HasErrorCode(actualRuleErr, expected.Code)) {
-					failedCode = true
+				if expected.Code == "" ||
+					expected.Code == actualRuleErr.Code ||
+					validation.HasErrorCode(actualRuleErr, expected.Code) {
+					matchedCtr++
+				}
+				if matchedCtr == 3 {
+					found = true
 					break
 				}
 			}
-
-			if !failedMessage && !failedContainsMessage && !failedCode {
-				found = true
+			if found {
 				break
 			}
 		}

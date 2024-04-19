@@ -77,8 +77,6 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		IncludeForEach(azureMonitorMetricDimensionValidation).
-		// We don't want to check names uniqueness if they're empty.
-		StopOnError().
 		Rules(validation.SliceUnique(func(d AzureMonitorMetricDimension) string {
 			if d.Name == nil {
 				return ""

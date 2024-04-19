@@ -1,146 +1,79 @@
 package validation
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // ForSlice creates a new [PropertyRulesForSlice] instance for a slice property
 // which value is extracted through [PropertyGetter] function.
 func ForSlice[T, S any](getter PropertyGetter[[]T, S]) PropertyRulesForSlice[T, S] {
-	return PropertyRulesForSlice[T, S]{getter: getter}
+	return PropertyRulesForSlice[T, S]{
+		sliceRules:   For(GetSelf[[]T]()),
+		forEachRules: For(GetSelf[T]()),
+		getter:       getter,
+	}
 }
 
 // PropertyRulesForSlice is responsible for validating a single property.
 type PropertyRulesForSlice[T, S any] struct {
-	name       string
-	getter     PropertyGetter[[]T, S]
-	steps      []interface{}
-	predicates []Predicate[S]
+	sliceRules   PropertyRules[[]T, []T]
+	forEachRules PropertyRules[T, T]
+	getter       PropertyGetter[[]T, S]
+	mode         CascadeMode
+
+	predicateMatcher[S]
 }
 
 // Validate executes each of the rules sequentially and aggregates the encountered errors.
-// nolint: prealloc, gocognit
 func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
-	var (
-		allErrors          PropertyErrors
-		sliceErrors        []error
-		propValue          []T
-		previousStepFailed bool
-	)
-	for _, predicate := range r.predicates {
-		if !predicate(st) {
-			return nil
+	if !r.matchPredicates(st) {
+		return nil
+	}
+	v := r.getter(st)
+	err := r.sliceRules.Validate(v)
+	if r.mode == CascadeModeStop && err != nil {
+		return err
+	}
+	for i, element := range v {
+		forEachErr := r.forEachRules.Validate(element)
+		if forEachErr == nil {
+			continue
+		}
+		for _, e := range forEachErr {
+			e.IsSliceElementError = true
+			err = append(err, e.PrependPropertyName(SliceElementName(r.sliceRules.name, i)))
 		}
 	}
-	sliceElementErrors := make(map[int]sliceElementError)
-loop:
-	for _, step := range r.steps {
-		switch v := step.(type) {
-		case stopOnErrorStep:
-			if previousStepFailed {
-				break loop
-			}
-		case Predicate[S]:
-			if !v(st) {
-				break loop
-			}
-		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
-		case Rule[T]:
-			errorEncountered := false
-			for i, element := range r.getter(st) {
-				err := v.Validate(element)
-				if err == nil {
-					continue
-				}
-				errorEncountered = true
-				switch ev := err.(type) {
-				case *PropertyError:
-					ev.IsSliceElementError = true
-					allErrors = append(allErrors, ev.PrependPropertyName(SliceElementName(r.name, i)))
-				default:
-					fErrs := sliceElementErrors[i].Errors
-					sliceElementErrors[i] = sliceElementError{Errors: append(fErrs, err), PropValue: element}
-				}
-			}
-			previousStepFailed = errorEncountered
-		case Rule[[]T]:
-			propValue = r.getter(st)
-			err := v.Validate(propValue)
-			if err != nil {
-				switch ev := err.(type) {
-				case *PropertyError:
-					ev.IsSliceElementError = true
-					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
-				default:
-					sliceErrors = append(sliceErrors, err)
-				}
-			}
-			previousStepFailed = err != nil
-		case validatorI[T]:
-			errorEncountered := false
-			for i, element := range r.getter(st) {
-				err := v.Validate(element)
-				if err == nil {
-					continue
-				}
-				errorEncountered = true
-				for _, e := range err.Errors {
-					e.IsSliceElementError = true
-					allErrors = append(allErrors, e.PrependPropertyName(SliceElementName(r.name, i)))
-				}
-			}
-			previousStepFailed = errorEncountered
-		}
-	}
-	if len(sliceErrors) > 0 {
-		allErrors = append(allErrors, NewPropertyError(r.name, propValue, sliceErrors...))
-	}
-	for i, element := range sliceElementErrors {
-		pErr := NewPropertyError(
-			SliceElementName(r.name, i),
-			element.PropValue,
-			element.Errors...)
-		pErr.IsSliceElementError = true
-		allErrors = append(allErrors, pErr)
-	}
-	if len(allErrors) > 0 {
-		return allErrors
-	}
-	return nil
-}
-
-type sliceElementError struct {
-	PropValue interface{}
-	Errors    []error
+	return err.Aggregate()
 }
 
 func (r PropertyRulesForSlice[T, S]) WithName(name string) PropertyRulesForSlice[T, S] {
-	r.name = name
+	r.sliceRules.name = name
 	return r
 }
 
 func (r PropertyRulesForSlice[T, S]) RulesForEach(rules ...Rule[T]) PropertyRulesForSlice[T, S] {
-	r.steps = appendSteps(r.steps, rules)
+	r.forEachRules = r.forEachRules.Rules(rules...)
 	return r
 }
 
 func (r PropertyRulesForSlice[T, S]) Rules(rules ...Rule[[]T]) PropertyRulesForSlice[T, S] {
-	r.steps = appendSteps(r.steps, rules)
+	r.sliceRules = r.sliceRules.Rules(rules...)
 	return r
 }
 
 func (r PropertyRulesForSlice[T, S]) When(predicates ...Predicate[S]) PropertyRulesForSlice[T, S] {
-	r.predicates = append(r.predicates, predicates...)
+	r.predicateMatcher = r.when(predicates...)
 	return r
 }
 
 func (r PropertyRulesForSlice[T, S]) IncludeForEach(rules ...Validator[T]) PropertyRulesForSlice[T, S] {
-	r.steps = appendSteps(r.steps, rules)
+	r.forEachRules = r.forEachRules.Include(rules...)
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) StopOnError() PropertyRulesForSlice[T, S] {
-	r.steps = append(r.steps, stopOnErrorStep(0))
+func (r PropertyRulesForSlice[T, S]) Cascade(mode CascadeMode) PropertyRulesForSlice[T, S] {
+	r.mode = mode
+	r.sliceRules = r.sliceRules.Cascade(mode)
+	r.forEachRules = r.forEachRules.Cascade(mode)
 	return r
 }
 

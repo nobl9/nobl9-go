@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -48,6 +49,45 @@ func (e PropertyErrors) HideValue() PropertyErrors {
 	return e
 }
 
+// Sort should be always called after Aggregate.
+func (e PropertyErrors) Sort() PropertyErrors {
+	if len(e) == 0 {
+		return e
+	}
+	sort.Slice(e, func(i, j int) bool {
+		e1, e2 := e[i], e[j]
+		if e1.PropertyName != e2.PropertyName {
+			return e1.PropertyName < e2.PropertyName
+		}
+		if e1.PropertyValue != e2.PropertyValue {
+			return e1.PropertyValue < e2.PropertyValue
+		}
+		if e1.IsKeyError != e2.IsKeyError {
+			return e1.IsKeyError
+		}
+		return e1.IsSliceElementError
+	})
+	return e
+}
+
+func (e PropertyErrors) Aggregate() PropertyErrors {
+	if len(e) == 0 {
+		return nil
+	}
+	agg := make(PropertyErrors, 0, len(e))
+outer:
+	for _, e1 := range e {
+		for _, e2 := range agg {
+			if e1.Equal(e2) {
+				e2.Errors = append(e2.Errors, e1.Errors...)
+				continue outer
+			}
+		}
+		agg = append(agg, e1)
+	}
+	return agg
+}
+
 func NewPropertyError(propertyName string, propertyValue interface{}, errs ...error) *PropertyError {
 	return &PropertyError{
 		PropertyName:  propertyName,
@@ -61,9 +101,9 @@ type PropertyError struct {
 	PropertyValue string `json:"propertyValue"`
 	// IsKeyError is set to true if the error was created through map key validation.
 	// PropertyValue in this scenario will be the key value, equal to the last element of PropertyName path.
-	IsKeyError bool `json:"isKeyError"`
+	IsKeyError bool `json:"isKeyError,omitempty"`
 	// IsSliceElementError is set to true if the error was created through slice element validation.
-	IsSliceElementError bool         `json:"isSliceElementError"`
+	IsSliceElementError bool         `json:"isSliceElementError,omitempty"`
 	Errors              []*RuleError `json:"errors"`
 }
 
@@ -84,6 +124,13 @@ func (e *PropertyError) Error() string {
 	}
 	JoinErrors(b, e.Errors, indent)
 	return b.String()
+}
+
+func (e *PropertyError) Equal(cmp *PropertyError) bool {
+	return e.PropertyName == cmp.PropertyName &&
+		e.PropertyValue == cmp.PropertyValue &&
+		e.IsKeyError == cmp.IsKeyError &&
+		e.IsSliceElementError == cmp.IsSliceElementError
 }
 
 const (

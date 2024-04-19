@@ -15,8 +15,8 @@ var graphiteValidation = validation.New[GraphiteMetric](
 	validation.ForPointer(func(g GraphiteMetric) *string { return g.MetricPath }).
 		WithName("metricPath").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(
 			// Graphite allows the use of wildcards in metric paths, but we decided not to support it for our MVP.
 			// https://graphite.readthedocs.io/en/latest/render_api.html#paths-and-wildcards
