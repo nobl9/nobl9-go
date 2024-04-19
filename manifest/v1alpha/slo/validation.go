@@ -12,7 +12,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var sloValidation = validation.New[SLO](
+var validator = validation.New[SLO](
 	validation.For(func(s SLO) SLO { return s }).
 		Include(sloValidationComposite),
 	validation.For(func(s SLO) Metadata { return s.Metadata }).
@@ -360,7 +360,7 @@ func validate(s SLO) *v1alpha.ObjectError {
 			}
 		}
 	}
-	return v1alpha.ValidateObject(sloValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {

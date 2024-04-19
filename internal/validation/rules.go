@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"reflect"
+
 	"github.com/pkg/errors"
 )
 
@@ -71,6 +73,7 @@ type PropertyRules[T, S any] struct {
 	hideValue       bool
 	isPointer       bool
 	mode            CascadeMode
+	examples        []string
 
 	predicateMatcher[S]
 }
@@ -140,6 +143,13 @@ func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
 	return r
 }
 
+func (r PropertyRules[T, S]) WithExamples(examples ...any) PropertyRules[T, S] {
+	for _, ex := range examples {
+		r.examples = append(r.examples, propertyValueString(ex))
+	}
+	return r
+}
+
 func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
@@ -175,13 +185,18 @@ func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) plan(path rulePlanPath) {
+func (r PropertyRules[T, S]) plan(builder planBuilder) {
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.examples...)
+	builder.propertyPlan.Type = reflect.TypeOf(*new(T)).Name()
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
+	}
 	if r.name != "" {
-		path = path.append(r.name)
+		builder = builder.append(r.name)
 	}
 	for _, step := range r.steps {
 		if p, ok := step.(planner); ok {
-			p.plan(path)
+			p.plan(builder)
 		}
 	}
 }

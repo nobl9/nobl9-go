@@ -1654,10 +1654,6 @@ fetch consumed_api
 	}},
 }
 
-func TestPlanValidation(t *testing.T) {
-	sloValidation.Plan()
-}
-
 func ptr[T any](v T) *T { return &v }
 
 func joinErrorCodes(codes ...string) string {

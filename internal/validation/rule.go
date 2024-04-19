@@ -2,7 +2,6 @@ package validation
 
 import (
 	"fmt"
-	"reflect"
 )
 
 // Rule is the interface for all validation rules.
@@ -91,14 +90,14 @@ func (r SingleRule[T]) WithDescription(description string) SingleRule[T] {
 	return r
 }
 
-func (r SingleRule[T]) plan(path rulePlanPath) {
-	path.plan = rulePlan{
-		typ:         reflect.TypeOf(*new(T)).Name(),
-		errorCode:   r.errorCode,
-		details:     r.details,
-		description: r.description,
+func (r SingleRule[T]) plan(builder planBuilder) {
+	builder.rulePlan = RulePlan{
+		ErrorCode:   r.errorCode,
+		Details:     r.details,
+		Description: r.description,
+		Conditions:  builder.rulePlan.Conditions,
 	}
-	*path.all = append(*path.all, path)
+	*builder.all = append(*builder.all, builder)
 }
 
 // NewRuleSet creates a new [RuleSet] instance.
@@ -159,10 +158,10 @@ func (r RuleSet[T]) WithDetails(format string, a ...any) RuleSet[T] {
 	return r
 }
 
-func (r RuleSet[T]) plan(path rulePlanPath) {
+func (r RuleSet[T]) plan(builder planBuilder) {
 	for _, rule := range r.rules {
 		if p, ok := rule.(planner); ok {
-			p.plan(path)
+			p.plan(builder)
 		}
 	}
 }

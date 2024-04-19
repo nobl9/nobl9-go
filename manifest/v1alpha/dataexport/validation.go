@@ -16,7 +16,7 @@ var S3BucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$
 var DNSNameRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 var GCSNonDNSNameBucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`)
 
-var dataExportValidation = validation.New[DataExport](
+var validator = validation.New[DataExport](
 	validation.For(func(d DataExport) Metadata { return d.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(d DataExport) Spec { return d.Spec }).
@@ -121,5 +121,5 @@ var bucketDNSNameValidation = validation.New[string](
 	)
 
 func validate(s DataExport) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(dataExportValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }

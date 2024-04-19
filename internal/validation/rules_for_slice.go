@@ -46,7 +46,12 @@ func (r PropertyRulesForSlice[T, S]) Validate(st S) PropertyErrors {
 }
 
 func (r PropertyRulesForSlice[T, S]) WithName(name string) PropertyRulesForSlice[T, S] {
-	r.sliceRules.name = name
+	r.sliceRules = r.sliceRules.WithName(name)
+	return r
+}
+
+func (r PropertyRulesForSlice[T, S]) WithExamples(examples ...any) PropertyRulesForSlice[T, S] {
+	r.sliceRules = r.sliceRules.WithExamples(examples...)
 	return r
 }
 
@@ -77,12 +82,16 @@ func (r PropertyRulesForSlice[T, S]) Cascade(mode CascadeMode) PropertyRulesForS
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) plan(path rulePlanPath) {
-	r.sliceRules.plan(path)
-	if r.sliceRules.name != "" {
-		path = path.append(r.sliceRules.name + "[*]")
+func (r PropertyRulesForSlice[T, S]) plan(builder planBuilder) {
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
-	r.forEachRules.plan(path)
+	r.sliceRules.plan(builder)
+	if r.sliceRules.name != "" {
+		builder = builder.append(r.sliceRules.name + "[*]")
+	}
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.sliceRules.examples...)
+	r.forEachRules.plan(builder)
 }
 
 func SliceElementName(sliceName string, index int) string {

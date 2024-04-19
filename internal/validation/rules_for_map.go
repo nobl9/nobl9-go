@@ -63,7 +63,12 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 }
 
 func (r PropertyRulesForMap[M, K, V, S]) WithName(name string) PropertyRulesForMap[M, K, V, S] {
-	r.mapRules.name = name
+	r.mapRules = r.mapRules.WithName(name)
+	return r
+}
+
+func (r PropertyRulesForMap[M, K, V, S]) WithExamples(examples ...any) PropertyRulesForMap[M, K, V, S] {
+	r.mapRules = r.mapRules.WithExamples(examples...)
 	return r
 }
 
@@ -118,14 +123,18 @@ func (r PropertyRulesForMap[M, K, V, S]) Cascade(mode CascadeMode) PropertyRules
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) plan(path rulePlanPath) {
-	r.mapRules.plan(path)
-	if r.mapRules.name != "" {
-		path = path.append(r.mapRules.name)
+func (r PropertyRulesForMap[M, K, V, S]) plan(builder planBuilder) {
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
-	r.forKeyRules.plan(path)
-	r.forValueRules.plan(path)
-	r.forItemRules.plan(path)
+	r.mapRules.plan(builder)
+	if r.mapRules.name != "" {
+		builder = builder.append(r.mapRules.name)
+	}
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.mapRules.examples...)
+	r.forKeyRules.plan(builder)
+	r.forValueRules.plan(builder)
+	r.forItemRules.plan(builder)
 }
 
 func MapElementName(mapName, key any) string {

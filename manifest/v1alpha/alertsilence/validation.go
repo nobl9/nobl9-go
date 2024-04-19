@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var alertSilenceValidation = validation.New[AlertSilence](
+var validator = validation.New[AlertSilence](
 	validation.For(validation.GetSelf[AlertSilence]()).
 		Cascade(validation.CascadeModeStop).
 		Include(metadataValidation).
@@ -103,5 +103,5 @@ var alertPolicyProjectConsistencyRule = validation.NewSingleRule(func(s AlertSil
 })
 
 func validate(s AlertSilence) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(alertSilenceValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }

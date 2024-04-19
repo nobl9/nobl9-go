@@ -11,7 +11,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var directValidation = validation.New[Direct](
+var validator = validation.New[Direct](
 	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
@@ -365,5 +365,5 @@ func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) valida
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
 
 func validate(d Direct) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(directValidation, d)
+	return v1alpha.ValidateObject(validator, d)
 }

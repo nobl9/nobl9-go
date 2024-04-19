@@ -22,7 +22,7 @@ const (
 var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
 var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
 
-var alertMethodValidation = validation.New[AlertMethod](
+var validator = validation.New[AlertMethod](
 	validation.For(func(a AlertMethod) Metadata { return a.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(a AlertMethod) Spec { return a.Spec }).
@@ -328,5 +328,5 @@ func validateTemplateFields(templateFields []string) error {
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(alertMethodValidation, a)
+	return v1alpha.ValidateObject(validator, a)
 }
