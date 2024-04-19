@@ -40,10 +40,8 @@ func (v Validator[S]) When(predicate Predicate[S], opts ...WhenOptions) Validato
 // If any predicate does not pass the validation won't be executed (returns nil).
 // All errors returned by property rules will be aggregated and wrapped in [ValidatorError].
 func (v Validator[S]) Validate(st S) *ValidatorError {
-	for _, predicate := range v.predicates {
-		if !predicate(st) {
-			return nil
-		}
+	if !v.matchPredicates(st) {
+		return nil
 	}
 	var allErrors PropertyErrors
 	for _, rules := range v.props {

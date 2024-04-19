@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"strings"
+
 	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -32,10 +34,14 @@ var attributeRequired = validation.New[HoneycombMetric](
 		Rules(
 			validation.StringMaxLength(255),
 			validation.StringNotEmpty()),
-).When(func(h HoneycombMetric) bool {
-	return slices.Contains([]string{
-		"SUM", "AVG", "CONCURRENCY", "COUNT", "COUNT_DISTINCT", "MAX", "MIN",
-		"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
-		"RATE_AVG", "RATE_SUM", "RATE_MAX",
-	}, h.Calculation)
-})
+).When(
+	func(h HoneycombMetric) bool {
+		return slices.Contains([]string{
+			"SUM", "AVG", "CONCURRENCY", "COUNT", "COUNT_DISTINCT", "MAX", "MIN",
+			"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
+			"RATE_AVG", "RATE_SUM", "RATE_MAX",
+		}, h.Calculation)
+	},
+	validation.WhenDescription("calculation is one of: %s",
+		strings.Join(supportedHoneycombCalculationTypes, ", ")),
+)

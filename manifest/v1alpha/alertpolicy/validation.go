@@ -115,20 +115,28 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 		Required().
 		Rules(validation.GreaterThan[time.Duration](0)),
 ).
-	When(func(c AlertCondition) bool {
-		return c.Measurement == MeasurementTimeToBurnBudget.String() ||
-			c.Measurement == MeasurementTimeToBurnEntireBudget.String()
-	})
+	When(
+		func(c AlertCondition) bool {
+			return c.Measurement == MeasurementTimeToBurnBudget.String() ||
+				c.Measurement == MeasurementTimeToBurnEntireBudget.String()
+		},
+		validation.WhenDescription("measurement is is either '%s' or '%s'",
+			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
+	)
 
 var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
 		OmitEmpty(),
 ).
-	When(func(c AlertCondition) bool {
-		return c.Measurement == MeasurementBurnedBudget.String() ||
-			c.Measurement == MeasurementAverageBurnRate.String()
-	})
+	When(
+		func(c AlertCondition) bool {
+			return c.Measurement == MeasurementBurnedBudget.String() ||
+				c.Measurement == MeasurementAverageBurnRate.String()
+		},
+		validation.WhenDescription("measurement is is either '%s' or '%s'",
+			MeasurementBurnedBudget, MeasurementAverageBurnRate),
+	)
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
 	isAlertingWindowSupported := false

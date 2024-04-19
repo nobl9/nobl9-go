@@ -100,7 +100,10 @@ var sloValidationComposite = validation.New[SLO](
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
 		),
-).When(func(s SLO) bool { return s.Spec.HasCompositeObjectives() })
+).When(
+	func(s SLO) bool { return s.Spec.HasCompositeObjectives() },
+	validation.WhenDescription("at least one composite objective is defined"),
+)
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
@@ -333,7 +336,10 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 		Required().
 		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 ).
-	When(func(o Objective) bool { return o.RawMetric != nil })
+	When(
+		func(o Objective) bool { return o.RawMetric != nil },
+		validation.WhenDescription("rawMetric is defined"),
+	)
 
 var objectiveBaseValidation = validation.New[ObjectiveBase](
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
@@ -369,7 +375,10 @@ var specValidationNonComposite = validation.New[Spec](
 		WithName("indicator").
 		Required().
 		Include(indicatorValidation),
-).When(func(s Spec) bool { return !s.HasCompositeObjectives() })
+).When(
+	func(s Spec) bool { return !s.HasCompositeObjectives() },
+	validation.WhenDescription("none of the objectives is of composite type"),
+)
 
 var specValidationComposite = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
@@ -409,4 +418,7 @@ var specValidationComposite = validation.New[Spec](
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),
-).When(func(s Spec) bool { return s.HasCompositeObjectives() })
+).When(
+	func(s Spec) bool { return s.HasCompositeObjectives() },
+	validation.WhenDescription("at least one composite objective is defined"),
+)

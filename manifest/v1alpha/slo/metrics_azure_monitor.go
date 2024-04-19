@@ -89,7 +89,10 @@ var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
 	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
 		Rules(validation.Forbidden[string]()),
-).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics })
+).When(
+	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics },
+	validation.WhenDescription("dataType is '%s'", AzureMonitorDataTypeMetrics),
+)
 
 var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
 
@@ -137,7 +140,10 @@ var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric
 	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		Rules(validation.Forbidden[[]AzureMonitorMetricDimension]()),
-).When(func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs })
+).When(
+	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs },
+	validation.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
+)
 
 var azureMonitorMetricDimensionValidation = validation.New[AzureMonitorMetricDimension](
 	validation.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
@@ -212,4 +218,7 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 			}
 			return nil
 		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
-).When(whenCountMetricsIs(v1alpha.AzureMonitor))
+).When(
+	whenCountMetricsIs(v1alpha.AzureMonitor),
+	validation.WhenDescription("countMetrics is azureMonitor"),
+)

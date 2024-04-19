@@ -29,7 +29,10 @@ var bigQueryCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo)),
-).When(whenCountMetricsIs(v1alpha.BigQuery))
+).When(
+	whenCountMetricsIs(v1alpha.BigQuery),
+	validation.WhenDescription("countMetrics is bigQuery"),
+)
 
 var bigQueryValidation = validation.New[BigQueryMetric](
 	validation.For(func(b BigQueryMetric) string { return b.ProjectID }).

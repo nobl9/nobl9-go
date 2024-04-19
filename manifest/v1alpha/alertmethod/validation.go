@@ -236,7 +236,10 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 				return nil
 			}),
 		),
-).When(func(v TeamsAlertMethod) bool { return v.URL != "" && v.URL != v1alpha.HiddenValue })
+).When(
+	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
+	validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+)
 
 var emailValidation = validation.New[EmailAlertMethod](
 	validation.For(validation.GetSelf[EmailAlertMethod]()).
@@ -288,7 +291,10 @@ var webhookHeaderValueValidation = validation.New[WebhookHeader](
 		WithName("value").
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(h WebhookHeader) bool { return !h.IsSecret })
+).When(
+	func(h WebhookHeader) bool { return !h.IsSecret },
+	validation.WhenDescription("isSecret is false"),
+)
 
 var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
 	validation.For(func(h WebhookHeader) string { return h.Value }).
@@ -296,7 +302,10 @@ var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
 		HideValue().
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(h WebhookHeader) bool { return h.IsSecret })
+).When(
+	func(h WebhookHeader) bool { return h.IsSecret },
+	validation.WhenDescription("isSecret is true"),
+)
 
 func extractTemplateFields(template string) []string {
 	matches := templateFieldsRegex.FindAllStringSubmatch(template, -1)

@@ -61,7 +61,10 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo),
 		),
-).When(whenCountMetricsIs(v1alpha.SumoLogic))
+).When(
+	whenCountMetricsIs(v1alpha.SumoLogic),
+	validation.WhenDescription("countMetrics is sumoLogic"),
+)
 
 var sumoLogicValidation = validation.New[SumoLogicMetric](
 	validation.For(validation.GetSelf[SumoLogicMetric]()).
@@ -99,9 +102,10 @@ var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
 		Required().
 		Rules(validation.OneOf(sumoLogicValidRollups...)),
 ).
-	When(func(m SumoLogicMetric) bool {
-		return m.Type != nil && *m.Type == sumoLogicTypeMetric
-	})
+	When(
+		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeMetric },
+		validation.WhenDescription("type is '%s'", sumoLogicTypeMetric),
+	)
 
 var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
@@ -121,9 +125,10 @@ var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
 		WithName("rollup").
 		Rules(validation.Forbidden[string]()),
 ).
-	When(func(m SumoLogicMetric) bool {
-		return m.Type != nil && *m.Type == sumoLogicTypeLogs
-	})
+	When(
+		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeLogs },
+		validation.WhenDescription("type is '%s'", sumoLogicTypeLogs),
+	)
 
 func validateSumoLogicTimeslice(query string) error {
 	timeSlice, err := getTimeSliceFromSumoLogicQuery(query)
