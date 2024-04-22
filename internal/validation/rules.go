@@ -1,8 +1,6 @@
 package validation
 
 import (
-	"reflect"
-
 	"github.com/pkg/errors"
 )
 
@@ -44,6 +42,7 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 			}
 			return transformed, v, nil
 		},
+		originalType: getTypeString[T](),
 	}
 }
 
@@ -74,6 +73,7 @@ type PropertyRules[T, S any] struct {
 	isPointer       bool
 	mode            CascadeMode
 	examples        []string
+	originalType    string
 
 	predicateMatcher[S]
 }
@@ -143,10 +143,8 @@ func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
 	return r
 }
 
-func (r PropertyRules[T, S]) WithExamples(examples ...any) PropertyRules[T, S] {
-	for _, ex := range examples {
-		r.examples = append(r.examples, propertyValueString(ex))
-	}
+func (r PropertyRules[T, S]) WithExamples(examples ...string) PropertyRules[T, S] {
+	r.examples = append(r.examples, examples...)
 	return r
 }
 
@@ -187,9 +185,13 @@ func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 
 func (r PropertyRules[T, S]) plan(builder planBuilder) {
 	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.examples...)
-	builder.propertyPlan.Type = reflect.TypeOf(*new(T)).Name()
 	for _, predicate := range r.predicates {
 		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
+	}
+	if r.originalType != "" {
+		builder.propertyPlan.Type = r.originalType
+	} else {
+		builder.propertyPlan.Type = getTypeString[T]()
 	}
 	if r.name != "" {
 		builder = builder.append(r.name)

@@ -102,8 +102,12 @@ func main() {
 			Properties: validation.Plan(v1alphaRoleBinding.RoleBinding{}.GetValidator()),
 		},
 	}
-	out := os.Stdout
-	out, _ = os.OpenFile("validation_plan.yaml", os.O_CREATE|os.O_WRONLY, 0644)
+	out, err := os.OpenFile("validation_plan.yaml", os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		panic(err)
+	}
 	enc := yaml.NewEncoder(out, yaml.Indent(2))
-	_ = enc.Encode(plan)
+	if err = enc.Encode(plan); err != nil {
+		panic(err)
+	}
 }

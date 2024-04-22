@@ -3,8 +3,11 @@ package validation_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"time"
+
+	"github.com/goccy/go-yaml"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
@@ -911,4 +914,47 @@ func ExampleValidator_branchingPattern() {
 	// Validation for File has failed for the following properties:
 	//   - 'indent' with value 'invalid':
 	//     - string must match regular expression: '^\s*$'
+}
+
+// When documenting an API it's often a struggle to keep consistency
+// between the code and documentation we write for it.
+// What If your code could be self-descriptive?
+// Specifically, what If we could generate documentation out of our validation rules?
+// We can achieve that by using [Plan] function!
+//
+// There are multiple ways to improve the generated documentation:
+//   - Use [PropertyRules.WithExamples] to provide a list of example values for the property.
+//   - Use [SingleRule.WithDescription] to provide a plan-only description for your rule.
+//     For builtin rules, the description is already provided.
+//   - Use [WhenDescription] to provide a plan-only description for your when conditions.
+func ExamplePlan() {
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			WithExamples("Jake", "John").
+			When(
+				func(t Teacher) bool { return t.Name == "Jerry" },
+				validation.WhenDescription("name is Jerry"),
+			).
+			Rules(
+				validation.NotEqualTo("Jerry").
+					WithDetails("Jerry is just a name!"),
+			),
+	)
+
+	properties := validation.Plan(v)
+	_ = yaml.NewEncoder(os.Stdout, yaml.Indent(2)).Encode(properties)
+
+	// Output:
+	// - path: $.name
+	//   type: string
+	//   examples:
+	//   - Jake
+	//   - John
+	//   rules:
+	//   - description: should be not equal to 'Jerry'
+	//     details: Jerry is just a name!
+	//     errorCode: not_equal_to
+	//     conditions:
+	//     - name is Jerry
 }

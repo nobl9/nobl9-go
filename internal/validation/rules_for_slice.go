@@ -50,7 +50,7 @@ func (r PropertyRulesForSlice[T, S]) WithName(name string) PropertyRulesForSlice
 	return r
 }
 
-func (r PropertyRulesForSlice[T, S]) WithExamples(examples ...any) PropertyRulesForSlice[T, S] {
+func (r PropertyRulesForSlice[T, S]) WithExamples(examples ...string) PropertyRulesForSlice[T, S] {
 	r.sliceRules = r.sliceRules.WithExamples(examples...)
 	return r
 }

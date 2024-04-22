@@ -2,10 +2,12 @@ package validation
 
 import "fmt"
 
+// WhenOptions defines optional parameters for the When conditions.
 type WhenOptions struct {
 	description string
 }
 
+// WhenDescription sets the description for the When condition.
 func WhenDescription(format string, a ...interface{}) WhenOptions {
 	return WhenOptions{description: fmt.Sprintf(format, a...)}
 }

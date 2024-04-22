@@ -51,7 +51,7 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[SLO]("metadata.labels") {
+	for name, test := range v1alphatest.GetLabelsTestCases[SLO](t, "metadata.labels") {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Labels = test.Labels
@@ -61,7 +61,7 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO]("metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO](t, "metadata.annotations") {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Annotations = test.Annotations
