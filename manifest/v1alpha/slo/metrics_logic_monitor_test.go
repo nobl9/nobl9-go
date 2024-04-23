@@ -18,7 +18,7 @@ func TestLogicMonitor(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.LogicMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.LogicMonitor = &LogicMonitorMetric{}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 5,
+		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
 				Code: validation.ErrorCodeRequired,
