@@ -30,6 +30,7 @@ ignorePaths:
   - "**/test_data/**"
   - "docs/mock_example/mocks/*"
 words:
+  - MAXRTT
   - aggs
   - alertmethod
   - alertpolicy
@@ -85,7 +86,6 @@ words:
   - logfmt
   - logql
   - mapstructure
-  - MAXRTT
   - memstats
   - mktemp
   - mockgen
