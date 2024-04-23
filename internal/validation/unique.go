@@ -32,5 +32,13 @@ func SliceUnique[S []V, V any, H comparable](hashFunc HashFunction[V, H], constr
 			unique[hash] = i
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeSliceUnique)
+	}).
+		WithErrorCode(ErrorCodeSliceUnique).
+		WithDescription(func() string {
+			msg := "elements must be unique"
+			if len(constraints) > 0 {
+				msg += " according to the following constraints: " + strings.Join(constraints, ", ")
+			}
+			return msg
+		}())
 }

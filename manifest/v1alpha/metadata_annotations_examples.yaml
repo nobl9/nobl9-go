@@ -1,0 +1,4 @@
+team: sales
+env: prod
+region: us
+area: latency

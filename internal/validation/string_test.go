@@ -28,12 +28,12 @@ func TestStringMatchRegexp(t *testing.T) {
 	})
 	t.Run("fails", func(t *testing.T) {
 		err := StringMatchRegexp(re).Validate("cd")
-		assert.EqualError(t, err, "string does not match regular expression: '[ab]+'")
+		assert.EqualError(t, err, "string must match regular expression: '[ab]+'")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringMatchRegexp))
 	})
 	t.Run("examples output", func(t *testing.T) {
 		err := StringMatchRegexp(re, "ab", "a", "b").Validate("cd")
-		assert.EqualError(t, err, "string does not match regular expression: '[ab]+' (e.g. 'ab', 'a', 'b')")
+		assert.EqualError(t, err, "string must match regular expression: '[ab]+' (e.g. 'ab', 'a', 'b')")
 		assert.True(t, HasErrorCode(err, ErrorCodeStringMatchRegexp))
 	})
 }

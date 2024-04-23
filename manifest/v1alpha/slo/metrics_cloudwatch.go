@@ -90,14 +90,20 @@ var cloudWatchSQLConfigValidation = validation.New[CloudWatchMetric](
 		WithName("sql").
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() },
+	validation.WhenDescription("sql is provided"),
+)
 
 var cloudWatchJSONConfigValidation = validation.New[CloudWatchMetric](
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
 		WithName("json").
 		Required().
 		Rules(cloudWatchJSONValidationRule),
-).When(func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() },
+	validation.WhenDescription("json is provided"),
+)
 
 var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
@@ -136,7 +142,10 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
 		Rules(validation.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
-).When(func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
+	validation.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
+)
 
 var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:

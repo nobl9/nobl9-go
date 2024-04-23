@@ -16,9 +16,10 @@ func New[S any](props ...propertyRulesI[S]) Validator[S] {
 // Validator is the top level validation entity.
 // It serves as an aggregator for [PropertyRules].
 type Validator[S any] struct {
-	props      []propertyRulesI[S]
-	name       string
-	predicates []Predicate[S]
+	props []propertyRulesI[S]
+	name  string
+
+	predicateMatcher[S]
 }
 
 // WithName when a rule fails will pass the provided name to [ValidatorError.WithName].
@@ -28,8 +29,8 @@ func (v Validator[S]) WithName(name string) Validator[S] {
 }
 
 // When defines accepts predicates which will be evaluated BEFORE [Validator] validates ANY rules.
-func (v Validator[S]) When(predicates ...Predicate[S]) Validator[S] {
-	v.predicates = append(v.predicates, predicates...)
+func (v Validator[S]) When(predicate Predicate[S], opts ...WhenOptions) Validator[S] {
+	v.predicateMatcher = v.when(predicate, opts...)
 	return v
 }
 
@@ -37,10 +38,8 @@ func (v Validator[S]) When(predicates ...Predicate[S]) Validator[S] {
 // If any predicate does not pass the validation won't be executed (returns nil).
 // All errors returned by property rules will be aggregated and wrapped in [ValidatorError].
 func (v Validator[S]) Validate(st S) *ValidatorError {
-	for _, predicate := range v.predicates {
-		if !predicate(st) {
-			return nil
-		}
+	if !v.matchPredicates(st) {
+		return nil
 	}
 	var allErrors PropertyErrors
 	for _, rules := range v.props {
@@ -52,4 +51,15 @@ func (v Validator[S]) Validate(st S) *ValidatorError {
 		return NewValidatorError(allErrors).WithName(v.name)
 	}
 	return nil
+}
+
+func (v Validator[S]) plan(path planBuilder) {
+	for _, predicate := range v.predicates {
+		path.rulePlan.Conditions = append(path.rulePlan.Conditions, predicate.description)
+	}
+	for _, rules := range v.props {
+		if p, ok := rules.(planner); ok {
+			p.plan(path)
+		}
+	}
 }

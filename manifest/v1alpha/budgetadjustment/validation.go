@@ -10,7 +10,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var budgetAdjustmentValidation = validation.New(
+var validator = validation.New(
 	validation.For(func(b BudgetAdjustment) Metadata { return b.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(b BudgetAdjustment) Spec { return b.Spec }).
@@ -60,5 +60,5 @@ var sloValidationRule = validation.New(
 )
 
 func validate(b BudgetAdjustment) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(budgetAdjustmentValidation, b)
+	return v1alpha.ValidateObject(validator, b)
 }

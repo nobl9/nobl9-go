@@ -52,7 +52,7 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[AlertPolicy]("metadata.labels") {
+	for name, test := range v1alphatest.GetLabelsTestCases[AlertPolicy](t, "metadata.labels") {
 		t.Run(name, func(t *testing.T) {
 			svc := validAlertPolicy()
 			svc.Metadata.Labels = test.Labels
@@ -62,7 +62,7 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy]("metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy](t, "metadata.annotations") {
 		t.Run(name, func(t *testing.T) {
 			svc := validAlertPolicy()
 			svc.Metadata.Annotations = test.Annotations

@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var roleBindingValidation = validation.New[RoleBinding](
+var validator = validation.New[RoleBinding](
 	validationV1Alpha.FieldRuleMetadataName(func(r RoleBinding) string { return r.Metadata.Name }),
 	validation.For(func(r RoleBinding) Spec { return r.Spec }).
 		WithName("spec").
@@ -29,5 +29,5 @@ var specValidation = validation.New[Spec](
 )
 
 func validate(r RoleBinding) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(roleBindingValidation, r)
+	return v1alpha.ValidateObject(validator, r)
 }

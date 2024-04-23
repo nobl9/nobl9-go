@@ -31,13 +31,16 @@ type Project struct {
 
 // Metadata provides identity information for Project.
 type Metadata struct {
-	Name        string                      `json:"name"`
+	// Name of the Project. Must be unique within the organization.
+	Name string `json:"name"`
+	// DisplayName is Project.
 	DisplayName string                      `json:"displayName,omitempty"`
 	Labels      v1alpha.Labels              `json:"labels,omitempty"`
 	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
-// Spec holds detailed information specific to Project.
+// Spec holds detailed specification of the Project.
 type Spec struct {
+	// Description allows for a more detailed description of the Project.
 	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
 }

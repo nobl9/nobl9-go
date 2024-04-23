@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	_ "embed"
 	"regexp"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -19,9 +20,10 @@ const (
 	maxAnnotationValueLength = 1050
 )
 
-var (
-	annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
-)
+//go:embed metadata_annotations_examples.yaml
+var metadataAnnotationsExamples string
+
+var annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
 func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotations] {
 	return validation.New[MetadataAnnotations](
@@ -30,7 +32,8 @@ func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotatio
 				validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
 				validation.StringMatchRegexp(annotationKeyRegexp),
 			).
-			IncludeForValues(annotationValueValidator),
+			IncludeForValues(annotationValueValidator).
+			WithExamples(metadataAnnotationsExamples),
 	)
 }
 
