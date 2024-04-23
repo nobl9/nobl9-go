@@ -265,6 +265,6 @@ type HoneycombConfig struct {
 // LogicMonitorConfig represents content of LogicMonitor Configuration typical for Direct Object.
 type LogicMonitorConfig struct {
 	Account   string `json:"account"`
-	AccessID  string `json:"accessID"`
+	AccessID  string `json:"accessId"`
 	AccessKey string `json:"accessKey"`
 }
