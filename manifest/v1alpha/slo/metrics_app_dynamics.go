@@ -46,7 +46,10 @@ var appDynamicsCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 			}
 			return nil
 		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
-).When(whenCountMetricsIs(v1alpha.AppDynamics))
+).When(
+	whenCountMetricsIs(v1alpha.AppDynamics),
+	validation.WhenDescription("countMetric is appDynamics"),
+)
 
 var appDynamicsMetricPathWildcardRegex = regexp.MustCompile(`([^\s|]\*)|(\*[^\s|])`)
 

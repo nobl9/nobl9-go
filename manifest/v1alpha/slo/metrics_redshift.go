@@ -33,7 +33,10 @@ var redshiftCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo)),
-).When(whenCountMetricsIs(v1alpha.Redshift))
+).When(
+	whenCountMetricsIs(v1alpha.Redshift),
+	validation.WhenDescription("countMetrics is redshift"),
+)
 
 var redshiftValidation = validation.New[RedshiftMetric](
 	validation.ForPointer(func(r RedshiftMetric) *string { return r.Region }).

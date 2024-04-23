@@ -8,7 +8,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var annotationValidation = validation.New[Annotation](
+var validator = validation.New[Annotation](
 	validation.For(func(p Annotation) Metadata { return p.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(p Annotation) Spec { return p.Spec }).
@@ -43,7 +43,7 @@ var specValidation = validation.New[Spec](
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(annotationValidation, p)
+	return v1alpha.ValidateObject(validator, p)
 }
 
 const errorCodeEndTimeNotBeforeStartTime validation.ErrorCode = "end_time_not_before_start_time"

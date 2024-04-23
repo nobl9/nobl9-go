@@ -1,6 +1,8 @@
 package validation
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // For creates a new [PropertyRules] instance for the property
 // which value is extracted through [PropertyGetter] function.
@@ -40,6 +42,7 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 			}
 			return transformed, v, nil
 		},
+		originalType: getTypeString[T](),
 	}
 }
 
@@ -69,6 +72,8 @@ type PropertyRules[T, S any] struct {
 	hideValue       bool
 	isPointer       bool
 	mode            CascadeMode
+	examples        []string
+	originalType    string
 
 	predicateMatcher[S]
 }
@@ -138,6 +143,11 @@ func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
 	return r
 }
 
+func (r PropertyRules[T, S]) WithExamples(examples ...string) PropertyRules[T, S] {
+	r.examples = append(r.examples, examples...)
+	return r
+}
+
 func (r PropertyRules[T, S]) Rules(rules ...Rule[T]) PropertyRules[T, S] {
 	r.steps = appendSteps(r.steps, rules)
 	return r
@@ -148,8 +158,8 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 	return r
 }
 
-func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.predicateMatcher = r.when(predicates...)
+func (r PropertyRules[T, S]) When(predicate Predicate[S], opts ...WhenOptions) PropertyRules[T, S] {
+	r.predicateMatcher = r.when(predicate, opts...)
 	return r
 }
 
@@ -171,6 +181,26 @@ func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
 func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 	r.mode = mode
 	return r
+}
+
+func (r PropertyRules[T, S]) plan(builder planBuilder) {
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.examples...)
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
+	}
+	if r.originalType != "" {
+		builder.propertyPlan.Type = r.originalType
+	} else {
+		builder.propertyPlan.Type = getTypeString[T]()
+	}
+	if r.name != "" {
+		builder = builder.append(r.name)
+	}
+	for _, step := range r.steps {
+		if p, ok := step.(planner); ok {
+			p.plan(builder)
+		}
+	}
 }
 
 func appendSteps[T any](slice []interface{}, steps []T) []interface{} {

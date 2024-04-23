@@ -3,6 +3,7 @@
 package dataexport
 
 import (
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -56,4 +57,8 @@ func (d DataExport) GetOrganization() string {
 func (d DataExport) SetOrganization(org string) manifest.Object {
 	d.Organization = org
 	return d
+}
+
+func (d DataExport) GetValidator() validation.Validator[DataExport] {
+	return validator
 }

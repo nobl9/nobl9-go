@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -16,7 +17,13 @@ func OneOf[T comparable](values ...T) SingleRule[T] {
 			}
 		}
 		return errors.New("must be one of " + prettyOneOfList(values))
-	}).WithErrorCode(ErrorCodeOneOf)
+	}).
+		WithErrorCode(ErrorCodeOneOf).
+		WithDescription(func() string {
+			b := strings.Builder{}
+			prettyStringListBuilder(&b, values, false)
+			return "must be one of: " + b.String()
+		}())
 }
 
 // MutuallyExclusive checks if properties are mutually exclusive.
@@ -50,7 +57,12 @@ func MutuallyExclusive[S any](required bool, getters map[string]func(s S) any) S
 				"%s properties are mutually exclusive, provide only one of them",
 				prettyOneOfList(nonEmpty))
 		}
-	}).WithErrorCode(ErrorCodeMutuallyExclusive)
+	}).
+		WithErrorCode(ErrorCodeMutuallyExclusive).
+		WithDescription(func() string {
+			keys := maps.Keys(getters)
+			return fmt.Sprintf("properties are mutually exclusive: %s", strings.Join(keys, ", "))
+		}())
 }
 
 func prettyOneOfList[T any](values []T) string {

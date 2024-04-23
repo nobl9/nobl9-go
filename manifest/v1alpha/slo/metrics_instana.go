@@ -54,7 +54,10 @@ var instanaCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				}
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo)),
-).When(whenCountMetricsIs(v1alpha.Instana))
+).When(
+	whenCountMetricsIs(v1alpha.Instana),
+	validation.WhenDescription("countMetrics is instana"),
+)
 
 var instanaValidation = validation.ForPointer(func(m MetricSpec) *InstanaMetric { return m.Instana }).
 	WithName("instana").

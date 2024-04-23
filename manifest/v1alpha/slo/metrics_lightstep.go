@@ -37,7 +37,10 @@ var lightstepCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Rules(validation.EqualTo(false)),
-).When(whenCountMetricsIs(v1alpha.Lightstep))
+).When(
+	whenCountMetricsIs(v1alpha.Lightstep),
+	validation.WhenDescription("countMetrics is lightstep"),
+)
 
 // createLightstepMetricSpecValidation constructs a new MetricSpec level validation for Lightstep.
 func createLightstepMetricSpecValidation(
@@ -94,9 +97,10 @@ var lightstepLatencyDataTypeValidation = validation.New[LightstepMetric](
 		WithName("uql").
 		Rules(validation.Forbidden[string]()),
 ).
-	When(func(m LightstepMetric) bool {
-		return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType
-	})
+	When(
+		func(m LightstepMetric) bool { return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType },
+		validation.WhenDescription("typeOfData is '%s'", LightstepLatencyDataType),
+	)
 
 var lightstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
 
@@ -112,9 +116,10 @@ var lightstepMetricDataTypeValidation = validation.New[LightstepMetric](
 		Required().
 		Rules(validation.StringDenyRegexp(lightstepUQLRegexp)),
 ).
-	When(func(m LightstepMetric) bool {
-		return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType
-	})
+	When(
+		func(m LightstepMetric) bool { return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType },
+		validation.WhenDescription("typeOfData is '%s'", LightstepMetricDataType),
+	)
 
 var lightstepGoodAndTotalDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
@@ -127,11 +132,15 @@ var lightstepGoodAndTotalDataTypeValidation = validation.New[LightstepMetric](
 		WithName("uql").
 		Rules(validation.Forbidden[string]()),
 ).
-	When(func(m LightstepMetric) bool {
-		return m.TypeOfData != nil &&
-			(*m.TypeOfData == LightstepGoodCountDataType ||
-				*m.TypeOfData == LightstepTotalCountDataType)
-	})
+	When(
+		func(m LightstepMetric) bool {
+			return m.TypeOfData != nil &&
+				(*m.TypeOfData == LightstepGoodCountDataType ||
+					*m.TypeOfData == LightstepTotalCountDataType)
+		},
+		validation.WhenDescription("typeOfData is either '%s' or '%s'",
+			LightstepGoodCountDataType, LightstepTotalCountDataType),
+	)
 
 var lightstepErrorRateDataTypeValidation = validation.New[LightstepMetric](
 	validation.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
@@ -144,6 +153,9 @@ var lightstepErrorRateDataTypeValidation = validation.New[LightstepMetric](
 		WithName("uql").
 		Rules(validation.Forbidden[string]()),
 ).
-	When(func(m LightstepMetric) bool {
-		return m.TypeOfData != nil && *m.TypeOfData == LightstepErrorRateDataType
-	})
+	When(
+		func(m LightstepMetric) bool {
+			return m.TypeOfData != nil && *m.TypeOfData == LightstepErrorRateDataType
+		},
+		validation.WhenDescription("typeOfData is '%s'", LightstepErrorRateDataType),
+	)

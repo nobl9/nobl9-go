@@ -1,8 +1,13 @@
 package v1alphatest
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/goccy/go-yaml"
+	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -25,13 +30,20 @@ func (tc LabelsTestCase[T]) Test(t *testing.T, object T, validate func(T) *v1alp
 	}
 }
 
-func GetLabelsTestCases[T manifest.Object](propertyPath string) map[string]LabelsTestCase[T] {
+func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) map[string]LabelsTestCase[T] {
+	t.Helper()
+
+	sourcedTestCases, err := os.ReadFile(filepath.Join(
+		testutils.FindModuleRoot(),
+		"manifest/v1alpha/labels_examples.yaml"))
+	require.NoError(t, err)
+	var examples v1alpha.Labels
+	err = yaml.Unmarshal(sourcedTestCases, &examples)
+	require.NoError(t, err)
+
 	return map[string]LabelsTestCase[T]{
-		"valid: simple strings": {
-			Labels: v1alpha.Labels{
-				"net":     {"vast", "infinite"},
-				"project": {"nobl9"},
-			},
+		"valid: examples": {
+			Labels:  examples,
 			isValid: true,
 		},
 		// FIXME: We're currently not handling empty map keys well when formatting property paths.

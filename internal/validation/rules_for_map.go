@@ -63,7 +63,12 @@ func (r PropertyRulesForMap[M, K, V, S]) Validate(st S) PropertyErrors {
 }
 
 func (r PropertyRulesForMap[M, K, V, S]) WithName(name string) PropertyRulesForMap[M, K, V, S] {
-	r.mapRules.name = name
+	r.mapRules = r.mapRules.WithName(name)
+	return r
+}
+
+func (r PropertyRulesForMap[M, K, V, S]) WithExamples(examples ...string) PropertyRulesForMap[M, K, V, S] {
+	r.mapRules = r.mapRules.WithExamples(examples...)
 	return r
 }
 
@@ -87,8 +92,11 @@ func (r PropertyRulesForMap[M, K, V, S]) Rules(rules ...Rule[M]) PropertyRulesFo
 	return r
 }
 
-func (r PropertyRulesForMap[M, K, V, S]) When(predicates ...Predicate[S]) PropertyRulesForMap[M, K, V, S] {
-	r.predicates = append(r.predicates, predicates...)
+func (r PropertyRulesForMap[M, K, V, S]) When(
+	predicate Predicate[S],
+	opts ...WhenOptions,
+) PropertyRulesForMap[M, K, V, S] {
+	r.predicateMatcher = r.when(predicate, opts...)
 	return r
 }
 
@@ -116,6 +124,20 @@ func (r PropertyRulesForMap[M, K, V, S]) Cascade(mode CascadeMode) PropertyRules
 	r.forValueRules = r.forValueRules.Cascade(mode)
 	r.forItemRules = r.forItemRules.Cascade(mode)
 	return r
+}
+
+func (r PropertyRulesForMap[M, K, V, S]) plan(builder planBuilder) {
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
+	}
+	r.mapRules.plan(builder)
+	if r.mapRules.name != "" {
+		builder = builder.append(r.mapRules.name)
+	}
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.mapRules.examples...)
+	r.forKeyRules.plan(builder)
+	r.forValueRules.plan(builder)
+	r.forItemRules.plan(builder)
 }
 
 func MapElementName(mapName, key any) string {

@@ -1,8 +1,13 @@
 package v1alphatest
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/goccy/go-yaml"
+	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -25,14 +30,24 @@ func (tc MetadataAnnotationsTestCase[T]) Test(t *testing.T, object T, validate f
 	}
 }
 
-func GetMetadataAnnotationsTestCases[T manifest.Object](propertyPath string) map[string]MetadataAnnotationsTestCase[T] {
+func GetMetadataAnnotationsTestCases[T manifest.Object](
+	t *testing.T,
+	propertyPath string,
+) map[string]MetadataAnnotationsTestCase[T] {
+	t.Helper()
+
+	sourcedTestCases, err := os.ReadFile(filepath.Join(
+		testutils.FindModuleRoot(),
+		"manifest/v1alpha/metadata_annotations_examples.yaml"))
+	require.NoError(t, err)
+	var examples v1alpha.MetadataAnnotations
+	err = yaml.Unmarshal(sourcedTestCases, &examples)
+	require.NoError(t, err)
+
 	return map[string]MetadataAnnotationsTestCase[T]{
-		"valid: simple strings": {
-			Annotations: v1alpha.MetadataAnnotations{
-				"domain":  "foundations",
-				"project": "nobl9",
-			},
-			isValid: true,
+		"valid: examples": {
+			Annotations: examples,
+			isValid:     true,
 		},
 		"valid: empty value": {
 			Annotations: v1alpha.MetadataAnnotations{

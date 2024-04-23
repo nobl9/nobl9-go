@@ -3,6 +3,7 @@
 package project
 
 import (
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -46,4 +47,8 @@ func (p Project) GetOrganization() string {
 func (p Project) SetOrganization(org string) manifest.Object {
 	p.Organization = org
 	return p
+}
+
+func (p Project) GetValidator() validation.Validator[Project] {
+	return validator
 }

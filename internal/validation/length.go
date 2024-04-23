@@ -1,66 +1,125 @@
 package validation
 
 import (
+	"fmt"
 	"unicode/utf8"
 
 	"github.com/pkg/errors"
 )
 
 func StringLength(min, max int) SingleRule[string] {
-	return NewSingleRule(
-		func(v string) error {
-			return lengthComparison(utf8.RuneCountInString(v), min, max)
-		}).
-		WithErrorCode(ErrorCodeStringLength)
+	msg := fmt.Sprintf("length must be between %d and %d", min, max)
+	return NewSingleRule(func(v string) error {
+		length := utf8.RuneCountInString(v)
+		if length < min || length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeStringLength).
+		WithDescription(msg)
 }
 
 func StringMinLength(min int) SingleRule[string] {
-	return StringLength(min, noLengthBound).WithErrorCode(ErrorCodeStringMinLength)
+	msg := fmt.Sprintf("length must be %s %d", cmpGreaterThanOrEqual, min)
+	return NewSingleRule(func(v string) error {
+		length := utf8.RuneCountInString(v)
+		if length < min {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeStringMinLength).
+		WithDescription(msg)
 }
 
 func StringMaxLength(max int) SingleRule[string] {
-	return StringLength(noLengthBound, max).WithErrorCode(ErrorCodeStringMaxLength)
+	msg := fmt.Sprintf("length must be %s %d", cmpLessThanOrEqual, max)
+	return NewSingleRule(func(v string) error {
+		length := utf8.RuneCountInString(v)
+		if length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeStringMaxLength).
+		WithDescription(msg)
 }
 
 func SliceLength[S ~[]E, E any](min, max int) SingleRule[S] {
-	return NewSingleRule(func(v S) error { return lengthComparison(len(v), min, max) }).
-		WithErrorCode(ErrorCodeSliceLength)
+	msg := fmt.Sprintf("length must be between %d and %d", min, max)
+	return NewSingleRule(func(v S) error {
+		length := len(v)
+		if length < min || length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeSliceLength).
+		WithDescription(msg)
 }
 
 func SliceMinLength[S ~[]E, E any](min int) SingleRule[S] {
-	return SliceLength[S](min, noLengthBound).WithErrorCode(ErrorCodeSliceMinLength)
+	msg := fmt.Sprintf("length must be %s %d", cmpGreaterThanOrEqual, min)
+	return NewSingleRule(func(v S) error {
+		length := len(v)
+		if length < min {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeSliceMinLength).
+		WithDescription(msg)
 }
 
 func SliceMaxLength[S ~[]E, E any](max int) SingleRule[S] {
-	return SliceLength[S](noLengthBound, max).WithErrorCode(ErrorCodeSliceMaxLength)
+	msg := fmt.Sprintf("length must be %s %d", cmpLessThanOrEqual, max)
+	return NewSingleRule(func(v S) error {
+		length := len(v)
+		if length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeSliceMaxLength).
+		WithDescription(msg)
 }
 
 func MapLength[M ~map[K]V, K comparable, V any](min, max int) SingleRule[M] {
-	return NewSingleRule(func(v M) error { return lengthComparison(len(v), min, max) }).
-		WithErrorCode(ErrorCodeMapLength)
+	msg := fmt.Sprintf("length must be between %d and %d", min, max)
+	return NewSingleRule(func(v M) error {
+		length := len(v)
+		if length < min || length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeMapLength).
+		WithDescription(msg)
 }
 
 func MapMinLength[M ~map[K]V, K comparable, V any](min int) SingleRule[M] {
-	return MapLength[M](min, noLengthBound).WithErrorCode(ErrorCodeMapMinLength)
+	msg := fmt.Sprintf("length must be %s %d", cmpGreaterThanOrEqual, min)
+	return NewSingleRule(func(v M) error {
+		length := len(v)
+		if length < min {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeMapMinLength).
+		WithDescription(msg)
 }
 
 func MapMaxLength[M ~map[K]V, K comparable, V any](max int) SingleRule[M] {
-	return MapLength[M](noLengthBound, max).WithErrorCode(ErrorCodeMapMaxLength)
-}
-
-const noLengthBound = -1
-
-func lengthComparison(length, min, max int) error {
-	lowerBoundBreached := length < min
-	upperBoundBreached := length > max
-	if (lowerBoundBreached || upperBoundBreached) && min != noLengthBound && max != noLengthBound {
-		return errors.Errorf("length must be between %d and %d", min, max)
-	}
-	if upperBoundBreached && min == noLengthBound && max != noLengthBound {
-		return errors.Errorf("length must be %s %d", cmpLessThanOrEqual, max)
-	}
-	if lowerBoundBreached && max == noLengthBound && min != noLengthBound {
-		return errors.Errorf("length must be %s %d", cmpGreaterThanOrEqual, min)
-	}
-	return nil
+	msg := fmt.Sprintf("length must be %s %d", cmpLessThanOrEqual, max)
+	return NewSingleRule(func(v M) error {
+		length := len(v)
+		if length > max {
+			return errors.New(msg)
+		}
+		return nil
+	}).
+		WithErrorCode(ErrorCodeMapMaxLength).
+		WithDescription(msg)
 }

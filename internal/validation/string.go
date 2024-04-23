@@ -11,38 +11,45 @@ import (
 )
 
 func StringNotEmpty() SingleRule[string] {
+	msg := "string cannot be empty"
 	return NewSingleRule(func(s string) error {
 		if len(strings.TrimSpace(s)) == 0 {
-			return errors.New("string cannot be empty")
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringNotEmpty)
+	}).
+		WithErrorCode(ErrorCodeStringNotEmpty).
+		WithDescription(msg)
 }
 
 func StringMatchRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
+	msg := fmt.Sprintf("string must match regular expression: '%s'", re.String())
+	if len(examples) > 0 {
+		msg += " " + prettyExamples(examples)
+	}
 	return NewSingleRule(func(s string) error {
 		if !re.MatchString(s) {
-			msg := fmt.Sprintf("string does not match regular expression: '%s'", re.String())
-			if len(examples) > 0 {
-				msg += " " + prettyExamples(examples)
-			}
 			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringMatchRegexp)
+	}).
+		WithErrorCode(ErrorCodeStringMatchRegexp).
+		WithDescription(msg)
 }
 
 func StringDenyRegexp(re *regexp.Regexp, examples ...string) SingleRule[string] {
+	msg := fmt.Sprintf("string must not match regular expression: '%s'", re.String())
+	if len(examples) > 0 {
+		msg += " " + prettyExamples(examples)
+	}
 	return NewSingleRule(func(s string) error {
 		if re.MatchString(s) {
-			msg := fmt.Sprintf("string must not match regular expression: '%s'", re.String())
-			if len(examples) > 0 {
-				msg += " " + prettyExamples(examples)
-			}
 			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringDenyRegexp)
+	}).
+		WithErrorCode(ErrorCodeStringDenyRegexp).
+		WithDescription(msg)
 }
 
 var dns1123SubdomainRegexp = regexp.MustCompile("^[a-z0-9]([-a-z0-9]*[a-z0-9])?$")
@@ -85,19 +92,25 @@ func StringURL() SingleRule[string] {
 			return errors.Wrap(err, "failed to parse URL")
 		}
 		return validateURL(u)
-	}).WithErrorCode(ErrorCodeStringURL)
+	}).
+		WithErrorCode(ErrorCodeStringURL).
+		WithDescription(urlDescription)
 }
 
 func StringJSON() SingleRule[string] {
+	msg := "string must be a valid JSON"
 	return NewSingleRule(func(s string) error {
 		if !json.Valid([]byte(s)) {
-			return errors.New("string is not a valid JSON")
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringJSON)
+	}).
+		WithErrorCode(ErrorCodeStringJSON).
+		WithDescription(msg)
 }
 
 func StringContains(substrings ...string) SingleRule[string] {
+	msg := "string must contain the following substrings: " + prettyStringList(substrings)
 	return NewSingleRule(func(s string) error {
 		matched := true
 		for _, substr := range substrings {
@@ -107,13 +120,21 @@ func StringContains(substrings ...string) SingleRule[string] {
 			}
 		}
 		if !matched {
-			return errors.New("string must contain the following substrings: " + prettyStringList(substrings))
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringContains)
+	}).
+		WithErrorCode(ErrorCodeStringContains).
+		WithDescription(msg)
 }
 
 func StringStartsWith(prefixes ...string) SingleRule[string] {
+	var msg string
+	if len(prefixes) == 1 {
+		msg = fmt.Sprintf("string must start with '%s' prefix", prefixes[0])
+	} else {
+		msg = "string must start with one of the following prefixes: " + prettyStringList(prefixes)
+	}
 	return NewSingleRule(func(s string) error {
 		matched := false
 		for _, prefix := range prefixes {
@@ -123,13 +144,12 @@ func StringStartsWith(prefixes ...string) SingleRule[string] {
 			}
 		}
 		if !matched {
-			if len(prefixes) == 1 {
-				return errors.Errorf("string must start with '%s' prefix", prefixes[0])
-			}
-			return errors.New("string must start with one of the following prefixes: " + prettyStringList(prefixes))
+			return errors.New(msg)
 		}
 		return nil
-	}).WithErrorCode(ErrorCodeStringStartsWith)
+	}).
+		WithErrorCode(ErrorCodeStringStartsWith).
+		WithDescription(msg)
 }
 
 func prettyExamples(examples []string) string {

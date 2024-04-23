@@ -3,6 +3,7 @@
 package alertsilence
 
 import (
+	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -56,4 +57,8 @@ func (a AlertSilence) GetOrganization() string {
 func (a AlertSilence) SetOrganization(org string) manifest.Object {
 	a.Organization = org
 	return a
+}
+
+func (a AlertSilence) GetValidator() validation.Validator[AlertSilence] {
+	return validator
 }

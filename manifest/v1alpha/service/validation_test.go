@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[Service]("metadata.labels") {
+	for name, test := range v1alphatest.GetLabelsTestCases[Service](t, "metadata.labels") {
 		t.Run(name, func(t *testing.T) {
 			svc := validService()
 			svc.Metadata.Labels = test.Labels
@@ -59,7 +59,7 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Service]("metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Service](t, "metadata.annotations") {
 		t.Run(name, func(t *testing.T) {
 			svc := validService()
 			svc.Metadata.Annotations = test.Annotations

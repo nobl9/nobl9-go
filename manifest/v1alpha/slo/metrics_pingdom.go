@@ -49,7 +49,10 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				return nil
 			}).WithErrorCode(validation.ErrorCodeEqualTo),
 		),
-).When(whenCountMetricsIs(v1alpha.Pingdom))
+).When(
+	whenCountMetricsIs(v1alpha.Pingdom),
+	validation.WhenDescription("countMetrics is pingdom"),
+)
 
 // createPingdomMetricSpecValidation constructs a new MetricSpec level validation for Pingdom.
 func createPingdomMetricSpecValidation(
@@ -75,9 +78,10 @@ var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(validation
 		Rules(validation.OneOf(PingdomTypeUptime, PingdomTypeTransaction)),
 	validation.For(func(p PingdomMetric) *string { return p.Status }).
 		WithName("status").
-		When(func(metric PingdomMetric) bool {
-			return metric.CheckType != nil && *metric.CheckType == PingdomTypeUptime
-		}).
+		When(
+			func(p PingdomMetric) bool { return p.CheckType != nil && *p.CheckType == PingdomTypeUptime },
+			validation.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+		).
 		Rules(validation.Required[*string]()),
 ))
 
@@ -110,15 +114,17 @@ var pingdomUptimeCheckTypeValidation = validation.New[PingdomMetric](
 			return nil
 		})),
 ).
-	When(func(m PingdomMetric) bool {
-		return m.CheckType != nil && *m.CheckType == PingdomTypeUptime
-	})
+	When(
+		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeUptime },
+		validation.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+	)
 
 var pingdomTransactionCheckTypeValidation = validation.New[PingdomMetric](
 	validation.ForPointer(func(m PingdomMetric) *string { return m.Status }).
 		WithName("status").
 		Rules(validation.Forbidden[string]()),
 ).
-	When(func(m PingdomMetric) bool {
-		return m.CheckType != nil && *m.CheckType == PingdomTypeTransaction
-	})
+	When(
+		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeTransaction },
+		validation.WhenDescription("checkType is equal to '%s'", PingdomTypeTransaction),
+	)
