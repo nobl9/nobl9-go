@@ -85,6 +85,7 @@ words:
   - logfmt
   - logql
   - mapstructure
+  - MAXRTT
   - memstats
   - mktemp
   - mockgen
