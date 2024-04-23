@@ -63,11 +63,13 @@ const (
 	Generic
 	// Honeycomb is a DataSourceType of type Honeycomb.
 	Honeycomb
+	// LogicMonitor is a DataSourceType of type LogicMonitor.
+	LogicMonitor
 )
 
 var ErrInvalidDataSourceType = errors.New("not a valid DataSourceType")
 
-const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycomb"
+const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycombLogicMonitor"
 
 // DataSourceTypeValues returns a list of the values for DataSourceType
 func DataSourceTypeValues() []DataSourceType {
@@ -97,6 +99,7 @@ func DataSourceTypeValues() []DataSourceType {
 		AzureMonitor,
 		Generic,
 		Honeycomb,
+		LogicMonitor,
 	}
 }
 
@@ -126,6 +129,7 @@ var _DataSourceTypeMap = map[DataSourceType]string{
 	AzureMonitor:          _DataSourceTypeName[225:237],
 	Generic:               _DataSourceTypeName[237:244],
 	Honeycomb:             _DataSourceTypeName[244:253],
+	LogicMonitor:          _DataSourceTypeName[253:265],
 }
 
 // String implements the Stringer interface.
@@ -169,6 +173,7 @@ var _DataSourceTypeValue = map[string]DataSourceType{
 	_DataSourceTypeName[225:237]: AzureMonitor,
 	_DataSourceTypeName[237:244]: Generic,
 	_DataSourceTypeName[244:253]: Honeycomb,
+	_DataSourceTypeName[253:265]: LogicMonitor,
 }
 
 // ParseDataSourceType attempts to convert a string to a DataSourceType.
