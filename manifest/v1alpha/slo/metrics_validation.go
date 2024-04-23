@@ -186,6 +186,7 @@ var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.AppDynamics,
 	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
+	v1alpha.LogicMonitor,
 }
 
 // Support for bad/total metrics will be enabled gradually.
