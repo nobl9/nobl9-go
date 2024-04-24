@@ -106,7 +106,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	enc := yaml.NewEncoder(out, yaml.Indent(2))
+	enc := yaml.NewEncoder(out,
+		yaml.Indent(2),
+		yaml.UseLiteralStyleIfMultiline(true))
 	if err = enc.Encode(plan); err != nil {
 		panic(err)
 	}

@@ -30,6 +30,7 @@ func ForPointer[T, S any](getter PropertyGetter[*T, S]) PropertyRules[T, S] {
 // If [Transformer] returns an error, the validation will not proceed and transformation error will be reported.
 // [Transformer] is only called if [PropertyGetter] returns a non-zero value.
 func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T, N]) PropertyRules[N, S] {
+	typInfo := getTypeInfo[T]()
 	return PropertyRules[N, S]{
 		transformGetter: func(s S) (transformed N, original any, err error) {
 			v := getter(s)
@@ -42,7 +43,7 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 			}
 			return transformed, v, nil
 		},
-		originalType: getTypeString[T](),
+		originalType: &typInfo,
 	}
 }
 
@@ -73,7 +74,7 @@ type PropertyRules[T, S any] struct {
 	isPointer       bool
 	mode            CascadeMode
 	examples        []string
-	originalType    string
+	originalType    *typeInfo
 
 	predicateMatcher[S]
 }
@@ -188,10 +189,13 @@ func (r PropertyRules[T, S]) plan(builder planBuilder) {
 	for _, predicate := range r.predicates {
 		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
-	if r.originalType != "" {
-		builder.propertyPlan.Type = r.originalType
+	if r.originalType != nil {
+		builder.propertyPlan.Type = r.originalType.Name
+		builder.propertyPlan.Package = r.originalType.Package
 	} else {
-		builder.propertyPlan.Type = getTypeString[T]()
+		typInfo := getTypeInfo[T]()
+		builder.propertyPlan.Type = typInfo.Name
+		builder.propertyPlan.Package = typInfo.Package
 	}
 	if r.name != "" {
 		builder = builder.append(r.name)

@@ -12,6 +12,7 @@ import (
 type PropertyPlan struct {
 	Path     string     `json:"path"`
 	Type     string     `json:"type"`
+	Package  string     `json:"package,omitempty"`
 	Examples []string   `json:"examples,omitempty"`
 	Rules    []RulePlan `json:"rules,omitempty"`
 }
@@ -43,6 +44,7 @@ func Plan[S any](v Validator[S]) []PropertyPlan {
 			entry = PropertyPlan{
 				Path:     p.path,
 				Type:     p.propertyPlan.Type,
+				Package:  p.propertyPlan.Package,
 				Examples: p.propertyPlan.Examples,
 				Rules:    []RulePlan{p.rulePlan},
 			}
@@ -78,19 +80,28 @@ func (p planBuilder) append(path string) planBuilder {
 	}
 }
 
-// getTypeString returns the string representation of the type T.
+// typeInfo stores the type name and its package if it's available.
+type typeInfo struct {
+	Name    string
+	Package string
+}
+
+// getTypeInfo returns the information for the type T.
 // It returns the type name without package path or name.
 // It strips the pointer '*' from the type name.
-func getTypeString[T any]() string {
+// Package is only available if the type is not a built-in type.
+func getTypeInfo[T any]() typeInfo {
 	typ := reflect.TypeOf(*new(T))
 	if typ == nil {
-		return ""
+		return typeInfo{}
 	}
-	var result string
+	var result typeInfo
 	if typ.PkgPath() == "" {
-		result = typ.String()
+		result.Name = typ.String()
 	} else {
-		result = typ.Name()
+		result.Name = typ.Name()
+		result.Package = typ.PkgPath()
 	}
-	return strings.TrimPrefix(result, "*")
+	result.Name = strings.TrimPrefix(result.Name, "*")
+	return result
 }
