@@ -15,7 +15,7 @@ var logicMonitorValidation = validation.New[LogicMonitorMetric](
 	validation.For(func(e LogicMonitorMetric) string { return e.QueryType }).
 		WithName("queryType").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(validation.StringContains("device_metrics")),
 	validation.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
 		WithName("deviceDataSourceInstanceID").
 		Required().
