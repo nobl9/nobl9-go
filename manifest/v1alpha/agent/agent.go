@@ -67,6 +67,7 @@ type Spec struct {
 	GCM                     *GCMConfig                       `json:"gcm,omitempty"`
 	Generic                 *GenericConfig                   `json:"generic,omitempty"`
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
+	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -136,6 +137,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Generic, nil
 	case spec.Honeycomb != nil:
 		return v1alpha.Honeycomb, nil
+	case spec.LogicMonitor != nil:
+		return v1alpha.LogicMonitor, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -251,3 +254,7 @@ type GenericConfig struct{}
 
 // HoneycombConfig represents content of Honeycomb Configuration typical for Agent Object.
 type HoneycombConfig struct{}
+
+type LogicMonitorConfig struct {
+	Account string `json:"account"`
+}

@@ -176,6 +176,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation, attributeRequired),
+	validation.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
+		WithName("logicMonitor").
+		Include(logicMonitorValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -183,6 +186,7 @@ var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.AppDynamics,
 	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
+	v1alpha.LogicMonitor,
 }
 
 // Support for bad/total metrics will be enabled gradually.
@@ -341,6 +345,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Honeycomb != nil {
 			if err := typesMatch(v1alpha.Honeycomb); err != nil {
+				return err
+			}
+		}
+		if metric.LogicMonitor != nil {
+			if err := typesMatch(v1alpha.LogicMonitor); err != nil {
 				return err
 			}
 		}

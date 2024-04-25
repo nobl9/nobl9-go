@@ -59,6 +59,7 @@ type Spec struct {
 	Dynatrace               *DynatraceConfig                 `json:"dynatrace,omitempty"`
 	AzureMonitor            *AzureMonitorConfig              `json:"azureMonitor,omitempty"`
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
+	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -91,6 +92,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.Dynatrace:           {},
 	v1alpha.AzureMonitor:        {},
 	v1alpha.Honeycomb:           {},
+	v1alpha.LogicMonitor:        {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -136,6 +138,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzureMonitor, nil
 	case spec.Honeycomb != nil:
 		return v1alpha.Honeycomb, nil
+	case spec.LogicMonitor != nil:
+		return v1alpha.LogicMonitor, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -256,4 +260,11 @@ type AzureMonitorConfig struct {
 // HoneycombConfig represents content of Honeycomb Configuration typical for Direct Object.
 type HoneycombConfig struct {
 	APIKey string `json:"apiKey"`
+}
+
+// LogicMonitorConfig represents content of LogicMonitor Configuration typical for Direct Object.
+type LogicMonitorConfig struct {
+	Account   string `json:"account"`
+	AccessID  string `json:"accessId"`
+	AccessKey string `json:"accessKey"`
 }

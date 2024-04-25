@@ -1652,6 +1652,13 @@ fetch consumed_api
 		Calculation: "SUM",
 		Attribute:   "http.status_code",
 	}},
+	v1alpha.LogicMonitor: {LogicMonitor: &LogicMonitorMetric{
+		QueryType:                  "device_metrics",
+		Account:                    "account",
+		DeviceDataSourceInstanceID: 1029,
+		GraphID:                    11354,
+		Line:                       "MAXRTT",
+	}},
 }
 
 func ptr[T any](v T) *T { return &v }
