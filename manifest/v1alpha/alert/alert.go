@@ -36,18 +36,20 @@ type Metadata struct {
 
 // Spec represents content of Alert's Spec
 type Spec struct {
-	AlertPolicy         ObjectMetadata `json:"alertPolicy"`
-	SLO                 ObjectMetadata `json:"slo"`
-	Service             ObjectMetadata `json:"service"`
-	Objective           Objective      `json:"objective"`
-	Severity            string         `json:"severity"`
-	Status              string         `json:"status"`
-	TriggeredMetricTime string         `json:"triggeredMetricTime"`
-	TriggeredClockTime  string         `json:"triggeredClockTime"`
-	ResolvedClockTime   *string        `json:"resolvedClockTime,omitempty"`
-	ResolvedMetricTime  *string        `json:"resolvedMetricTime,omitempty"`
-	CoolDown            string         `json:"coolDown"`
-	Conditions          []Condition    `json:"conditions"`
+	AlertPolicy                 ObjectMetadata `json:"alertPolicy"`
+	SLO                         ObjectMetadata `json:"slo"`
+	Service                     ObjectMetadata `json:"service"`
+	Objective                   Objective      `json:"objective"`
+	Severity                    string         `json:"severity"`
+	Status                      string         `json:"status"`
+	TriggeredMetricTime         string         `json:"triggeredMetricTime"`
+	TriggeredClockTime          string         `json:"triggeredClockTime"`
+	ResolvedClockTime           *string        `json:"resolvedClockTime,omitempty"`
+	ResolvedMetricTime          *string        `json:"resolvedMetricTime,omitempty"`
+	CoolDown                    string         `json:"coolDown"`
+	Conditions                  []Condition    `json:"conditions"`
+	CoolDownStartedAtMetricTime *string        `json:"coolDownStartedAtMetricTime"`
+	ResolutionReason            *string        `json:"resolutionReason"`
 }
 
 type Objective struct {
@@ -64,11 +66,18 @@ type ObjectMetadata struct {
 }
 
 type Condition struct {
-	Measurement      string      `json:"measurement"`
-	Value            interface{} `json:"value"`
-	AlertingWindow   string      `json:"alertingWindow,omitempty"`
-	LastsForDuration string      `json:"lastsFor,omitempty"`
-	Operator         string      `json:"op,omitempty"`
+	Measurement      string           `json:"measurement"`
+	Value            interface{}      `json:"value"`
+	AlertingWindow   string           `json:"alertingWindow,omitempty"`
+	LastsForDuration string           `json:"lastsFor,omitempty"`
+	Operator         string           `json:"op,omitempty"`
+	Status           *ConditionStatus `json:"status,omitempty"`
+}
+
+type ConditionStatus struct {
+	StartedAtMetricTime string  `json:"startedAtMetricTime,omitempty"`
+	StoppedAtMetricTime *string `json:"stoppedAtMetricTIme,omitempty"`
+	LastsForMetAt       *string `json:"lastsForMetAt,omitempty"`
 }
 
 var validator = validation.New[Alert]()
