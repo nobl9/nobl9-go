@@ -23,7 +23,7 @@ func TestLogicMonitor(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
-				Code: validation.ErrorCodeRequired,
+				Code: validation.ErrorCodeStringContains,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceID",

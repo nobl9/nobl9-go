@@ -1055,7 +1055,7 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.LogicMonitor: {
 			LogicMonitor: &LogicMonitorConfig{
-				Account:   "secret",
+				Account:   "account",
 				AccessID:  "secret",
 				AccessKey: "secret",
 			},

@@ -859,7 +859,7 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.LogicMonitor: {
 			LogicMonitor: &LogicMonitorConfig{
-				Account: "secret",
+				Account: "account",
 			},
 		},
 	}
