@@ -5,10 +5,17 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(p Annotation) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, p, manifest.KindAnnotation)
+}
+
 var validator = validation.New[Annotation](
+	validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
 	validation.For(func(p Annotation) Metadata { return p.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(p Annotation) Spec { return p.Spec }).
@@ -41,10 +48,6 @@ var specValidation = validation.New[Spec](
 		Rules(endTimeNotBeforeStartTime).
 		Rules(categoryUserDefined),
 )
-
-func validate(p Annotation) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, p)
-}
 
 const errorCodeEndTimeNotBeforeStartTime validation.ErrorCode = "end_time_not_before_start_time"
 

@@ -7,10 +7,19 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(b BudgetAdjustment) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, b, manifest.KindBudgetAdjustment)
+}
+
 var validator = validation.New(
+	validationV1Alpha.FieldRuleAPIVersion(func(b BudgetAdjustment) manifest.Version { return b.APIVersion }),
+	validationV1Alpha.FieldRuleKind(
+		func(b BudgetAdjustment) manifest.Kind { return b.Kind },
+		manifest.KindBudgetAdjustment),
 	validation.For(func(b BudgetAdjustment) Metadata { return b.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(b BudgetAdjustment) Spec { return b.Spec }).
@@ -58,7 +67,3 @@ var sloValidationRule = validation.New(
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
 )
-
-func validate(b BudgetAdjustment) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, b)
-}

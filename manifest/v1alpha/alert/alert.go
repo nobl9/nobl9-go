@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -70,7 +69,3 @@ type Condition struct {
 	LastsForDuration string      `json:"lastsFor,omitempty"`
 	Operator         string      `json:"op,omitempty"`
 }
-
-var validator = validation.New[Alert]()
-
-func validate(_ Alert) *v1alpha.ObjectError { return nil }

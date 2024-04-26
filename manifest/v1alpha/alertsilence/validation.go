@@ -6,10 +6,17 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(s AlertSilence) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, s, manifest.KindAlertSilence)
+}
+
 var validator = validation.New[AlertSilence](
+	validationV1Alpha.FieldRuleAPIVersion(func(a AlertSilence) manifest.Version { return a.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(a AlertSilence) manifest.Kind { return a.Kind }, manifest.KindAlertSilence),
 	validation.For(validation.GetSelf[AlertSilence]()).
 		Cascade(validation.CascadeModeStop).
 		Include(metadataValidation).
@@ -101,7 +108,3 @@ var alertPolicyProjectConsistencyRule = validation.NewSingleRule(func(s AlertSil
 
 	return nil
 })
-
-func validate(s AlertSilence) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, s)
-}

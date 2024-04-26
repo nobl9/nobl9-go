@@ -19,9 +19,29 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/rolebinding.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	rb := validRoleBinding()
+	rb.APIVersion = "v0.1"
+	rb.Kind = manifest.KindProject
+	rb.ManifestSource = "/home/me/rolebinding.yaml"
+	err := validate(rb)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, rb, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
 	rb := RoleBinding{
-		Kind: manifest.KindRoleBinding,
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindRoleBinding,
 		Metadata: Metadata{
 			Name: strings.Repeat("MY BINDING", 20),
 		},
@@ -93,7 +113,8 @@ func TestSpec(t *testing.T) {
 
 func validRoleBinding() RoleBinding {
 	return RoleBinding{
-		Kind: manifest.KindRoleBinding,
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindRoleBinding,
 		Metadata: Metadata{
 			Name: "my-binding",
 		},

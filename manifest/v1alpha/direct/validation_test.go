@@ -22,23 +22,33 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/direct.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	direct := validDirect(v1alpha.CloudWatch)
+	direct.APIVersion = "v0.1"
+	direct.Kind = manifest.KindProject
+	direct.ManifestSource = "/home/me/direct.yaml"
+	err := validate(direct)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, direct, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	direct := Direct{
-		Kind: manifest.KindDirect,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY DIRECT", 20),
-			DisplayName: strings.Repeat("my-direct", 20),
-			Project:     strings.Repeat("MY PROJECT", 20),
-		},
-		Spec: Spec{
-			Datadog: &DatadogConfig{
-				Site:           "datadoghq.com",
-				APIKey:         "secret",
-				ApplicationKey: "secret",
-			},
-		},
-		ManifestSource: "/home/me/direct.yaml",
+	direct := validDirect(v1alpha.Datadog)
+	direct.Metadata = Metadata{
+		Name:        strings.Repeat("MY DIRECT", 20),
+		DisplayName: strings.Repeat("my-direct", 20),
+		Project:     strings.Repeat("MY PROJECT", 20),
 	}
+	direct.ManifestSource = "/home/me/direct.yaml"
 	err := validate(direct)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, direct, err, 5,

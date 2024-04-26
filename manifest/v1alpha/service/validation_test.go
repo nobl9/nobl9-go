@@ -20,16 +20,33 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/service.yaml
 `))
 
-func TestValidate_Metadata(t *testing.T) {
-	svc := Service{
-		Kind: manifest.KindService,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY SERVICE", 20),
-			DisplayName: strings.Repeat("my-service", 20),
-			Project:     strings.Repeat("MY PROJECT", 20),
+func TestValidate_VersionAndKind(t *testing.T) {
+	svc := validService()
+	svc.APIVersion = "v0.1"
+	svc.Kind = manifest.KindProject
+	svc.ManifestSource = "/home/me/service.yaml"
+	err := validate(svc)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, svc, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
 		},
-		ManifestSource: "/home/me/service.yaml",
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
+func TestValidate_Metadata(t *testing.T) {
+	svc := validService()
+	svc.Metadata = Metadata{
+		Name:        strings.Repeat("MY SERVICE", 20),
+		DisplayName: strings.Repeat("my-service", 20),
+		Project:     strings.Repeat("MY PROJECT", 20),
 	}
+	svc.ManifestSource = "/home/me/service.yaml"
 	err := validate(svc)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, svc, err, 5,

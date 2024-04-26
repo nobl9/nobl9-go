@@ -132,7 +132,7 @@ func (r PropertyRulesForMap[M, K, V, S]) plan(builder planBuilder) {
 	}
 	r.mapRules.plan(builder)
 	if r.mapRules.name != "" {
-		builder = builder.append(r.mapRules.name)
+		builder = builder.append(r.mapRules.name + ".*")
 	}
 	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.mapRules.examples...)
 	r.forKeyRules.plan(builder)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
@@ -17,6 +18,25 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 .*
 Manifest source: /home/me/alertmethod.yaml
 `))
+
+func TestValidate_VersionAndKind(t *testing.T) {
+	method := validAlertMethod()
+	method.APIVersion = "v0.1"
+	method.Kind = manifest.KindProject
+	method.ManifestSource = "/home/me/alertmethod.yaml"
+	err := validate(method)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, method, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
 
 func TestValidate_Metadata(t *testing.T) {
 	alertMethod := validAlertMethod()

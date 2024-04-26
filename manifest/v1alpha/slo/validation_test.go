@@ -24,6 +24,25 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/slo.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	slo := validSLO()
+	slo.APIVersion = "v0.1"
+	slo.Kind = manifest.KindProject
+	slo.ManifestSource = "/home/me/slo.yaml"
+	err := validate(slo)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, slo, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{

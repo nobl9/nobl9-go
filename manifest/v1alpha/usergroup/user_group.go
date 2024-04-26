@@ -15,6 +15,7 @@ func New(metadata Metadata, spec Spec) UserGroup {
 	}
 }
 
+// UserGroup represents a UserGroup object.
 type UserGroup struct {
 	APIVersion manifest.Version `json:"apiVersion"`
 	Kind       manifest.Kind    `json:"kind"`

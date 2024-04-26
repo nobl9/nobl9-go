@@ -12,7 +12,20 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(s SLO) *v1alpha.ObjectError {
+	if s.Spec.AnomalyConfig != nil && s.Spec.AnomalyConfig.NoData != nil {
+		for i := range s.Spec.AnomalyConfig.NoData.AlertMethods {
+			if s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project == "" {
+				s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project = s.Metadata.Project
+			}
+		}
+	}
+	return v1alpha.ValidateObject(validator, s, manifest.KindSLO)
+}
+
 var validator = validation.New[SLO](
+	validationV1Alpha.FieldRuleAPIVersion(func(s SLO) manifest.Version { return s.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(s SLO) manifest.Kind { return s.Kind }, manifest.KindSLO),
 	validation.For(func(s SLO) SLO { return s }).
 		Include(sloValidationComposite),
 	validation.For(func(s SLO) Metadata { return s.Metadata }).
@@ -351,17 +364,6 @@ var objectiveBaseValidation = validation.New[ObjectiveBase](
 		OmitEmpty().
 		Rules(validation.StringMaxLength(63)),
 )
-
-func validate(s SLO) *v1alpha.ObjectError {
-	if s.Spec.AnomalyConfig != nil && s.Spec.AnomalyConfig.NoData != nil {
-		for i := range s.Spec.AnomalyConfig.NoData.AlertMethods {
-			if s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project == "" {
-				s.Spec.AnomalyConfig.NoData.AlertMethods[i].Project = s.Metadata.Project
-			}
-		}
-	}
-	return v1alpha.ValidateObject(validator, s)
-}
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 	if p1 == nil || p2 == nil {

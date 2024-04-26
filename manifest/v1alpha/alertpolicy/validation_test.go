@@ -22,21 +22,32 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/alertpolicy.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	policy := validAlertPolicy()
+	policy.APIVersion = "v0.1"
+	policy.Kind = manifest.KindProject
+	policy.ManifestSource = "/home/me/alertpolicy.yaml"
+	err := validate(policy)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, policy, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	policy := AlertPolicy{
-		Kind: manifest.KindAlertPolicy,
-		Metadata: Metadata{
-			Name:    strings.Repeat("MY ALERTPOLICY", 20),
-			Project: strings.Repeat("MY ALERTPOLICY", 20),
-		},
-		Spec: Spec{
-			Severity:         SeverityHigh.String(),
-			CoolDownDuration: "5m",
-			Conditions:       []AlertCondition{validAlertCondition()},
-			AlertMethods:     nil,
-		},
-		ManifestSource: "/home/me/alertpolicy.yaml",
+	policy := validAlertPolicy()
+	policy.Metadata = Metadata{
+		Name:    strings.Repeat("MY ALERTPOLICY", 20),
+		Project: strings.Repeat("MY ALERTPOLICY", 20),
 	}
+	policy.ManifestSource = "/home/me/alertpolicy.yaml"
 	err := validate(policy)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, policy, err, 4,

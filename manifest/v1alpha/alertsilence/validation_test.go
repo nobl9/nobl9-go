@@ -20,28 +20,32 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/alertsilence.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	silence := validAlertSilence()
+	silence.APIVersion = "v0.1"
+	silence.Kind = manifest.KindProject
+	silence.ManifestSource = "/home/me/alertsilence.yaml"
+	err := validate(silence)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, silence, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	silence := AlertSilence{
-		Kind: manifest.KindAlertSilence,
-		Metadata: Metadata{
-			Name:    strings.Repeat("MY ALERTSILENCE", 20),
-			Project: strings.Repeat("MY PROJECT", 20),
-		},
-		Spec: Spec{
-			SLO: "slo-name",
-			AlertPolicy: AlertPolicySource{
-				Name:    "my-alert-policy",
-				Project: "default",
-			},
-			Period: Period{
-				StartTime: ptr(
-					time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-				),
-				Duration: "10m",
-			},
-		},
-		ManifestSource: "/home/me/alertsilence.yaml",
+	silence := validAlertSilence()
+	silence.Metadata = Metadata{
+		Name:    strings.Repeat("MY ALERTSILENCE", 20),
+		Project: strings.Repeat("MY PROJECT", 20),
 	}
+	silence.ManifestSource = "/home/me/alertsilence.yaml"
 	err := validate(silence)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, silence, err, 4,

@@ -13,7 +13,13 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(a Agent) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, a, manifest.KindAgent)
+}
+
 var validator = validation.New[Agent](
+	validationV1Alpha.FieldRuleAPIVersion(func(a Agent) manifest.Version { return a.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(a Agent) manifest.Kind { return a.Kind }, manifest.KindAgent),
 	validationV1Alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
@@ -404,8 +410,4 @@ func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validat
 			Required().
 			Rules(validation.StringURL()),
 	)
-}
-
-func validate(a Agent) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, a)
 }
