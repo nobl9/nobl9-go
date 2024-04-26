@@ -24,6 +24,7 @@ type PropertyDoc struct {
 	Type          string                `json:"type"`
 	Package       string                `json:"package,omitempty"`
 	Doc           string                `yaml:"doc,omitempty"`
+	FieldDoc      string                `yaml:"fieldDoc,omitempty"`
 	Examples      []string              `json:"examples,omitempty"`
 	Rules         []validation.RulePlan `json:"rules,omitempty"`
 	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
@@ -45,6 +46,15 @@ func main() {
 				continue
 			}
 			objectDoc.Properties[i].Doc = goDoc.Doc
+			for name, field := range goDoc.StructFields {
+				fieldPath := property.Path + "." + name
+				for j, p := range objectDoc.Properties {
+					if fieldPath == p.Path {
+						objectDoc.Properties[j].FieldDoc = field.Doc
+						break
+					}
+				}
+			}
 		}
 	}
 
