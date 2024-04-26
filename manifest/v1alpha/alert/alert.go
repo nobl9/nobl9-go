@@ -75,9 +75,9 @@ type Condition struct {
 }
 
 type ConditionStatus struct {
-	StartedAtMetricTime string  `json:"startedAtMetricTime,omitempty"`
-	StoppedAtMetricTime *string `json:"stoppedAtMetricTIme,omitempty"`
-	LastsForMetAt       *string `json:"lastsForMetAt,omitempty"`
+	FirstMetMetricTime   string  `json:"firstMetMetricTime,omitempty"`
+	LastMetMetricTime    *string `json:"lastMetMetricTime,omitempty"`
+	LastForMetMetricTime *string `json:"lastsForMetMetricTime,omitempty"`
 }
 
 var validator = validation.New[Alert]()
