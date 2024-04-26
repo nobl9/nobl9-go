@@ -34,6 +34,21 @@ func main() {
 	docs := generateObjectDocs()
 	goDocs := parseGoDocs()
 
+	mergeDocs(docs, goDocs)
+
+	out, err := os.OpenFile("validation_plan.yaml", os.O_CREATE|os.O_WRONLY, 0o600)
+	if err != nil {
+		panic(err)
+	}
+	enc := yaml.NewEncoder(out,
+		yaml.Indent(2),
+		yaml.UseLiteralStyleIfMultiline(true))
+	if err = enc.Encode(docs); err != nil {
+		panic(err)
+	}
+}
+
+func mergeDocs(docs []*ObjectDoc, goDocs map[string]goTypeDoc) {
 	for _, objectDoc := range docs {
 		for i, property := range objectDoc.Properties {
 			// Builtin type.
@@ -56,17 +71,5 @@ func main() {
 				}
 			}
 		}
-	}
-
-	out, err := os.OpenFile("validation_plan.yaml", os.O_CREATE|os.O_WRONLY, 0o600)
-	if err != nil {
-		panic(err)
-	}
-	out = os.Stdout
-	enc := yaml.NewEncoder(out,
-		yaml.Indent(2),
-		yaml.UseLiteralStyleIfMultiline(true))
-	if err = enc.Encode(docs); err != nil {
-		panic(err)
 	}
 }
