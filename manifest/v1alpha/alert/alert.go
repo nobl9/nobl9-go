@@ -48,8 +48,8 @@ type Spec struct {
 	ResolvedMetricTime          *string        `json:"resolvedMetricTime,omitempty"`
 	CoolDown                    string         `json:"coolDown"`
 	Conditions                  []Condition    `json:"conditions"`
-	CoolDownStartedAtMetricTime *string        `json:"coolDownStartedAtMetricTime"`
-	ResolutionReason            *string        `json:"resolutionReason"`
+	CoolDownStartedAtMetricTime *string        `json:"coolDownStartedAtMetricTime,omitempty"`
+	ResolutionReason            *string        `json:"resolutionReason,omitempty"`
 }
 
 type Objective struct {

@@ -1,22 +1,52 @@
 apiVersion: n9/v1alpha
 kind: Alert
 metadata:
-  name: 6fbc76bc-ff8a-40a2-8ac6-65d7d7a2686e
-  project: alerting-test
+name: a706583a-153a-4d3f-8a12-2741cc09da9b
+project: azure-monitor-direct
+organization: alerting-test
 spec:
-  alertPolicy:
-    name: burn-rate-is-4x-immediately
-    project: alerting-test
-  service:
-    name: triggering-alerts-service
-    project: alerting-test
-  objective:
-    value: 99.0
-    name: ok
-    displayName: ok
-  severity: Medium
-  slo:
-    name: prometheus-rolling-timeslices-threshold
-    project: alerting-test
-  status: Triggered
-  triggeredClockTime: "2022-01-16T00:28:05Z
+alertPolicy:
+  displayName: Fast Burn
+  name: fast-burn
+  project: azure-monitor-direct
+conditions:
+- alertingWindow: 15m0s
+  measurement: averageBurnRate
+  op: gte
+  status:
+    firstMetMetricTime: "2024-04-16T16:45:00Z"
+    lastMetMetricTime: "2024-04-23T16:29:00Z"
+  value: 2
+- alertingWindow: 24h0m0s
+  measurement: averageBurnRate
+  op: gte
+  status:
+    firstMetMetricTime: "2024-04-17T16:30:00Z"
+    lastMetMetricTime: "2024-04-23T16:29:00Z"
+  value: 3
+- alertingWindow: 72h0m0s
+  measurement: averageBurnRate
+  op: gte
+  status:
+    firstMetMetricTime: "2024-04-19T16:30:00Z"
+    lastMetMetricTime: "2024-04-23T16:29:00Z"
+  value: 3
+coolDown: 5m0s
+coolDownStartedAtMetricTime: "2024-04-23T16:29:00Z"
+objective:
+  displayName: ""
+  name: objective-1
+  value: 1
+resolutionReason: AlertCanceledNewCalendarAlignedTimeWindow
+resolvedClockTime: "2024-04-23T16:36:10Z"
+resolvedMetricTime: "2024-04-23T16:30:00Z"
+service:
+  name: n9-web-app-direct
+  project: azure-monitor-direct
+severity: Medium
+slo:
+  name: azure-n9-web-app-availability-calendar-week-ts
+  project: azure-monitor-direct
+status: Canceled
+triggeredClockTime: "2024-04-19T16:36:08Z"
+triggeredMetricTime: "2024-04-19T16:30:00Z"
