@@ -30,6 +30,15 @@ type PropertyDoc struct {
 	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
 }
 
+// TODO:
+// - Some types are still poorly resolved, e.g. []alertpolicy.AlertCondition which should be []AlertCondition.
+// - Add flags to the script (e.g. -o).
+// - Make sure type aliases are resolved to concrete types (like Labels).
+// - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
+// - Remove ENUM declarations from comments.
+// - Figure out how to handle maps (keys vs values vs items validation).
+// - Fill out documentation gaps.
+// - Provide more examples.
 func main() {
 	docs := generateObjectDocs()
 	goDocs := parseGoDocs()
