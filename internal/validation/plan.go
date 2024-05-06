@@ -3,7 +3,6 @@ package validation
 import (
 	"reflect"
 	"sort"
-	"strings"
 
 	"golang.org/x/exp/maps"
 )
@@ -96,12 +95,18 @@ func getTypeInfo[T any]() typeInfo {
 		return typeInfo{}
 	}
 	var result typeInfo
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	if typ.Kind() == reflect.Slice {
+		typ = typ.Elem()
+		result.Name = "[]"
+	}
 	if typ.PkgPath() == "" {
-		result.Name = typ.String()
+		result.Name += typ.String()
 	} else {
-		result.Name = typ.Name()
+		result.Name += typ.Name()
 		result.Package = typ.PkgPath()
 	}
-	result.Name = strings.TrimPrefix(result.Name, "*")
 	return result
 }

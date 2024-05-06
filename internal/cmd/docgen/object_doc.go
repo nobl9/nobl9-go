@@ -2,9 +2,12 @@ package main
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
+	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
@@ -124,11 +127,14 @@ func generateObjectDocs() []*ObjectDoc {
 			object:               v1alphaRoleBinding.RoleBinding{},
 		},
 	}
+	rootPath := testutils.FindModuleRoot()
 	// Generate object properties based on reflection.
 	for _, object := range objects {
 		mapper := newObjectMapper()
-		mapper.Map(reflect.TypeOf(object.object), "$")
+		typ := reflect.TypeOf(object.object)
+		mapper.Map(typ, "$")
 		object.Properties = mapper.Properties
+		object.Examples = readObjectExamples(rootPath, typ)
 	}
 	// Add children paths to properties.
 	// The object mapper does not provide this information, but rather returns a flat list of properties.
@@ -203,4 +209,14 @@ var validationInferredProperties = []struct {
 		Kind:    manifest.KindDataExport,
 		Path:    "$.spec.spec",
 	},
+}
+
+func readObjectExamples(root string, typ reflect.Type) []string {
+	relPath := strings.TrimPrefix(typ.PkgPath(), moduleRootPath)
+	objectPath := filepath.Join(root, relPath, "example.yaml")
+	data, err := os.ReadFile(objectPath)
+	if err != nil {
+		log.Panicf("failed to read examples for object, path: %s, err: %v", objectPath, err)
+	}
+	return []string{string(data)}
 }

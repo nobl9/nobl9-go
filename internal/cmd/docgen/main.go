@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 
@@ -14,6 +15,7 @@ type ObjectDoc struct {
 	Kind       manifest.Kind    `yaml:"kind"`
 	Version    manifest.Version `yaml:"version"`
 	Properties []PropertyDoc    `yaml:"properties"`
+	Examples   []string         `yaml:"examples,omitempty"`
 	// Compute-only fields.
 	object               manifest.Object
 	validationProperties []PropertyDoc
@@ -28,26 +30,36 @@ type PropertyDoc struct {
 	Examples      []string              `json:"examples,omitempty"`
 	Rules         []validation.RulePlan `json:"rules,omitempty"`
 	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
+	IsDeprecated  bool                  `json:"isDeprecated,omitempty"`
 }
 
 // TODO:
-// - Some types are still poorly resolved, e.g. []alertpolicy.AlertCondition which should be []AlertCondition.
-// - Add flags to the script (e.g. -o).
-// - Make sure type aliases are resolved to concrete types (like Labels).
 // - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
-// - Remove ENUM declarations from comments.
 // - Figure out how to handle maps (keys vs values vs items validation).
 //
 // Docs improvements:
 // - Fill out documentation gaps.
 // - Provide more examples.
 func main() {
+	outputFilePath := flag.String("o", "validation_plan.yaml", "Output plan file path")
+	flag.Parse()
+
+	run(*outputFilePath)
+}
+
+func run(outputFilePath string) {
 	docs := generateObjectDocs()
 	goDocs := parseGoDocs()
 
 	mergeDocs(docs, goDocs)
 
-	out, err := os.OpenFile("validation_plan.yaml", os.O_CREATE|os.O_WRONLY, 0o600)
+	postProcessProperties(docs,
+		removeEnumDeclaration,
+		extractDeprecatedInformation,
+		removeTrailingWhitespace,
+	)
+
+	out, err := os.OpenFile(outputFilePath, os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		panic(err)
 	}
