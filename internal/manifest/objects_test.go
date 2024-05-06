@@ -10,8 +10,14 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaParser "github.com/nobl9/nobl9-go/manifest/v1alpha/parser"
 	"github.com/nobl9/nobl9-go/sdk"
 )
+
+func TestMain(m *testing.M) {
+	v1alphaParser.UseStrictDecodingMode = true
+	m.Run()
+}
 
 func TestObjectExamples(t *testing.T) {
 	moduleRoot := testutils.FindModuleRoot()

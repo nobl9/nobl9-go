@@ -37,6 +37,8 @@ type PropertyDoc struct {
 // - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
 // - Remove ENUM declarations from comments.
 // - Figure out how to handle maps (keys vs values vs items validation).
+//
+// Docs improvements:
 // - Fill out documentation gaps.
 // - Provide more examples.
 func main() {
