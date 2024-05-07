@@ -134,7 +134,7 @@ func (p packageParser) parseStructFields(spec ast.Spec) map[string]goTypeDoc {
 		if star, ok := fieldType.(*ast.StarExpr); ok {
 			fieldType = star.X
 		}
-		if selector, ok := field.Type.(*ast.SelectorExpr); ok {
+		if selector, ok := fieldType.(*ast.SelectorExpr); ok {
 			fieldPkgName := selector.X.(*ast.Ident).Name
 			importPath, found := p.CommentParser.LookupPackage(fieldPkgName)
 			if !found {

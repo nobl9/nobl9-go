@@ -76,7 +76,7 @@ func generateObjectDocs(objectNames []string) []*ObjectDoc {
 }
 
 func findPropertyChildrenPaths(parent string, properties []PropertyDoc) []string {
-	var childrenPaths []string
+	childrenPaths := make([]string, 0, len(properties))
 	for _, property := range properties {
 		childRelativePath, found := strings.CutPrefix(property.Path, parent+".")
 		if !found {
@@ -117,6 +117,7 @@ var validationInferredProperties = []struct {
 func readObjectExamples(root string, typ reflect.Type) []string {
 	relPath := strings.TrimPrefix(typ.PkgPath(), moduleRootPath)
 	objectPath := filepath.Join(root, relPath, "example.yaml")
+	// #nosec G304
 	data, err := os.ReadFile(objectPath)
 	if err != nil {
 		log.Panicf("failed to read examples for object, path: %s, err: %v", objectPath, err)

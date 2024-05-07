@@ -7,11 +7,10 @@ import (
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
+// Labels are key-value pairs that can be attached to SLOs, services, projects, and alert policies.
+// Labels are used to select and filter Nobl9 objects.
+type Labels map[labelKey][]labelValue
 type (
-	// Labels are key-value pairs that can be attached to SLOs, services, projects, and alert policies.
-	// Labels are used to select and filter Nobl9 objects.
-	Labels map[labelKey][]labelValue
-
 	labelKey   = string
 	labelValue = string
 )

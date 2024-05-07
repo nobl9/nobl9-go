@@ -107,7 +107,7 @@ var objectsRegistry = []*ObjectDoc{
 }
 
 func objectPlansToDocs(plans []validation.PropertyPlan) []PropertyDoc {
-	var docs []PropertyDoc
+	docs := make([]PropertyDoc, 0, len(plans))
 	for _, plan := range plans {
 		docs = append(docs, PropertyDoc{
 			Doc:        "TODO",

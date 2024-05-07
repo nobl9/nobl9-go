@@ -70,6 +70,7 @@ func run(outputFilePath string, objectNames []string) {
 		removeTrailingWhitespace,
 	)
 
+	// #nosec G304
 	out, err := os.OpenFile(outputFilePath, os.O_CREATE|os.O_WRONLY, 0o600)
 	if err != nil {
 		panic(err)
