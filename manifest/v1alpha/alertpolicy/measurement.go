@@ -47,8 +47,8 @@ func ParseMeasurement(value string) (Measurement, error) {
 	return result, nil
 }
 
-// GetExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
-func GetExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operator, error) {
+// GetDefaultOperatorForMeasurement returns the default operator when operator is undefined.
+func GetDefaultOperatorForMeasurement(measurement Measurement) (v1alpha.Operator, error) {
 	switch measurement {
 	case MeasurementBurnedBudget:
 		return v1alpha.GreaterThanEqual, nil
@@ -58,6 +58,16 @@ func GetExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operato
 		return v1alpha.LessThan, nil
 	case MeasurementTimeToBurnEntireBudget:
 		return v1alpha.LessThanEqual, nil
+	default:
+		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
+	}
+}
+
+// getExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
+func getExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operator, error) {
+	switch measurement {
+	case MeasurementAverageBurnRate, MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget:
+		return GetDefaultOperatorForMeasurement(measurement)
 	default:
 		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
 	}
