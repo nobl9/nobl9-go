@@ -41,6 +41,7 @@ type PropertyDoc struct {
 
 // TODO:
 // - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
+// - Consider stopping at RuleSet level if a description was provided (instead of using SingleRule descriptions).
 //
 // Docs improvements:
 // - Fill out documentation gaps.

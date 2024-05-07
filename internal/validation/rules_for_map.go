@@ -135,9 +135,15 @@ func (r PropertyRulesForMap[M, K, V, S]) plan(builder planBuilder) {
 	r.mapRules.plan(builder.setExamples(r.mapRules.examples...))
 	builder = builder.appendPath(r.mapRules.name)
 	// JSON/YAML path for keys uses '~' to extract the keys.
-	r.forKeyRules.plan(builder.appendPath("~"))
-	r.forValueRules.plan(builder.appendPath("*"))
-	r.forItemRules.plan(builder.appendPath("*"))
+	if len(r.forKeyRules.steps) > 0 {
+		r.forKeyRules.plan(builder.appendPath("~"))
+	}
+	if len(r.forValueRules.steps) > 0 {
+		r.forValueRules.plan(builder.appendPath("*"))
+	}
+	if len(r.forItemRules.steps) > 0 {
+		r.forItemRules.plan(builder.appendPath("*"))
+	}
 }
 
 func MapElementName(mapName, key any) string {

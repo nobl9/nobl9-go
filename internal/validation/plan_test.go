@@ -4,10 +4,10 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -138,6 +138,5 @@ func TestPlan(t *testing.T) {
 	err := enc.Encode(properties)
 	require.NoError(t, err)
 
-	fmt.Println(buf.String())
-	//assert.Equal(t, expectedPlanJSON, buf.String())
+	assert.Equal(t, expectedPlanJSON, buf.String())
 }
