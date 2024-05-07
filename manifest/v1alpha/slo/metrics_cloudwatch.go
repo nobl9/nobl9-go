@@ -48,6 +48,7 @@ type CloudWatchMetricDimension struct {
 
 var cloudWatchValidation = validation.New[CloudWatchMetric](
 	validation.For(validation.GetSelf[CloudWatchMetric]()).
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.NewSingleRule(func(c CloudWatchMetric) error {
 			var configOptions int
 			if c.IsStandardConfiguration() {
@@ -66,7 +67,6 @@ var cloudWatchValidation = validation.New[CloudWatchMetric](
 			}
 			return nil
 		}).WithErrorCode(validation.ErrorCodeOneOf)).
-		StopOnError().
 		Include(
 			cloudWatchStandardConfigValidation,
 			cloudWatchSQLConfigValidation,
@@ -90,42 +90,47 @@ var cloudWatchSQLConfigValidation = validation.New[CloudWatchMetric](
 		WithName("sql").
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() },
+	validation.WhenDescription("sql is provided"),
+)
 
 var cloudWatchJSONConfigValidation = validation.New[CloudWatchMetric](
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
 		WithName("json").
 		Required().
 		Rules(cloudWatchJSONValidationRule),
-).When(func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() },
+	validation.WhenDescription("json is provided"),
+)
 
 var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
 		WithName("namespace").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(validation.StringMatchRegexp(cloudWatchNamespaceRegexp)),
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.MetricName }).
 		WithName("metricName").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(validation.StringMaxLength(255)),
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Stat }).
 		WithName("stat").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(validation.StringMatchRegexp(cloudWatchStatRegexp, cloudWatchExampleValidStats...)),
 	validation.ForSlice(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
 		WithName("dimensions").
-		Rules(validation.SliceMaxLength[[]CloudWatchMetricDimension](10)).
 		// If the slice is too long, don't proceed with validation.
-		StopOnError().
-		IncludeForEach(cloudwatchMetricDimensionValidation).
-		StopOnError().
 		// We don't want to check names uniqueness if for example names are empty.
+		Cascade(validation.CascadeModeStop).
+		Rules(validation.SliceMaxLength[[]CloudWatchMetricDimension](10)).
+		IncludeForEach(cloudwatchMetricDimensionValidation).
 		Rules(validation.SliceUnique(func(c CloudWatchMetricDimension) string {
 			if c.Name == nil {
 				return ""
@@ -134,10 +139,13 @@ var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
 	validation.ForPointer(func(c CloudWatchMetric) *string { return c.AccountID }).
 		WithName("accountId").
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.StringNotEmpty()).
-		StopOnError().
 		Rules(validation.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
-).When(func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() })
+).When(
+	func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
+	validation.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
+)
 
 var (
 	// cloudWatchStatRegex matches valid stat function according to this documentation:

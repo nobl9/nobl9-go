@@ -11,7 +11,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var directValidation = validation.New[Direct](
+var validator = validation.New[Direct](
 	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
@@ -23,8 +23,8 @@ var directValidation = validation.New[Direct](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
+		Cascade(validation.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
-		StopOnError().
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
@@ -92,6 +92,9 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
+	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
+		WithName("logicMonitor").
+		Include(logicMonitorValidation),
 )
 
 var (
@@ -109,7 +112,10 @@ var (
 		validation.For(func(n NewRelicConfig) string { return n.InsightsQueryKey }).
 			WithName("insightsQueryKey").
 			HideValue().
-			When(func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) }).
+			When(
+				func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringStartsWith("NRIQ-")),
 	)
 	appDynamicsValidation = validation.New[AppDynamicsConfig](
@@ -131,7 +137,10 @@ var (
 		validation.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
-			When(func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) }).
+			When(
+				func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringJSON()),
 	)
 	splunkValidation = validation.New[SplunkConfig](
@@ -157,7 +166,10 @@ var (
 		validation.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
-			When(func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) }).
+			When(
+				func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringJSON()),
 	)
 	lightstepValidation = validation.New[LightstepConfig](
@@ -170,9 +182,7 @@ var (
 		validation.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
 			WithName("url").
 			OmitEmpty().
-			Rules(
-				validation.URL(),
-			),
+			Rules(validation.URL()),
 	)
 	dynatraceValidation = validation.New[DynatraceConfig](
 		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
@@ -183,7 +193,21 @@ var (
 			Required().
 			Rules(validation.StringUUID()),
 	)
-	honeycombValidation = validation.New[HoneycombConfig]()
+	honeycombValidation    = validation.New[HoneycombConfig]()
+	logicMonitorValidation = validation.New[LogicMonitorConfig](
+		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
+			WithName("account").
+			Required().
+			Rules(validation.StringNotEmpty()),
+		validation.For(func(l LogicMonitorConfig) string { return l.AccessID }).
+			WithName("accessId").
+			Required().
+			Rules(validation.StringNotEmpty()),
+		validation.For(func(l LogicMonitorConfig) string { return l.AccessKey }).
+			WithName("accessKey").
+			Required().
+			Rules(validation.StringNotEmpty()),
+	)
 )
 
 const (
@@ -294,6 +318,11 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 			return err
 		}
 	}
+	if spec.LogicMonitor != nil {
+		if err := typesMatch(v1alpha.LogicMonitor); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -344,9 +373,9 @@ const errorCodeHTTPSSchemeRequired = "https_scheme_required"
 func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) validation.PropertyRules[*url.URL, S] {
 	return validation.Transform(getter, url.Parse).
 		WithName("url").
+		Cascade(validation.CascadeModeStop).
 		Required().
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(validation.NewSingleRule(func(u *url.URL) error {
 			if u.Scheme != "https" {
 				return errors.New("requires https scheme")
@@ -358,5 +387,5 @@ func urlPropertyRules[S any](getter validation.PropertyGetter[string, S]) valida
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
 
 func validate(d Direct) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(directValidation, d)
+	return v1alpha.ValidateObject(validator, d)
 }

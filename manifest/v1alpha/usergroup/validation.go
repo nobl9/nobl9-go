@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var userGroupValidation = validation.New[UserGroup](
+var validator = validation.New[UserGroup](
 	validationV1Alpha.FieldRuleMetadataName(func(u UserGroup) string { return u.Metadata.Name }),
 	validation.For(func(u UserGroup) string { return u.Spec.DisplayName }).
 		WithName("spec.displayName").
@@ -14,5 +14,5 @@ var userGroupValidation = validation.New[UserGroup](
 )
 
 func validate(u UserGroup) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(userGroupValidation, u)
+	return v1alpha.ValidateObject(validator, u)
 }

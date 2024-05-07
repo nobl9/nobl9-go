@@ -3,8 +3,11 @@ package validation_test
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"time"
+
+	"github.com/goccy/go-yaml"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
@@ -366,7 +369,7 @@ func ExampleSingleRule_WithDetails() {
 	// Output:
 	// Validation for Teacher has failed for the following properties:
 	//   - 'name' with value 'Jake':
-	//     - string does not match regular expression: '^(Tom|Jerry)$'; Teacher can be either Tom or Jerry :)
+	//     - string must match regular expression: '^(Tom|Jerry)$'; Teacher can be either Tom or Jerry :)
 }
 
 // When testing, it can be tedious to always rely on error messages as these can change over time.
@@ -631,11 +634,11 @@ func ExampleForSlice() {
 
 	// Output:
 	// Validation has failed for the following properties:
-	//   - 'students[1].index' with value '9182300123':
-	//     - length must be between 9 and 9
 	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
 	//     - length must be less than or equal to 2
 	//     - elements are not unique, index 0 collides with index 2
+	//   - 'students[1].index' with value '9182300123':
+	//     - length must be between 9 and 9
 }
 
 // When dealing with maps there are three forms of iteration:
@@ -711,14 +714,14 @@ func ExampleForMap() {
 
 	// Output:
 	// Validation has failed for the following properties:
-	//   - 'students.9182300123.name' with value 'Eve':
-	//     - should be not equal to 'Eve'
 	//   - 'students' with value '{"9182300123":{"name":"Eve","age":0,"students":null,"university":{"name":"","address":""}},"91823001...':
 	//     - length must be less than or equal to 2
-	//   - 'students.918230013' with value '{"name":"Joan","age":0,"students":null,"university":{"name":"","address":""}}':
-	//     - Joan cannot be a teacher for student with index 918230013
 	//   - 'students.9182300123' with key '9182300123':
 	//     - length must be between 9 and 9
+	//   - 'students.9182300123.name' with value 'Eve':
+	//     - should be not equal to 'Eve'
+	//   - 'students.918230013' with value '{"name":"Joan","age":0,"students":null,"university":{"name":"","address":""}}':
+	//     - Joan cannot be a teacher for student with index 918230013
 }
 
 // To only run property validation on condition, use [PropertyRules.When].
@@ -748,9 +751,10 @@ func ExamplePropertyRules_When() {
 	//     - should be not equal to 'Jerry'
 }
 
-// To fail validation immediately after certain [Rule] fails use [PropertyRules.StopOnError].
-// You need to call it directly AFTER you've called [PropertyRules.Rules].
-func ExamplePropertyRules_StopOnError() {
+// To customize how [Rule] are evaluated use [PropertyRules.Cascade].
+// Use [CascadeModeStop] to stop validation after the first error.
+// If you wish to revert to the default behavior, use [CascadeModeContinue].
+func ExamplePropertyRules_Cascade() {
 	alwaysFailingRule := validation.NewSingleRule(func(string) error {
 		return fmt.Errorf("always fails")
 	})
@@ -758,8 +762,8 @@ func ExamplePropertyRules_StopOnError() {
 	v := validation.New[Teacher](
 		validation.For(func(t Teacher) string { return t.Name }).
 			WithName("name").
+			Cascade(validation.CascadeModeStop).
 			Rules(validation.NotEqualTo("Jerry")).
-			StopOnError().
 			Rules(alwaysFailingRule),
 	).WithName("Teacher")
 
@@ -832,11 +836,11 @@ func ExampleValidator() {
 	// Validation for John has failed for the following properties:
 	//   - 'name' with value 'John':
 	//     - must be one of [Jake, George]
-	//   - 'students[1].index' with value '9182300123':
-	//     - length must be between 9 and 9
 	//   - 'students' with value '[{"index":"918230014"},{"index":"9182300123"},{"index":"918230014"}]':
 	//     - length must be less than or equal to 2
 	//     - elements are not unique, index 0 collides with index 2
+	//   - 'students[1].index' with value '9182300123':
+	//     - length must be between 9 and 9
 	//   - 'university.address':
 	//     - property is required but was empty
 }
@@ -909,5 +913,48 @@ func ExampleValidator_branchingPattern() {
 	// Output:
 	// Validation for File has failed for the following properties:
 	//   - 'indent' with value 'invalid':
-	//     - string does not match regular expression: '^\s*$'
+	//     - string must match regular expression: '^\s*$'
+}
+
+// When documenting an API it's often a struggle to keep consistency
+// between the code and documentation we write for it.
+// What If your code could be self-descriptive?
+// Specifically, what If we could generate documentation out of our validation rules?
+// We can achieve that by using [Plan] function!
+//
+// There are multiple ways to improve the generated documentation:
+//   - Use [PropertyRules.WithExamples] to provide a list of example values for the property.
+//   - Use [SingleRule.WithDescription] to provide a plan-only description for your rule.
+//     For builtin rules, the description is already provided.
+//   - Use [WhenDescription] to provide a plan-only description for your when conditions.
+func ExamplePlan() {
+	v := validation.New[Teacher](
+		validation.For(func(t Teacher) string { return t.Name }).
+			WithName("name").
+			WithExamples("Jake", "John").
+			When(
+				func(t Teacher) bool { return t.Name == "Jerry" },
+				validation.WhenDescription("name is Jerry"),
+			).
+			Rules(
+				validation.NotEqualTo("Jerry").
+					WithDetails("Jerry is just a name!"),
+			),
+	)
+
+	properties := validation.Plan(v)
+	_ = yaml.NewEncoder(os.Stdout, yaml.Indent(2)).Encode(properties)
+
+	// Output:
+	// - path: $.name
+	//   type: string
+	//   examples:
+	//   - Jake
+	//   - John
+	//   rules:
+	//   - description: should be not equal to 'Jerry'
+	//     details: Jerry is just a name!
+	//     errorCode: not_equal_to
+	//     conditions:
+	//     - name is Jerry
 }

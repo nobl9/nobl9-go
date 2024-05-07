@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	_ "embed"
 	"regexp"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -19,6 +20,9 @@ const (
 	maxLabelValueLength = 200
 )
 
+//go:embed labels_examples.yaml
+var labelsExamples string
+
 var labelKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
 func LabelsValidationRules() validation.Validator[Labels] {
@@ -28,7 +32,8 @@ func LabelsValidationRules() validation.Validator[Labels] {
 				validation.StringLength(minLabelKeyLength, maxLabelKeyLength),
 				validation.StringMatchRegexp(labelKeyRegexp),
 			).
-			IncludeForValues(labelValuesValidation),
+			IncludeForValues(labelValuesValidation).
+			WithExamples(labelsExamples),
 	)
 }
 

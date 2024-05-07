@@ -12,19 +12,17 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var sloValidation = validation.New[SLO](
+var validator = validation.New[SLO](
 	validation.For(func(s SLO) SLO { return s }).
 		Include(sloValidationComposite),
 	validation.For(func(s SLO) Metadata { return s.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(s SLO) Spec { return s.Spec }).
 		WithName("spec").
+		Cascade(validation.CascadeModeStop).
 		Include(specValidationNonComposite).
-		StopOnError().
 		Include(specValidationComposite).
-		StopOnError().
-		Include(specValidation).
-		StopOnError(),
+		Include(specValidation),
 )
 
 var metadataValidation = validation.New[Metadata](
@@ -102,12 +100,15 @@ var sloValidationComposite = validation.New[SLO](
 				return nil
 			}).WithErrorCode(validation.ErrorCodeForbidden),
 		),
-).When(func(s SLO) bool { return s.Spec.HasCompositeObjectives() })
+).When(
+	func(s SLO) bool { return s.Spec.HasCompositeObjectives() },
+	validation.WhenDescription("at least one composite objective is defined"),
+)
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
-		Include(specMetricsValidation).
-		StopOnError(),
+		Cascade(validation.CascadeModeStop).
+		Include(specMetricsValidation),
 	validation.For(validation.GetSelf[Spec]()).
 		WithName("composite").
 		When(func(s Spec) bool { return s.Composite != nil }).
@@ -131,8 +132,8 @@ var specValidation = validation.New[Spec](
 		RulesForEach(validation.StringIsDNSSubdomain()),
 	validation.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceLength[[]Attachment](0, 20)).
-		StopOnError().
 		IncludeForEach(attachmentValidation),
 	validation.ForPointer(func(s Spec) *Composite { return s.Composite }).
 		WithName("composite").
@@ -142,17 +143,19 @@ var specValidation = validation.New[Spec](
 		Include(anomalyConfigValidation),
 	validation.ForSlice(func(s Spec) []TimeWindow { return s.TimeWindows }).
 		WithName("timeWindows").
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceLength[[]TimeWindow](1, 1)).
-		StopOnError().
 		IncludeForEach(timeWindowsValidation).
-		StopOnError().
 		RulesForEach(timeWindowValidationRule()),
 	validation.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
+		Cascade(validation.CascadeModeStop).
+		When(
+			func(s Spec) bool { return !s.HasCompositeObjectives() },
+			validation.WhenDescription("none of the objectives is of composite type"),
+		).
 		Rules(validation.SliceMinLength[[]Objective](1)).
-		StopOnError().
 		IncludeForEach(objectiveValidation).
-		When(func(s Spec) bool { return !s.HasCompositeObjectives() }).
 		Rules(validation.SliceUnique(func(v Objective) float64 {
 			if v.Value == nil {
 				return 0
@@ -204,7 +207,7 @@ var compositeValidation = validation.New[Composite](
 			validation.For(func(b CompositeBurnRateCondition) string { return b.Operator }).
 				WithName("op").
 				Required().
-				Rules(validation.OneOf("gt")),
+				Rules(validation.EqualTo("gt")),
 		)),
 )
 
@@ -267,10 +270,9 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 		Include(validation.New[AnomalyConfigNoData](
 			validation.ForSlice(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
+				Cascade(validation.CascadeModeStop).
 				Rules(validation.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
-				StopOnError().
 				Rules(validation.SliceUnique(validation.SelfHashFunc[AnomalyConfigAlertMethod]())).
-				StopOnError().
 				IncludeForEach(validation.New[AnomalyConfigAlertMethod](
 					validation.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
@@ -334,7 +336,10 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 		Required().
 		Rules(validation.OneOf(v1alpha.OperatorNames()...)),
 ).
-	When(func(o Objective) bool { return o.RawMetric != nil })
+	When(
+		func(o Objective) bool { return o.RawMetric != nil },
+		validation.WhenDescription("rawMetric is defined"),
+	)
 
 var objectiveBaseValidation = validation.New[ObjectiveBase](
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
@@ -355,7 +360,7 @@ func validate(s SLO) *v1alpha.ObjectError {
 			}
 		}
 	}
-	return v1alpha.ValidateObject(sloValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
@@ -370,7 +375,10 @@ var specValidationNonComposite = validation.New[Spec](
 		WithName("indicator").
 		Required().
 		Include(indicatorValidation),
-).When(func(s Spec) bool { return !s.HasCompositeObjectives() })
+).When(
+	func(s Spec) bool { return !s.HasCompositeObjectives() },
+	validation.WhenDescription("none of the objectives is of composite type"),
+)
 
 var specValidationComposite = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
@@ -410,4 +418,7 @@ var specValidationComposite = validation.New[Spec](
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),
-).When(func(s Spec) bool { return s.HasCompositeObjectives() })
+).When(
+	func(s Spec) bool { return s.HasCompositeObjectives() },
+	validation.WhenDescription("at least one composite objective is defined"),
+)

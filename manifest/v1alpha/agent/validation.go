@@ -13,7 +13,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var agentValidation = validation.New[Agent](
+var validator = validation.New[Agent](
 	validationV1Alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
@@ -25,8 +25,8 @@ var agentValidation = validation.New[Agent](
 
 var specValidation = validation.New[Spec](
 	validation.For(validation.GetSelf[Spec]()).
+		Cascade(validation.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
-		StopOnError().
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
@@ -115,6 +115,9 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
+	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
+		WithName("logicMonitor").
+		Include(logicMonitorValidation),
 )
 
 var (
@@ -185,6 +188,12 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(validation.StringUUID()),
+	)
+	logicMonitorValidation = validation.New[LogicMonitorConfig](
+		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
+			WithName("account").
+			Required().
+			Rules(validation.StringNotEmpty()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
@@ -351,6 +360,11 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 			return err
 		}
 	}
+	if spec.LogicMonitor != nil {
+		if err := typesMatch(v1alpha.LogicMonitor); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -407,5 +421,5 @@ func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validat
 }
 
 func validate(a Agent) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(agentValidation, a)
+	return v1alpha.ValidateObject(validator, a)
 }

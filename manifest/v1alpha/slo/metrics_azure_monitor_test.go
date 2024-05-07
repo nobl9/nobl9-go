@@ -221,9 +221,8 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code:            validation.ErrorCodeStringMatchRegexp,
-				ContainsMessage: "string does not match regular expression: '(?m)\\bn9_time\\b'; n9_time is required", // nolint: lll
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code: validation.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
@@ -235,9 +234,8 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code:            validation.ErrorCodeStringMatchRegexp,
-				ContainsMessage: "string does not match regular expression: '(?m)\\bn9_value\\b'; n9_value is required", // nolint: lll
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+				Code: validation.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
@@ -426,9 +424,8 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 				} else {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
-							Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
-							Message: "string does not match regular expression: '^[a-zA-Z0-9-._()]+$'",
-							Code:    validation.ErrorCodeStringMatchRegexp,
+							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
+							Code: validation.ErrorCodeStringMatchRegexp,
 						})
 				}
 			})
@@ -525,7 +522,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 			},
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 8,
+		testutils.AssertContainsErrors(t, slo, err, 9,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name",
 				Code: validation.ErrorCodeRequired,

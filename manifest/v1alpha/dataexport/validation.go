@@ -16,7 +16,7 @@ var S3BucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$
 var DNSNameRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 var GCSNonDNSNameBucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`)
 
-var dataExportValidation = validation.New[DataExport](
+var validator = validation.New[DataExport](
 	validation.For(func(d DataExport) Metadata { return d.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(d DataExport) Spec { return d.Spec }).
@@ -49,7 +49,11 @@ var s3SpecValidation = validation.New[Spec](
 		WithName("spec").
 		Include(s3Validation),
 ).
-	When(func(s Spec) bool { return s.ExportType == DataExportTypeS3 || s.ExportType == DataExportTypeSnowflake })
+	When(
+		func(s Spec) bool { return s.ExportType == DataExportTypeS3 || s.ExportType == DataExportTypeSnowflake },
+		validation.WhenDescription("exportType is either '%s' or '%s'",
+			DataExportTypeS3, DataExportTypeSnowflake),
+	)
 
 var s3Validation = validation.New[S3DataExportSpec](
 	validation.For(func(c S3DataExportSpec) string { return c.BucketName }).
@@ -79,7 +83,10 @@ var gcsSpecValidation = validation.New[Spec](
 		WithName("spec").
 		Include(gcsValidation),
 ).
-	When(func(s Spec) bool { return s.ExportType == DataExportTypeGCS })
+	When(
+		func(s Spec) bool { return s.ExportType == DataExportTypeGCS },
+		validation.WhenDescription("exportType is '%s'", DataExportTypeGCS),
+	)
 
 // gcsValidation checks if name matches restrictions specified
 // at https://cloud.google.com/storage/docs/naming-buckets.
@@ -97,19 +104,22 @@ var bucketNonDNSNameValidation = validation.New[string](
 		Rules(validation.StringMatchRegexp(GCSNonDNSNameBucketNameRegexp).
 			WithDetails("must be a valid GCS bucket name")),
 ).
-	When(func(n string) bool {
-		return len(n) <= GCSNonDomainNameBucketMaxLength
-	})
+	When(
+		func(n string) bool { return len(n) <= GCSNonDomainNameBucketMaxLength },
+		validation.WhenDescription("bucketName length is less than or equal to %d",
+			GCSNonDomainNameBucketMaxLength),
+	)
 
 var bucketDNSNameValidation = validation.New[string](
 	validation.For(validation.GetSelf[string]()).
 		Rules(validation.StringMatchRegexp(DNSNameRegexp).
 			WithDetails("must be a valid GCS bucket name")),
 ).
-	When(func(n string) bool {
-		return len(n) > GCSNonDomainNameBucketMaxLength
-	})
+	When(
+		func(n string) bool { return len(n) > GCSNonDomainNameBucketMaxLength },
+		validation.WhenDescription("bucketName length is greater than %d", GCSNonDomainNameBucketMaxLength),
+	)
 
 func validate(s DataExport) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(dataExportValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }

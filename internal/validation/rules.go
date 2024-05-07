@@ -1,6 +1,8 @@
 package validation
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 // For creates a new [PropertyRules] instance for the property
 // which value is extracted through [PropertyGetter] function.
@@ -31,9 +33,6 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 	return PropertyRules[N, S]{
 		transformGetter: func(s S) (transformed N, original any, err error) {
 			v := getter(s)
-			if err != nil {
-				return transformed, nil, err
-			}
 			if isEmptyFunc(v) {
 				return transformed, nil, emptyErr{}
 			}
@@ -43,6 +42,7 @@ func Transform[T, N, S any](getter PropertyGetter[T, S], transform Transformer[T
 			}
 			return transformed, v, nil
 		},
+		originalType: getTypeString[T](),
 	}
 }
 
@@ -52,8 +52,6 @@ func GetSelf[S any]() PropertyGetter[S, S] {
 }
 
 type Transformer[T, N any] func(T) (N, error)
-
-type Predicate[S any] func(S) bool
 
 type PropertyGetter[T, S any] func(S) T
 
@@ -69,20 +67,23 @@ type PropertyRules[T, S any] struct {
 	getter          internalPropertyGetter[T, S]
 	transformGetter internalTransformPropertyGetter[T, S]
 	steps           []interface{}
-	predicates      []Predicate[S]
 	required        bool
 	omitEmpty       bool
 	hideValue       bool
 	isPointer       bool
+	mode            CascadeMode
+	examples        []string
+	originalType    string
+
+	predicateMatcher[S]
 }
 
 // Validate validates the property value using provided rules.
 // nolint: gocognit
 func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	var (
-		ruleErrors         []error
-		allErrors          PropertyErrors
-		previousStepFailed bool
+		ruleErrors []error
+		allErrors  PropertyErrors
 	)
 	propValue, skip, err := r.getValue(st)
 	if err != nil {
@@ -94,22 +95,17 @@ func (r PropertyRules[T, S]) Validate(st S) PropertyErrors {
 	if skip {
 		return nil
 	}
-	for _, predicate := range r.predicates {
-		if !predicate(st) {
-			return nil
-		}
+	if !r.matchPredicates(st) {
+		return nil
 	}
-loop:
 	for _, step := range r.steps {
+		stepFailed := false
 		switch v := step.(type) {
-		case stopOnErrorStep:
-			if previousStepFailed {
-				break loop
-			}
 		// Same as Rule[S] as for GetSelf we'd get the same type on T and S.
 		case Rule[T]:
 			err := v.Validate(propValue)
 			if err != nil {
+				stepFailed = true
 				switch ev := err.(type) {
 				case *PropertyError:
 					allErrors = append(allErrors, ev.PrependPropertyName(r.name))
@@ -117,15 +113,17 @@ loop:
 					ruleErrors = append(ruleErrors, err)
 				}
 			}
-			previousStepFailed = err != nil
 		case validatorI[T]:
 			err := v.Validate(propValue)
 			if err != nil {
+				stepFailed = true
 				for _, e := range err.Errors {
 					allErrors = append(allErrors, e.PrependPropertyName(r.name))
 				}
 			}
-			previousStepFailed = err != nil
+		}
+		if stepFailed && r.mode == CascadeModeStop {
+			break
 		}
 	}
 	if len(ruleErrors) > 0 {
@@ -135,13 +133,18 @@ loop:
 		if r.hideValue {
 			allErrors = allErrors.HideValue()
 		}
-		return allErrors
+		return allErrors.Aggregate()
 	}
 	return nil
 }
 
 func (r PropertyRules[T, S]) WithName(name string) PropertyRules[T, S] {
 	r.name = name
+	return r
+}
+
+func (r PropertyRules[T, S]) WithExamples(examples ...string) PropertyRules[T, S] {
+	r.examples = append(r.examples, examples...)
 	return r
 }
 
@@ -155,8 +158,8 @@ func (r PropertyRules[T, S]) Include(rules ...Validator[T]) PropertyRules[T, S] 
 	return r
 }
 
-func (r PropertyRules[T, S]) When(predicates ...Predicate[S]) PropertyRules[T, S] {
-	r.predicates = predicates
+func (r PropertyRules[T, S]) When(predicate Predicate[S], opts ...WhenOptions) PropertyRules[T, S] {
+	r.predicateMatcher = r.when(predicate, opts...)
 	return r
 }
 
@@ -175,11 +178,29 @@ func (r PropertyRules[T, S]) HideValue() PropertyRules[T, S] {
 	return r
 }
 
-type stopOnErrorStep uint8
-
-func (r PropertyRules[T, S]) StopOnError() PropertyRules[T, S] {
-	r.steps = append(r.steps, stopOnErrorStep(0))
+func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
+	r.mode = mode
 	return r
+}
+
+func (r PropertyRules[T, S]) plan(builder planBuilder) {
+	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.examples...)
+	for _, predicate := range r.predicates {
+		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
+	}
+	if r.originalType != "" {
+		builder.propertyPlan.Type = r.originalType
+	} else {
+		builder.propertyPlan.Type = getTypeString[T]()
+	}
+	if r.name != "" {
+		builder = builder.append(r.name)
+	}
+	for _, step := range r.steps {
+		if p, ok := step.(planner); ok {
+			p.plan(builder)
+		}
+	}
 }
 
 func appendSteps[T any](slice []interface{}, steps []T) []interface{} {

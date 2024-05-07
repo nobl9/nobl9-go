@@ -146,11 +146,13 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key1.nested",
 				PropertyValue: "nestedKey",
+				IsKeyError:    true,
 				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
 				PropertyValue: "nestedKey",
+				IsKeyError:    true,
 				Errors:        []*RuleError{{Message: errNestedKey.Error()}},
 			},
 			{
@@ -181,12 +183,12 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key1.nested",
-				PropertyValue: "nestedItem",
+				PropertyValue: "value1",
 				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
 			},
 			{
 				PropertyName:  "test.path.key2.nested",
-				PropertyValue: "nestedItem",
+				PropertyValue: "value2",
 				Errors:        []*RuleError{{Message: errNestedItem.Error()}},
 			},
 			{
@@ -197,20 +199,29 @@ func TestPropertyRulesForMap(t *testing.T) {
 		}, errs)
 	})
 
-	t.Run("stop on error", func(t *testing.T) {
-		expectedErr := errors.New("oh no!")
+	t.Run("cascade mode stop", func(t *testing.T) {
+		keyErr := errors.New("key error")
+		valueErr := errors.New("value error")
 		r := ForMap(func(m mockStruct) map[string]string { return map[string]string{"key": "value"} }).
 			WithName("test.path").
-			RulesForValues(NewSingleRule(func(v string) error { return expectedErr })).
-			StopOnError().
-			RulesForKeys(NewSingleRule(func(v string) error { return errors.New("no") }))
+			Cascade(CascadeModeStop).
+			RulesForValues(NewSingleRule(func(v string) error { return valueErr })).
+			RulesForKeys(NewSingleRule(func(v string) error { return keyErr }))
 		errs := r.Validate(mockStruct{})
-		require.Len(t, errs, 1)
-		assert.Equal(t, &PropertyError{
-			PropertyName:  "test.path.key",
-			PropertyValue: "value",
-			Errors:        []*RuleError{{Message: expectedErr.Error()}},
-		}, errs[0])
+		require.Len(t, errs, 2)
+		assert.ElementsMatch(t, []*PropertyError{
+			{
+				PropertyName:  "test.path.key",
+				PropertyValue: "key",
+				IsKeyError:    true,
+				Errors:        []*RuleError{{Message: keyErr.Error()}},
+			},
+			{
+				PropertyName:  "test.path.key",
+				PropertyValue: "value",
+				Errors:        []*RuleError{{Message: valueErr.Error()}},
+			},
+		}, errs)
 	})
 
 	t.Run("include for keys validator", func(t *testing.T) {
@@ -225,7 +236,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 		r := ForMap(func(m mockStruct) map[string]int { return m.IntMap }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v map[string]int) error { return errRule })).
-			IncludeForKeys(New[string](
+			IncludeForKeys(New(
 				For(func(s string) string { return s }).
 					WithName("included_key").
 					Rules(
@@ -233,7 +244,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 						NewSingleRule(func(v string) error { return errIncludedKey2 }),
 					),
 			)).
-			IncludeForValues(New[int](
+			IncludeForValues(New(
 				For(func(i int) int { return i }).
 					WithName("included_value").
 					Rules(
@@ -241,7 +252,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 						NewSingleRule(func(v int) error { return errIncludedValue2 }),
 					),
 			)).
-			IncludeForItems(New[MapItem[string, int]](
+			IncludeForItems(New(
 				For(func(i MapItem[string, int]) MapItem[string, int] { return i }).
 					WithName("included_item").
 					Rules(
@@ -261,6 +272,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key.included_key",
 				PropertyValue: "key",
+				IsKeyError:    true,
 				Errors: []*RuleError{
 					{Message: errIncludedKey1.Error()},
 					{Message: errIncludedKey2.Error()},
@@ -276,7 +288,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key.included_item",
-				PropertyValue: `{"Key":"key","Value":1}`,
+				PropertyValue: "1",
 				Errors: []*RuleError{
 					{Message: errIncludedItem1.Error()},
 					{Message: errIncludedItem2.Error()},
@@ -297,7 +309,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 		r := ForMap(func(m mockStruct) map[string]string { return m.StringMap }).
 			WithName("test.path").
 			Rules(NewSingleRule(func(v map[string]string) error { return errRule })).
-			IncludeForKeys(New[string](
+			IncludeForKeys(New(
 				For(func(s string) string { return s }).
 					WithName("included_key").
 					Rules(
@@ -305,7 +317,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 						NewSingleRule(func(v string) error { return errIncludedKey2 }),
 					),
 			)).
-			IncludeForValues(New[string](
+			IncludeForValues(New(
 				For(func(i string) string { return i }).
 					WithName("included_value").
 					Rules(
@@ -313,7 +325,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 						NewSingleRule(func(v string) error { return errIncludedValue2 }),
 					),
 			)).
-			IncludeForItems(New[MapItem[string, string]](
+			IncludeForItems(New(
 				For(func(i MapItem[string, string]) MapItem[string, string] { return i }).
 					WithName("included_item").
 					Rules(
@@ -333,6 +345,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			{
 				PropertyName:  "test.path.key.included_key",
 				PropertyValue: "key",
+				IsKeyError:    true,
 				Errors: []*RuleError{
 					{Message: errIncludedKey1.Error()},
 					{Message: errIncludedKey2.Error()},
@@ -348,7 +361,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 			},
 			{
 				PropertyName:  "test.path.key.included_item",
-				PropertyValue: `{"Key":"key","Value":"1"}`,
+				PropertyValue: "1",
 				Errors: []*RuleError{
 					{Message: errIncludedItem1.Error()},
 					{Message: errIncludedItem2.Error()},
@@ -359,7 +372,7 @@ func TestPropertyRulesForMap(t *testing.T) {
 
 	t.Run("include nested for map", func(t *testing.T) {
 		expectedErr := errors.New("oh no!")
-		inc := New[map[string]string](
+		inc := New(
 			ForMap(GetSelf[map[string]string]()).
 				RulesForValues(NewSingleRule(func(v string) error { return expectedErr })),
 		)

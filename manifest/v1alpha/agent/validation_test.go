@@ -857,6 +857,11 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		v1alpha.Honeycomb: {
 			Honeycomb: &HoneycombConfig{},
 		},
+		v1alpha.LogicMonitor: {
+			LogicMonitor: &LogicMonitorConfig{
+				Account: "account",
+			},
+		},
 	}
 
 	return specs[typ]

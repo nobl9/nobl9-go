@@ -12,7 +12,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var alertPolicyValidation = validation.New[AlertPolicy](
+var validator = validation.New[AlertPolicy](
 	validation.For(func(p AlertPolicy) Metadata { return p.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(p AlertPolicy) Spec { return p.Spec }).
@@ -44,8 +44,8 @@ var specValidation = validation.New[Spec](
 		Rules(validation.GreaterThanOrEqualTo(time.Minute*5)),
 	validation.ForSlice(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceMinLength[[]AlertCondition](1)).
-		StopOnError().
 		IncludeForEach(conditionValidation),
 	validation.ForSlice(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
 		WithName("alertMethods").
@@ -115,20 +115,28 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 		Required().
 		Rules(validation.GreaterThan[time.Duration](0)),
 ).
-	When(func(c AlertCondition) bool {
-		return c.Measurement == MeasurementTimeToBurnBudget.String() ||
-			c.Measurement == MeasurementTimeToBurnEntireBudget.String()
-	})
+	When(
+		func(c AlertCondition) bool {
+			return c.Measurement == MeasurementTimeToBurnBudget.String() ||
+				c.Measurement == MeasurementTimeToBurnEntireBudget.String()
+		},
+		validation.WhenDescription("measurement is is either '%s' or '%s'",
+			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
+	)
 
 var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
 		OmitEmpty(),
 ).
-	When(func(c AlertCondition) bool {
-		return c.Measurement == MeasurementBurnedBudget.String() ||
-			c.Measurement == MeasurementAverageBurnRate.String()
-	})
+	When(
+		func(c AlertCondition) bool {
+			return c.Measurement == MeasurementBurnedBudget.String() ||
+				c.Measurement == MeasurementAverageBurnRate.String()
+		},
+		validation.WhenDescription("measurement is is either '%s' or '%s'",
+			MeasurementBurnedBudget, MeasurementAverageBurnRate),
+	)
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
 	isAlertingWindowSupported := false
@@ -216,7 +224,7 @@ var operatorValidationRule = validation.NewSingleRule(
 )
 
 func validate(p AlertPolicy) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(alertPolicyValidation, p)
+	return v1alpha.ValidateObject(validator, p)
 }
 
 func alertingWindowSupportedMeasurements() []string {

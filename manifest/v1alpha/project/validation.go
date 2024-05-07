@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var projectValidation = validation.New[Project](
+var validator = validation.New[Project](
 	validationV1Alpha.FieldRuleMetadataName(func(p Project) string { return p.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(p Project) string { return p.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataLabels(func(p Project) v1alpha.Labels { return p.Metadata.Labels }),
@@ -17,5 +17,5 @@ var projectValidation = validation.New[Project](
 )
 
 func validate(p Project) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(projectValidation, p)
+	return v1alpha.ValidateObject(validator, p)
 }

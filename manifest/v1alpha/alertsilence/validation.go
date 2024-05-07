@@ -9,10 +9,10 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-var alertSilenceValidation = validation.New[AlertSilence](
+var validator = validation.New[AlertSilence](
 	validation.For(validation.GetSelf[AlertSilence]()).
+		Cascade(validation.CascadeModeStop).
 		Include(metadataValidation).
-		StopOnError().
 		Rules(alertPolicyProjectConsistencyRule),
 	validation.For(func(s AlertSilence) Spec { return s.Spec }).
 		WithName("spec").
@@ -37,13 +37,13 @@ var specValidation = validation.New[Spec](
 		Include(alertPolicySourceValidation),
 	validation.For(func(s Spec) Period { return s.Period }).
 		WithName("period").
+		Cascade(validation.CascadeModeStop).
 		Rules(
 			validation.MutuallyExclusive(true, map[string]func(p Period) any{
 				"duration": func(p Period) any { return p.Duration },
 				"endTime":  func(p Period) any { return p.EndTime },
 			}),
 		).
-		StopOnError().
 		Include(
 			validation.New[Period](
 				validation.Transform(func(p Period) string { return p.Duration }, time.ParseDuration).
@@ -103,5 +103,5 @@ var alertPolicyProjectConsistencyRule = validation.NewSingleRule(func(s AlertSil
 })
 
 func validate(s AlertSilence) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(alertSilenceValidation, s)
+	return v1alpha.ValidateObject(validator, s)
 }

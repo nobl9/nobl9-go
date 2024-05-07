@@ -30,6 +30,7 @@ ignorePaths:
   - "**/test_data/**"
   - "docs/mock_example/mocks/*"
 words:
+  - MAXRTT
   - aggs
   - alertmethod
   - alertpolicy

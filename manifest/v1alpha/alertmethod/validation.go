@@ -22,7 +22,7 @@ const (
 var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
 var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
 
-var alertMethodValidation = validation.New[AlertMethod](
+var validator = validation.New[AlertMethod](
 	validation.For(func(a AlertMethod) Metadata { return a.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(a AlertMethod) Spec { return a.Spec }).
@@ -132,8 +132,8 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 		Rules(validation.NewSingleRule(validateTemplateFields)),
 	validation.ForSlice(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
 		WithName("headers").
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
-		StopOnError().
 		IncludeForEach(webhookHeaderValidation),
 )
 
@@ -141,9 +141,10 @@ var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
 	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
 		HideValue().
-		When(func(p PagerDutyAlertMethod) bool {
-			return p.IntegrationKey != "" && p.IntegrationKey != v1alpha.HiddenValue
-		}).
+		When(
+			func(p PagerDutyAlertMethod) bool { return !isHiddenValue(p.IntegrationKey) },
+			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+		).
 		Rules(validation.StringMaxLength(32)),
 )
 
@@ -158,6 +159,7 @@ var discordValidation = validation.New[DiscordAlertMethod](
 	validation.For(func(s DiscordAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
+		Cascade(validation.CascadeModeStop).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if strings.HasSuffix(strings.ToLower(v), "/slack") || strings.HasSuffix(strings.ToLower(v), "/github") {
@@ -165,7 +167,6 @@ var discordValidation = validation.New[DiscordAlertMethod](
 				}
 				return nil
 			})).
-		StopOnError().
 		Include(optionalUrlValidation()),
 )
 
@@ -176,9 +177,10 @@ var opsgenieValidation = validation.New[OpsgenieAlertMethod](
 	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
 		HideValue().
-		When(func(o OpsgenieAlertMethod) bool {
-			return o.Auth != "" && o.Auth != v1alpha.HiddenValue
-		}).
+		When(
+			func(o OpsgenieAlertMethod) bool { return !isHiddenValue(o.Auth) },
+			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+		).
 		Rules(
 			validation.NewSingleRule(func(v string) error {
 				if !strings.HasPrefix(v, "Basic") &&
@@ -202,8 +204,8 @@ var jiraValidation = validation.New[JiraAlertMethod](
 	validation.Transform(func(j JiraAlertMethod) string { return j.URL }, url.Parse).
 		WithName("url").
 		Required().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(u *url.URL) error {
 				if u.Scheme != "https" {
@@ -224,8 +226,8 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 	validation.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
 		HideValue().
+		Cascade(validation.CascadeModeStop).
 		Rules(validation.URL()).
-		StopOnError().
 		Rules(
 			validation.NewSingleRule(func(u *url.URL) error {
 				if u.Scheme != "https" {
@@ -234,7 +236,10 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 				return nil
 			}),
 		),
-).When(func(v TeamsAlertMethod) bool { return v.URL != "" && v.URL != v1alpha.HiddenValue })
+).When(
+	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
+	validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+)
 
 var emailValidation = validation.New[EmailAlertMethod](
 	validation.For(validation.GetSelf[EmailAlertMethod]()).
@@ -259,7 +264,10 @@ var emailValidation = validation.New[EmailAlertMethod](
 func optionalUrlValidation() validation.Validator[string] {
 	return validation.New[string](
 		validation.For(validation.GetSelf[string]()).
-			When(func(v string) bool { return v != "" && v != v1alpha.HiddenValue }).
+			When(
+				func(v string) bool { return !isHiddenValue(v) },
+				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
 			Rules(validation.StringURL()),
 	)
 }
@@ -283,7 +291,10 @@ var webhookHeaderValueValidation = validation.New[WebhookHeader](
 		WithName("value").
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(h WebhookHeader) bool { return !h.IsSecret })
+).When(
+	func(h WebhookHeader) bool { return !h.IsSecret },
+	validation.WhenDescription("isSecret is false"),
+)
 
 var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
 	validation.For(func(h WebhookHeader) string { return h.Value }).
@@ -291,7 +302,10 @@ var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
 		HideValue().
 		Required().
 		Rules(validation.StringNotEmpty()),
-).When(func(h WebhookHeader) bool { return h.IsSecret })
+).When(
+	func(h WebhookHeader) bool { return h.IsSecret },
+	validation.WhenDescription("isSecret is true"),
+)
 
 func extractTemplateFields(template string) []string {
 	matches := templateFieldsRegex.FindAllStringSubmatch(template, -1)
@@ -311,6 +325,8 @@ func validateTemplateFields(templateFields []string) error {
 	return nil
 }
 
+func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
+
 func validate(a AlertMethod) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(alertMethodValidation, a)
+	return v1alpha.ValidateObject(validator, a)
 }
