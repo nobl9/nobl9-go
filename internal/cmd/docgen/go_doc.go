@@ -52,7 +52,7 @@ func parseGoDocs() map[string]goTypeDoc {
 			log.Panicf("Expected exactly one package in %s, got %d", dir, len(packages))
 		}
 		pkg := maps.Values(packages)[0]
-		pkgParser := newPackageParser(pkg, dir)
+		pkgParser := newPackageParser(pkg, strings.TrimPrefix(dir, root+"/"))
 		docs := pkgParser.Parse()
 		for k, v := range docs {
 			typeDocs[k] = v
@@ -61,10 +61,10 @@ func parseGoDocs() map[string]goTypeDoc {
 	return typeDocs
 }
 
-func newPackageParser(astPkg *ast.Package, dir string) packageParser {
+func newPackageParser(astPkg *ast.Package, relPath string) packageParser {
 	pkgDoc := doc.New(astPkg, ".", doc.AllDecls)
 	return packageParser{
-		Path:          filepath.Join(moduleRootPath, dir),
+		Path:          filepath.Join(moduleRootPath, relPath),
 		Doc:           pkgDoc,
 		CommentParser: pkgDoc.Parser(),
 	}
