@@ -185,7 +185,8 @@ func (r PropertyRules[T, S]) Cascade(mode CascadeMode) PropertyRules[T, S] {
 }
 
 func (r PropertyRules[T, S]) plan(builder planBuilder) {
-	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.examples...)
+	builder.propertyPlan.IsOptional = (r.omitEmpty || r.isPointer) && !r.required
+	builder.propertyPlan.IsHidden = r.hideValue
 	for _, predicate := range r.predicates {
 		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
@@ -197,13 +198,16 @@ func (r PropertyRules[T, S]) plan(builder planBuilder) {
 		builder.propertyPlan.Type = typInfo.Name
 		builder.propertyPlan.Package = typInfo.Package
 	}
-	if r.name != "" {
-		builder = builder.append(r.name)
-	}
+	builder = builder.appendPath(r.name).setExamples(r.examples...)
 	for _, step := range r.steps {
 		if p, ok := step.(planner); ok {
 			p.plan(builder)
 		}
+	}
+	// If we don't have any rules defined for this property, append it nonetheless.
+	// It can be useful when we have things like [WithExamples] or [Required] set.
+	if len(r.steps) == 0 {
+		*builder.all = append(*builder.all, builder)
 	}
 }
 

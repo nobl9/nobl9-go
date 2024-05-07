@@ -86,12 +86,9 @@ func (r PropertyRulesForSlice[T, S]) plan(builder planBuilder) {
 	for _, predicate := range r.predicates {
 		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
-	r.sliceRules.plan(builder)
-	if r.sliceRules.name != "" {
-		builder = builder.append(r.sliceRules.name + "[*]")
-	}
-	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.sliceRules.examples...)
-	r.forEachRules.plan(builder)
+	r.sliceRules.plan(builder.setExamples(r.sliceRules.examples...))
+	builder = builder.appendPath(r.sliceRules.name)
+	r.forEachRules.plan(builder.appendPath("[*]"))
 }
 
 func SliceElementName(sliceName string, index int) string {

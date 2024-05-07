@@ -8,6 +8,8 @@ import (
 )
 
 type (
+	// MetadataAnnotations are non-identifiable key-value pairs that can be attached to SLOs, services, projects, and alert policies.
+	// Metadata annotations are used for descriptive purposes only.
 	MetadataAnnotations map[annotationKey]annotationValue
 
 	annotationKey   = string

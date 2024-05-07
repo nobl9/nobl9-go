@@ -2,16 +2,28 @@ package main
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 )
 
+// filterProperties is a list of property paths that should be filtered out from the documentation.
+var filterProperties = []string{
+	"$.organization",
+}
+
 func postProcessProperties(docs []*ObjectDoc, formatters ...propertyPostProcessor) {
 	for _, doc := range docs {
-		for i := range doc.Properties {
-			for _, formatter := range formatters {
-				doc.Properties[i] = formatter(doc.Properties[i])
+		properties := make([]PropertyDoc, 0, len(doc.Properties))
+		for _, property := range doc.Properties {
+			if slices.Contains(filterProperties, property.Path) {
+				continue
 			}
+			for _, formatter := range formatters {
+				property = formatter(property)
+			}
+			properties = append(properties, property)
 		}
+		doc.Properties = properties
 	}
 }
 

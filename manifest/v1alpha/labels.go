@@ -8,6 +8,8 @@ import (
 )
 
 type (
+	// Labels are key-value pairs that can be attached to SLOs, services, projects, and alert policies.
+	// Labels are used to select and filter Nobl9 objects.
 	Labels map[labelKey][]labelValue
 
 	labelKey   = string

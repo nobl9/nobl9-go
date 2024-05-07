@@ -17,7 +17,10 @@ func New(metadata Metadata, spec Spec) Service {
 	}
 }
 
-// Service struct which mapped one to one with kind: service yaml definition
+// Service in Nobl9 is a high-level grouping of service level objectives (SLOs).
+// A service can represent a logical service endpoint like an API, a database, an application,
+// or anything else you care about setting an SLO for.
+// Every SLO in Nobl9 is tied to a service, and service can have one or more SLOs.
 type Service struct {
 	APIVersion manifest.Version `json:"apiVersion"`
 	Kind       manifest.Kind    `json:"kind"`

@@ -35,6 +35,7 @@ func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRule
 func FieldRuleMetadataDisplayName[S any](getter func(S) string) validation.PropertyRules[string, S] {
 	return validation.For(getter).
 		WithName("metadata.displayName").
+		OmitEmpty().
 		Rules(validation.StringLength(0, 63))
 }
 

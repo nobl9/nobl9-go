@@ -39,6 +39,7 @@ func (o *objectMapper) Map(typ reflect.Type, path string) {
 	case reflect.Slice:
 		o.Map(typ.Elem(), path+"[*]")
 	case reflect.Map:
+		o.Map(typ.Key(), path+".~")
 		o.Map(typ.Elem(), path+".*")
 	default:
 	}
@@ -48,6 +49,10 @@ func setTypeInfo(doc PropertyDoc, typ reflect.Type) PropertyDoc {
 	info := extractTypeInfo(typ)
 	doc.Type = info.Name
 	doc.Package = info.Package
+	doc.originalType = typeInfo{
+		Name:    typ.Name(),
+		Package: typ.PkgPath(),
+	}
 	return doc
 }
 

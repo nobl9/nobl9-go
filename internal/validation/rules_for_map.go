@@ -1,6 +1,8 @@
 package validation
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ForMap creates a new [PropertyRulesForMap] instance for a map property
 // which value is extracted through [PropertyGetter] function.
@@ -130,14 +132,12 @@ func (r PropertyRulesForMap[M, K, V, S]) plan(builder planBuilder) {
 	for _, predicate := range r.predicates {
 		builder.rulePlan.Conditions = append(builder.rulePlan.Conditions, predicate.description)
 	}
-	r.mapRules.plan(builder)
-	if r.mapRules.name != "" {
-		builder = builder.append(r.mapRules.name + ".*")
-	}
-	builder.propertyPlan.Examples = append(builder.propertyPlan.Examples, r.mapRules.examples...)
-	r.forKeyRules.plan(builder)
-	r.forValueRules.plan(builder)
-	r.forItemRules.plan(builder)
+	r.mapRules.plan(builder.setExamples(r.mapRules.examples...))
+	builder = builder.appendPath(r.mapRules.name)
+	// JSON/YAML path for keys uses '~' to extract the keys.
+	r.forKeyRules.plan(builder.appendPath("~"))
+	r.forValueRules.plan(builder.appendPath("*"))
+	r.forItemRules.plan(builder.appendPath("*"))
 }
 
 func MapElementName(mapName, key any) string {

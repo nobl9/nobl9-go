@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 
@@ -27,28 +28,37 @@ type PropertyDoc struct {
 	Package       string                `json:"package,omitempty"`
 	Doc           string                `yaml:"doc,omitempty"`
 	FieldDoc      string                `yaml:"fieldDoc,omitempty"`
+	IsDeprecated  bool                  `json:"isDeprecated,omitempty"`
+	IsOptional    bool                  `json:"isOptional,omitempty"`
+	IsSecret      bool                  `json:"isSecret,omitempty"`
 	Examples      []string              `json:"examples,omitempty"`
 	Rules         []validation.RulePlan `json:"rules,omitempty"`
 	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
-	IsDeprecated  bool                  `json:"isDeprecated,omitempty"`
+
+	// originalType holds the original type alias info while the Type field holds resolved type name.
+	originalType typeInfo
 }
 
 // TODO:
 // - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
-// - Figure out how to handle maps (keys vs values vs items validation).
 //
 // Docs improvements:
 // - Fill out documentation gaps.
 // - Provide more examples.
 func main() {
-	outputFilePath := flag.String("o", "validation_plan.yaml", "Output plan file path")
+	outputFilePathFlag := flag.String("o", "docs.yaml", "Output plan file path")
+	objectsFlag := flag.String("objects", strings.Join(
+		getAllObjectNames(),
+		",",
+	), "Comma separated list of objects to generate docs for in the form of <VERSION>/<KIND>, e.g. v1alpha/Service")
 	flag.Parse()
 
-	run(*outputFilePath)
+	objectNames := strings.Split(*objectsFlag, ",")
+	run(*outputFilePathFlag, objectNames)
 }
 
-func run(outputFilePath string) {
-	docs := generateObjectDocs()
+func run(outputFilePath string, objectNames []string) {
+	docs := generateObjectDocs(objectNames)
 	goDocs := parseGoDocs()
 
 	mergeDocs(docs, goDocs)
@@ -75,10 +85,10 @@ func mergeDocs(docs []*ObjectDoc, goDocs map[string]goTypeDoc) {
 	for _, objectDoc := range docs {
 		for i, property := range objectDoc.Properties {
 			// Builtin type.
-			if property.Package == "" {
+			if property.originalType.Package == "" {
 				continue
 			}
-			key := filepath.Join(property.Package, property.Type)
+			key := filepath.Join(property.originalType.Package, property.originalType.Name)
 			goDoc, found := goDocs[key]
 			if !found {
 				continue
@@ -95,4 +105,12 @@ func mergeDocs(docs []*ObjectDoc, goDocs map[string]goTypeDoc) {
 			}
 		}
 	}
+}
+
+func getAllObjectNames() []string {
+	allObjects := make([]string, 0, len(objectsRegistry))
+	for _, object := range objectsRegistry {
+		allObjects = append(allObjects, object.Version.String()+"/"+object.Kind.String())
+	}
+	return allObjects
 }

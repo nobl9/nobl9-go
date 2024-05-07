@@ -17,8 +17,11 @@ func New(metadata Metadata, spec Spec) Project {
 	}
 }
 
-// Project is the primary grouping primitive for manifest.Object.
+// Project is the primary grouping of resources in Nobl9.
 // Most objects are scoped to a certain Project.
+// For more details, see [projects in the Nobl9 platform].
+//
+// [projects in the Nobl9 platform]: https://docs.nobl9.com/getting-started/rbac/#projects-in-the-nobl9-platform
 type Project struct {
 	APIVersion manifest.Version `json:"apiVersion"`
 	Kind       manifest.Kind    `json:"kind"`
@@ -31,9 +34,9 @@ type Project struct {
 
 // Metadata provides identity information for Project.
 type Metadata struct {
-	// Name of the Project. Must be unique within the organization.
+	// Name is used to uniquely identify the Project.
 	Name string `json:"name"`
-	// DisplayName is Project.
+	// DisplayName allows defining a more human-readable name for the Project.
 	DisplayName string                      `json:"displayName,omitempty"`
 	Labels      v1alpha.Labels              `json:"labels,omitempty"`
 	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`

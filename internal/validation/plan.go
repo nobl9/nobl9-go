@@ -3,17 +3,20 @@ package validation
 import (
 	"reflect"
 	"sort"
+	"strings"
 
 	"golang.org/x/exp/maps"
 )
 
 // PropertyPlan is a validation plan for a single property.
 type PropertyPlan struct {
-	Path     string     `json:"path"`
-	Type     string     `json:"type"`
-	Package  string     `json:"package,omitempty"`
-	Examples []string   `json:"examples,omitempty"`
-	Rules    []RulePlan `json:"rules,omitempty"`
+	Path       string     `json:"path"`
+	Type       string     `json:"type"`
+	Package    string     `json:"package,omitempty"`
+	IsOptional bool       `json:"isOptional,omitempty"`
+	IsHidden   bool       `json:"isHidden,omitempty"`
+	Examples   []string   `json:"examples,omitempty"`
+	Rules      []RulePlan `json:"rules,omitempty"`
 }
 
 // RulePlan is a validation plan for a single rule.
@@ -41,11 +44,13 @@ func Plan[S any](v Validator[S]) []PropertyPlan {
 			propertiesMap[p.path] = entry
 		} else {
 			entry = PropertyPlan{
-				Path:     p.path,
-				Type:     p.propertyPlan.Type,
-				Package:  p.propertyPlan.Package,
-				Examples: p.propertyPlan.Examples,
-				Rules:    []RulePlan{p.rulePlan},
+				Path:       p.path,
+				Type:       p.propertyPlan.Type,
+				Package:    p.propertyPlan.Package,
+				Examples:   p.propertyPlan.Examples,
+				Rules:      []RulePlan{p.rulePlan},
+				IsOptional: p.propertyPlan.IsOptional,
+				IsHidden:   p.propertyPlan.IsHidden,
 			}
 			propertiesMap[p.path] = entry
 		}
@@ -70,13 +75,30 @@ type planBuilder struct {
 	all *[]planBuilder
 }
 
-func (p planBuilder) append(path string) planBuilder {
-	return planBuilder{
-		path:         p.path + "." + path,
+func (p planBuilder) appendPath(path string) planBuilder {
+	builder := planBuilder{
 		all:          p.all,
 		rulePlan:     p.rulePlan,
 		propertyPlan: p.propertyPlan,
 	}
+	switch {
+	case p.path == "" && path != "":
+		builder.path = path
+	case p.path != "" && path != "":
+		if strings.HasPrefix(path, "[") {
+			builder.path = p.path + path
+		} else {
+			builder.path = p.path + "." + path
+		}
+	default:
+		builder.path = p.path
+	}
+	return builder
+}
+
+func (p planBuilder) setExamples(examples ...string) planBuilder {
+	p.propertyPlan.Examples = examples
+	return p
 }
 
 // typeInfo stores the type name and its package if it's available.

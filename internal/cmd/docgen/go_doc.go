@@ -14,12 +14,11 @@ import (
 	"strings"
 
 	"golang.org/x/exp/maps"
+
+	"github.com/nobl9/nobl9-go/internal/testutils"
 )
 
-const (
-	objectsDirectory = "manifest"
-	moduleRootPath   = "github.com/nobl9/nobl9-go"
-)
+const moduleRootPath = "github.com/nobl9/nobl9-go"
 
 type goTypeDoc struct {
 	Name         string
@@ -33,6 +32,8 @@ func (t goTypeDoc) PkgPath() string {
 }
 
 func parseGoDocs() map[string]goTypeDoc {
+	root := testutils.FindModuleRoot()
+	objectsDirectory := filepath.Join(root, "manifest")
 	directories, err := listDirectories(objectsDirectory)
 	if err != nil {
 		log.Panicf("Error listing directories under %s: %v", objectsDirectory, err)
