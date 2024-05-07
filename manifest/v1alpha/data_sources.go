@@ -46,7 +46,6 @@ GoogleCloudMonitoring
 AzureMonitor
 Generic
 Honeycomb
-LogicMonitor
 )*/
 type DataSourceType int
 
@@ -461,10 +460,6 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		},
 		Honeycomb: {
 			Value: ptr(5),
-			Unit:  Minute,
-		},
-		LogicMonitor: {
-			Value: ptr(2),
 			Unit:  Minute,
 		},
 	}
