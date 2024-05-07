@@ -898,41 +898,6 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 	})
 }
 
-func TestValidateSpec_LogicMonitor(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
-	})
-	t.Run("required account", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		direct.Spec.LogicMonitor.Account = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.account",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
-	t.Run("invalid accountID", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		direct.Spec.LogicMonitor.AccessID = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.accessId",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
-	t.Run("invalid accessKey", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		direct.Spec.LogicMonitor.AccessKey = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.accessKey",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
-}
-
 func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
@@ -1051,13 +1016,6 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 		v1alpha.Honeycomb: {
 			Honeycomb: &HoneycombConfig{
 				APIKey: "secret",
-			},
-		},
-		v1alpha.LogicMonitor: {
-			LogicMonitor: &LogicMonitorConfig{
-				Account:   "account",
-				AccessID:  "secret",
-				AccessKey: "secret",
 			},
 		},
 	}

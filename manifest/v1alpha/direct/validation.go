@@ -92,9 +92,6 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
-	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
-		WithName("logicMonitor").
-		Include(logicMonitorValidation),
 )
 
 var (
@@ -193,21 +190,7 @@ var (
 			Required().
 			Rules(validation.StringUUID()),
 	)
-	honeycombValidation    = validation.New[HoneycombConfig]()
-	logicMonitorValidation = validation.New[LogicMonitorConfig](
-		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
-			WithName("account").
-			Required().
-			Rules(validation.StringNotEmpty()),
-		validation.For(func(l LogicMonitorConfig) string { return l.AccessID }).
-			WithName("accessId").
-			Required().
-			Rules(validation.StringNotEmpty()),
-		validation.For(func(l LogicMonitorConfig) string { return l.AccessKey }).
-			WithName("accessKey").
-			Required().
-			Rules(validation.StringNotEmpty()),
-	)
+	honeycombValidation = validation.New[HoneycombConfig]()
 )
 
 const (
@@ -315,11 +298,6 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	if spec.Honeycomb != nil {
 		if err := typesMatch(v1alpha.Honeycomb); err != nil {
-			return err
-		}
-	}
-	if spec.LogicMonitor != nil {
-		if err := typesMatch(v1alpha.LogicMonitor); err != nil {
 			return err
 		}
 	}
