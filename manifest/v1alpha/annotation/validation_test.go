@@ -20,22 +20,32 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/annotation.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	annotation := validAnnotation()
+	annotation.APIVersion = "v0.1"
+	annotation.Kind = manifest.KindProject
+	annotation.ManifestSource = "/home/me/annotation.yaml"
+	err := validate(annotation)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, annotation, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	annotation := Annotation{
-		Kind: manifest.KindAnnotation,
-		Metadata: Metadata{
-			Name:    strings.Repeat("MY ANNOTATION", 20),
-			Project: strings.Repeat("MY ANNOTATION", 20),
-		},
-		Spec: Spec{
-			Description:   "Example annotation",
-			Slo:           "slo-name",
-			ObjectiveName: "some-obj-name",
-			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
-		},
-		ManifestSource: "/home/me/annotation.yaml",
+	annotation := validAnnotation()
+	annotation.Metadata = Metadata{
+		Name:    strings.Repeat("MY ANNOTATION", 20),
+		Project: strings.Repeat("MY ANNOTATION", 20),
 	}
+	annotation.ManifestSource = "/home/me/annotation.yaml"
 	err := validate(annotation)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, annotation, err, 4,

@@ -20,15 +20,32 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/project.yaml
 `))
 
-func TestValidate_Metadata(t *testing.T) {
-	project := Project{
-		Kind: manifest.KindProject,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY PROJECT", 20),
-			DisplayName: strings.Repeat("my-project", 20),
+func TestValidate_VersionAndKind(t *testing.T) {
+	project := validProject()
+	project.APIVersion = "v0.1"
+	project.Kind = manifest.KindService
+	project.ManifestSource = "/home/me/project.yaml"
+	err := validate(project)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, project, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
 		},
-		ManifestSource: "/home/me/project.yaml",
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
+func TestValidate_Metadata(t *testing.T) {
+	project := validProject()
+	project.Metadata = Metadata{
+		Name:        strings.Repeat("MY PROJECT", 20),
+		DisplayName: strings.Repeat("my-project", 20),
 	}
+	project.ManifestSource = "/home/me/project.yaml"
 	err := validate(project)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, project, err, 3,

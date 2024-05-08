@@ -23,21 +23,33 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/agent.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	method := validAgent(v1alpha.Prometheus)
+	method.APIVersion = "v0.1"
+	method.Kind = manifest.KindProject
+	method.ManifestSource = "/home/me/agent.yaml"
+	err := validate(method)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, method, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	agent := Agent{
-		Kind: manifest.KindAgent,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY AGENT", 20),
-			DisplayName: strings.Repeat("my-agent", 10),
-			Project:     strings.Repeat("MY PROJECT", 20),
-		},
-		Spec: Spec{
-			Prometheus: &PrometheusConfig{
-				URL: "https://prometheus-service.monitoring:8080",
-			},
-		},
-		ManifestSource: "/home/me/agent.yaml",
+	agent := validAgent(v1alpha.Prometheus)
+	agent.Metadata = Metadata{
+		Name:        strings.Repeat("MY AGENT", 20),
+		DisplayName: strings.Repeat("my-agent", 10),
+		Project:     strings.Repeat("MY PROJECT", 20),
 	}
+	agent.ManifestSource = "/home/me/agent.yaml"
 	err := validate(agent)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, agent, err, 5,

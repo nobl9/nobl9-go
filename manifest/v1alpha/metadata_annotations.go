@@ -7,9 +7,11 @@ import (
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
+// MetadataAnnotations are non-identifiable key-value pairs that can be attached to
+// SLOs, services, projects, and alert policies.
+// Metadata annotations are used for descriptive purposes only.
+type MetadataAnnotations map[annotationKey]annotationValue
 type (
-	MetadataAnnotations map[annotationKey]annotationValue
-
 	annotationKey   = string
 	annotationValue = string
 )

@@ -5,6 +5,7 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -16,7 +17,13 @@ var S3BucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9\-.]{1,61}[a-z0-9]$
 var DNSNameRegexp = regexp.MustCompile(`^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$`)
 var GCSNonDNSNameBucketNameRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9-_]{1,61}[a-z0-9]$`)
 
+func validate(s DataExport) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, s, manifest.KindDataExport)
+}
+
 var validator = validation.New[DataExport](
+	validationV1Alpha.FieldRuleAPIVersion(func(d DataExport) manifest.Version { return d.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(d DataExport) manifest.Kind { return d.Kind }, manifest.KindDataExport),
 	validation.For(func(d DataExport) Metadata { return d.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(d DataExport) Spec { return d.Spec }).
@@ -119,7 +126,3 @@ var bucketDNSNameValidation = validation.New[string](
 		func(n string) bool { return len(n) > GCSNonDomainNameBucketMaxLength },
 		validation.WhenDescription("bucketName length is greater than %d", GCSNonDomainNameBucketMaxLength),
 	)
-
-func validate(s DataExport) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, s)
-}

@@ -9,6 +9,7 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -22,7 +23,13 @@ const (
 var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
 var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
 
+func validate(a AlertMethod) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, a, manifest.KindAlertMethod)
+}
+
 var validator = validation.New[AlertMethod](
+	validationV1Alpha.FieldRuleAPIVersion(func(a AlertMethod) manifest.Version { return a.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(a AlertMethod) manifest.Kind { return a.Kind }, manifest.KindAlertMethod),
 	validation.For(func(a AlertMethod) Metadata { return a.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(a AlertMethod) Spec { return a.Spec }).
@@ -326,7 +333,3 @@ func validateTemplateFields(templateFields []string) error {
 }
 
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
-
-func validate(a AlertMethod) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, a)
-}

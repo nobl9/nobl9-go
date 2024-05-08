@@ -9,10 +9,17 @@ import (
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+func validate(p AlertPolicy) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject(validator, p, manifest.KindAlertPolicy)
+}
+
 var validator = validation.New[AlertPolicy](
+	validationV1Alpha.FieldRuleAPIVersion(func(a AlertPolicy) manifest.Version { return a.APIVersion }),
+	validationV1Alpha.FieldRuleKind(func(a AlertPolicy) manifest.Kind { return a.Kind }, manifest.KindAlertPolicy),
 	validation.For(func(p AlertPolicy) Metadata { return p.Metadata }).
 		Include(metadataValidation),
 	validation.For(func(p AlertPolicy) Spec { return p.Spec }).
@@ -222,10 +229,6 @@ var operatorValidationRule = validation.NewSingleRule(
 		return nil
 	},
 )
-
-func validate(p AlertPolicy) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, p)
-}
 
 func alertingWindowSupportedMeasurements() []string {
 	return []string{

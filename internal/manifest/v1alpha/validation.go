@@ -3,8 +3,27 @@ package v1alpha
 
 import (
 	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
+
+func FieldRuleAPIVersion[S manifest.Object](
+	getter func(S) manifest.Version,
+) validation.PropertyRules[manifest.Version, S] {
+	return validation.For(getter).
+		WithName("apiVersion").
+		Required().
+		Rules(validation.EqualTo(manifest.VersionV1alpha))
+}
+
+func FieldRuleKind[S manifest.Object](
+	getter func(S) manifest.Kind, kind manifest.Kind,
+) validation.PropertyRules[manifest.Kind, S] {
+	return validation.For(getter).
+		WithName("kind").
+		Required().
+		Rules(validation.EqualTo(kind))
+}
 
 func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRules[string, S] {
 	return validation.For(getter).
@@ -16,6 +35,7 @@ func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRule
 func FieldRuleMetadataDisplayName[S any](getter func(S) string) validation.PropertyRules[string, S] {
 	return validation.For(getter).
 		WithName("metadata.displayName").
+		OmitEmpty().
 		Rules(validation.StringLength(0, 63))
 }
 

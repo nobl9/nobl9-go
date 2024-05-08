@@ -20,27 +20,32 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/budget-adjustment.yaml
 `))
 
+func TestValidate_VersionAndKind(t *testing.T) {
+	budgetAdjustment := validBudgetAdjustment()
+	budgetAdjustment.APIVersion = "v0.1"
+	budgetAdjustment.Kind = manifest.KindProject
+	budgetAdjustment.ManifestSource = "/home/me/budget-adjustment.yaml"
+	err := validate(budgetAdjustment)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
+		},
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
 func TestValidate_Metadata(t *testing.T) {
-	budgetAdjustment := BudgetAdjustment{
-		Kind: manifest.KindBudgetAdjustment,
-		Metadata: Metadata{
-			Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 20),
-			DisplayName: strings.Repeat("my-budget-adjustment-", 20),
-		},
-		Spec: Spec{
-			FirstEventStart: time.Now(),
-			Duration:        "5m",
-			Filters: Filters{
-				SLOs: []SLORef{
-					{
-						Name:    "my-slo",
-						Project: "default",
-					},
-				},
-			},
-		},
-		ManifestSource: "/home/me/budget-adjustment.yaml",
+	budgetAdjustment := validBudgetAdjustment()
+	budgetAdjustment.Metadata = Metadata{
+		Name:        strings.Repeat("MY BUDGET ADJUSTMENT ", 20),
+		DisplayName: strings.Repeat("my-budget-adjustment-", 20),
 	}
+	budgetAdjustment.ManifestSource = "/home/me/budget-adjustment.yaml"
 	err := validate(budgetAdjustment)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 3,
@@ -286,15 +291,10 @@ func TestValidate_Spec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			alertMethod := BudgetAdjustment{
-				Kind: manifest.KindBudgetAdjustment,
-				Metadata: Metadata{
-					Name: "my-budget-adjustment",
-				},
-				Spec:           test.spec,
-				ManifestSource: "/home/me/budget-adjustment.yaml",
-			}
-			err := validate(alertMethod)
+			budgetAdjustment := validBudgetAdjustment()
+			budgetAdjustment.Spec = test.spec
+
+			err := validate(budgetAdjustment)
 
 			if len(test.expectedErrors) == 0 {
 				testutils.AssertNoError(t, test.spec, err)
@@ -302,5 +302,28 @@ func TestValidate_Spec(t *testing.T) {
 				testutils.AssertContainsErrors(t, test.spec, err, len(test.expectedErrors), test.expectedErrors...)
 			}
 		})
+	}
+}
+
+func validBudgetAdjustment() BudgetAdjustment {
+	return BudgetAdjustment{
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindBudgetAdjustment,
+		Metadata: Metadata{
+			Name:        "my-budget-adjustment",
+			DisplayName: "My Budget Adjustment",
+		},
+		Spec: Spec{
+			FirstEventStart: time.Now(),
+			Duration:        "1m",
+			Filters: Filters{
+				SLOs: []SLORef{
+					{
+						Name:    "my-slo",
+						Project: "default",
+					},
+				},
+			},
+		},
 	}
 }

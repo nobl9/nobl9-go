@@ -19,14 +19,29 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 Manifest source: /home/me/usergroup.yaml
 `))
 
-func TestValidate_Metadata(t *testing.T) {
-	group := UserGroup{
-		Kind: manifest.KindUserGroup,
-		Metadata: Metadata{
-			Name: strings.Repeat("MY GROUP", 20),
+func TestValidate_VersionAndKind(t *testing.T) {
+	group := validUserGroup()
+	group.APIVersion = "v0.1"
+	group.Kind = manifest.KindProject
+	group.ManifestSource = "/home/me/usergroup.yaml"
+	err := validate(group)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, group, err, 2,
+		testutils.ExpectedError{
+			Prop: "apiVersion",
+			Code: validation.ErrorCodeEqualTo,
 		},
-		ManifestSource: "/home/me/usergroup.yaml",
-	}
+		testutils.ExpectedError{
+			Prop: "kind",
+			Code: validation.ErrorCodeEqualTo,
+		},
+	)
+}
+
+func TestValidate_Metadata(t *testing.T) {
+	group := validUserGroup()
+	group.Metadata.Name = strings.Repeat("MY GROUP", 20)
+	group.ManifestSource = "/home/me/usergroup.yaml"
 	err := validate(group)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, group, err, 2,
@@ -39,19 +54,25 @@ func TestValidate_Metadata(t *testing.T) {
 
 func TestValidate_Spec(t *testing.T) {
 	t.Run("displayName too long", func(t *testing.T) {
-		group := UserGroup{
-			Kind: manifest.KindUserGroup,
-			Metadata: Metadata{
-				Name: "my-group",
-			},
-			Spec: Spec{
-				DisplayName: strings.Repeat("MY GROUP", 20),
-			},
-		}
+		group := validUserGroup()
+		group.Spec.DisplayName = strings.Repeat("MY GROUP", 20)
 		err := validate(group)
 		testutils.AssertContainsErrors(t, group, err, 1, testutils.ExpectedError{
 			Prop: "spec.displayName",
 			Code: validation.ErrorCodeStringLength,
 		})
 	})
+}
+
+func validUserGroup() UserGroup {
+	return UserGroup{
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindUserGroup,
+		Metadata: Metadata{
+			Name: "my-group",
+		},
+		Spec: Spec{
+			DisplayName: "My Group",
+		},
+	}
 }
