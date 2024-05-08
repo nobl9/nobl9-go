@@ -45,13 +45,27 @@ func removeEnumDeclaration(doc PropertyDoc) PropertyDoc {
 // removeTrailingWhitespace removes trailing whitespace from the docs.
 func removeTrailingWhitespace(doc PropertyDoc) PropertyDoc {
 	doc.Doc = strings.TrimSpace(doc.Doc)
-	doc.FieldDoc = strings.TrimSpace(doc.FieldDoc)
+	doc.fieldDoc = strings.TrimSpace(doc.fieldDoc)
 	return doc
 }
 
 // extractDeprecatedInformation extracts deprecated information from the docs
 // and sets PropertyDoc.IsDeprecated accordingly.
 func extractDeprecatedInformation(doc PropertyDoc) PropertyDoc {
-	doc.IsDeprecated = deprecatedRegex.MatchString(doc.Doc) || deprecatedRegex.MatchString(doc.FieldDoc)
+	doc.IsDeprecated = deprecatedRegex.MatchString(doc.Doc) || deprecatedRegex.MatchString(doc.fieldDoc)
+	return doc
+}
+
+// mergeFieldDocIntoDoc merges the PropertyDoc.fieldDoc into PropertyDoc.Doc.
+// It inserts the field documentation at the beginning of the property documentation.
+func mergeFieldDocIntoDoc(doc PropertyDoc) PropertyDoc {
+	if doc.fieldDoc == "" {
+		return doc
+	}
+	if doc.Doc == "" {
+		doc.Doc = doc.fieldDoc
+		return doc
+	}
+	doc.Doc = strings.TrimSpace(doc.fieldDoc) + "\n\n" + doc.Doc
 	return doc
 }

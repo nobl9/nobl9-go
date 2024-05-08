@@ -27,6 +27,10 @@ type RulePlan struct {
 	Conditions  []string  `json:"conditions,omitempty"`
 }
 
+func (r RulePlan) isEmpty() bool {
+	return r.Description == "" && r.Details == "" && r.ErrorCode == "" && len(r.Conditions) == 0
+}
+
 // Plan creates a validation plan for the provided [Validator].
 // Each property is represented by a [PropertyPlan] which aggregates its every [RulePlan].
 // If a property does not have any rules, it won't be included in the result.
@@ -35,9 +39,6 @@ func Plan[S any](v Validator[S]) []PropertyPlan {
 	v.plan(planBuilder{path: "$", all: &all})
 	propertiesMap := make(map[string]PropertyPlan)
 	for _, p := range all {
-		if p.rulePlan.Description == "" {
-			p.rulePlan.Description = "TODO"
-		}
 		entry, ok := propertiesMap[p.path]
 		if ok {
 			entry.Rules = append(entry.Rules, p.rulePlan)
@@ -48,9 +49,11 @@ func Plan[S any](v Validator[S]) []PropertyPlan {
 				Type:       p.propertyPlan.Type,
 				Package:    p.propertyPlan.Package,
 				Examples:   p.propertyPlan.Examples,
-				Rules:      []RulePlan{p.rulePlan},
 				IsOptional: p.propertyPlan.IsOptional,
 				IsHidden:   p.propertyPlan.IsHidden,
+			}
+			if !p.rulePlan.isEmpty() {
+				entry.Rules = append(entry.Rules, p.rulePlan)
 			}
 			propertiesMap[p.path] = entry
 		}

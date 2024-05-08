@@ -114,12 +114,7 @@
   {
     "path": "$.spec.containers[*].env",
     "type": "[]EnvVar",
-    "package": "github.com/nobl9/nobl9-go/internal/validation",
-    "rules": [
-      {
-        "description": "TODO"
-      }
-    ]
+    "package": "github.com/nobl9/nobl9-go/internal/validation"
   },
   {
     "path": "$.spec.containers[*].env[*]",

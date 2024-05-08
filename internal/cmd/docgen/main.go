@@ -27,20 +27,20 @@ type PropertyDoc struct {
 	Type          string                `json:"type"`
 	Package       string                `json:"package,omitempty"`
 	Doc           string                `yaml:"doc,omitempty"`
-	FieldDoc      string                `yaml:"fieldDoc,omitempty"`
 	IsDeprecated  bool                  `json:"isDeprecated,omitempty"`
 	IsOptional    bool                  `json:"isOptional,omitempty"`
 	IsSecret      bool                  `json:"isSecret,omitempty"`
 	Examples      []string              `json:"examples,omitempty"`
 	Rules         []validation.RulePlan `json:"rules,omitempty"`
 	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
-
+	// Compute-only fields.
+	// fieldDoc holds the documentation which was provided on the struct field level.
+	fieldDoc string
 	// originalType holds the original type alias info while the Type field holds resolved type name.
 	originalType typeInfo
 }
 
 // TODO:
-// - Merge Doc and FieldDoc into a single, well formatted doc (maybe?).
 // - Consider stopping at RuleSet level if a description was provided (instead of using SingleRule descriptions).
 //
 // Docs improvements:
@@ -65,6 +65,7 @@ func run(outputFilePath string, objectNames []string) {
 	mergeDocs(docs, goDocs)
 
 	postProcessProperties(docs,
+		mergeFieldDocIntoDoc,
 		removeEnumDeclaration,
 		extractDeprecatedInformation,
 		removeTrailingWhitespace,
@@ -100,7 +101,7 @@ func mergeDocs(docs []*ObjectDoc, goDocs map[string]goTypeDoc) {
 				fieldPath := property.Path + "." + name
 				for j, p := range objectDoc.Properties {
 					if fieldPath == p.Path {
-						objectDoc.Properties[j].FieldDoc = field.Doc
+						objectDoc.Properties[j].fieldDoc = field.Doc
 						break
 					}
 				}
