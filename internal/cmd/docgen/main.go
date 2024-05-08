@@ -40,12 +40,6 @@ type PropertyDoc struct {
 	originalType typeInfo
 }
 
-// TODO:
-// - Consider stopping at RuleSet level if a description was provided (instead of using SingleRule descriptions).
-//
-// Docs improvements:
-// - Fill out documentation gaps.
-// - Provide more examples.
 func main() {
 	outputFilePathFlag := flag.String("o", "docs.yaml", "Output plan file path")
 	objectsFlag := flag.String("objects", strings.Join(
