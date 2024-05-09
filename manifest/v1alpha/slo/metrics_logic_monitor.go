@@ -5,7 +5,6 @@ import "github.com/nobl9/nobl9-go/internal/validation"
 // LogicMonitorMetric represents metric from LogicMonitor
 type LogicMonitorMetric struct {
 	QueryType                  string `json:"queryType"`
-	Account                    string `json:"account,omitempty"`
 	DeviceDataSourceInstanceID int    `json:"deviceDataSourceInstanceId"`
 	GraphID                    int    `json:"graphId"`
 	Line                       string `json:"line"`

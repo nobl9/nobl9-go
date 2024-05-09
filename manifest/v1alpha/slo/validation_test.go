@@ -1673,7 +1673,6 @@ fetch consumed_api
 	}},
 	v1alpha.LogicMonitor: {LogicMonitor: &LogicMonitorMetric{
 		QueryType:                  "device_metrics",
-		Account:                    "account",
 		DeviceDataSourceInstanceID: 1029,
 		GraphID:                    11354,
 		Line:                       "MAXRTT",
