@@ -69,25 +69,6 @@ func (s *Spec) HasCompositeObjectives() bool {
 	return false
 }
 
-// CompositeObjectivesComponentCount returns count of components of the Composite.
-// If the SLO is not composite, it returns 0.
-// If the SLO is composite and has components, it returns the count of components.
-func (s *Spec) CompositeObjectivesComponentCount() int {
-	count := 0
-
-	// A composite SLO can have only one objective.
-	if len(s.Objectives) > 1 {
-		return count
-	}
-
-	for _, obj := range s.Objectives {
-		if obj.IsComposite() {
-			count = len(obj.Composite.Components.Objectives)
-		}
-	}
-	return count
-}
-
 // HasRawMetric returns true if SLOSpec has raw metric.
 func (s *Spec) HasRawMetric() bool {
 	if s.containsIndicatorRawMetric() {
