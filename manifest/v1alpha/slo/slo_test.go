@@ -26,4 +26,11 @@ func TestSLO_CompositeSLOFunctions(t *testing.T) {
 		assert.Equal(t, true, slo.Spec.HasCompositeObjectives())
 		assert.Equal(t, 4, slo.Spec.CompositeObjectivesComponentCount())
 	})
+
+	t.Run("passes - normal SLO has no composite objectives", func(t *testing.T) {
+		slo := validSLO()
+
+		assert.Equal(t, false, slo.Spec.HasCompositeObjectives())
+		assert.Equal(t, 0, slo.Spec.CompositeObjectivesComponentCount())
+	})
 }
