@@ -286,4 +286,24 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			Message: "composite SLO cannot have duplicated SLOs as its objectives",
 		})
 	})
+	t.Run("fails - component list not provided", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives = nil
+
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].composite.components.objectives",
+			Code:    validation.ErrorCodeRequired,
+			Message: "property is required but was empty",
+		})
+	})
+	t.Run("passed - empty component list provided", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Objectives = []CompositeObjective{}
+
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
 }
