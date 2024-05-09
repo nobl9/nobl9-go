@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSLO_SpecHasCompositeObjectives(t *testing.T) {
+func TestSpec_HasCompositeObjectives(t *testing.T) {
 	t.Run("passes - composite SLO", func(t *testing.T) {
 		slo := validCompositeSLO()
 
