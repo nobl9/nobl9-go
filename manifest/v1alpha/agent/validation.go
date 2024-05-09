@@ -121,6 +121,9 @@ var specValidation = validation.New[Spec](
 	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
+	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
+		WithName("logicMonitor").
+		Include(logicMonitorValidation),
 )
 
 var (
@@ -191,6 +194,12 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(validation.StringUUID()),
+	)
+	logicMonitorValidation = validation.New[LogicMonitorConfig](
+		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
+			WithName("account").
+			Required().
+			Rules(validation.StringNotEmpty()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
@@ -354,6 +363,11 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	if spec.Honeycomb != nil {
 		if err := typesMatch(v1alpha.Honeycomb); err != nil {
+			return err
+		}
+	}
+	if spec.LogicMonitor != nil {
+		if err := typesMatch(v1alpha.LogicMonitor); err != nil {
 			return err
 		}
 	}
