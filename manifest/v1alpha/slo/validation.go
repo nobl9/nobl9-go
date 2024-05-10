@@ -415,7 +415,10 @@ var specValidationComposite = validation.New[Spec](
 							validation.DurationPrecision(time.Minute),
 							validation.GreaterThanOrEqualTo(time.Minute),
 						),
-					validation.ForSlice(func(c CompositeSpec) []CompositeObjective { return c.Objectives }).
+					validation.For(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
+						WithName("components.objectives").
+						Required(),
+					validation.ForSlice(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
 						WithName("components.objectives").
 						IncludeForEach(compositeObjectiveRule),
 				)),
