@@ -80,6 +80,8 @@ func run(outputFilePath, outputFileFormat string, objectNames []string) {
 		enc = yaml.NewEncoder(out,
 			yaml.Indent(2),
 			yaml.UseLiteralStyleIfMultiline(true))
+	default:
+		panic("unsupported output format: " + outputFileFormat)
 	}
 	if err = enc.Encode(docs); err != nil {
 		panic(err)
