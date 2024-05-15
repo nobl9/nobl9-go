@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"os"
 	"path/filepath"
@@ -41,7 +42,8 @@ type PropertyDoc struct {
 }
 
 func main() {
-	outputFilePathFlag := flag.String("o", "docs.yaml", "Output plan file path")
+	outputFilePathFlag := flag.String("f", "docs.yaml", "Output plan file path")
+	outputFileFormatFlag := flag.String("o", "yaml", "Output plan file format")
 	objectsFlag := flag.String("objects", strings.Join(
 		getAllObjectNames(),
 		",",
@@ -49,10 +51,10 @@ func main() {
 	flag.Parse()
 
 	objectNames := strings.Split(*objectsFlag, ",")
-	run(*outputFilePathFlag, objectNames)
+	run(*outputFilePathFlag, *outputFileFormatFlag, objectNames)
 }
 
-func run(outputFilePath string, objectNames []string) {
+func run(outputFilePath, outputFileFormat string, objectNames []string) {
 	docs := generateObjectDocs(objectNames)
 	goDocs := parseGoDocs()
 
@@ -70,9 +72,15 @@ func run(outputFilePath string, objectNames []string) {
 	if err != nil {
 		panic(err)
 	}
-	enc := yaml.NewEncoder(out,
-		yaml.Indent(2),
-		yaml.UseLiteralStyleIfMultiline(true))
+	var enc interface{ Encode(v any) error }
+	switch outputFileFormat {
+	case "json":
+		enc = json.NewEncoder(out)
+	case "yaml":
+		enc = yaml.NewEncoder(out,
+			yaml.Indent(2),
+			yaml.UseLiteralStyleIfMultiline(true))
+	}
 	if err = enc.Encode(docs); err != nil {
 		panic(err)
 	}
