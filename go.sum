@@ -4,8 +4,8 @@ github.com/MicahParks/jwkset v0.5.17 h1:DrcwyKwSP5adD0G2XJTvDulnWXjD6gbjROMgMXDb
 github.com/MicahParks/jwkset v0.5.17/go.mod h1:q8ptTGn/Z9c4MwbcfeCDssADeVQb3Pk7PnVxrvi+2QY=
 github.com/MicahParks/keyfunc/v3 v3.3.2 h1:YTtwc4dxalBZKFqHhqctBWN6VhbLdGhywmne9u5RQVM=
 github.com/MicahParks/keyfunc/v3 v3.3.2/go.mod h1:GJBeEjnv25OnD9y2OYQa7ELU6gYahEMBNXINZb+qm34=
-github.com/aws/aws-sdk-go v1.53.2 h1:KhTx/eMkavqkpmrV+aBc+bWADSTzwKxTXOvGmRImgFs=
-github.com/aws/aws-sdk-go v1.53.2/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.53.3 h1:xv0iGCCLdf6ZtlLPMCBjm+tU9UBLP5hXnSqnbKFYmto=
+github.com/aws/aws-sdk-go v1.53.3/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/bmatcuk/doublestar/v4 v4.6.1 h1:FH9SifrbvJhnlQpztAx++wlkk70QBf0iBWDwNy7PA4I=
 github.com/bmatcuk/doublestar/v4 v4.6.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
