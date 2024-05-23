@@ -325,6 +325,22 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			Code: errorCodeMeasurementWithAlertingWindow,
 		})
 	})
+	t.Run("fails, lastsFor is defined", func(t *testing.T) {
+		alertPolicy := validAlertPolicy()
+		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBudgetDrop.String()
+		alertPolicy.Spec.Conditions[0].Value = 0.1
+		alertPolicy.Spec.Conditions[0].LastsForDuration = "5m"
+		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+		err := validate(alertPolicy)
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+			Prop: "spec.conditions[0].measurement",
+			ContainsMessage: fmt.Sprintf(
+				`must be equal to one of '%s' when 'lastsFor' is defined`,
+				strings.Join(lastsForSupportedMeasurements(), ","),
+			),
+			Code: errorCodeMeasurementWithLastsFor,
+		})
+	})
 }
 
 func TestValidate_Spec_Condition_Value(t *testing.T) {

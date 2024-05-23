@@ -73,6 +73,7 @@ var conditionValidation = validation.New[AlertCondition](
 				"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
 			}),
 			measurementWithAlertingWindowValidation,
+			measurementWithLastsForValidation,
 		).
 		Include(timeDurationBasedMeasurementsValueValidation).
 		Include(floatBasedMeasurementsValueValidation),
@@ -114,6 +115,7 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 
 const (
 	errorCodeMeasurementWithAlertingWindow = "measurement_regarding_alerting_window"
+	errorCodeMeasurementWithLastsFor       = "measurement_regarding_lasts_for"
 )
 
 var timeDurationBasedMeasurementsValueValidation = validation.New[AlertCondition](
@@ -164,6 +166,30 @@ var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c Al
 					strings.Join(alertingWindowSupportedMeasurements(), ","),
 				),
 				errorCodeMeasurementWithAlertingWindow,
+			),
+		)
+	}
+	return nil
+})
+
+var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	isLastsForSupported := false
+	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isLastsForSupported = true
+			break
+		}
+	}
+	if c.LastsForDuration != "" && !isLastsForSupported {
+		return validation.NewPropertyError(
+			"measurement",
+			c.Measurement,
+			validation.NewRuleError(
+				fmt.Sprintf(
+					`must be equal to one of '%s' when 'lastsFor' is defined`,
+					strings.Join(lastsForSupportedMeasurements(), ","),
+				),
+				errorCodeMeasurementWithLastsFor,
 			),
 		)
 	}
@@ -230,6 +256,15 @@ var operatorValidationRule = validation.NewSingleRule(
 		return nil
 	},
 )
+
+func lastsForSupportedMeasurements() []string {
+	return []string{
+		MeasurementAverageBurnRate.String(),
+		MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String(),
+		MeasurementBurnedBudget.String(),
+	}
+}
 
 func alertingWindowSupportedMeasurements() []string {
 	return []string{
