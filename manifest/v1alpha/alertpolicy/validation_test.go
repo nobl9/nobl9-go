@@ -295,7 +295,6 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = ""
 		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
-		alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
@@ -325,27 +324,38 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 			Code: errorCodeMeasurementWithAlertingWindow,
 		})
 	})
-	t.Run("fails, lastsFor is defined", func(t *testing.T) {
+	t.Run("fails, lastsFor is defined and alertingWindow is missing", func(t *testing.T) {
 		alertPolicy := validAlertPolicy()
 		alertPolicy.Spec.Conditions[0].Measurement = MeasurementBudgetDrop.String()
 		alertPolicy.Spec.Conditions[0].Value = 0.1
 		alertPolicy.Spec.Conditions[0].LastsForDuration = "5m"
 		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
 		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: "spec.conditions[0].measurement",
-			ContainsMessage: fmt.Sprintf(
-				`must be equal to one of '%s' when 'lastsFor' is defined`,
-				strings.Join(lastsForSupportedMeasurements(), ","),
-			),
-			Code: errorCodeMeasurementWithLastsFor,
-		})
+		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.conditions[0].measurement",
+				ContainsMessage: fmt.Sprintf(
+					`must be equal to one of '%s' when 'lastsFor' is defined`,
+					strings.Join(lastsForSupportedMeasurements(), ","),
+				),
+				Code: errorCodeMeasurementWithLastsFor,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.conditions[0].measurement",
+				ContainsMessage: fmt.Sprintf(
+					`alerting window is required for measurement '%s'`,
+					MeasurementBudgetDrop.String(),
+				),
+				Code: validation.ErrorCodeRequired,
+			},
+		)
 	})
 }
 
-func TestValidate_Spec_Condition_Value(t *testing.T) {
-	passTests := map[string]measurementDetermined{
-		"passes, valid duration when measurement is timeToBurnBudget or timeToBurnEntireBudget and lastsFor is defined": {
+func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
+	passWithLastsForTests := map[string]measurementDetermined{
+		"passes, valid duration when measurement is timeToBurnBudget or timeToBurnEntireBudget and " +
+			"lastsFor is defined": {
 			values: []interface{}{
 				"1ms",
 				"15s",
@@ -367,7 +377,6 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
-				MeasurementBudgetDrop,
 			},
 		},
 		"passes, allows empty values, measurement is burnedBudget or averageBurnRate": {
@@ -375,11 +384,10 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
-				MeasurementBudgetDrop,
 			},
 		},
 	}
-	for name, testCase := range passTests {
+	for name, testCase := range passWithLastsForTests {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				for _, measurement := range testCase.measurements {
@@ -395,8 +403,8 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 		})
 	}
 
-	testCases := map[string]measurementDetermined{
-		"fails, greater than 0 when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
+	testCasesWithLastsFor := map[string]measurementDetermined{
+		"fails, greater than 0 when measurement with lastsFor is timeToBurnBudget or timeToBurnEntireBudget": {
 			values: []interface{}{
 				"-1ms",
 				"-15s",
@@ -406,10 +414,11 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 				MeasurementTimeToBurnBudget,
 				MeasurementTimeToBurnEntireBudget,
 			},
+
 			expectedCode:    validation.ErrorCodeGreaterThan,
 			expectedMessage: "should be greater than '0s'",
 		},
-		"fails, unexpected format when measurement is averageBurnRate, burnedBudget or budgetDrop": {
+		"fails, unexpected format when measurement with lastsFor is averageBurnRate or burnedBudget": {
 			values: []interface{}{
 				"1.0",
 				"1.9",
@@ -418,12 +427,11 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
-				MeasurementBudgetDrop,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
-		"fails, unexpected format when measurement is burnedBudget, averageBurnRate or budgetDrop": {
+		"fails, unexpected format when measurement with lastsFor is burnedBudget or averageBurnRate": {
 			values: []interface{}{
 				"-1ms",
 				"s892k",
@@ -432,21 +440,134 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
-				MeasurementBudgetDrop,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
 	}
-	for name, testCase := range testCases {
+	for name, testCase := range testCasesWithLastsFor {
 		t.Run(name, func(t *testing.T) {
 			for _, value := range testCase.values {
 				for _, measurement := range testCase.measurements {
 					alertPolicy := validAlertPolicy()
 					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
 					alertPolicy.Spec.Conditions[0].Value = value
-					alertPolicy.Spec.Conditions[0].LastsForDuration = "8m"
+					alertPolicy.Spec.Conditions[0].LastsForDuration = "5m"
 					alertPolicy.Spec.Conditions[0].AlertingWindow = ""
+					err := validate(alertPolicy)
+					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
+						Prop:            "spec.conditions[0].value",
+						ContainsMessage: testCase.expectedMessage,
+						Code:            testCase.expectedCode,
+					})
+				}
+			}
+		})
+	}
+}
+
+func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
+	passWithAlertingWindowTests := map[string]measurementDetermined{
+		"passes, valid duration when measurement is timeToBurnBudget or timeToBurnEntireBudget and " +
+			"alertingWindow is defined": {
+			values: []interface{}{
+				"1ms",
+				"15s",
+				"15m",
+				"1h",
+			},
+			measurements: []Measurement{
+				MeasurementTimeToBurnBudget,
+				MeasurementTimeToBurnEntireBudget,
+			},
+		},
+		"passes, valid float, measurement is burnedBudget or averageBurnRate and alertingWindow is defined": {
+			values: []interface{}{
+				0.000000020,
+				0.97,
+				2.00,
+				157.00,
+			},
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBudgetDrop,
+			},
+		},
+		"passes, allows empty values, measurement is burnedBudget, averageBurnRate or budgetDrop": {
+			values: []interface{}{"", 0.0},
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBudgetDrop,
+			},
+		},
+	}
+	for name, testCase := range passWithAlertingWindowTests {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				for _, measurement := range testCase.measurements {
+					alertPolicy := validAlertPolicy()
+					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
+					alertPolicy.Spec.Conditions[0].Value = value
+					alertPolicy.Spec.Conditions[0].LastsForDuration = ""
+					alertPolicy.Spec.Conditions[0].AlertingWindow = "10m"
+					err := validate(alertPolicy)
+					testutils.AssertNoError(t, alertPolicy, err)
+				}
+			}
+		})
+	}
+
+	testCasesWithAlertingWindow := map[string]measurementDetermined{
+		"fails, greater than 0 when measurement with alertingWindow is timeToBurnBudget or timeToBurnEntireBudget": {
+			values: []interface{}{
+				"-1ms",
+				"-15s",
+				"-1h",
+			},
+			measurements: []Measurement{
+				MeasurementTimeToBurnBudget,
+				MeasurementTimeToBurnEntireBudget,
+			},
+
+			expectedCode:    validation.ErrorCodeGreaterThan,
+			expectedMessage: "should be greater than '0s'",
+		},
+		"fails, unexpected format when measurement with alertingWindow is averageBurnRate or budgetDrop": {
+			values: []interface{}{
+				"1.0",
+				"1.9",
+				"100",
+			},
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBudgetDrop,
+			},
+			expectedCode:    validation.ErrorCodeTransform,
+			expectedMessage: "float64 expected, got ",
+		},
+		"fails, unexpected format when measurement with alertingWindow is budgetDrop or averageBurnRate": {
+			values: []interface{}{
+				"-1ms",
+				"s892k",
+				"100",
+			},
+			measurements: []Measurement{
+				MeasurementAverageBurnRate,
+				MeasurementBudgetDrop,
+			},
+			expectedCode:    validation.ErrorCodeTransform,
+			expectedMessage: "float64 expected, got ",
+		},
+	}
+	for name, testCase := range testCasesWithAlertingWindow {
+		t.Run(name, func(t *testing.T) {
+			for _, value := range testCase.values {
+				for _, measurement := range testCase.measurements {
+					alertPolicy := validAlertPolicy()
+					alertPolicy.Spec.Conditions[0].Measurement = measurement.String()
+					alertPolicy.Spec.Conditions[0].Value = value
+					alertPolicy.Spec.Conditions[0].LastsForDuration = ""
+					alertPolicy.Spec.Conditions[0].AlertingWindow = "10m"
 					err := validate(alertPolicy)
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 						Prop:            "spec.conditions[0].value",

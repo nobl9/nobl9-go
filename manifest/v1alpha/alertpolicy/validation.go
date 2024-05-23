@@ -74,6 +74,7 @@ var conditionValidation = validation.New[AlertCondition](
 			}),
 			measurementWithAlertingWindowValidation,
 			measurementWithLastsForValidation,
+			measurementWithRequiredAlertingWindowValidation,
 		).
 		Include(timeDurationBasedMeasurementsValueValidation).
 		Include(floatBasedMeasurementsValueValidation),
@@ -190,6 +191,36 @@ var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCon
 					strings.Join(lastsForSupportedMeasurements(), ","),
 				),
 				errorCodeMeasurementWithLastsFor,
+			),
+		)
+	}
+	return nil
+})
+
+var measurementWithRequiredAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	isLastsForSupported := false
+	isAlertingWindowSupported := false
+	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isLastsForSupported = true
+			break
+		}
+	}
+	for _, allowedMeasurement := range alertingWindowSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isAlertingWindowSupported = true
+			break
+		}
+	}
+	if c.AlertingWindow == "" && isAlertingWindowSupported && !isLastsForSupported {
+		return validation.NewPropertyError(
+			"measurement",
+			c.Measurement,
+			validation.NewRuleError(
+				fmt.Sprintf(
+					`alerting window is required for measurement '%s'`, c.Measurement,
+				),
+				validation.ErrorCodeRequired,
 			),
 		)
 	}
