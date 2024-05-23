@@ -74,8 +74,8 @@ var conditionValidation = validation.New[AlertCondition](
 			}),
 			measurementWithAlertingWindowValidation,
 		).
-		Include(timeToBurnBudgetValueValidation).
-		Include(burnedAndAverageBudgetValueValidation),
+		Include(timeDurationBasedMeasurementsValueValidation).
+		Include(floatBasedMeasurementsValueValidation),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow },
 		func(alertingWindow string) (time.Duration, error) {
 			value, err := time.ParseDuration(alertingWindow)
@@ -116,7 +116,7 @@ const (
 	errorCodeMeasurementWithAlertingWindow = "measurement_regarding_alerting_window"
 )
 
-var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
+var timeDurationBasedMeasurementsValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
 		WithName("value").
 		Required().
@@ -131,7 +131,7 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
 	)
 
-var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
+var floatBasedMeasurementsValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
 		OmitEmpty(),
@@ -139,10 +139,11 @@ var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 	When(
 		func(c AlertCondition) bool {
 			return c.Measurement == MeasurementBurnedBudget.String() ||
-				c.Measurement == MeasurementAverageBurnRate.String()
+				c.Measurement == MeasurementAverageBurnRate.String() ||
+				c.Measurement == MeasurementBudgetDrop.String()
 		},
-		validation.WhenDescription("measurement is is either '%s' or '%s'",
-			MeasurementBurnedBudget, MeasurementAverageBurnRate),
+		validation.WhenDescription("measurement is is either '%s', '%s' or '%s'",
+			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBurnedBudget),
 	)
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
@@ -235,6 +236,7 @@ func alertingWindowSupportedMeasurements() []string {
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),
 		MeasurementTimeToBurnEntireBudget.String(),
+		MeasurementBudgetDrop.String(),
 	}
 }
 

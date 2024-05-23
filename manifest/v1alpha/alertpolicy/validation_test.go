@@ -222,6 +222,11 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 				AlertingWindow: "10m",
 			},
 			{
+				Measurement:    MeasurementBudgetDrop.String(),
+				Value:          0.1,
+				AlertingWindow: "5m",
+			},
+			{
 				Measurement:    MeasurementTimeToBurnBudget.String(),
 				Value:          "1h",
 				AlertingWindow: "10m",
@@ -346,6 +351,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
+				MeasurementBudgetDrop,
 			},
 		},
 		"passes, allows empty values, measurement is burnedBudget or averageBurnRate": {
@@ -353,6 +359,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
+				MeasurementBudgetDrop,
 			},
 		},
 	}
@@ -386,7 +393,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			expectedCode:    validation.ErrorCodeGreaterThan,
 			expectedMessage: "should be greater than '0s'",
 		},
-		"fails, unexpected format when measurement is timeToBurnBudget or timeToBurnEntireBudget": {
+		"fails, unexpected format when measurement is averageBurnRate, burnedBudget or budgetDrop": {
 			values: []interface{}{
 				"1.0",
 				"1.9",
@@ -395,11 +402,12 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
+				MeasurementBudgetDrop,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
-		"fails, unexpected format when measurement is burnedBudget or averageBurnRate": {
+		"fails, unexpected format when measurement is burnedBudget, averageBurnRate or budgetDrop": {
 			values: []interface{}{
 				"-1ms",
 				"s892k",
@@ -408,6 +416,7 @@ func TestValidate_Spec_Condition_Value(t *testing.T) {
 			measurements: []Measurement{
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
+				MeasurementBudgetDrop,
 			},
 			expectedCode:    validation.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
@@ -632,6 +641,11 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 				Measurement:    MeasurementAverageBurnRate.String(),
 				AlertingWindow: "5m",
 				Value:          30.0,
+			},
+			{
+				Measurement:    MeasurementBudgetDrop.String(),
+				AlertingWindow: "5m",
+				Value:          0.1,
 			},
 		}
 		for _, alertCondition := range testCases {
