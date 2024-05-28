@@ -5,7 +5,7 @@ metadata:
   displayName: My budget adjustment
 spec:
   description: Example budget adjustment
-  firstEventStart: 2024-02-05T05:00:00.000Z
+  firstEventStart: 2024-02-05T05:00:00Z
   duration: 1h
   rrule: FREQ=WEEKLY;INTERVAL=1
   filters:
@@ -13,11 +13,11 @@ spec:
       - name: slo-name
         project: default
   overrides:
-    - date: 2024-02-05T05:00:00.000Z
+    - date: 2024-02-05T05:00:00Z
       comment: Example override with excluded event
       exclude: true
-    - date: 2024-02-12T05:00:00.000Z
+    - date: 2024-02-12T05:00:00Z
       comment: Example override with modified event
       modify:
         duration: 2h
-        eventStart: 2024-02-12T06:00:00.000Z
+        eventStart: 2024-02-12T06:00:00Z

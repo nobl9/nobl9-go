@@ -60,24 +60,24 @@ func ExampleBudgetAdjustment() {
 	// apiVersion: n9/v1alpha
 	// kind: BudgetAdjustment
 	// metadata:
-	//  name: budget-adjustment
-	//  displayName: My budget adjustment
+	//   name: budget-adjustment
+	//   displayName: My budget adjustment
 	// spec:
-	//  description: Example budget adjustment
-	//  firstEventStart: 2024-02-05T05:00:00Z
-	//  duration: 1h
-	//  rrule: FREQ=WEEKLY;INTERVAL=1
-	//  filters:
-	//    slos:
-	//	  - name: slo-name
-	//      project: default
-	//	overrides:
-	//	- date: 2024-02-05T05:00:00Z
-	//	  comment: Example override with excluded event
-	//    exclude: true
-	//	- date: 2024-02-12T05:00:00Z
-	//	  comment: Example override with modified event
-	//	  modify:
-	//	    duration: 2h
-	//	    eventStart: 2024-02-12T06:00:00Z
+	//   description: Example budget adjustment
+	//   firstEventStart: 2024-02-05T05:00:00Z
+	//   duration: 1h
+	//   rrule: FREQ=WEEKLY;INTERVAL=1
+	//   filters:
+	//     slos:
+	//     - name: slo-name
+	//       project: default
+	//   overrides:
+	//   - date: 2024-02-05T05:00:00Z
+	//     comment: Example override with excluded event
+	//     exclude: true
+	//   - date: 2024-02-12T05:00:00Z
+	//     comment: Example override with modified event
+	//     modify:
+	//       duration: 2h
+	//       eventStart: 2024-02-12T06:00:00Z
 }
