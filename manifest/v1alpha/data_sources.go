@@ -308,30 +308,32 @@ func (d DurationUnit) String() string {
 }
 
 var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
-	Datadog:          {Value: ptr(30), Unit: HRDDay},
-	Prometheus:       {Value: ptr(30), Unit: HRDDay},
-	AmazonPrometheus: {Value: ptr(30), Unit: HRDDay},
-	NewRelic:         {Value: ptr(30), Unit: HRDDay},
-	Splunk:           {Value: ptr(30), Unit: HRDDay},
-	Graphite:         {Value: ptr(30), Unit: HRDDay},
-	Lightstep:        {Value: ptr(30), Unit: HRDDay},
-	CloudWatch:       {Value: ptr(15), Unit: HRDDay},
-	Dynatrace:        {Value: ptr(28), Unit: HRDDay},
-	AppDynamics:      {Value: ptr(30), Unit: HRDDay},
-	AzureMonitor:     {Value: ptr(30), Unit: HRDDay},
-	Honeycomb:        {Value: ptr(7), Unit: HRDDay},
+	Datadog:               {Value: ptr(30), Unit: HRDDay},
+	Prometheus:            {Value: ptr(30), Unit: HRDDay},
+	AmazonPrometheus:      {Value: ptr(30), Unit: HRDDay},
+	NewRelic:              {Value: ptr(30), Unit: HRDDay},
+	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	Graphite:              {Value: ptr(30), Unit: HRDDay},
+	Lightstep:             {Value: ptr(30), Unit: HRDDay},
+	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
+	Dynatrace:             {Value: ptr(28), Unit: HRDDay},
+	AppDynamics:           {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor:          {Value: ptr(30), Unit: HRDDay},
+	Honeycomb:             {Value: ptr(7), Unit: HRDDay},
+	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
-	Datadog:      {Value: ptr(30), Unit: HRDDay},
-	NewRelic:     {Value: ptr(30), Unit: HRDDay},
-	Splunk:       {Value: ptr(30), Unit: HRDDay},
-	Lightstep:    {Value: ptr(30), Unit: HRDDay},
-	CloudWatch:   {Value: ptr(15), Unit: HRDDay},
-	Dynatrace:    {Value: ptr(28), Unit: HRDDay},
-	AppDynamics:  {Value: ptr(30), Unit: HRDDay},
-	AzureMonitor: {Value: ptr(30), Unit: HRDDay},
-	Honeycomb:    {Value: ptr(7), Unit: HRDDay},
+	Datadog:               {Value: ptr(30), Unit: HRDDay},
+	NewRelic:              {Value: ptr(30), Unit: HRDDay},
+	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	Lightstep:             {Value: ptr(30), Unit: HRDDay},
+	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
+	Dynatrace:             {Value: ptr(28), Unit: HRDDay},
+	AppDynamics:           {Value: ptr(30), Unit: HRDDay},
+	AzureMonitor:          {Value: ptr(30), Unit: HRDDay},
+	Honeycomb:             {Value: ptr(7), Unit: HRDDay},
+	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
