@@ -16,13 +16,13 @@ var logicMonitorValidation = validation.New[LogicMonitorMetric](
 		Required().
 		Rules(validation.StringContains("device_metrics")),
 	validation.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
-		WithName("deviceDataSourceInstanceID").
+		WithName("deviceDataSourceInstanceId").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo[int](0)),
+		Rules(validation.GreaterThanOrEqualTo(0)),
 	validation.For(func(e LogicMonitorMetric) int { return e.GraphID }).
-		WithName("graphID").
+		WithName("graphId").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo[int](0)),
+		Rules(validation.GreaterThanOrEqualTo(0)),
 	validation.For(func(e LogicMonitorMetric) string { return e.Line }).
 		WithName("line").
 		Required().
