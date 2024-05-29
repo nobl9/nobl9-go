@@ -40,10 +40,25 @@ type Spec struct {
 	Duration        string    `json:"duration"`
 	Rrule           string    `json:"rrule,omitempty"`
 	Filters         Filters   `json:"filters"`
+	Overrides       Overrides `json:"overrides,omitempty"`
 }
 
 type Filters struct {
 	SLOs []SLORef `json:"slos"`
+}
+
+type Overrides []Override
+
+type Override struct {
+	Date    time.Time `json:"date"`
+	Comment string    `json:"comment"`
+	Exclude bool      `json:"exclude,omitempty"`
+	Modify  Modify    `json:"modify,omitempty"`
+}
+
+type Modify struct {
+	Duration   string    `json:"duration"`
+	EventStart time.Time `json:"eventStart"`
 }
 
 type SLORef struct {
