@@ -44,6 +44,8 @@ type Metadata struct {
 
 // Spec holds detailed specification of the Project.
 type Spec struct {
+	CreatedAt string `json:"createdAt,omitempty"`
+	CreatedBy string `json:"createdBy,omitempty"`
 	// Description allows for a more detailed description of the Project.
 	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
 }
