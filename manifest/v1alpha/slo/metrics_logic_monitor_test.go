@@ -26,11 +26,11 @@ func TestLogicMonitor(t *testing.T) {
 				Code: validation.ErrorCodeStringContains,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceID",
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
 				Code: validation.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphID",
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
 				Code: validation.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
