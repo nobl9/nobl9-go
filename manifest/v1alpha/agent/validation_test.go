@@ -744,6 +744,72 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_LogicMonitor(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.LogicMonitor)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required account", func(t *testing.T) {
+		agent := validAgent(v1alpha.LogicMonitor)
+		agent.Spec.LogicMonitor.Account = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.logicMonitor.account",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+}
+
+func TestValidateSpec_AzurePrometheus(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzurePrometheus)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("invalid tenantId", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzurePrometheus)
+		agent.Spec.AzurePrometheus.TenantID = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.azurePrometheus.tenantId",
+			Code: validation.ErrorCodeStringUUID,
+		})
+	})
+	t.Run("required fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzurePrometheus)
+		agent.Spec.AzurePrometheus.URL = ""
+		agent.Spec.AzurePrometheus.TenantID = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.url",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.tenantId",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.AzurePrometheus)
+		agent.Spec.AzurePrometheus.URL = "invalid"
+		agent.Spec.AzurePrometheus.TenantID = strings.Repeat("l", 256)
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.url",
+				Code: validation.ErrorCodeStringURL,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.tenantId",
+				Code: validation.ErrorCodeStringUUID,
+			},
+		)
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
@@ -877,7 +943,7 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		v1alpha.AzurePrometheus: {
 			AzurePrometheus: &AzurePrometheusConfig{
 				URL:      "https://prometheus-service.monitoring:8080",
-				TenantID: "tenant_id",
+				TenantID: "e190c630-8873-11ee-b9d1-0242ac120002",
 			},
 		},
 	}

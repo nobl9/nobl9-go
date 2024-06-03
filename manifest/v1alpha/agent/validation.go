@@ -209,6 +209,10 @@ var (
 			WithName("url").
 			Required().
 			Rules(validation.StringURL()),
+		validation.For(func(a AzurePrometheusConfig) string { return a.TenantID }).
+			WithName("tenantId").
+			Required().
+			Rules(validation.StringUUID()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
