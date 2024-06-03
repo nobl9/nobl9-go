@@ -874,6 +874,12 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				Account: "account",
 			},
 		},
+		v1alpha.AzurePrometheus: {
+			AzurePrometheus: &AzurePrometheusConfig{
+				URL:      "https://prometheus-service.monitoring:8080",
+				TenantID: "tenant_id",
+			},
+		},
 	}
 
 	return specs[typ]
