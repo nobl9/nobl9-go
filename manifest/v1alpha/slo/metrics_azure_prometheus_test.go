@@ -16,7 +16,7 @@ func TestAzurePrometheus(t *testing.T) {
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzurePrometheus)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus.PromQL = nil
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus = &AzurePrometheusMetric{}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azurePrometheus.promql",
@@ -25,11 +25,11 @@ func TestAzurePrometheus(t *testing.T) {
 	})
 	t.Run("empty", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzurePrometheus)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus.PromQL = ptr("")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus.PromQL = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azurePrometheus.promql",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: validation.ErrorCodeRequired,
 		})
 	})
 }

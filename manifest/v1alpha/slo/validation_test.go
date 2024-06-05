@@ -1678,7 +1678,7 @@ fetch consumed_api
 		Line:                       "MAXRTT",
 	}},
 	v1alpha.AzurePrometheus: {AzurePrometheus: &AzurePrometheusMetric{
-		PromQL: ptr("sum(rate(prometheus_http_requests_total[1h]))"),
+		PromQL: "sum(rate(prometheus_http_requests_total[1h]))",
 	}},
 }
 
