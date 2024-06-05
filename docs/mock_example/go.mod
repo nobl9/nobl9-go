@@ -12,7 +12,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/MicahParks/jwkset v0.5.18 // indirect
 	github.com/MicahParks/keyfunc/v3 v3.3.3 // indirect
-	github.com/aws/aws-sdk-go v1.53.13 // indirect
+	github.com/aws/aws-sdk-go v1.53.15 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
@@ -26,6 +26,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
+	golang.org/x/crypto v0.18.0 // indirect
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
