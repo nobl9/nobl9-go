@@ -1,6 +1,7 @@
 package slo
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -14,6 +15,26 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		slo := validCompositeSLO()
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("fails - invalid objective name - too long", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Name = strings.Repeat("a", 64)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].name",
+			Code: validation.ErrorCodeStringLength,
+		})
+	})
+	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 64)
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].displayName",
+			Code: validation.ErrorCodeStringMaxLength,
+		})
 	})
 	t.Run("fails - spec.indicator provided", func(t *testing.T) {
 		for _, ind := range []Indicator{

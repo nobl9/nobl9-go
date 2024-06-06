@@ -402,6 +402,8 @@ var specValidationComposite = validation.New[Spec](
 		Rules(validation.SliceLength[[]Objective](1, 1).
 			WithMessage("this SLO contains a composite objective. No more objectives can be added to it")).
 		IncludeForEach(validation.New[Objective](
+			validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
+				Include(objectiveBaseValidation),
 			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
 				Include(validation.New[CompositeSpec](
