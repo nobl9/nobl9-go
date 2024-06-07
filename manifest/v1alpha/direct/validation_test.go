@@ -943,6 +943,75 @@ func TestValidateSpec_LogicMonitor(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_AzurePrometheus(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.AzurePrometheus)
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("invalid tenantId", func(t *testing.T) {
+		direct := validDirect(v1alpha.AzurePrometheus)
+		direct.Spec.AzurePrometheus.TenantID = "invalid"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.azurePrometheus.tenantId",
+			Code: validation.ErrorCodeStringUUID,
+		})
+	})
+	t.Run("required fields", func(t *testing.T) {
+		direct := validDirect(v1alpha.AzurePrometheus)
+		direct.Spec.AzurePrometheus.URL = ""
+		direct.Spec.AzurePrometheus.TenantID = ""
+		direct.Spec.AzurePrometheus.ClientID = ""
+		direct.Spec.AzurePrometheus.ClientSecret = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 4,
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.url",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.tenantId",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.clientId",
+				Code: validation.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.clientSecret",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		direct := validDirect(v1alpha.AzurePrometheus)
+		direct.Spec.AzurePrometheus.URL = "invalid"
+		direct.Spec.AzurePrometheus.TenantID = strings.Repeat("l", 256)
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.url",
+				Code: validation.ErrorCodeURL,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.azurePrometheus.tenantId",
+				Code: validation.ErrorCodeStringUUID,
+			},
+		)
+	})
+
+	t.Run("url must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.AzurePrometheus)
+		direct.Spec.AzurePrometheus.URL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.azurePrometheus.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
 func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
@@ -1068,6 +1137,14 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 				Account:   "account",
 				AccessID:  "secret",
 				AccessKey: "secret",
+			},
+		},
+		v1alpha.AzurePrometheus: {
+			AzurePrometheus: &AzurePrometheusConfig{
+				URL:          "https://prometheus-service.monitoring:8080",
+				TenantID:     "abf988bf-86f1-41af-91ab-2d7cd011db46",
+				ClientID:     "secret",
+				ClientSecret: "secret",
 			},
 		},
 	}

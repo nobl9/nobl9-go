@@ -60,6 +60,7 @@ type Spec struct {
 	AzureMonitor            *AzureMonitorConfig              `json:"azureMonitor,omitempty"`
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
+	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -93,6 +94,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.AzureMonitor:        {},
 	v1alpha.Honeycomb:           {},
 	v1alpha.LogicMonitor:        {},
+	v1alpha.AzurePrometheus:     {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -140,6 +142,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Honeycomb, nil
 	case spec.LogicMonitor != nil:
 		return v1alpha.LogicMonitor, nil
+	case spec.AzurePrometheus != nil:
+		return v1alpha.AzurePrometheus, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -267,4 +271,12 @@ type LogicMonitorConfig struct {
 	Account   string `json:"account"`
 	AccessID  string `json:"accessId"`
 	AccessKey string `json:"accessKey"`
+}
+
+// AzurePrometheusConfig represents content of Azure Monitor managed service for Prometheus typical for Direct Object.
+type AzurePrometheusConfig struct {
+	URL          string `json:"url"`
+	TenantID     string `json:"tenantId"`
+	ClientID     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
 }
