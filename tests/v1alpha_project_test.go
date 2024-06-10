@@ -15,12 +15,13 @@ import (
 )
 
 func Test_Objects_V1_V1alpha_Project(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	inputs := []v1alphaProject.Project{
 		v1alphaProject.New(
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(v1alpha.Labels{"team": []string{"green"}}),
+				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
 				Annotations: commonAnnotations,
 			},
 			v1alphaProject.Spec{
@@ -30,7 +31,7 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 		v1alphaProject.New(
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 				Annotations: commonAnnotations,
 			},
 			v1alphaProject.Spec{
@@ -40,7 +41,7 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 		v1alphaProject.New(
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 				Annotations: commonAnnotations,
 			},
 			v1alphaProject.Spec{
@@ -63,23 +64,28 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 			returnsAll: true,
 		},
 		"filter by name": {
-			request:  objectsV1.GetProjectsRequest{Names: []string{inputs[0].Metadata.Name}},
+			request: objectsV1.GetProjectsRequest{
+				Names: []string{inputs[0].Metadata.Name},
+			},
 			expected: []v1alphaProject.Project{inputs[0]},
 		},
 		"filter by label": {
-			request:  objectsV1.GetProjectsRequest{Labels: v1alpha.Labels{"team": []string{"orange"}}},
+			request: objectsV1.GetProjectsRequest{
+				Labels: annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+			},
 			expected: []v1alphaProject.Project{inputs[1], inputs[2]},
 		},
 		"filter by label and name": {
 			request: objectsV1.GetProjectsRequest{
 				Names:  []string{inputs[2].Metadata.Name},
-				Labels: v1alpha.Labels{"team": []string{"orange"}},
+				Labels: annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaProject.Project{inputs[2]},
 		},
 	}
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			actual, err := client.Objects().V1().GetV1alphaProjects(ctx, test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
