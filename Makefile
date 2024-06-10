@@ -8,9 +8,9 @@ GO_ENUM_VERSION := v0.6.0
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.20.0
 # renovate datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION := v1.59.0
+GOLANGCI_LINT_VERSION := v1.59.1
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
-GOVULNCHECK_VERSION := v1.1.1
+GOVULNCHECK_VERSION := v1.1.2
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
 GOIMPORTS_VERSION := v0.22.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
