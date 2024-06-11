@@ -71,7 +71,7 @@ type credentials struct {
 	clientID     string
 	clientSecret string
 
-	mu sync.Mutex
+	mu sync.RWMutex
 }
 
 // GetEnvironment first ensures a token has been parsed before returning the environment,
@@ -95,6 +95,8 @@ func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get organization")
 	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	return c.organization, nil
 }
 
@@ -105,6 +107,8 @@ func (c *credentials) GetUser(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get user")
 	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	switch c.tokenType {
 	case tokenTypeM2M:
 		return c.claims.M2MProfile.Value.User, nil
@@ -153,9 +157,13 @@ func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err
 	if c.config.DisableOkta {
 		return false, nil
 	}
+	c.mu.RLock()
 	if !c.shouldRefresh() {
+		c.mu.RUnlock()
 		return false, nil
 	}
+	c.mu.RUnlock()
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if !c.shouldRefresh() {

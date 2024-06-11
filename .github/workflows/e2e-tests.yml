@@ -1,0 +1,46 @@
+name: End-to-end tests
+on:
+  workflow_call:
+    inputs:
+      clientId:
+        description: Client ID to use for authentication
+        required: true
+        type: string
+      oktaOrgUrl:
+        description: Okta organization URL
+        required: false
+        type: string
+      oktaAuthServer:
+        description: Okta authentication server identifier
+        required: false
+        type: string
+      ref:
+        description: Reference branch, tag or commit SHA to checkout
+        required: false
+        type: string
+        default: main
+    secrets:
+      clientSecret:
+        description: Client secret to use for authentication
+        required: true
+jobs:
+  test:
+    name: Run e2e tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          repository: nobl9/nobl9-go
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Run tests
+        env:
+          NOBL9_SDK_CLIENT_ID: ${{ inputs.clientId }}
+          NOBL9_SDK_CLIENT_SECRET: ${{ secrets.clientSecret }}
+          NOBL9_SDK_OKTA_ORG_URL: ${{ inputs.oktaOrgUrl }}
+          NOBL9_SDK_OKTA_AUTH_SERVER: ${{ inputs.oktaAuthServer }}
+        run: make test/e2e

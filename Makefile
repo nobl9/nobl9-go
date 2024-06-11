@@ -36,10 +36,15 @@ define _print_check_step
 	printf -- '------\n%s...\n' "${1}"
 endef
 
-.PHONY: test test/record
+.PHONY: test test/e2e test/record
 ## Run all unit tests.
 test:
 	go test -race -cover ./... ./docs/mock_example
+
+## Run all end-to-end tests (requires Nobl9 platform credentials).
+test/e2e:
+	# The '-count=1' flag disables tests results caching, as per https://go.dev/doc/go1.10#test.
+	go test -count=1 -race -test.v -timeout=5m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:
