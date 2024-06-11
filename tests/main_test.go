@@ -15,6 +15,8 @@ import (
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
+const defaultProject = "sdk-e2e-default"
+
 var client *sdk.Client
 
 func TestMain(m *testing.M) {
@@ -27,13 +29,14 @@ func runTestMain(m *testing.M) int {
 		printError("failed to create %T: %v", client, err)
 		return 1
 	}
+	client.Config.Project = defaultProject
 	org, err := client.GetOrganization(context.Background())
 	if err != nil {
 		printError("failed to get test organization: %v", err)
 		return 1
 	}
-	fmt.Printf("Running SDK end-to-end tests\nOrganization: %s\nEnvironment: %s\nClient ID: %s\n\n",
-		org, client.Config.URL, client.Config.ClientID)
+	fmt.Printf("Running SDK end-to-end tests\nOrganization: %s\nAuth Server: %s\nClient ID: %s\n\n",
+		org, client.Config.OktaOrgURL.JoinPath(client.Config.OktaAuthServer), client.Config.ClientID)
 	defer cleanupLabels()
 	return m.Run()
 }

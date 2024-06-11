@@ -43,7 +43,8 @@ test:
 
 ## Run all end-to-end tests (requires Nobl9 platform credentials).
 test/e2e:
-	go test -race -test.v -timeout=5m -tags=e2e_test ./tests
+	# The '-count=1' flag disables tests results caching, as per https://go.dev/doc/go1.10#test.
+	go test -count=1 -race -test.v -timeout=5m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:

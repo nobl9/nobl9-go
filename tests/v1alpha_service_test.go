@@ -12,7 +12,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
-	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
 
@@ -25,7 +24,7 @@ func Test_Objects_V1_V1alpha_Service(t *testing.T) {
 		v1alphaService.New(
 			v1alphaService.Metadata{
 				Name:        generateName(),
-				Project:     sdk.DefaultProject,
+				Project:     defaultProject,
 				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 				Annotations: commonAnnotations,
 			},
