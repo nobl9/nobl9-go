@@ -43,4 +43,5 @@ jobs:
           NOBL9_SDK_CLIENT_SECRET: ${{ secrets.clientSecret }}
           NOBL9_SDK_OKTA_ORG_URL: ${{ inputs.oktaOrgUrl }}
           NOBL9_SDK_OKTA_AUTH_SERVER: ${{ inputs.oktaAuthServer }}
+          NOBL9_SDK_NO_CONFIG_FILE: true
         run: make test/e2e
