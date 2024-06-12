@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/exp/slices"
 
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -1326,6 +1327,19 @@ func validCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	return s
 }
 
+// nolint:unparam
+func validSingleQueryGoodOverTotalCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
+	s := validSLO()
+	if !slices.Contains(singleQueryGoodOverTotalEnabledSources, metricType) {
+		panic("metric type not supported")
+	}
+	s.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+		Incremental:     ptr(false),
+		GoodTotalMetric: validSingleQueryMetricSpec(metricType),
+	}
+	return s
+}
+
 func validSLO() SLO {
 	return New(
 		Metadata{
@@ -1676,6 +1690,26 @@ fetch consumed_api
 		DeviceDataSourceInstanceID: 1029,
 		GraphID:                    11354,
 		Line:                       "MAXRTT",
+	}},
+}
+
+func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
+	ms := validSingleQueryMetricSpecs[typ]
+	var clone MetricSpec
+	data, _ := json.Marshal(ms)
+	_ = json.Unmarshal(data, &clone)
+	return &clone
+}
+
+var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
+	v1alpha.Splunk: {Splunk: &SplunkMetric{
+		Query: ptr(`
+    | mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
+    | join type=left _time [
+    | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
+    ]
+    | rename _time as n9time
+    | fields n9time n9good n9total`),
 	}},
 }
 
