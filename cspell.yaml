@@ -22,7 +22,7 @@ ignorePaths:
   - .golangci.yml
   - "**/*.lock"
   - "**/go.mod"
-  - "**/go.sum"
+  - "**/go*.sum"
   - "**/node_modules/**"
   - cspell.yaml
   - CODEOWNERS

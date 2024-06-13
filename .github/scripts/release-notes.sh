@@ -23,9 +23,10 @@ extract_header() {
 	local header_name="$2"
 	awk "
     /^\s?$/ {next}
+    /^--+/ {rn=0};
+    /^Signed-off-by|Co-authored-by/ {rn=0};
     /^## $header_name/ {rn=1}
     rn && !/^##/ && !/^--+/ {print};
-    /^--+/ {rn=0};
     /^##/ && !/^## $header_name/ {rn=0}" <<<"$commit"
 }
 

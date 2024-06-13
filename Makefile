@@ -8,11 +8,11 @@ GO_ENUM_VERSION := v0.6.0
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.20.0
 # renovate datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION := v1.57.2
+GOLANGCI_LINT_VERSION := v1.59.1
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
-GOVULNCHECK_VERSION := v1.1.1
+GOVULNCHECK_VERSION := v1.1.2
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
-GOIMPORTS_VERSION := v0.21.0
+GOIMPORTS_VERSION := v0.22.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.2.1
 
@@ -36,10 +36,15 @@ define _print_check_step
 	printf -- '------\n%s...\n' "${1}"
 endef
 
-.PHONY: test test/record
+.PHONY: test test/e2e test/record
 ## Run all unit tests.
 test:
 	go test -race -cover ./... ./docs/mock_example
+
+## Run all end-to-end tests (requires Nobl9 platform credentials).
+test/e2e:
+	# The '-count=1' flag disables tests results caching, as per https://go.dev/doc/go1.10#test.
+	go test -count=1 -race -test.v -timeout=5m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:
