@@ -146,7 +146,7 @@ var floatBasedMeasurementsValueValidation = validation.New[AlertCondition](
 				c.Measurement == MeasurementBudgetDrop.String()
 		},
 		validation.WhenDescription("measurement is is either '%s', '%s' or '%s'",
-			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBurnedBudget),
+			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBudgetDrop),
 	)
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
