@@ -1,12 +1,16 @@
-package examplegen
+package main
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/goccy/go-yaml"
 
 	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
+	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/sdk"
 )
 
 type examplesGeneratorFunc func() any
@@ -19,6 +23,7 @@ type examplesGeneratorConfig struct {
 const manifestPath = "manifest"
 
 func main() {
+	rootPath := pathutils.FindModuleRoot()
 	configs := getV1alphaExamplesRegistry()
 	for _, config := range configs {
 		v := config.Generate()
@@ -30,9 +35,24 @@ func main() {
 				"examples.yaml",
 			)
 		}
-
-		enc := yaml.NewEncoder()
+		config.Path = filepath.Join(rootPath, config.Path)
+		if err := writeExamples(v, config.Path); err != nil {
+			errFatal(err.Error())
+		}
 	}
+}
+
+func writeExamples(v any, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = file.Close() }()
+	if object, ok := v.(manifest.Object); ok {
+		return sdk.PrintObject(object, file, manifest.ObjectFormatYAML)
+	}
+	enc := yaml.NewEncoder(file, yaml.Indent(2))
+	return enc.Encode(v)
 }
 
 func getV1alphaExamplesRegistry() []examplesGeneratorConfig {
@@ -53,4 +73,9 @@ func getV1alphaExamplesRegistry() []examplesGeneratorConfig {
 
 func generify[T any](generator func() T) examplesGeneratorFunc {
 	return func() any { return generator() }
+}
+
+func errFatal(f string) {
+	fmt.Fprintln(os.Stderr, f)
+	os.Exit(1)
 }

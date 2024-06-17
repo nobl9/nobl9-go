@@ -9,6 +9,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -34,7 +35,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 	t.Helper()
 
 	sourcedTestCases, err := os.ReadFile(filepath.Join(
-		testutils.FindModuleRoot(),
+		pathutils.FindModuleRoot(),
 		"manifest/v1alpha/labels_examples.yaml"))
 	require.NoError(t, err)
 	var examples v1alpha.Labels
