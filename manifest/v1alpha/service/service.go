@@ -5,7 +5,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go Service
+//go:generate go run ../../../internal/cmd/objectimpl Service
 
 // New creates a new Service based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) Service {

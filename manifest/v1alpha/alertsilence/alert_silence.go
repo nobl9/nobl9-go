@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go AlertSilence
+//go:generate go run ../../../internal/cmd/objectimpl AlertSilence
 
 // New creates a new AlertSilence based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) AlertSilence {
