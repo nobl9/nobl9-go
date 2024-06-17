@@ -46,21 +46,21 @@ func TestWriteObjects(t *testing.T) {
 
 	t.Run("JSON format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObjects(objects, buf, manifest.ObjectFormatJSON)
+		err := EncodeObjects(objects, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedObjectsJSON, buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObjects(objects, buf, manifest.ObjectFormatYAML)
+		err := EncodeObjects(objects, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedObjectsYAML, buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObjects(objects, buf, manifest.ObjectFormat(-1))
+		err := EncodeObjects(objects, buf, manifest.ObjectFormat(-1))
 		assert.Error(t, err)
 		assert.Equal(t, "unsupported format: ObjectFormat(-1)", err.Error())
 	})
@@ -84,21 +84,21 @@ func TestWriteObject(t *testing.T) {
 
 	t.Run("JSON format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObject(object, buf, manifest.ObjectFormatJSON)
+		err := EncodeObject(object, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedObjectJSON, buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObject(object, buf, manifest.ObjectFormatYAML)
+		err := EncodeObject(object, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
 		assert.Equal(t, expectedObjectYAML, buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
-		err := WriteObject(object, buf, manifest.ObjectFormat(-1))
+		err := EncodeObject(object, buf, manifest.ObjectFormat(-1))
 		assert.Error(t, err)
 		assert.Equal(t, "unsupported format: ObjectFormat(-1)", err.Error())
 	})

@@ -10,29 +10,29 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-// WriteObjects writes objects to the given [io.Writer] in specified [manifest.ObjectFormat].
-func WriteObjects(objects []manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
-	return writeObjects(objects, out, format)
+// EncodeObjects writes objects to the given [io.Writer] in the specified [manifest.ObjectFormat].
+func EncodeObjects(objects []manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
+	return encodeObjects(objects, out, format)
 }
 
-// WriteObject writes a single object to the given [io.Writer] in specified [manifest.ObjectFormat].
-func WriteObject(object manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
-	return writeObjects(object, out, format)
+// EncodeObject writes a single object to the given [io.Writer] in the specified [manifest.ObjectFormat].
+func EncodeObject(object manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
+	return encodeObjects(object, out, format)
 }
 
-// PrintObjects prints objects to the given [io.Writer] in specified [manifest.ObjectFormat].
-// Deprecated: Use WriteObjects instead.
+// PrintObjects prints objects to the given [io.Writer] in the specified [manifest.ObjectFormat].
+// Deprecated: Use EncodeObjects instead.
 func PrintObjects(objects []manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
-	return writeObjects(objects, out, format)
+	return encodeObjects(objects, out, format)
 }
 
-// PrintObject prints a single object to the given [io.Writer] in specified [manifest.ObjectFormat].
-// Deprecated: Use WriteObject instead.
+// PrintObject prints a single object to the given [io.Writer] in the specified [manifest.ObjectFormat].
+// Deprecated: Use EncodeObject instead.
 func PrintObject(object manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
-	return writeObjects(object, out, format)
+	return encodeObjects(object, out, format)
 }
 
-func writeObjects(objects any, out io.Writer, format manifest.ObjectFormat) error {
+func encodeObjects(objects any, out io.Writer, format manifest.ObjectFormat) error {
 	switch format {
 	case manifest.ObjectFormatJSON:
 		enc := json.NewEncoder(out)
