@@ -27,7 +27,7 @@ func main() {
 	configs := getV1alphaExamplesRegistry()
 	for _, config := range configs {
 		v := config.Generate()
-		if object, ok := v.(manifest.Object); ok && config.Path != "" {
+		if object, ok := v.(manifest.Object); ok && config.Path == "" {
 			config.Path = filepath.Join(
 				manifestPath,
 				object.GetVersion().VersionString(),
