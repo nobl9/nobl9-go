@@ -7,7 +7,8 @@ It utilizes `text/template` to generate the code.
 
 ## Usage
 
-Add the following `generate` directive to the file that contains the `manifest.Object` object definition.
+Add the following `generate` directive to the file that contains
+the `manifest.Object` object definition.
 Replace the `<OBJECT_KIND>` with the struct name of your object, e.g. `Project`.
 
 ```go

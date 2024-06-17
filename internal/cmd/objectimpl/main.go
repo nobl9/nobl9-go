@@ -80,7 +80,7 @@ func main() {
 		errFatal(err.Error())
 	}
 	outputName := filepath.Join(cwd, fmt.Sprintf("%s_object.go", strings.TrimSuffix(filename, ".go")))
-	if err = os.WriteFile(outputName, formatted, 0600); err != nil {
+	if err = os.WriteFile(outputName, formatted, 0o600); err != nil {
 		errFatal(err.Error())
 	}
 }
@@ -168,11 +168,7 @@ func (g *generator) hasOrganizationAndManifestSource(fields *ast.FieldList) bool
 	return hasOrganization && hasManifestSource
 }
 
-func errFatal(f string, a ...interface{}) {
-	if len(a) == 0 {
-		fmt.Fprintln(os.Stderr, f)
-	} else {
-		fmt.Fprintf(os.Stderr, f+"\n", a...)
-	}
+func errFatal(f string) {
+	fmt.Fprintln(os.Stderr, f)
 	os.Exit(1)
 }
