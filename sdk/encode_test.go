@@ -12,13 +12,13 @@ import (
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 )
 
-//go:embed test_data/writer/expected_objects.json
+//go:embed test_data/encode/expected_objects.json
 var expectedObjectsJSON string
 
-//go:embed test_data/writer/expected_objects.yaml
+//go:embed test_data/encode/expected_objects.yaml
 var expectedObjectsYAML string
 
-func TestWriteObjects(t *testing.T) {
+func TestEncodeObjects(t *testing.T) {
 	objects := []manifest.Object{
 		v1alpha.GenericObject{
 			"apiVersion": "v1alpha",
@@ -66,13 +66,13 @@ func TestWriteObjects(t *testing.T) {
 	})
 }
 
-//go:embed test_data/writer/expected_object.json
+//go:embed test_data/encode/expected_object.json
 var expectedObjectJSON string
 
-//go:embed test_data/writer/expected_object.yaml
+//go:embed test_data/encode/expected_object.yaml
 var expectedObjectYAML string
 
-func TestWriteObject(t *testing.T) {
+func TestEncodeObject(t *testing.T) {
 	object := v1alpha.GenericObject{
 		"apiVersion": "v1alpha",
 		"kind":       "Project",
