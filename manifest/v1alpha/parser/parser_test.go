@@ -136,13 +136,6 @@ func Test_ParseObject_EnsureAllKindsAreParsed(t *testing.T) {
 	}
 }
 
-func Test_ParseThis(t *testing.T) {
-	data, format := readParserTestFile(t, "test.yaml")
-	_, err := ParseObject(data, manifest.KindSLO, format)
-	assert.NoError(t, err)
-	//yaml.NewEncoder()
-}
-
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
 	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))

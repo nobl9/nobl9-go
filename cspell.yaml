@@ -76,6 +76,7 @@ words:
   - hrdu
   - httpurls
   - ifacemaker
+  - impl
   - instana
   - iowait
   - jsonyaml
@@ -99,6 +100,7 @@ words:
   - noprefix
   - nriq
   - nrql
+  - objectimpl
   - opentsdb
   - opsgenie
   - pagerduty
