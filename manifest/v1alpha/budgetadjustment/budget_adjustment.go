@@ -6,7 +6,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go BudgetAdjustment
+//go:generate go run ../../../internal/cmd/objectimpl BudgetAdjustment
 
 func New(metadata Metadata, spec Spec) BudgetAdjustment {
 	return BudgetAdjustment{

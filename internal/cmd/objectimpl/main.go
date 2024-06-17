@@ -15,7 +15,7 @@ import (
 	"unicode"
 )
 
-//go:embed generate-object-impl.tpl
+//go:embed object.tmpl
 var templateStr string
 
 type generator struct {

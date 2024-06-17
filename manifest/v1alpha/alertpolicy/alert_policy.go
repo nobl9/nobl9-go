@@ -7,7 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go AlertPolicy
+//go:generate go run ../../../internal/cmd/objectimpl AlertPolicy
 
 func New(metadata Metadata, spec Spec) AlertPolicy {
 	return AlertPolicy{
