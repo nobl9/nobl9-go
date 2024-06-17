@@ -7,6 +7,9 @@ It utilizes `text/template` to generate the code.
 
 ## Usage
 
-```shell
-go run . -o docs.yaml
+Add the following `generate` directive to the file that contains the `manifest.Object` object definition.
+Replace the `<OBJECT_KIND>` with the struct name of your object, e.g. `Project`.
+
+```go
+//go:generate go run ../../../internal/cmd/objectimpl <OBJECT_KIND>
 ```
