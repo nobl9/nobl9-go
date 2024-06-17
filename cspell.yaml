@@ -76,7 +76,6 @@ words:
   - hrdu
   - httpurls
   - ifacemaker
-  - impl
   - instana
   - iowait
   - jsonyaml
@@ -135,6 +134,7 @@ words:
   - timeseries
   - timeslice
   - timeslices
+  - tmpl
   - tpng
   - tsdb
   - twindow
