@@ -17,8 +17,8 @@ import (
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
-//go:embed test_data/parser
-var parserTestData embed.FS
+//go:embed test_data/decode
+var decodeTestData embed.FS
 
 func TestDecode(t *testing.T) {
 	for _, test := range []struct {
@@ -198,7 +198,7 @@ func TestDecodeSingle(t *testing.T) {
 
 func readInputFile(t *testing.T, name string) []byte {
 	t.Helper()
-	data, err := parserTestData.ReadFile(filepath.Join("test_data", "parser", name))
+	data, err := decodeTestData.ReadFile(filepath.Join("test_data", "decode", name))
 	require.NoError(t, err)
 	return data
 }
