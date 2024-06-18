@@ -4,7 +4,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go UserGroup
+//go:generate go run ../../../internal/cmd/objectimpl UserGroup
 
 func New(metadata Metadata, spec Spec) UserGroup {
 	return UserGroup{
