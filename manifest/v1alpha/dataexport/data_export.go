@@ -9,7 +9,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go DataExport
+//go:generate go run ../../../internal/cmd/objectimpl DataExport
 
 // New creates a new DataExport based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) DataExport {

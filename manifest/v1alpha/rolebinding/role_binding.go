@@ -4,7 +4,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go RoleBinding
+//go:generate go run ../../../internal/cmd/objectimpl RoleBinding
 
 func New(metadata Metadata, spec Spec) RoleBinding {
 	return RoleBinding{
