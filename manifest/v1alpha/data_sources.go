@@ -47,6 +47,7 @@ AzureMonitor
 Generic
 Honeycomb
 LogicMonitor
+AzurePrometheus
 )*/
 type DataSourceType int
 
@@ -321,6 +322,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	AzureMonitor:          {Value: ptr(30), Unit: HRDDay},
 	Honeycomb:             {Value: ptr(7), Unit: HRDDay},
 	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
+	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
@@ -468,6 +470,10 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		LogicMonitor: {
 			Value: ptr(2),
 			Unit:  Minute,
+		},
+		AzurePrometheus: {
+			Value: ptr(0),
+			Unit:  Second,
 		},
 	}
 }

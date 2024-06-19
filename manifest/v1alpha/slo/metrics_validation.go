@@ -179,6 +179,9 @@ var metricSpecValidation = validation.New[MetricSpec](
 	validation.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
+	validation.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
+		WithName("azurePrometheus").
+		Include(azurePrometheusValidation),
 )
 
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
@@ -187,6 +190,7 @@ var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
+	v1alpha.AzurePrometheus,
 }
 
 // Support for bad/total metrics will be enabled gradually.
@@ -350,6 +354,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.LogicMonitor != nil {
 			if err := typesMatch(v1alpha.LogicMonitor); err != nil {
+				return err
+			}
+		}
+		if metric.AzurePrometheus != nil {
+			if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
 				return err
 			}
 		}
