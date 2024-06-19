@@ -47,6 +47,7 @@ type MetricSpec struct {
 	Generic             *GenericMetric             `json:"generic,omitempty"`
 	Honeycomb           *HoneycombMetric           `json:"honeycomb,omitempty"`
 	LogicMonitor        *LogicMonitorMetric        `json:"logicMonitor,omitempty"`
+	AzurePrometheus     *AzurePrometheusMetric     `json:"azurePrometheus,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -265,6 +266,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.Honeycomb
 	case m.LogicMonitor != nil:
 		return v1alpha.LogicMonitor
+	case m.AzurePrometheus != nil:
+		return v1alpha.AzurePrometheus
 	default:
 		return 0
 	}
@@ -349,6 +352,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.Honeycomb
 	case v1alpha.LogicMonitor:
 		return m.LogicMonitor
+	case v1alpha.AzurePrometheus:
+		return m.AzurePrometheus
 	default:
 		return nil
 	}
