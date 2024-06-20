@@ -1,0 +1,508 @@
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats avg(response_time) as n9value by _time | rename _time as n9time | fields n9time n9value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats avg(response_time) as n9value by _time | rename _time as n9time | fields n9time n9value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats avg(response_time) as n9value by _time | rename _time as n9time | fields n9time n9value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats avg(response_time) as n9value by _time | rename _time as n9time | fields n9time n9value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+        total:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+        total:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+        total:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Splunk SLO
+    indicator:
+      metricSource:
+        name: splunk
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog status<400 | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+        total:
+          splunk:
+            query: index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default

@@ -1,0 +1,2804 @@
+# Metric type: threshold
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/RDS
+            metricName: ReadLatency
+            stat: Average
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/RDS
+            metricName: ReadLatency
+            stat: Average
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/RDS
+            metricName: ReadLatency
+            stat: Average
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/RDS
+            metricName: ReadLatency
+            stat: Average
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "m1 / m2",
+                  "Period": 60
+                },
+                {
+                  "Id": "m1",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionEstablishedCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                },
+                {
+                  "Id": "m2",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionAttemptCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                }
+              ]
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "m1 / m2",
+                  "Period": 60
+                },
+                {
+                  "Id": "m1",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionEstablishedCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                },
+                {
+                  "Id": "m2",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionAttemptCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                }
+              ]
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "m1 / m2",
+                  "Period": 60
+                },
+                {
+                  "Id": "m1",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionEstablishedCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                },
+                {
+                  "Id": "m2",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionAttemptCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                }
+              ]
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "m1 / m2",
+                  "Period": 60
+                },
+                {
+                  "Id": "m1",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionEstablishedCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                },
+                {
+                  "Id": "m2",
+                  "MetricStat": {
+                    "Metric": {
+                      "Namespace": "AWS/NATGateway",
+                      "MetricName": "ConnectionAttemptCount",
+                      "Dimensions": [
+                        {
+                          "Name": "NatGatewayId",
+                          "Value": "nat-016e2012a5fa8a151"
+                        }
+                      ]
+                    },
+                    "Period": 60,
+                    "Stat": "SampleCount"
+                  },
+                  "ReturnData": false
+                }
+              ]
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2”
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2”
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2”
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2”
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_2XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_2XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_2XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_2XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_5XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_5XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: standard configuration
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_5XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: standard configuration
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: HTTPCode_Target_5XX_Count
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+        total:
+          cloudWatch:
+            region: us-west-2
+            namespace: AWS/ApplicationELB
+            metricName: RequestCount
+            stat: SampleCount
+            dimensions:
+            - name: LoadBalancer
+              value: app/api-server
+            accountId: "123456789012"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: JSON
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: JSON
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e1",
+                  "Expression": "SELECT AVG(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487218c2d40b52f4'",
+                  "Period": 60
+                }
+              ]
+        total:
+          cloudWatch:
+            region: us-west-2
+            json: |-
+              [
+                {
+                  "Id": "e2",
+                  "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+                  "Period": 60
+                }
+              ]
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: sql query
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: sql query
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example CloudWatch SLO
+    indicator:
+      metricSource:
+        name: cloudwatch
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
+        total:
+          cloudWatch:
+            region: us-west-2
+            sql: SELECT MAX(CPUUtilization) FROM "AWS/EC2"
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default

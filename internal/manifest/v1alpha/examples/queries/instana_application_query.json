@@ -1,0 +1,34 @@
+{
+  "type": "EXPRESSION",
+  "logicalOperator": "AND",
+  "elements": [
+    {
+      "type": "TAG_FILTER",
+      "name": "kubernetes.cluster.name",
+      "operator": "EQUALS",
+      "entity": "DESTINATION",
+      "value": "n9-dev-tooling-cluster"
+    },
+    {
+      "type": "TAG_FILTER",
+      "name": "kubernetes.container.name",
+      "operator": "EQUALS",
+      "entity": "DESTINATION",
+      "value": "datanode"
+    },
+    {
+      "type": "TAG_FILTER",
+      "name": "call.type",
+      "operator": "EQUALS",
+      "entity": "NOT_APPLICABLE",
+      "value": "HTTP"
+    },
+    {
+      "type": "TAG_FILTER",
+      "name": "endpoint.name",
+      "operator": "EQUALS",
+      "entity": "DESTINATION",
+      "value": "GET /"
+    }
+  ]
+}

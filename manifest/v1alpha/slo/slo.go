@@ -48,14 +48,18 @@ type Spec struct {
 	TimeWindows     []TimeWindow `json:"timeWindows"`
 	AlertPolicies   []string     `json:"alertPolicies"`
 	Attachments     []Attachment `json:"attachments,omitempty"`
-	CreatedAt       string       `json:"createdAt,omitempty"`
-	CreatedBy       string       `json:"createdBy,omitempty"`
+	// CreatedAt is the date of the [SLO] creation in RFC3339 format.
+	// Read-only field.
+	CreatedAt string `json:"createdAt,omitempty"`
+	// CreatedBy is the id of the user who first created the SLO.
+	// Read-only field.
+	CreatedBy string `json:"createdBy,omitempty"`
 	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
 
-// Attachment represents user defined URL attached to SLO
+// Attachment represents user defined URL attached to SLO.
 type Attachment struct {
 	URL         string  `json:"url"`
 	DisplayName *string `json:"displayName,omitempty"`
@@ -89,7 +93,8 @@ type Objective struct {
 	// Composite is not yet supported, applying it will have no effect
 	Composite *CompositeSpec `json:"composite,omitempty"`
 	Operator  *string        `json:"op,omitempty"`
-	Primary   *bool          `json:"primary,omitempty"`
+	// Primary is used to highlight the main (primary) objective of the [SLO].
+	Primary *bool `json:"primary,omitempty"`
 }
 
 func (o Objective) GetBudgetTarget() float64 {

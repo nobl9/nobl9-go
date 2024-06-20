@@ -1,0 +1,1156 @@
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          sumoLogic:
+            type: metrics
+            query: metric=CPU_Usage
+            quantization: 15s
+            rollup: Avg
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          sumoLogic:
+            type: metrics
+            query: metric=CPU_Usage
+            quantization: 15s
+            rollup: Avg
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          sumoLogic:
+            type: metrics
+            query: metric=CPU_Usage
+            quantization: 15s
+            rollup: Avg
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          sumoLogic:
+            type: metrics
+            query: metric=CPU_Usage
+            quantization: 15s
+            rollup: Avg
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourceCategory=uploads/nginx
+              | timeslice 1m as n9_time
+              | parse "HTTP/1.1" * * " as (status_code, size, tail)
+              | if (status_code matches "20" or status_code matches "30*",1,0) as resp_ok
+              | sum(resp_ok) as n9_value by n9_time
+              | sort by n9_time asc
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourceCategory=uploads/nginx
+              | timeslice 1m as n9_time
+              | parse "HTTP/1.1" * * " as (status_code, size, tail)
+              | if (status_code matches "20" or status_code matches "30*",1,0) as resp_ok
+              | sum(resp_ok) as n9_value by n9_time
+              | sort by n9_time asc
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourceCategory=uploads/nginx
+              | timeslice 1m as n9_time
+              | parse "HTTP/1.1" * * " as (status_code, size, tail)
+              | if (status_code matches "20" or status_code matches "30*",1,0) as resp_ok
+              | sum(resp_ok) as n9_value by n9_time
+              | sort by n9_time asc
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourceCategory=uploads/nginx
+              | timeslice 1m as n9_time
+              | parse "HTTP/1.1" * * " as (status_code, size, tail)
+              | if (status_code matches "20" or status_code matches "30*",1,0) as resp_ok
+              | sum(resp_ok) as n9_value by n9_time
+              | sort by n9_time asc
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Used
+            quantization: 15s
+            rollup: Avg
+        total:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Total
+            quantization: 15s
+            rollup: Avg
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Used
+            quantization: 15s
+            rollup: Avg
+        total:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Total
+            quantization: 15s
+            rollup: Avg
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Used
+            quantization: 15s
+            rollup: Avg
+        total:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Total
+            quantization: 15s
+            rollup: Avg
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Used
+            quantization: 15s
+            rollup: Avg
+        total:
+          sumoLogic:
+            type: metrics
+            query: metric=Mem_Total
+            quantization: 15s
+            rollup: Avg
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | if (log_level matches "error" ,0,1) as log_level_not_error
+              | sum(log_level_not_error) as n9_value by n9_time
+              | sort by n9_time asc
+        total:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | count(*) as n9_value by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | if (log_level matches "error" ,0,1) as log_level_not_error
+              | sum(log_level_not_error) as n9_value by n9_time
+              | sort by n9_time asc
+        total:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | count(*) as n9_value by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | if (log_level matches "error" ,0,1) as log_level_not_error
+              | sum(log_level_not_error) as n9_value by n9_time
+              | sort by n9_time asc
+        total:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | count(*) as n9_value by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: my-service-latency
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example SumoLogic SLO
+    indicator:
+      metricSource:
+        name: sumologic
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | if (log_level matches "error" ,0,1) as log_level_not_error
+              | sum(log_level_not_error) as n9_value by n9_time
+              | sort by n9_time asc
+        total:
+          sumoLogic:
+            type: logs
+            query: |-
+              _collector="app-cluster" _source="logs"
+              | json "log"
+              | timeslice 15s as n9_time
+              | parse "level=* *" as (log_level, tail)
+              | count(*) as n9_value by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
