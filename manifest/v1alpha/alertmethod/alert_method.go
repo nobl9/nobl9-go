@@ -4,7 +4,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-//go:generate go run ../../../scripts/generate-object-impl.go AlertMethod
+//go:generate go run ../../../internal/cmd/objectimpl AlertMethod
 
 // New creates a new AlertMethod based on provided Metadata nad Spec.
 func New(metadata Metadata, spec Spec) AlertMethod {

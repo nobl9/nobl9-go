@@ -1691,6 +1691,9 @@ fetch consumed_api
 		GraphID:                    11354,
 		Line:                       "MAXRTT",
 	}},
+	v1alpha.AzurePrometheus: {AzurePrometheus: &AzurePrometheusMetric{
+		PromQL: "sum(rate(prometheus_http_requests_total[1h]))",
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {

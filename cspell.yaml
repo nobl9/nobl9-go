@@ -100,6 +100,7 @@ words:
   - noprefix
   - nriq
   - nrql
+  - objectimpl
   - opentsdb
   - opsgenie
   - pagerduty
@@ -134,6 +135,7 @@ words:
   - timeseries
   - timeslice
   - timeslices
+  - tmpl
   - tpng
   - tsdb
   - twindow
