@@ -1,8 +1,9 @@
 package slo
 
 import (
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"testing"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 func Test_whenCountMetricsIs(t *testing.T) {
