@@ -66,9 +66,9 @@ words:
   - gofile
   - goimports
   - golangci
-  - goodtotal
   - gomnd
   - gomock
+  - goodtotal
   - gopackage
   - goreleaser
   - gosec
