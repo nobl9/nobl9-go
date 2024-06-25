@@ -55,6 +55,15 @@ func Test_whenCountMetricsIs(t *testing.T) {
 			},
 			expected: true,
 		},
+		"false - mixed bigquery and cloudwatch": {
+			datasource: v1alpha.CloudWatch,
+			spec: CountMetricsSpec{
+				Incremental: ptr(false),
+				GoodMetric:  validMetricSpec(v1alpha.BigQuery),
+				TotalMetric: validMetricSpec(v1alpha.BigQuery),
+			},
+			expected: false,
+		},
 	}
 
 	for name, tc := range testCases {
