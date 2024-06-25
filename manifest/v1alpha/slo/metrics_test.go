@@ -1,10 +1,11 @@
 package slo
 
 import (
-	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"slices"
 	"testing"
+
+	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/validation"
 
 	"github.com/stretchr/testify/assert"
 
