@@ -1274,6 +1274,28 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
 				},
 			},
+			"two objectives - mix bad/total with goodtotal metric": {
+				{
+					Incremental:     ptr(true),
+					GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Splunk),
+				},
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Splunk),
+					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
+				},
+			},
+			"two objectives - mix good/total with goodtotal metric": {
+				{
+					Incremental:     ptr(true),
+					GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Splunk),
+				},
+				{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Splunk),
+					GoodMetric:  validMetricSpec(v1alpha.CloudWatch),
+				},
+			},
 		} {
 			t.Run(name, func(t *testing.T) {
 				slo := validSLO()
