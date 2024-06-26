@@ -136,6 +136,15 @@ func Test_ParseObject_EnsureAllKindsAreParsed(t *testing.T) {
 	}
 }
 
+// References:
+// - https://github.com/nobl9/go-yaml/pull/3 (fork)
+// - https://github.com/nobl9/go-yaml/pull/457 (upstream)
+func Test_ParseObject_DoubleQuotedJSONHandling(t *testing.T) {
+	data, format := readParserTestFile(t, "cloudwatch_slo.yaml")
+	_, err := ParseObject(data, manifest.KindSLO, format)
+	require.NoError(t, err)
+}
+
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
 	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))

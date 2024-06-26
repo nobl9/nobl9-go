@@ -1,0 +1,29 @@
+apiVersion: n9/v1alpha
+kind: SLO
+metadata:
+  name: cloudwatch-json
+  project: cloudwatch
+spec:
+  budgetingMethod: Occurrences
+  description: ""
+  indicator:
+    metricSource:
+      kind: Agent
+      name: cloudwatch
+      project: cloudwatch
+  objectives:
+    - displayName: ""
+      op: lte
+      rawMetric:
+        query:
+          cloudWatch:
+            json: "[{\"Id\": \"e1\",\"Expression\": \"MAX(FILL(METRICS(), 0))\",\"Period\": 60},{\"Id\": \"m1\",\"MetricStat\": {\"Metric\": {\"Namespace\": \"AWS/ApplicationELB\",\"MetricName\": \"TargetResponseTime\",\"Dimensions\": [{\"Name\": \"LoadBalancer\",\"Value\": \"app/123/123\"},{\"Name\": \"TargetGroup\",\"Value\": \"targetgroup/123/123\"}]},\"Period\": 60,\"Stat\": \"Average\"},\"ReturnData\": false}]"
+            region: eu-central-1
+      target: 0.8
+      value: 0.9
+      name: objective-1
+  service: cloudwatch-service
+  timeWindows:
+    - count: 1
+      isRolling: true
+      unit: Hour
