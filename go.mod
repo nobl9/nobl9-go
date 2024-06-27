@@ -31,3 +31,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// We might in the end decide to just go with the fork direcly.
+replace github.com/goccy/go-yaml => github.com/nobl9/go-yaml v0.0.0-20240626115914-6b82fd0d61b9
