@@ -2,6 +2,8 @@ package alertmethod
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/pkg/errors"
 )
 
 //go:generate go run ../../../internal/cmd/objectimpl AlertMethod
@@ -54,6 +56,30 @@ type Spec struct {
 	Jira        *JiraAlertMethod       `json:"jira,omitempty"`
 	Teams       *TeamsAlertMethod      `json:"msteams,omitempty"`
 	Email       *EmailAlertMethod      `json:"email,omitempty"`
+}
+
+func (s Spec) GetType() (v1alpha.AlertMethodType, error) {
+	switch {
+	case s.Webhook != nil:
+		return v1alpha.Webhook, nil
+	case s.PagerDuty != nil:
+		return v1alpha.PagerDuty, nil
+	case s.Slack != nil:
+		return v1alpha.Slack, nil
+	case s.Discord != nil:
+		return v1alpha.Discord, nil
+	case s.Opsgenie != nil:
+		return v1alpha.Opsgenie, nil
+	case s.ServiceNow != nil:
+		return v1alpha.ServiceNow, nil
+	case s.Jira != nil:
+		return v1alpha.Jira, nil
+	case s.Teams != nil:
+		return v1alpha.Teams, nil
+	case s.Email != nil:
+		return v1alpha.Email, nil
+	}
+	return 0, errors.New("unknown alert method type")
 }
 
 type WebhookAlertMethod struct {
