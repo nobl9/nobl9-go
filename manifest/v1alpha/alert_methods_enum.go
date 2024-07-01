@@ -13,24 +13,24 @@ import (
 )
 
 const (
-	// Webhook is a AlertMethodType of type Webhook.
-	Webhook AlertMethodType = iota + 1
-	// PagerDuty is a AlertMethodType of type PagerDuty.
-	PagerDuty
-	// Slack is a AlertMethodType of type Slack.
-	Slack
-	// Discord is a AlertMethodType of type Discord.
-	Discord
-	// Opsgenie is a AlertMethodType of type Opsgenie.
-	Opsgenie
-	// ServiceNow is a AlertMethodType of type ServiceNow.
-	ServiceNow
-	// Jira is a AlertMethodType of type Jira.
-	Jira
-	// Teams is a AlertMethodType of type Teams.
-	Teams
-	// Email is a AlertMethodType of type Email.
-	Email
+	// AlertMethodTypeWebhook is a AlertMethodType of type Webhook.
+	AlertMethodTypeWebhook AlertMethodType = iota + 1
+	// AlertMethodTypePagerDuty is a AlertMethodType of type PagerDuty.
+	AlertMethodTypePagerDuty
+	// AlertMethodTypeSlack is a AlertMethodType of type Slack.
+	AlertMethodTypeSlack
+	// AlertMethodTypeDiscord is a AlertMethodType of type Discord.
+	AlertMethodTypeDiscord
+	// AlertMethodTypeOpsgenie is a AlertMethodType of type Opsgenie.
+	AlertMethodTypeOpsgenie
+	// AlertMethodTypeServiceNow is a AlertMethodType of type ServiceNow.
+	AlertMethodTypeServiceNow
+	// AlertMethodTypeJira is a AlertMethodType of type Jira.
+	AlertMethodTypeJira
+	// AlertMethodTypeTeams is a AlertMethodType of type Teams.
+	AlertMethodTypeTeams
+	// AlertMethodTypeEmail is a AlertMethodType of type Email.
+	AlertMethodTypeEmail
 )
 
 var ErrInvalidAlertMethodType = errors.New("not a valid AlertMethodType")
@@ -40,28 +40,28 @@ const _AlertMethodTypeName = "WebhookPagerDutySlackDiscordOpsgenieServiceNowJira
 // AlertMethodTypeValues returns a list of the values for AlertMethodType
 func AlertMethodTypeValues() []AlertMethodType {
 	return []AlertMethodType{
-		Webhook,
-		PagerDuty,
-		Slack,
-		Discord,
-		Opsgenie,
-		ServiceNow,
-		Jira,
-		Teams,
-		Email,
+		AlertMethodTypeWebhook,
+		AlertMethodTypePagerDuty,
+		AlertMethodTypeSlack,
+		AlertMethodTypeDiscord,
+		AlertMethodTypeOpsgenie,
+		AlertMethodTypeServiceNow,
+		AlertMethodTypeJira,
+		AlertMethodTypeTeams,
+		AlertMethodTypeEmail,
 	}
 }
 
 var _AlertMethodTypeMap = map[AlertMethodType]string{
-	Webhook:    _AlertMethodTypeName[0:7],
-	PagerDuty:  _AlertMethodTypeName[7:16],
-	Slack:      _AlertMethodTypeName[16:21],
-	Discord:    _AlertMethodTypeName[21:28],
-	Opsgenie:   _AlertMethodTypeName[28:36],
-	ServiceNow: _AlertMethodTypeName[36:46],
-	Jira:       _AlertMethodTypeName[46:50],
-	Teams:      _AlertMethodTypeName[50:55],
-	Email:      _AlertMethodTypeName[55:60],
+	AlertMethodTypeWebhook:    _AlertMethodTypeName[0:7],
+	AlertMethodTypePagerDuty:  _AlertMethodTypeName[7:16],
+	AlertMethodTypeSlack:      _AlertMethodTypeName[16:21],
+	AlertMethodTypeDiscord:    _AlertMethodTypeName[21:28],
+	AlertMethodTypeOpsgenie:   _AlertMethodTypeName[28:36],
+	AlertMethodTypeServiceNow: _AlertMethodTypeName[36:46],
+	AlertMethodTypeJira:       _AlertMethodTypeName[46:50],
+	AlertMethodTypeTeams:      _AlertMethodTypeName[50:55],
+	AlertMethodTypeEmail:      _AlertMethodTypeName[55:60],
 }
 
 // String implements the Stringer interface.
@@ -80,15 +80,15 @@ func (x AlertMethodType) IsValid() bool {
 }
 
 var _AlertMethodTypeValue = map[string]AlertMethodType{
-	_AlertMethodTypeName[0:7]:   Webhook,
-	_AlertMethodTypeName[7:16]:  PagerDuty,
-	_AlertMethodTypeName[16:21]: Slack,
-	_AlertMethodTypeName[21:28]: Discord,
-	_AlertMethodTypeName[28:36]: Opsgenie,
-	_AlertMethodTypeName[36:46]: ServiceNow,
-	_AlertMethodTypeName[46:50]: Jira,
-	_AlertMethodTypeName[50:55]: Teams,
-	_AlertMethodTypeName[55:60]: Email,
+	_AlertMethodTypeName[0:7]:   AlertMethodTypeWebhook,
+	_AlertMethodTypeName[7:16]:  AlertMethodTypePagerDuty,
+	_AlertMethodTypeName[16:21]: AlertMethodTypeSlack,
+	_AlertMethodTypeName[21:28]: AlertMethodTypeDiscord,
+	_AlertMethodTypeName[28:36]: AlertMethodTypeOpsgenie,
+	_AlertMethodTypeName[36:46]: AlertMethodTypeServiceNow,
+	_AlertMethodTypeName[46:50]: AlertMethodTypeJira,
+	_AlertMethodTypeName[50:55]: AlertMethodTypeTeams,
+	_AlertMethodTypeName[55:60]: AlertMethodTypeEmail,
 }
 
 // ParseAlertMethodType attempts to convert a string to a AlertMethodType.

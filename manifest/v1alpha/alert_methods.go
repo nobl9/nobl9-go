@@ -1,8 +1,8 @@
 package v1alpha
 
-//go:generate ../../bin/go-enum  --values --noprefix
+//go:generate ../../bin/go-enum  --values
 
-// DataSourceType represents the specific type of alert method.
+// AlertMethodType represents the specific type of alert method.
 //
 /* ENUM(
 Webhook = 1
