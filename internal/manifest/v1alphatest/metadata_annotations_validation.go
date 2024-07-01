@@ -9,6 +9,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -37,7 +38,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 	t.Helper()
 
 	sourcedTestCases, err := os.ReadFile(filepath.Join(
-		testutils.FindModuleRoot(),
+		pathutils.FindModuleRoot(),
 		"manifest/v1alpha/metadata_annotations_examples.yaml"))
 	require.NoError(t, err)
 	var examples v1alpha.MetadataAnnotations

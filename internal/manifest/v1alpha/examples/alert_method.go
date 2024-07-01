@@ -19,7 +19,7 @@ const (
 var standardAlertMethods = []v1alpha.AlertMethodType{}
 
 var customAlertMethods = map[v1alpha.AlertMethodType][]alertMethodVariant{
-	v1alpha.Webhook: {
+	v1alpha.AlertMethodTypeWebhook: {
 		alertMethodVariantWebhookTemplate,
 		alertMethodVariantWebhookTemplateFields,
 	},
@@ -69,7 +69,7 @@ func (a AlertMethodVariant) Generate() v1alphaAlertMethod.AlertMethod {
 
 func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v1alphaAlertMethod.AlertMethod {
 	switch a.Type {
-	case v1alpha.Email:
+	case v1alpha.AlertMethodTypeEmail:
 		am.Spec.Email = &v1alphaAlertMethod.EmailAlertMethod{
 			To:      []string{"alerts-tests@nobl9.com"},
 			Cc:      []string{"alerts-tests+cc@nobl9.com"},
@@ -83,44 +83,44 @@ func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v
   Service: $service_name
   Organization: $organization`,
 		}
-	case v1alpha.Discord:
+	case v1alpha.AlertMethodTypeDiscord:
 		am.Spec.Discord = &v1alphaAlertMethod.DiscordAlertMethod{
 			URL: "https://discord.com/api/webhooks/123/secret",
 		}
-	case v1alpha.Jira:
+	case v1alpha.AlertMethodTypeJira:
 		am.Spec.Jira = &v1alphaAlertMethod.JiraAlertMethod{
 			URL:        "https://nobl9.atlassian.net/",
 			Username:   "jira-alerts@nobl9.com",
 			APIToken:   "123456789",
 			ProjectKey: "AL",
 		}
-	case v1alpha.Opsgenie:
+	case v1alpha.AlertMethodTypeOpsgenie:
 		am.Spec.Opsgenie = &v1alphaAlertMethod.OpsgenieAlertMethod{
 			Auth: "GenieKey 123",
 			URL:  "https://api.opsgenie.com",
 		}
-	case v1alpha.PagerDuty:
+	case v1alpha.AlertMethodTypePagerDuty:
 		am.Spec.PagerDuty = &v1alphaAlertMethod.PagerDutyAlertMethod{
 			IntegrationKey: "123456789",
 			SendResolution: &v1alphaAlertMethod.SendResolution{
 				Message: ptr("Alert is now resolved"),
 			},
 		}
-	case v1alpha.ServiceNow:
+	case v1alpha.AlertMethodTypeServiceNow:
 		am.Spec.ServiceNow = &v1alphaAlertMethod.ServiceNowAlertMethod{
 			Username:     "user",
 			Password:     "super-strong-password",
 			InstanceName: "vm123",
 		}
-	case v1alpha.Slack:
+	case v1alpha.AlertMethodTypeSlack:
 		am.Spec.Slack = &v1alphaAlertMethod.SlackAlertMethod{
 			URL: "https://hooks.slack.com/services/321/123/secret",
 		}
-	case v1alpha.Teams:
+	case v1alpha.AlertMethodTypeTeams:
 		am.Spec.Teams = &v1alphaAlertMethod.TeamsAlertMethod{
 			URL: "https://meshmark.webhook.office.com/webhookb2/123@321/IncomingWebhook/123/321",
 		}
-	case v1alpha.Webhook:
+	case v1alpha.AlertMethodTypeWebhook:
 		am.Spec.Webhook = &v1alphaAlertMethod.WebhookAlertMethod{
 			URL: "https://123.execute-api.eu-central-1.amazonaws.com/default/putReq2S3",
 			Headers: []v1alphaAlertMethod.WebhookHeader{
