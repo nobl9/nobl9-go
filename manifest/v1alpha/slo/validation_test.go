@@ -1274,7 +1274,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
 				},
 			},
-			"two objectives - mix bad/total with goodtotal metric": {
+			"two objectives - mix bad/total with single query good/total metric": {
 				{
 					Incremental:     ptr(true),
 					GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Splunk),
@@ -1285,7 +1285,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 					BadMetric:   validMetricSpec(v1alpha.CloudWatch),
 				},
 			},
-			"two objectives - mix good/total with goodtotal metric": {
+			"two objectives - mix good/total with single query good/total metric": {
 				{
 					Incremental:     ptr(true),
 					GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Splunk),
