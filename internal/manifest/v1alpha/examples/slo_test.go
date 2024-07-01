@@ -10,8 +10,8 @@ import (
 func TestSLO_SupportsAllDataSourceTypes(t *testing.T) {
 	variants := SLO()
 	for _, dataSourceType := range v1alpha.DataSourceTypeValues() {
-		if !slices.ContainsFunc(variants, func(v SLOVariant) bool {
-			return v.DataSourceType == dataSourceType
+		if !slices.ContainsFunc(variants, func(e Example) bool {
+			return e.(sloVariant).DataSourceType == dataSourceType
 		}) {
 			t.Errorf("%T '%s' is not listed in the examples", dataSourceType, dataSourceType)
 		}

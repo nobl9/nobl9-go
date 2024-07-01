@@ -128,8 +128,8 @@ var badOverTotalVariants = []string{
 	metricVariantBadRatio,
 }
 
-func SLO() []SLOVariant {
-	baseVariants := make([]SLOVariant, 0)
+func SLO() []Example {
+	baseVariants := make([]sloVariant, 0)
 	for _, dataSourceType := range standardGoodOverTotalMetrics {
 		baseVariants = append(baseVariants, createVariants(dataSourceType, goodOverTotalVariants, nil)...)
 	}
@@ -145,7 +145,7 @@ func SLO() []SLOVariant {
 			)...)
 		}
 	}
-	variants := make([]SLOVariant, 0, len(baseVariants)*4)
+	variants := make([]sloVariant, 0, len(baseVariants)*4)
 	for _, variant := range baseVariants {
 		for _, timeWindow := range []twindow.TimeWindowTypeEnum{
 			twindow.Rolling,
@@ -155,7 +155,7 @@ func SLO() []SLOVariant {
 				v1alphaSLO.BudgetingMethodTimeslices,
 				v1alphaSLO.BudgetingMethodOccurrences,
 			} {
-				variant = SLOVariant{
+				variant = sloVariant{
 					DataSourceType:   variant.DataSourceType,
 					BudgetingMethod:  method,
 					TimeWindowType:   timeWindow,
@@ -167,25 +167,25 @@ func SLO() []SLOVariant {
 			}
 		}
 	}
-	return variants
+	return newExampleSlice(variants...)
 }
 
 func createVariants(
 	dataSourceType v1alpha.DataSourceType,
 	metricVariants []metricVariant,
 	metricSubVariants []metricSubVariant,
-) []SLOVariant {
-	variants := make([]SLOVariant, 0, len(metricVariants)*(1+len(metricSubVariants)))
+) []sloVariant {
+	variants := make([]sloVariant, 0, len(metricVariants)*(1+len(metricSubVariants)))
 	for _, variant := range metricVariants {
 		if len(metricSubVariants) == 0 {
-			variants = append(variants, SLOVariant{
+			variants = append(variants, sloVariant{
 				DataSourceType: dataSourceType,
 				MetricVariant:  variant,
 			})
 			continue
 		}
 		for _, subVariant := range metricSubVariants {
-			variants = append(variants, SLOVariant{
+			variants = append(variants, sloVariant{
 				DataSourceType:   dataSourceType,
 				MetricVariant:    variant,
 				MetricSubVariant: subVariant,

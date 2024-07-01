@@ -9,66 +9,87 @@ import (
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
-type alertMethodVariant = string
+type alertMethodSpecSubVariant = string
 
 const (
-	alertMethodVariantWebhookTemplate       metricVariant = "template"
-	alertMethodVariantWebhookTemplateFields metricVariant = "template fields"
+	alertMethodSpecSubVariantWebhookTemplate       metricVariant = "template"
+	alertMethodSpecSubVariantWebhookTemplateFields metricVariant = "templateFields"
 )
 
-var standardAlertMethods = []v1alpha.AlertMethodType{}
+var standardAlertMethods = []v1alpha.AlertMethodType{
+	v1alpha.AlertMethodTypePagerDuty,
+	v1alpha.AlertMethodTypeSlack,
+	v1alpha.AlertMethodTypeDiscord,
+	v1alpha.AlertMethodTypeOpsgenie,
+	v1alpha.AlertMethodTypeServiceNow,
+	v1alpha.AlertMethodTypeJira,
+	v1alpha.AlertMethodTypeTeams,
+	v1alpha.AlertMethodTypeEmail,
+}
 
-var customAlertMethods = map[v1alpha.AlertMethodType][]alertMethodVariant{
+var customAlertMethodsSubVariants = map[v1alpha.AlertMethodType][]alertMethodSpecSubVariant{
 	v1alpha.AlertMethodTypeWebhook: {
-		alertMethodVariantWebhookTemplate,
-		alertMethodVariantWebhookTemplateFields,
+		alertMethodSpecSubVariantWebhookTemplate,
+		alertMethodSpecSubVariantWebhookTemplateFields,
 	},
 }
 
-type AlertMethodVariant struct {
-	Type    v1alpha.AlertMethodType
-	Variant alertMethodVariant
-
-	AlertMethod v1alphaAlertMethod.AlertMethod
+type alertMethodExample struct {
+	standardExample
+	methodType v1alpha.AlertMethodType
 }
 
-func AlertMethod() []AlertMethodVariant {
-	variants := make([]AlertMethodVariant, 0, len(standardAlertMethods))
+func (a alertMethodExample) GetYAMLComments() []string {
+	comment := fmt.Sprintf("%s Alert Method", a.Variant)
+	if a.SubVariant != "" {
+		comment += fmt.Sprintf(" with %s", a.SubVariant)
+	}
+	return []string{comment}
+}
+
+func AlertMethod() []Example {
+	variants := make([]alertMethodExample, 0, len(standardAlertMethods))
 	for _, typ := range standardAlertMethods {
-		variants = append(variants, AlertMethodVariant{
-			Type: typ,
+		variants = append(variants, alertMethodExample{
+			standardExample: standardExample{
+				Variant: typ.String(),
+			},
+			methodType: typ,
 		})
 	}
-	for typ, customVariants := range customAlertMethods {
-		for _, variant := range customVariants {
-			variants = append(variants, AlertMethodVariant{
-				Type:    typ,
-				Variant: variant,
+	for typ, subVariants := range customAlertMethodsSubVariants {
+		for _, subVariant := range subVariants {
+			variants = append(variants, alertMethodExample{
+				standardExample: standardExample{
+					Variant:    typ.String(),
+					SubVariant: subVariant,
+				},
+				methodType: typ,
 			})
 		}
 	}
 	for i := range variants {
-		variants[i].AlertMethod = variants[i].Generate()
+		variants[i].Object = variants[i].Generate()
 	}
-	return variants
+	return newExampleSlice(variants...)
 }
 
-func (a AlertMethodVariant) Generate() v1alphaAlertMethod.AlertMethod {
+func (a alertMethodExample) Generate() v1alphaAlertMethod.AlertMethod {
 	am := v1alphaAlertMethod.New(
 		v1alphaAlertMethod.Metadata{
-			Name:        strings.ToLower(a.Type.String()),
-			DisplayName: a.Type.String() + " Alert Method",
+			Name:        strings.ToLower(a.Variant),
+			DisplayName: a.Variant + " Alert Method",
 			Project:     sdk.DefaultProject,
 		},
 		v1alphaAlertMethod.Spec{
-			Description: fmt.Sprintf("Example %s Alert Method", a.Type),
+			Description: fmt.Sprintf("Example %s Alert Method", a.Variant),
 		},
 	)
 	return a.generateVariant(am)
 }
 
-func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v1alphaAlertMethod.AlertMethod {
-	switch a.Type {
+func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v1alphaAlertMethod.AlertMethod {
+	switch a.methodType {
 	case v1alpha.AlertMethodTypeEmail:
 		am.Spec.Email = &v1alphaAlertMethod.EmailAlertMethod{
 			To:      []string{"alerts-tests@nobl9.com"},
@@ -136,8 +157,8 @@ func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 				},
 			},
 		}
-		switch a.Variant {
-		case alertMethodVariantWebhookTemplate:
+		switch a.SubVariant {
+		case alertMethodSpecSubVariantWebhookTemplate:
 			am.Spec.Webhook.Template = ptr(`{
   "message": "Your SLO $slo_name needs attention!",
   "timestamp": "$timestamp",
@@ -154,7 +175,7 @@ func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v
     "alert_policy": "$alert_policy_labels_text"
   }
 }`)
-		case alertMethodVariantWebhookTemplateFields:
+		case alertMethodSpecSubVariantWebhookTemplateFields:
 			am.Spec.Webhook.TemplateFields = []string{
 				"project_name",
 				"service_name",
@@ -170,7 +191,7 @@ func (a AlertMethodVariant) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 			}
 		}
 	default:
-		panic(fmt.Sprintf("unexpected v1alpha.AlertMethodType: %#v", a.Type))
+		panic(fmt.Sprintf("unexpected v1alpha.AlertMethodType: %#v", a.Variant))
 	}
 	return am
 }
