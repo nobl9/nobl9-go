@@ -4,9 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 func TestAlertMethod_Spec_GetType(t *testing.T) {

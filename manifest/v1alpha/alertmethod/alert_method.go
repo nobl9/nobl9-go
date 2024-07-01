@@ -1,9 +1,10 @@
 package alertmethod
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/pkg/errors"
 )
 
 //go:generate go run ../../../internal/cmd/objectimpl AlertMethod
