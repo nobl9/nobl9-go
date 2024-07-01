@@ -46,7 +46,8 @@ func (s SLOVariant) String() string {
 func (s SLOVariant) Generate() v1alphaSLO.SLO {
 	slo := v1alphaSLO.New(
 		v1alphaSLO.Metadata{
-			Name:        fmt.Sprintf("my-service-latency"),
+			Name:        fmt.Sprintf("api-server-slo"),
+			DisplayName: "API Server SLO",
 			Project:     sdk.DefaultProject,
 			Labels:      Labels(),
 			Annotations: MetadataAnnotations(),
@@ -180,7 +181,7 @@ const (
 	metricSubVariantAzureMonitorLogs    metricVariant = "logs"
 )
 
-// generateMetricVariant returns a [v1alphaSLO.Objective] with all [v1alphaSLO.MetricSpec] variants filled out.
+// generateMetricVariant returns a [v1alphaSLO.SLO] with all [v1alphaSLO.MetricSpec] variants filled out.
 // The standard variants are: raw, good/total, and bad/total (only supported sources).
 // If a metric source has non-standard variants (e.g. Lightstep), it can extend metricVariant with it's own types.
 // It is up to the caller to nil-out the unwanted fields.
