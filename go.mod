@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/MicahParks/jwkset v0.5.18
 	github.com/MicahParks/keyfunc/v3 v3.3.3
-	github.com/aws/aws-sdk-go v1.54.7
+	github.com/aws/aws-sdk-go v1.54.11
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.11.3
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -31,3 +31,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// We might in the end decide to just go with the fork direcly.
+replace github.com/goccy/go-yaml => github.com/nobl9/go-yaml v0.0.0-20240626115914-6b82fd0d61b9

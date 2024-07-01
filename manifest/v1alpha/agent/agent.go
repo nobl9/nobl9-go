@@ -86,61 +86,61 @@ type Status struct {
 	NewestBetaAgentVersion   string `json:"newestBetaAgentVersion,omitempty"`
 }
 
-func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
+func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 	switch {
-	case spec.Prometheus != nil:
+	case s.Prometheus != nil:
 		return v1alpha.Prometheus, nil
-	case spec.Datadog != nil:
+	case s.Datadog != nil:
 		return v1alpha.Datadog, nil
-	case spec.NewRelic != nil:
+	case s.NewRelic != nil:
 		return v1alpha.NewRelic, nil
-	case spec.AppDynamics != nil:
+	case s.AppDynamics != nil:
 		return v1alpha.AppDynamics, nil
-	case spec.Splunk != nil:
+	case s.Splunk != nil:
 		return v1alpha.Splunk, nil
-	case spec.Lightstep != nil:
+	case s.Lightstep != nil:
 		return v1alpha.Lightstep, nil
-	case spec.SplunkObservability != nil:
+	case s.SplunkObservability != nil:
 		return v1alpha.SplunkObservability, nil
-	case spec.Dynatrace != nil:
+	case s.Dynatrace != nil:
 		return v1alpha.Dynatrace, nil
-	case spec.Elasticsearch != nil:
+	case s.Elasticsearch != nil:
 		return v1alpha.Elasticsearch, nil
-	case spec.ThousandEyes != nil:
+	case s.ThousandEyes != nil:
 		return v1alpha.ThousandEyes, nil
-	case spec.Graphite != nil:
+	case s.Graphite != nil:
 		return v1alpha.Graphite, nil
-	case spec.BigQuery != nil:
+	case s.BigQuery != nil:
 		return v1alpha.BigQuery, nil
-	case spec.OpenTSDB != nil:
+	case s.OpenTSDB != nil:
 		return v1alpha.OpenTSDB, nil
-	case spec.GrafanaLoki != nil:
+	case s.GrafanaLoki != nil:
 		return v1alpha.GrafanaLoki, nil
-	case spec.CloudWatch != nil:
+	case s.CloudWatch != nil:
 		return v1alpha.CloudWatch, nil
-	case spec.Pingdom != nil:
+	case s.Pingdom != nil:
 		return v1alpha.Pingdom, nil
-	case spec.AmazonPrometheus != nil:
+	case s.AmazonPrometheus != nil:
 		return v1alpha.AmazonPrometheus, nil
-	case spec.Redshift != nil:
+	case s.Redshift != nil:
 		return v1alpha.Redshift, nil
-	case spec.SumoLogic != nil:
+	case s.SumoLogic != nil:
 		return v1alpha.SumoLogic, nil
-	case spec.Instana != nil:
+	case s.Instana != nil:
 		return v1alpha.Instana, nil
-	case spec.InfluxDB != nil:
+	case s.InfluxDB != nil:
 		return v1alpha.InfluxDB, nil
-	case spec.GCM != nil:
+	case s.GCM != nil:
 		return v1alpha.GCM, nil
-	case spec.AzureMonitor != nil:
+	case s.AzureMonitor != nil:
 		return v1alpha.AzureMonitor, nil
-	case spec.Generic != nil:
+	case s.Generic != nil:
 		return v1alpha.Generic, nil
-	case spec.Honeycomb != nil:
+	case s.Honeycomb != nil:
 		return v1alpha.Honeycomb, nil
-	case spec.LogicMonitor != nil:
+	case s.LogicMonitor != nil:
 		return v1alpha.LogicMonitor, nil
-	case spec.AzurePrometheus != nil:
+	case s.AzurePrometheus != nil:
 		return v1alpha.AzurePrometheus, nil
 	}
 	return 0, errors.New("unknown agent type")

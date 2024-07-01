@@ -32,10 +32,10 @@ jobs:
             ${{ runner.os }}-yarn-
       - name: Run spell and markdown checkers
         run: make check/spell check/trailing check/markdown
-      - name: Check generated code
-        run: make check/generate
       - name: Check formatting
         run: make check/format
+      - name: Check generated code
+        run: make check/generate
       - name: Run go vet
         run: make check/vet
       - name: Run golangci-lint
