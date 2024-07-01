@@ -336,6 +336,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	AzureMonitor:          {Value: ptr(30), Unit: HRDDay},
 	Honeycomb:             {Value: ptr(7), Unit: HRDDay},
 	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
+	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
