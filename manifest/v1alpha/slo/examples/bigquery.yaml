@@ -1,266 +1,11 @@
-# Metric type: threshold
-# Budgeting method: Timeslices
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example BigQuery SLO
-    indicator:
-      metricSource:
-        name: bigquery
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          bigQuery:
-            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
-            projectId: api-server-256112
-            location: US
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Budgeting method: Occurrences
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example BigQuery SLO
-    indicator:
-      metricSource:
-        name: bigquery
-        project: default
-        kind: Direct
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      rawMetric:
-        query:
-          bigQuery:
-            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
-            projectId: api-server-256112
-            location: US
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Budgeting method: Timeslices
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example BigQuery SLO
-    indicator:
-      metricSource:
-        name: bigquery
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          bigQuery:
-            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
-            projectId: api-server-256112
-            location: US
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Budgeting method: Occurrences
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example BigQuery SLO
-    indicator:
-      metricSource:
-        name: bigquery
-        project: default
-        kind: Direct
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      rawMetric:
-        query:
-          bigQuery:
-            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
-            projectId: api-server-256112
-            location: US
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
 # Metric type: good over total
-# Budgeting method: Timeslices
-# Time window type: Rolling
+# Budgeting method: Occurrences
+# Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -287,13 +32,12 @@
         name: bigquery
         project: default
         kind: Direct
-    budgetingMethod: Timeslices
+    budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
       value: 1.0
       name: ok
       target: 0.95
-      timeSliceTarget: 0.9
       countMetrics:
         incremental: true
         good:
@@ -309,9 +53,12 @@
       primary: true
     service: api-server
     timeWindows:
-    - unit: Hour
+    - unit: Month
       count: 1
-      isRolling: true
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
     attachments:
@@ -328,7 +75,8 @@
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -395,7 +143,8 @@
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -461,12 +210,82 @@
         - name: slack-notification
           project: default
 # Metric type: good over total
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example BigQuery SLO
+    indicator:
+      metricSource:
+        name: bigquery
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          bigQuery:
+            query: SELECT http_code AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)
+            projectId: api-server-256112
+            location: US
+        total:
+          bigQuery:
+            query: SELECT http_code AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)
+            projectId: api-server-256112
+            location: US
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
 # Budgeting method: Occurrences
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -496,21 +315,16 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           bigQuery:
-            query: SELECT http_code AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE http_code = 200 AND created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)
+            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
             projectId: api-server-256112
             location: US
-        total:
-          bigQuery:
-            query: SELECT http_code AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)
-            projectId: api-server-256112
-            location: US
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -520,6 +334,200 @@
       calendar:
         startTime: 2022-12-01 00:00:00
         timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example BigQuery SLO
+    indicator:
+      metricSource:
+        name: bigquery
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          bigQuery:
+            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
+            projectId: api-server-256112
+            location: US
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example BigQuery SLO
+    indicator:
+      metricSource:
+        name: bigquery
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          bigQuery:
+            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
+            projectId: api-server-256112
+            location: US
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example BigQuery SLO
+    indicator:
+      metricSource:
+        name: bigquery
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          bigQuery:
+            query: SELECT response_time AS n9value, created AS n9date FROM `api-server-256112.metrics.http_response` WHERE created BETWEEN DATETIME(@n9date_from) AND DATETIME(@n9date_to)`
+            projectId: api-server-256112
+            location: US
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
     alertPolicies:
     - fast-burn-5x-for-last-10m
     attachments:

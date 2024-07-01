@@ -18,7 +18,7 @@ import (
 //go:embed queries
 var queriesFS embed.FS
 
-type sloVariant struct {
+type sloExample struct {
 	DataSourceType   v1alpha.DataSourceType
 	BudgetingMethod  v1alphaSLO.BudgetingMethod
 	TimeWindowType   twindow.TimeWindowTypeEnum
@@ -28,31 +28,31 @@ type sloVariant struct {
 	SLO v1alphaSLO.SLO
 }
 
-func (s sloVariant) GetObject() any {
+func (s sloExample) GetObject() any {
 	return s.SLO
 }
 
-func (s sloVariant) GetVariant() string {
+func (s sloExample) GetVariant() string {
 	return s.DataSourceType.String()
 }
 
-func (s sloVariant) GetSubVariant() string {
+func (s sloExample) GetSubVariant() string {
 	return s.String()
 }
 
-func (s sloVariant) GetYAMLComments() []string {
+func (s sloExample) GetYAMLComments() []string {
 	comments := []string{
-		fmt.Sprintf(" Metric type: %s", s.MetricVariant),
-		fmt.Sprintf(" Budgeting method: %s", s.BudgetingMethod),
-		fmt.Sprintf(" Time window type: %s", s.TimeWindowType),
+		fmt.Sprintf("Metric type: %s", s.MetricVariant),
+		fmt.Sprintf("Budgeting method: %s", s.BudgetingMethod),
+		fmt.Sprintf("Time window type: %s", s.TimeWindowType),
 	}
 	if s.MetricSubVariant != "" {
-		comments = slices.Insert(comments, 1, fmt.Sprintf(" Metric variant: %s", s.MetricSubVariant))
+		comments = slices.Insert(comments, 1, fmt.Sprintf("Metric variant: %s", s.MetricSubVariant))
 	}
 	return comments
 }
 
-func (s sloVariant) String() string {
+func (s sloExample) String() string {
 	subVariantStr := s.MetricSubVariant
 	if subVariantStr != "" {
 		subVariantStr = subVariantStr + " "
@@ -67,7 +67,7 @@ func (s sloVariant) String() string {
 	)
 }
 
-func (s sloVariant) Generate() v1alphaSLO.SLO {
+func (s sloExample) Generate() v1alphaSLO.SLO {
 	slo := v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "api-server-slo",
@@ -209,7 +209,7 @@ const (
 // The standard variants are: raw, good/total, and bad/total (only supported sources).
 // If a metric source has non-standard variants (e.g. Lightstep), it can extend metricVariant with it's own types.
 // It is up to the caller to nil-out the unwanted fields.
-func (s sloVariant) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
+func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 	switch s.DataSourceType {
 	case v1alpha.Prometheus:
 		switch s.MetricVariant {

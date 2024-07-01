@@ -13,7 +13,7 @@ import (
 
 func TestExamples_Validate_SLO(t *testing.T) {
 	for _, variant := range SLO() {
-		v := variant.(sloVariant)
+		v := variant.(sloExample)
 		t.Run(v.String(), func(t *testing.T) {
 			assert.NoError(t, v.SLO.Validate())
 		})

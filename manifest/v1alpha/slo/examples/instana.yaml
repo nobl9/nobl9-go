@@ -1,78 +1,12 @@
-# Metric type: threshold
-# Metric variant: infrastructure query
-# Budgeting method: Timeslices
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: max_request_latency
-              pluginId: zooKeeper
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
+# Metric type: good over total
 # Metric variant: infrastructure query
 # Budgeting method: Occurrences
-# Time window type: Rolling
+# Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -102,19 +36,105 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
-      rawMetric:
-        query:
+      countMetrics:
+        incremental: true
+        good:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: query
               query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: max_request_latency
+              metricId: error_requests_count
               pluginId: zooKeeper
-      op: lte
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: total_requests_count
+              pluginId: zooKeeper
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: infrastructure query
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: error_requests_count
+              pluginId: zooKeeper
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: total_requests_count
+              pluginId: zooKeeper
       primary: true
     service: api-server
     timeWindows:
@@ -131,14 +151,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: threshold
+# Metric type: good over total
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -168,20 +189,28 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
       timeSliceTarget: 0.9
-      rawMetric:
-        query:
+      countMetrics:
+        incremental: true
+        good:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: query
               query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: max_request_latency
+              metricId: error_requests_count
               pluginId: zooKeeper
-      op: lte
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: total_requests_count
+              pluginId: zooKeeper
       primary: true
     service: api-server
     timeWindows:
@@ -201,14 +230,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: threshold
+# Metric type: good over total
 # Metric variant: infrastructure query
-# Budgeting method: Occurrences
-# Time window type: Calendar
+# Budgeting method: Timeslices
+# Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -235,92 +265,31 @@
         name: instana
         project: default
         kind: Direct
-    budgetingMethod: Occurrences
+    budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
-      rawMetric:
-        query:
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: query
               query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: max_request_latency
+              metricId: error_requests_count
               pluginId: zooKeeper
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Metric variant: infrastructure snapshot id
-# Budgeting method: Timeslices
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
+        total:
           instana:
             metricType: infrastructure
             infrastructure:
-              metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: max_request_latency
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: total_requests_count
               pluginId: zooKeeper
-      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -337,14 +306,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: threshold
+# Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
-# Time window type: Rolling
+# Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -374,86 +344,27 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
-      rawMetric:
-        query:
+      countMetrics:
+        incremental: true
+        good:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: max_request_latency
+              metricId: error_requests_count
               pluginId: zooKeeper
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Metric variant: infrastructure snapshot id
-# Budgeting method: Timeslices
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
+        total:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: max_request_latency
+              metricId: total_requests_count
               pluginId: zooKeeper
-      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -473,14 +384,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: threshold
+# Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
-# Time window type: Calendar
+# Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -510,28 +422,33 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
-      rawMetric:
-        query:
+      countMetrics:
+        incremental: true
+        good:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: max_request_latency
+              metricId: error_requests_count
               pluginId: zooKeeper
-      op: lte
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: snapshot
+              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              metricId: total_requests_count
+              pluginId: zooKeeper
       primary: true
     service: api-server
     timeWindows:
-    - unit: Month
+    - unit: Hour
       count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
+      isRolling: true
     alertPolicies:
     - fast-burn-5x-for-last-10m
     attachments:
@@ -542,14 +459,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: threshold
-# Metric variant: application
+# Metric type: good over total
+# Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
-# Time window type: Rolling
+# Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -579,56 +497,107 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 200.0
+      value: 1.0
       name: ok
       target: 0.95
       timeSliceTarget: 0.9
-      rawMetric:
-        query:
+      countMetrics:
+        incremental: true
+        good:
           instana:
-            metricType: application
-            application:
-              metricId: calls
-              aggregation: sum
-              groupBy:
-                tag: application.name
-                tagEntity: DESTINATION
-              apiQuery: |-
-                {
-                  "type": "EXPRESSION",
-                  "logicalOperator": "AND",
-                  "elements": [
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.cluster.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "n9-dev-tooling-cluster"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.container.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "datanode"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "call.type",
-                      "operator": "EQUALS",
-                      "entity": "NOT_APPLICABLE",
-                      "value": "HTTP"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "endpoint.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "GET /"
-                    }
-                  ]
-                }
-      op: lte
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: snapshot
+              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              metricId: error_requests_count
+              pluginId: zooKeeper
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: snapshot
+              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              metricId: total_requests_count
+              pluginId: zooKeeper
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: infrastructure snapshot id
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: snapshot
+              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              metricId: error_requests_count
+              pluginId: zooKeeper
+        total:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: snapshot
+              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              metricId: total_requests_count
+              pluginId: zooKeeper
       primary: true
     service: api-server
     timeWindows:
@@ -648,219 +617,12 @@
 # Metric type: threshold
 # Metric variant: application
 # Budgeting method: Occurrences
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      rawMetric:
-        query:
-          instana:
-            metricType: application
-            application:
-              metricId: calls
-              aggregation: sum
-              groupBy:
-                tag: application.name
-                tagEntity: DESTINATION
-              apiQuery: |-
-                {
-                  "type": "EXPRESSION",
-                  "logicalOperator": "AND",
-                  "elements": [
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.cluster.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "n9-dev-tooling-cluster"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.container.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "datanode"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "call.type",
-                      "operator": "EQUALS",
-                      "entity": "NOT_APPLICABLE",
-                      "value": "HTTP"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "endpoint.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "GET /"
-                    }
-                  ]
-                }
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Metric variant: application
-# Budgeting method: Timeslices
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 200.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          instana:
-            metricType: application
-            application:
-              metricId: calls
-              aggregation: sum
-              groupBy:
-                tag: application.name
-                tagEntity: DESTINATION
-              apiQuery: |-
-                {
-                  "type": "EXPRESSION",
-                  "logicalOperator": "AND",
-                  "elements": [
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.cluster.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "n9-dev-tooling-cluster"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "kubernetes.container.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "datanode"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "call.type",
-                      "operator": "EQUALS",
-                      "entity": "NOT_APPLICABLE",
-                      "value": "HTTP"
-                    },
-                    {
-                      "type": "TAG_FILTER",
-                      "name": "endpoint.name",
-                      "operator": "EQUALS",
-                      "entity": "DESTINATION",
-                      "value": "GET /"
-                    }
-                  ]
-                }
-      op: lte
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: threshold
-# Metric variant: application
-# Budgeting method: Occurrences
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -958,89 +720,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
-# Metric variant: infrastructure query
-# Budgeting method: Timeslices
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 1.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      countMetrics:
-        incremental: true
-        good:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: error_requests_count
-              pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: total_requests_count
-              pluginId: zooKeeper
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: good over total
-# Metric variant: infrastructure query
+# Metric type: threshold
+# Metric variant: application
 # Budgeting method: Occurrences
 # Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1070,27 +758,55 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: error_requests_count
-              pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: total_requests_count
-              pluginId: zooKeeper
+            metricType: application
+            application:
+              metricId: calls
+              aggregation: sum
+              groupBy:
+                tag: application.name
+                tagEntity: DESTINATION
+              apiQuery: |-
+                {
+                  "type": "EXPRESSION",
+                  "logicalOperator": "AND",
+                  "elements": [
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.cluster.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "n9-dev-tooling-cluster"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.container.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "datanode"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "call.type",
+                      "operator": "EQUALS",
+                      "entity": "NOT_APPLICABLE",
+                      "value": "HTTP"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "endpoint.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "GET /"
+                    }
+                  ]
+                }
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -1107,14 +823,363 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
+# Metric type: threshold
+# Metric variant: application
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          instana:
+            metricType: application
+            application:
+              metricId: calls
+              aggregation: sum
+              groupBy:
+                tag: application.name
+                tagEntity: DESTINATION
+              apiQuery: |-
+                {
+                  "type": "EXPRESSION",
+                  "logicalOperator": "AND",
+                  "elements": [
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.cluster.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "n9-dev-tooling-cluster"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.container.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "datanode"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "call.type",
+                      "operator": "EQUALS",
+                      "entity": "NOT_APPLICABLE",
+                      "value": "HTTP"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "endpoint.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "GET /"
+                    }
+                  ]
+                }
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: application
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          instana:
+            metricType: application
+            application:
+              metricId: calls
+              aggregation: sum
+              groupBy:
+                tag: application.name
+                tagEntity: DESTINATION
+              apiQuery: |-
+                {
+                  "type": "EXPRESSION",
+                  "logicalOperator": "AND",
+                  "elements": [
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.cluster.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "n9-dev-tooling-cluster"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "kubernetes.container.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "datanode"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "call.type",
+                      "operator": "EQUALS",
+                      "entity": "NOT_APPLICABLE",
+                      "value": "HTTP"
+                    },
+                    {
+                      "type": "TAG_FILTER",
+                      "name": "endpoint.name",
+                      "operator": "EQUALS",
+                      "entity": "DESTINATION",
+                      "value": "GET /"
+                    }
+                  ]
+                }
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: infrastructure query
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: max_request_latency
+              pluginId: zooKeeper
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: infrastructure query
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          instana:
+            metricType: infrastructure
+            infrastructure:
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: max_request_latency
+              pluginId: zooKeeper
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1144,28 +1209,20 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
       timeSliceTarget: 0.9
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: query
               query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: error_requests_count
+              metricId: max_request_latency
               pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: total_requests_count
-              pluginId: zooKeeper
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -1185,91 +1242,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
+# Metric type: threshold
 # Metric variant: infrastructure query
-# Budgeting method: Occurrences
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: my-service-latency
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Instana SLO
-    indicator:
-      metricSource:
-        name: instana
-        project: default
-        kind: Direct
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 1.0
-      name: ok
-      target: 0.95
-      countMetrics:
-        incremental: true
-        good:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: error_requests_count
-              pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: query
-              query: entity.selfType:zookeeper AND entity.label:replica.1
-              metricId: total_requests_count
-              pluginId: zooKeeper
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-# Metric type: good over total
-# Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
 # Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1299,28 +1280,20 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
       timeSliceTarget: 0.9
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
-              metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: error_requests_count
+              metricRetrievalMethod: query
+              query: entity.selfType:zookeeper AND entity.label:replica.1
+              metricId: max_request_latency
               pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: total_requests_count
-              pluginId: zooKeeper
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -1337,14 +1310,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
+# Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
-# Time window type: Rolling
+# Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1374,27 +1348,89 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: error_requests_count
+              metricId: max_request_latency
               pluginId: zooKeeper
-        total:
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: infrastructure snapshot id
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Instana SLO
+    indicator:
+      metricSource:
+        name: instana
+        project: default
+        kind: Direct
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: total_requests_count
+              metricId: max_request_latency
               pluginId: zooKeeper
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -1411,14 +1447,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
+# Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1448,28 +1485,20 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
       timeSliceTarget: 0.9
-      countMetrics:
-        incremental: true
-        good:
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: error_requests_count
+              metricId: max_request_latency
               pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: total_requests_count
-              pluginId: zooKeeper
+      op: lte
       primary: true
     service: api-server
     timeWindows:
@@ -1489,14 +1518,15 @@
         alertMethods:
         - name: slack-notification
           project: default
-# Metric type: good over total
+# Metric type: threshold
 # Metric variant: infrastructure snapshot id
-# Budgeting method: Occurrences
-# Time window type: Calendar
+# Budgeting method: Timeslices
+# Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: my-service-latency
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
@@ -1523,39 +1553,29 @@
         name: instana
         project: default
         kind: Direct
-    budgetingMethod: Occurrences
+    budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
-      value: 1.0
+      value: 200.0
       name: ok
       target: 0.95
-      countMetrics:
-        incremental: true
-        good:
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
           instana:
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
               snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: error_requests_count
+              metricId: max_request_latency
               pluginId: zooKeeper
-        total:
-          instana:
-            metricType: infrastructure
-            infrastructure:
-              metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
-              metricId: total_requests_count
-              pluginId: zooKeeper
+      op: lte
       primary: true
     service: api-server
     timeWindows:
-    - unit: Month
+    - unit: Hour
       count: 1
-      isRolling: false
-      calendar:
-        startTime: 2022-12-01 00:00:00
-        timeZone: UTC
+      isRolling: true
     alertPolicies:
     - fast-burn-5x-for-last-10m
     attachments:

@@ -1,24 +1,24 @@
-apiVersion: n9/v1alpha
-kind: Project
-metadata:
-  name: default
-  labels:
-    area:
-    - latency
-    - slow-check
-    env:
-    - prod
-    - dev
-    region:
-    - us
-    - eu
-    team:
-    - green
-    - sales
-  annotations:
-    area: latency
-    env: prod
-    region: us
-    team: sales
-spec:
-  description: Example Project
+- apiVersion: n9/v1alpha
+  kind: Project
+  metadata:
+    name: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Project

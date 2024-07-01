@@ -1,0 +1,10 @@
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: slack
+    displayName: Slack Alert Method
+    project: default
+  spec:
+    description: Example Slack Alert Method
+    slack:
+      url: https://hooks.slack.com/services/321/123/secret

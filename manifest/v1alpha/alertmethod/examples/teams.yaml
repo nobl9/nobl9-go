@@ -1,0 +1,10 @@
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: teams
+    displayName: Teams Alert Method
+    project: default
+  spec:
+    description: Example Teams Alert Method
+    msteams:
+      url: https://meshmark.webhook.office.com/webhookb2/123@321/IncomingWebhook/123/321

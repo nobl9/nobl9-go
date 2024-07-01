@@ -1,4 +1,4 @@
-area: latency
-env: prod
-region: us
-team: sales
+- area: latency
+  env: prod
+  region: us
+  team: sales

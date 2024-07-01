@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/goccy/go-yaml"
@@ -28,20 +29,13 @@ func main() {
 	rootPath := pathutils.FindModuleRoot()
 	configs := getV1alphaExamplesConfigs()
 	for _, config := range configs {
+		examples := make([]any, 0, len(config.Examples))
 		for _, variant := range config.Examples {
-			v := variant.GetObject()
-			if object, ok := v.(manifest.Object); ok && config.Path == "" {
-				config.Path = filepath.Join(
-					manifestPath,
-					object.GetVersion().VersionString(),
-					object.GetKind().ToLower(),
-					"examples.yaml",
-				)
-			}
-			config.Path = filepath.Join(rootPath, config.Path)
-			if err := writeExamples(v, config.Path, config.Comments); err != nil {
-				errFatal(err.Error())
-			}
+			examples = append(examples, variant.GetObject())
+		}
+		config.Path = filepath.Join(rootPath, config.Path)
+		if err := writeExamples(examples, config.Path, config.Comments); err != nil {
+			panic(err.Error())
 		}
 	}
 }
@@ -67,7 +61,7 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		v1alphaExamples.SLO(),
 	}
 	for _, examples := range allExamples {
-		object := examples[0].(manifest.Object)
+		object := examples[0].GetObject().(manifest.Object)
 		basePath := filepath.Join(
 			manifestPath,
 			object.GetVersion().VersionString(),
@@ -92,10 +86,18 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 				configs = append(configs, config)
 				continue
 			}
+			if examples[0].GetSubVariant() != "" {
+				sort.Slice(examples, func(i, j int) bool {
+					return examples[i].GetSubVariant() < examples[j].GetSubVariant()
+				})
+			}
 			for i, example := range examples {
 				comments := example.GetYAMLComments()
 				if len(comments) == 0 {
 					continue
+				}
+				for i := range comments {
+					comments[i] = " " + comments[i]
 				}
 				config.Comments[fmt.Sprintf("$[%d]", i)] = []*yaml.Comment{yaml.HeadComment(comments...)}
 			}
@@ -124,11 +126,6 @@ func writeExamples(v any, path string, comments yaml.CommentMap) error {
 	}
 	enc := yaml.NewEncoder(file, opts...)
 	return enc.Encode(v)
-}
-
-func errFatal(f string) {
-	fmt.Fprintln(os.Stderr, f)
-	os.Exit(1)
 }
 
 func groupBy[K comparable, V any](s []V, key func(V) K) map[K][]V {

@@ -31,7 +31,7 @@ var standardBadOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.Honeycomb,
 }
 
-var customMetricVariants = map[v1alpha.DataSourceType]map[metricVariant][]metricSubVariant{
+var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metricSubVariant{
 	v1alpha.Lightstep: {
 		metricVariantThreshold: []metricSubVariant{
 			metricSubVariantLightstepMetrics,
@@ -129,24 +129,24 @@ var badOverTotalVariants = []string{
 }
 
 func SLO() []Example {
-	baseVariants := make([]sloVariant, 0)
+	baseExamples := make([]sloExample, 0)
 	for _, dataSourceType := range standardGoodOverTotalMetrics {
-		baseVariants = append(baseVariants, createVariants(dataSourceType, goodOverTotalVariants, nil)...)
+		baseExamples = append(baseExamples, createVariants(dataSourceType, goodOverTotalVariants, nil)...)
 	}
 	for _, dataSourceType := range standardBadOverTotalMetrics {
-		baseVariants = append(baseVariants, createVariants(dataSourceType, badOverTotalVariants, nil)...)
+		baseExamples = append(baseExamples, createVariants(dataSourceType, badOverTotalVariants, nil)...)
 	}
-	for dataSourceType, customVariants := range customMetricVariants {
-		for customVariant, subVariants := range customVariants {
-			baseVariants = append(baseVariants, createVariants(
+	for dataSourceType, customExamples := range customMetricExamples {
+		for variant, subVariants := range customExamples {
+			baseExamples = append(baseExamples, createVariants(
 				dataSourceType,
-				[]metricVariant{customVariant},
+				[]metricVariant{variant},
 				subVariants,
 			)...)
 		}
 	}
-	variants := make([]sloVariant, 0, len(baseVariants)*4)
-	for _, variant := range baseVariants {
+	variants := make([]sloExample, 0, len(baseExamples)*4)
+	for _, example := range baseExamples {
 		for _, timeWindow := range []twindow.TimeWindowTypeEnum{
 			twindow.Rolling,
 			twindow.Calendar,
@@ -155,15 +155,15 @@ func SLO() []Example {
 				v1alphaSLO.BudgetingMethodTimeslices,
 				v1alphaSLO.BudgetingMethodOccurrences,
 			} {
-				variant = sloVariant{
-					DataSourceType:   variant.DataSourceType,
+				example = sloExample{
+					DataSourceType:   example.DataSourceType,
 					BudgetingMethod:  method,
 					TimeWindowType:   timeWindow,
-					MetricVariant:    variant.MetricVariant,
-					MetricSubVariant: variant.MetricSubVariant,
+					MetricVariant:    example.MetricVariant,
+					MetricSubVariant: example.MetricSubVariant,
 				}
-				variant.SLO = variant.Generate()
-				variants = append(variants, variant)
+				example.SLO = example.Generate()
+				variants = append(variants, example)
 			}
 		}
 	}
@@ -174,23 +174,23 @@ func createVariants(
 	dataSourceType v1alpha.DataSourceType,
 	metricVariants []metricVariant,
 	metricSubVariants []metricSubVariant,
-) []sloVariant {
-	variants := make([]sloVariant, 0, len(metricVariants)*(1+len(metricSubVariants)))
-	for _, variant := range metricVariants {
+) []sloExample {
+	examples := make([]sloExample, 0, len(metricVariants)*(1+len(metricSubVariants)))
+	for _, example := range metricVariants {
 		if len(metricSubVariants) == 0 {
-			variants = append(variants, sloVariant{
+			examples = append(examples, sloExample{
 				DataSourceType: dataSourceType,
-				MetricVariant:  variant,
+				MetricVariant:  example,
 			})
 			continue
 		}
 		for _, subVariant := range metricSubVariants {
-			variants = append(variants, sloVariant{
+			examples = append(examples, sloExample{
 				DataSourceType:   dataSourceType,
-				MetricVariant:    variant,
+				MetricVariant:    example,
 				MetricSubVariant: subVariant,
 			})
 		}
 	}
-	return variants
+	return examples
 }
