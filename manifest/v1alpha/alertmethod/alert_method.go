@@ -62,23 +62,23 @@ type Spec struct {
 func (s Spec) GetType() (v1alpha.AlertMethodType, error) {
 	switch {
 	case s.Webhook != nil:
-		return v1alpha.Webhook, nil
+		return v1alpha.AlertMethodTypeWebhook, nil
 	case s.PagerDuty != nil:
-		return v1alpha.PagerDuty, nil
+		return v1alpha.AlertMethodTypePagerDuty, nil
 	case s.Slack != nil:
-		return v1alpha.Slack, nil
+		return v1alpha.AlertMethodTypeSlack, nil
 	case s.Discord != nil:
-		return v1alpha.Discord, nil
+		return v1alpha.AlertMethodTypeDiscord, nil
 	case s.Opsgenie != nil:
-		return v1alpha.Opsgenie, nil
+		return v1alpha.AlertMethodTypeOpsgenie, nil
 	case s.ServiceNow != nil:
-		return v1alpha.ServiceNow, nil
+		return v1alpha.AlertMethodTypeServiceNow, nil
 	case s.Jira != nil:
-		return v1alpha.Jira, nil
+		return v1alpha.AlertMethodTypeJira, nil
 	case s.Teams != nil:
-		return v1alpha.Teams, nil
+		return v1alpha.AlertMethodTypeTeams, nil
 	case s.Email != nil:
-		return v1alpha.Email, nil
+		return v1alpha.AlertMethodTypeEmail, nil
 	}
 	return 0, errors.New("unknown alert method type")
 }
