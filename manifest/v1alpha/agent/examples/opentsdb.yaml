@@ -1,0 +1,15 @@
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: opentsdb
+    displayName: OpenTSDB Agent
+    project: default
+  spec:
+    description: Example OpenTSDB Agent
+    releaseChannel: stable
+    opentsdb:
+      url: http://opentsdb.opentsdb:4242
+    queryDelay:
+      duration:
+        value: 2
+        unit: Minute

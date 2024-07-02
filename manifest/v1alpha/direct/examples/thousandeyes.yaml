@@ -1,0 +1,15 @@
+- apiVersion: n9/v1alpha
+  kind: Direct
+  metadata:
+    name: thousandeyes
+    displayName: ThousandEyes Direct
+    project: default
+  spec:
+    description: Example ThousandEyes Direct
+    releaseChannel: stable
+    thousandEyes:
+      oauthBearerToken: "[secret]"
+    queryDelay:
+      duration:
+        value: 2
+        unit: Minute

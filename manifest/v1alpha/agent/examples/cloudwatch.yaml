@@ -1,0 +1,21 @@
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: cloudwatch
+    displayName: CloudWatch Agent
+    project: default
+  spec:
+    description: Example CloudWatch Agent
+    releaseChannel: stable
+    cloudWatch: {}
+    historicalDataRetrieval:
+      maxDuration:
+        value: 15
+        unit: Day
+      defaultDuration:
+        value: 7
+        unit: Day
+    queryDelay:
+      duration:
+        value: 2
+        unit: Minute

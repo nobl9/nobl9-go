@@ -179,7 +179,7 @@ const gcloudServiceAccountKey = `{
   "type": "service_account",
   "project_id": "prod-app",
   "private_key_id": "669180ba44964eddba9e2f6623721381",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nKEY_GOES_HERE\n-----END PRIVATE KEY-----\n",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nSECRET_KEY_GOES_HERE\n-----END PRIVATE KEY-----\n",
   "client_email": "nobl9@nobl9.iam.gserviceaccount.com",
   "client_id": "eddba9e2f66237213812",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",

@@ -59,6 +59,8 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		v1alphaExamples.Service(),
 		v1alphaExamples.AlertMethod(),
 		v1alphaExamples.SLO(),
+		v1alphaExamples.Agent(),
+		v1alphaExamples.Direct(),
 	}
 	for _, examples := range allExamples {
 		object := examples[0].GetObject().(manifest.Object)
@@ -104,11 +106,13 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 			configs = append(configs, config)
 		}
 	}
-	// config = append(config, getV1alphaSLOExamplesConfigs(path)...)
 	return configs
 }
 
 func writeExamples(v any, path string, comments yaml.CommentMap) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return err
+	}
 	file, err := os.Create(path)
 	if err != nil {
 		return err

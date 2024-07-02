@@ -12,7 +12,7 @@ func TestDirect_SupportsAllDirectTypes(t *testing.T) {
 	variants := Direct()
 	for _, typ := range v1alpha.DataSourceTypeValues() {
 		if !v1alphaDirect.IsValidDirectType(typ) {
-      continue
+			continue
 		}
 		if !slices.ContainsFunc(variants, func(e Example) bool {
 			return e.(directExample).typ == typ
