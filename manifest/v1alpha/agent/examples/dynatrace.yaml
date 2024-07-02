@@ -1,22 +1,22 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: dynatrace
-    displayName: Dynatrace Agent
-    project: default
-  spec:
-    description: Example Dynatrace Agent
-    releaseChannel: stable
-    dynatrace:
-      url: https://zvf10945.live.dynatrace.com/
-    historicalDataRetrieval:
-      maxDuration:
-        value: 28
-        unit: Day
-      defaultDuration:
-        value: 14
-        unit: Day
-    queryDelay:
-      duration:
-        value: 3
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: dynatrace
+  displayName: Dynatrace Agent
+  project: default
+spec:
+  description: Example Dynatrace Agent
+  releaseChannel: stable
+  dynatrace:
+    url: https://zvf10945.live.dynatrace.com/
+  historicalDataRetrieval:
+    maxDuration:
+      value: 28
+      unit: Day
+    defaultDuration:
+      value: 14
+      unit: Day
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

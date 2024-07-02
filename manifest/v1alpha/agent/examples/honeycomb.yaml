@@ -1,21 +1,21 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: honeycomb
-    displayName: Honeycomb Agent
-    project: default
-  spec:
-    description: Example Honeycomb Agent
-    releaseChannel: stable
-    honeycomb: {}
-    historicalDataRetrieval:
-      maxDuration:
-        value: 7
-        unit: Day
-      defaultDuration:
-        value: 3
-        unit: Day
-    queryDelay:
-      duration:
-        value: 6
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: honeycomb
+  displayName: Honeycomb Agent
+  project: default
+spec:
+  description: Example Honeycomb Agent
+  releaseChannel: stable
+  honeycomb: {}
+  historicalDataRetrieval:
+    maxDuration:
+      value: 7
+      unit: Day
+    defaultDuration:
+      value: 3
+      unit: Day
+  queryDelay:
+    duration:
+      value: 6
+      unit: Minute

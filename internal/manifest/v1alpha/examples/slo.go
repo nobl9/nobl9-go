@@ -29,6 +29,7 @@ var standardBadOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.AppDynamics,
 	v1alpha.LogicMonitor,
 	v1alpha.Honeycomb,
+	v1alpha.AzurePrometheus,
 }
 
 var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metricSubVariant{

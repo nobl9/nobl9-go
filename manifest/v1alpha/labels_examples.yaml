@@ -1,12 +1,12 @@
-- area:
-  - latency
-  - slow-check
-  env:
-  - prod
-  - dev
-  region:
-  - us
-  - eu
-  team:
-  - green
-  - sales
+area:
+- latency
+- slow-check
+env:
+- prod
+- dev
+region:
+- us
+- eu
+team:
+- green
+- sales

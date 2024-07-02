@@ -1,16 +1,16 @@
-- apiVersion: n9/v1alpha
-  kind: Direct
-  metadata:
-    name: instana
-    displayName: Instana Direct
-    project: default
-  spec:
-    description: Example Instana Direct
-    releaseChannel: stable
-    instana:
-      apiToken: "[secret]"
-      url: https://orange-my-org12.instana.io
-    queryDelay:
-      duration:
-        value: 2
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: instana
+  displayName: Instana Direct
+  project: default
+spec:
+  description: Example Instana Direct
+  releaseChannel: stable
+  instana:
+    apiToken: "[secret]"
+    url: https://orange-my-org12.instana.io
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

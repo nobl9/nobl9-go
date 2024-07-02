@@ -1,0 +1,84 @@
+# long windows
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: slow-burn
+    displayName: Slow burn (1x2d and 2x15min)
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The budget is slowly being exhausted and not recovering
+    severity: Medium
+    coolDown: 5m
+    conditions:
+    - measurement: averageBurnRate
+      value: 1.0
+      alertingWindow: 48h
+      op: gte
+    - measurement: averageBurnRate
+      value: 2.0
+      alertingWindow: 15m
+      op: gte
+    alertMethods:
+    - metadata:
+        name: slack
+        project: default
+# short windows
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: slow-burn
+    displayName: Slow burn (1x12h and 2x15min)
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The budget is slowly being exhausted and not recovering
+    severity: Medium
+    coolDown: 5m
+    conditions:
+    - measurement: averageBurnRate
+      value: 1.0
+      alertingWindow: 12h
+      op: gte
+    - measurement: averageBurnRate
+      value: 2.0
+      alertingWindow: 15m
+      op: gte
+    alertMethods:
+    - metadata:
+        name: slack
+        project: default

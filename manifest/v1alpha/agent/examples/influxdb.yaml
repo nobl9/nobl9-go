@@ -1,15 +1,15 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: influxdb
-    displayName: InfluxDB Agent
-    project: default
-  spec:
-    description: Example InfluxDB Agent
-    releaseChannel: stable
-    influxdb:
-      url: https://us-west-2-2.aws.cloud2.influxdata.com
-    queryDelay:
-      duration:
-        value: 2
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: influxdb
+  displayName: InfluxDB Agent
+  project: default
+spec:
+  description: Example InfluxDB Agent
+  releaseChannel: stable
+  influxdb:
+    url: https://us-west-2-2.aws.cloud2.influxdata.com
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

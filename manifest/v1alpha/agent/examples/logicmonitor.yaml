@@ -1,15 +1,15 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: logicmonitor
-    displayName: LogicMonitor Agent
-    project: default
-  spec:
-    description: Example LogicMonitor Agent
-    releaseChannel: stable
-    logicMonitor:
-      account: myaccountname
-    queryDelay:
-      duration:
-        value: 3
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: logicmonitor
+  displayName: LogicMonitor Agent
+  project: default
+spec:
+  description: Example LogicMonitor Agent
+  releaseChannel: stable
+  logicMonitor:
+    account: myaccountname
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

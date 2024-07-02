@@ -1,22 +1,22 @@
-- apiVersion: n9/v1alpha
-  kind: Direct
-  metadata:
-    name: cloudwatch
-    displayName: CloudWatch Direct
-    project: default
-  spec:
-    description: Example CloudWatch Direct
-    releaseChannel: stable
-    cloudWatch:
-      roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app
-    historicalDataRetrieval:
-      maxDuration:
-        value: 15
-        unit: Day
-      defaultDuration:
-        value: 7
-        unit: Day
-    queryDelay:
-      duration:
-        value: 2
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: cloudwatch
+  displayName: CloudWatch Direct
+  project: default
+spec:
+  description: Example CloudWatch Direct
+  releaseChannel: stable
+  cloudWatch:
+    roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app
+  historicalDataRetrieval:
+    maxDuration:
+      value: 15
+      unit: Day
+    defaultDuration:
+      value: 7
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

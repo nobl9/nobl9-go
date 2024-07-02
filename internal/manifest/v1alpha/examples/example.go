@@ -16,9 +16,9 @@ func newExampleSlice[T Example](tv ...T) []Example {
 }
 
 type standardExample struct {
-	Object     any
 	Variant    string
 	SubVariant string
+	Object     any
 }
 
 func (s standardExample) GetObject() any {

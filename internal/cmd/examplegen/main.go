@@ -34,7 +34,13 @@ func main() {
 			examples = append(examples, variant.GetObject())
 		}
 		config.Path = filepath.Join(rootPath, config.Path)
-		if err := writeExamples(examples, config.Path, config.Comments); err != nil {
+		var input any
+		if len(examples) == 1 {
+			input = examples[0]
+		} else {
+			input = examples
+		}
+		if err := writeExamples(input, config.Path, config.Comments); err != nil {
 			panic(err.Error())
 		}
 	}
@@ -61,6 +67,12 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		v1alphaExamples.SLO(),
 		v1alphaExamples.Agent(),
 		v1alphaExamples.Direct(),
+		v1alphaExamples.AlertPolicy(),
+		v1alphaExamples.AlertSilence(),
+		v1alphaExamples.Annotation(),
+		v1alphaExamples.BudgetAdjustment(),
+		v1alphaExamples.DataExport(),
+		v1alphaExamples.RoleBinding(),
 	}
 	for _, examples := range allExamples {
 		object := examples[0].GetObject().(manifest.Object)
@@ -81,7 +93,7 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		for variant, examples := range grouped {
 			config := examplesGeneratorConfig{
 				Examples: examples,
-				Path:     filepath.Join(basePath, "examples", strings.ToLower(variant)+".yaml"),
+				Path:     filepath.Join(basePath, "examples", strings.ReplaceAll(strings.ToLower(variant), " ", "-")+".yaml"),
 				Comments: make(yaml.CommentMap),
 			}
 			if len(examples) == 1 {

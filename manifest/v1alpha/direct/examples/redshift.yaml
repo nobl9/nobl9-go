@@ -1,18 +1,18 @@
-- apiVersion: n9/v1alpha
-  kind: Direct
-  metadata:
-    name: redshift
-    displayName: Redshift Direct
-    project: default
-  spec:
-    description: Example Redshift Direct
-    releaseChannel: stable
-    redshift:
-      accessKeyID: AKIA4NPYKXO34R341XUX
-      secretAccessKey: "[secret]"
-      secretARN: arn:aws:secretsmanager:eu-central-1:123456578901:secret:prod-redshift-db-user
-      roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdRedshift-prod-app
-    queryDelay:
-      duration:
-        value: 31
-        unit: Second
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: redshift
+  displayName: Redshift Direct
+  project: default
+spec:
+  description: Example Redshift Direct
+  releaseChannel: stable
+  redshift:
+    accessKeyID: AKIA4NPYKXO34R341XUX
+    secretAccessKey: "[secret]"
+    secretARN: arn:aws:secretsmanager:eu-central-1:123456578901:secret:prod-redshift-db-user
+    roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdRedshift-prod-app
+  queryDelay:
+    duration:
+      value: 31
+      unit: Second

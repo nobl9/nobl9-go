@@ -1,25 +1,25 @@
-- apiVersion: n9/v1alpha
-  kind: Direct
-  metadata:
-    name: lightstep
-    displayName: Lightstep Direct
-    project: default
-  spec:
-    description: Example Lightstep Direct
-    releaseChannel: stable
-    lightstep:
-      organization: MyOrg
-      project: prod-app
-      appToken: "[secret]"
-      url: https://api.lightstep.com
-    historicalDataRetrieval:
-      maxDuration:
-        value: 30
-        unit: Day
-      defaultDuration:
-        value: 15
-        unit: Day
-    queryDelay:
-      duration:
-        value: 3
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: lightstep
+  displayName: Lightstep Direct
+  project: default
+spec:
+  description: Example Lightstep Direct
+  releaseChannel: stable
+  lightstep:
+    organization: MyOrg
+    project: prod-app
+    appToken: "[secret]"
+    url: https://api.lightstep.com
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

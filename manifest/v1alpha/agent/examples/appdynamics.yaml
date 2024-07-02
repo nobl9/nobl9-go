@@ -1,22 +1,22 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: appdynamics
-    displayName: AppDynamics Agent
-    project: default
-  spec:
-    description: Example AppDynamics Agent
-    releaseChannel: stable
-    appDynamics:
-      url: https://my-org.saas.appdynamics.com
-    historicalDataRetrieval:
-      maxDuration:
-        value: 30
-        unit: Day
-      defaultDuration:
-        value: 15
-        unit: Day
-    queryDelay:
-      duration:
-        value: 2
-        unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: appdynamics
+  displayName: AppDynamics Agent
+  project: default
+spec:
+  description: Example AppDynamics Agent
+  releaseChannel: stable
+  appDynamics:
+    url: https://my-org.saas.appdynamics.com
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute
