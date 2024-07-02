@@ -6,7 +6,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
+	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
@@ -35,6 +37,18 @@ func TestExamples_Validate_Service(t *testing.T) {
 func TestExamples_Validate_AlertMethods(t *testing.T) {
 	for _, variant := range AlertMethod() {
 		assert.NoError(t, variant.GetObject().(v1alphaAlertMethod.AlertMethod).Validate())
+	}
+}
+
+func TestExamples_Validate_Agent(t *testing.T) {
+	for _, variant := range Agent() {
+		assert.NoError(t, variant.GetObject().(v1alphaAgent.Agent).Validate())
+	}
+}
+
+func TestExamples_Validate_Direct(t *testing.T) {
+	for _, variant := range Direct() {
+		assert.NoError(t, variant.GetObject().(v1alphaDirect.Direct).Validate())
 	}
 }
 

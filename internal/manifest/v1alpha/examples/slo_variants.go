@@ -987,6 +987,27 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		}
+	case v1alpha.AzurePrometheus:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+				PromQL: `sum((rate(container_cpu_usage_seconds_total{container!="POD",container!=""}[30m])
+- on (namespace,pod,container) group_left avg by (namespace,pod,container)(kube_pod_container_resource_requests{resource="cpu"}))
+* -1 >0)`,
+			}))
+		case metricVariantGoodRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+				PromQL: `sum(api_server_requests_total{code="2xx"})`,
+			}), newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+				PromQL: `sum(api_server_requests_total{})`,
+			}))
+		case metricVariantBadRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+				PromQL: `sum(api_server_requests_total{code="5xx"})`,
+			}), newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+				PromQL: `sum(api_server_requests_total{})`,
+			}))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1073,6 +1094,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.Honeycomb = &v
 	case v1alphaSLO.LogicMonitorMetric:
 		spec.LogicMonitor = &v
+	case v1alphaSLO.AzurePrometheusMetric:
+		spec.AzurePrometheus = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}
