@@ -1,0 +1,14 @@
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: redshift
+    displayName: Redshift Agent
+    project: default
+  spec:
+    description: Example Redshift Agent
+    releaseChannel: stable
+    redshift: {}
+    queryDelay:
+      duration:
+        value: 31
+        unit: Second

@@ -1,0 +1,24 @@
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: email
+    displayName: Email Alert Method
+    project: default
+  spec:
+    description: Example Email Alert Method
+    email:
+      to:
+      - alerts-tests@nobl9.com
+      cc:
+      - alerts-tests+cc@nobl9.com
+      bcc:
+      - alerts-tests+bcc@nobl9.com
+      subject: Your SLO $slo_name needs attention!
+      body: |-
+        $alert_policy_name has triggered with the following conditions:
+          $alert_policy_conditions[]
+          Time: $timestamp
+          Severity: $severity
+          Project: $project_name
+          Service: $service_name
+          Organization: $organization

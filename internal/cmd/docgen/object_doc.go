@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -27,7 +27,7 @@ func generateObjectDocs(objectNames []string) []*ObjectDoc {
 		}
 	}
 
-	rootPath := testutils.FindModuleRoot()
+	rootPath := pathutils.FindModuleRoot()
 	// Generate object properties based on reflection.
 	for _, object := range objects {
 		mapper := newObjectMapper()

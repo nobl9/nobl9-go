@@ -1,0 +1,22 @@
+- apiVersion: n9/v1alpha
+  kind: Agent
+  metadata:
+    name: azuremonitor
+    displayName: AzureMonitor Agent
+    project: default
+  spec:
+    description: Example AzureMonitor Agent
+    releaseChannel: stable
+    azureMonitor:
+      tenantId: 5cdecca3-c2c5-4072-89dd-5555faf05202
+    historicalDataRetrieval:
+      maxDuration:
+        value: 30
+        unit: Day
+      defaultDuration:
+        value: 15
+        unit: Day
+    queryDelay:
+      duration:
+        value: 6
+        unit: Minute

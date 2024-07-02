@@ -1,0 +1,44 @@
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "service.name": "api-server"
+          }
+        }
+      ],
+      "filter": [
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "{{.BeginTime}}",
+              "lte": "{{.EndTime}}"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "size": 0,
+  "aggs": {
+    "resolution": {
+      "date_histogram": {
+        "field": "@timestamp",
+        "fixed_interval": "{{.Resolution}}"
+        "min_doc_count": 0,
+        "extended_bounds": {
+          "min": "{{.BeginTime}}",
+          "max": "{{.EndTime}}"
+        }
+      },
+      "aggs": {
+        "n9-val": {
+          "value_count": {
+            "field": "transaction.result"
+          }
+        }
+      }
+    }
+  }
+}

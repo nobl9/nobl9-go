@@ -1,0 +1,13 @@
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: jira
+    displayName: Jira Alert Method
+    project: default
+  spec:
+    description: Example Jira Alert Method
+    jira:
+      url: https://nobl9.atlassian.net/
+      username: jira-alerts@nobl9.com
+      apiToken: "123456789"
+      projectKey: AL

@@ -1,0 +1,17 @@
+- apiVersion: n9/v1alpha
+  kind: Direct
+  metadata:
+    name: sumologic
+    displayName: SumoLogic Direct
+    project: default
+  spec:
+    description: Example SumoLogic Direct
+    releaseChannel: stable
+    sumoLogic:
+      accessID: wzeulXAULylic8
+      accessKey: "[secret]"
+      url: https://service.sumologic.com
+    queryDelay:
+      duration:
+        value: 5
+        unit: Minute

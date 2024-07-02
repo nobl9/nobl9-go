@@ -23,7 +23,7 @@ func validate(s SLO) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindSLO)
 }
 
-var validator = validation.New[SLO](
+var validator = validation.New(
 	validationV1Alpha.FieldRuleAPIVersion(func(s SLO) manifest.Version { return s.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(s SLO) manifest.Kind { return s.Kind }, manifest.KindSLO),
 	validation.For(func(s SLO) SLO { return s }).
@@ -38,7 +38,7 @@ var validator = validation.New[SLO](
 		Include(specValidation),
 )
 
-var metadataValidation = validation.New[Metadata](
+var metadataValidation = validation.New(
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
@@ -66,7 +66,7 @@ func getCompositeObjectiveComponents(s SLO) []CompositeObjective {
 	return make([]CompositeObjective, 0)
 }
 
-var sloValidationComposite = validation.New[SLO](
+var sloValidationComposite = validation.New(
 	validation.For(validation.GetSelf[SLO]()).
 		Rules(
 			validation.NewSingleRule(func(s SLO) error {
@@ -118,7 +118,7 @@ var sloValidationComposite = validation.New[SLO](
 	validation.WhenDescription("at least one composite objective is defined"),
 )
 
-var specValidation = validation.New[Spec](
+var specValidation = validation.New(
 	validation.For(validation.GetSelf[Spec]()).
 		Cascade(validation.CascadeModeStop).
 		Include(specMetricsValidation),
@@ -196,7 +196,7 @@ var specValidation = validation.New[Spec](
 		),
 )
 
-var attachmentValidation = validation.New[Attachment](
+var attachmentValidation = validation.New(
 	validation.For(func(a Attachment) string { return a.URL }).
 		WithName("url").
 		Required().
@@ -206,14 +206,14 @@ var attachmentValidation = validation.New[Attachment](
 		Rules(validation.StringLength(0, 63)),
 )
 
-var compositeValidation = validation.New[Composite](
+var compositeValidation = validation.New(
 	validation.ForPointer(func(c Composite) *float64 { return c.BudgetTarget }).
 		WithName("target").
 		Required().
 		Rules(validation.GreaterThan(0.0), validation.LessThan(1.0)),
 	validation.ForPointer(func(c Composite) *CompositeBurnRateCondition { return c.BurnRateCondition }).
 		WithName("burnRateCondition").
-		Include(validation.New[CompositeBurnRateCondition](
+		Include(validation.New(
 			validation.For(func(b CompositeBurnRateCondition) float64 { return b.Value }).
 				WithName("value").
 				Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1000.0)),
@@ -251,7 +251,7 @@ var specCompositeValidationRule = validation.NewSingleRule(func(s Spec) error {
 	return nil
 })
 
-var compositeObjectiveRule = validation.New[CompositeObjective](
+var compositeObjectiveRule = validation.New(
 	validation.For(func(c CompositeObjective) string { return c.Project }).
 		WithName("project").
 		Required().
@@ -270,23 +270,23 @@ var compositeObjectiveRule = validation.New[CompositeObjective](
 	validation.For(func(c CompositeObjective) WhenDelayed { return c.WhenDelayed }).
 		WithName("whenDelayed").
 		Required().
-		Rules(validation.OneOf[WhenDelayed](
+		Rules(validation.OneOf(
 			WhenDelayedCountAsGood,
 			WhenDelayedCountAsBad,
 			WhenDelayedIgnore,
 		)),
 )
 
-var anomalyConfigValidation = validation.New[AnomalyConfig](
+var anomalyConfigValidation = validation.New(
 	validation.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
-		Include(validation.New[AnomalyConfigNoData](
+		Include(validation.New(
 			validation.ForSlice(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
 				Cascade(validation.CascadeModeStop).
 				Rules(validation.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
 				Rules(validation.SliceUnique(validation.SelfHashFunc[AnomalyConfigAlertMethod]())).
-				IncludeForEach(validation.New[AnomalyConfigAlertMethod](
+				IncludeForEach(validation.New(
 					validation.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
 						Required().
@@ -298,10 +298,10 @@ var anomalyConfigValidation = validation.New[AnomalyConfig](
 		)),
 )
 
-var indicatorValidation = validation.New[Indicator](
+var indicatorValidation = validation.New(
 	validation.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
 		WithName("metricSource").
-		Include(validation.New[MetricSourceSpec](
+		Include(validation.New(
 			validation.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
 				Required().
@@ -320,7 +320,7 @@ var indicatorValidation = validation.New[Indicator](
 		Include(metricSpecValidation),
 )
 
-var objectiveValidation = validation.New[Objective](
+var objectiveValidation = validation.New(
 	validation.For(validation.GetSelf[Objective]()).
 		Include(rawMetricObjectiveValidation),
 	validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
@@ -340,7 +340,7 @@ var objectiveValidation = validation.New[Objective](
 		Include(rawMetricsValidation),
 )
 
-var rawMetricObjectiveValidation = validation.New[Objective](
+var rawMetricObjectiveValidation = validation.New(
 	validation.ForPointer(func(o Objective) *float64 { return o.ObjectiveBase.Value }).
 		WithName("value").
 		Required(),
@@ -354,7 +354,7 @@ var rawMetricObjectiveValidation = validation.New[Objective](
 		validation.WhenDescription("rawMetric is defined"),
 	)
 
-var objectiveBaseValidation = validation.New[ObjectiveBase](
+var objectiveBaseValidation = validation.New(
 	validation.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
 		OmitEmpty().
@@ -372,7 +372,7 @@ func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 	return *p1 == *p2
 }
 
-var specValidationNonComposite = validation.New[Spec](
+var specValidationNonComposite = validation.New(
 	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Required().
@@ -382,7 +382,7 @@ var specValidationNonComposite = validation.New[Spec](
 	validation.WhenDescription("none of the objectives is of composite type"),
 )
 
-var specValidationComposite = validation.New[Spec](
+var specValidationComposite = validation.New(
 	validation.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Rules(
@@ -401,12 +401,12 @@ var specValidationComposite = validation.New[Spec](
 		WithName("objectives").
 		Rules(validation.SliceLength[[]Objective](1, 1).
 			WithMessage("this SLO contains a composite objective. No more objectives can be added to it")).
-		IncludeForEach(validation.New[Objective](
+		IncludeForEach(validation.New(
 			validation.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
 				Include(objectiveBaseValidation),
 			validation.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
-				Include(validation.New[CompositeSpec](
+				Include(validation.New(
 					validation.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
 						Required(),

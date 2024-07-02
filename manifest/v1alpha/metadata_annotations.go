@@ -28,7 +28,7 @@ var metadataAnnotationsExamples string
 var annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
 func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotations] {
-	return validation.New[MetadataAnnotations](
+	return validation.New(
 		validation.ForMap(validation.GetSelf[MetadataAnnotations]()).
 			RulesForKeys(
 				validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
@@ -39,7 +39,7 @@ func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotatio
 	)
 }
 
-var annotationValueValidator = validation.New[annotationValue](
+var annotationValueValidator = validation.New(
 	validation.For(validation.GetSelf[string]()).
 		Rules(
 			validation.StringMaxLength(maxAnnotationValueLength),
