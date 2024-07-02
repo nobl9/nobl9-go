@@ -14,6 +14,18 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
 	})
+	t.Run("unsupported goodTotal single query", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.BigQuery)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental:     ptr(false),
+			GoodTotalMetric: validMetricSpec(v1alpha.BigQuery),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal",
+			Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, validation.ErrorCodeOneOf),
+		})
+	})
 	t.Run("projectId must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.BigQuery)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.BigQuery.ProjectID = "1"
