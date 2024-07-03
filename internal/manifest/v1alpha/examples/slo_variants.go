@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
-	"strings"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -33,7 +32,7 @@ func (s sloExample) GetObject() any {
 }
 
 func (s sloExample) GetVariant() string {
-	return s.DataSourceType.String()
+	return toKebabCase(s.DataSourceType.String())
 }
 
 func (s sloExample) GetSubVariant() string {
@@ -77,11 +76,11 @@ func (s sloExample) Generate() v1alphaSLO.SLO {
 			Annotations: exampleMetadataAnnotations(),
 		},
 		v1alphaSLO.Spec{
-			Description: fmt.Sprintf("Example %s SLO", s.DataSourceType),
+			Description: fmt.Sprintf("Example %s SLO", dataSourceTypePrettyName(s.DataSourceType)),
 			Service:     "api-server",
 			Indicator: &v1alphaSLO.Indicator{
 				MetricSource: v1alphaSLO.MetricSourceSpec{
-					Name:    strings.ToLower(s.DataSourceType.String()),
+					Name:    toKebabCase(s.DataSourceType.String()),
 					Project: sdk.DefaultProject,
 					Kind:    manifest.KindDirect,
 				},

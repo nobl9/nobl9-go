@@ -2,7 +2,6 @@ package v1alphaExamples
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -24,7 +23,7 @@ func Direct() []Example {
 		}
 		example := directExample{
 			standardExample: standardExample{
-				Variant: typ.String(),
+				Variant: toKebabCase(typ.String()),
 			},
 			typ: typ,
 		}
@@ -35,14 +34,15 @@ func Direct() []Example {
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
+	titleName := dataSourceTypePrettyName(d.typ)
 	direct := v1alphaDirect.New(
 		v1alphaDirect.Metadata{
-			Name:        strings.ToLower(d.Variant),
-			DisplayName: d.Variant + " Direct",
+			Name:        d.Variant,
+			DisplayName: titleName + " Direct",
 			Project:     sdk.DefaultProject,
 		},
 		v1alphaDirect.Spec{
-			Description:    fmt.Sprintf("Example %s Direct", d.Variant),
+			Description:    fmt.Sprintf("Example %s Direct", titleName),
 			ReleaseChannel: v1alpha.ReleaseChannelStable,
 		},
 	)

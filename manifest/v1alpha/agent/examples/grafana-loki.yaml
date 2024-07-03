@@ -1,0 +1,15 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: grafana-loki
+  displayName: Grafana Loki Agent
+  project: default
+spec:
+  description: Example Grafana Loki Agent
+  releaseChannel: stable
+  grafanaLoki:
+    url: http://grafana-loki.loki:3100
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

@@ -2,7 +2,6 @@ package v1alphaExamples
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -21,7 +20,7 @@ func Agent() []Example {
 	for _, typ := range types {
 		example := agentExample{
 			standardExample: standardExample{
-				Variant: typ.String(),
+				Variant: toKebabCase(typ.String()),
 			},
 			typ: typ,
 		}
@@ -32,14 +31,15 @@ func Agent() []Example {
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
+	titleName := dataSourceTypePrettyName(a.typ)
 	agent := v1alphaAgent.New(
 		v1alphaAgent.Metadata{
-			Name:        strings.ToLower(a.Variant),
-			DisplayName: a.Variant + " Agent",
+			Name:        a.Variant,
+			DisplayName: titleName + " Agent",
 			Project:     sdk.DefaultProject,
 		},
 		v1alphaAgent.Spec{
-			Description:    fmt.Sprintf("Example %s Agent", a.Variant),
+			Description:    fmt.Sprintf("Example %s Agent", titleName),
 			ReleaseChannel: v1alpha.ReleaseChannelStable,
 		},
 	)

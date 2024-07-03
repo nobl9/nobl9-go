@@ -1,8 +1,6 @@
 package v1alphaExamples
 
 import (
-	"time"
-
 	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	"github.com/nobl9/nobl9-go/sdk"
 )
@@ -40,12 +38,4 @@ func Annotation() []Example {
 		},
 	}
 	return newExampleSlice(examples...)
-}
-
-func mustParseTime(s string) time.Time {
-	t, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		panic(err)
-	}
-	return t
 }
