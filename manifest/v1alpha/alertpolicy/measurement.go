@@ -17,6 +17,7 @@ const (
 	MeasurementAverageBurnRate
 	MeasurementTimeToBurnBudget
 	MeasurementTimeToBurnEntireBudget
+	MeasurementBudgetDrop
 )
 
 func getMeasurements() map[string]Measurement {
@@ -25,6 +26,7 @@ func getMeasurements() map[string]Measurement {
 		"averageBurnRate":        MeasurementAverageBurnRate,
 		"timeToBurnBudget":       MeasurementTimeToBurnBudget,
 		"timeToBurnEntireBudget": MeasurementTimeToBurnEntireBudget,
+		"budgetDrop":             MeasurementBudgetDrop,
 	}
 }
 
@@ -58,6 +60,8 @@ func GetDefaultOperatorForMeasurement(measurement Measurement) (v1alpha.Operator
 		return v1alpha.LessThan, nil
 	case MeasurementTimeToBurnEntireBudget:
 		return v1alpha.LessThanEqual, nil
+	case MeasurementBudgetDrop:
+		return v1alpha.GreaterThanEqual, nil
 	default:
 		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
 	}
@@ -66,7 +70,8 @@ func GetDefaultOperatorForMeasurement(measurement Measurement) (v1alpha.Operator
 // getExpectedOperatorForMeasurement returns the operator that should be paired with a given measurement.
 func getExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operator, error) {
 	switch measurement {
-	case MeasurementAverageBurnRate, MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget:
+	case MeasurementAverageBurnRate, MeasurementTimeToBurnBudget,
+		MeasurementTimeToBurnEntireBudget, MeasurementBudgetDrop:
 		return GetDefaultOperatorForMeasurement(measurement)
 	default:
 		return 0, errors.Errorf("unable to return expected operator for provided measurement: '%v'", measurement)
@@ -79,5 +84,6 @@ func measurementValidation() validation.SingleRule[string] {
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),
 		MeasurementTimeToBurnEntireBudget.String(),
+		MeasurementBudgetDrop.String(),
 	)
 }
