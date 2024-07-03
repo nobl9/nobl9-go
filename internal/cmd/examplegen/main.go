@@ -15,8 +15,6 @@ import (
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
-type examplesGeneratorFunc func() any
-
 type examplesGeneratorConfig struct {
 	Examples []v1alphaExamples.Example
 	Path     string
@@ -125,6 +123,7 @@ func writeExamples(v any, path string, comments yaml.CommentMap) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
 	}
+	// #nosec G304
 	file, err := os.Create(path)
 	if err != nil {
 		return err

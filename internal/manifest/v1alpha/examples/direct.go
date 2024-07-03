@@ -175,6 +175,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 	return direct
 }
 
+// #nosec G101
 const gcloudServiceAccountKey = `{
   "type": "service_account",
   "project_id": "prod-app",
