@@ -45,13 +45,13 @@
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
         total:
           redshift:
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
       primary: true
     service: api-server
     timeWindows:
@@ -118,13 +118,13 @@
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
         total:
           redshift:
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
       primary: true
     service: api-server
     timeWindows:
@@ -189,13 +189,13 @@
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
         total:
           redshift:
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
       primary: true
     service: api-server
     timeWindows:
@@ -263,13 +263,13 @@
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to
         total:
           redshift:
             region: eu-central-1
             clusterId: prod-cluster
             databaseName: db
-            query: SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
+            query: SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE timestamp BETWEEN :n9date_from AND :n9date_to
       primary: true
     service: api-server
     timeWindows:

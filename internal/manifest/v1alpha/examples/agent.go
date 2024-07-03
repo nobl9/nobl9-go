@@ -130,7 +130,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.LogicMonitor:
 		agent.Spec.LogicMonitor = &v1alphaAgent.LogicMonitorConfig{
-			Account: "myaccountname",
+			Account: "my-account-name",
 		}
 	case v1alpha.NewRelic:
 		agent.Spec.NewRelic = &v1alphaAgent.NewRelicConfig{

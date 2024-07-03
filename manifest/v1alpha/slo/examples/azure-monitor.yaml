@@ -51,7 +51,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) == 0 or toint(ResultCode) >= 400
+              | where ResultCode == 0 or ResultCode >= 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -138,7 +138,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) == 0 or toint(ResultCode) >= 400
+              | where ResultCode == 0 or ResultCode >= 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -223,7 +223,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) == 0 or toint(ResultCode) >= 400
+              | where ResultCode == 0 or ResultCode >= 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -311,7 +311,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) == 0 or toint(ResultCode) >= 400
+              | where ResultCode == 0 or ResultCode >= 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -687,7 +687,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) >= 200 and toint(ResultCode) < 400
+              | where ResultCode >= 200 and ResultCode < 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -774,7 +774,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) >= 200 and toint(ResultCode) < 400
+              | where ResultCode >= 200 and ResultCode < 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -859,7 +859,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) >= 200 and toint(ResultCode) < 400
+              | where ResultCode >= 200 and ResultCode < 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:
@@ -947,7 +947,7 @@
             kqlQuery: |-
               AppRequests
               | where AppRoleName == "my-app"
-              | where toint(ResultCode) >= 200 and toint(ResultCode) < 400
+              | where ResultCode >= 200 and ResultCode < 400
               | summarize n9_value = count() by bin(TimeGenerated, 15s)
               | project n9_time = TimeGenerated, n9_value
         total:

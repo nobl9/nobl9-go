@@ -354,7 +354,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: error_requests_count
               pluginId: zooKeeper
         total:
@@ -362,7 +362,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: total_requests_count
               pluginId: zooKeeper
       primary: true
@@ -432,7 +432,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: error_requests_count
               pluginId: zooKeeper
         total:
@@ -440,7 +440,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: total_requests_count
               pluginId: zooKeeper
       primary: true
@@ -508,7 +508,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: error_requests_count
               pluginId: zooKeeper
         total:
@@ -516,7 +516,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: total_requests_count
               pluginId: zooKeeper
       primary: true
@@ -587,7 +587,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: error_requests_count
               pluginId: zooKeeper
         total:
@@ -595,7 +595,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: total_requests_count
               pluginId: zooKeeper
       primary: true
@@ -665,7 +665,7 @@
               groupBy:
                 tag: application.name
                 tagEntity: DESTINATION
-              apiQuery: |-
+              apiQuery: |
                 {
                   "type": "EXPRESSION",
                   "logicalOperator": "AND",
@@ -682,7 +682,7 @@
                       "name": "kubernetes.container.name",
                       "operator": "EQUALS",
                       "entity": "DESTINATION",
-                      "value": "datanode"
+                      "value": "data-node"
                     },
                     {
                       "type": "TAG_FILTER",
@@ -771,7 +771,7 @@
               groupBy:
                 tag: application.name
                 tagEntity: DESTINATION
-              apiQuery: |-
+              apiQuery: |
                 {
                   "type": "EXPRESSION",
                   "logicalOperator": "AND",
@@ -788,7 +788,7 @@
                       "name": "kubernetes.container.name",
                       "operator": "EQUALS",
                       "entity": "DESTINATION",
-                      "value": "datanode"
+                      "value": "data-node"
                     },
                     {
                       "type": "TAG_FILTER",
@@ -875,7 +875,7 @@
               groupBy:
                 tag: application.name
                 tagEntity: DESTINATION
-              apiQuery: |-
+              apiQuery: |
                 {
                   "type": "EXPRESSION",
                   "logicalOperator": "AND",
@@ -892,7 +892,7 @@
                       "name": "kubernetes.container.name",
                       "operator": "EQUALS",
                       "entity": "DESTINATION",
-                      "value": "datanode"
+                      "value": "data-node"
                     },
                     {
                       "type": "TAG_FILTER",
@@ -982,7 +982,7 @@
               groupBy:
                 tag: application.name
                 tagEntity: DESTINATION
-              apiQuery: |-
+              apiQuery: |
                 {
                   "type": "EXPRESSION",
                   "logicalOperator": "AND",
@@ -999,7 +999,7 @@
                       "name": "kubernetes.container.name",
                       "operator": "EQUALS",
                       "entity": "DESTINATION",
-                      "value": "datanode"
+                      "value": "data-node"
                     },
                     {
                       "type": "TAG_FILTER",
@@ -1357,7 +1357,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: max_request_latency
               pluginId: zooKeeper
       op: lte
@@ -1427,7 +1427,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: max_request_latency
               pluginId: zooKeeper
       op: lte
@@ -1495,7 +1495,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: max_request_latency
               pluginId: zooKeeper
       op: lte
@@ -1566,7 +1566,7 @@
             metricType: infrastructure
             infrastructure:
               metricRetrievalMethod: snapshot
-              snapshotId: t_Vg_hcHRUQHMAbNYKkYuTd6-AQ
+              snapshotId: 00u2y4e4atkzaYkXP4x8
               metricId: max_request_latency
               pluginId: zooKeeper
       op: lte

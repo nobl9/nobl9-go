@@ -129,7 +129,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		}
 	case v1alpha.LogicMonitor:
 		direct.Spec.LogicMonitor = &v1alphaDirect.LogicMonitorConfig{
-			Account:   "myaccountname",
+			Account:   "my-account-name",
 			AccessID:  "9xA2BssShK21ld9LoOYu",
 			AccessKey: "[secret]",
 		}

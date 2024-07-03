@@ -8,7 +8,7 @@ spec:
   description: Example LogicMonitor Agent
   releaseChannel: stable
   logicMonitor:
-    account: myaccountname
+    account: my-account-name
   queryDelay:
     duration:
       value: 3

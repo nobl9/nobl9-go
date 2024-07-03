@@ -8,7 +8,7 @@ spec:
   description: Example LogicMonitor Direct
   releaseChannel: stable
   logicMonitor:
-    account: myaccountname
+    account: my-account-name
     accessId: 9xA2BssShK21ld9LoOYu
     accessKey: "[secret]"
   queryDelay:

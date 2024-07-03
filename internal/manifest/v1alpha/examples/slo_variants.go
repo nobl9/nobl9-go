@@ -626,12 +626,12 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				Region:       ptr("eu-central-1"),
 				ClusterID:    ptr("prod-cluster"),
 				DatabaseName: ptr("db"),
-				Query:        ptr(`SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to`),
+				Query:        ptr(`SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE value = '200' AND timestamp BETWEEN :n9date_from AND :n9date_to`),
 			}), newMetricSpec(v1alphaSLO.RedshiftMetric{
 				Region:       ptr("eu-central-1"),
 				ClusterID:    ptr("prod-cluster"),
 				DatabaseName: ptr("db"),
-				Query:        ptr(`SELECT value as n9value, timestamp as n9date FROM httpstatuscodes WHERE timestamp BETWEEN :n9date_from AND :n9date_to`),
+				Query:        ptr(`SELECT value as n9value, timestamp as n9date FROM http_status_codes WHERE timestamp BETWEEN :n9date_from AND :n9date_to`),
 			}))
 		}
 	case v1alpha.SumoLogic:
@@ -702,7 +702,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				MetricType: "infrastructure",
 				Infrastructure: &v1alphaSLO.InstanaInfrastructureMetricType{
 					MetricRetrievalMethod: "snapshot",
-					SnapshotID:            ptr("t_Vg_hcHRUQHMAbNYKkYuTd6-AQ"),
+					SnapshotID:            ptr("00u2y4e4atkzaYkXP4x8"),
 					MetricID:              "max_request_latency",
 					PluginID:              "zooKeeper",
 				},
@@ -743,7 +743,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				MetricType: "infrastructure",
 				Infrastructure: &v1alphaSLO.InstanaInfrastructureMetricType{
 					MetricRetrievalMethod: "snapshot",
-					SnapshotID:            ptr("t_Vg_hcHRUQHMAbNYKkYuTd6-AQ"),
+					SnapshotID:            ptr("00u2y4e4atkzaYkXP4x8"),
 					MetricID:              "error_requests_count",
 					PluginID:              "zooKeeper",
 				},
@@ -751,7 +751,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				MetricType: "infrastructure",
 				Infrastructure: &v1alphaSLO.InstanaInfrastructureMetricType{
 					MetricRetrievalMethod: "snapshot",
-					SnapshotID:            ptr("t_Vg_hcHRUQHMAbNYKkYuTd6-AQ"),
+					SnapshotID:            ptr("00u2y4e4atkzaYkXP4x8"),
 					MetricID:              "total_requests_count",
 					PluginID:              "zooKeeper",
 				},
@@ -869,7 +869,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				DataType: v1alphaSLO.AzureMonitorDataTypeLogs,
 				KQLQuery: `AppRequests
 | where AppRoleName == "my-app"
-| where toint(ResultCode) >= 200 and toint(ResultCode) < 400
+| where ResultCode >= 200 and ResultCode < 400
 | summarize n9_value = count() by bin(TimeGenerated, 15s)
 | project n9_time = TimeGenerated, n9_value`,
 				Workspace: &v1alphaSLO.AzureMonitorMetricLogAnalyticsWorkspace{
@@ -894,7 +894,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				DataType: v1alphaSLO.AzureMonitorDataTypeLogs,
 				KQLQuery: `AppRequests
 | where AppRoleName == "my-app"
-| where toint(ResultCode) == 0 or toint(ResultCode) >= 400
+| where ResultCode == 0 or ResultCode >= 400
 | summarize n9_value = count() by bin(TimeGenerated, 15s)
 | project n9_time = TimeGenerated, n9_value`,
 				Workspace: &v1alphaSLO.AzureMonitorMetricLogAnalyticsWorkspace{

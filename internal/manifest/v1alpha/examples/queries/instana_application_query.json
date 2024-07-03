@@ -14,7 +14,7 @@
       "name": "kubernetes.container.name",
       "operator": "EQUALS",
       "entity": "DESTINATION",
-      "value": "datanode"
+      "value": "data-node"
     },
     {
       "type": "TAG_FILTER",
