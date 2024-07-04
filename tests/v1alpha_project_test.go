@@ -18,34 +18,25 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	inputs := []v1alphaProject.Project{
-		v1alphaProject.New(
+		newV1alphaProject(t,
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
-				Annotations: commonAnnotations,
-			},
-			v1alphaProject.Spec{
-				Description: objectDescription,
+				DisplayName: "Project 1",
+				Labels:      v1alpha.Labels{"team": []string{"green"}},
 			},
 		),
-		v1alphaProject.New(
+		newV1alphaProject(t,
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
-				Annotations: commonAnnotations,
-			},
-			v1alphaProject.Spec{
-				Description: objectDescription,
+				DisplayName: "Project 2",
+				Labels:      v1alpha.Labels{"team": []string{"orange"}},
 			},
 		),
-		v1alphaProject.New(
+		newV1alphaProject(t,
 			v1alphaProject.Metadata{
 				Name:        generateName(),
-				Labels:      annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
-				Annotations: commonAnnotations,
-			},
-			v1alphaProject.Spec{
-				Description: objectDescription,
+				DisplayName: "Project 3",
+				Labels:      v1alpha.Labels{"team": []string{"orange"}},
 			},
 		),
 	}
@@ -91,12 +82,27 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))
 			}
-			assertSubset(t, actual, test.expected, assertProjectsAreEqual)
+			assertSubset(t, actual, test.expected, assertV1alphaProjectsAreEqual)
 		})
 	}
 }
 
-func assertProjectsAreEqual(t *testing.T, expected, actual v1alphaProject.Project) {
+func newV1alphaProject(
+	t *testing.T,
+	metadata v1alphaProject.Metadata,
+) v1alphaProject.Project {
+	t.Helper()
+	annotateLabels(t, metadata.Labels)
+	metadata.Annotations = commonAnnotations
+	return v1alphaProject.New(metadata, v1alphaProject.Spec{Description: objectDescription})
+}
+
+func generateV1alphaProject(t *testing.T) v1alphaProject.Project {
+	t.Helper()
+	return newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
+}
+
+func assertV1alphaProjectsAreEqual(t *testing.T, expected, actual v1alphaProject.Project) {
 	t.Helper()
 	assert.Regexp(t, timeRFC3339Regexp, actual.Spec.CreatedAt)
 	assert.Regexp(t, userIDRegexp, actual.Spec.CreatedBy)
