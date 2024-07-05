@@ -35,7 +35,7 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 			},
 		)
 		if i == 0 {
-			method.Metadata.Project = sdk.DefaultProject
+			method.Metadata.Project = defaultProject
 		}
 		allObjects = append(allObjects, method)
 	}
@@ -99,6 +99,7 @@ func newV1alphaAlertMethod(
 
 func assertV1alphaAlertMethodsAreEqual(t *testing.T, expected, actual v1alphaAlertMethod.AlertMethod) {
 	t.Helper()
+	expected = deepCopyObject(t, expected)
 	actual.Status = nil
 	typ, err := expected.Spec.GetType()
 	require.NoError(t, err)

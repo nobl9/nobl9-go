@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -93,4 +94,14 @@ func annotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	labels[uniqueTestIdentifierLabel.Key] = []string{uniqueTestIdentifierLabel.Value}
 	labels["sdk-test-name"] = []string{t.Name()}
 	return labels
+}
+
+// deepCopyObject creates a deep copy of the provided object using JSON encoding and decoding.
+func deepCopyObject[T any](t *testing.T, object T) T {
+	t.Helper()
+	data, err := json.Marshal(object)
+	require.NoError(t, err)
+	var copied T
+	require.NoError(t, json.Unmarshal(data, &copied))
+	return copied
 }

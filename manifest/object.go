@@ -42,8 +42,7 @@ type ProjectScopedObject interface {
 func FilterByKind[T Object](objects []Object) []T {
 	var filtered []T
 	for i := range objects {
-		v, ok := objects[i].(T)
-		if ok {
+		if v, ok := objects[i].(T); ok {
 			filtered = append(filtered, v)
 		}
 	}
