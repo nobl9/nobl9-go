@@ -1,3 +1,4 @@
+# gcs
 - apiVersion: n9/v1alpha
   kind: DataExport
   metadata:
@@ -9,6 +10,7 @@
     spec:
       bucketName: prod-data-export-bucket
   status: null
+# s3
 - apiVersion: n9/v1alpha
   kind: DataExport
   metadata:

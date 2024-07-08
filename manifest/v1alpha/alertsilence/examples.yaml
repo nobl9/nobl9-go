@@ -1,3 +1,32 @@
+# duration
+- apiVersion: n9/v1alpha
+  kind: AlertSilence
+  metadata:
+    name: incident-70
+    project: default
+  spec:
+    description: Alerts silenced for the duration of the active incident 70
+    slo: api-server-latency
+    alertPolicy:
+      name: fast-burn
+      project: default
+    period:
+      duration: 4h
+# end time
+- apiVersion: n9/v1alpha
+  kind: AlertSilence
+  metadata:
+    name: incident-71
+    project: default
+  spec:
+    description: Alerts silenced until incident 71 is resolved
+    slo: api-server-latency
+    alertPolicy:
+      name: fast-burn
+      project: default
+    period:
+      endTime: 2024-05-01T20:00:00Z
+# start and end time
 - apiVersion: n9/v1alpha
   kind: AlertSilence
   metadata:
@@ -12,6 +41,7 @@
     period:
       startTime: 2024-05-01T12:00:00Z
       endTime: 2024-05-01T14:00:00Z
+# start time and duration
 - apiVersion: n9/v1alpha
   kind: AlertSilence
   metadata:
@@ -26,29 +56,3 @@
     period:
       startTime: 2024-05-02T12:00:00Z
       duration: 2h
-- apiVersion: n9/v1alpha
-  kind: AlertSilence
-  metadata:
-    name: incident-70
-    project: default
-  spec:
-    description: Alerts silenced for the duration of the active incident 70
-    slo: api-server-latency
-    alertPolicy:
-      name: fast-burn
-      project: default
-    period:
-      duration: 4h
-- apiVersion: n9/v1alpha
-  kind: AlertSilence
-  metadata:
-    name: incident-71
-    project: default
-  spec:
-    description: Alerts silenced until incident 71 is resolved
-    slo: api-server-latency
-    alertPolicy:
-      name: fast-burn
-      project: default
-    period:
-      endTime: 2024-05-01T20:00:00Z

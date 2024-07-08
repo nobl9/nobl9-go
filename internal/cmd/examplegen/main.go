@@ -80,18 +80,17 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 			object.GetKind().ToLower(),
 		)
 		grouped := groupBy(examples, func(e v1alphaExamples.Example) string { return e.GetVariant() })
-		// If we don't have any variants, we can write all examples into examples.yaml file.
-		if len(grouped) == 1 {
-			configs = append(configs, examplesGeneratorConfig{
-				Examples: examples,
-				Path:     filepath.Join(basePath, "examples.yaml"),
-			})
-			continue
-		}
 		for variant, examples := range grouped {
+			var path string
+			if len(grouped) == 1 {
+				// If we don't have any variants, we can write all examples into examples.yaml file.
+				path = filepath.Join(basePath, "examples.yaml")
+			} else {
+				path = filepath.Join(basePath, "examples", strings.ReplaceAll(strings.ToLower(variant), " ", "-")+".yaml")
+			}
 			config := examplesGeneratorConfig{
 				Examples: examples,
-				Path:     filepath.Join(basePath, "examples", strings.ReplaceAll(strings.ToLower(variant), " ", "-")+".yaml"),
+				Path:     path,
 				Comments: make(yaml.CommentMap),
 			}
 			if len(examples) == 1 {

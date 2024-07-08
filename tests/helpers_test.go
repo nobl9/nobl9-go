@@ -105,3 +105,5 @@ func deepCopyObject[T any](t *testing.T, object T) T {
 	require.NoError(t, json.Unmarshal(data, &copied))
 	return copied
 }
+
+func ptr[T any](v T) *T { return &v }
