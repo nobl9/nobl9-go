@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/goccy/go-yaml"
+	"github.com/nobl9/go-yaml"
 
 	"github.com/nobl9/nobl9-go/internal/validation"
 )
