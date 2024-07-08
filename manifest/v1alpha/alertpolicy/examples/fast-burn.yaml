@@ -1,0 +1,37 @@
+apiVersion: n9/v1alpha
+kind: AlertPolicy
+metadata:
+  name: fast-burn
+  displayName: Fast burn (20x5min)
+  project: default
+  labels:
+    area:
+    - latency
+    - slow-check
+    env:
+    - prod
+    - dev
+    region:
+    - us
+    - eu
+    team:
+    - green
+    - sales
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: There’s been a significant spike in burn rate over a brief period
+  severity: High
+  coolDown: 5m
+  conditions:
+  - measurement: averageBurnRate
+    value: 20.0
+    alertingWindow: 5m
+    op: gte
+  alertMethods:
+  - metadata:
+      name: pagerduty
+      project: default

@@ -1,0 +1,16 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: splunk-observability
+  displayName: Splunk Observability Direct
+  project: default
+spec:
+  description: Example Splunk Observability Direct
+  releaseChannel: stable
+  splunkObservability:
+    realm: us1
+    accessToken: "[secret]"
+  queryDelay:
+    duration:
+      value: 6
+      unit: Minute

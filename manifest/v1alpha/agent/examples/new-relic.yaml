@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: new-relic
+  displayName: New Relic Agent
+  project: default
+spec:
+  description: Example New Relic Agent
+  releaseChannel: stable
+  newRelic:
+    accountId: 1234567
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

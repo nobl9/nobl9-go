@@ -1,0 +1,10 @@
+apiVersion: n9/v1alpha
+kind: AlertMethod
+metadata:
+  name: discord
+  displayName: Discord Alert Method
+  project: default
+spec:
+  description: Example Discord Alert Method
+  discord:
+    url: https://discord.com/api/webhooks/123/secret

@@ -1,0 +1,84 @@
+# above budget
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: fast-exhaustion-above-budget
+    displayName: Fast exhaustion above budget
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The error budget is exhausting significantly and there's still some budget remaining
+    severity: Medium
+    coolDown: 5m
+    conditions:
+    - measurement: timeToBurnBudget
+      value: 72h
+      alertingWindow: 10m
+      op: lt
+    - measurement: burnedBudget
+      value: 1.0
+      lastsFor: 0m
+      op: lt
+    alertMethods:
+    - metadata:
+        name: slack
+        project: default
+# below budget
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: fast-exhaustion-below-budget
+    displayName: Fast exhaustion below budget
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The error budget is exhausting significantly and there's no remaining budget left
+    severity: Medium
+    coolDown: 5m
+    conditions:
+    - measurement: timeToBurnEntireBudget
+      value: 72h
+      alertingWindow: 10m
+      op: lte
+    - measurement: burnedBudget
+      value: 1.0
+      lastsFor: 0m
+      op: gte
+    alertMethods:
+    - metadata:
+        name: slack
+        project: default

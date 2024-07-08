@@ -107,9 +107,9 @@ check/format:
 	$(call _print_check_step,Checking if files are formatted)
 	./scripts/check-formatting.sh
 
-.PHONY: generate generate/code generate/diagrams
+.PHONY: generate generate/code generate/examples generate/plantuml
 ## Auto generate files.
-generate: generate/code generate/plantuml
+generate: generate/code generate/examples generate/plantuml
 
 ## Generate Golang code.
 generate/code:
@@ -118,6 +118,11 @@ generate/code:
 	$(call _ensure_installed,binary,ifacemaker)
 	go generate ./... ./docs/mock_example
 	${MAKE} format/go
+
+## Generate examples from code.
+generate/examples:
+	echo "Generating examples..."
+	go run internal/cmd/examplegen/main.go
 
 PLANTUML_JAR_URL := https://sourceforge.net/projects/plantuml/files/plantuml.jar/download
 PLANTUML_JAR :=  $(BIN_DIR)/plantuml.jar

@@ -1,0 +1,21 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: google-cloud-monitoring
+  displayName: Google Cloud Monitoring Agent
+  project: default
+spec:
+  description: Example Google Cloud Monitoring Agent
+  releaseChannel: stable
+  gcm: {}
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

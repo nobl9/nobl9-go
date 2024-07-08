@@ -1,0 +1,7 @@
+[
+  {
+    "Id": "e2",
+    "Expression": "SELECT MAX(CPUUtilization) FROM SCHEMA(\"AWS/EC2\", InstanceId) WHERE InstanceId = 'i-0487518c3d40b12f9'",
+    "Period": 60
+  }
+]

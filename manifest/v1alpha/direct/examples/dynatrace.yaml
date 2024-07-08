@@ -1,0 +1,23 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: dynatrace
+  displayName: Dynatrace Direct
+  project: default
+spec:
+  description: Example Dynatrace Direct
+  releaseChannel: stable
+  dynatrace:
+    url: https://zvf10945.live.dynatrace.com/
+    dynatraceToken: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 28
+      unit: Day
+    defaultDuration:
+      value: 14
+      unit: Day
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

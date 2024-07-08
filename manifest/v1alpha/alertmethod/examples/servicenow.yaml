@@ -1,0 +1,12 @@
+apiVersion: n9/v1alpha
+kind: AlertMethod
+metadata:
+  name: servicenow
+  displayName: ServiceNow Alert Method
+  project: default
+spec:
+  description: Example ServiceNow Alert Method
+  servicenow:
+    username: user
+    password: super-strong-password
+    instanceName: vm123
