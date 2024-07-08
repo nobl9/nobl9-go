@@ -21,7 +21,6 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	ctx := context.Background()
 
 	project := generateV1alphaProject(t)
-	project.Metadata.DisplayName = "Project 1"
 	v1Apply(t, ctx, []manifest.Object{project})
 	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(ctx,
 		objectsV1.GetRoleBindingsRequest{Project: project.GetName()})
