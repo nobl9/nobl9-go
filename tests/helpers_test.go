@@ -106,4 +106,14 @@ func deepCopyObject[T any](t *testing.T, object T) T {
 	return copied
 }
 
+func filterSlice[T any](s []T, filter func(T) bool) []T {
+	result := make([]T, 0, len(s))
+	for i := range s {
+		if filter(s[i]) {
+			result = append(result, s[i])
+		}
+	}
+	return result
+}
+
 func ptr[T any](v T) *T { return &v }

@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,10 +19,24 @@ import (
 func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
+
 	project := generateV1alphaProject(t)
 	project.Metadata.DisplayName = "Project 1"
-	allObjects := []manifest.Object{
-		project,
+	v1Apply(t, ctx, []manifest.Object{project})
+	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(ctx,
+		objectsV1.GetRoleBindingsRequest{Project: project.GetName()})
+	require.NoError(t, err)
+	require.Len(t, implicitBindings, 1)
+	implicitProjectBinding := implicitBindings[0]
+
+	inputs := []v1alphaRoleBinding.RoleBinding{
+		v1alphaRoleBinding.New(
+			v1alphaRoleBinding.Metadata{Name: generateName()},
+			v1alphaRoleBinding.Spec{
+				User:    ptr(generateName()),
+				RoleRef: "organization-blank",
+			},
+		),
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: generateName()},
 			v1alphaRoleBinding.Spec{
@@ -32,35 +47,45 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: generateName()},
 			v1alphaRoleBinding.Spec{
-				User:       new(string),
-				GroupRef:   new(string),
-				RoleRef:    "",
-				ProjectRef: "",
+				User:       ptr(generateName()),
+				RoleRef:    "project-viewer",
+				ProjectRef: project.GetName(),
 			},
 		),
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: generateName()},
 			v1alphaRoleBinding.Spec{
-				User:       new(string),
-				GroupRef:   new(string),
-				RoleRef:    "",
-				ProjectRef: "",
+				GroupRef:   ptr(generateName()),
+				RoleRef:    "project-viewer",
+				ProjectRef: project.GetName(),
 			},
 		),
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: generateName()},
 			v1alphaRoleBinding.Spec{
-				User:       new(string),
-				GroupRef:   new(string),
-				RoleRef:    "",
-				ProjectRef: "",
+				User:       ptr(generateName()),
+				RoleRef:    "project-viewer",
+				ProjectRef: defaultProject,
+			},
+		),
+		v1alphaRoleBinding.New(
+			v1alphaRoleBinding.Metadata{Name: generateName()},
+			v1alphaRoleBinding.Spec{
+				GroupRef:   ptr(generateName()),
+				RoleRef:    "project-viewer",
+				ProjectRef: defaultProject,
 			},
 		),
 	}
 
-	v1Apply(t, ctx, allObjects)
-	t.Cleanup(func() { v1Delete(t, ctx, allObjects) })
-	inputs := manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](allObjects)
+	v1Apply(t, ctx, inputs)
+	t.Cleanup(func() {
+		// Organization role bindings cannot be deleted.
+		filterOrganizationBindings := func(r v1alphaRoleBinding.RoleBinding) bool {
+			return !strings.HasPrefix(r.Spec.RoleRef, "organization-")
+		}
+		v1Delete(t, ctx, filterSlice(inputs, filterOrganizationBindings))
+	})
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetRoleBindingsRequest
@@ -69,26 +94,26 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	}{
 		"all": {
 			request:    objectsV1.GetRoleBindingsRequest{Project: sdk.ProjectsWildcard},
-			expected:   manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](allObjects),
+			expected:   inputs,
 			returnsAll: true,
 		},
 		"default project": {
 			request:    objectsV1.GetRoleBindingsRequest{},
-			expected:   []v1alphaRoleBinding.RoleBinding{inputs[0]},
+			expected:   []v1alphaRoleBinding.RoleBinding{inputs[4], inputs[5]},
 			returnsAll: true,
 		},
 		"filter by project": {
 			request: objectsV1.GetRoleBindingsRequest{
 				Project: project.GetName(),
 			},
-			expected: []v1alphaRoleBinding.RoleBinding{inputs[1], inputs[2], inputs[3]},
+			expected: []v1alphaRoleBinding.RoleBinding{implicitProjectBinding, inputs[2], inputs[3]},
 		},
 		"filter by name": {
 			request: objectsV1.GetRoleBindingsRequest{
 				Project: project.GetName(),
-				Names:   []string{inputs[1].Metadata.Name},
+				Names:   []string{inputs[2].Metadata.Name},
 			},
-			expected: []v1alphaRoleBinding.RoleBinding{inputs[1]},
+			expected: []v1alphaRoleBinding.RoleBinding{inputs[2]},
 		},
 	}
 	for name, test := range filterTests {

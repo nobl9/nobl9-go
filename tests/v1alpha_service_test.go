@@ -70,7 +70,7 @@ func Test_Objects_V1_V1alpha_Service(t *testing.T) {
 	}{
 		"all": {
 			request:    objectsV1.GetServicesRequest{Project: sdk.ProjectsWildcard},
-			expected:   manifest.FilterByKind[v1alphaService.Service](allObjects),
+			expected:   inputs,
 			returnsAll: true,
 		},
 		"default project": {

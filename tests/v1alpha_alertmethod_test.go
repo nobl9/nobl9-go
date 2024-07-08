@@ -51,7 +51,7 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 	}{
 		"all": {
 			request:    objectsV1.GetAlertMethodsRequest{Project: sdk.ProjectsWildcard},
-			expected:   manifest.FilterByKind[v1alphaAlertMethod.AlertMethod](allObjects),
+			expected:   inputs,
 			returnsAll: true,
 		},
 		"default project": {
