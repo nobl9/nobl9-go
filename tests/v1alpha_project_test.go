@@ -92,7 +92,7 @@ func newV1alphaProject(
 	metadata v1alphaProject.Metadata,
 ) v1alphaProject.Project {
 	t.Helper()
-	annotateLabels(t, metadata.Labels)
+	metadata.Labels = annotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
 	return v1alphaProject.New(metadata, v1alphaProject.Spec{Description: objectDescription})
 }
