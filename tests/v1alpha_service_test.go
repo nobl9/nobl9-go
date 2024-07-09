@@ -125,7 +125,7 @@ func newV1alphaService(
 	metadata v1alphaService.Metadata,
 ) v1alphaService.Service {
 	t.Helper()
-	annotateLabels(t, metadata.Labels)
+	metadata.Labels = annotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
 	return v1alphaService.New(metadata, v1alphaService.Spec{Description: objectDescription})
 }
