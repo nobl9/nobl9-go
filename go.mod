@@ -6,8 +6,9 @@ require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/MicahParks/jwkset v0.5.18
 	github.com/MicahParks/keyfunc/v3 v3.3.3
-	github.com/aws/aws-sdk-go v1.54.15
+	github.com/aws/aws-sdk-go v1.54.16
 	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/goccy/go-yaml v1.11.3
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/go-yaml v1.0.1
