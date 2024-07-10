@@ -104,7 +104,6 @@ func generateV1alphaProject(t *testing.T) v1alphaProject.Project {
 
 func assertV1alphaProjectsAreEqual(t *testing.T, expected, actual v1alphaProject.Project) {
 	t.Helper()
-	expected = deepCopyObject(t, expected)
 	assert.Regexp(t, timeRFC3339Regexp, actual.Spec.CreatedAt)
 	assert.Regexp(t, userIDRegexp, actual.Spec.CreatedBy)
 	actual.Spec.CreatedAt = ""

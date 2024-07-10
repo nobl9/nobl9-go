@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -21,9 +22,23 @@ func TestMain(m *testing.M) {
 
 func TestObjectExamples(t *testing.T) {
 	moduleRoot := pathutils.FindModuleRoot()
-	objects, err := sdk.ReadObjects(context.Background(), filepath.Join(moduleRoot, "manifest/**/example*.yaml"))
+	objects, err := sdk.ReadObjects(context.Background(),
+		filepath.Join(moduleRoot, "manifest/**/example*.yaml"),
+		filepath.Join(moduleRoot, "manifest/**/examples/*.yaml"),
+	)
 	require.NoError(t, err)
-	assert.Greater(t, len(objects), 0, "no object examples found")
-	errs := manifest.Validate(objects)
-	assert.Empty(t, errs)
+	assert.NotEmpty(t, objects, "no object examples found")
+	for i := range objects {
+		err = objects[i].Validate()
+		require.NoError(t, err)
+		// Make sure YAML and JSON are interoperable.
+		yamlData, err := yaml.Marshal(objects[i])
+		require.NoError(t, err)
+		jsonData, err := yaml.YAMLToJSON(yamlData)
+		assert.NoError(t, err)
+		object, err := sdk.DecodeObject[manifest.Object](jsonData)
+		assert.NoError(t, err)
+		err = object.Validate()
+		require.NoError(t, err)
+	}
 }

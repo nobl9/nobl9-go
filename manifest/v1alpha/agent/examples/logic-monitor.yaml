@@ -6,10 +6,9 @@ metadata:
   project: default
 spec:
   description: Example LogicMonitor Agent
-  releaseChannel: stable
+  releaseChannel: beta
   logicMonitor:
     account: my-account-name
   queryDelay:
-    duration:
-      value: 3
-      unit: Minute
+    value: 3
+    unit: Minute

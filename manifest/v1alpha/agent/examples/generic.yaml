@@ -9,6 +9,5 @@ spec:
   releaseChannel: stable
   generic: {}
   queryDelay:
-    duration:
-      value: 1
-      unit: Second
+    value: 1
+    unit: Second

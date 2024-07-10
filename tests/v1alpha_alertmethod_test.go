@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
@@ -25,7 +26,7 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 	allObjects := make([]manifest.Object, 0, len(alertMethodTypes)+1)
 	allObjects = append(allObjects, project)
 
-	for i, typ := range v1alpha.AlertMethodTypeValues() {
+	for i, typ := range alertMethodTypes {
 		method := newV1alphaAlertMethod(t,
 			typ,
 			v1alphaAlertMethod.Metadata{
@@ -92,7 +93,14 @@ func newV1alphaAlertMethod(
 	metadata v1alphaAlertMethod.Metadata,
 ) v1alphaAlertMethod.AlertMethod {
 	t.Helper()
-	variant := getExample[v1alphaAlertMethod.AlertMethod](t, manifest.KindAlertMethod, typ.String(), "")
+	variant := getExample[v1alphaAlertMethod.AlertMethod](t,
+		manifest.KindAlertMethod,
+		func(example v1alphaExamples.Example) bool {
+			return example.(interface {
+				GetAlertMethodType() v1alpha.AlertMethodType
+			}).GetAlertMethodType() == typ
+		},
+	)
 	variant.Spec.Description = objectDescription
 	return v1alphaAlertMethod.New(metadata, variant.Spec)
 }

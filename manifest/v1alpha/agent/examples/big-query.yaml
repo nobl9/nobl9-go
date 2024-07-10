@@ -9,6 +9,5 @@ spec:
   releaseChannel: stable
   bigQuery: {}
   queryDelay:
-    duration:
-      value: 1
-      unit: Second
+    value: 1
+    unit: Second

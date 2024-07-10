@@ -10,6 +10,5 @@ spec:
   opentsdb:
     url: http://opentsdb.opentsdb:4242
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute

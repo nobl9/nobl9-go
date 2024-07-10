@@ -6,12 +6,11 @@ metadata:
   project: default
 spec:
   description: Example LogicMonitor Direct
-  releaseChannel: stable
+  releaseChannel: beta
   logicMonitor:
     account: my-account-name
     accessId: 9xA2BssShK21ld9LoOYu
     accessKey: "[secret]"
   queryDelay:
-    duration:
-      value: 3
-      unit: Minute
+    value: 3
+    unit: Minute

@@ -11,6 +11,5 @@ spec:
     realm: us1
     accessToken: "[secret]"
   queryDelay:
-    duration:
-      value: 6
-      unit: Minute
+    value: 6
+    unit: Minute
