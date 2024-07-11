@@ -11,7 +11,9 @@ type CountMetricsSpec struct {
 	Incremental *bool       `json:"incremental"`
 	GoodMetric  *MetricSpec `json:"good,omitempty"`
 	BadMetric   *MetricSpec `json:"bad,omitempty"`
-	TotalMetric *MetricSpec `json:"total"`
+	TotalMetric *MetricSpec `json:"total,omitempty"`
+	// Experimental: Splunk only, a single query returning both good and total counts.
+	GoodTotalMetric *MetricSpec `json:"goodTotal,omitempty"`
 }
 
 // RawMetricSpec represents integration with a metric source for a particular objective.
@@ -143,6 +145,9 @@ func (s *Spec) CountMetricsCount() int {
 			if objective.CountMetrics.BadMetric != nil {
 				count++
 			}
+			if objective.CountMetrics.GoodTotalMetric != nil {
+				count++
+			}
 		}
 	}
 	return count
@@ -166,6 +171,10 @@ func (s *Spec) CountMetrics() []*MetricSpec {
 		}
 		if objective.CountMetrics.BadMetric != nil {
 			countMetrics[i] = objective.CountMetrics.BadMetric
+			i++
+		}
+		if objective.CountMetrics.GoodTotalMetric != nil {
+			countMetrics[i] = objective.CountMetrics.GoodTotalMetric
 			i++
 		}
 	}
