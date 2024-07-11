@@ -1,0 +1,76 @@
+# fast
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: fast-budget-drop
+    displayName: Fast budget drop (10% over 15 min)
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The budget dropped by 10% over the last 15 minutes and is not recovering
+    severity: High
+    coolDown: 5m
+    conditions:
+    - measurement: budgetDrop
+      value: 0.1
+      alertingWindow: 15m
+      op: gte
+    alertMethods:
+    - metadata:
+        name: pagerduty
+        project: default
+# slow
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: slow-budget-drop
+    displayName: Slow budget drop (5% over 1h)
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The budget dropped by 5% over the last 1 hour and is not recovering
+    severity: Low
+    coolDown: 5m
+    conditions:
+    - measurement: budgetDrop
+      value: 0.05
+      alertingWindow: 1h
+      op: gte
+    alertMethods:
+    - metadata:
+        name: email
+        project: default

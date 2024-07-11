@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: datadog
+  displayName: Datadog Agent
+  project: default
+spec:
+  description: Example Datadog Agent
+  releaseChannel: stable
+  datadog:
+    site: com
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

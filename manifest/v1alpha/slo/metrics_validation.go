@@ -197,6 +197,7 @@ var metricSpecValidation = validation.New[MetricSpec](
 		Include(azurePrometheusValidation),
 )
 
+// When updating this list, make sure you also update the generated examples.
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.CloudWatch,
 	v1alpha.AppDynamics,

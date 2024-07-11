@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: graphite
+  displayName: Graphite Agent
+  project: default
+spec:
+  description: Example Graphite Agent
+  releaseChannel: stable
+  graphite:
+    url: http://graphite.graphite:8080/render
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

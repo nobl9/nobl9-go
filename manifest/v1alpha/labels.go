@@ -27,7 +27,7 @@ var labelsExamples string
 var labelKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
 func LabelsValidationRules() validation.Validator[Labels] {
-	return validation.New[Labels](
+	return validation.New(
 		validation.ForMap(validation.GetSelf[Labels]()).
 			RulesForKeys(
 				validation.StringLength(minLabelKeyLength, maxLabelKeyLength),
@@ -38,7 +38,7 @@ func LabelsValidationRules() validation.Validator[Labels] {
 	)
 }
 
-var labelValuesValidation = validation.New[[]labelValue](
+var labelValuesValidation = validation.New(
 	validation.ForSlice(validation.GetSelf[[]labelValue]()).
 		Rules(validation.SliceUnique(validation.SelfHashFunc[labelValue]())).
 		RulesForEach(

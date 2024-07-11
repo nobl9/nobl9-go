@@ -64,7 +64,7 @@ type HistoricalDataRetrieval struct {
 }
 
 func HistoricalDataRetrievalValidation() validation.Validator[HistoricalDataRetrieval] {
-	return validation.New[HistoricalDataRetrieval](
+	return validation.New(
 		validation.For(validation.GetSelf[HistoricalDataRetrieval]()).
 			Rules(defaultDataRetrievalDurationValidation),
 		validation.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
@@ -78,7 +78,7 @@ func HistoricalDataRetrievalValidation() validation.Validator[HistoricalDataRetr
 	)
 }
 
-var historicalRetrievalDurationValidation = validation.New[HistoricalRetrievalDuration](
+var historicalRetrievalDurationValidation = validation.New(
 	validation.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
 		WithName("value").
 		Required().
@@ -129,7 +129,7 @@ var maxQueryDelay = Duration{
 }
 
 func QueryDelayValidation() validation.Validator[QueryDelay] {
-	return validation.New[QueryDelay](
+	return validation.New(
 		validation.For(func(q QueryDelay) Duration { return q.Duration }).
 			Rules(validation.NewSingleRule(func(d Duration) error {
 				if d.Duration() > maxQueryDelay.Duration() {

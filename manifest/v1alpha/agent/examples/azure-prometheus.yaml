@@ -1,0 +1,23 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: azure-prometheus
+  displayName: Azure Prometheus Agent
+  project: default
+spec:
+  description: Example Azure Prometheus Agent
+  releaseChannel: stable
+  azurePrometheus:
+    url: https://defaultazuremonitorworkspace-westus2-szxw.westus2.prometheus.monitor.azure.com
+    tenantId: 41372654-f4b6-4bd1-a3fe-75629c024df1
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 1
+      unit: Second
