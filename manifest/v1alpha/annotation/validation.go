@@ -13,7 +13,7 @@ func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, p, manifest.KindAnnotation)
 }
 
-var validator = validation.New[Annotation](
+var validator = validation.New(
 	validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
 	validation.For(func(p Annotation) Metadata { return p.Metadata }).
@@ -23,7 +23,7 @@ var validator = validation.New[Annotation](
 		Include(specValidation),
 )
 
-var metadataValidation = validation.New[Metadata](
+var metadataValidation = validation.New(
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validation.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
@@ -31,7 +31,7 @@ var metadataValidation = validation.New[Metadata](
 		Rules(validation.StringIsDNSSubdomain()),
 )
 
-var specValidation = validation.New[Spec](
+var specValidation = validation.New(
 	validation.For(func(s Spec) string { return s.Slo }).
 		WithName("slo").
 		Required().
@@ -58,7 +58,6 @@ var endTimeNotBeforeStartTime = validation.NewSingleRule(func(s Spec) error {
 			Code:    errorCodeEndTimeNotBeforeStartTime,
 		}
 	}
-
 	return nil
 })
 
@@ -71,6 +70,5 @@ var categoryUserDefined = validation.NewSingleRule(func(s Spec) error {
 			Code:    errorCodeCategoryUserDefined,
 		}
 	}
-
 	return nil
 })

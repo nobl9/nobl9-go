@@ -1,0 +1,21 @@
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: good-objective-data-gap
+    project: default
+  spec:
+    slo: api-server-latency
+    objectiveName: good
+    description: Data gap occurred
+    startTime: 2024-05-01T12:00:00Z
+    endTime: 2024-05-04T10:00:00Z
+- apiVersion: n9/v1alpha
+  kind: Annotation
+  metadata:
+    name: deployment-2021-01-01
+    project: default
+  spec:
+    slo: api-server-latency
+    description: Deployment was performed here
+    startTime: 2024-05-16T14:00:00+01:00
+    endTime: 2024-05-16T15:00:00+01:00

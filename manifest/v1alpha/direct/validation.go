@@ -15,7 +15,7 @@ func validate(d Direct) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, d, manifest.KindDirect)
 }
 
-var validator = validation.New[Direct](
+var validator = validation.New(
 	validationV1Alpha.FieldRuleAPIVersion(func(d Direct) manifest.Version { return d.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(d Direct) manifest.Kind { return d.Kind }, manifest.KindDirect),
 	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
@@ -27,7 +27,7 @@ var validator = validation.New[Direct](
 		Include(specValidation),
 )
 
-var specValidation = validation.New[Spec](
+var specValidation = validation.New(
 	validation.For(validation.GetSelf[Spec]()).
 		Cascade(validation.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
@@ -107,13 +107,13 @@ var specValidation = validation.New[Spec](
 )
 
 var (
-	datadogValidation = validation.New[DatadogConfig](
+	datadogValidation = validation.New(
 		validation.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
 			Rules(v1alpha.DataDogSiteValidationRule()),
 	)
-	newRelicValidation = validation.New[NewRelicConfig](
+	newRelicValidation = validation.New(
 		validation.For(func(n NewRelicConfig) int { return n.AccountID }).
 			WithName("accountId").
 			Required().
@@ -127,7 +127,7 @@ var (
 			).
 			Rules(validation.StringStartsWith("NRIQ-")),
 	)
-	appDynamicsValidation = validation.New[AppDynamicsConfig](
+	appDynamicsValidation = validation.New(
 		urlPropertyRules(func(a AppDynamicsConfig) string { return a.URL }),
 		validation.For(func(a AppDynamicsConfig) string { return a.ClientName }).
 			WithName("clientName").
@@ -136,13 +136,13 @@ var (
 			WithName("accountName").
 			Required(),
 	)
-	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
+	splunkObservabilityValidation = validation.New(
 		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
 			WithName("realm").
 			Required(),
 	)
 	thousandEyesValidation = validation.New[ThousandEyesConfig]()
-	bigQueryValidation     = validation.New[BigQueryConfig](
+	bigQueryValidation     = validation.New(
 		validation.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
@@ -152,26 +152,26 @@ var (
 			).
 			Rules(validation.StringJSON()),
 	)
-	splunkValidation = validation.New[SplunkConfig](
+	splunkValidation = validation.New(
 		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
 	)
 	cloudWatchValidation = validation.New[CloudWatchConfig]()
 	pingdomValidation    = validation.New[PingdomConfig]()
-	redshiftValidation   = validation.New[RedshiftConfig](
+	redshiftValidation   = validation.New(
 		validation.For(func(r RedshiftConfig) string { return r.SecretARN }).
 			WithName("secretARN").
 			Required(),
 	)
-	sumoLogicValidation = validation.New[SumoLogicConfig](
+	sumoLogicValidation = validation.New(
 		urlPropertyRules(func(s SumoLogicConfig) string { return s.URL }),
 	)
-	instanaValidation = validation.New[InstanaConfig](
+	instanaValidation = validation.New(
 		urlPropertyRules(func(i InstanaConfig) string { return i.URL }),
 	)
-	influxDBValidation = validation.New[InfluxDBConfig](
+	influxDBValidation = validation.New(
 		urlPropertyRules(func(i InfluxDBConfig) string { return i.URL }),
 	)
-	gcmValidation = validation.New[GCMConfig](
+	gcmValidation = validation.New(
 		validation.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
@@ -181,7 +181,7 @@ var (
 			).
 			Rules(validation.StringJSON()),
 	)
-	lightstepValidation = validation.New[LightstepConfig](
+	lightstepValidation = validation.New(
 		validation.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").
 			Required(),
@@ -193,17 +193,17 @@ var (
 			OmitEmpty().
 			Rules(validation.URL()),
 	)
-	dynatraceValidation = validation.New[DynatraceConfig](
+	dynatraceValidation = validation.New(
 		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
 	)
-	azureMonitorValidation = validation.New[AzureMonitorConfig](
+	azureMonitorValidation = validation.New(
 		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
 			WithName("tenantId").
 			Required().
 			Rules(validation.StringUUID()),
 	)
 	honeycombValidation    = validation.New[HoneycombConfig]()
-	logicMonitorValidation = validation.New[LogicMonitorConfig](
+	logicMonitorValidation = validation.New(
 		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
 			WithName("account").
 			Required().

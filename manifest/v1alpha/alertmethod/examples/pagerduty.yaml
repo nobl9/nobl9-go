@@ -1,0 +1,12 @@
+apiVersion: n9/v1alpha
+kind: AlertMethod
+metadata:
+  name: pagerduty
+  displayName: PagerDuty Alert Method
+  project: default
+spec:
+  description: Example PagerDuty Alert Method
+  pagerduty:
+    integrationKey: "123456789"
+    sendResolution:
+      message: Alert is now resolved

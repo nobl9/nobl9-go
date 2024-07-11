@@ -1,0 +1,25 @@
+# gcs
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: gcs-export
+    displayName: Data export to Google Cloud Storage bucket
+    project: default
+  spec:
+    exportType: GCS
+    spec:
+      bucketName: prod-data-export-bucket
+  status: null
+# s3
+- apiVersion: n9/v1alpha
+  kind: DataExport
+  metadata:
+    name: s3-export
+    displayName: Data export to AWS S3 bucket
+    project: default
+  spec:
+    exportType: S3
+    spec:
+      bucketName: data-export-bucket
+      roleArn: arn:aws:iam::123456578901:role/nobl9-access
+  status: null

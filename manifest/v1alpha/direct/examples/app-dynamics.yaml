@@ -1,0 +1,26 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: app-dynamics
+  displayName: AppDynamics Direct
+  project: default
+spec:
+  description: Example AppDynamics Direct
+  releaseChannel: stable
+  appDynamics:
+    url: https://my-org.saas.appdynamics.com
+    clientID: ""
+    clientName: prod-direct
+    accountName: my-account
+    clientSecret: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 2
+      unit: Minute

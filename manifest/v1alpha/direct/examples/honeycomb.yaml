@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: honeycomb
+  displayName: Honeycomb Direct
+  project: default
+spec:
+  description: Example Honeycomb Direct
+  releaseChannel: stable
+  honeycomb:
+    apiKey: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 7
+      unit: Day
+    defaultDuration:
+      value: 3
+      unit: Day
+  queryDelay:
+    duration:
+      value: 6
+      unit: Minute

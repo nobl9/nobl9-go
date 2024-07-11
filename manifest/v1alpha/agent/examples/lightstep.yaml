@@ -1,0 +1,24 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: lightstep
+  displayName: Lightstep Agent
+  project: default
+spec:
+  description: Example Lightstep Agent
+  releaseChannel: stable
+  lightstep:
+    organization: MyOrg
+    project: prod-app
+    url: https://api.lightstep.com
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    duration:
+      value: 3
+      unit: Minute

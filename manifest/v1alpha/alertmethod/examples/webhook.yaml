@@ -1,0 +1,65 @@
+# Webhook Alert Method with template
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: webhook
+    displayName: Webhook Alert Method
+    project: default
+  spec:
+    description: Example Webhook Alert Method
+    webhook:
+      url: https://123.execute-api.eu-central-1.amazonaws.com/default/putReq2S3
+      template: |-
+        {
+          "message": "Your SLO $slo_name needs attention!",
+          "timestamp": "$timestamp",
+          "severity": "$severity",
+          "slo": "$slo_name",
+          "project": "$project_name",
+          "organization": "$organization",
+          "alert_policy": "$alert_policy_name",
+          "alerting_conditions": $alert_policy_conditions[],
+          "service": "$service_name",
+          "labels": {
+            "slo": "$slo_labels_text",
+            "service": "$service_labels_text",
+            "alert_policy": "$alert_policy_labels_text"
+          }
+        }
+      headers:
+      - name: Authorization
+        value: very-secret
+        isSecret: true
+      - name: X-User-Data
+        value: "{\"data\":\"is here\"}"
+        isSecret: false
+# Webhook Alert Method with templateFields
+- apiVersion: n9/v1alpha
+  kind: AlertMethod
+  metadata:
+    name: webhook
+    displayName: Webhook Alert Method
+    project: default
+  spec:
+    description: Example Webhook Alert Method
+    webhook:
+      url: https://123.execute-api.eu-central-1.amazonaws.com/default/putReq2S3
+      templateFields:
+      - project_name
+      - service_name
+      - organization
+      - alert_policy_name
+      - alert_policy_description
+      - alert_policy_conditions[]
+      - alert_policy_conditions_text
+      - severity
+      - slo_name
+      - objective_name
+      - timestamp
+      headers:
+      - name: Authorization
+        value: very-secret
+        isSecret: true
+      - name: X-User-Data
+        value: "{\"data\":\"is here\"}"
+        isSecret: false

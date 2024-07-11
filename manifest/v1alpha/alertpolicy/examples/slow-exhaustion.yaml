@@ -1,0 +1,92 @@
+# long window
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: slow-exhaustion-long-window
+    displayName: Slow exhaustion for long window SLOs
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The error budget is exhausting slowly and not recovering
+    severity: Low
+    coolDown: 5m
+    conditions:
+    - measurement: timeToBurnBudget
+      value: 480h
+      alertingWindow: 48h
+      op: lt
+    - measurement: timeToBurnBudget
+      value: 480h
+      alertingWindow: 15m
+      op: lt
+    - measurement: burnedBudget
+      value: 1.0
+      lastsFor: 0m
+      op: lt
+    alertMethods:
+    - metadata:
+        name: email
+        project: default
+# short window
+- apiVersion: n9/v1alpha
+  kind: AlertPolicy
+  metadata:
+    name: slow-exhaustion-short-window
+    displayName: Slow exhaustion for short window SLOs
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: The error budget is exhausting slowly and not recovering
+    severity: Low
+    coolDown: 5m
+    conditions:
+    - measurement: timeToBurnBudget
+      value: 120h
+      alertingWindow: 12h
+      op: lt
+    - measurement: timeToBurnBudget
+      value: 120h
+      alertingWindow: 15m
+      op: lt
+    - measurement: burnedBudget
+      value: 1.0
+      lastsFor: 0m
+      op: lt
+    alertMethods:
+    - metadata:
+        name: email
+        project: default

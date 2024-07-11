@@ -1,0 +1,34 @@
+# organization binding
+- apiVersion: n9/v1alpha
+  kind: RoleBinding
+  metadata:
+    name: organization-binding-john-admin
+  spec:
+    user: 00u2y4e4atkzaYkXP4x8
+    roleRef: organization-admin
+# organization group binding
+- apiVersion: n9/v1alpha
+  kind: RoleBinding
+  metadata:
+    name: group-binding-admin
+  spec:
+    groupRef: group-Q72HorLyjjCc
+    roleRef: organization-admin
+# project binding
+- apiVersion: n9/v1alpha
+  kind: RoleBinding
+  metadata:
+    name: default-project-binding
+  spec:
+    user: 00u2y4e4atkzaYkXP4x8
+    roleRef: project-viewer
+    projectRef: default
+# project group binding
+- apiVersion: n9/v1alpha
+  kind: RoleBinding
+  metadata:
+    name: default-group-project-binding
+  spec:
+    groupRef: group-Q72HorLyjjCc
+    roleRef: project-viewer
+    projectRef: default
