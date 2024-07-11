@@ -9,6 +9,5 @@ spec:
   releaseChannel: stable
   redshift: {}
   queryDelay:
-    duration:
-      value: 31
-      unit: Second
+    value: 31
+    unit: Second

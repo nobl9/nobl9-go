@@ -18,6 +18,5 @@ spec:
       value: 14
       unit: Day
   queryDelay:
-    duration:
-      value: 3
-      unit: Minute
+    value: 3
+    unit: Minute

@@ -10,6 +10,5 @@ spec:
   grafanaLoki:
     url: http://grafana-loki.loki:3100
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute

@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Honeycomb Direct
-  releaseChannel: stable
+  releaseChannel: beta
   honeycomb:
     apiKey: "[secret]"
   historicalDataRetrieval:
@@ -17,6 +17,5 @@ spec:
       value: 3
       unit: Day
   queryDelay:
-    duration:
-      value: 6
-      unit: Minute
+    value: 6
+    unit: Minute
