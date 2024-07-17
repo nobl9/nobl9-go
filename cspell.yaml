@@ -68,8 +68,10 @@ words:
   - dynatrace
   - endef
   - enduml
+  - errgroup
   - examplegen
   - fatalf
+  - generify
   - gobin
   - gofile
   - goimports
