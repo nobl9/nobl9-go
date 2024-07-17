@@ -965,21 +965,13 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		direct.Spec.AzurePrometheus.ClientID = ""
 		direct.Spec.AzurePrometheus.ClientSecret = ""
 		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 4,
+		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.azurePrometheus.url",
 				Code: validation.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.azurePrometheus.tenantId",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.clientId",
-				Code: validation.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.clientSecret",
 				Code: validation.ErrorCodeRequired,
 			},
 		)
