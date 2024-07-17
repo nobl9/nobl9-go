@@ -105,6 +105,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			ServiceAccountKey: gcloudServiceAccountKey,
 		}
 	case v1alpha.CloudWatch:
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.CloudWatch = &v1alphaDirect.CloudWatchConfig{
 			RoleARN: "arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app",
 		}

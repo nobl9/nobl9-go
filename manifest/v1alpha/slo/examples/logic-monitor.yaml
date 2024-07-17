@@ -31,7 +31,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -104,7 +104,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -174,7 +174,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -248,7 +248,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -319,7 +319,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -392,7 +392,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -462,7 +462,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -536,7 +536,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -607,7 +607,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -674,7 +674,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -738,7 +738,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -806,7 +806,7 @@
       metricSource:
         name: logic-monitor
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)

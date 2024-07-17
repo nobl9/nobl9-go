@@ -21,7 +21,7 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	ctx := context.Background()
 
 	project := generateV1alphaProject(t)
-	v1Apply(t, ctx, []manifest.Object{project})
+	v1Apply(t, []manifest.Object{project})
 	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(ctx,
 		objectsV1.GetRoleBindingsRequest{Project: project.GetName()})
 	require.NoError(t, err)
@@ -77,13 +77,13 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 		),
 	}
 
-	v1Apply(t, ctx, inputs)
+	v1Apply(t, inputs)
 	t.Cleanup(func() {
 		// Organization role bindings cannot be deleted.
 		filterOrganizationBindings := func(r v1alphaRoleBinding.RoleBinding) bool {
 			return !strings.HasPrefix(r.Spec.RoleRef, "organization-")
 		}
-		v1Delete(t, ctx, filterSlice(inputs, filterOrganizationBindings))
+		v1Delete(t, filterSlice(inputs, filterOrganizationBindings))
 	})
 
 	filterTests := map[string]struct {

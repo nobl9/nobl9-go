@@ -31,7 +31,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -98,7 +98,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -162,7 +162,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -230,7 +230,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -295,7 +295,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -359,7 +359,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -420,7 +420,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -485,7 +485,7 @@
       metricSource:
         name: open-t-s-d-b
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)

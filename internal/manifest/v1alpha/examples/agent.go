@@ -41,6 +41,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
 	v1alpha.GCM,
+	// In order to use AWS cross-account o11y.
+	v1alpha.CloudWatch,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {

@@ -31,7 +31,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -194,7 +194,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -354,7 +354,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -518,7 +518,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -679,7 +679,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -793,7 +793,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -904,7 +904,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -1019,7 +1019,7 @@
       metricSource:
         name: elasticsearch
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)

@@ -116,11 +116,31 @@ var validationInferredProperties = []struct {
 
 func readObjectExamples(root string, typ reflect.Type) []string {
 	relPath := strings.TrimPrefix(typ.PkgPath(), moduleRootPath)
-	objectPath := filepath.Join(root, relPath, "example.yaml")
+	examplesPath := filepath.Join(root, relPath, "examples.yaml")
 	// #nosec G304
-	data, err := os.ReadFile(objectPath)
-	if err != nil {
-		log.Panicf("failed to read examples for object, path: %s, err: %v", objectPath, err)
+	data, err := os.ReadFile(examplesPath)
+	if err == nil {
+		return []string{string(data)}
 	}
-	return []string{string(data)}
+	if !os.IsNotExist(err) {
+		log.Panicf("failed to read examples for object, path: %s, err: %v", examplesPath, err)
+	}
+	examplesDirPath := filepath.Join(filepath.Dir(examplesPath), "examples")
+	dir, err := os.ReadDir(examplesDirPath)
+	if err != nil {
+		log.Panicf("failed to read examples for object, path: %s, err: %v", examplesDirPath, err)
+	}
+	examples := make([]string, 0, len(dir))
+	for _, entry := range dir {
+		if entry.IsDir() {
+			continue
+		}
+		path := filepath.Join(examplesDirPath, entry.Name())
+		data, err = os.ReadFile(path)
+		if err != nil {
+			log.Panicf("failed to read examples for object, path: %s, err: %v", path, err)
+		}
+		examples = append(examples, string(data))
+	}
+	return examples
 }
