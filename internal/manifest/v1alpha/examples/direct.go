@@ -2,6 +2,7 @@ package v1alphaExamples
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -12,6 +13,10 @@ import (
 type directExample struct {
 	standardExample
 	typ v1alpha.DataSourceType
+}
+
+func (d directExample) GetDataSourceType() v1alpha.DataSourceType {
+	return d.typ
 }
 
 func Direct() []Example {
@@ -31,6 +36,13 @@ func Direct() []Example {
 		examples = append(examples, example)
 	}
 	return examples
+}
+
+var betaChannelDirects = []v1alpha.DataSourceType{
+	v1alpha.AzureMonitor,
+	v1alpha.Honeycomb,
+	v1alpha.LogicMonitor,
+	v1alpha.GoogleCloudMonitoring,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -64,6 +76,11 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
+	if slices.Contains(betaChannelDirects, typ) {
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+	} else {
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+	}
 	return direct
 }
 
@@ -77,6 +94,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			ClientSecret: "[secret]",
 		}
 	case v1alpha.AzureMonitor:
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.AzureMonitor = &v1alphaDirect.AzureMonitorConfig{
 			TenantID:     "5cdecca3-c2c5-4072-89dd-5555faf05202",
 			ClientID:     "70747025-9367-41a5-98f1-59b18b5793c3",
@@ -106,6 +124,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			ServiceAccountKey: gcloudServiceAccountKey,
 		}
 	case v1alpha.Honeycomb:
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.Honeycomb = &v1alphaDirect.HoneycombConfig{
 			APIKey: "[secret]",
 		}
@@ -144,10 +163,8 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		}
 	case v1alpha.Redshift:
 		direct.Spec.Redshift = &v1alphaDirect.RedshiftConfig{
-			AccessKeyID:     "AKIA4NPYKXO34R341XUX",
-			SecretAccessKey: "[secret]",
-			SecretARN:       "arn:aws:secretsmanager:eu-central-1:123456578901:secret:prod-redshift-db-user",
-			RoleARN:         "arn:aws:iam::123456578901:role/awsCrossAccountProdRedshift-prod-app",
+			SecretARN: "arn:aws:secretsmanager:eu-central-1:123456578901:secret:prod-redshift-db-user",
+			RoleARN:   "arn:aws:iam::123456578901:role/awsCrossAccountProdRedshift-prod-app",
 		}
 	case v1alpha.Splunk:
 		direct.Spec.Splunk = &v1alphaDirect.SplunkConfig{

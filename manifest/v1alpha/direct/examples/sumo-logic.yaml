@@ -12,6 +12,5 @@ spec:
     accessKey: "[secret]"
     url: https://service.sumologic.com
   queryDelay:
-    duration:
-      value: 5
-      unit: Minute
+    value: 5
+    unit: Minute

@@ -10,6 +10,5 @@ spec:
   pingdom:
     apiToken: "[secret]"
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute

@@ -2,6 +2,7 @@ package v1alphaExamples
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -12,6 +13,10 @@ import (
 type agentExample struct {
 	standardExample
 	typ v1alpha.DataSourceType
+}
+
+func (a agentExample) GetDataSourceType() v1alpha.DataSourceType {
+	return a.typ
 }
 
 func Agent() []Example {
@@ -30,6 +35,14 @@ func Agent() []Example {
 	return examples
 }
 
+var betaChannelAgents = []v1alpha.DataSourceType{
+	v1alpha.AzureMonitor,
+	v1alpha.Honeycomb,
+	v1alpha.LogicMonitor,
+	v1alpha.AzurePrometheus,
+	v1alpha.GCM,
+}
+
 func (a agentExample) Generate() v1alphaAgent.Agent {
 	titleName := dataSourceTypePrettyName(a.typ)
 	agent := v1alphaAgent.New(
@@ -39,8 +52,7 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Project:     sdk.DefaultProject,
 		},
 		v1alphaAgent.Spec{
-			Description:    fmt.Sprintf("Example %s Agent", titleName),
-			ReleaseChannel: v1alpha.ReleaseChannelStable,
+			Description: fmt.Sprintf("Example %s Agent", titleName),
 		},
 	)
 	agent = a.generateVariant(agent)
@@ -60,6 +72,11 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Value: ptr(*defaultQueryDelay.Value + 1),
 			Unit:  defaultQueryDelay.Unit,
 		},
+	}
+	if slices.Contains(betaChannelAgents, typ) {
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+	} else {
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	}
 	return agent
 }

@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Azure Prometheus Agent
-  releaseChannel: stable
+  releaseChannel: beta
   azurePrometheus:
     url: https://defaultazuremonitorworkspace-westus2-szxw.westus2.prometheus.monitor.azure.com
     tenantId: 41372654-f4b6-4bd1-a3fe-75629c024df1
@@ -18,6 +18,5 @@ spec:
       value: 15
       unit: Day
   queryDelay:
-    duration:
-      value: 1
-      unit: Second
+    value: 1
+    unit: Second

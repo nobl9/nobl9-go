@@ -139,7 +139,12 @@ func newV1alphaAlertPolicy(
 	t.Helper()
 	metadata.Labels = annotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	ap := getExample[v1alphaAlertPolicy.AlertPolicy](t, manifest.KindAlertPolicy, variant, subVariant)
+	ap := getExample[v1alphaAlertPolicy.AlertPolicy](t,
+		manifest.KindAlertPolicy,
+		func(example v1alphaExamples.Example) bool {
+			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
+		},
+	)
 	ap.Spec.Description = objectDescription
 	return v1alphaAlertPolicy.New(metadata, ap.Spec)
 }

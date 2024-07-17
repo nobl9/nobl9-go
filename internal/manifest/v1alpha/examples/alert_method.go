@@ -36,7 +36,11 @@ var customAlertMethodsSubVariants = map[v1alpha.AlertMethodType][]alertMethodSpe
 
 type alertMethodExample struct {
 	standardExample
-	methodType v1alpha.AlertMethodType
+	typ v1alpha.AlertMethodType
+}
+
+func (a alertMethodExample) GetAlertMethodType() v1alpha.AlertMethodType {
+	return a.typ
 }
 
 func (a alertMethodExample) GetYAMLComments() []string {
@@ -54,7 +58,7 @@ func AlertMethod() []Example {
 			standardExample: standardExample{
 				Variant: typ.String(),
 			},
-			methodType: typ,
+			typ: typ,
 		})
 	}
 	for typ, subVariants := range customAlertMethodsSubVariants {
@@ -64,7 +68,7 @@ func AlertMethod() []Example {
 					Variant:    typ.String(),
 					SubVariant: subVariant,
 				},
-				methodType: typ,
+				typ: typ,
 			})
 		}
 	}
@@ -89,7 +93,7 @@ func (a alertMethodExample) Generate() v1alphaAlertMethod.AlertMethod {
 }
 
 func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v1alphaAlertMethod.AlertMethod {
-	switch a.methodType {
+	switch a.typ {
 	case v1alpha.AlertMethodTypeEmail:
 		am.Spec.Email = &v1alphaAlertMethod.EmailAlertMethod{
 			To:      []string{"alerts-tests@nobl9.com"},

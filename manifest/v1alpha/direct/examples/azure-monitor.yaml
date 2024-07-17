@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Azure Monitor Direct
-  releaseChannel: stable
+  releaseChannel: beta
   azureMonitor:
     tenantId: 5cdecca3-c2c5-4072-89dd-5555faf05202
     clientId: 70747025-9367-41a5-98f1-59b18b5793c3
@@ -19,6 +19,5 @@ spec:
       value: 15
       unit: Day
   queryDelay:
-    duration:
-      value: 6
-      unit: Minute
+    value: 6
+    unit: Minute

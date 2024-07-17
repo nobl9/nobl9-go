@@ -12,6 +12,5 @@ spec:
     apiToken: "[secret]"
     organizationID: my-org
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute

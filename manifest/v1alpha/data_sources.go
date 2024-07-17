@@ -107,20 +107,20 @@ var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
 	})
 
 type Interval struct {
-	Duration
+	Duration `yaml:",inline"`
 }
 
 type Jitter struct {
-	Duration
+	Duration `yaml:",inline"`
 }
 
 type Timeout struct {
-	Duration
+	Duration `yaml:",inline"`
 }
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
-	Duration
+	Duration            `yaml:",inline"`
 }
 
 var maxQueryDelay = Duration{

@@ -137,7 +137,6 @@ func generateV1alphaService(t *testing.T) v1alphaService.Service {
 
 func assertV1alphaServicesAreEqual(t *testing.T, expected, actual v1alphaService.Service) {
 	t.Helper()
-	expected = deepCopyObject(t, expected)
 	assert.NotNil(t, actual.Status)
 	actual.Status = nil
 	assert.Equal(t, expected, actual)

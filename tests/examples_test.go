@@ -51,7 +51,9 @@ var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
 	return wrapped
 }()
 
-func getExample[T any](t *testing.T, kind manifest.Kind, variant, subVariant string) *T {
+type examplesFilter = func(example v1alphaExamples.Example) bool
+
+func getExample[T any](t *testing.T, kind manifest.Kind, filter examplesFilter) *T {
 	t.Helper()
 	examples, ok := examplesRegistry[kind]
 	if !ok {
@@ -64,13 +66,14 @@ func getExample[T any](t *testing.T, kind manifest.Kind, variant, subVariant str
 		}
 		return &object
 	}
-	if variant == "" && subVariant == "" {
+	if filter == nil {
 		return decode(examples[0].rawObject)
 	}
 	for _, example := range examples {
-		if example.GetVariant() == variant && (subVariant == "" || example.GetSubVariant() == subVariant) {
+		if filter(example.Example) {
 			return decode(example.rawObject)
 		}
 	}
+	t.Fatalf("example not found for kind %s", kind)
 	return nil
 }

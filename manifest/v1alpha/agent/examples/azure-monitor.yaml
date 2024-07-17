@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Azure Monitor Agent
-  releaseChannel: stable
+  releaseChannel: beta
   azureMonitor:
     tenantId: 5cdecca3-c2c5-4072-89dd-5555faf05202
   historicalDataRetrieval:
@@ -17,6 +17,5 @@ spec:
       value: 15
       unit: Day
   queryDelay:
-    duration:
-      value: 6
-      unit: Minute
+    value: 6
+    unit: Minute

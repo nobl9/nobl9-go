@@ -10,6 +10,5 @@ spec:
   influxdb:
     url: https://us-west-2-2.aws.cloud2.influxdata.com
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute

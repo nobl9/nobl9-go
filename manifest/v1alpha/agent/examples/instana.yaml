@@ -10,6 +10,5 @@ spec:
   instana:
     url: https://orange-my-org12.instana.io
   queryDelay:
-    duration:
-      value: 2
-      unit: Minute
+    value: 2
+    unit: Minute
