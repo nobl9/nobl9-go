@@ -223,14 +223,6 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(validation.StringUUID()),
-		validation.For(func(l AzurePrometheusConfig) string { return l.ClientID }).
-			WithName("clientId").
-			Required().
-			Rules(validation.StringNotEmpty()),
-		validation.For(func(l AzurePrometheusConfig) string { return l.ClientSecret }).
-			WithName("clientSecret").
-			Required().
-			Rules(validation.StringNotEmpty()),
 	)
 )
 
