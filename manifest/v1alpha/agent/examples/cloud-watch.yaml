@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example CloudWatch Agent
-  releaseChannel: stable
+  releaseChannel: beta
   cloudWatch: {}
   historicalDataRetrieval:
     maxDuration:

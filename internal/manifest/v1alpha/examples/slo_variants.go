@@ -51,6 +51,10 @@ func (s sloExample) GetYAMLComments() []string {
 	return comments
 }
 
+func (s sloExample) GetDataSourceType() v1alpha.DataSourceType {
+	return s.DataSourceType
+}
+
 func (s sloExample) String() string {
 	subVariantStr := s.MetricSubVariant
 	if subVariantStr != "" {
@@ -82,7 +86,7 @@ func (s sloExample) Generate() v1alphaSLO.SLO {
 				MetricSource: v1alphaSLO.MetricSourceSpec{
 					Name:    toKebabCase(s.DataSourceType.String()),
 					Project: sdk.DefaultProject,
-					Kind:    manifest.KindDirect,
+					Kind:    manifest.KindAgent,
 				},
 			},
 			BudgetingMethod: s.BudgetingMethod.String(),
@@ -502,7 +506,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				},
 			}))
 		case metricVariantBadRatio + metricSubVariantCloudWatchStandard:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
 				AccountID:  ptr("123456789012"),
 				Region:     ptr("us-west-2"),
 				Namespace:  ptr("AWS/ApplicationELB"),
@@ -542,7 +546,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 			// TODO this needs to be better adjusted.
 		case metricVariantBadRatio + metricSubVariantCloudWatchSQLQuery:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
 				Region: ptr("us-west-2"),
 				SQL:    ptr(`SELECT AVG(CPUUtilization) FROM "AWS/EC2"`),
 			}), newMetricSpec(v1alphaSLO.CloudWatchMetric{
@@ -564,7 +568,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 			// TODO this needs to be better adjusted.
 		case metricVariantBadRatio + metricSubVariantCloudWatchJSON:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
 				Region: ptr("us-west-2"),
 				JSON:   ptr(mustLoadQuery("cloudwatch_count_bad.json")),
 			}), newMetricSpec(v1alphaSLO.CloudWatchMetric{
@@ -944,7 +948,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				Attribute:   "counterTotal",
 			}))
 		case metricVariantBadRatio:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
 				Calculation: "SUM",
 				Attribute:   "counterBad",
 			}), newMetricSpec(v1alphaSLO.HoneycombMetric{
@@ -974,7 +978,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		case metricVariantBadRatio:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
 				QueryType:                  "device_metrics",
 				DeviceDataSourceInstanceID: 933147615,
 				GraphID:                    11437,
@@ -1001,7 +1005,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				PromQL: `sum(api_server_requests_total{})`,
 			}))
 		case metricVariantBadRatio:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
 				PromQL: `sum(api_server_requests_total{code="5xx"})`,
 			}), newMetricSpec(v1alphaSLO.AzurePrometheusMetric{
 				PromQL: `sum(api_server_requests_total{})`,

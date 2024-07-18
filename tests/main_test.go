@@ -11,7 +11,11 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
@@ -25,19 +29,39 @@ func TestMain(m *testing.M) {
 
 func runTestMain(m *testing.M) int {
 	var err error
-	if client, err = sdk.DefaultClient(); err != nil {
+	config, err := sdk.ReadConfig()
+	if err != nil {
+		printError("failed to read %T: %v", config, err)
+		return 1
+	}
+	config.Project = defaultProject
+	config.Timeout = 1 * time.Minute
+	if client, err = sdk.NewClient(config); err != nil {
 		printError("failed to create %T: %v", client, err)
 		return 1
 	}
-	client.Config.Project = defaultProject
 	org, err := client.GetOrganization(context.Background())
 	if err != nil {
 		printError("failed to get test organization: %v", err)
 		return 1
 	}
+	if err = client.Objects().V1().Apply(context.Background(), []manifest.Object{v1alphaProject.New(
+		v1alphaProject.Metadata{
+			Name:        defaultProject,
+			Labels:      v1alpha.Labels{"origin": []string{"sdk-e2e-test"}},
+			Annotations: commonAnnotations,
+		},
+		v1alphaProject.Spec{
+			Description: objectPersistedDescription,
+		},
+	)}); err != nil {
+		printError("failed to create '%s' Project: %v", defaultProject, err)
+		return 1
+	}
 	fmt.Printf("Running SDK end-to-end tests\nOrganization: %s\nAuth Server: %s\nClient ID: %s\n\n",
 		org, client.Config.OktaOrgURL.JoinPath(client.Config.OktaAuthServer), client.Config.ClientID)
 	defer cleanupLabels()
+
 	return m.Run()
 }
 

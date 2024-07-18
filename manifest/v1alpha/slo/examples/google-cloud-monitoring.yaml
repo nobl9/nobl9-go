@@ -31,7 +31,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -117,7 +117,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -200,7 +200,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -287,7 +287,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -371,7 +371,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -443,7 +443,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Occurrences
     objectives:
     - displayName: Good response (200)
@@ -512,7 +512,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)
@@ -585,7 +585,7 @@
       metricSource:
         name: google-cloud-monitoring
         project: default
-        kind: Direct
+        kind: Agent
     budgetingMethod: Timeslices
     objectives:
     - displayName: Good response (200)

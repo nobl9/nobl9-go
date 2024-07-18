@@ -116,7 +116,7 @@ generate/code:
 	echo "Generating Go code..."
 	$(call _ensure_installed,binary,go-enum)
 	$(call _ensure_installed,binary,ifacemaker)
-	go generate ./... ./docs/mock_example
+	go generate -tags=e2e_test ./... ./docs/mock_example
 	${MAKE} format/go
 
 ## Generate examples from code.

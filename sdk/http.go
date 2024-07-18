@@ -39,7 +39,7 @@ func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.C
 	rc.CheckRetry = httpCheckRetry
 	rc.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, c int) {
 		if c > 0 {
-			fmt.Fprintf(os.Stderr, "%s %s request failed. Retrying.", req.Method, req.URL.Path)
+			fmt.Fprintf(os.Stderr, "%s %s request failed. Retrying.\n", req.Method, req.URL.Path)
 		}
 	}
 	return rc.StandardClient()

@@ -43,8 +43,8 @@ func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 		allObjects = append(allObjects, direct)
 	}
 
-	v1Apply(t, ctx, allObjects)
-	t.Cleanup(func() { v1Delete(t, ctx, allObjects) })
+	v1Apply(t, allObjects)
+	t.Cleanup(func() { v1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaDirect.Direct](allObjects)
 
 	filterTests := map[string]struct {

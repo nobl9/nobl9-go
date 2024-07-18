@@ -59,8 +59,8 @@ func Test_Objects_V1_V1alpha_Service(t *testing.T) {
 		),
 	}
 
-	v1Apply(t, ctx, allObjects)
-	t.Cleanup(func() { v1Delete(t, ctx, allObjects) })
+	v1Apply(t, allObjects)
+	t.Cleanup(func() { v1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaService.Service](allObjects)
 
 	filterTests := map[string]struct {
@@ -128,11 +128,6 @@ func newV1alphaService(
 	metadata.Labels = annotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
 	return v1alphaService.New(metadata, v1alphaService.Spec{Description: objectDescription})
-}
-
-func generateV1alphaService(t *testing.T) v1alphaService.Service {
-	t.Helper()
-	return newV1alphaService(t, v1alphaService.Metadata{Name: generateName()})
 }
 
 func assertV1alphaServicesAreEqual(t *testing.T, expected, actual v1alphaService.Service) {

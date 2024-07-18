@@ -5,6 +5,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,8 +24,7 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	agentTypes := v1alpha.DataSourceTypeValues()
-	allObjects := make([]manifest.Object, 0, len(agentTypes)+1)
-	allObjects = append(allObjects, project)
+	agents := make([]v1alphaAgent.Agent, 0, len(agentTypes))
 
 	for i, typ := range agentTypes {
 		agent := newV1alphaAgent(t,
@@ -38,22 +38,17 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 		if i == 0 {
 			agent.Metadata.Project = defaultProject
 		}
-		allObjects = append(allObjects, agent)
+		agents = append(agents, agent)
 	}
 
-	v1Apply(t, ctx, allObjects[:2])
-	// Since we can only apply a single Agent per request, we need to split the applies.
-	for _, obj := range allObjects[2:] {
-		v1Apply(t, ctx, []manifest.Object{obj})
-	}
+	// Register cleanup first as we're not applying in a batch.
 	t.Cleanup(func() {
-		// Since we can only apply a single Agent per request, we need to split the applies.
-		for _, obj := range allObjects[2:] {
-			v1Delete(t, ctx, []manifest.Object{obj})
-		}
-		v1Delete(t, ctx, allObjects[:2])
+		slices.Reverse(agents)
+		v1DeleteBatch(t, agents, 1, 5)
+		v1Delete(t, []manifest.Object{project})
 	})
-	inputs := manifest.FilterByKind[v1alphaAgent.Agent](allObjects)
+	v1Apply(t, []manifest.Object{project})
+	v1ApplyBatch(t, agents, 1, 5)
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetAgentsRequest
@@ -62,26 +57,26 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	}{
 		"all": {
 			request:    objectsV1.GetAgentsRequest{Project: sdk.ProjectsWildcard},
-			expected:   inputs,
+			expected:   agents,
 			returnsAll: true,
 		},
 		"default project": {
 			request:    objectsV1.GetAgentsRequest{},
-			expected:   []v1alphaAgent.Agent{inputs[0]},
+			expected:   []v1alphaAgent.Agent{agents[0]},
 			returnsAll: true,
 		},
 		"filter by project": {
 			request: objectsV1.GetAgentsRequest{
 				Project: project.GetName(),
 			},
-			expected: inputs[1:],
+			expected: agents[1:],
 		},
 		"filter by name": {
 			request: objectsV1.GetAgentsRequest{
 				Project: project.GetName(),
-				Names:   []string{inputs[3].Metadata.Name},
+				Names:   []string{agents[3].Metadata.Name},
 			},
-			expected: []v1alphaAgent.Agent{inputs[3]},
+			expected: []v1alphaAgent.Agent{agents[3]},
 		},
 	}
 	for name, test := range filterTests {
