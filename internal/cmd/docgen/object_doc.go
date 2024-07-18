@@ -136,6 +136,7 @@ func readObjectExamples(root string, typ reflect.Type) []string {
 			continue
 		}
 		path := filepath.Join(examplesDirPath, entry.Name())
+		// #nosec G304
 		data, err = os.ReadFile(path)
 		if err != nil {
 			log.Panicf("failed to read examples for object, path: %s, err: %v", path, err)
