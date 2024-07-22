@@ -1,0 +1,23 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: datadog
+  displayName: Datadog Direct
+  project: default
+spec:
+  description: Example Datadog Direct
+  releaseChannel: stable
+  datadog:
+    site: com
+    apiKey: "[secret]"
+    applicationKey: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 2
+    unit: Minute

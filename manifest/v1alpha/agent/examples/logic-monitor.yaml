@@ -1,0 +1,14 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: logic-monitor
+  displayName: LogicMonitor Agent
+  project: default
+spec:
+  description: Example LogicMonitor Agent
+  releaseChannel: beta
+  logicMonitor:
+    account: my-account-name
+  queryDelay:
+    value: 3
+    unit: Minute

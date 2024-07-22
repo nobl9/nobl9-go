@@ -1,0 +1,21 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: splunk
+  displayName: Splunk Agent
+  project: default
+spec:
+  description: Example Splunk Agent
+  releaseChannel: stable
+  splunk:
+    url: https://splunk.my-org.com/services
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 6
+    unit: Minute

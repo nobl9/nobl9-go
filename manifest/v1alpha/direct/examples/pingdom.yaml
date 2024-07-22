@@ -1,0 +1,14 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: pingdom
+  displayName: Pingdom Direct
+  project: default
+spec:
+  description: Example Pingdom Direct
+  releaseChannel: stable
+  pingdom:
+    apiToken: "[secret]"
+  queryDelay:
+    value: 2
+    unit: Minute

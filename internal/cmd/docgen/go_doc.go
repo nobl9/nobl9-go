@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/exp/maps"
 
-	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/pathutils"
 )
 
 const moduleRootPath = "github.com/nobl9/nobl9-go"
@@ -32,7 +32,7 @@ func (t goTypeDoc) PkgPath() string {
 }
 
 func parseGoDocs() map[string]goTypeDoc {
-	root := testutils.FindModuleRoot()
+	root := pathutils.FindModuleRoot()
 	objectsDirectory := filepath.Join(root, "manifest")
 	directories, err := listDirectories(objectsDirectory)
 	if err != nil {

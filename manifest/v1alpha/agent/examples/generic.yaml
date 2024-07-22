@@ -1,0 +1,13 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: generic
+  displayName: Generic Agent
+  project: default
+spec:
+  description: Example Generic Agent
+  releaseChannel: stable
+  generic: {}
+  queryDelay:
+    value: 1
+    unit: Second

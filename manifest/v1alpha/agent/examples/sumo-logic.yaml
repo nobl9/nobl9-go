@@ -1,0 +1,14 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: sumo-logic
+  displayName: Sumo Logic Agent
+  project: default
+spec:
+  description: Example Sumo Logic Agent
+  releaseChannel: stable
+  sumoLogic:
+    url: https://service.sumologic.com
+  queryDelay:
+    value: 5
+    unit: Minute

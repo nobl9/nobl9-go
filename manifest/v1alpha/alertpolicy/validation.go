@@ -73,9 +73,11 @@ var conditionValidation = validation.New[AlertCondition](
 				"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
 			}),
 			measurementWithAlertingWindowValidation,
+			measurementWithLastsForValidation,
+			measurementWithRequiredAlertingWindowValidation,
 		).
-		Include(timeToBurnBudgetValueValidation).
-		Include(burnedAndAverageBudgetValueValidation),
+		Include(timeDurationBasedMeasurementsValueValidation).
+		Include(floatBasedMeasurementsValueValidation),
 	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow },
 		func(alertingWindow string) (time.Duration, error) {
 			value, err := time.ParseDuration(alertingWindow)
@@ -114,9 +116,10 @@ var alertMethodRefValidation = validation.New[AlertMethodRef](
 
 const (
 	errorCodeMeasurementWithAlertingWindow = "measurement_regarding_alerting_window"
+	errorCodeMeasurementWithLastsFor       = "measurement_regarding_lasts_for"
 )
 
-var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
+var timeDurationBasedMeasurementsValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
 		WithName("value").
 		Required().
@@ -131,7 +134,7 @@ var timeToBurnBudgetValueValidation = validation.New[AlertCondition](
 			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
 	)
 
-var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
+var floatBasedMeasurementsValueValidation = validation.New[AlertCondition](
 	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
 		OmitEmpty(),
@@ -139,10 +142,11 @@ var burnedAndAverageBudgetValueValidation = validation.New[AlertCondition](
 	When(
 		func(c AlertCondition) bool {
 			return c.Measurement == MeasurementBurnedBudget.String() ||
-				c.Measurement == MeasurementAverageBurnRate.String()
+				c.Measurement == MeasurementAverageBurnRate.String() ||
+				c.Measurement == MeasurementBudgetDrop.String()
 		},
-		validation.WhenDescription("measurement is is either '%s' or '%s'",
-			MeasurementBurnedBudget, MeasurementAverageBurnRate),
+		validation.WhenDescription("measurement is is either '%s', '%s' or '%s'",
+			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBudgetDrop),
 	)
 
 var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
@@ -163,6 +167,60 @@ var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c Al
 					strings.Join(alertingWindowSupportedMeasurements(), ","),
 				),
 				errorCodeMeasurementWithAlertingWindow,
+			),
+		)
+	}
+	return nil
+})
+
+var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	isLastsForSupported := false
+	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isLastsForSupported = true
+			break
+		}
+	}
+	if c.LastsForDuration != "" && !isLastsForSupported {
+		return validation.NewPropertyError(
+			"measurement",
+			c.Measurement,
+			validation.NewRuleError(
+				fmt.Sprintf(
+					`must be equal to one of '%s' when 'lastsFor' is defined`,
+					strings.Join(lastsForSupportedMeasurements(), ","),
+				),
+				errorCodeMeasurementWithLastsFor,
+			),
+		)
+	}
+	return nil
+})
+
+var measurementWithRequiredAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
+	isLastsForSupported := false
+	isAlertingWindowSupported := false
+	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isLastsForSupported = true
+			break
+		}
+	}
+	for _, allowedMeasurement := range alertingWindowSupportedMeasurements() {
+		if allowedMeasurement == c.Measurement {
+			isAlertingWindowSupported = true
+			break
+		}
+	}
+	if c.AlertingWindow == "" && isAlertingWindowSupported && !isLastsForSupported {
+		return validation.NewPropertyError(
+			"measurement",
+			c.Measurement,
+			validation.NewRuleError(
+				fmt.Sprintf(
+					`alerting window is required for measurement '%s'`, c.Measurement,
+				),
+				validation.ErrorCodeRequired,
 			),
 		)
 	}
@@ -230,11 +288,21 @@ var operatorValidationRule = validation.NewSingleRule(
 	},
 )
 
+func lastsForSupportedMeasurements() []string {
+	return []string{
+		MeasurementAverageBurnRate.String(),
+		MeasurementTimeToBurnBudget.String(),
+		MeasurementTimeToBurnEntireBudget.String(),
+		MeasurementBurnedBudget.String(),
+	}
+}
+
 func alertingWindowSupportedMeasurements() []string {
 	return []string{
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),
 		MeasurementTimeToBurnEntireBudget.String(),
+		MeasurementBudgetDrop.String(),
 	}
 }
 

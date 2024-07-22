@@ -1,0 +1,13 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: big-query
+  displayName: BigQuery Agent
+  project: default
+spec:
+  description: Example BigQuery Agent
+  releaseChannel: stable
+  bigQuery: {}
+  queryDelay:
+    value: 1
+    unit: Second

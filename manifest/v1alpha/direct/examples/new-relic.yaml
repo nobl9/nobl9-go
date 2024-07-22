@@ -1,0 +1,22 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: new-relic
+  displayName: New Relic Direct
+  project: default
+spec:
+  description: Example New Relic Direct
+  releaseChannel: stable
+  newRelic:
+    accountId: 1234567
+    insightsQueryKey: NRIQ-2f66237213814496669180ba
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 2
+    unit: Minute

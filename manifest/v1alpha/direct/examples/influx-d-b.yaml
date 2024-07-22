@@ -1,0 +1,16 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: influx-d-b
+  displayName: InfluxDB Direct
+  project: default
+spec:
+  description: Example InfluxDB Direct
+  releaseChannel: stable
+  influxdb:
+    url: https://us-west-2-2.aws.cloud2.influxdata.com
+    apiToken: "[secret]"
+    organizationID: my-org
+  queryDelay:
+    value: 2
+    unit: Minute

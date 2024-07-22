@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	errCodeExactlyOneMetricType       = "exactly_one_metric_type"
-	errCodeBadOverTotalDisabled       = "bad_over_total_disabled"
-	errCodeExactlyOneMetricSpecType   = "exactly_one_metric_spec_type"
-	errCodeEitherBadOrGoodCountMetric = "either_bad_or_good_count_metric"
-	errCodeTimeSliceTarget            = "time_slice_target"
+	errCodeExactlyOneMetricType             = "exactly_one_metric_type"
+	errCodeBadOverTotalDisabled             = "bad_over_total_disabled"
+	errCodeSingleQueryGoodOverTotalDisabled = "single_query_good_over_total_disabled"
+	errCodeExactlyOneMetricSpecType         = "exactly_one_metric_spec_type"
+	errCodeEitherBadOrGoodCountMetric       = "either_bad_or_good_count_metric"
+	errCodeTimeSliceTarget                  = "time_slice_target"
 )
 
 var specMetricsValidation = validation.New[Spec](
@@ -61,13 +62,13 @@ var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 			sumoLogicCountMetricsLevelValidation,
 			instanaCountMetricsLevelValidation,
 			redshiftCountMetricsLevelValidation,
-			bigQueryCountMetricsLevelValidation),
+			bigQueryCountMetricsLevelValidation,
+			splunkCountMetricsLevelValidation),
 	validation.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
 	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
-		Required().
 		Include(
 			metricSpecValidation,
 			countMetricsValidation,
@@ -84,6 +85,12 @@ var countMetricsSpecValidation = validation.New[CountMetricsSpec](
 		Include(
 			countMetricsValidation,
 			metricSpecValidation),
+	validation.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodTotalMetric }).
+		WithName("goodTotal").
+		Rules(oneOfSingleQueryGoodOverTotalValidationRule).
+		Include(
+			countMetricsValidation,
+			singleQueryMetricSpecValidation),
 )
 
 var rawMetricsValidation = validation.New[RawMetricSpec](
@@ -104,6 +111,12 @@ var countMetricsValidation = validation.New[MetricSpec](
 			pingdomCountMetricsValidation,
 			thousandEyesCountMetricsValidation,
 			instanaCountMetricsValidation),
+)
+
+var singleQueryMetricSpecValidation = validation.New[MetricSpec](
+	validation.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
+		WithName("splunk").
+		Include(splunkSingleQueryValidation),
 )
 
 var metricSpecValidation = validation.New[MetricSpec](
@@ -184,6 +197,7 @@ var metricSpecValidation = validation.New[MetricSpec](
 		Include(azurePrometheusValidation),
 )
 
+// When updating this list, make sure you also update the generated examples.
 var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.CloudWatch,
 	v1alpha.AppDynamics,
@@ -198,6 +212,17 @@ var badOverTotalEnabledSources = []v1alpha.DataSourceType{
 var oneOfBadOverTotalValidationRule = validation.NewSingleRule(func(v MetricSpec) error {
 	return validation.OneOf(badOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeBadOverTotalDisabled)
+
+var singleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{
+	v1alpha.Splunk,
+}
+
+// Support for single query good/total metrics is experimental.
+// Splunk is the only datasource integration to have this feature
+// - extend the list while adding support for next integrations.
+var oneOfSingleQueryGoodOverTotalValidationRule = validation.NewSingleRule(func(v MetricSpec) error {
+	return validation.OneOf(singleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
+}).WithErrorCode(errCodeSingleQueryGoodOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = validation.NewSingleRule(func(v Spec) error {
 	if v.Indicator == nil {
@@ -400,6 +425,12 @@ var timeSliceTargetsValidationRule = validation.NewSingleRule[Spec](func(s Spec)
 // the count metrics is of the given type.
 func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
 	return func(c CountMetricsSpec) bool {
+		if slices.Contains(singleQueryGoodOverTotalEnabledSources, typ) {
+			if c.GoodTotalMetric != nil && typ != c.GoodTotalMetric.DataSourceType() {
+				return false
+			}
+			return c.GoodMetric != nil || c.BadMetric != nil || c.TotalMetric != nil
+		}
 		if c.TotalMetric == nil {
 			return false
 		}

@@ -77,3 +77,116 @@ fields n9time n9value`,
 		}
 	})
 }
+
+func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("required", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = nil
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+			Code: validation.ErrorCodeRequired,
+		})
+	})
+	t.Run("empty", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = ptr("")
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+			Code: validation.ErrorCodeStringNotEmpty,
+		})
+	})
+	t.Run("goodTotal mixed with total", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validMetricSpec(v1alpha.Splunk)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("goodTotal mixed with good", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validMetricSpec(v1alpha.Splunk)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("goodTotal mixed with bad", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+		slo.Spec.Objectives[0].CountMetrics.BadMetric = validMetricSpec(v1alpha.Splunk)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.bad",
+			Code: joinErrorCodes(errCodeBadOverTotalDisabled, validation.ErrorCodeOneOf),
+		}, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: validation.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("invalid query", func(t *testing.T) {
+		tests := map[string]struct {
+			Query        string
+			ExpectedCode string
+		}{
+			"missing n9time": {
+				Query: `
+    | mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
+    | join type=left _time [
+    | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
+    ]
+    | fields _time n9good n9total`,
+				ExpectedCode: validation.ErrorCodeStringContains,
+			},
+			"missing n9good": {
+				Query: `
+    | mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as good WHERE index="_metrics" span=15s
+    | join type=left _time [
+    | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
+    ]
+    | rename _time as n9time
+    | fields n9time good n9total`,
+				ExpectedCode: validation.ErrorCodeStringContains,
+			},
+			"missing n9total": {
+				Query: `
+    | mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
+    | join type=left _time [
+    | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as total WHERE index="_metrics" span=15s
+    ]
+    | rename _time as n9time
+    | fields n9time n9good total`,
+				ExpectedCode: validation.ErrorCodeStringContains,
+			},
+			"missing index": {
+				Query: `
+    | mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good span=15s
+    | join type=left _time [
+    | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total span=15s
+    ]
+    | rename _time as n9time
+    | fields n9time n9good n9total`,
+				ExpectedCode: validation.ErrorCodeStringMatchRegexp,
+			},
+		}
+		for name, test := range tests {
+			t.Run(name, func(t *testing.T) {
+				slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
+				slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = ptr(test.Query)
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+					Code: test.ExpectedCode,
+				})
+			})
+		}
+	})
+}

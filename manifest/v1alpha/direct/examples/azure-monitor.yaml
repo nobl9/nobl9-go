@@ -1,0 +1,23 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: azure-monitor
+  displayName: Azure Monitor Direct
+  project: default
+spec:
+  description: Example Azure Monitor Direct
+  releaseChannel: beta
+  azureMonitor:
+    tenantId: 5cdecca3-c2c5-4072-89dd-5555faf05202
+    clientId: 70747025-9367-41a5-98f1-59b18b5793c3
+    clientSecret: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 6
+    unit: Minute

@@ -1,0 +1,16 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: logic-monitor
+  displayName: LogicMonitor Direct
+  project: default
+spec:
+  description: Example LogicMonitor Direct
+  releaseChannel: beta
+  logicMonitor:
+    account: my-account-name
+    accessId: 9xA2BssShK21ld9LoOYu
+    accessKey: "[secret]"
+  queryDelay:
+    value: 3
+    unit: Minute

@@ -1,0 +1,1836 @@
+# Metric type: bad over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode == 0 or ResultCode >= 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode == 0 or ResultCode >= 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode == 0 or ResultCode >= 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode == 0 or ResultCode >= 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http4xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http4xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http4xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: bad over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http4xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode >= 200 and ResultCode < 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode >= 200 and ResultCode < 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode >= 200 and ResultCode < 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | where ResultCode >= 200 and ResultCode < 400
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+        total:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "my-app"
+              | summarize n9_value = count() by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http2xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http2xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http2xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: good over total
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Http2xx
+            aggregation: Sum
+        total:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Requests
+            aggregation: Sum
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "api-server"
+              | summarize n9_value = avg(DurationMs) by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "api-server"
+              | summarize n9_value = avg(DurationMs) by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "api-server"
+              | summarize n9_value = avg(DurationMs) by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: logs
+            workspace:
+              subscriptionId: 00000000-0000-0000-0000-000000000000
+              resourceGroup: myResourceGroup
+              workspaceId: 11111111-1111-1111-1111-111111111111
+            kqlQuery: |-
+              AppRequests
+              | where AppRoleName == "api-server"
+              | summarize n9_value = avg(DurationMs) by bin(TimeGenerated, 15s)
+              | project n9_time = TimeGenerated, n9_value
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Percentage CPU
+            aggregation: Avg
+            metricNamespace: azure.applicationinsights
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Percentage CPU
+            aggregation: Avg
+            metricNamespace: azure.applicationinsights
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Percentage CPU
+            aggregation: Avg
+            metricNamespace: azure.applicationinsights
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Metric type: threshold
+# Metric variant: metrics
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Azure Monitor SLO
+    indicator:
+      metricSource:
+        name: azure-monitor
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          azureMonitor:
+            dataType: metrics
+            resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
+            metricName: Percentage CPU
+            aggregation: Avg
+            metricNamespace: azure.applicationinsights
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default

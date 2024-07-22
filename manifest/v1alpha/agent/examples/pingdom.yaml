@@ -1,0 +1,13 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: pingdom
+  displayName: Pingdom Agent
+  project: default
+spec:
+  description: Example Pingdom Agent
+  releaseChannel: stable
+  pingdom: {}
+  queryDelay:
+    value: 2
+    unit: Minute

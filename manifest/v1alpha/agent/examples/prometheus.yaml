@@ -1,0 +1,21 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: prometheus
+  displayName: Prometheus Agent
+  project: default
+spec:
+  description: Example Prometheus Agent
+  releaseChannel: stable
+  prometheus:
+    url: http://prometheus.prometheus:9090
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 1
+    unit: Second
