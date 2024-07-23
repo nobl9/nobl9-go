@@ -41,8 +41,8 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 		),
 	}
 
-	v1Apply(t, ctx, inputs)
-	t.Cleanup(func() { v1Delete(t, ctx, inputs) })
+	v1Apply(t, inputs)
+	t.Cleanup(func() { v1Delete(t, inputs) })
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetProjectsRequest

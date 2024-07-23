@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Google Cloud Monitoring Agent
-  releaseChannel: stable
+  releaseChannel: beta
   gcm: {}
   historicalDataRetrieval:
     maxDuration:

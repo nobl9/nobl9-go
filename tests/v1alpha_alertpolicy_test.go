@@ -28,7 +28,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		DisplayName: "Alert Method",
 		Project:     project.GetName(),
 	})
-	examples := v1alphaExamples.AlertPolicy()
+	examples := examplesRegistry[manifest.KindAlertPolicy]
 	allObjects := make([]manifest.Object, 0, len(examples)+2)
 	allObjects = append(allObjects, project)
 	allObjects = append(allObjects, alertMethod)
@@ -69,8 +69,8 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		allObjects = append(allObjects, policy)
 	}
 
-	v1Apply(t, ctx, allObjects)
-	t.Cleanup(func() { v1Delete(t, ctx, allObjects) })
+	v1Apply(t, allObjects)
+	t.Cleanup(func() { v1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](allObjects)
 
 	filterTests := map[string]struct {

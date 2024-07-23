@@ -5,6 +5,7 @@ package tests
 import (
 	"encoding/json"
 	"log"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -35,6 +36,10 @@ var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
 	}
 	wrapped := make(map[manifest.Kind][]exampleWrapper, len(kindToExamples))
 	for kind, examples := range kindToExamples {
+		sort.Slice(examples, func(i, j int) bool {
+			return examples[i].GetVariant() < examples[j].GetVariant() &&
+				examples[i].GetSubVariant() < examples[j].GetSubVariant()
+		})
 		wrapped[kind] = make([]exampleWrapper, 0, len(examples))
 		for _, example := range examples {
 			object := example.GetObject()
