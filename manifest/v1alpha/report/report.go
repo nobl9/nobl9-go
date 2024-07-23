@@ -1,6 +1,8 @@
 package report
 
 import (
+	"errors"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -90,17 +92,6 @@ type ColumnSpec struct {
 	Labels      Labels `json:"labels" validate:"required"`
 }
 
-type Threshold struct {
-	Name string   `json:"name"`
-	Gt   *float64 `json:"gt,omitempty"`
-	Lte  *float64 `json:"lte,omitempty"`
-}
-
-type MetricSpec struct {
-	Name            string `json:"name" default:"remaining_budget"`
-	AggregationType string `json:"aggregationType" default:"avg"`
-}
-
 type Filters struct {
 	Projects Projects `json:"projects"`
 	Services Services `json:"services"`
@@ -127,6 +118,7 @@ type SLO struct {
 	DisplayName string `json:"displayName"`
 	Project     string `json:"project" validate:"required"`
 	Service     string `json:"service" validate:"required"`
+	IsComposite bool   `json:"isComposite"`
 }
 
 type Labels map[LabelKey][]LabelValue
@@ -135,3 +127,15 @@ type LabelValue = string
 
 type SLOHistoryConfig struct{}
 type ErrorBudgetStatusConfig struct{}
+
+func (s Spec) GetType() (ReportType, error) {
+	switch {
+	case s.SLOHistory != nil:
+		return ReportTypeSLOHistory, nil
+	case s.ErrorBudgetStatus != nil:
+		return ReportTypeErrorBudgetStatus, nil
+	case s.SystemHealthReview != nil:
+		return ReportTypeSystemHealthReview, nil
+	}
+	return 0, errors.New("unknown report type")
+}
