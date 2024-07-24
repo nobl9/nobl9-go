@@ -87,6 +87,7 @@ type SystemHealthReviewConfig struct {
 }
 
 type ColumnSpec struct {
+	Order       int    `json:"-,omitempty"`
 	DisplayName string `json:"displayName" validate:"required"`
 	Labels      Labels `json:"labels" validate:"required"`
 }
