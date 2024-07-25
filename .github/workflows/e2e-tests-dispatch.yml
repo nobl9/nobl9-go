@@ -18,6 +18,11 @@ on:
         description: Okta authentication server identifier
         required: false
         type: string
+      sequentialApplyAndDelete:
+        description: Whether to perform apply/delete requests sequentially
+        required: false
+        type: boolean
+        default: true
 jobs:
   test:
     uses: ./.github/workflows/e2e-tests.yml
@@ -26,5 +31,6 @@ jobs:
       ref: "${{ github.ref_name }}"
       oktaOrgUrl: "${{ inputs.oktaOrgUrl }}"
       oktaAuthServer: "${{ inputs.oktaAuthServer }}"
+      sequentialApplyAndDelete: "${{ inputs.sequentialApplyAndDelete }}"
     secrets:
       clientSecret: "${{ inputs.clientSecret }}"
