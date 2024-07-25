@@ -19,7 +19,7 @@ on:
         required: false
         type: string
       sequentialApplyAndDelete:
-        description: Whether to perform apply/delete requests sequentially
+        description: Perform apply/delete requests sequentially
         required: false
         type: boolean
         default: true
