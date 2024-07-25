@@ -19,6 +19,11 @@ on:
         required: false
         type: string
         default: main
+      sequentialApplyAndDelete:
+        description: Whether to perform apply/delete requests sequentially
+        required: false
+        type: boolean
+        default: true
     secrets:
       clientSecret:
         description: Client secret to use for authentication
@@ -44,4 +49,5 @@ jobs:
           NOBL9_SDK_OKTA_ORG_URL: ${{ inputs.oktaOrgUrl }}
           NOBL9_SDK_OKTA_AUTH_SERVER: ${{ inputs.oktaAuthServer }}
           NOBL9_SDK_NO_CONFIG_FILE: true
+          NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE: ${{ inputs.sequentialApplyAndDelete }}
         run: make test/e2e

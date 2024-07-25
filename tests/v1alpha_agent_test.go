@@ -44,11 +44,11 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	// Register cleanup first as we're not applying in a batch.
 	t.Cleanup(func() {
 		slices.Reverse(agents)
-		v1DeleteBatch(t, agents, 1, 5)
+		v1DeleteBatch(t, agents, 1)
 		v1Delete(t, []manifest.Object{project})
 	})
 	v1Apply(t, []manifest.Object{project})
-	v1ApplyBatch(t, agents, 1, 5)
+	v1ApplyBatch(t, agents, 1)
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetAgentsRequest

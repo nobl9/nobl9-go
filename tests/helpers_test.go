@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
 	"regexp"
+	"runtime"
 	"strconv"
-	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk"
 )
 
 const (
@@ -37,7 +40,8 @@ var (
 		Key:   "sdk-e2e-test-id",
 		Value: strconv.Itoa(int(testStartTime.UnixNano())),
 	}
-	commonAnnotations = v1alpha.MetadataAnnotations{"origin": "sdk-e2e-test"}
+	commonAnnotations  = v1alpha.MetadataAnnotations{"origin": "sdk-e2e-test"}
+	applyAndDeleteLock = newApplyAndDeleteLocker()
 )
 
 var (
@@ -66,22 +70,22 @@ func assertSubset[T manifest.Object](t *testing.T, actual, expected []T, f objec
 
 func v1Apply[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, len(objects)+1, 1)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, len(objects)+1)
 }
 
 func v1Delete[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, len(objects)+1, 1)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, len(objects)+1)
 }
 
-func v1ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int, concurrentRequests int) {
+func v1ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, batchSize, concurrentRequests)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, batchSize)
 }
 
-func v1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int, concurrentRequests int) {
+func v1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, batchSize, concurrentRequests)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, batchSize)
 }
 
 // v1ApplyOrDeleteBatch applies or deletes objects in batches.
@@ -92,12 +96,11 @@ func v1ApplyOrDeleteBatch(
 	objects []manifest.Object,
 	delete bool,
 	batchSize int,
-	concurrentRequests int,
 ) {
 	t.Helper()
 	ctx := context.Background()
 	group, ctx := errgroup.WithContext(ctx)
-	group.SetLimit(concurrentRequests)
+	group.SetLimit(runtime.NumCPU())
 	for i, j := 0, 0; i < len(objects); i += batchSize {
 		j += batchSize
 		if j > len(objects) {
@@ -105,51 +108,27 @@ func v1ApplyOrDeleteBatch(
 		}
 		batch := objects[i:j]
 		group.Go(func() error {
-			// Used for logging the number of objects in the batch.
-			m := make(map[string]int)
-			numbers := make([]string, 0)
-			for _, o := range batch {
-				if m == nil {
-					m = make(map[string]int)
-				}
-				m[o.GetKind().String()]++
-				name := o.GetName()
-				if split := strings.Split(name, "-"); len(split) > 1 {
-					if _, err := strconv.Atoi(split[2]); err == nil {
-						numbers = append(numbers, split[2])
-					}
-				}
-			}
+			applyAndDeleteLock.Lock()
+			defer applyAndDeleteLock.Unlock()
 			if delete {
-				t.Logf("deleting: %v, numbers: %s\n", m, strings.Join(numbers, ","))
 				return client.Objects().V1().Delete(ctx, batch)
-			} else {
-				t.Logf("applying: %v, numbers: %s\n", m, strings.Join(numbers, ","))
-				return client.Objects().V1().Apply(ctx, batch)
 			}
+			return client.Objects().V1().Apply(ctx, batch)
 		})
 	}
 	err := group.Wait()
 	var urlErr *url.Error
 	if errors.As(err, &urlErr) && urlErr.Timeout() {
+		// Unlock the lock to allow other tests to proceed,
+		// including the retry, which otherwise would cause a deadlock.
+		applyAndDeleteLock.Unlock()
+
 		waitFor := 30 * time.Second
-		t.Logf("timeout encountered, the apply/delete operation will be retried in %s; error: %v", waitFor, err)
+		t.Logf("timeout encountered, the apply/delete operation will be retried in %s; test: %s; error: %v",
+			waitFor, t.Name(), err)
 		time.Sleep(waitFor)
-		v1ApplyOrDeleteBatch(t, objects, delete, batchSize, concurrentRequests)
+		v1ApplyOrDeleteBatch(t, objects, delete, batchSize)
 	} else {
-		if err != nil {
-			split := strings.Split(err.Error(), " ")
-			if len(split) > 6 {
-				sloName := split[6]
-				slo := filterSlice(objects, func(o manifest.Object) bool {
-					return o.GetName() == sloName
-				})
-				if len(slo) > 0 {
-					data, _ := json.Marshal(slo)
-					t.Logf("slo: %s", string(data))
-				}
-			}
-		}
 		require.NoError(t, err)
 	}
 }
@@ -171,6 +150,20 @@ func annotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	labels[uniqueTestIdentifierLabel.Key] = []string{uniqueTestIdentifierLabel.Value}
 	labels["sdk-test-name"] = []string{t.Name()}
 	return labels
+}
+
+type noopLocker struct{}
+
+func (n noopLocker) Lock()   {}
+func (n noopLocker) Unlock() {}
+
+func newApplyAndDeleteLocker() sync.Locker {
+	sequential, _ := strconv.ParseBool(os.Getenv(sdk.EnvPrefix + "TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE"))
+	if sequential {
+		fmt.Println("Running apply and delete operations sequentially")
+		return new(sync.Mutex)
+	}
+	return noopLocker{}
 }
 
 // deepCopyObject creates a deep copy of the provided object using JSON encoding and decoding.
