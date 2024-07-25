@@ -82,12 +82,11 @@ type CustomPeriod struct {
 }
 
 type SystemHealthReviewConfig struct {
-	RowGroupBy string       `json:"rowGroupBy" validate:"required" example:"project"`
+	RowGroupBy RowGroupBy   `json:"rowGroupBy" validate:"required" example:"project"`
 	Columns    []ColumnSpec `json:"columns"`
 }
 
 type ColumnSpec struct {
-	Order       int    `json:"order"`
 	DisplayName string `json:"displayName" validate:"required"`
 	Labels      Labels `json:"labels" validate:"required"`
 }

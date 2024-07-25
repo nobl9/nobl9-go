@@ -84,10 +84,9 @@ func validReport() Report {
 				},
 			},
 			SystemHealthReview: &SystemHealthReviewConfig{
-				RowGroupBy: "project",
+				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{
-						Order:       0,
 						DisplayName: "Column 1",
 						Labels: map[string][]string{
 							"key1": {
@@ -100,7 +99,6 @@ func validReport() Report {
 						},
 					},
 					{
-						Order:       1,
 						DisplayName: "Column 2",
 						Labels: map[string][]string{
 							"key3": {

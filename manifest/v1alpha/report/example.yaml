@@ -16,11 +16,11 @@ spec:
       - name: project_name
     services:
       - name: service_name
-      - project: project_name
+        project: project_name
     slos:
       - name: slo_name
-      - project: project_name
-      - service: service_name
+        project: project_name
+        service: service_name
     labels:
       label_key_1:
         - label_value_1
@@ -30,16 +30,14 @@ spec:
   systemHealthReview:
       rowGroupBy: project
       columns:
-      - order: 0
-        displayName: Column 1
+      - displayName: Column 1
         labels:
           key1:
           - value1
           key2:
           - value1
           - value2
-      - order: 1
-        displayName: Column 2
+      - displayName: Column 2
         labels:
           key3:
           - value1

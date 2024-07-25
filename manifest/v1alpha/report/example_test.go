@@ -57,10 +57,9 @@ func ExampleReport_systemHealthReview() {
 				},
 			},
 			SystemHealthReview: &report.SystemHealthReviewConfig{
-				RowGroupBy: "project",
+				RowGroupBy: report.RowGroupByProject,
 				Columns: []report.ColumnSpec{
 					{
-						Order:       0,
 						DisplayName: "Column 1",
 						Labels: map[string][]string{
 							"key1": {
@@ -73,7 +72,6 @@ func ExampleReport_systemHealthReview() {
 						},
 					},
 					{
-						Order:       1,
 						DisplayName: "Column 2",
 						Labels: map[string][]string{
 							"key3": {
@@ -122,6 +120,7 @@ func ExampleReport_systemHealthReview() {
 	//       displayName: ""
 	//       project: project
 	//       service: service
+	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
@@ -132,16 +131,14 @@ func ExampleReport_systemHealthReview() {
 	//   systemHealthReview:
 	//     rowGroupBy: project
 	//     columns:
-	//     - order: 0
-	//       displayName: Column 1
+	//     - displayName: Column 1
 	//       labels:
 	//         key1:
 	//         - value1
 	//         key2:
 	//         - value1
 	//         - value2
-	//     - order: 1
-	//       displayName: Column 2
+	//     - displayName: Column 2
 	//       labels:
 	//         key3:
 	//         - value1
@@ -234,6 +231,7 @@ func ExampleReport_sloHistory() {
 	//       displayName: ""
 	//       project: project
 	//       service: service
+	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
@@ -329,6 +327,7 @@ func ExampleReport_errorBudgetStatus() {
 	//       displayName: ""
 	//       project: project
 	//       service: service
+	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
