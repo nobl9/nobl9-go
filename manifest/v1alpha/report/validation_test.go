@@ -35,6 +35,26 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	)
 }
 
+func TestValidate_Metadata(t *testing.T) {
+	report := validReport()
+	report.Metadata = Metadata{
+		Name: strings.Repeat("-my report", 20),
+	}
+	report.ManifestSource = "/home/me/report.yaml"
+	err := validate(report)
+	assert.Regexp(t, validationMessageRegexp, err.Error())
+	testutils.AssertContainsErrors(t, report, err, 2,
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringIsDNSSubdomain,
+		},
+		testutils.ExpectedError{
+			Prop: "metadata.name",
+			Code: validation.ErrorCodeStringLength,
+		},
+	)
+}
+
 func validReport() Report {
 	return Report{
 		APIVersion: manifest.VersionV1alpha,
@@ -44,14 +64,6 @@ func validReport() Report {
 			DisplayName: "My Report",
 		},
 		Spec: Spec{
-			TimeFrame: &TimeFrame{
-				Snapshot: &SnapshotTimeFrame{
-					Point:    "past",
-					DateTime: func(s string) *string { return &s }("2022-01-01T00:00:00Z"),
-					Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
-				},
-				TimeZone: "America/New_York",
-			},
 			Shared: true,
 			Filters: &Filters{
 				Projects: []Project{
@@ -84,6 +96,14 @@ func validReport() Report {
 				},
 			},
 			SystemHealthReview: &SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point:    func(s string) *string { return &s }("past"),
+						DateTime: func(s string) *string { return &s }("2022-01-01T00:00:00Z"),
+						Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
+					},
+					TimeZone: "America/New_York",
+				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{

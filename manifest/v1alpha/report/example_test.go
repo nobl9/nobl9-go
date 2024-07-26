@@ -17,14 +17,6 @@ func ExampleReport_systemHealthReview() {
 			DisplayName: "My report",
 		},
 		report.Spec{
-			TimeFrame: &report.TimeFrame{
-				Snapshot: &report.SnapshotTimeFrame{
-					Point:    "past",
-					DateTime: func(s string) *string { return &s }("2022-01-01T00:00:00Z"),
-					Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
-				},
-				TimeZone: "America/New_York",
-			},
 			Shared: true,
 			Filters: &report.Filters{
 				Projects: []report.Project{
@@ -57,6 +49,14 @@ func ExampleReport_systemHealthReview() {
 				},
 			},
 			SystemHealthReview: &report.SystemHealthReviewConfig{
+				TimeFrame: report.SystemHealthReviewTimeFrame{
+					Snapshot: report.SnapshotTimeFrame{
+						Point:    func(s string) *string { return &s }("past"),
+						DateTime: func(s string) *string { return &s }("2022-01-01T00:00:00Z"),
+						Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
+					},
+					TimeZone: "America/New_York",
+				},
 				RowGroupBy: report.RowGroupByProject,
 				Columns: []report.ColumnSpec{
 					{
@@ -100,12 +100,6 @@ func ExampleReport_systemHealthReview() {
 	//   name: report
 	//   displayName: My report
 	// spec:
-	//   timeFrame:
-	//     snapshot:
-	//       point: past
-	//       dateTime: 2022-01-01T00:00:00Z
-	//       rrule: FREQ=WEEKLY
-	//     timeZone: America/New_York
 	//   shared: true
 	//   filters:
 	//     projects:
@@ -129,6 +123,12 @@ func ExampleReport_systemHealthReview() {
 	//       - value1
 	//       - value2
 	//   systemHealthReview:
+	//     timeFrame:
+	//       snapshot:
+	//         point: past
+	//         dateTime: 2022-01-01T00:00:00Z
+	//         rrule: FREQ=WEEKLY
+	//       timeZone: America/New_York
 	//     rowGroupBy: project
 	//     columns:
 	//     - displayName: Column 1
@@ -152,15 +152,6 @@ func ExampleReport_sloHistory() {
 			DisplayName: "My report",
 		},
 		report.Spec{
-			TimeFrame: &report.TimeFrame{
-				Rolling: &report.RollingTimeFrame{
-					Repeat: report.Repeat{
-						Unit:  func(s string) *string { return &s }("week"),
-						Count: func(i int) *int { return &i }(2),
-					},
-				},
-				TimeZone: "America/New_York",
-			},
 			Shared: true,
 			Filters: &report.Filters{
 				Projects: []report.Project{
@@ -192,7 +183,17 @@ func ExampleReport_sloHistory() {
 					},
 				},
 			},
-			SLOHistory: &report.SLOHistoryConfig{},
+			SLOHistory: &report.SLOHistoryConfig{
+				TimeFrame: report.SLOHistoryTimeFrame{
+					Rolling: &report.RollingTimeFrame{
+						Repeat: report.Repeat{
+							Unit:  func(s string) *string { return &s }("week"),
+							Count: func(i int) *int { return &i }(2),
+						},
+					},
+					TimeZone: "America/New_York",
+				},
+			},
 		},
 	)
 
@@ -212,11 +213,6 @@ func ExampleReport_sloHistory() {
 	//   name: report
 	//   displayName: My report
 	// spec:
-	//   timeFrame:
-	//     rolling:
-	//       unit: week
-	//       count: 2
-	//     timeZone: America/New_York
 	//   shared: true
 	//   filters:
 	//     projects:
@@ -239,7 +235,12 @@ func ExampleReport_sloHistory() {
 	//       key2:
 	//       - value1
 	//       - value2
-	//   sloHistory: {}
+	//   sloHistory:
+	//     timeFrame:
+	//       rolling:
+	//         unit: week
+	//         count: 2
+	//       timeZone: America/New_York
 }
 
 func ExampleReport_errorBudgetStatus() {
@@ -250,13 +251,6 @@ func ExampleReport_errorBudgetStatus() {
 			DisplayName: "My report",
 		},
 		report.Spec{
-			TimeFrame: &report.TimeFrame{
-				Calendar: &report.CalendarTimeFrame{
-					From: func(s string) *string { return &s }("2024-06-14"),
-					To:   func(s string) *string { return &s }("2024-07-14"),
-				},
-				TimeZone: "America/New_York",
-			},
 			Shared: true,
 			Filters: &report.Filters{
 				Projects: []report.Project{
@@ -308,11 +302,6 @@ func ExampleReport_errorBudgetStatus() {
 	//   name: report
 	//   displayName: My report
 	// spec:
-	//   timeFrame:
-	//     calendar:
-	//       from: 2024-06-14
-	//       to: 2024-07-14
-	//     timeZone: America/New_York
 	//   shared: true
 	//   filters:
 	//     projects:

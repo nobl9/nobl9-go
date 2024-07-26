@@ -64,6 +64,10 @@ var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
 		WithName("columns").
 		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
 		IncludeForEach(columnValidation),
+	validation.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
+		WithName("timeFrame").
+		Required().
+		Include(snapshotValidation),
 )
 
 var columnValidation = validation.New[ColumnSpec](
@@ -73,4 +77,10 @@ var columnValidation = validation.New[ColumnSpec](
 	validation.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
 		WithName("labels").
 		Rules(validation.MapMinLength[map[LabelKey][]LabelValue](1)),
+)
+
+var snapshotValidation = validation.New[SystemHealthReviewTimeFrame](
+	validation.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
+		WithName("displayName").
+		Required(),
 )
