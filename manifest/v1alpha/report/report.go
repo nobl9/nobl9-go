@@ -92,7 +92,7 @@ type ColumnSpec struct {
 }
 
 type Filters struct {
-	Projects Projects `json:"project"`
+	Projects Projects `json:"projects"`
 	Services Services `json:"services"`
 	SLOs     SLOs     `json:"slos"`
 	Labels   Labels   `json:"labels"`
