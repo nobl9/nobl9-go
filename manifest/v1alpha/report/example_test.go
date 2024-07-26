@@ -104,17 +104,13 @@ func ExampleReport_systemHealthReview() {
 	//   filters:
 	//     projects:
 	//     - name: project
-	//       displayName: ""
 	//     services:
 	//     - name: service
-	//       displayName: ""
 	//       project: project
 	//     slos:
 	//     - name: slo1
-	//       displayName: ""
 	//       project: project
 	//       service: service
-	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
@@ -217,17 +213,13 @@ func ExampleReport_sloHistory() {
 	//   filters:
 	//     projects:
 	//     - name: project
-	//       displayName: ""
 	//     services:
 	//     - name: service
-	//       displayName: ""
 	//       project: project
 	//     slos:
 	//     - name: slo1
-	//       displayName: ""
 	//       project: project
 	//       service: service
-	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
@@ -306,17 +298,13 @@ func ExampleReport_errorBudgetStatus() {
 	//   filters:
 	//     projects:
 	//     - name: project
-	//       displayName: ""
 	//     services:
 	//     - name: service
-	//       displayName: ""
 	//       project: project
 	//     slos:
 	//     - name: slo1
-	//       displayName: ""
 	//       project: project
 	//       service: service
-	//       isComposite: false
 	//     labels:
 	//       key1:
 	//       - value1
