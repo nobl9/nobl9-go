@@ -194,4 +194,12 @@ func generifyObjects[T manifest.Object](objects []T) []manifest.Object {
 	return result
 }
 
+func mustParseTime(s string) time.Time {
+	t, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
 func ptr[T any](v T) *T { return &v }
