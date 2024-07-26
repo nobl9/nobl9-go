@@ -66,7 +66,7 @@ func Report() []Example {
 					SLOHistory: &report.SLOHistoryConfig{
 						TimeFrame: report.SLOHistoryTimeFrame{
 							Rolling: &report.RollingTimeFrame{
-								report.Repeat{
+								Repeat: report.Repeat{
 									Unit:  func(s string) *string { return &s }("day"),
 									Count: func(i int) *int { return &i }(3),
 								},
