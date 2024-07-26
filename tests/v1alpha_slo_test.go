@@ -148,11 +148,11 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	t.Cleanup(func() {
 		slices.Reverse(slos)
-		v1DeleteBatch(t, slos, 50, 1)
+		v1DeleteBatch(t, slos, 50)
 		v1Delete(t, dependencies)
 	})
 	v1Apply(t, dependencies)
-	v1ApplyBatch(t, slos, 50, 1)
+	v1ApplyBatch(t, slos, 50)
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
 
 	filterTests := map[string]struct {
@@ -228,7 +228,7 @@ func v1alphaSLODependencyAgents(t *testing.T) []manifest.Object {
 		agent.Spec.Description = objectPersistedDescription
 		agents = append(agents, agent)
 	}
-	v1ApplyBatch(t, agents, 1, 1)
+	v1ApplyBatch(t, agents, 1)
 	return agents
 }
 
