@@ -232,7 +232,7 @@ func assertV1alphaAlertSilencesAreEqual(t *testing.T, expected, actual v1alphaAl
 		}
 		actual.Spec.Period.StartTime = nil
 	}
-	// The API looses some time precision when returning the object, thus we need to compensate.
+	// The API loses some time precision when returning the object, thus we need to compensate.
 	if expected.Spec.Period.StartTime != nil {
 		*expected.Spec.Period.StartTime = expected.Spec.Period.StartTime.Truncate(time.Microsecond)
 	}
