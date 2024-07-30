@@ -115,6 +115,7 @@ words:
   - opentsdb
   - opsgenie
   - pagerduty
+  - pastlatest
   - pathutils
   - plantuml
   - preconfigured
