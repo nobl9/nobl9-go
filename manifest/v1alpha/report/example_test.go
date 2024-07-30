@@ -3,6 +3,7 @@ package report_test
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -51,9 +52,11 @@ func ExampleReport_systemHealthReview() {
 			SystemHealthReview: &report.SystemHealthReviewConfig{
 				TimeFrame: report.SystemHealthReviewTimeFrame{
 					Snapshot: report.SnapshotTimeFrame{
-						Point:    func(s string) *string { return &s }("past"),
-						DateTime: func(s string) *string { return &s }("2022-01-01T00:00:00Z"),
-						Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
+						Point: report.SnapshotPointPast,
+						DateTime: ptr(
+							time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+						),
+						Rrule: "FREQ=WEEKLY",
 					},
 					TimeZone: "America/New_York",
 				},
@@ -183,8 +186,8 @@ func ExampleReport_sloHistory() {
 				TimeFrame: report.SLOHistoryTimeFrame{
 					Rolling: &report.RollingTimeFrame{
 						Repeat: report.Repeat{
-							Unit:  func(s string) *string { return &s }("week"),
-							Count: func(i int) *int { return &i }(2),
+							Unit:  ptr("week"),
+							Count: ptr(2),
 						},
 					},
 					TimeZone: "America/New_York",
@@ -314,3 +317,5 @@ func ExampleReport_errorBudgetStatus() {
 	//       - value2
 	//   errorBudgetStatus: {}
 }
+
+func ptr[T any](v T) *T { return &v }

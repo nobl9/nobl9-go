@@ -1,6 +1,10 @@
 package v1alphaExamples
 
-import "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
+import (
+	"time"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/report"
+)
 
 func Report() []Example {
 	examples := []standardExample{
@@ -25,9 +29,9 @@ func Report() []Example {
 					SystemHealthReview: &report.SystemHealthReviewConfig{
 						TimeFrame: report.SystemHealthReviewTimeFrame{
 							Snapshot: report.SnapshotTimeFrame{
-								Point:    func(s string) *string { return &s }("past"),
-								DateTime: func(s string) *string { return &s }("2024-07-01T10:00:00Z"),
-								Rrule:    func(s string) *string { return &s }("FREQ=WEEKLY"),
+								Point:    report.SnapshotPointPast,
+								DateTime: ptr(time.Date(2024, 7, 1, 10, 0, 0, 0, time.UTC)),
+								Rrule:    "FREQ=WEEKLY",
 							},
 							TimeZone: "Europe/Warsaw",
 						},
@@ -67,8 +71,8 @@ func Report() []Example {
 						TimeFrame: report.SLOHistoryTimeFrame{
 							Rolling: &report.RollingTimeFrame{
 								Repeat: report.Repeat{
-									Unit:  func(s string) *string { return &s }("day"),
-									Count: func(i int) *int { return &i }(3),
+									Unit:  ptr("day"),
+									Count: ptr(3),
 								},
 							},
 							TimeZone: "Europe/Warsaw",

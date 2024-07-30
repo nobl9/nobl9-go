@@ -1,5 +1,7 @@
 package report
 
+import "time"
+
 type SystemHealthReviewConfig struct {
 	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame" validate:"required"`
 	RowGroupBy RowGroupBy                  `json:"rowGroupBy" validate:"required" example:"project"`
@@ -12,9 +14,9 @@ type ColumnSpec struct {
 }
 
 type SnapshotTimeFrame struct {
-	Point    *string `json:"point,omitempty" example:"current"`
-	DateTime *string `json:"dateTime,omitempty"`
-	Rrule    *string `json:"rrule,omitempty"`
+	Point    SnapshotPoint `json:"point" validate:"required" example:"latest"`
+	DateTime *time.Time    `json:"dateTime,omitempty"`
+	Rrule    string        `json:"rrule,omitempty"`
 }
 
 type SystemHealthReviewTimeFrame struct {
