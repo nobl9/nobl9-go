@@ -101,6 +101,9 @@ var specValidation = validation.New(
 	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
+	validation.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
+		WithName("azurePrometheus").
+		Include(azurePrometheusValidation),
 )
 
 var (
@@ -214,6 +217,13 @@ var (
 			Required().
 			Rules(validation.StringNotEmpty()),
 	)
+	azurePrometheusValidation = validation.New[AzurePrometheusConfig](
+		urlPropertyRules(func(s AzurePrometheusConfig) string { return s.URL }),
+		validation.For(func(a AzurePrometheusConfig) string { return a.TenantID }).
+			WithName("tenantId").
+			Required().
+			Rules(validation.StringUUID()),
+	)
 )
 
 const (
@@ -326,6 +336,11 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	}
 	if spec.LogicMonitor != nil {
 		if err := typesMatch(v1alpha.LogicMonitor); err != nil {
+			return err
+		}
+	}
+	if spec.AzurePrometheus != nil {
+		if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
 			return err
 		}
 	}
