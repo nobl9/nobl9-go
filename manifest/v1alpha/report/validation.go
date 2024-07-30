@@ -1,10 +1,7 @@
 package report
 
 import (
-	"time"
-
 	"github.com/pkg/errors"
-	"github.com/teambition/rrule-go"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/validation"
@@ -53,6 +50,10 @@ var specValidation = validation.New[Spec](
 			}
 			return nil
 		})),
+	validation.ForPointer(func(s Spec) *Filters { return s.Filters }).
+		WithName("filters").
+		Required().
+		Include(filtersValidation),
 	validation.ForPointer(func(s Spec) *SLOHistoryConfig { return s.SLOHistory }).
 		WithName("sloHistory").
 		Include(sloHistoryValidation),
@@ -61,130 +62,49 @@ var specValidation = validation.New[Spec](
 		Include(systemHealthReviewValidation),
 )
 
-var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
-	validation.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
-		WithName("rowGroupBy").
-		Required().
-		Rules(RowGroupByValidation()),
-	validation.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
-		WithName("columns").
-		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
-		IncludeForEach(columnValidation),
-	validation.For(func(s SystemHealthReviewConfig) string { return s.TimeFrame.TimeZone }).
-		WithName("timeZone").
-		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
+var filtersValidation = validation.New[Filters](
+	validation.For(validation.GetSelf[Filters]()).
+		Rules(validation.NewSingleRule(func(f Filters) error {
+			if len(f.Projects) == 0 && len(f.Services) == 0 && len(f.SLOs) == 0 {
+				return errors.New("at least one of the following fields is required: projects, services, slos")
 			}
 			return nil
 		})),
-	validation.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
-		WithName("timeFrame").
-		Required(),
-	validation.For(func(s SystemHealthReviewConfig) SnapshotTimeFrame { return s.TimeFrame.Snapshot }).
-		WithName("snapshot").
+	validation.ForSlice(func(f Filters) []string { return f.Projects }).
+		WithName("projects").
+		IncludeForEach(projectValidation),
+	validation.ForSlice(func(f Filters) []Service { return f.Services }).
+		WithName("services").
+		IncludeForEach(serviceValidation),
+	validation.ForSlice(func(f Filters) []SLO { return f.SLOs }).
+		WithName("slos").
+		IncludeForEach(sloValidation),
+)
+
+var projectValidation = validation.New(
+	validation.For(validation.GetSelf[string]()).
 		Required().
-		Include(snapshotValidation),
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
-var sloHistoryValidation = validation.New[SLOHistoryConfig](
-	validation.For(func(s SLOHistoryConfig) string { return s.TimeFrame.TimeZone }).
-		WithName("timeZone").
+var serviceValidation = validation.New(
+	validation.For(func(s Service) string { return s.Project }).
+		WithName("project").
 		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
-			}
-			return nil
-		})),
-	validation.For(func(s SLOHistoryConfig) SLOHistoryTimeFrame { return s.TimeFrame }).
-		WithName("timeFrame").
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(s Service) string { return s.Name }).
+		WithName("name").
 		Required().
-		Rules(validation.MutuallyExclusive(true, map[string]func(t SLOHistoryTimeFrame) any{
-			"rolling":  func(t SLOHistoryTimeFrame) any { return t.Rolling },
-			"calendar": func(t SLOHistoryTimeFrame) any { return t.Calendar },
-		})),
-	validation.ForPointer(func(s SLOHistoryConfig) *RollingTimeFrame { return s.TimeFrame.Rolling }).
-		WithName("rolling").
-		Include(rollingTimeFrameValidation),
-	validation.ForPointer(func(s SLOHistoryConfig) *CalendarTimeFrame { return s.TimeFrame.Calendar }).
-		WithName("calendar").
-		Include(calendarTimeFrameValidation),
+		Rules(validation.StringIsDNSSubdomain()),
 )
 
-var columnValidation = validation.New[ColumnSpec](
-	validation.For(func(s ColumnSpec) string { return s.DisplayName }).
-		WithName("displayName").
-		Required(),
-	validation.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
-		WithName("labels").
-		Rules(validation.MapMinLength[map[LabelKey][]LabelValue](1)),
-)
-
-var snapshotValidation = validation.New[SnapshotTimeFrame](
-	validation.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
-		WithName("point").
+var sloValidation = validation.New(
+	validation.For(func(s SLO) string { return s.Project }).
+		WithName("project").
 		Required().
-		Rules(SnapshotPointValidation()),
-	validation.For(func(s SnapshotTimeFrame) SnapshotTimeFrame { return s }).
-		Include(snapshotTimeFramePastPointValidation).
-		Include(snapshotTimeFrameLatestPointValidation),
-)
-
-var snapshotTimeFramePastPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
-		WithName("dateTime").
-		Required(),
-	validation.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
-		WithName("rrule"),
-).When(
-	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointPast },
-	validation.WhenDescription("past snapshot point"),
-)
-
-var snapshotTimeFrameLatestPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
-		WithName("dateTime").
-		Rules(
-			validation.Forbidden[time.Time]().WithDetails(
-				"dateTime is forbidden for latest snapshot point",
-			),
-		),
-	validation.For(func(s SnapshotTimeFrame) string { return s.Rrule }).
-		WithName("rrule").
-		Rules(
-			validation.Forbidden[string]().WithDetails(
-				"rrule is forbidden for latest snapshot point",
-			),
-		),
-).When(
-	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointLatest },
-	validation.WhenDescription("latest snapshot point"),
-)
-
-var rollingTimeFrameValidation = validation.New[RollingTimeFrame](
-	validation.ForPointer(func(t RollingTimeFrame) *string { return t.Unit }).
-		WithName("unit").
-		Required(),
-	validation.ForPointer(func(t RollingTimeFrame) *int { return t.Count }).
-		WithName("count").
-		Required(),
-)
-
-var calendarTimeFrameValidation = validation.New[CalendarTimeFrame](
-	validation.For(validation.GetSelf[CalendarTimeFrame]()).
-		Rules(
-			validation.NewSingleRule(func(t CalendarTimeFrame) error {
-				allFieldsSet := t.Count != nil && t.Unit != nil && t.From != nil && t.To != nil
-				noFieldSet := t.Count == nil && t.Unit == nil && t.From == nil && t.To == nil
-				onlyCountSet := t.Count != nil && t.Unit == nil
-				onlyUnitSet := t.Count == nil && t.Unit != nil
-				onlyFromSet := t.From != nil && t.To == nil
-				onlyToSet := t.From == nil && t.To != nil
-				if allFieldsSet || noFieldSet || onlyCountSet || onlyUnitSet || onlyFromSet || onlyToSet {
-					return errors.New("must contain either unit and count pair or from and to pair")
-				}
-				return nil
-			})),
+		Rules(validation.StringIsDNSSubdomain()),
+	validation.For(func(s SLO) string { return s.Name }).
+		WithName("name").
+		Required().
+		Rules(validation.StringIsDNSSubdomain()),
 )

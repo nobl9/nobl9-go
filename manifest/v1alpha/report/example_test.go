@@ -20,11 +20,7 @@ func ExampleReport_systemHealthReview() {
 		report.Spec{
 			Shared: true,
 			Filters: &report.Filters{
-				Projects: []report.Project{
-					{
-						Name: "project",
-					},
-				},
+				Projects: []string{"project"},
 				Services: []report.Service{
 					{
 						Name:    "service",
@@ -35,7 +31,6 @@ func ExampleReport_systemHealthReview() {
 					{
 						Name:    "slo1",
 						Project: "project",
-						Service: "service",
 					},
 				},
 				Labels: map[string][]string{
@@ -106,14 +101,13 @@ func ExampleReport_systemHealthReview() {
 	//   shared: true
 	//   filters:
 	//     projects:
-	//     - name: project
+	//     - project
 	//     services:
 	//     - name: service
 	//       project: project
 	//     slos:
 	//     - name: slo1
 	//       project: project
-	//       service: service
 	//     labels:
 	//       key1:
 	//       - value1
@@ -153,11 +147,7 @@ func ExampleReport_sloHistory() {
 		report.Spec{
 			Shared: true,
 			Filters: &report.Filters{
-				Projects: []report.Project{
-					{
-						Name: "project",
-					},
-				},
+				Projects: []string{"project"},
 				Services: []report.Service{
 					{
 						Name:    "service",
@@ -168,7 +158,6 @@ func ExampleReport_sloHistory() {
 					{
 						Name:    "slo1",
 						Project: "project",
-						Service: "service",
 					},
 				},
 				Labels: map[string][]string{
@@ -215,14 +204,13 @@ func ExampleReport_sloHistory() {
 	//   shared: true
 	//   filters:
 	//     projects:
-	//     - name: project
+	//     - project
 	//     services:
 	//     - name: service
 	//       project: project
 	//     slos:
 	//     - name: slo1
 	//       project: project
-	//       service: service
 	//     labels:
 	//       key1:
 	//       - value1
@@ -248,11 +236,7 @@ func ExampleReport_errorBudgetStatus() {
 		report.Spec{
 			Shared: true,
 			Filters: &report.Filters{
-				Projects: []report.Project{
-					{
-						Name: "project",
-					},
-				},
+				Projects: []string{"project"},
 				Services: []report.Service{
 					{
 						Name:    "service",
@@ -263,7 +247,6 @@ func ExampleReport_errorBudgetStatus() {
 					{
 						Name:    "slo1",
 						Project: "project",
-						Service: "service",
 					},
 				},
 				Labels: map[string][]string{
@@ -300,14 +283,13 @@ func ExampleReport_errorBudgetStatus() {
 	//   shared: true
 	//   filters:
 	//     projects:
-	//     - name: project
+	//     - project
 	//     services:
 	//     - name: service
 	//       project: project
 	//     slos:
 	//     - name: slo1
 	//       project: project
-	//       service: service
 	//     labels:
 	//       key1:
 	//       - value1

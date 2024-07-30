@@ -65,32 +65,22 @@ type CustomPeriod struct {
 }
 
 type Filters struct {
-	Projects Projects `json:"projects"`
-	Services Services `json:"services"`
-	SLOs     SLOs     `json:"slos"`
-	Labels   Labels   `json:"labels"`
-}
-
-type Projects []Project
-type Project struct {
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"displayName,omitempty"`
+	Projects []string `json:"projects,omitempty"`
+	Services Services `json:"services,omitempty"`
+	SLOs     SLOs     `json:"slos,omitempty"`
+	Labels   Labels   `json:"labels,omitempty"`
 }
 
 type Services []Service
 type Service struct {
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"displayName,omitempty"`
-	Project     string `json:"project" validate:"required"`
+	Name    string `json:"name" validate:"required"`
+	Project string `json:"project" validate:"required"`
 }
 
 type SLOs []SLO
 type SLO struct {
-	Name        string `json:"name" validate:"required"`
-	DisplayName string `json:"displayName,omitempty"`
-	Project     string `json:"project" validate:"required"`
-	Service     string `json:"service,omitempty"`
-	IsComposite bool   `json:"isComposite,omitempty"`
+	Name    string `json:"name" validate:"required"`
+	Project string `json:"project" validate:"required"`
 }
 
 type Labels map[LabelKey][]LabelValue

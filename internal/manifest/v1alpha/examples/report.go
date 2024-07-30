@@ -17,13 +17,9 @@ func Report() []Example {
 				report.Spec{
 					Shared: true,
 					Filters: &report.Filters{
-						Projects: []report.Project{
-							{
-								Name: "project-1",
-							},
-							{
-								Name: "project-2",
-							},
+						Projects: []string{
+							"project-1",
+							"project-2",
 						},
 					},
 					SystemHealthReview: &report.SystemHealthReviewConfig{
@@ -58,12 +54,28 @@ func Report() []Example {
 				report.Spec{
 					Shared: true,
 					Filters: &report.Filters{
-						Projects: []report.Project{
+						Projects: []string{
+							"project-1",
+							"project-2",
+						},
+						Services: []report.Service{
 							{
-								Name: "project-1",
+								Name:    "service-1",
+								Project: "project-1",
 							},
 							{
-								Name: "project-2",
+								Name:    "service-2",
+								Project: "project-1",
+							},
+						},
+						SLOs: []report.SLO{
+							{
+								Name:    "slo-1",
+								Project: "project-1",
+							},
+							{
+								Name:    "slo-2",
+								Project: "project-1",
 							},
 						},
 					},
@@ -90,13 +102,9 @@ func Report() []Example {
 				report.Spec{
 					Shared: true,
 					Filters: &report.Filters{
-						Projects: []report.Project{
-							{
-								Name: "project-1",
-							},
-							{
-								Name: "project-2",
-							},
+						Projects: []string{
+							"project-1",
+							"project-2",
 						},
 					},
 					ErrorBudgetStatus: &report.ErrorBudgetStatusConfig{},

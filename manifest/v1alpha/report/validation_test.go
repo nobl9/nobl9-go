@@ -61,14 +61,21 @@ func TestValidate_Spec(t *testing.T) {
 		report := validReport()
 		report.Spec = Spec{}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
-			Message: "exactly one report type configuration is required",
-		})
+		testutils.AssertContainsErrors(t, report, err, 2,
+			testutils.ExpectedError{
+				Prop:    "spec",
+				Message: "exactly one report type configuration is required",
+			},
+			testutils.ExpectedError{
+				Prop: "spec.filters",
+				Code: validation.ErrorCodeRequired,
+			},
+		)
 	})
 	t.Run("fails with more than one report type configuration defined in spec", func(t *testing.T) {
 		report := validReport()
 		report.Spec = Spec{
+			Filters: &Filters{Projects: []string{"project"}},
 			SystemHealthReview: &SystemHealthReviewConfig{
 				TimeFrame: SystemHealthReviewTimeFrame{
 					TimeZone: "Europe/Warsaw",
@@ -104,6 +111,226 @@ func TestValidate_Spec(t *testing.T) {
 			Message: "exactly one report type configuration is required",
 		})
 	})
+}
+
+func TestValidate_Spec_Filters(t *testing.T) {
+	for name, filters := range map[string]Filters{
+		"passes with valid projects": {
+			Projects: []string{"project1", "project2"},
+		},
+		"passes with valid services": {
+			Services: Services{
+				Service{
+					Name:    "service1",
+					Project: "project1",
+				},
+				Service{
+					Name:    "service2",
+					Project: "project2",
+				},
+			},
+		},
+		"passes with valid SLOs": {
+			SLOs: SLOs{
+				SLO{
+					Name:    "slo1",
+					Project: "project1",
+				},
+				SLO{
+					Name:    "slo2",
+					Project: "project2",
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			report := validReport()
+			report.Spec.Filters = &filters
+			err := validate(report)
+			testutils.AssertNoError(t, report, err)
+		})
+	}
+	for name, test := range map[string]struct {
+		ExpectedErrorsCount int
+		ExpectedErrors      []testutils.ExpectedError
+		Filters             *Filters
+	}{
+		"fails with empty filters": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			Filters: nil,
+		},
+		"fails with neither projects, services nor slos selected": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.filters",
+					Message: "at least one of the following fields is required: projects, services, slos",
+				},
+			},
+			Filters: &Filters{
+				Labels: map[LabelKey][]LabelValue{
+					"key1": {"value1"},
+				},
+			},
+		},
+		"fails with invalid project names": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.projects[0]",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+			Filters: &Filters{
+				Projects: []string{"test project", "project"},
+			},
+		},
+		"fails with service defined without name": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.services[0].name",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			Filters: &Filters{
+				Services: Services{
+					Service{
+						Project: "project",
+					},
+				},
+			},
+		},
+		"fails with service defined with invalid name": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.services[0].name",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+			Filters: &Filters{
+				Services: Services{
+					Service{
+						Name:    "test name",
+						Project: "project",
+					},
+				},
+			},
+		},
+		"fails with service defined without project": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.services[0].project",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			Filters: &Filters{
+				Services: Services{
+					Service{
+						Name: "service",
+					},
+				},
+			},
+		},
+		"fails with service defined with invalid project": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.services[0].project",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+			Filters: &Filters{
+				Services: Services{
+					Service{
+						Name:    "name",
+						Project: "test project",
+					},
+				},
+			},
+		},
+		"fails with slo defined without name": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].name",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			Filters: &Filters{
+				SLOs: SLOs{
+					SLO{
+						Project: "project",
+					},
+				},
+			},
+		},
+		"fails with slo defined with invalid name": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].name",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+			Filters: &Filters{
+				SLOs: SLOs{
+					SLO{
+						Name:    "test name",
+						Project: "project",
+					},
+				},
+			},
+		},
+		"fails with slo defined without project": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].project",
+					Code: validation.ErrorCodeRequired,
+				},
+			},
+			Filters: &Filters{
+				SLOs: SLOs{
+					SLO{
+						Name: "service",
+					},
+				},
+			},
+		},
+		"fails with slo defined with invalid project": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos[0].project",
+					Code: validation.ErrorCodeStringIsDNSSubdomain,
+				},
+			},
+			Filters: &Filters{
+				SLOs: SLOs{
+					SLO{
+						Name:    "name",
+						Project: "test project",
+					},
+				},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			report := validReport()
+			report.Spec.Filters = test.Filters
+			err := validate(report)
+			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
 }
 
 func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
@@ -525,11 +752,7 @@ func validReport() Report {
 		Spec: Spec{
 			Shared: true,
 			Filters: &Filters{
-				Projects: []Project{
-					{
-						Name: "project",
-					},
-				},
+				Projects: []string{"project"},
 				Services: []Service{
 					{
 						Name:    "service",
@@ -540,7 +763,6 @@ func validReport() Report {
 					{
 						Name:    "slo1",
 						Project: "project",
-						Service: "service",
 					},
 				},
 				Labels: map[string][]string{
