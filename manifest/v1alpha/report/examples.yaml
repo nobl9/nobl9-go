@@ -9,9 +9,6 @@
       projects:
       - project-1
       - project-2
-      services: []
-      slos: []
-      labels: {}
     systemHealthReview:
       timeFrame:
         snapshot:
@@ -49,7 +46,6 @@
         project: project-1
       - name: slo-2
         project: project-1
-      labels: {}
     sloHistory:
       timeFrame:
         rolling:
@@ -67,7 +63,4 @@
       projects:
       - project-1
       - project-2
-      services: []
-      slos: []
-      labels: {}
     errorBudgetStatus: {}
