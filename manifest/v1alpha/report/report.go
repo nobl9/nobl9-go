@@ -32,8 +32,8 @@ type Metadata struct {
 
 // nolint: lll
 type Spec struct {
-	CreatedAt          string                    `json:"createdAt,omitempty" validate:"dateWithTime" example:"2022-01-01T00:00:00Z"`
-	UpdatedAt          string                    `json:"updatedAt,omitempty" validate:"dateWithTime" example:"2022-01-01T00:00:00Z"`
+	CreatedAt          string                    `json:"createdAt,omitempty"`
+	UpdatedAt          string                    `json:"updatedAt,omitempty"`
 	Shared             bool                      `json:"shared" validate:"required"`
 	ExternalUserID     *string                   `json:"user,omitempty"`
 	Filters            *Filters                  `json:"filters,omitempty"`
