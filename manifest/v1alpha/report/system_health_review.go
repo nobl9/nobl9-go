@@ -5,7 +5,7 @@ import "time"
 type SystemHealthReviewConfig struct {
 	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame" validate:"required"`
 	RowGroupBy RowGroupBy                  `json:"rowGroupBy" validate:"required" example:"project"`
-	Columns    []ColumnSpec                `json:"columns"`
+	Columns    []ColumnSpec                `json:"columns" validate:"min=1,max=30"`
 }
 
 type ColumnSpec struct {

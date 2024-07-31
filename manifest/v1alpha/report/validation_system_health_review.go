@@ -17,6 +17,7 @@ var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
 	validation.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
 		WithName("columns").
 		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
+		Rules(validation.SliceMaxLength[[]ColumnSpec](30)).
 		IncludeForEach(columnValidation),
 	validation.For(func(s SystemHealthReviewConfig) string { return s.TimeFrame.TimeZone }).
 		WithName("timeZone").

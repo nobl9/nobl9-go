@@ -489,6 +489,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 }
 
 func TestValidate_Spec_SystemHealthReview(t *testing.T) {
+	properLabel := map[LabelKey][]LabelValue{"key1": {"value1"}}
 	for name, test := range map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
@@ -508,7 +509,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 					TimeZone: "America/New_York",
 				},
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: properLabel},
 				},
 			},
 		},
@@ -529,6 +530,57 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns:    []ColumnSpec{},
+			},
+		},
+		"fails with too many columns": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.columns",
+					Code: validation.ErrorCodeSliceMaxLength,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+					{DisplayName: "Column 2", Labels: properLabel},
+					{DisplayName: "Column 3", Labels: properLabel},
+					{DisplayName: "Column 4", Labels: properLabel},
+					{DisplayName: "Column 5", Labels: properLabel},
+					{DisplayName: "Column 6", Labels: properLabel},
+					{DisplayName: "Column 7", Labels: properLabel},
+					{DisplayName: "Column 8", Labels: properLabel},
+					{DisplayName: "Column 9", Labels: properLabel},
+					{DisplayName: "Column 10", Labels: properLabel},
+					{DisplayName: "Column 11", Labels: properLabel},
+					{DisplayName: "Column 12", Labels: properLabel},
+					{DisplayName: "Column 13", Labels: properLabel},
+					{DisplayName: "Column 14", Labels: properLabel},
+					{DisplayName: "Column 15", Labels: properLabel},
+					{DisplayName: "Column 16", Labels: properLabel},
+					{DisplayName: "Column 17", Labels: properLabel},
+					{DisplayName: "Column 18", Labels: properLabel},
+					{DisplayName: "Column 19", Labels: properLabel},
+					{DisplayName: "Column 20", Labels: properLabel},
+					{DisplayName: "Column 21", Labels: properLabel},
+					{DisplayName: "Column 22", Labels: properLabel},
+					{DisplayName: "Column 23", Labels: properLabel},
+					{DisplayName: "Column 24", Labels: properLabel},
+					{DisplayName: "Column 25", Labels: properLabel},
+					{DisplayName: "Column 26", Labels: properLabel},
+					{DisplayName: "Column 27", Labels: properLabel},
+					{DisplayName: "Column 28", Labels: properLabel},
+					{DisplayName: "Column 29", Labels: properLabel},
+					{DisplayName: "Column 30", Labels: properLabel},
+					{DisplayName: "Column 31", Labels: properLabel},
+				},
 			},
 		},
 		"fails with empty labels": {
@@ -569,7 +621,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{Labels: properLabel},
 				},
 			},
 		},
