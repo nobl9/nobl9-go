@@ -68,7 +68,7 @@ var validUUIDRegex = regexp.
 
 func StringUUID() SingleRule[string] {
 	return StringMatchRegexp(validUUIDRegex,
-		"0000000-0000-0000-0000-000000000000",
+		"00000000-0000-0000-0000-000000000000",
 		"e190c630-8873-11ee-b9d1-0242ac120002",
 		"79258D24-01A7-47E5-ACBB-7E762DE52298").
 		WithDetails("expected RFC-4122 compliant UUID string").

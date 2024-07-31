@@ -162,6 +162,9 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 		expected.Spec.SumoLogic.AccessKey = "[hidden]"
 	case v1alpha.ThousandEyes:
 		expected.Spec.ThousandEyes.OauthBearerToken = "[hidden]"
+	case v1alpha.AzurePrometheus:
+		expected.Spec.AzurePrometheus.ClientID = "[hidden]"
+		expected.Spec.AzurePrometheus.ClientSecret = "[hidden]"
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", typ))
 	}

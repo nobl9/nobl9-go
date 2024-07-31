@@ -43,6 +43,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
 	v1alpha.GoogleCloudMonitoring,
+	v1alpha.AzurePrometheus,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -186,6 +187,13 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 	case v1alpha.ThousandEyes:
 		direct.Spec.ThousandEyes = &v1alphaDirect.ThousandEyesConfig{
 			OauthBearerToken: "[secret]",
+		}
+	case v1alpha.AzurePrometheus:
+		direct.Spec.AzurePrometheus = &v1alphaDirect.AzurePrometheusConfig{
+			URL:          "https://prod-app.azuremonitor.com",
+			TenantID:     "5cdecca3-c2c5-4072-89dd-5555faf05202",
+			ClientID:     "70747025-9367-41a5-98f1-59b18b5793c3",
+			ClientSecret: "[secret]",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))
