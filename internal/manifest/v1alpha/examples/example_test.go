@@ -8,10 +8,11 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/nobl9/nobl9-go/internal/pathutils"
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/internal/pathutils"
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestExamples_EnsureAllKindsHaveExamples(t *testing.T) {
