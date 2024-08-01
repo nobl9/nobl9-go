@@ -642,18 +642,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 		Config              SystemHealthReviewConfig
 	}{
 		"fails with empty time frame": {
-			ExpectedErrorsCount: 3,
+			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame",
-					Code: validation.ErrorCodeRequired,
-				},
-				{
-					Prop: "spec.systemHealthReview.timeZone",
-					Code: validation.ErrorCodeRequired,
-				},
-				{
-					Prop: "spec.systemHealthReview.snapshot",
 					Code: validation.ErrorCodeRequired,
 				},
 			},
@@ -668,7 +660,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.snapshot",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot",
 					Code: validation.ErrorCodeRequired,
 				},
 			},
@@ -687,7 +679,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.snapshot.dateTime",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
 					Code: validation.ErrorCodeRequired,
 				},
 			},
@@ -708,11 +700,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.snapshot.rrule",
+					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
 					Message: "wrong format",
 				},
 				{
-					Prop: "spec.systemHealthReview.snapshot.dateTime",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
 					Code: validation.ErrorCodeRequired,
 				},
 			},
@@ -734,11 +726,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.snapshot.rrule",
+					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
 					Message: "undefined frequency: TEST",
 				},
 				{
-					Prop: "spec.systemHealthReview.snapshot.dateTime",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
 					Code: validation.ErrorCodeRequired,
 				},
 			},
@@ -760,11 +752,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.snapshot.rrule",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot.rrule",
 					Code: validation.ErrorCodeForbidden,
 				},
 				{
-					Prop: "spec.systemHealthReview.snapshot.dateTime",
+					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
 					Code: validation.ErrorCodeForbidden,
 				},
 			},

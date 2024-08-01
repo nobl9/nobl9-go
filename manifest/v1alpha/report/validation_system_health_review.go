@@ -19,22 +19,10 @@ var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
 		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
 		Rules(validation.SliceMaxLength[[]ColumnSpec](30)).
 		IncludeForEach(columnValidation),
-	validation.For(func(s SystemHealthReviewConfig) string { return s.TimeFrame.TimeZone }).
-		WithName("timeZone").
-		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
-			}
-			return nil
-		})),
 	validation.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
-		Required(),
-	validation.For(func(s SystemHealthReviewConfig) SnapshotTimeFrame { return s.TimeFrame.Snapshot }).
-		WithName("snapshot").
 		Required().
-		Include(snapshotValidation),
+		Include(timeFrameValidation),
 )
 
 var columnValidation = validation.New[ColumnSpec](
@@ -46,14 +34,29 @@ var columnValidation = validation.New[ColumnSpec](
 		Rules(validation.MapMinLength[map[LabelKey][]LabelValue](1)),
 )
 
+var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
+	validation.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
+		WithName("timeZone").
+		Required().
+		Rules(validation.NewSingleRule(func(v string) error {
+			if _, err := time.LoadLocation(v); err != nil {
+				return errors.Wrap(err, "not a valid time zone")
+			}
+			return nil
+		})),
+	validation.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
+		WithName("snapshot").
+		Required().
+		Include(snapshotValidation).
+		Include(snapshotTimeFramePastPointValidation).
+		Include(snapshotTimeFrameLatestPointValidation),
+)
+
 var snapshotValidation = validation.New[SnapshotTimeFrame](
 	validation.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
 		WithName("point").
 		Required().
 		Rules(SnapshotPointValidation()),
-	validation.For(func(s SnapshotTimeFrame) SnapshotTimeFrame { return s }).
-		Include(snapshotTimeFramePastPointValidation).
-		Include(snapshotTimeFrameLatestPointValidation),
 )
 
 var snapshotTimeFramePastPointValidation = validation.New[SnapshotTimeFrame](

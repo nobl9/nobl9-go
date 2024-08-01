@@ -30,7 +30,6 @@ type Metadata struct {
 	DisplayName string `json:"displayName,omitempty"`
 }
 
-// nolint: lll
 type Spec struct {
 	CreatedAt          string                    `json:"createdAt,omitempty"`
 	UpdatedAt          string                    `json:"updatedAt,omitempty"`

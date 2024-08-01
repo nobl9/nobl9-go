@@ -72,7 +72,7 @@ var filtersValidation = validation.New[Filters](
 		})),
 	validation.ForSlice(func(f Filters) []string { return f.Projects }).
 		WithName("projects").
-		IncludeForEach(projectValidation),
+		IncludeForEach(requiredNameValidation),
 	validation.ForSlice(func(f Filters) []Service { return f.Services }).
 		WithName("services").
 		IncludeForEach(serviceValidation),
@@ -81,7 +81,7 @@ var filtersValidation = validation.New[Filters](
 		IncludeForEach(sloValidation),
 )
 
-var projectValidation = validation.New(
+var requiredNameValidation = validation.New(
 	validation.For(validation.GetSelf[string]()).
 		Required().
 		Rules(validation.StringIsDNSSubdomain()),
@@ -90,21 +90,17 @@ var projectValidation = validation.New(
 var serviceValidation = validation.New(
 	validation.For(func(s Service) string { return s.Project }).
 		WithName("project").
-		Required().
-		Rules(validation.StringIsDNSSubdomain()),
+		Include(requiredNameValidation),
 	validation.For(func(s Service) string { return s.Name }).
 		WithName("name").
-		Required().
-		Rules(validation.StringIsDNSSubdomain()),
+		Include(requiredNameValidation),
 )
 
 var sloValidation = validation.New(
 	validation.For(func(s SLO) string { return s.Project }).
 		WithName("project").
-		Required().
-		Rules(validation.StringIsDNSSubdomain()),
+		Include(requiredNameValidation),
 	validation.For(func(s SLO) string { return s.Name }).
 		WithName("name").
-		Required().
-		Rules(validation.StringIsDNSSubdomain()),
+		Include(requiredNameValidation),
 )
