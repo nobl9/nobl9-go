@@ -101,8 +101,13 @@ We use the following tools to do that:
   your own const-based enums. It can generate methods for decoding the custom
   type from and to string, so you can use the enum type directly in your
   struct.
-- [Our custom tool](scripts/generate-object-impl.go)
-  for generating `manifest.Object` methods implementation for all object kinds.
+- [objectimpl](../internal/cmd/objectimpl)
+  for generating `manifest.Object` implementation for all object kinds.
+- [docgen](../internal/cmd/docgen/)
+  for generating documentation based on validation rules, Go doc comments and
+  generate examples.
+- [examplegen](../internal/cmd/examplegen/)
+  for generating examples for each manifest object.
 
 ## Validation
 
