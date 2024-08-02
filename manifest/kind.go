@@ -38,7 +38,7 @@ func (k Kind) Equals(s string) bool {
 // Applicable returns true if the Kind can be applied or deleted by the user.
 // In other words, it informs whether the Kind's lifecycle is managed by the user.
 func (k Kind) Applicable() bool {
-	return k != KindAlert
+	return k != KindAlert && k != KindUserGroup
 }
 
 // ApplicableKinds returns all the Kind instances which can be applied or deleted by the user.

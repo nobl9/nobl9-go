@@ -6,6 +6,7 @@ It merges:
 - Go doc comments
 - [Validation plan](../../validation/plan.go)
 - Custom documentation and formatting
+- Generated examples
 
 into a single YAML file.
 
