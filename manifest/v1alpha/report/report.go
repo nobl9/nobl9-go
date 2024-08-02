@@ -34,7 +34,7 @@ type Spec struct {
 	CreatedAt          string                    `json:"createdAt,omitempty"`
 	UpdatedAt          string                    `json:"updatedAt,omitempty"`
 	Shared             bool                      `json:"shared" validate:"required"`
-	ExternalUserID     *string                   `json:"user,omitempty"`
+	CreatedBy          *string                   `json:"createdBy,omitempty"`
 	Filters            *Filters                  `json:"filters,omitempty"`
 	SystemHealthReview *SystemHealthReviewConfig `json:"systemHealthReview,omitempty"`
 	SLOHistory         *SLOHistoryConfig         `json:"sloHistory,omitempty"`
