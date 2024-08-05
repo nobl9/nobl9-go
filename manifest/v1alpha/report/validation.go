@@ -9,10 +9,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-const (
-	expectedNumberOfReportTypes = 1
-)
-
 func validate(r Report) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, r, manifest.KindReport)
 }
@@ -45,7 +41,7 @@ var specValidation = validation.New[Spec](
 			if s.ErrorBudgetStatus != nil {
 				reportTypeCounter++
 			}
-			if reportTypeCounter != expectedNumberOfReportTypes {
+			if reportTypeCounter != 1 {
 				return errors.New("exactly one report type configuration is required")
 			}
 			return nil
