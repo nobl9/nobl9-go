@@ -1,0 +1,66 @@
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: shr-report
+    displayName: System Health Review
+  spec:
+    shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
+    systemHealthReview:
+      timeFrame:
+        snapshot:
+          point: past
+          dateTime: 2024-07-01T10:00:00Z
+          rrule: FREQ=WEEKLY
+        timeZone: Europe/Warsaw
+      rowGroupBy: project
+      columns:
+      - displayName: Column 1
+        labels:
+          key1:
+          - value1
+          key2:
+          - value2
+          - value3
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: slo-history-report
+    displayName: SLO History
+  spec:
+    shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
+      services:
+      - name: service-1
+        project: project-1
+      - name: service-2
+        project: project-1
+      slos:
+      - name: slo-1
+        project: project-1
+      - name: slo-2
+        project: project-1
+    sloHistory:
+      timeFrame:
+        rolling:
+          unit: day
+          count: 3
+        timeZone: Europe/Warsaw
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: ebs-report
+    displayName: Error Budget Status
+  spec:
+    shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
+    errorBudgetStatus: {}

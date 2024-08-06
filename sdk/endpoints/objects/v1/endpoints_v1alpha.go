@@ -19,6 +19,7 @@ import (
 	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -283,4 +284,16 @@ func (e endpoints) GetBudgetAdjustments(
 		return nil, err
 	}
 	return manifest.FilterByKind[v1alphaBudgetAdjustment.BudgetAdjustment](objects), err
+}
+
+func (e endpoints) GetReports(
+	ctx context.Context,
+	params GetReportsRequest,
+) ([]v1alphaReport.Report, error) {
+	f := filterBy().Strings(QueryKeyName, params.Names)
+	objects, err := e.Get(ctx, manifest.KindReport, f.header, f.query)
+	if err != nil {
+		return nil, err
+	}
+	return manifest.FilterByKind[v1alphaReport.Report](objects), err
 }
