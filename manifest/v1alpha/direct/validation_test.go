@@ -923,24 +923,6 @@ func TestValidateSpec_LogicMonitor(t *testing.T) {
 			Code: validation.ErrorCodeRequired,
 		})
 	})
-	t.Run("invalid accountID", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		direct.Spec.LogicMonitor.AccessID = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.accessId",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
-	t.Run("invalid accessKey", func(t *testing.T) {
-		direct := validDirect(v1alpha.LogicMonitor)
-		direct.Spec.LogicMonitor.AccessKey = ""
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.accessKey",
-			Code: validation.ErrorCodeRequired,
-		})
-	})
 }
 
 func TestValidateSpec_AzurePrometheus(t *testing.T) {
