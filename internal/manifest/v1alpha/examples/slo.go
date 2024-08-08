@@ -137,7 +137,7 @@ type SloExample interface {
 }
 
 func SLO() []Example {
-	baseExamples := make([]any, 0)
+	baseExamples := make([]SloExample, 0)
 	for _, dataSourceType := range standardGoodOverTotalMetrics {
 		baseExamples = append(baseExamples, createVariants(dataSourceType, goodOverTotalVariants, nil)...)
 	}
@@ -167,7 +167,7 @@ func SLO() []Example {
 			} {
 				switch example := baseExample.(type) {
 				case sloExample:
-					example = sloExample{
+					variants = append(variants, sloExample{
 						sloBaseExample: sloBaseExample{
 							BudgetingMethod: method,
 							TimeWindowType:  timeWindow,
@@ -175,31 +175,30 @@ func SLO() []Example {
 						DataSourceType:   example.DataSourceType,
 						MetricVariant:    example.MetricVariant,
 						MetricSubVariant: example.MetricSubVariant,
-					}
-					example.SLO = example.Generate()
-					variants = append(variants, example)
+					})
 				case sloCompositeExample:
-					example = sloCompositeExample{
+					compositeVariants = append(compositeVariants, sloCompositeExample{
 						sloBaseExample: sloBaseExample{
 							BudgetingMethod: method,
 							TimeWindowType:  timeWindow,
 						},
-					}
-					example.SLO = example.Generate()
-					compositeVariants = append(compositeVariants, example)
+					})
 				}
 			}
 		}
 	}
-	return append(newExampleSlice(variants...), newExampleSlice(compositeVariants...)...)
+	return append(
+		newExampleSlice(variants...),
+		newExampleSlice(compositeVariants...)...,
+	)
 }
 
 func createVariants(
 	dataSourceType v1alpha.DataSourceType,
 	metricVariants []metricVariant,
 	metricSubVariants []metricSubVariant,
-) []any {
-	examples := make([]any, 0, len(metricVariants)*(1+len(metricSubVariants)))
+) []SloExample {
+	examples := make([]SloExample, 0, len(metricVariants)*(1+len(metricSubVariants)))
 	for _, example := range metricVariants {
 		if len(metricSubVariants) == 0 {
 			examples = append(examples, sloExample{

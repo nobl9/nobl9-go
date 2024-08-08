@@ -13,7 +13,7 @@ type sloCompositeExample struct {
 }
 
 func (s sloCompositeExample) GetObject() any {
-	return s.SLO
+	return s.Slo()
 }
 
 func (s sloCompositeExample) GetVariant() string {
@@ -40,7 +40,7 @@ func (s sloCompositeExample) String() string {
 	)
 }
 
-func (s sloCompositeExample) Generate() v1alphaSLO.SLO {
+func (s sloCompositeExample) Slo() v1alphaSLO.SLO {
 	return v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "user-experience-slo",
@@ -80,16 +80,16 @@ func (s sloCompositeExample) Generate() v1alphaSLO.SLO {
 									WhenDelayed: v1alphaSLO.WhenDelayedCountAsGood,
 								},
 								{
-									Project:     "project-1",
-									SLO:         "slo-1",
-									Objective:   "objective-1",
+									Project:     "project-2",
+									SLO:         "slo-2",
+									Objective:   "objective-2",
 									Weight:      2,
 									WhenDelayed: v1alphaSLO.WhenDelayedCountAsBad,
 								},
 								{
-									Project:     "project-1",
-									SLO:         "slo-1",
-									Objective:   "objective-1",
+									Project:     "project-3",
+									SLO:         "slo-3",
+									Objective:   "objective-3",
 									Weight:      4,
 									WhenDelayed: v1alphaSLO.WhenDelayedIgnore,
 								},

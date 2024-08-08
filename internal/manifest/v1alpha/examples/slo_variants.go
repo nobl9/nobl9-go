@@ -19,8 +19,6 @@ var queriesFS embed.FS
 type sloBaseExample struct {
 	BudgetingMethod v1alphaSLO.BudgetingMethod
 	TimeWindowType  twindow.TimeWindowTypeEnum
-
-	SLO v1alphaSLO.SLO
 }
 
 type sloExample struct {
@@ -32,7 +30,7 @@ type sloExample struct {
 }
 
 func (s sloExample) GetObject() any {
-	return s.SLO
+	return s.Slo()
 }
 
 func (s sloExample) GetVariant() string {
@@ -74,7 +72,7 @@ func (s sloExample) String() string {
 	)
 }
 
-func (s sloExample) Generate() v1alphaSLO.SLO {
+func (s sloExample) Slo() v1alphaSLO.SLO {
 	slo := v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "api-server-slo",
