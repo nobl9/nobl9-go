@@ -1,0 +1,284 @@
+# Composite SLO
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: User experience
+      value: null
+      name: user-experience
+      target: 0.95
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: project-1
+            slo: slo-1
+            objective: objective-1
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: project-2
+            slo: slo-2
+            objective: objective-2
+            weight: 2.0
+            whenDelayed: CountAsBad
+          - project: project-3
+            slo: slo-3
+            objective: objective-3
+            weight: 4.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Composite SLO
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: User experience
+      value: null
+      name: user-experience
+      target: 0.95
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: project-1
+            slo: slo-1
+            objective: objective-1
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: project-2
+            slo: slo-2
+            objective: objective-2
+            weight: 2.0
+            whenDelayed: CountAsBad
+          - project: project-3
+            slo: slo-3
+            objective: objective-3
+            weight: 4.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Composite SLO
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: User experience
+      value: null
+      name: user-experience
+      target: 0.95
+      timeSliceTarget: 0.9
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: project-1
+            slo: slo-1
+            objective: objective-1
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: project-2
+            slo: slo-2
+            objective: objective-2
+            weight: 2.0
+            whenDelayed: CountAsBad
+          - project: project-3
+            slo: slo-3
+            objective: objective-3
+            weight: 4.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+# Composite SLO
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: User experience
+      value: null
+      name: user-experience
+      target: 0.95
+      timeSliceTarget: 0.9
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: project-1
+            slo: slo-1
+            objective: objective-1
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: project-2
+            slo: slo-2
+            objective: objective-2
+            weight: 2.0
+            whenDelayed: CountAsBad
+          - project: project-3
+            slo: slo-3
+            objective: objective-3
+            weight: 4.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
