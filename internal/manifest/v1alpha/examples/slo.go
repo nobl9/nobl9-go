@@ -1,6 +1,7 @@
 package v1alphaExamples
 
 import (
+	"fmt"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
@@ -129,8 +130,14 @@ var badOverTotalVariants = []string{
 	metricVariantBadRatio,
 }
 
+type SloExample interface {
+	Example
+	fmt.Stringer
+	Slo() v1alphaSLO.SLO
+}
+
 func SLO() []Example {
-	baseExamples := make([]sloExample, 0)
+	baseExamples := make([]any, 0)
 	for _, dataSourceType := range standardGoodOverTotalMetrics {
 		baseExamples = append(baseExamples, createVariants(dataSourceType, goodOverTotalVariants, nil)...)
 	}
@@ -147,7 +154,9 @@ func SLO() []Example {
 		}
 	}
 	variants := make([]sloExample, 0, len(baseExamples)*4)
-	for _, example := range baseExamples {
+	baseExamples = append(baseExamples, sloCompositeExample{})
+	compositeVariants := make([]sloCompositeExample, 0, 4)
+	for _, baseExample := range baseExamples {
 		for _, timeWindow := range []twindow.TimeWindowTypeEnum{
 			twindow.Rolling,
 			twindow.Calendar,
@@ -156,27 +165,41 @@ func SLO() []Example {
 				v1alphaSLO.BudgetingMethodTimeslices,
 				v1alphaSLO.BudgetingMethodOccurrences,
 			} {
-				example = sloExample{
-					DataSourceType:   example.DataSourceType,
-					BudgetingMethod:  method,
-					TimeWindowType:   timeWindow,
-					MetricVariant:    example.MetricVariant,
-					MetricSubVariant: example.MetricSubVariant,
+				switch example := baseExample.(type) {
+				case sloExample:
+					example = sloExample{
+						sloBaseExample: sloBaseExample{
+							BudgetingMethod: method,
+							TimeWindowType:  timeWindow,
+						},
+						DataSourceType:   example.DataSourceType,
+						MetricVariant:    example.MetricVariant,
+						MetricSubVariant: example.MetricSubVariant,
+					}
+					example.SLO = example.Generate()
+					variants = append(variants, example)
+				case sloCompositeExample:
+					example = sloCompositeExample{
+						sloBaseExample: sloBaseExample{
+							BudgetingMethod: method,
+							TimeWindowType:  timeWindow,
+						},
+					}
+					example.SLO = example.Generate()
+					compositeVariants = append(compositeVariants, example)
 				}
-				example.SLO = example.Generate()
-				variants = append(variants, example)
 			}
 		}
 	}
-	return newExampleSlice(variants...)
+	return append(newExampleSlice(variants...), newExampleSlice(compositeVariants...)...)
 }
 
 func createVariants(
 	dataSourceType v1alpha.DataSourceType,
 	metricVariants []metricVariant,
 	metricSubVariants []metricSubVariant,
-) []sloExample {
-	examples := make([]sloExample, 0, len(metricVariants)*(1+len(metricSubVariants)))
+) []any {
+	examples := make([]any, 0, len(metricVariants)*(1+len(metricSubVariants)))
 	for _, example := range metricVariants {
 		if len(metricSubVariants) == 0 {
 			examples = append(examples, sloExample{

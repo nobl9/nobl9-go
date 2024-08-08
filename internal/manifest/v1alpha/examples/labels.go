@@ -16,3 +16,12 @@ func exampleLabels() v1alpha.Labels {
 		"area":   {"latency", "slow-check"},
 	}
 }
+
+func exampleCompositeLabels() v1alpha.Labels {
+	return v1alpha.Labels{
+		"team":   {"green", "ux"},
+		"env":    {"prod", "dev"},
+		"region": {"us", "eu"},
+		"area":   {"user-experience"},
+	}
+}

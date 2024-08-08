@@ -16,3 +16,12 @@ func exampleMetadataAnnotations() v1alpha.MetadataAnnotations {
 		"area":   "latency",
 	}
 }
+
+func exampleCompositeMetadataAnnotations() v1alpha.MetadataAnnotations {
+	return v1alpha.MetadataAnnotations{
+		"team":   "ux",
+		"env":    "prod",
+		"region": "us",
+		"area":   "user-experience",
+	}
+}
