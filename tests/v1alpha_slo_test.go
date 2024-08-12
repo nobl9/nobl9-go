@@ -57,6 +57,25 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		v1alphaSLODependencyDirects(t)...)
 
 	sloExamples := examplesRegistry[manifest.KindSLO]
+
+	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
+	// allowing them to depend on the SLOs listed before them.
+	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
+		var intI, intJ int
+
+		iSlo := i.GetObject().(v1alphaSLO.SLO)
+		if iSlo.Spec.HasCompositeObjectives() {
+			intI = 1
+		}
+
+		jSlo := j.GetObject().(v1alphaSLO.SLO)
+		if jSlo.Spec.HasCompositeObjectives() {
+			intJ = 1
+		}
+
+		return intI - intJ
+	})
+
 	slos := make([]manifest.Object, 0, len(sloExamples))
 	dependencies := []manifest.Object{
 		project,
@@ -85,62 +104,73 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		}
 		slo.Spec.Service = service.GetName()
 		slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
-		slo.Spec.AnomalyConfig.NoData.AlertMethods = []v1alphaSLO.AnomalyConfigAlertMethod{
-			{
-				Name:    alertMethod.Metadata.Name,
-				Project: alertMethod.Metadata.Project,
-			},
-		}
 
-		metricSpecs := slo.Spec.AllMetricSpecs()
-		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-		sourceType := metricSpecs[0].DataSourceType()
-		sources := filterSlice(agentsAndDirects, func(object manifest.Object) bool {
-			if object.GetKind() != slo.Spec.Indicator.MetricSource.Kind {
-				return false
+		if slo.Spec.HasCompositeObjectives() {
+			for componentIndex, component := range slo.Spec.Objectives[0].Composite.Components.Objectives {
+				componentSlo := slos[len(slos)-1-componentIndex].(v1alphaSLO.SLO)
+				component.Project = componentSlo.Metadata.Project
+				component.SLO = componentSlo.Metadata.Name
+				component.Objective = componentSlo.Spec.Objectives[0].Name
+				slo.Spec.Objectives[0].Composite.Components.Objectives[componentIndex] = component
 			}
-			var getType func() (v1alpha.DataSourceType, error)
-			if direct, ok := object.(v1alphaDirect.Direct); ok {
-				getType = direct.Spec.GetType
-			} else if agent, ok := object.(v1alphaAgent.Agent); ok {
-				getType = agent.Spec.GetType
+		} else {
+			slo.Spec.AnomalyConfig.NoData.AlertMethods = []v1alphaSLO.AnomalyConfigAlertMethod{
+				{
+					Name:    alertMethod.Metadata.Name,
+					Project: alertMethod.Metadata.Project,
+				},
 			}
-			require.NotNil(t, getType)
-			typ, err := getType()
-			require.NoError(t, err)
-			return typ == sourceType
-		})
-		require.Greater(t, len(sources), 0, "expected at least 1 source of type %s", sourceType)
-		source := sources[0]
-		slo.Spec.Indicator.MetricSource.Name = source.GetName()
-		slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
 
-		switch i {
-		case 0:
-			slo.Metadata.Project = defaultProject
-			slo.Spec.Service = defaultProjectService.GetName()
-			// We don't need to have these field filled,
-			// the first SLO is only here to test default project querying.
-			slo.Spec.AlertPolicies = []string{}
-			slo.Spec.AnomalyConfig = nil
-		case 1:
-			slo.Metadata.Labels["team"] = []string{"green"}
-		case 2:
-			slo.Metadata.Labels["team"] = []string{"orange"}
-		case 3:
-			slo.Metadata.Labels["team"] = []string{"orange"}
-		}
-		// TODO: Remove this after PC-13575 is resolved.
-		if slo.Spec.Indicator.MetricSource.Kind == manifest.KindAgent && sourceType == v1alpha.CloudWatch {
-			skip := false
-			for _, spec := range slo.Spec.AllMetricSpecs() {
-				if spec.CloudWatch.AccountID != nil {
-					skip = true
-					break
+			metricSpecs := slo.Spec.AllMetricSpecs()
+			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
+			sourceType := metricSpecs[0].DataSourceType()
+			sources := filterSlice(agentsAndDirects, func(object manifest.Object) bool {
+				if object.GetKind() != slo.Spec.Indicator.MetricSource.Kind {
+					return false
 				}
+				var getType func() (v1alpha.DataSourceType, error)
+				if direct, ok := object.(v1alphaDirect.Direct); ok {
+					getType = direct.Spec.GetType
+				} else if agent, ok := object.(v1alphaAgent.Agent); ok {
+					getType = agent.Spec.GetType
+				}
+				require.NotNil(t, getType)
+				typ, err := getType()
+				require.NoError(t, err)
+				return typ == sourceType
+			})
+			require.Greater(t, len(sources), 0, "expected at least 1 source of type %s", sourceType)
+			source := sources[0]
+			slo.Spec.Indicator.MetricSource.Name = source.GetName()
+			slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
+
+			switch i {
+			case 0:
+				slo.Metadata.Project = defaultProject
+				slo.Spec.Service = defaultProjectService.GetName()
+				// We don't need to have these field filled,
+				// the first SLO is only here to test default project querying.
+				slo.Spec.AlertPolicies = []string{}
+				slo.Spec.AnomalyConfig = nil
+			case 1:
+				slo.Metadata.Labels["team"] = []string{"green"}
+			case 2:
+				slo.Metadata.Labels["team"] = []string{"orange"}
+			case 3:
+				slo.Metadata.Labels["team"] = []string{"orange"}
 			}
-			if skip {
-				continue
+			// TODO: Remove this after PC-13575 is resolved.
+			if slo.Spec.Indicator.MetricSource.Kind == manifest.KindAgent && sourceType == v1alpha.CloudWatch {
+				skip := false
+				for _, spec := range slo.Spec.AllMetricSpecs() {
+					if spec.CloudWatch.AccountID != nil {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					continue
+				}
 			}
 		}
 		slos = append(slos, slo)
