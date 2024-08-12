@@ -29,7 +29,7 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: User experience
-      value: null
+      value: 0.0
       name: user-experience
       target: 0.95
       composite:
@@ -101,7 +101,7 @@
     budgetingMethod: Occurrences
     objectives:
     - displayName: User experience
-      value: null
+      value: 0.0
       name: user-experience
       target: 0.95
       composite:
@@ -170,7 +170,7 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: User experience
-      value: null
+      value: 0.0
       name: user-experience
       target: 0.95
       timeSliceTarget: 0.9
@@ -243,7 +243,7 @@
     budgetingMethod: Timeslices
     objectives:
     - displayName: User experience
-      value: null
+      value: 0.0
       name: user-experience
       target: 0.95
       timeSliceTarget: 0.9
