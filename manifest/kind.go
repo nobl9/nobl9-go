@@ -20,6 +20,7 @@ RoleBinding
 Annotation
 UserGroup
 BudgetAdjustment
+Report
 )*/
 type Kind int
 

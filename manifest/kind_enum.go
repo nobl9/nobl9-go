@@ -40,11 +40,13 @@ const (
 	KindUserGroup
 	// KindBudgetAdjustment is a Kind of type BudgetAdjustment.
 	KindBudgetAdjustment
+	// KindReport is a Kind of type Report.
+	KindReport
 )
 
 var ErrInvalidKind = fmt.Errorf("not a valid Kind, try [%s]", strings.Join(_KindNames, ", "))
 
-const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodDirectDataExportRoleBindingAnnotationUserGroupBudgetAdjustment"
+const _KindName = "SLOServiceAgentAlertPolicyAlertSilenceAlertProjectAlertMethodDirectDataExportRoleBindingAnnotationUserGroupBudgetAdjustmentReport"
 
 var _KindNames = []string{
 	_KindName[0:3],
@@ -61,6 +63,7 @@ var _KindNames = []string{
 	_KindName[88:98],
 	_KindName[98:107],
 	_KindName[107:123],
+	_KindName[123:129],
 }
 
 // KindNames returns a list of possible string values of Kind.
@@ -87,6 +90,7 @@ func KindValues() []Kind {
 		KindAnnotation,
 		KindUserGroup,
 		KindBudgetAdjustment,
+		KindReport,
 	}
 }
 
@@ -105,6 +109,7 @@ var _KindMap = map[Kind]string{
 	KindAnnotation:       _KindName[88:98],
 	KindUserGroup:        _KindName[98:107],
 	KindBudgetAdjustment: _KindName[107:123],
+	KindReport:           _KindName[123:129],
 }
 
 // String implements the Stringer interface.
@@ -151,6 +156,8 @@ var _KindValue = map[string]Kind{
 	strings.ToLower(_KindName[98:107]):  KindUserGroup,
 	_KindName[107:123]:                  KindBudgetAdjustment,
 	strings.ToLower(_KindName[107:123]): KindBudgetAdjustment,
+	_KindName[123:129]:                  KindReport,
+	strings.ToLower(_KindName[123:129]): KindReport,
 }
 
 // ParseKind attempts to convert a string to a Kind.

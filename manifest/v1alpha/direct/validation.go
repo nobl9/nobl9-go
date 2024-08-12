@@ -208,14 +208,6 @@ var (
 			WithName("account").
 			Required().
 			Rules(validation.StringNotEmpty()),
-		validation.For(func(l LogicMonitorConfig) string { return l.AccessID }).
-			WithName("accessId").
-			Required().
-			Rules(validation.StringNotEmpty()),
-		validation.For(func(l LogicMonitorConfig) string { return l.AccessKey }).
-			WithName("accessKey").
-			Required().
-			Rules(validation.StringNotEmpty()),
 	)
 	azurePrometheusValidation = validation.New[AzurePrometheusConfig](
 		urlPropertyRules(func(s AzurePrometheusConfig) string { return s.URL }),

@@ -115,9 +115,11 @@ words:
   - opentsdb
   - opsgenie
   - pagerduty
+  - pastlatest
   - pathutils
   - plantuml
   - preconfigured
+  - projectservice
   - promql
   - puml
   - retryable

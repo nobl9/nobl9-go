@@ -20,6 +20,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -90,6 +91,8 @@ func parseObject(kind manifest.Kind, unmarshal unmarshalFunc) (manifest.Object, 
 		return genericParseObject[usergroup.UserGroup](unmarshal)
 	case manifest.KindBudgetAdjustment:
 		return genericParseObject[budgetadjustment.BudgetAdjustment](unmarshal)
+	case manifest.KindReport:
+		return genericParseObject[report.Report](unmarshal)
 	default:
 		return nil, fmt.Errorf("%s is %w", kind, manifest.ErrInvalidKind)
 	}

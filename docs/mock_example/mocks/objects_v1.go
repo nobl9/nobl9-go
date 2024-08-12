@@ -27,6 +27,7 @@ import (
 	dataexport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	direct "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	project "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	report "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	rolebinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	service "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	slo "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -290,6 +291,45 @@ func (c *MockObjectsV1EndpointsGetBudgetAdjustmentsCall) Do(f func(context.Conte
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockObjectsV1EndpointsGetBudgetAdjustmentsCall) DoAndReturn(f func(context.Context, v1.GetBudgetAdjustmentRequest) ([]budgetadjustment.BudgetAdjustment, error)) *MockObjectsV1EndpointsGetBudgetAdjustmentsCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// GetReports mocks base method.
+func (m *MockObjectsV1Endpoints) GetReports(arg0 context.Context, arg1 v1.GetReportsRequest) ([]report.Report, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReports", arg0, arg1)
+	ret0, _ := ret[0].([]report.Report)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetReports indicates an expected call of GetReports.
+func (mr *MockObjectsV1EndpointsMockRecorder) GetReports(arg0, arg1 any) *MockObjectsV1EndpointsGetReportsCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReports", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetReports), arg0, arg1)
+	return &MockObjectsV1EndpointsGetReportsCall{Call: call}
+}
+
+// MockObjectsV1EndpointsGetReportsCall wrap *gomock.Call
+type MockObjectsV1EndpointsGetReportsCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockObjectsV1EndpointsGetReportsCall) Return(arg0 []report.Report, arg1 error) *MockObjectsV1EndpointsGetReportsCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockObjectsV1EndpointsGetReportsCall) Do(f func(context.Context, v1.GetReportsRequest) ([]report.Report, error)) *MockObjectsV1EndpointsGetReportsCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockObjectsV1EndpointsGetReportsCall) DoAndReturn(f func(context.Context, v1.GetReportsRequest) ([]report.Report, error)) *MockObjectsV1EndpointsGetReportsCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

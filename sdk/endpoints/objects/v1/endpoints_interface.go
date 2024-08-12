@@ -17,6 +17,7 @@ import (
 	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -45,4 +46,5 @@ type Endpoints interface {
 	// concrete manifest.Version instead, like GetV1alphaAlerts
 	GetAlerts(ctx context.Context, header http.Header, query url.Values) ([]manifest.Object, int, error)
 	GetBudgetAdjustments(ctx context.Context, params GetBudgetAdjustmentRequest) ([]v1alphaBudgetAdjustment.BudgetAdjustment, error)
+	GetReports(ctx context.Context, params GetReportsRequest) ([]v1alphaReport.Report, error)
 }
