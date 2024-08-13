@@ -68,7 +68,7 @@ func (s sloCompositeExample) SLO() v1alphaSLO.SLO {
 			BudgetingMethod: s.BudgetingMethod.String(),
 			Attachments:     exampleAttachments(),
 			AlertPolicies:   exampleAlertPolicies(),
-			AnomalyConfig:   exampleAnomalyConfig(),
+			AnomalyConfig:   nil,
 			TimeWindows:     exampleTimeWindows(s.TimeWindowType),
 			Objectives: []v1alphaSLO.Objective{
 				{

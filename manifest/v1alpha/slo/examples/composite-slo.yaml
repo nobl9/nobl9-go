@@ -65,11 +65,6 @@
     attachments:
     - url: https://docs.nobl9.com
       displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
 # Composite SLO
 # Budgeting method: Occurrences
 # Time window type: Rolling
@@ -134,11 +129,6 @@
     attachments:
     - url: https://docs.nobl9.com
       displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
 # Composite SLO
 # Budgeting method: Timeslices
 # Time window type: Calendar
@@ -207,11 +197,6 @@
     attachments:
     - url: https://docs.nobl9.com
       displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
 # Composite SLO
 # Budgeting method: Timeslices
 # Time window type: Rolling
@@ -277,8 +262,3 @@
     attachments:
     - url: https://docs.nobl9.com
       displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
