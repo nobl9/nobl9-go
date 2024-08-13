@@ -17,7 +17,7 @@ func (s sloCompositeExample) GetObject() any {
 }
 
 func (s sloCompositeExample) GetVariant() string {
-	return "compostie-slo"
+	return "composite-slo"
 }
 
 func (s sloCompositeExample) GetSubVariant() string {
