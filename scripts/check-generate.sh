@@ -2,7 +2,7 @@
 
 set -e
 
-GEN_PATHS="*.go *.yaml"
+GEN_PATHS="**/*.go **/*.yaml"
 TMP_DIR=$(mktemp -d)
 
 cleanup_git() {
