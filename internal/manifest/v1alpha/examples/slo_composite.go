@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 )
@@ -46,8 +48,18 @@ func (s sloCompositeExample) SLO() v1alphaSLO.SLO {
 			Name:        "user-experience-slo",
 			DisplayName: "User experience SLO",
 			Project:     sdk.DefaultProject,
-			Labels:      exampleCompositeLabels(),
-			Annotations: exampleCompositeMetadataAnnotations(),
+			Labels: v1alpha.Labels{
+				"team":   {"green", "ux"},
+				"env":    {"prod", "dev"},
+				"region": {"us", "eu"},
+				"area":   {"user-experience"},
+			},
+			Annotations: v1alpha.MetadataAnnotations{
+				"team":   "ux",
+				"env":    "prod",
+				"region": "us",
+				"area":   "user-experience",
+			},
 		},
 		v1alphaSLO.Spec{
 			Description:     "Example composite SLO",
