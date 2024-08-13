@@ -2,6 +2,7 @@
 
 set -e
 
+GEN_PATHS="*.go *.yaml"
 TMP_DIR=$(mktemp -d)
 
 cleanup_git() {
@@ -15,7 +16,7 @@ main() {
 
   make -C "$TMP_DIR" generate
 
-  CHANGED=$(git -C "$TMP_DIR" status --porcelain)
+  CHANGED=$(git -C "$TMP_DIR" status --porcelain ${GEN_PATHS})
   if [ -n "${CHANGED}" ]; then
     printf >&2 "There are generated changes that are not committed:\n%s\n" "$CHANGED"
     exit 1
