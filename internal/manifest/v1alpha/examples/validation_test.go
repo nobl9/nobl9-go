@@ -21,9 +21,9 @@ import (
 
 func TestExamples_Validate_SLO(t *testing.T) {
 	for _, variant := range SLO() {
-		v := variant.(sloExample)
+		v := variant.(sloExampleInterface)
 		t.Run(v.String(), func(t *testing.T) {
-			assert.NoError(t, v.SLO.Validate())
+			assert.NoError(t, v.SLO().Validate())
 		})
 	}
 }
