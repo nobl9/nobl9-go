@@ -2,6 +2,7 @@ package v1alphaExamples
 
 import (
 	"fmt"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"

@@ -3,14 +3,15 @@ package v1alphaExamples
 import (
 	"embed"
 	"fmt"
+	"path/filepath"
+	"reflect"
+	"slices"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 	"github.com/nobl9/nobl9-go/sdk"
-	"path/filepath"
-	"reflect"
-	"slices"
 )
 
 //go:embed queries
