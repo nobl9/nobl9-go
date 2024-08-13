@@ -36,20 +36,20 @@
         maxDelay: 45m0s
         components:
           objectives:
-          - project: project-1
-            slo: slo-1
-            objective: objective-1
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
             weight: 1.0
             whenDelayed: CountAsGood
-          - project: project-2
-            slo: slo-2
-            objective: objective-2
-            weight: 2.0
-            whenDelayed: CountAsBad
-          - project: project-3
-            slo: slo-3
-            objective: objective-3
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
             weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
             whenDelayed: Ignore
       primary: true
     service: web-app
@@ -108,20 +108,20 @@
         maxDelay: 45m0s
         components:
           objectives:
-          - project: project-1
-            slo: slo-1
-            objective: objective-1
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
             weight: 1.0
             whenDelayed: CountAsGood
-          - project: project-2
-            slo: slo-2
-            objective: objective-2
-            weight: 2.0
-            whenDelayed: CountAsBad
-          - project: project-3
-            slo: slo-3
-            objective: objective-3
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
             weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
             whenDelayed: Ignore
       primary: true
     service: web-app
@@ -178,20 +178,20 @@
         maxDelay: 45m0s
         components:
           objectives:
-          - project: project-1
-            slo: slo-1
-            objective: objective-1
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
             weight: 1.0
             whenDelayed: CountAsGood
-          - project: project-2
-            slo: slo-2
-            objective: objective-2
-            weight: 2.0
-            whenDelayed: CountAsBad
-          - project: project-3
-            slo: slo-3
-            objective: objective-3
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
             weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
             whenDelayed: Ignore
       primary: true
     service: web-app
@@ -251,20 +251,20 @@
         maxDelay: 45m0s
         components:
           objectives:
-          - project: project-1
-            slo: slo-1
-            objective: objective-1
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
             weight: 1.0
             whenDelayed: CountAsGood
-          - project: project-2
-            slo: slo-2
-            objective: objective-2
-            weight: 2.0
-            whenDelayed: CountAsBad
-          - project: project-3
-            slo: slo-3
-            objective: objective-3
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
             weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
             whenDelayed: Ignore
       primary: true
     service: web-app
