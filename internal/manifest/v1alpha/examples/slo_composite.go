@@ -13,7 +13,7 @@ type sloCompositeExample struct {
 }
 
 func (s sloCompositeExample) GetObject() any {
-	return s.Slo()
+	return s.SLO()
 }
 
 func (s sloCompositeExample) GetVariant() string {
@@ -40,7 +40,7 @@ func (s sloCompositeExample) String() string {
 	)
 }
 
-func (s sloCompositeExample) Slo() v1alphaSLO.SLO {
+func (s sloCompositeExample) SLO() v1alphaSLO.SLO {
 	return v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "user-experience-slo",

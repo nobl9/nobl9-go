@@ -134,7 +134,7 @@ var badOverTotalVariants = []string{
 type sloExampleInterface interface {
 	Example
 	fmt.Stringer
-	Slo() v1alphaSLO.SLO
+	SLO() v1alphaSLO.SLO
 }
 
 func SLO() []Example {

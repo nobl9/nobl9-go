@@ -31,7 +31,7 @@ type sloExample struct {
 }
 
 func (s sloExample) GetObject() any {
-	return s.Slo()
+	return s.SLO()
 }
 
 func (s sloExample) GetVariant() string {
@@ -73,7 +73,7 @@ func (s sloExample) String() string {
 	)
 }
 
-func (s sloExample) Slo() v1alphaSLO.SLO {
+func (s sloExample) SLO() v1alphaSLO.SLO {
 	slo := v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "api-server-slo",
