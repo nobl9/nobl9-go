@@ -10,7 +10,7 @@ import (
 func TestSingleRule(t *testing.T) {
 	r := NewSingleRule(func(v int) error {
 		if v < 0 {
-			return errors.Errorf("must be positive")
+			return errors.New("must be positive")
 		}
 		return nil
 	})
@@ -24,7 +24,7 @@ func TestSingleRule(t *testing.T) {
 func TestSingleRule_WithErrorCode(t *testing.T) {
 	r := NewSingleRule(func(v int) error {
 		if v < 0 {
-			return errors.Errorf("must be positive")
+			return errors.New("must be positive")
 		}
 		return nil
 	}).WithErrorCode("test")
@@ -64,7 +64,7 @@ func TestSingleRule_WithMessage(t *testing.T) {
 	} {
 		r := NewSingleRule(func(v int) error {
 			if v < 0 {
-				return errors.Errorf(test.Error)
+				return errors.New(test.Error)
 			}
 			return nil
 		}).
@@ -104,7 +104,7 @@ func TestSingleRule_WithDetails(t *testing.T) {
 	} {
 		r := NewSingleRule(func(v int) error {
 			if v < 0 {
-				return errors.Errorf(test.Error)
+				return errors.New(test.Error)
 			}
 			return nil
 		}).

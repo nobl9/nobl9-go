@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -17,7 +18,7 @@ import (
 
 func TestMain(m *testing.M) {
 	v1alphaParser.UseStrictDecodingMode = true
-	m.Run()
+	os.Exit(m.Run())
 }
 
 func TestObjectExamples(t *testing.T) {
