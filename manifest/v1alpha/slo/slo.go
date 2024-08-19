@@ -17,7 +17,7 @@ func New(metadata Metadata, spec Spec) SLO {
 	}
 }
 
-// SLO struct which mapped one to one with kind: slo yaml definition, external usage
+// SLO struct which mapped one to one with kind: slo yaml definition, external usage.
 type SLO struct {
 	APIVersion manifest.Version `json:"apiVersion"`
 	Kind       manifest.Kind    `json:"kind"`
@@ -54,7 +54,7 @@ type Spec struct {
 	// CreatedBy is the id of the user who first created the SLO.
 	// Read-only field.
 	CreatedBy string `json:"createdBy,omitempty"`
-	// Deprecated: this implementation of Composite wil be removed and replaced with new CompositeSpec
+	// Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
 }
@@ -81,7 +81,7 @@ func (o ObjectiveBase) GetValue() float64 {
 	return v
 }
 
-// Objective represents single objective for SLO, for internal usage
+// Objective represents single objective for SLO, for internal usage.
 type Objective struct {
 	ObjectiveBase `json:",inline"`
 	// <!-- Go struct field and type names renaming budgetTarget to target has been postponed after GA as requested
@@ -90,9 +90,8 @@ type Objective struct {
 	TimeSliceTarget *float64          `json:"timeSliceTarget,omitempty"`
 	CountMetrics    *CountMetricsSpec `json:"countMetrics,omitempty"`
 	RawMetric       *RawMetricSpec    `json:"rawMetric,omitempty"`
-	// Composite is not yet supported, applying it will have no effect
-	Composite *CompositeSpec `json:"composite,omitempty"`
-	Operator  *string        `json:"op,omitempty"`
+	Composite       *CompositeSpec    `json:"composite,omitempty"`
+	Operator        *string           `json:"op,omitempty"`
 	// Primary is used to highlight the main (primary) objective of the [SLO].
 	Primary *bool `json:"primary,omitempty"`
 }
@@ -109,7 +108,7 @@ func (o Objective) IsComposite() bool {
 	return o.Composite != nil
 }
 
-// Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage
+// Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage.
 type Indicator struct {
 	MetricSource MetricSourceSpec `json:"metricSource"`
 	RawMetric    *MetricSpec      `json:"rawMetric,omitempty"`
@@ -122,7 +121,7 @@ type MetricSourceSpec struct {
 }
 
 // Composite represents configuration for Composite SLO.
-// Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
+// Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`
 	BurnRateCondition *CompositeBurnRateCondition `json:"burnRateCondition,omitempty"`

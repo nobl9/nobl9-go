@@ -1,0 +1,264 @@
+# Composite SLO
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: User experience
+      value: 0.0
+      name: user-experience
+      target: 0.95
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
+            weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+# Composite SLO
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: User experience
+      value: 0.0
+      name: user-experience
+      target: 0.95
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
+            weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+# Composite SLO
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: User experience
+      value: 0.0
+      name: user-experience
+      target: 0.95
+      timeSliceTarget: 0.9
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
+            weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: 2022-12-01 00:00:00
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+# Composite SLO
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: user-experience-slo
+    displayName: User experience SLO
+    project: default
+    labels:
+      area:
+      - user-experience
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - ux
+    annotations:
+      area: user-experience
+      env: prod
+      region: us
+      team: ux
+  spec:
+    description: Example composite SLO
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: User experience
+      value: 0.0
+      name: user-experience
+      target: 0.95
+      timeSliceTarget: 0.9
+      composite:
+        maxDelay: 45m0s
+        components:
+          objectives:
+          - project: e-commerce
+            slo: store-web-latency
+            objective: latency
+            weight: 1.0
+            whenDelayed: CountAsGood
+          - project: e-commerce
+            slo: store-web-availability
+            objective: availability
+            weight: 4.0
+            whenDelayed: CountAsBad
+          - project: external-services
+            slo: payment-integration-availability
+            objective: availability
+            weight: 3.0
+            whenDelayed: Ignore
+      primary: true
+    service: web-app
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation

@@ -8,7 +8,7 @@ GO_ENUM_VERSION := v0.6.0
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.20.0
 # renovate datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION := v1.59.1
+GOLANGCI_LINT_VERSION := v1.60.1
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
 GOVULNCHECK_VERSION := v1.1.3
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
@@ -44,6 +44,9 @@ test:
 ## Run all end-to-end tests (requires Nobl9 platform credentials).
 test/e2e:
 	# The '-count=1' flag disables tests results caching, as per https://go.dev/doc/go1.10#test.
+	@if [ "$(GITHUB_ACTIONS)" != "true" ]; then \
+		export NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE=true; \
+	fi; \
 	go test -count=1 -race -test.v -timeout=5m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.

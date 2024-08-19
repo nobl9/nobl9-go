@@ -17,18 +17,21 @@ import (
 //go:embed queries
 var queriesFS embed.FS
 
+type sloBaseExample struct {
+	BudgetingMethod v1alphaSLO.BudgetingMethod
+	TimeWindowType  twindow.TimeWindowTypeEnum
+}
+
 type sloExample struct {
+	sloBaseExample
+
 	DataSourceType   v1alpha.DataSourceType
-	BudgetingMethod  v1alphaSLO.BudgetingMethod
-	TimeWindowType   twindow.TimeWindowTypeEnum
 	MetricVariant    metricVariant
 	MetricSubVariant metricSubVariant
-
-	SLO v1alphaSLO.SLO
 }
 
 func (s sloExample) GetObject() any {
-	return s.SLO
+	return s.SLO()
 }
 
 func (s sloExample) GetVariant() string {
@@ -70,7 +73,7 @@ func (s sloExample) String() string {
 	)
 }
 
-func (s sloExample) Generate() v1alphaSLO.SLO {
+func (s sloExample) SLO() v1alphaSLO.SLO {
 	slo := v1alphaSLO.New(
 		v1alphaSLO.Metadata{
 			Name:        "api-server-slo",
@@ -90,23 +93,10 @@ func (s sloExample) Generate() v1alphaSLO.SLO {
 				},
 			},
 			BudgetingMethod: s.BudgetingMethod.String(),
-			Attachments: []v1alphaSLO.Attachment{
-				{
-					URL:         "https://docs.nobl9.com",
-					DisplayName: ptr("Nobl9 Documentation"),
-				},
-			},
-			AlertPolicies: []string{"fast-burn-5x-for-last-10m"},
-			AnomalyConfig: &v1alphaSLO.AnomalyConfig{
-				NoData: &v1alphaSLO.AnomalyConfigNoData{
-					AlertMethods: []v1alphaSLO.AnomalyConfigAlertMethod{
-						{
-							Name:    "slack-notification",
-							Project: sdk.DefaultProject,
-						},
-					},
-				},
-			},
+			Attachments:     exampleAttachments(),
+			AlertPolicies:   exampleAlertPolicies(),
+			AnomalyConfig:   exampleAnomalyConfig(),
+			TimeWindows:     exampleTimeWindows(s.TimeWindowType),
 		})
 	objective := v1alphaSLO.Objective{
 		ObjectiveBase: v1alphaSLO.ObjectiveBase{
@@ -114,36 +104,13 @@ func (s sloExample) Generate() v1alphaSLO.SLO {
 			Name:        "ok",
 			Value:       nil,
 		},
-		BudgetTarget: ptr(0.95),
-		Primary:      ptr(true),
-		RawMetric:    &v1alphaSLO.RawMetricSpec{},
+		BudgetTarget:    ptr(0.95),
+		TimeSliceTarget: exampleTimeSliceTarget(s.BudgetingMethod),
+		Primary:         ptr(true),
+		RawMetric:       &v1alphaSLO.RawMetricSpec{},
 		CountMetrics: &v1alphaSLO.CountMetricsSpec{
 			Incremental: ptr(true),
 		},
-	}
-	if s.BudgetingMethod == v1alphaSLO.BudgetingMethodTimeslices {
-		objective.TimeSliceTarget = ptr(0.90)
-	}
-	switch s.TimeWindowType {
-	case twindow.Calendar:
-		slo.Spec.TimeWindows = []v1alphaSLO.TimeWindow{
-			{
-				Unit:  "Month",
-				Count: 1.0,
-				Calendar: &v1alphaSLO.Calendar{
-					StartTime: "2022-12-01 00:00:00",
-					TimeZone:  "UTC",
-				},
-			},
-		}
-	case twindow.Rolling:
-		slo.Spec.TimeWindows = []v1alphaSLO.TimeWindow{
-			{
-				Unit:      twindow.Hour.String(),
-				Count:     1.0,
-				IsRolling: true,
-			},
-		}
 	}
 	switch s.MetricVariant {
 	case metricVariantThreshold:
@@ -161,6 +128,68 @@ func (s sloExample) Generate() v1alphaSLO.SLO {
 	// This way the getVariant function can modify the SLO object as needed
 	// without any chance that these changes would be overwritten.
 	return s.generateMetricVariant(slo)
+}
+
+func exampleTimeWindows(timeWindowType twindow.TimeWindowTypeEnum) []v1alphaSLO.TimeWindow {
+	var timeWindow []v1alphaSLO.TimeWindow
+	switch timeWindowType {
+	case twindow.Calendar:
+		timeWindow = []v1alphaSLO.TimeWindow{
+			{
+				Unit:  "Month",
+				Count: 1.0,
+				Calendar: &v1alphaSLO.Calendar{
+					StartTime: "2022-12-01 00:00:00",
+					TimeZone:  "UTC",
+				},
+			},
+		}
+	case twindow.Rolling:
+		timeWindow = []v1alphaSLO.TimeWindow{
+			{
+				Unit:      twindow.Hour.String(),
+				Count:     1.0,
+				IsRolling: true,
+			},
+		}
+	}
+	return timeWindow
+}
+
+func exampleTimeSliceTarget(method v1alphaSLO.BudgetingMethod) *float64 {
+	var target *float64
+	if method == v1alphaSLO.BudgetingMethodTimeslices {
+		target = ptr(0.90)
+	} else {
+		target = nil
+	}
+	return target
+}
+
+func exampleAlertPolicies() []string {
+	return []string{"fast-burn-5x-for-last-10m"}
+}
+
+func exampleAnomalyConfig() *v1alphaSLO.AnomalyConfig {
+	return &v1alphaSLO.AnomalyConfig{
+		NoData: &v1alphaSLO.AnomalyConfigNoData{
+			AlertMethods: []v1alphaSLO.AnomalyConfigAlertMethod{
+				{
+					Name:    "slack-notification",
+					Project: sdk.DefaultProject,
+				},
+			},
+		},
+	}
+}
+
+func exampleAttachments() []v1alphaSLO.Attachment {
+	return []v1alphaSLO.Attachment{
+		{
+			URL:         "https://docs.nobl9.com",
+			DisplayName: ptr("Nobl9 Documentation"),
+		},
+	}
 }
 
 // metricVariant lists the standard metric variants.

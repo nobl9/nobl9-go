@@ -3,6 +3,8 @@ package validation
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // HashFunction accepts a value and returns a comparable hash.
@@ -27,7 +29,7 @@ func SliceUnique[S []V, V any, H comparable](hashFunc HashFunction[V, H], constr
 				if len(constraints) > 0 {
 					errMsg += " based on constraints: " + strings.Join(constraints, ", ")
 				}
-				return fmt.Errorf(errMsg)
+				return errors.New(errMsg)
 			}
 			unique[hash] = i
 		}

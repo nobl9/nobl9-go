@@ -48,7 +48,7 @@ type Date interface {
 
 // TimeOfDay represents valid time of day
 type TimeOfDay interface {
-	Clock() (hour, min, sec int)
+	Clock() (hour, minute, sec int)
 }
 
 // DateWithTime represents day in calendar with time of day

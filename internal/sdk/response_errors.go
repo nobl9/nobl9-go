@@ -36,5 +36,5 @@ func getResponseServerError(resp *http.Response) error {
 	if traceID != "" {
 		msg = fmt.Sprintf("%s error id: %s", msg, traceID)
 	}
-	return fmt.Errorf(msg)
+	return errors.New(msg)
 }
