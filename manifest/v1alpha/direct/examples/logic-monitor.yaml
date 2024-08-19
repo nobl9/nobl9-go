@@ -11,6 +11,13 @@ spec:
     account: my-account-name
     accessId: 9xA2BssShK21ld9LoOYu
     accessKey: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 3
     unit: Minute
