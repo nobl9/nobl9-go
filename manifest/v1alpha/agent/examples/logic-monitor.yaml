@@ -9,6 +9,13 @@ spec:
   releaseChannel: beta
   logicMonitor:
     account: my-account-name
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 3
     unit: Minute
