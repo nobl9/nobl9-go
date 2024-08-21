@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -23,7 +24,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.goodTotal",
-			Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, validation.ErrorCodeOneOf),
+			Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, rules.ErrorCodeOneOf),
 		})
 	})
 	t.Run("projectId must be the same for good and total", func(t *testing.T) {
@@ -33,7 +34,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 	t.Run("location must be the same for good and total", func(t *testing.T) {
@@ -43,7 +44,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 }
@@ -56,15 +57,15 @@ func TestBigQuery(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.projectId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.location",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.bigQuery.query",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})

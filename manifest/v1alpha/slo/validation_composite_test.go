@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -23,7 +24,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].name",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		})
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
@@ -33,7 +34,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].displayName",
-			Code: validation.ErrorCodeStringMaxLength,
+			Code: rules.ErrorCodeStringMaxLength,
 		})
 	})
 	t.Run("fails - spec.indicator provided", func(t *testing.T) {
@@ -61,7 +62,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop:    "spec.indicator",
-				Code:    validation.ErrorCodeForbidden,
+				Code:    rules.ErrorCodeForbidden,
 				Message: "property is forbidden; indicator section is forbidden when spec.objectives[0].composite is provided",
 			})
 		}
@@ -76,7 +77,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
-				Code:    validation.ErrorCodeSliceLength,
+				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
@@ -102,7 +103,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
-				Code:    validation.ErrorCodeSliceLength,
+				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
@@ -131,7 +132,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop:    "spec.objectives",
-				Code:    validation.ErrorCodeSliceLength,
+				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
 		)
@@ -153,7 +154,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.composite",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 				Message: "property is forbidden; composite section is forbidden " +
 					"when spec.objectives[0].composite is provided",
 			})
@@ -174,7 +175,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop:    "spec.objectives[0].composite.maxDelay",
-				Code:    validation.ErrorCodeGreaterThanOrEqualTo,
+				Code:    rules.ErrorCodeGreaterThanOrEqualTo,
 				Message: "should be greater than or equal to '1m0s'",
 			},
 		)
@@ -186,7 +187,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.maxDelay",
-			Code:    validation.ErrorCodeRequired,
+			Code:    rules.ErrorCodeRequired,
 			Message: "property is required but was empty",
 		})
 	})
@@ -197,7 +198,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.maxDelay",
-			Code:    validation.ErrorCodeDurationPrecision,
+			Code:    rules.ErrorCodeDurationPrecision,
 			Message: "duration must be defined with 1m0s precision",
 		})
 	})
@@ -208,7 +209,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].weight",
-			Code: validation.ErrorCodeGreaterThan,
+			Code: rules.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - weight is zero for second composite objective", func(t *testing.T) {
@@ -218,7 +219,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[1].weight",
-			Code: validation.ErrorCodeGreaterThan,
+			Code: rules.ErrorCodeGreaterThan,
 		})
 	})
 	t.Run("fails - one of objectives is the composite SLO itself (cycle)", func(t *testing.T) {
@@ -229,7 +230,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "slo",
-			Code:    validation.ErrorCodeForbidden,
+			Code:    rules.ErrorCodeForbidden,
 			Message: "composite SLO cannot have itself as one of its objectives",
 		})
 	})
@@ -240,7 +241,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].project",
-			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
+			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -250,7 +251,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
-			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
+			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -260,7 +261,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
-			Code: joinErrorCodes(validation.ErrorCodeStringIsDNSSubdomain, validation.ErrorCodeStringMatchRegexp),
+			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {
@@ -270,7 +271,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[0].weight",
-			Code:    validation.ErrorCodeGreaterThan,
+			Code:    rules.ErrorCodeGreaterThan,
 			Message: "should be greater than '0'",
 		})
 	})
@@ -281,7 +282,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[0].whenDelayed",
-			Code:    validation.ErrorCodeOneOf,
+			Code:    rules.ErrorCodeOneOf,
 			Message: "must be one of [CountAsGood, CountAsBad, Ignore]",
 		})
 	})
@@ -303,7 +304,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[2]",
-			Code:    validation.ErrorCodeForbidden,
+			Code:    rules.ErrorCodeForbidden,
 			Message: "composite SLO cannot have duplicated SLOs as its objectives",
 		})
 	})
@@ -315,7 +316,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives",
-			Code:    validation.ErrorCodeRequired,
+			Code:    rules.ErrorCodeRequired,
 			Message: "property is required but was empty",
 		})
 	})

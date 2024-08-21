@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -30,11 +31,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, annotation, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -51,11 +52,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, annotation, err, 4,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
 }
@@ -76,7 +77,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		})
 	})
 	t.Run("required", func(t *testing.T) {
@@ -85,7 +86,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -103,7 +104,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -112,7 +113,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -130,7 +131,7 @@ func TestValidate_Spec_Objective(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectiveName",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 }

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
@@ -55,7 +56,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.email.to",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			AlertMethod: EmailAlertMethod{
@@ -67,7 +68,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.email.cc",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			AlertMethod: EmailAlertMethod{
@@ -79,7 +80,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.email.bcc",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			AlertMethod: EmailAlertMethod{

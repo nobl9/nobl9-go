@@ -3,7 +3,9 @@ package slo
 import (
 	"regexp"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -52,119 +54,119 @@ var supportedAzureMonitorDataTypes = []string{
 
 var azureMonitorResourceIDRegex = regexp.MustCompile(`^/subscriptions/[a-zA-Z0-9-]+/resourceGroups/[a-zA-Z0-9-._()]+/providers/[a-zA-Z0-9-.()_]+/[a-zA-Z0-9-_()]+/[a-zA-Z0-9-_()]+$`) //nolint:lll
 
-var azureMonitorValidation = validation.New[AzureMonitorMetric](
-	validation.For(validation.GetSelf[AzureMonitorMetric]()).
+var azureMonitorValidation = govy.New(
+	govy.For(govy.GetSelf[AzureMonitorMetric]()).
 		Include(azureMonitorMetricDataTypeValidation).
 		Include(azureMonitorMetricLogsDataTypeValidation),
-	validation.For(func(p AzureMonitorMetric) string { return p.DataType }).
+	govy.For(func(p AzureMonitorMetric) string { return p.DataType }).
 		WithName("dataType").
 		Required().
-		Rules(validation.OneOf(supportedAzureMonitorDataTypes...)),
+		Rules(rules.OneOf(supportedAzureMonitorDataTypes...)),
 )
 
-var azureMonitorMetricDataTypeValidation = validation.New[AzureMonitorMetric](
-	validation.For(func(a AzureMonitorMetric) string { return a.MetricName }).
+var azureMonitorMetricDataTypeValidation = govy.New(
+	govy.For(func(a AzureMonitorMetric) string { return a.MetricName }).
 		WithName("metricName").
 		Required(),
-	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
+	govy.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
 		WithName("resourceId").
 		Required().
-		Rules(validation.StringMatchRegexp(azureMonitorResourceIDRegex)),
-	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
+		Rules(rules.StringMatchRegexp(azureMonitorResourceIDRegex)),
+	govy.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
 		Required().
-		Rules(validation.OneOf(supportedAzureMonitorAggregations...)),
-	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
+		Rules(rules.OneOf(supportedAzureMonitorAggregations...)),
+	govy.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
 		IncludeForEach(azureMonitorMetricDimensionValidation).
-		Rules(validation.SliceUnique(func(d AzureMonitorMetricDimension) string {
+		Rules(rules.SliceUnique(func(d AzureMonitorMetricDimension) string {
 			if d.Name == nil {
 				return ""
 			}
 			return *d.Name
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
-	validation.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
+	govy.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
 		WithName("workspace").
-		Rules(validation.Forbidden[AzureMonitorMetricLogAnalyticsWorkspace]()),
-	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
+		Rules(rules.Forbidden[AzureMonitorMetricLogAnalyticsWorkspace]()),
+	govy.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
-		Rules(validation.Forbidden[string]()),
+		Rules(rules.Forbidden[string]()),
 ).When(
 	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics },
-	validation.WhenDescription("dataType is '%s'", AzureMonitorDataTypeMetrics),
+	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeMetrics),
 )
 
 var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
 
-var azureMonitorMetricLogAnalyticsWorkspaceValidation = validation.New[AzureMonitorMetricLogAnalyticsWorkspace](
-	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
+var azureMonitorMetricLogAnalyticsWorkspaceValidation = govy.New(
+	govy.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
 		WithName("subscriptionId").
 		Required().
-		Rules(validation.StringUUID()),
-	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.ResourceGroup }).
+		Rules(rules.StringUUID()),
+	govy.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.ResourceGroup }).
 		WithName("resourceGroup").
 		Required().
-		Rules(validation.StringMatchRegexp(validAzureResourceGroupRegex)),
-	validation.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
+		Rules(rules.StringMatchRegexp(validAzureResourceGroupRegex)),
+	govy.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.WorkspaceID }).
 		WithName("workspaceId").
 		Required().
-		Rules(validation.StringUUID()),
+		Rules(rules.StringUUID()),
 )
 
-var azureMonitorMetricLogsDataTypeValidation = validation.New[AzureMonitorMetric](
-	validation.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
+var azureMonitorMetricLogsDataTypeValidation = govy.New(
+	govy.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
 		WithName("workspace").
 		Required().
 		Include(azureMonitorMetricLogAnalyticsWorkspaceValidation),
-	validation.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
+	govy.For(func(a AzureMonitorMetric) string { return a.KQLQuery }).
 		WithName("kqlQuery").
 		Required().
 		Rules(
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
 				WithDetails("n9_time is required"),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
 		),
-	validation.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
+	govy.For(func(a AzureMonitorMetric) string { return a.ResourceID }).
 		WithName("resourceId").
-		Rules(validation.Forbidden[string]()),
-	validation.For(func(a AzureMonitorMetric) string { return a.MetricNamespace }).
+		Rules(rules.Forbidden[string]()),
+	govy.For(func(a AzureMonitorMetric) string { return a.MetricNamespace }).
 		WithName("metricNamespace").
-		Rules(validation.Forbidden[string]()),
-	validation.For(func(a AzureMonitorMetric) string { return a.MetricName }).
+		Rules(rules.Forbidden[string]()),
+	govy.For(func(a AzureMonitorMetric) string { return a.MetricName }).
 		WithName("metricName").
-		Rules(validation.Forbidden[string]()),
-	validation.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
+		Rules(rules.Forbidden[string]()),
+	govy.For(func(a AzureMonitorMetric) string { return a.Aggregation }).
 		WithName("aggregation").
-		Rules(validation.Forbidden[string]()),
-	validation.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
+		Rules(rules.Forbidden[string]()),
+	govy.ForSlice(func(a AzureMonitorMetric) []AzureMonitorMetricDimension { return a.Dimensions }).
 		WithName("dimensions").
-		Rules(validation.Forbidden[[]AzureMonitorMetricDimension]()),
+		Rules(rules.Forbidden[[]AzureMonitorMetricDimension]()),
 ).When(
 	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs },
-	validation.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
+	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
 )
 
-var azureMonitorMetricDimensionValidation = validation.New[AzureMonitorMetricDimension](
-	validation.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
+var azureMonitorMetricDimensionValidation = govy.New(
+	govy.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
 		WithName("name").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			validation.StringMaxLength(255),
-			validation.StringASCII()),
-	validation.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Value }).
+			rules.StringNotEmpty(),
+			rules.StringMaxLength(255),
+			rules.StringASCII()),
+	govy.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Value }).
 		WithName("value").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			validation.StringMaxLength(255),
-			validation.StringASCII()),
+			rules.StringNotEmpty(),
+			rules.StringMaxLength(255),
+			rules.StringASCII()),
 )
 
-var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).Rules(
-		validation.NewSingleRule(func(c CountMetricsSpec) error {
+var azureMonitorCountMetricsLevelValidation = govy.New(
+	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
+		govy.NewRule(func(c CountMetricsSpec) error {
 			total := c.TotalMetric
 			good := c.GoodMetric
 			bad := c.BadMetric
@@ -217,8 +219,8 @@ var azureMonitorCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				}
 			}
 			return nil
-		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
 ).When(
 	whenCountMetricsIs(v1alpha.AzureMonitor),
-	validation.WhenDescription("countMetrics is azureMonitor"),
+	govy.WhenDescription("countMetrics is azureMonitor"),
 )

@@ -3,7 +3,8 @@ package alertpolicy
 import (
 	"fmt"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // Severity level describe importance of triggered alert
@@ -41,6 +42,6 @@ func ParseSeverity(value string) (Severity, error) {
 	return result, nil
 }
 
-func severityValidation() validation.SingleRule[string] {
-	return validation.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String())
+func severityValidation() govy.Rule[string] {
+	return rules.OneOf(SeverityLow.String(), SeverityMedium.String(), SeverityHigh.String())
 }

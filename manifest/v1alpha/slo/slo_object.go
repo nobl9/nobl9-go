@@ -3,7 +3,8 @@
 package slo
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (s SLO) SetOrganization(org string) manifest.Object {
 	return s
 }
 
-func (s SLO) GetValidator() validation.Validator[SLO] {
+func (s SLO) GetValidator() govy.Validator[SLO] {
 	return validator
 }

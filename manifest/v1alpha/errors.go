@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
+	"github.com/nobl9/nobl9-go/internal/errorutils"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
-func ValidateObject[T manifest.Object](validator validation.Validator[T], s T, kind manifest.Kind) *ObjectError {
+func ValidateObject[T manifest.Object](validator govy.Validator[T], s T, kind manifest.Kind) *ObjectError {
 	if err := validator.Validate(s); err != nil {
 		return newObjectError(s, kind, err)
 	}
 	return nil
 }
 
-func newObjectError(object manifest.Object, kind manifest.Kind, err *validation.ValidatorError) *ObjectError {
+func newObjectError(object manifest.Object, kind manifest.Kind, err *govy.ValidatorError) *ObjectError {
 	if err == nil {
 		return nil
 	}
@@ -35,8 +37,8 @@ func newObjectError(object manifest.Object, kind manifest.Kind, err *validation.
 }
 
 type ObjectError struct {
-	Object ObjectMetadata            `json:"object"`
-	Errors validation.PropertyErrors `json:"errors"`
+	Object ObjectMetadata      `json:"object"`
+	Errors govy.PropertyErrors `json:"errors"`
 }
 
 type ObjectMetadata struct {
@@ -54,7 +56,7 @@ func (o *ObjectError) Error() string {
 		b.WriteString(" in project '" + o.Object.Project + "'")
 	}
 	b.WriteString(" has failed for the following fields:\n")
-	validation.JoinErrors(b, o.Errors, strings.Repeat(" ", 2))
+	errorutils.JoinErrors(b, o.Errors, strings.Repeat(" ", 2))
 	if o.Object.Source != "" {
 		b.WriteString("\nManifest source: ")
 		b.WriteString(o.Object.Source)

@@ -3,7 +3,8 @@ package v1alpha
 import (
 	"fmt"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 //go:generate ../../bin/go-enum --nocase --names --lower --values
@@ -32,6 +33,6 @@ func (r *ReleaseChannel) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func ReleaseChannelValidation() validation.SingleRule[ReleaseChannel] {
-	return validation.OneOf(ReleaseChannelStable, ReleaseChannelBeta)
+func ReleaseChannelValidation() govy.Rule[ReleaseChannel] {
+	return rules.OneOf(ReleaseChannelStable, ReleaseChannelBeta)
 }

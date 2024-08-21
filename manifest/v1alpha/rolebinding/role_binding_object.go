@@ -3,7 +3,8 @@
 package rolebinding
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -49,6 +50,6 @@ func (r RoleBinding) SetOrganization(org string) manifest.Object {
 	return r
 }
 
-func (r RoleBinding) GetValidator() validation.Validator[RoleBinding] {
+func (r RoleBinding) GetValidator() govy.Validator[RoleBinding] {
 	return validator
 }

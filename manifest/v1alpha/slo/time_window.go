@@ -5,7 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/twindow"
 )
 
@@ -51,25 +53,25 @@ const (
 	maximumCalendarTimeWindowSize = 366 * 24 * time.Hour // 366 days
 )
 
-var timeWindowsValidation = validation.New[TimeWindow](
-	validation.For(func(t TimeWindow) string { return t.Unit }).
+var timeWindowsValidation = govy.New(
+	govy.For(func(t TimeWindow) string { return t.Unit }).
 		WithName("unit").
 		Required().
 		Rules(twindow.ValidationRuleTimeUnit()),
-	validation.For(func(t TimeWindow) int { return t.Count }).
+	govy.For(func(t TimeWindow) int { return t.Count }).
 		WithName("count").
-		Rules(validation.GreaterThan(0)),
-	validation.ForPointer(func(t TimeWindow) *Calendar { return t.Calendar }).
+		Rules(rules.GT(0)),
+	govy.ForPointer(func(t TimeWindow) *Calendar { return t.Calendar }).
 		WithName("calendar").
-		Include(validation.New[Calendar](
-			validation.For(func(c Calendar) string { return c.StartTime }).
+		Include(govy.New(
+			govy.For(func(c Calendar) string { return c.StartTime }).
 				WithName("startTime").
 				Required().
 				Rules(calendarStartTimeValidationRule()),
-			validation.For(func(c Calendar) string { return c.TimeZone }).
+			govy.For(func(c Calendar) string { return c.TimeZone }).
 				WithName("timeZone").
 				Required().
-				Rules(validation.NewSingleRule(func(v string) error {
+				Rules(govy.NewRule(func(v string) error {
 					if _, err := time.LoadLocation(v); err != nil {
 						return errors.Wrap(err, "not a valid time zone")
 					}
@@ -78,8 +80,8 @@ var timeWindowsValidation = validation.New[TimeWindow](
 		),
 )
 
-func timeWindowValidationRule() validation.SingleRule[TimeWindow] {
-	return validation.NewSingleRule(func(v TimeWindow) error {
+func timeWindowValidationRule() govy.Rule[TimeWindow] {
+	return govy.NewRule(func(v TimeWindow) error {
 		if err := validateTimeWindowAmbiguity(v); err != nil {
 			return err
 		}
@@ -166,8 +168,8 @@ func validateTimeUnitForTimeWindowType(tw TimeWindow) error {
 	return nil
 }
 
-func calendarStartTimeValidationRule() validation.SingleRule[string] {
-	return validation.NewSingleRule(func(v string) error {
+func calendarStartTimeValidationRule() govy.Rule[string] {
+	return govy.NewRule(func(v string) error {
 		date, err := twindow.ParseStartDate(v)
 		if err != nil {
 			return err

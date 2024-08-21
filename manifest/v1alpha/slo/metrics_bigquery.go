@@ -3,7 +3,9 @@ package slo
 import (
 	"regexp"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -14,10 +16,10 @@ type BigQueryMetric struct {
 	Location  string `json:"location"`
 }
 
-var bigQueryCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).
+var bigQueryCountMetricsLevelValidation = govy.New(
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			govy.NewRule(func(c CountMetricsSpec) error {
 				good := c.GoodMetric
 				total := c.TotalMetric
 
@@ -28,30 +30,30 @@ var bigQueryCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("bigQuery.location", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo)),
+			}).WithErrorCode(rules.ErrorCodeEqualTo)),
 ).When(
 	whenCountMetricsIs(v1alpha.BigQuery),
-	validation.WhenDescription("countMetrics is bigQuery"),
+	govy.WhenDescription("countMetrics is bigQuery"),
 )
 
-var bigQueryValidation = validation.New[BigQueryMetric](
-	validation.For(func(b BigQueryMetric) string { return b.ProjectID }).
+var bigQueryValidation = govy.New(
+	govy.For(func(b BigQueryMetric) string { return b.ProjectID }).
 		WithName("projectId").
 		Required().
-		Rules(validation.StringMaxLength(255)),
-	validation.For(func(b BigQueryMetric) string { return b.Location }).
+		Rules(rules.StringMaxLength(255)),
+	govy.For(func(b BigQueryMetric) string { return b.Location }).
 		WithName("location").
 		Required(),
-	validation.For(func(b BigQueryMetric) string { return b.Query }).
+	govy.For(func(b BigQueryMetric) string { return b.Query }).
 		WithName("query").
 		Required().
 		Rules(
-			validation.StringMatchRegexp(regexp.MustCompile(`\bn9date\b`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date\b`)).
 				WithDetails("must contain 'n9date'"),
-			validation.StringMatchRegexp(regexp.MustCompile(`\bn9value\b`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`\bn9value\b`)).
 				WithDetails("must contain 'n9value'"),
-			validation.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_from\s*\)`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_from\s*\)`)).
 				WithDetails("must have DATETIME placeholder with '@n9date_from'"),
-			validation.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_to\s*\)`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_to\s*\)`)).
 				WithDetails("must have DATETIME placeholder with '@n9date_to'")),
 )

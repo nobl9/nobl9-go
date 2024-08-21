@@ -3,8 +3,9 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
@@ -34,7 +35,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.servicenow.username",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: ServiceNowAlertMethod{
@@ -46,7 +47,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.servicenow.instanceName",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: ServiceNowAlertMethod{

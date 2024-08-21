@@ -7,8 +7,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -17,157 +19,157 @@ func validate(a Agent) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, a, manifest.KindAgent)
 }
 
-var validator = validation.New[Agent](
+var validator = govy.New[Agent](
 	validationV1Alpha.FieldRuleAPIVersion(func(a Agent) manifest.Version { return a.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(a Agent) manifest.Kind { return a.Kind }, manifest.KindAgent),
 	validationV1Alpha.FieldRuleMetadataName(func(a Agent) string { return a.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(a Agent) string { return a.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(a Agent) string { return a.Metadata.Project }),
 	validationV1Alpha.FieldRuleSpecDescription(func(a Agent) string { return a.Spec.Description }),
-	validation.For(func(a Agent) Spec { return a.Spec }).
+	govy.For(func(a Agent) Spec { return a.Spec }).
 		WithName("spec").
 		Include(specValidation),
 )
 
-var specValidation = validation.New[Spec](
-	validation.For(validation.GetSelf[Spec]()).
-		Cascade(validation.CascadeModeStop).
+var specValidation = govy.New[Spec](
+	govy.For(govy.GetSelf[Spec]()).
+		Cascade(govy.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayGreaterThanOrEqualToDefaultValidationRule),
-	validation.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
+	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
 		Rules(v1alpha.ReleaseChannelValidation()),
-	validation.ForPointer(func(s Spec) *v1alpha.HistoricalDataRetrieval { return s.HistoricalDataRetrieval }).
+	govy.ForPointer(func(s Spec) *v1alpha.HistoricalDataRetrieval { return s.HistoricalDataRetrieval }).
 		WithName("historicalDataRetrieval").
 		Include(v1alpha.HistoricalDataRetrievalValidation()),
-	validation.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
+	govy.ForPointer(func(s Spec) *v1alpha.QueryDelay { return s.QueryDelay }).
 		WithName("queryDelay").
 		Include(v1alpha.QueryDelayValidation()),
-	validation.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
+	govy.ForPointer(func(s Spec) *PrometheusConfig { return s.Prometheus }).
 		WithName("prometheus").
 		Include(prometheusValidation),
-	validation.ForPointer(func(s Spec) *DatadogConfig { return s.Datadog }).
+	govy.ForPointer(func(s Spec) *DatadogConfig { return s.Datadog }).
 		WithName("datadog").
 		Include(datadogValidation),
-	validation.ForPointer(func(s Spec) *NewRelicConfig { return s.NewRelic }).
+	govy.ForPointer(func(s Spec) *NewRelicConfig { return s.NewRelic }).
 		WithName("newRelic").
 		Include(newRelicValidation),
-	validation.ForPointer(func(s Spec) *AppDynamicsConfig { return s.AppDynamics }).
+	govy.ForPointer(func(s Spec) *AppDynamicsConfig { return s.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
-	validation.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
+	govy.ForPointer(func(s Spec) *SplunkConfig { return s.Splunk }).
 		WithName("splunk").
 		Include(splunkValidation),
-	validation.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
+	govy.ForPointer(func(s Spec) *LightstepConfig { return s.Lightstep }).
 		WithName("lightstep").
 		Include(lightstepValidation),
-	validation.ForPointer(func(s Spec) *SplunkObservabilityConfig { return s.SplunkObservability }).
+	govy.ForPointer(func(s Spec) *SplunkObservabilityConfig { return s.SplunkObservability }).
 		WithName("splunkObservability").
 		Include(splunkObservabilityValidation),
-	validation.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
+	govy.ForPointer(func(s Spec) *DynatraceConfig { return s.Dynatrace }).
 		WithName("dynatrace").
 		Include(dynatraceValidation),
-	validation.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
+	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
-	validation.ForPointer(func(s Spec) *ThousandEyesConfig { return s.ThousandEyes }).
+	govy.ForPointer(func(s Spec) *ThousandEyesConfig { return s.ThousandEyes }).
 		WithName("thousandEyes").
 		Include(thousandEyesValidation),
-	validation.ForPointer(func(s Spec) *GraphiteConfig { return s.Graphite }).
+	govy.ForPointer(func(s Spec) *GraphiteConfig { return s.Graphite }).
 		WithName("graphite").
 		Include(graphiteValidation),
-	validation.ForPointer(func(s Spec) *BigQueryConfig { return s.BigQuery }).
+	govy.ForPointer(func(s Spec) *BigQueryConfig { return s.BigQuery }).
 		WithName("bigQuery").
 		Include(bigQueryValidation),
-	validation.ForPointer(func(s Spec) *OpenTSDBConfig { return s.OpenTSDB }).
+	govy.ForPointer(func(s Spec) *OpenTSDBConfig { return s.OpenTSDB }).
 		WithName("opentsdb").
 		Include(openTSDBValidation),
-	validation.ForPointer(func(s Spec) *GrafanaLokiConfig { return s.GrafanaLoki }).
+	govy.ForPointer(func(s Spec) *GrafanaLokiConfig { return s.GrafanaLoki }).
 		WithName("grafanaLoki").
 		Include(grafanaLokiValidation),
-	validation.ForPointer(func(s Spec) *CloudWatchConfig { return s.CloudWatch }).
+	govy.ForPointer(func(s Spec) *CloudWatchConfig { return s.CloudWatch }).
 		WithName("cloudWatch").
 		Include(cloudWatchValidation),
-	validation.ForPointer(func(s Spec) *PingdomConfig { return s.Pingdom }).
+	govy.ForPointer(func(s Spec) *PingdomConfig { return s.Pingdom }).
 		WithName("pingdom").
 		Include(pingdomValidation),
-	validation.ForPointer(func(s Spec) *AmazonPrometheusConfig { return s.AmazonPrometheus }).
+	govy.ForPointer(func(s Spec) *AmazonPrometheusConfig { return s.AmazonPrometheus }).
 		WithName("amazonPrometheus").
 		Include(amazonPrometheusValidation),
-	validation.ForPointer(func(s Spec) *RedshiftConfig { return s.Redshift }).
+	govy.ForPointer(func(s Spec) *RedshiftConfig { return s.Redshift }).
 		WithName("redshift").
 		Include(redshiftValidation),
-	validation.ForPointer(func(s Spec) *SumoLogicConfig { return s.SumoLogic }).
+	govy.ForPointer(func(s Spec) *SumoLogicConfig { return s.SumoLogic }).
 		WithName("sumoLogic").
 		Include(sumoLogicValidation),
-	validation.ForPointer(func(s Spec) *InstanaConfig { return s.Instana }).
+	govy.ForPointer(func(s Spec) *InstanaConfig { return s.Instana }).
 		WithName("instana").
 		Include(instanaValidation),
-	validation.ForPointer(func(s Spec) *InfluxDBConfig { return s.InfluxDB }).
+	govy.ForPointer(func(s Spec) *InfluxDBConfig { return s.InfluxDB }).
 		WithName("influxdb").
 		Include(influxDBValidation),
-	validation.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
+	govy.ForPointer(func(s Spec) *AzureMonitorConfig { return s.AzureMonitor }).
 		WithName("azureMonitor").
 		Include(azureMonitorValidation),
-	validation.ForPointer(func(s Spec) *GCMConfig { return s.GCM }).
+	govy.ForPointer(func(s Spec) *GCMConfig { return s.GCM }).
 		WithName("gcm").
 		Include(gcmValidation),
-	validation.ForPointer(func(s Spec) *GenericConfig { return s.Generic }).
+	govy.ForPointer(func(s Spec) *GenericConfig { return s.Generic }).
 		WithName("generic").
 		Include(genericValidation),
-	validation.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
+	govy.ForPointer(func(s Spec) *HoneycombConfig { return s.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombValidation),
-	validation.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
+	govy.ForPointer(func(s Spec) *LogicMonitorConfig { return s.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
-	validation.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
+	govy.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
 )
 
 var (
-	datadogValidation = validation.New[DatadogConfig](
-		validation.For(func(d DatadogConfig) string { return d.Site }).
+	datadogValidation = govy.New[DatadogConfig](
+		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
 			Rules(v1alpha.DataDogSiteValidationRule()),
 	)
-	newRelicValidation = validation.New[NewRelicConfig](
-		validation.For(func(n NewRelicConfig) int { return n.AccountID }).
+	newRelicValidation = govy.New[NewRelicConfig](
+		govy.For(func(n NewRelicConfig) int { return n.AccountID }).
 			WithName("accountId").
 			Required().
-			Rules(validation.GreaterThanOrEqualTo(1)),
+			Rules(rules.GTE(1)),
 	)
-	lightstepValidation = validation.New[LightstepConfig](
-		validation.For(func(l LightstepConfig) string { return l.Organization }).
+	lightstepValidation = govy.New[LightstepConfig](
+		govy.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").
 			Required(),
-		validation.For(func(l LightstepConfig) string { return l.Project }).
+		govy.For(func(l LightstepConfig) string { return l.Project }).
 			WithName("project").
 			Required(),
-		validation.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
+		govy.Transform(func(l LightstepConfig) string { return l.URL }, url.Parse).
 			WithName("url").
 			OmitEmpty().
 			Rules(
-				validation.URL(),
+				rules.URL(),
 			),
 	)
-	splunkObservabilityValidation = validation.New[SplunkObservabilityConfig](
-		validation.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
+	splunkObservabilityValidation = govy.New[SplunkObservabilityConfig](
+		govy.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
 			WithName("realm").
 			Required(),
 	)
-	dynatraceValidation = validation.New[DynatraceConfig](
-		validation.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
+	dynatraceValidation = govy.New[DynatraceConfig](
+		govy.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
 			WithName("url").
 			Required().
 			Rules(
-				validation.URL(),
-				validation.NewSingleRule(func(u *url.URL) error {
+				rules.URL(),
+				govy.NewRule(func(u *url.URL) error {
 					// For SaaS type enforce https and land lack of path.
 					// - Join instead of Clean (to avoid getting . for empty path),
 					// - Trim to get rid of root.
@@ -182,37 +184,37 @@ var (
 				}),
 			),
 	)
-	amazonPrometheusValidation = validation.New[AmazonPrometheusConfig](
-		validation.For(func(a AmazonPrometheusConfig) string { return a.URL }).
+	amazonPrometheusValidation = govy.New[AmazonPrometheusConfig](
+		govy.For(func(a AmazonPrometheusConfig) string { return a.URL }).
 			WithName("url").
 			Required().
-			Rules(validation.StringURL()),
-		validation.For(func(a AmazonPrometheusConfig) string { return a.Region }).
+			Rules(rules.StringURL()),
+		govy.For(func(a AmazonPrometheusConfig) string { return a.Region }).
 			WithName("region").
 			Required().
-			Rules(validation.StringMaxLength(255)),
+			Rules(rules.StringMaxLength(255)),
 	)
-	azureMonitorValidation = validation.New[AzureMonitorConfig](
-		validation.For(func(a AzureMonitorConfig) string { return a.TenantID }).
+	azureMonitorValidation = govy.New[AzureMonitorConfig](
+		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
 			WithName("tenantId").
 			Required().
-			Rules(validation.StringUUID()),
+			Rules(rules.StringUUID()),
 	)
-	logicMonitorValidation = validation.New[LogicMonitorConfig](
-		validation.For(func(l LogicMonitorConfig) string { return l.Account }).
+	logicMonitorValidation = govy.New[LogicMonitorConfig](
+		govy.For(func(l LogicMonitorConfig) string { return l.Account }).
 			WithName("account").
 			Required().
-			Rules(validation.StringNotEmpty()),
+			Rules(rules.StringNotEmpty()),
 	)
-	azurePrometheusValidation = validation.New[AzurePrometheusConfig](
-		validation.For(func(a AzurePrometheusConfig) string { return a.URL }).
+	azurePrometheusValidation = govy.New[AzurePrometheusConfig](
+		govy.For(func(a AzurePrometheusConfig) string { return a.URL }).
 			WithName("url").
 			Required().
-			Rules(validation.StringURL()),
-		validation.For(func(a AzurePrometheusConfig) string { return a.TenantID }).
+			Rules(rules.StringURL()),
+		govy.For(func(a AzurePrometheusConfig) string { return a.TenantID }).
 			WithName("tenantId").
 			Required().
-			Rules(validation.StringUUID()),
+			Rules(rules.StringUUID()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
@@ -226,14 +228,14 @@ var (
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
 	// Empty configs.
-	thousandEyesValidation = validation.New[ThousandEyesConfig]()
-	bigQueryValidation     = validation.New[BigQueryConfig]()
-	cloudWatchValidation   = validation.New[CloudWatchConfig]()
-	pingdomValidation      = validation.New[PingdomConfig]()
-	redshiftValidation     = validation.New[RedshiftConfig]()
-	gcmValidation          = validation.New[GCMConfig]()
-	genericValidation      = validation.New[GenericConfig]()
-	honeycombValidation    = validation.New[HoneycombConfig]()
+	thousandEyesValidation = govy.New[ThousandEyesConfig]()
+	bigQueryValidation     = govy.New[BigQueryConfig]()
+	cloudWatchValidation   = govy.New[CloudWatchConfig]()
+	pingdomValidation      = govy.New[PingdomConfig]()
+	redshiftValidation     = govy.New[RedshiftConfig]()
+	gcmValidation          = govy.New[GCMConfig]()
+	genericValidation      = govy.New[GenericConfig]()
+	honeycombValidation    = govy.New[HoneycombConfig]()
 )
 
 const (
@@ -241,7 +243,7 @@ const (
 	errCodeQueryDelayGreaterThanOrEqualToDefault = "query_delay_greater_than_or_equal_to_default"
 )
 
-var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec Spec) error {
+var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
 	var onlyType v1alpha.DataSourceType
 	typesMatch := func(typ v1alpha.DataSourceType) error {
 		if onlyType == 0 {
@@ -395,21 +397,21 @@ var exactlyOneDataSourceTypeValidationRule = validation.NewSingleRule(func(spec 
 	return nil
 }).WithErrorCode(errCodeExactlyOneDataSourceType)
 
-var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec Spec) error {
+var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	if spec.HistoricalDataRetrieval == nil {
 		return nil
 	}
 	typ, _ := spec.GetType()
 	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
 	if err != nil {
-		return validation.NewPropertyError("historicalDataRetrieval", nil, err)
+		return govy.NewPropertyError("historicalDataRetrieval", nil, err)
 	}
 	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
 		Value: maxDuration.Value,
 		Unit:  maxDuration.Unit,
 	}
 	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		return validation.NewPropertyError(
+		return govy.NewPropertyError(
 			"historicalDataRetrieval.maxDuration",
 			spec.HistoricalDataRetrieval.MaxDuration,
 			errors.Errorf("must be less than or equal to %d %s",
@@ -418,14 +420,14 @@ var historicalDataRetrievalValidationRule = validation.NewSingleRule(func(spec S
 	return nil
 })
 
-var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRule(func(spec Spec) error {
+var queryDelayGreaterThanOrEqualToDefaultValidationRule = govy.NewRule(func(spec Spec) error {
 	if spec.QueryDelay == nil {
 		return nil
 	}
 	typ, _ := spec.GetType()
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
-		return validation.NewPropertyError(
+		return govy.NewPropertyError(
 			"queryDelay",
 			spec.QueryDelay,
 			errors.Errorf("should be greater than or equal to %s", agentDefault),
@@ -434,12 +436,12 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = validation.NewSingleRu
 	return nil
 }).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
 
-// newURLValidator is a helper construct for Agent which only have a simple 'url' field validation.
-func newURLValidator[S any](getter validation.PropertyGetter[string, S]) validation.Validator[S] {
-	return validation.New[S](
-		validation.For(getter).
+// newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
+func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {
+	return govy.New[S](
+		govy.For(getter).
 			WithName("url").
 			Required().
-			Rules(validation.StringURL()),
+			Rules(rules.StringURL()),
 	)
 }

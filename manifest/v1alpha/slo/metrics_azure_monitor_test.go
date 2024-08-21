@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -170,7 +171,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -188,7 +189,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -205,11 +206,11 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -222,7 +223,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
@@ -235,7 +236,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
@@ -254,15 +255,15 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -280,11 +281,11 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 		)
 	})
@@ -302,7 +303,7 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -320,15 +321,15 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			})
 	})
 	t.Run("forbidden fields", func(t *testing.T) {
@@ -349,23 +350,23 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 5,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricNamespace",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			})
 	})
 	t.Run("subscriptionId must be uuid if defined validation", func(t *testing.T) {
@@ -376,7 +377,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
-				Code: validation.ErrorCodeStringUUID,
+				Code: rules.ErrorCodeStringUUID,
 			})
 	})
 	t.Run("resourceGroup must match regex if defined validation", func(t *testing.T) {
@@ -425,7 +426,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
 							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
-							Code: validation.ErrorCodeStringMatchRegexp,
+							Code: rules.ErrorCodeStringMatchRegexp,
 						})
 				}
 			})
@@ -480,7 +481,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
 							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
-							Code: validation.ErrorCodeStringUUID,
+							Code: rules.ErrorCodeStringUUID,
 						})
 				}
 			})
@@ -525,35 +526,35 @@ func TestAzureMonitorDimension(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 9,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].value",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].name",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].value",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].name",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].value",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].name",
-				Code: validation.ErrorCodeStringASCII,
+				Code: rules.ErrorCodeStringASCII,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].value",
-				Code: validation.ErrorCodeStringASCII,
+				Code: rules.ErrorCodeStringASCII,
 			},
 		)
 	})
@@ -572,7 +573,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
-			Code: validation.ErrorCodeSliceUnique,
+			Code: rules.ErrorCodeSliceUnique,
 		})
 	})
 }
@@ -634,7 +635,7 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				})
 			}
 		})

@@ -1,7 +1,8 @@
 package report
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 //go:generate ../../../bin/go-enum  --nocase --names --lower --values
@@ -22,6 +23,6 @@ func (p *SnapshotPoint) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func SnapshotPointValidation() validation.SingleRule[SnapshotPoint] {
-	return validation.OneOf(SnapshotPointPast, SnapshotPointLatest)
+func SnapshotPointValidation() govy.Rule[SnapshotPoint] {
+	return rules.OneOf(SnapshotPointPast, SnapshotPointLatest)
 }
