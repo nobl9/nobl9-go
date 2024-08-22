@@ -28,7 +28,7 @@ type ReplayDuration struct {
 
 type ReplayTimeRange struct {
 	StartDate time.Time `json:"startDate,omitempty"`
-	EndDate   time.Time `json:"endDate,omitempty"` //not supported yet
+	EndDate   time.Time `json:"endDate,omitempty"` // not supported yet
 }
 
 // ReplayWithStatus used for returning Replay data with status.

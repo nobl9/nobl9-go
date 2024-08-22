@@ -182,7 +182,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Value: 30,
 				},
 				TimeRange: ReplayTimeRange{
-					StartDate: time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC),
+					StartDate: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
 				},
 			},
 			isValid: true,
@@ -198,7 +198,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
-
 				require.Error(t, err)
 				require.IsType(t, &validation.ValidatorError{}, err)
 				assert.True(t, validation.HasErrorCode(err, tc.ErrorCode))
