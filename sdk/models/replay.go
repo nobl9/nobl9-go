@@ -17,8 +17,8 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 type Replay struct {
 	Project   string          `json:"project"`
 	Slo       string          `json:"slo"`
-	Duration  ReplayDuration  `json:"duration""`
-	TimeRange ReplayTimeRange `json:"timeRange"`
+	Duration  ReplayDuration  `json:"duration,omitempty""`
+	TimeRange ReplayTimeRange `json:"timeRange,omitempty"`
 }
 
 type ReplayDuration struct {
