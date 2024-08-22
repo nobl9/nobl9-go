@@ -133,9 +133,11 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		{
 			name: "correct struct start date",
 			replay: Replay{
-				Project:   "project",
-				Slo:       "slo",
-				StartDate: time.Now().Add(-time.Hour * 24),
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
 			},
 			isValid: true,
 		},
@@ -148,7 +150,9 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "Day",
 					Value: 30,
 				},
-				StartDate: time.Now().Add(-time.Hour * 24),
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
 			},
 			isValid:   false,
 			ErrorCode: replayDurationAndStartDateValidationError,
@@ -162,7 +166,9 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "",
 					Value: 0,
 				},
-				StartDate: time.Now().Add(-time.Hour * 24),
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
 			},
 			isValid: true,
 		},
@@ -175,7 +181,9 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "Day",
 					Value: 30,
 				},
-				StartDate: time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC),
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
 			},
 			isValid: true,
 		},

@@ -15,15 +15,20 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project   string         `json:"project"`
-	Slo       string         `json:"slo"`
-	Duration  ReplayDuration `json:"duration,omitempty"`
-	StartDate time.Time      `json:"startDate,omitempty"`
+	Project   string          `json:"project"`
+	Slo       string          `json:"slo"`
+	Duration  ReplayDuration  `json:"duration""`
+	TimeRange ReplayTimeRange `json:"timeRange"`
 }
 
 type ReplayDuration struct {
 	Unit  string `json:"unit"`
 	Value int    `json:"value"`
+}
+
+type ReplayTimeRange struct {
+	StartDate time.Time `json:"startDate,omitempty"`
+	EndDate   time.Time `json:"endDate,omitempty"` //not supported yet
 }
 
 // ReplayWithStatus used for returning Replay data with status.
@@ -73,20 +78,22 @@ var replayValidation = validation.New[Replay](
 	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		When(
-			func(r Replay) bool { return !isEmpty(r.Duration) || (r.StartDate.IsZero() && isEmpty(r.Duration)) },
+			func(r Replay) bool {
+				return !isEmpty(r.Duration) || (r.TimeRange.StartDate.IsZero() && isEmpty(r.Duration))
+			},
 		).
 		Cascade(validation.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
-	validation.For(func(r Replay) time.Time { return r.StartDate }).
+	validation.For(func(r Replay) time.Time { return r.TimeRange.StartDate }).
 		WithName("startDate").
 		When(
-			func(r Replay) bool { return !r.StartDate.IsZero() },
+			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
 		Rules(replayStartTimeValidationRule()),
 	validation.For(func(r Replay) Replay { return r }).
 		Rules(validation.NewSingleRule(func(r Replay) error {
-			if !isEmpty(r.Duration) && !r.StartDate.IsZero() {
+			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
 				return errors.New("only one of duration or startDate can be set")
 			}
 			return nil
