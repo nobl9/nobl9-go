@@ -153,6 +153,32 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			isValid:   false,
 			ErrorCode: replayDurationAndStartDateValidationError,
 		},
+		{
+			name: "use start date without duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "",
+					Value: 0,
+				},
+				StartDate: time.Now().Add(-time.Hour * 24),
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				StartDate: time.Date(0001, 1, 1, 0, 0, 0, 0, time.UTC),
+			},
+			isValid: true,
+		},
 	}
 
 	for _, tt := range tests {
