@@ -54,7 +54,10 @@ var filtersValidationRule = validation.New(
 	validation.ForSlice(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
 		Rules(validation.SliceMinLength[[]SLORef](1)).
-		IncludeForEach(sloValidationRule),
+		IncludeForEach(sloValidationRule).
+		Rules(validation.SliceUnique(func(s SLORef) string {
+			return s.Project + s.Name
+		}, "SLOs must be unique")),
 )
 
 var sloValidationRule = validation.New(
