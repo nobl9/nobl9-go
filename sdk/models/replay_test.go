@@ -130,6 +130,29 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			isValid:   false,
 			ErrorCode: validation.ErrorCodeRequired,
 		},
+		{
+			name: "correct struct start date",
+			replay: Replay{
+				Project:   "project",
+				Slo:       "slo",
+				StartDate: time.Now().Add(-time.Hour * 24),
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration or start date can be set",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				StartDate: time.Now().Add(-time.Hour * 24),
+			},
+			isValid:   false,
+			ErrorCode: replayDurationAndStartDateValidationError,
+		},
 	}
 
 	for _, tt := range tests {
@@ -141,6 +164,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			if tc.isValid {
 				assert.Nil(t, err)
 			} else {
+
 				require.Error(t, err)
 				require.IsType(t, &validation.ValidatorError{}, err)
 				assert.True(t, validation.HasErrorCode(err, tc.ErrorCode))

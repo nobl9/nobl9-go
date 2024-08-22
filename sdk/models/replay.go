@@ -15,9 +15,10 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project  string         `json:"project"`
-	Slo      string         `json:"slo"`
-	Duration ReplayDuration `json:"duration"`
+	Project   string         `json:"project"`
+	Slo       string         `json:"slo"`
+	Duration  ReplayDuration `json:"duration,omitempty"`
+	StartDate time.Time      `json:"startDate,omitempty"`
 }
 
 type ReplayDuration struct {
@@ -71,10 +72,25 @@ var replayValidation = validation.New[Replay](
 		Required(),
 	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
-		Required().
+		When(
+			func(r Replay) bool { return !isEmpty(r.Duration) || (r.StartDate.IsZero() && isEmpty(r.Duration)) },
+		).
 		Cascade(validation.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
+	validation.For(func(r Replay) time.Time { return r.StartDate }).
+		WithName("startDate").
+		When(
+			func(r Replay) bool { return !r.StartDate.IsZero() },
+		).
+		Rules(replayStartTimeValidationRule()),
+	validation.For(func(r Replay) Replay { return r }).
+		Rules(validation.NewSingleRule(func(r Replay) error {
+			if !isEmpty(r.Duration) && !r.StartDate.IsZero() {
+				return errors.New("only one of duration or startDate can be set")
+			}
+			return nil
+		}).WithErrorCode(replayDurationAndStartDateValidationError)),
 )
 
 var replayDurationValidation = validation.New[ReplayDuration](
@@ -97,8 +113,9 @@ func (r Replay) Validate() error {
 }
 
 const (
-	replayDurationValidationErrorCode     = "replay_duration"
-	replayDurationUnitValidationErrorCode = "replay_duration_unit"
+	replayDurationValidationErrorCode         = "replay_duration"
+	replayDurationUnitValidationErrorCode     = "replay_duration_unit"
+	replayDurationAndStartDateValidationError = "replay_duration_or_start_date"
 )
 
 func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
@@ -107,6 +124,17 @@ func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
 		if err != nil {
 			return err
 		}
+		if duration > maximumAllowedReplayDuration {
+			return errors.Errorf("%s duration must not be greater than %s",
+				duration, maximumAllowedReplayDuration)
+		}
+		return nil
+	}).WithErrorCode(replayDurationValidationErrorCode)
+}
+
+func replayStartTimeValidationRule() validation.SingleRule[time.Time] {
+	return validation.NewSingleRule(func(v time.Time) error {
+		duration := time.Since(v)
 		if duration > maximumAllowedReplayDuration {
 			return errors.Errorf("%s duration must not be greater than %s",
 				duration, maximumAllowedReplayDuration)
@@ -166,4 +194,8 @@ func ValidateReplayDurationUnit(unit string) error {
 		}
 	}
 	return ErrInvalidReplayDurationUnit
+}
+
+func isEmpty(duration ReplayDuration) bool {
+	return duration.Unit == "" || duration.Value == 0
 }
