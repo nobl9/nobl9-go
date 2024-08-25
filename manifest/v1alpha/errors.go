@@ -12,7 +12,9 @@ import (
 
 func ValidateObject[T manifest.Object](validator govy.Validator[T], s T, kind manifest.Kind) *ObjectError {
 	if err := validator.Validate(s); err != nil {
-		return newObjectError(s, kind, err)
+		if vErr, ok := err.(*govy.ValidatorError); ok {
+			return newObjectError(s, kind, vErr)
+		}
 	}
 	return nil
 }
