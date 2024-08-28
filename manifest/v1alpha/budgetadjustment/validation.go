@@ -56,7 +56,10 @@ var filtersValidationRule = govy.New(
 	govy.ForSlice(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
 		Rules(rules.SliceMinLength[[]SLORef](1)).
-		IncludeForEach(sloValidationRule),
+		IncludeForEach(sloValidationRule).
+		Rules(rules.SliceUnique(func(s SLORef) string {
+			return s.Project + s.Name
+		}, "SLOs must be unique")),
 )
 
 var sloValidationRule = govy.New(

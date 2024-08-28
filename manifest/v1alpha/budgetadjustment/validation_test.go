@@ -277,6 +277,51 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
+			name: "duplicate slo",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
+				Filters: Filters{
+					SLOs: []SLORef{
+						{Name: "test", Project: "project"},
+						{Name: "test", Project: "project"},
+					},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos",
+					Code: validation.ErrorCodeSliceUnique,
+				},
+			},
+		},
+		{
+			name: "duplicate slo with multiple others",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
+				Filters: Filters{
+					SLOs: []SLORef{
+						{Name: "test1", Project: "project"},
+						{Name: "test1", Project: "project"},
+						{Name: "test2", Project: "project"},
+						{Name: "test3", Project: "project"},
+						{Name: "test4", Project: "project"},
+						{Name: "test5", Project: "project"},
+						{Name: "test6", Project: "project"},
+					},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos",
+					Code: validation.ErrorCodeSliceUnique,
+				},
+			},
+		},
+		{
 			name: "proper spec",
 			spec: Spec{
 				FirstEventStart: time.Now(),
