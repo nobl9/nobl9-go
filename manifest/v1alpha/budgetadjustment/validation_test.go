@@ -292,7 +292,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos",
-					Code: validation.ErrorCodeSliceUnique,
+					Code: rules.ErrorCodeSliceUnique,
 				},
 			},
 		},
@@ -317,7 +317,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos",
-					Code: validation.ErrorCodeSliceUnique,
+					Code: rules.ErrorCodeSliceUnique,
 				},
 			},
 		},
