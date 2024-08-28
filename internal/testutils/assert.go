@@ -76,12 +76,13 @@ func AssertContainsErrors(
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
+				actualMessage := actualRuleErr.Error()
 				matchedCtr := 0
-				if expected.Message == "" || expected.Message == actualRuleErr.Message {
+				if expected.Message == "" || expected.Message == actualMessage {
 					matchedCtr++
 				}
 				if expected.ContainsMessage == "" ||
-					strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					strings.Contains(actualMessage, expected.ContainsMessage) {
 					matchedCtr++
 				}
 				if expected.Code == "" ||

@@ -12,7 +12,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/go-yaml v1.0.1
-	github.com/nobl9/govy v0.0.0-20240821083117-1bc70f9ea179
+	github.com/nobl9/govy v0.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	github.com/teambition/rrule-go v1.8.2
@@ -36,5 +36,3 @@ require (
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/nobl9/govy v0.0.0-20240821083117-1bc70f9ea179 => /home/mh/nobl9/govy
