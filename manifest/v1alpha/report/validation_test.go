@@ -106,7 +106,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, report, err, 2, testutils.ExpectedError{
 			Prop:    "spec",
 			Message: "exactly one report type configuration is required",
 		})
@@ -750,6 +750,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty point in snapshot": {
@@ -768,6 +772,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -789,6 +797,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -816,6 +828,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with invalid rrule in past point snapshot": {
@@ -841,6 +857,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -868,6 +888,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: ReportThresholds{
+					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
