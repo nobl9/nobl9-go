@@ -79,9 +79,9 @@ func ExampleReport_systemHealthReview() {
 					},
 				},
 				Thresholds: report.Thresholds{
-					RedLowerThanOrEqual: ptr(0.8),
-					GreenGreaterThan:    ptr(0.95),
-					ShowNoData:          false,
+					RedLessThanOrEqual: ptr(0.8),
+					GreenGreaterThan:   ptr(0.95),
+					ShowNoData:         false,
 				},
 			},
 		},
