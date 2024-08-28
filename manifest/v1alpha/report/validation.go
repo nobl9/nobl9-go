@@ -13,7 +13,7 @@ func validate(r Report) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, r, manifest.KindReport)
 }
 
-var validator = validation.New(
+var validator = validation.New[Report](
 	validationV1Alpha.FieldRuleAPIVersion(func(r Report) manifest.Version { return r.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(r Report) manifest.Kind { return r.Kind }, manifest.KindReport),
 	validation.For(func(r Report) Metadata { return r.Metadata }).

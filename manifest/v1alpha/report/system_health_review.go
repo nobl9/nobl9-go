@@ -13,7 +13,7 @@ type ReportThresholds struct {
 	RedLowerThanOrEqual *float64 `json:"redLte" validate:"required" example:"0.8"`
 	// Yellow is calculated as the difference between Red and Green
 	// thresholds. If Red and Green are the same, Yellow is not used on the report.
-	GreenGreaterThan *float64 `json:"greenGte" validate:"required" example:"0.95"`
+	GreenGreaterThan *float64 `json:"greenGt" validate:"required" example:"0.95"`
 	// ShowNoData customizes the report to either show or hide rows with no data.
 	ShowNoData bool `json:"noData"`
 }
