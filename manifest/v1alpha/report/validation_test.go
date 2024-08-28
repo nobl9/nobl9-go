@@ -511,7 +511,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: properLabel},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -534,7 +534,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns:    []ColumnSpec{},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -589,7 +589,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 					{DisplayName: "Column 30", Labels: properLabel},
 					{DisplayName: "Column 31", Labels: properLabel},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -614,7 +614,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -639,7 +639,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{Labels: properLabel},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -689,7 +689,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: properLabel},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(-0.1),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(1.1),
 				},
@@ -717,7 +717,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			Columns: []ColumnSpec{
 				{DisplayName: "Column 1", Labels: properLabel},
 			},
-			Thresholds: ReportThresholds{
+			Thresholds: Thresholds{
 				RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.2),
 				GreenGreaterThan:    func(f float64) *float64 { return &f }(0.1),
 			},
@@ -750,7 +750,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -773,7 +773,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -798,7 +798,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -828,7 +828,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -858,7 +858,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -889,7 +889,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.0),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.2),
 				},
@@ -972,7 +972,7 @@ func validReport() Report {
 						},
 					},
 				},
-				Thresholds: ReportThresholds{
+				Thresholds: Thresholds{
 					RedLowerThanOrEqual: func(f float64) *float64 { return &f }(0.8),
 					GreenGreaterThan:    func(f float64) *float64 { return &f }(0.95),
 					ShowNoData:          true,

@@ -41,7 +41,7 @@ func Report() []Example {
 								},
 							},
 						},
-						Thresholds: report.ReportThresholds{
+						Thresholds: report.Thresholds{
 							RedLowerThanOrEqual: ptr(0.8),
 							GreenGreaterThan:    ptr(0.95),
 						},

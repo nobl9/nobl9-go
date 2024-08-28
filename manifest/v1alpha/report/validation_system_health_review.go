@@ -23,7 +23,7 @@ var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
 		WithName("timeFrame").
 		Required().
 		Include(timeFrameValidation),
-	validation.For(func(s SystemHealthReviewConfig) ReportThresholds { return s.Thresholds }).
+	validation.For(func(s SystemHealthReviewConfig) Thresholds { return s.Thresholds }).
 		WithName("thresholds").
 		Required().
 		Include(reportThresholdsValidation),
@@ -56,20 +56,20 @@ var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
 		Include(snapshotTimeFrameLatestPointValidation),
 )
 
-var reportThresholdsValidation = validation.New[ReportThresholds](
-	validation.For(validation.GetSelf[ReportThresholds]()).
+var reportThresholdsValidation = validation.New[Thresholds](
+	validation.For(validation.GetSelf[Thresholds]()).
 		Rules(redLteValidation),
-	validation.ForPointer(func(s ReportThresholds) *float64 { return s.RedLowerThanOrEqual }).
+	validation.ForPointer(func(s Thresholds) *float64 { return s.RedLowerThanOrEqual }).
 		WithName("redLte").
 		Required().
 		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1.0)),
-	validation.ForPointer(func(s ReportThresholds) *float64 { return s.GreenGreaterThan }).
+	validation.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
 		WithName("greenGt").
 		Required().
 		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1.0)),
 )
 
-var redLteValidation = validation.NewSingleRule(func(v ReportThresholds) error {
+var redLteValidation = validation.NewSingleRule(func(v Thresholds) error {
 	if v.RedLowerThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLowerThanOrEqual >= *v.GreenGreaterThan {
 			return validation.NewPropertyError(
