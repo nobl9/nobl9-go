@@ -25,6 +25,10 @@
           key2:
           - value2
           - value3
+      thresholds:
+        redLte: null
+        greenGt: null
+        noData: false
 - apiVersion: n9/v1alpha
   kind: Report
   metadata:
