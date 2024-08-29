@@ -9,7 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -17,16 +18,16 @@ import (
 var errorsTestData embed.FS
 
 func TestObjectError(t *testing.T) {
-	errs := validation.PropertyErrors{
-		&validation.PropertyError{
+	errs := govy.PropertyErrors{
+		&govy.PropertyError{
 			PropertyName:  "metadata.name",
 			PropertyValue: "default",
-			Errors:        []*validation.RuleError{{Message: "here's an error"}},
+			Errors:        []*govy.RuleError{{Message: "here's an error"}},
 		},
-		&validation.PropertyError{
+		&govy.PropertyError{
 			PropertyName:  "spec.description",
 			PropertyValue: "some long description",
-			Errors:        []*validation.RuleError{{Message: "here's another error"}},
+			Errors:        []*govy.RuleError{{Message: "here's another error"}},
 		},
 	}
 
@@ -66,11 +67,11 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 			IsProjectScoped: true,
 			Project:         "default",
 		},
-		Errors: validation.PropertyErrors{
+		Errors: govy.PropertyErrors{
 			{
 				PropertyName:  "metadata.project",
 				PropertyValue: "default",
-				Errors:        []*validation.RuleError{{Message: "nested"}},
+				Errors:        []*govy.RuleError{{Message: "nested"}},
 			},
 			{
 				PropertyName:  "metadata.name",

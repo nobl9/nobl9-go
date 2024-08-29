@@ -8,8 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -29,11 +30,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, dataExport, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -51,15 +52,15 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, dataExport, err, 5,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
 }
@@ -100,7 +101,7 @@ func TestValidate_Spec_ExportType(t *testing.T) {
 		err := validate(dataExport)
 		testutils.AssertContainsErrors(t, dataExport, err, 1, testutils.ExpectedError{
 			Prop: "spec.exportType",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -128,11 +129,11 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			2,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			})
 	})
 	t.Run("fails with invalid bucket name", func(t *testing.T) {
@@ -150,7 +151,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			})
 	})
 	t.Run("fails with invalid role ARN", func(t *testing.T) {
@@ -168,7 +169,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
-				Code: validation.ErrorCodeStringLength,
+				Code: rules.ErrorCodeStringLength,
 			})
 	})
 }
@@ -196,11 +197,11 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			2,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			})
 	})
 	t.Run("fails with invalid bucket name", func(t *testing.T) {
@@ -218,7 +219,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			})
 	})
 	t.Run("fails with invalid role ARN", func(t *testing.T) {
@@ -236,7 +237,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			1,
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
-				Code: validation.ErrorCodeStringLength,
+				Code: rules.ErrorCodeStringLength,
 			})
 	})
 }
@@ -266,7 +267,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
 			BucketName: "My-Travel-Maps",
@@ -276,7 +277,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
 			BucketName: "travel maps",
@@ -286,7 +287,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -295,11 +296,11 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringLength,
+					Code: rules.ErrorCodeStringLength,
 				},
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
 			BucketName: "1",
@@ -309,11 +310,11 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringLength,
+					Code: rules.ErrorCodeStringLength,
 				},
 				{
 					Prop: "spec.spec.bucketName",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
 			BucketName: strings.Repeat("my-bucket", 100),

@@ -5,7 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -17,9 +19,9 @@ type AppDynamicsMetric struct {
 	MetricPath      *string `json:"metricPath"`
 }
 
-var appDynamicsCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).Rules(
-		validation.NewSingleRule(func(c CountMetricsSpec) error {
+var appDynamicsCountMetricsLevelValidation = govy.New(
+	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
+		govy.NewRule(func(c CountMetricsSpec) error {
 			total := c.TotalMetric
 			good := c.GoodMetric
 			bad := c.BadMetric
@@ -45,23 +47,23 @@ var appDynamicsCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 				}
 			}
 			return nil
-		}).WithErrorCode(validation.ErrorCodeNotEqualTo)),
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
 ).When(
 	whenCountMetricsIs(v1alpha.AppDynamics),
-	validation.WhenDescription("countMetric is appDynamics"),
+	govy.WhenDescription("countMetric is appDynamics"),
 )
 
 var appDynamicsMetricPathWildcardRegex = regexp.MustCompile(`([^\s|]\*)|(\*[^\s|])`)
 
-var appDynamicsValidation = validation.New[AppDynamicsMetric](
-	validation.ForPointer(func(a AppDynamicsMetric) *string { return a.ApplicationName }).
+var appDynamicsValidation = govy.New(
+	govy.ForPointer(func(a AppDynamicsMetric) *string { return a.ApplicationName }).
 		WithName("applicationName").
 		Required().
-		Rules(validation.StringNotEmpty()),
-	validation.ForPointer(func(a AppDynamicsMetric) *string { return a.MetricPath }).
+		Rules(rules.StringNotEmpty()),
+	govy.ForPointer(func(a AppDynamicsMetric) *string { return a.MetricPath }).
 		WithName("metricPath").
 		Required().
-		Rules(validation.NewSingleRule(func(s string) error {
+		Rules(govy.NewRule(func(s string) error {
 			if appDynamicsMetricPathWildcardRegex.MatchString(s) {
 				return errors.Errorf(
 					"Wildcards like: 'App | MyApp* | Latency' are not supported by AppDynamics," +

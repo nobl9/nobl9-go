@@ -3,7 +3,8 @@
 package budgetadjustment
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -49,6 +50,6 @@ func (b BudgetAdjustment) SetOrganization(org string) manifest.Object {
 	return b
 }
 
-func (b BudgetAdjustment) GetValidator() validation.Validator[BudgetAdjustment] {
+func (b BudgetAdjustment) GetValidator() govy.Validator[BudgetAdjustment] {
 	return validator
 }

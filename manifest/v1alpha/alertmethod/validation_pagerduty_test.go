@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -45,7 +46,7 @@ func TestValidate_Spec_PagerDutyAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.pagerduty.integrationKey",
-					Code: validation.ErrorCodeStringMaxLength,
+					Code: rules.ErrorCodeStringMaxLength,
 				},
 			},
 			AlertMethod: PagerDutyAlertMethod{

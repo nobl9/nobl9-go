@@ -7,7 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
@@ -62,30 +63,30 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
-var replayValidation = validation.New[Replay](
-	validation.For(func(r Replay) string { return r.Project }).
+var replayValidation = govy.New[Replay](
+	govy.For(func(r Replay) string { return r.Project }).
 		WithName("project").
 		Required(),
-	validation.For(func(r Replay) string { return r.Slo }).
+	govy.For(func(r Replay) string { return r.Slo }).
 		WithName("slo").
 		Required(),
-	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
+	govy.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		Required().
-		Cascade(validation.CascadeModeStop).
+		Cascade(govy.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
 )
 
-var replayDurationValidation = validation.New[ReplayDuration](
-	validation.For(func(d ReplayDuration) string { return d.Unit }).
+var replayDurationValidation = govy.New[ReplayDuration](
+	govy.For(func(d ReplayDuration) string { return d.Unit }).
 		WithName("unit").
 		Required().
-		Rules(validation.NewSingleRule(ValidateReplayDurationUnit).
+		Rules(govy.NewRule(ValidateReplayDurationUnit).
 			WithErrorCode(replayDurationUnitValidationErrorCode)),
-	validation.For(func(d ReplayDuration) int { return d.Value }).
+	govy.For(func(d ReplayDuration) int { return d.Value }).
 		WithName("value").
-		Rules(validation.GreaterThan(0)),
+		Rules(rules.GT(0)),
 )
 
 func (r Replay) Validate() error {
@@ -101,8 +102,8 @@ const (
 	replayDurationUnitValidationErrorCode = "replay_duration_unit"
 )
 
-func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
-	return validation.NewSingleRule(func(v ReplayDuration) error {
+func replayDurationValidationRule() govy.Rule[ReplayDuration] {
+	return govy.NewRule(func(v ReplayDuration) error {
 		duration, err := v.Duration()
 		if err != nil {
 			return err
@@ -115,7 +116,7 @@ func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
 	}).WithErrorCode(replayDurationValidationErrorCode)
 }
 
-// ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with validation.
+// ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.
 func ParseJSONToReplayStruct(data io.Reader) (Replay, error) {
 	replay := Replay{}
 	if err := json.NewDecoder(data).Decode(&replay); err != nil {

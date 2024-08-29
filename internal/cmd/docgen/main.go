@@ -9,7 +9,8 @@ import (
 
 	"github.com/nobl9/go-yaml"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -24,16 +25,16 @@ type ObjectDoc struct {
 }
 
 type PropertyDoc struct {
-	Path          string                `json:"path"`
-	Type          string                `json:"type"`
-	Package       string                `json:"package,omitempty"`
-	Doc           string                `yaml:"doc,omitempty"`
-	IsDeprecated  bool                  `json:"isDeprecated,omitempty"`
-	IsOptional    bool                  `json:"isOptional,omitempty"`
-	IsSecret      bool                  `json:"isSecret,omitempty"`
-	Examples      []string              `json:"examples,omitempty"`
-	Rules         []validation.RulePlan `json:"rules,omitempty"`
-	ChildrenPaths []string              `json:"childrenPaths,omitempty"`
+	Path          string          `json:"path"`
+	Type          string          `json:"type"`
+	Package       string          `json:"package,omitempty"`
+	Doc           string          `yaml:"doc,omitempty"`
+	IsDeprecated  bool            `json:"isDeprecated,omitempty"`
+	IsOptional    bool            `json:"isOptional,omitempty"`
+	IsSecret      bool            `json:"isSecret,omitempty"`
+	Examples      []string        `json:"examples,omitempty"`
+	Rules         []govy.RulePlan `json:"rules,omitempty"`
+	ChildrenPaths []string        `json:"childrenPaths,omitempty"`
 	// Compute-only fields.
 	// fieldDoc holds the documentation which was provided on the struct field level.
 	fieldDoc string

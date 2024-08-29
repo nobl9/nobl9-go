@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -23,7 +24,7 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 	t.Run("checkType must be the same for good and total", func(t *testing.T) {
@@ -41,7 +42,7 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 	t.Run("required status", func(t *testing.T) {
@@ -54,11 +55,11 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.pingdom.status",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.pingdom.status",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -77,7 +78,7 @@ func TestPingdom_RawMetricLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkType",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 	t.Run("omit empty status", func(t *testing.T) {
@@ -96,7 +97,7 @@ func TestPingdom(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkType",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("required checkId", func(t *testing.T) {
@@ -105,7 +106,7 @@ func TestPingdom(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("missing checkId", func(t *testing.T) {
@@ -114,7 +115,7 @@ func TestPingdom(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
 	t.Run("invalid checkId", func(t *testing.T) {
@@ -123,7 +124,7 @@ func TestPingdom(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
-			Code: validation.ErrorCodeStringMatchRegexp,
+			Code: rules.ErrorCodeStringMatchRegexp,
 		})
 	})
 }
@@ -138,7 +139,7 @@ func TestPingdom_CheckTypeTransaction(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.total.pingdom.status",
-			Code: validation.ErrorCodeForbidden,
+			Code: rules.ErrorCodeForbidden,
 		})
 	})
 }
@@ -173,7 +174,7 @@ func TestPingdom_CheckTypeUptime(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.pingdom.status",
-				Code: validation.ErrorCodeOneOf,
+				Code: rules.ErrorCodeOneOf,
 			})
 		}
 	})

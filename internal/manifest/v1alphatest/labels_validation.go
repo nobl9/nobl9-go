@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/nobl9/go-yaml"
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -55,7 +55,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 		//	error: testutils.ExpectedError{
 		//		Prop:       propertyPath + "." + "",
 		//		IsKeyError: true,
-		//		Code:       validation.ErrorCodeStringLength,
+		//		Code:       rules.ErrorCodeStringLength,
 		//	},
 		// },
 		"valid: one empty label value": {
@@ -70,7 +70,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			},
 			error: testutils.ExpectedError{
 				Prop: propertyPath + "." + "net",
-				Code: validation.ErrorCodeSliceUnique,
+				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
 		"invalid: two empty label values (because duplicates)": {
@@ -79,7 +79,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			},
 			error: testutils.ExpectedError{
 				Prop: propertyPath + "." + "net",
-				Code: validation.ErrorCodeSliceUnique,
+				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
 		"valid: no label values for a given key": {
@@ -95,7 +95,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + strings.Repeat("net", 40),
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringLength,
+				Code:       rules.ErrorCodeStringLength,
 			},
 		},
 		"invalid: label key starts with non letter": {
@@ -105,7 +105,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "9net",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: label key ends with non alphanumeric char": {
@@ -115,7 +115,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "net_",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: label key contains uppercase character": {
@@ -125,7 +125,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "nEt",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: label value is too long (over 200 chars)": {
@@ -134,7 +134,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 			},
 			error: testutils.ExpectedError{
 				Prop: propertyPath + "." + "net[0]",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},
 		"valid: label value with uppercase characters": {

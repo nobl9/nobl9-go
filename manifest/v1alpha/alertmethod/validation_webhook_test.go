@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -58,7 +59,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.url",
-					Code: validation.ErrorCodeStringURL,
+					Code: rules.ErrorCodeStringURL,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -174,7 +175,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -194,7 +195,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers[0].name",
-					Code: validation.ErrorCodeStringMatchRegexp,
+					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -214,7 +215,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers[0].value",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -233,7 +234,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers[0].value",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{
@@ -252,7 +253,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.webhook.headers",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			AlertMethod: WebhookAlertMethod{

@@ -6,45 +6,46 @@ import (
 	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
-var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
-	validation.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
+var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
+	govy.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
 		WithName("rowGroupBy").
 		Required().
 		Rules(RowGroupByValidation()),
-	validation.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
+	govy.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
 		WithName("columns").
-		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
-		Rules(validation.SliceMaxLength[[]ColumnSpec](30)).
+		Rules(rules.SliceMinLength[[]ColumnSpec](1)).
+		Rules(rules.SliceMaxLength[[]ColumnSpec](30)).
 		IncludeForEach(columnValidation),
-	validation.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
+	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
 		Required().
 		Include(timeFrameValidation),
 )
 
-var columnValidation = validation.New[ColumnSpec](
-	validation.For(func(s ColumnSpec) string { return s.DisplayName }).
+var columnValidation = govy.New[ColumnSpec](
+	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
 		Required(),
-	validation.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
+	govy.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
 		WithName("labels").
-		Rules(validation.MapMinLength[map[LabelKey][]LabelValue](1)),
+		Rules(rules.MapMinLength[map[LabelKey][]LabelValue](1)),
 )
 
-var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
-	validation.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
+var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
+	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
+		Rules(govy.NewRule(func(v string) error {
 			if _, err := time.LoadLocation(v); err != nil {
 				return errors.Wrap(err, "not a valid time zone")
 			}
 			return nil
 		})),
-	validation.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
+	govy.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
 		WithName("snapshot").
 		Required().
 		Include(snapshotValidation).
@@ -52,40 +53,40 @@ var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
 		Include(snapshotTimeFrameLatestPointValidation),
 )
 
-var snapshotValidation = validation.New[SnapshotTimeFrame](
-	validation.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
+var snapshotValidation = govy.New[SnapshotTimeFrame](
+	govy.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
 		WithName("point").
 		Required().
 		Rules(SnapshotPointValidation()),
 )
 
-var snapshotTimeFramePastPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
+var snapshotTimeFramePastPointValidation = govy.New[SnapshotTimeFrame](
+	govy.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
 		WithName("dateTime").
 		Required(),
-	validation.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
+	govy.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
 		WithName("rrule"),
 ).When(
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointPast },
-	validation.WhenDescription("past snapshot point"),
+	govy.WhenDescription("past snapshot point"),
 )
 
-var snapshotTimeFrameLatestPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
+var snapshotTimeFrameLatestPointValidation = govy.New[SnapshotTimeFrame](
+	govy.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
 		WithName("dateTime").
 		Rules(
-			validation.Forbidden[time.Time]().WithDetails(
+			rules.Forbidden[time.Time]().WithDetails(
 				"dateTime is forbidden for latest snapshot point",
 			),
 		),
-	validation.For(func(s SnapshotTimeFrame) string { return s.Rrule }).
+	govy.For(func(s SnapshotTimeFrame) string { return s.Rrule }).
 		WithName("rrule").
 		Rules(
-			validation.Forbidden[string]().WithDetails(
+			rules.Forbidden[string]().WithDetails(
 				"rrule is forbidden for latest snapshot point",
 			),
 		),
 ).When(
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointLatest },
-	validation.WhenDescription("latest snapshot point"),
+	govy.WhenDescription("latest snapshot point"),
 )

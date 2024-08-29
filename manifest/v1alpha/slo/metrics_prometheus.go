@@ -1,15 +1,18 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // PrometheusMetric represents metric from Prometheus
 type PrometheusMetric struct {
 	PromQL *string `json:"promql"`
 }
 
-var prometheusValidation = validation.New[PrometheusMetric](
-	validation.ForPointer(func(p PrometheusMetric) *string { return p.PromQL }).
+var prometheusValidation = govy.New(
+	govy.ForPointer(func(p PrometheusMetric) *string { return p.PromQL }).
 		WithName("promql").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 )
