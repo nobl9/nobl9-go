@@ -91,7 +91,10 @@ var replayValidation = govy.New[Replay](
 		When(
 			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
-		Rules(replayStartTimeValidationRule()),
+		Rules(
+			replayStartTimeValidationRule(),
+			replayStartTimeNotInFutureValidationRule(),
+		),
 	govy.For(func(r Replay) Replay { return r }).
 		Rules(govy.NewRule(func(r Replay) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
@@ -124,6 +127,7 @@ const (
 	replayDurationValidationErrorCode         = "replay_duration"
 	replayDurationUnitValidationErrorCode     = "replay_duration_unit"
 	replayDurationAndStartDateValidationError = "replay_duration_or_start_date"
+	replayStartDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
 
 func replayDurationValidationRule() govy.Rule[ReplayDuration] {
@@ -149,6 +153,16 @@ func replayStartTimeValidationRule() govy.Rule[time.Time] {
 		}
 		return nil
 	}).WithErrorCode(replayDurationValidationErrorCode)
+}
+
+func replayStartTimeNotInFutureValidationRule() govy.Rule[time.Time] {
+	return govy.NewRule(func(v time.Time) error {
+		now := time.Now()
+		if v.After(now) {
+			return errors.Errorf("startDate %s must not be in the future", v)
+		}
+		return nil
+	}).WithErrorCode(replayStartDateInTheFutureValidationError)
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.

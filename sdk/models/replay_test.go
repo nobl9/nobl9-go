@@ -159,6 +159,18 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			ErrorCode: replayDurationAndStartDateValidationError,
 		},
 		{
+			name: "start date cannot be in the future",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(time.Minute * 1),
+				},
+			},
+			isValid:   false,
+			ErrorCode: replayStartDateInTheFutureValidationError,
+		},
+		{
 			name: "use start date without duration",
 			replay: Replay{
 				Project: "project",
