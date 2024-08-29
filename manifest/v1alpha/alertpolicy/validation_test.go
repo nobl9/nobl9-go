@@ -10,9 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -32,11 +36,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, policy, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -53,11 +57,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, policy, err, 4,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
 }
@@ -89,7 +93,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -100,7 +104,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	err := validate(alertPolicy)
 	testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 		Prop: "spec.description",
-		Code: validation.ErrorCodeStringDescription,
+		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
 
@@ -119,7 +123,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.severity",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails, invalid", func(t *testing.T) {
@@ -128,7 +132,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.severity",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -150,11 +154,11 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 	tests := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
 			values:       []string{"1 hour"},
-			expectedCode: validation.ErrorCodeTransform,
+			expectedCode: govy.ErrorCodeTransform,
 		},
 		"fails, value too small": {
 			values:          []string{"60s", "4m"},
-			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
+			expectedCode:    rules.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
 	}
@@ -187,7 +191,7 @@ func TestValidate_Spec_Conditions(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions",
-			Code: validation.ErrorCodeSliceMinLength,
+			Code: rules.ErrorCodeSliceMinLength,
 		})
 	})
 }
@@ -208,7 +212,7 @@ func TestValidate_Spec_Condition(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0]",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 }
@@ -298,7 +302,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails, invalid measurement", func(t *testing.T) {
@@ -307,7 +311,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2, testutils.ExpectedError{
 			Prop: "spec.conditions[0].measurement",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 	t.Run("fails, alertingWindow is defined", func(t *testing.T) {
@@ -346,7 +350,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 					`alerting window is required for measurement '%s'`,
 					MeasurementBudgetDrop.String(),
 				),
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -415,7 +419,7 @@ func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
 				MeasurementTimeToBurnEntireBudget,
 			},
 
-			expectedCode:    validation.ErrorCodeGreaterThan,
+			expectedCode:    rules.ErrorCodeGreaterThan,
 			expectedMessage: "should be greater than '0s'",
 		},
 		"fails, unexpected format when measurement with lastsFor is averageBurnRate or burnedBudget": {
@@ -428,7 +432,7 @@ func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
 			},
-			expectedCode:    validation.ErrorCodeTransform,
+			expectedCode:    govy.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
 		"fails, unexpected format when measurement with lastsFor is burnedBudget or averageBurnRate": {
@@ -441,7 +445,7 @@ func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
 				MeasurementAverageBurnRate,
 				MeasurementBurnedBudget,
 			},
-			expectedCode:    validation.ErrorCodeTransform,
+			expectedCode:    govy.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
 	}
@@ -529,7 +533,7 @@ func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
 				MeasurementTimeToBurnEntireBudget,
 			},
 
-			expectedCode:    validation.ErrorCodeGreaterThan,
+			expectedCode:    rules.ErrorCodeGreaterThan,
 			expectedMessage: "should be greater than '0s'",
 		},
 		"fails, unexpected format when measurement with alertingWindow is averageBurnRate or budgetDrop": {
@@ -542,7 +546,7 @@ func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
 				MeasurementAverageBurnRate,
 				MeasurementBudgetDrop,
 			},
-			expectedCode:    validation.ErrorCodeTransform,
+			expectedCode:    govy.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
 		"fails, unexpected format when measurement with alertingWindow is budgetDrop or averageBurnRate": {
@@ -555,7 +559,7 @@ func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
 				MeasurementAverageBurnRate,
 				MeasurementBudgetDrop,
 			},
-			expectedCode:    validation.ErrorCodeTransform,
+			expectedCode:    govy.ErrorCodeTransform,
 			expectedMessage: "float64 expected, got ",
 		},
 	}
@@ -603,7 +607,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 	testCases := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
 			values:       []string{"1 hour"},
-			expectedCode: validation.ErrorCodeTransform,
+			expectedCode: govy.ErrorCodeTransform,
 		},
 		"fails, cannot parse unit format": {
 			values: []string{
@@ -612,7 +616,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"0.5w",
 				"1w",
 			},
-			expectedCode: validation.ErrorCodeTransform,
+			expectedCode: govy.ErrorCodeTransform,
 		},
 	}
 	for name, testCase := range testCases {
@@ -639,7 +643,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"555s",
 				"360001ms",
 			},
-			expectedCode:    validation.ErrorCodeDurationPrecision,
+			expectedCode:    rules.ErrorCodeDurationPrecision,
 			expectedMessage: "duration must be defined with 1m0s precision",
 		},
 		"fails, too long": {
@@ -647,7 +651,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"555h",
 				"168h1m0s",
 			},
-			expectedCode:    validation.ErrorCodeLessThanOrEqualTo,
+			expectedCode:    rules.ErrorCodeLessThanOrEqualTo,
 			expectedMessage: `should be less than or equal to '168h0m0s'`,
 		},
 		"fails, too short": {
@@ -655,7 +659,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"4m",
 				"60000ms",
 			},
-			expectedCode:    validation.ErrorCodeGreaterThanOrEqualTo,
+			expectedCode:    rules.ErrorCodeGreaterThanOrEqualTo,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
 		"fails, zero value": {
@@ -665,7 +669,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"0s",
 				"0m",
 			},
-			expectedCode:    validation.ErrorCodeTransform,
+			expectedCode:    govy.ErrorCodeTransform,
 			expectedMessage: `should be greater than or equal to '5m0s'`,
 		},
 	}
@@ -719,11 +723,11 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 	tests := map[string]valuesWithCodeExpect{
 		"fails, wrong format": {
 			values:       []string{"1 hour"},
-			expectedCode: validation.ErrorCodeTransform,
+			expectedCode: govy.ErrorCodeTransform,
 		},
 		"fails, wrong unit in format": {
 			values:       []string{"365d"},
-			expectedCode: validation.ErrorCodeTransform,
+			expectedCode: govy.ErrorCodeTransform,
 		},
 	}
 	for name, testCase := range tests {
@@ -880,11 +884,11 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.name",
-				Code: validation.ErrorCodeStringIsDNSSubdomain,
+				Code: rules.ErrorCodeStringDNSLabel,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.name",
-				Code: validation.ErrorCodeStringIsDNSSubdomain,
+				Code: rules.ErrorCodeStringDNSLabel,
 			},
 		)
 	})
@@ -902,11 +906,11 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.project",
-				Code: validation.ErrorCodeStringIsDNSSubdomain,
+				Code: rules.ErrorCodeStringDNSLabel,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.project",
-				Code: validation.ErrorCodeStringIsDNSSubdomain,
+				Code: rules.ErrorCodeStringDNSLabel,
 			},
 		)
 	})

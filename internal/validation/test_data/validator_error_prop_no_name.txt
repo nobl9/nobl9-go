@@ -1,4 +1,0 @@
-Validation has failed for the following properties:
-  - no name
-  - 'that':
-    - that is an error

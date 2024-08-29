@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -20,11 +21,11 @@ func TestThousandEyes(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.total.thousandEyes",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].countMetrics.good.thousandEyes",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 		)
 	})
@@ -35,11 +36,11 @@ func TestThousandEyes(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -53,11 +54,11 @@ func TestThousandEyes(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
-				Code: validation.ErrorCodeGreaterThanOrEqualTo,
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
-				Code: validation.ErrorCodeOneOf,
+				Code: rules.ErrorCodeOneOf,
 			},
 		)
 	})

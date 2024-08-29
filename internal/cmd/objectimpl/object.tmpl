@@ -3,7 +3,7 @@
 package {{ .Package }}
 
 import (
-    "github.com/nobl9/nobl9-go/internal/validation"
+    "github.com/nobl9/govy/pkg/govy"
     "github.com/nobl9/nobl9-go/manifest"
     "github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -73,7 +73,7 @@ func ({{ .Receiver }} {{ .Name }}) SetOrganization(org string) manifest.Object {
 }
 {{- end }}
 
-func ({{ .Receiver }} {{ .Name }}) GetValidator() validation.Validator[{{ .Name }}] {
+func ({{ .Receiver }} {{ .Name }}) GetValidator() govy.Validator[{{ .Name }}] {
   return validator
 }
 {{- end }}

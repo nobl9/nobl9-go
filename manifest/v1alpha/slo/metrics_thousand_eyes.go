@@ -1,6 +1,9 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // ThousandEyesMetric represents metric from ThousandEyes
 type ThousandEyesMetric struct {
@@ -21,14 +24,14 @@ const (
 	ThousandEyesDNSSECValid             = "dns-dnssec-valid"
 )
 
-var thousandEyesCountMetricsValidation = validation.New[MetricSpec](
-	validation.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
+var thousandEyesCountMetricsValidation = govy.New(
+	govy.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
 		WithName("thousandEyes").
-		Rules(validation.Forbidden[ThousandEyesMetric]()),
+		Rules(rules.Forbidden[ThousandEyesMetric]()),
 )
 
-var thousandEyesRawMetricValidation = validation.New[MetricSpec](
-	validation.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
+var thousandEyesRawMetricValidation = govy.New(
+	govy.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
 		WithName("thousandEyes").
 		Include(thousandEyesValidation),
 )
@@ -46,13 +49,13 @@ var supportedThousandEyesTestTypes = []string{
 	ThousandEyesDNSSECValid,
 }
 
-var thousandEyesValidation = validation.New[ThousandEyesMetric](
-	validation.ForPointer(func(m ThousandEyesMetric) *int64 { return m.TestID }).
+var thousandEyesValidation = govy.New(
+	govy.ForPointer(func(m ThousandEyesMetric) *int64 { return m.TestID }).
 		WithName("testID").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo[int64](0)),
-	validation.ForPointer(func(m ThousandEyesMetric) *string { return m.TestType }).
+		Rules(rules.GTE[int64](0)),
+	govy.ForPointer(func(m ThousandEyesMetric) *string { return m.TestType }).
 		WithName("testType").
 		Required().
-		Rules(validation.OneOf(supportedThousandEyesTestTypes...)),
+		Rules(rules.OneOf(supportedThousandEyesTestTypes...)),
 )

@@ -8,7 +8,9 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -63,40 +65,40 @@ type HistoricalDataRetrieval struct {
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
 }
 
-func HistoricalDataRetrievalValidation() validation.Validator[HistoricalDataRetrieval] {
-	return validation.New(
-		validation.For(validation.GetSelf[HistoricalDataRetrieval]()).
+func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
+	return govy.New(
+		govy.For(govy.GetSelf[HistoricalDataRetrieval]()).
 			Rules(defaultDataRetrievalDurationValidation),
-		validation.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
+		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
 			WithName("maxDuration").
 			Required().
 			Include(historicalRetrievalDurationValidation),
-		validation.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.DefaultDuration }).
+		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.DefaultDuration }).
 			WithName("defaultDuration").
 			Required().
 			Include(historicalRetrievalDurationValidation),
 	)
 }
 
-var historicalRetrievalDurationValidation = validation.New(
-	validation.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
+var historicalRetrievalDurationValidation = govy.New(
+	govy.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
 		WithName("value").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo(0), validation.LessThanOrEqualTo(43200)),
-	validation.For(func(h HistoricalRetrievalDuration) HistoricalRetrievalDurationUnit { return h.Unit }).
+		Rules(rules.GTE(0), rules.LTE(43200)),
+	govy.For(func(h HistoricalRetrievalDuration) HistoricalRetrievalDurationUnit { return h.Unit }).
 		WithName("unit").
 		Required().
-		Rules(validation.OneOf(HRDDay, HRDHour, HRDMinute)),
+		Rules(rules.OneOf(HRDDay, HRDHour, HRDMinute)),
 )
 
-var defaultDataRetrievalDurationValidation = validation.NewSingleRule(
+var defaultDataRetrievalDurationValidation = govy.NewRule(
 	func(dataRetrieval HistoricalDataRetrieval) error {
 		if dataRetrieval.DefaultDuration.BiggerThan(dataRetrieval.MaxDuration) {
 			var maxDurationValue int
 			if dataRetrieval.MaxDuration.Value != nil {
 				maxDurationValue = *dataRetrieval.MaxDuration.Value
 			}
-			return validation.NewPropertyError(
+			return govy.NewPropertyError(
 				"defaultDuration",
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
@@ -128,23 +130,23 @@ var maxQueryDelay = Duration{
 	Unit:  maxQueryDelayDurationUnit,
 }
 
-func QueryDelayValidation() validation.Validator[QueryDelay] {
-	return validation.New(
-		validation.For(func(q QueryDelay) Duration { return q.Duration }).
-			Rules(validation.NewSingleRule(func(d Duration) error {
+func QueryDelayValidation() govy.Validator[QueryDelay] {
+	return govy.New(
+		govy.For(func(q QueryDelay) Duration { return q.Duration }).
+			Rules(govy.NewRule(func(d Duration) error {
 				if d.Duration() > maxQueryDelay.Duration() {
 					return errors.Errorf("must be less than or equal to %s", maxQueryDelay)
 				}
 				return nil
 			})),
 		// Value's max and min are validated through [GetQueryDelayDefaults] and [maxQueryDelay].
-		validation.ForPointer(func(q QueryDelay) *int { return q.Value }).
+		govy.ForPointer(func(q QueryDelay) *int { return q.Value }).
 			WithName("value").
 			Required(),
-		validation.For(func(q QueryDelay) DurationUnit { return q.Unit }).
+		govy.For(func(q QueryDelay) DurationUnit { return q.Unit }).
 			WithName("unit").
 			Required().
-			Rules(validation.OneOf(Minute, Second)),
+			Rules(rules.OneOf(Minute, Second)),
 	)
 }
 
@@ -481,8 +483,8 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 	}
 }
 
-func DataDogSiteValidationRule() validation.SingleRule[string] {
-	return validation.OneOf(
+func DataDogSiteValidationRule() govy.Rule[string] {
+	return rules.OneOf(
 		"eu",
 		"com",
 		"datadoghq.com",

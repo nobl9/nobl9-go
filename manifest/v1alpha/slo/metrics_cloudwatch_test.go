@@ -9,8 +9,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -53,7 +54,7 @@ func TestCloudWatch(t *testing.T) {
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.cloudWatch",
-					Code: validation.ErrorCodeOneOf,
+					Code: rules.ErrorCodeOneOf,
 				})
 			})
 		}
@@ -64,7 +65,7 @@ func TestCloudWatch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.region",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -101,19 +102,19 @@ func TestCloudWatchStandard(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.metricName",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.namespace",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.stat",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
 	})
@@ -130,19 +131,19 @@ func TestCloudWatchStandard(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.namespace",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.metricName",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.stat",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 		)
 	})
@@ -173,7 +174,7 @@ func TestCloudWatchStandard(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.accountId",
-				Code: validation.ErrorCodeStringMatchRegexp,
+				Code: rules.ErrorCodeStringMatchRegexp,
 			})
 		}
 	})
@@ -197,11 +198,11 @@ func TestCloudWatchJSON(t *testing.T) {
 	}{
 		"invalid JSON": {
 			JSON: ptr("{]}"),
-			Code: validation.ErrorCodeStringJSON,
+			Code: rules.ErrorCodeStringJSON,
 		},
 		"invalid metric data": {
 			JSON: ptr("[{}]"),
-			// Returned by AWS SDK validation.
+			// Returned by AWS SDK govy.
 			ContainsMessage: "missing required field",
 		},
 		"no returned data": {
@@ -218,7 +219,7 @@ func TestCloudWatchJSON(t *testing.T) {
 		},
 		"missing MetricStat.Period": {
 			JSON: getCloudWatchJSON(t, "cloudwatch_missing_metric_stat_period_json"),
-			// Returned by AWS SDK validation.
+			// Returned by AWS SDK govy.
 			ContainsMessage: "missing required field, MetricDataQuery.MetricStat.Period",
 		},
 		"invalid Period": {
@@ -267,7 +268,7 @@ func TestCloudWatchSQL(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.sql",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
 }
@@ -301,7 +302,7 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions",
-			Code: validation.ErrorCodeSliceMaxLength,
+			Code: rules.ErrorCodeSliceMaxLength,
 		})
 	})
 	t.Run("required fields", func(t *testing.T) {
@@ -313,11 +314,11 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].name",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].value",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -341,27 +342,27 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 6,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].name",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[0].value",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[1].name",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[1].value",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[2].name",
-				Code: validation.ErrorCodeStringASCII,
+				Code: rules.ErrorCodeStringASCII,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions[2].value",
-				Code: validation.ErrorCodeStringASCII,
+				Code: rules.ErrorCodeStringASCII,
 			},
 		)
 	})
@@ -380,7 +381,7 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.dimensions",
-			Code: validation.ErrorCodeSliceUnique,
+			Code: rules.ErrorCodeSliceUnique,
 		})
 	})
 }

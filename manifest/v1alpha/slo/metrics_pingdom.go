@@ -4,7 +4,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -27,10 +29,10 @@ const (
 	pingdomStatusUnknown     = "unknown"
 )
 
-var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).
+var pingdomCountMetricsLevelValidation = govy.New(
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			govy.NewRule(func(c CountMetricsSpec) error {
 				if c.GoodMetric.Pingdom.CheckID == nil || c.TotalMetric.Pingdom.CheckID == nil {
 					return nil
 				}
@@ -38,8 +40,8 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("pingdom.checkId", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo),
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
+			govy.NewRule(func(c CountMetricsSpec) error {
 				if c.GoodMetric.Pingdom.CheckType == nil || c.TotalMetric.Pingdom.CheckType == nil {
 					return nil
 				}
@@ -47,63 +49,63 @@ var pingdomCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("pingdom.checkType", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
 		),
 ).When(
 	whenCountMetricsIs(v1alpha.Pingdom),
-	validation.WhenDescription("countMetrics is pingdom"),
+	govy.WhenDescription("countMetrics is pingdom"),
 )
 
 // createPingdomMetricSpecValidation constructs a new MetricSpec level validation for Pingdom.
 func createPingdomMetricSpecValidation(
-	include validation.Validator[PingdomMetric],
-) validation.Validator[MetricSpec] {
-	return validation.New[MetricSpec](
-		validation.ForPointer(func(m MetricSpec) *PingdomMetric { return m.Pingdom }).
+	include govy.Validator[PingdomMetric],
+) govy.Validator[MetricSpec] {
+	return govy.New(
+		govy.ForPointer(func(m MetricSpec) *PingdomMetric { return m.Pingdom }).
 			WithName("pingdom").
 			Include(include))
 }
 
-var pingdomRawMetricValidation = createPingdomMetricSpecValidation(validation.New[PingdomMetric](
-	validation.ForPointer(func(p PingdomMetric) *string { return p.CheckType }).
+var pingdomRawMetricValidation = createPingdomMetricSpecValidation(govy.New(
+	govy.ForPointer(func(p PingdomMetric) *string { return p.CheckType }).
 		WithName("checkType").
 		Required().
-		Rules(validation.EqualTo(PingdomTypeUptime)),
+		Rules(rules.EQ(PingdomTypeUptime)),
 ))
 
-var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(validation.New[PingdomMetric](
-	validation.ForPointer(func(p PingdomMetric) *string { return p.CheckType }).
+var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(govy.New(
+	govy.ForPointer(func(p PingdomMetric) *string { return p.CheckType }).
 		WithName("checkType").
 		Required().
-		Rules(validation.OneOf(PingdomTypeUptime, PingdomTypeTransaction)),
-	validation.For(func(p PingdomMetric) *string { return p.Status }).
+		Rules(rules.OneOf(PingdomTypeUptime, PingdomTypeTransaction)),
+	govy.For(func(p PingdomMetric) *string { return p.Status }).
 		WithName("status").
 		When(
 			func(p PingdomMetric) bool { return p.CheckType != nil && *p.CheckType == PingdomTypeUptime },
-			validation.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+			govy.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
 		).
-		Rules(validation.Required[*string]()),
+		Rules(rules.Required[*string]()),
 ))
 
-var pingdomValidation = validation.New[PingdomMetric](
-	validation.For(validation.GetSelf[PingdomMetric]()).
+var pingdomValidation = govy.New(
+	govy.For(govy.GetSelf[PingdomMetric]()).
 		Include(pingdomUptimeCheckTypeValidation).
 		Include(pingdomTransactionCheckTypeValidation),
-	validation.ForPointer(func(p PingdomMetric) *string { return p.CheckID }).
+	govy.ForPointer(func(p PingdomMetric) *string { return p.CheckID }).
 		WithName("checkId").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			// This regexp is crafted in order to not interweave with StringNotEmpty validation.
-			validation.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`))), // nolint: gocritic
+			rules.StringNotEmpty(),
+			// This regexp is crafted in order to not interweave with StringNotEmpty govy.
+			rules.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`))), // nolint: gocritic
 )
 
-var pingdomUptimeCheckTypeValidation = validation.New[PingdomMetric](
-	validation.ForPointer(func(m PingdomMetric) *string { return m.Status }).
+var pingdomUptimeCheckTypeValidation = govy.New(
+	govy.ForPointer(func(m PingdomMetric) *string { return m.Status }).
 		WithName("status").
-		Rules(validation.NewSingleRule(func(s string) error {
+		Rules(govy.NewRule(func(s string) error {
 			for _, status := range strings.Split(s, ",") {
-				if err := validation.OneOf(
+				if err := rules.OneOf(
 					pingdomStatusUp,
 					pingdomStatusDown,
 					pingdomStatusUnconfirmed,
@@ -116,15 +118,15 @@ var pingdomUptimeCheckTypeValidation = validation.New[PingdomMetric](
 ).
 	When(
 		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeUptime },
-		validation.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+		govy.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
 	)
 
-var pingdomTransactionCheckTypeValidation = validation.New[PingdomMetric](
-	validation.ForPointer(func(m PingdomMetric) *string { return m.Status }).
+var pingdomTransactionCheckTypeValidation = govy.New(
+	govy.ForPointer(func(m PingdomMetric) *string { return m.Status }).
 		WithName("status").
-		Rules(validation.Forbidden[string]()),
+		Rules(rules.Forbidden[string]()),
 ).
 	When(
 		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeTransaction },
-		validation.WhenDescription("checkType is equal to '%s'", PingdomTypeTransaction),
+		govy.WhenDescription("checkType is equal to '%s'", PingdomTypeTransaction),
 	)

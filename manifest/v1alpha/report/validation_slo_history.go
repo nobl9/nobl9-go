@@ -5,47 +5,48 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
-var sloHistoryValidation = validation.New[SLOHistoryConfig](
-	validation.For(func(s SLOHistoryConfig) string { return s.TimeFrame.TimeZone }).
+var sloHistoryValidation = govy.New[SLOHistoryConfig](
+	govy.For(func(s SLOHistoryConfig) string { return s.TimeFrame.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
+		Rules(govy.NewRule(func(v string) error {
 			if _, err := time.LoadLocation(v); err != nil {
 				return errors.Wrap(err, "not a valid time zone")
 			}
 			return nil
 		})),
-	validation.For(func(s SLOHistoryConfig) SLOHistoryTimeFrame { return s.TimeFrame }).
+	govy.For(func(s SLOHistoryConfig) SLOHistoryTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
 		Required().
-		Rules(validation.MutuallyExclusive(true, map[string]func(t SLOHistoryTimeFrame) any{
+		Rules(rules.MutuallyExclusive(true, map[string]func(t SLOHistoryTimeFrame) any{
 			"rolling":  func(t SLOHistoryTimeFrame) any { return t.Rolling },
 			"calendar": func(t SLOHistoryTimeFrame) any { return t.Calendar },
 		})),
-	validation.ForPointer(func(s SLOHistoryConfig) *RollingTimeFrame { return s.TimeFrame.Rolling }).
+	govy.ForPointer(func(s SLOHistoryConfig) *RollingTimeFrame { return s.TimeFrame.Rolling }).
 		WithName("rolling").
 		Include(rollingTimeFrameValidation),
-	validation.ForPointer(func(s SLOHistoryConfig) *CalendarTimeFrame { return s.TimeFrame.Calendar }).
+	govy.ForPointer(func(s SLOHistoryConfig) *CalendarTimeFrame { return s.TimeFrame.Calendar }).
 		WithName("calendar").
 		Include(calendarTimeFrameValidation),
 )
 
-var rollingTimeFrameValidation = validation.New[RollingTimeFrame](
-	validation.ForPointer(func(t RollingTimeFrame) *string { return t.Unit }).
+var rollingTimeFrameValidation = govy.New[RollingTimeFrame](
+	govy.ForPointer(func(t RollingTimeFrame) *string { return t.Unit }).
 		WithName("unit").
 		Required(),
-	validation.ForPointer(func(t RollingTimeFrame) *int { return t.Count }).
+	govy.ForPointer(func(t RollingTimeFrame) *int { return t.Count }).
 		WithName("count").
 		Required(),
 )
 
-var calendarTimeFrameValidation = validation.New[CalendarTimeFrame](
-	validation.For(validation.GetSelf[CalendarTimeFrame]()).
+var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
+	govy.For(govy.GetSelf[CalendarTimeFrame]()).
 		Rules(
-			validation.NewSingleRule(func(t CalendarTimeFrame) error {
+			govy.NewRule(func(t CalendarTimeFrame) error {
 				allFieldsSet := t.Count != nil && t.Unit != nil && t.From != nil && t.To != nil
 				noFieldSet := t.Count == nil && t.Unit == nil && t.From == nil && t.To == nil
 				onlyCountSet := t.Count != nil && t.Unit == nil

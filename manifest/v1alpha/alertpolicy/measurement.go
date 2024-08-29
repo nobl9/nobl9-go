@@ -5,7 +5,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -78,8 +80,8 @@ func getExpectedOperatorForMeasurement(measurement Measurement) (v1alpha.Operato
 	}
 }
 
-func measurementValidation() validation.SingleRule[string] {
-	return validation.OneOf(
+func measurementValidation() govy.Rule[string] {
+	return rules.OneOf(
 		MeasurementBurnedBudget.String(),
 		MeasurementAverageBurnRate.String(),
 		MeasurementTimeToBurnBudget.String(),

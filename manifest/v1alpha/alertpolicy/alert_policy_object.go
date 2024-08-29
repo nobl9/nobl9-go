@@ -3,7 +3,8 @@
 package alertpolicy
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (a AlertPolicy) SetOrganization(org string) manifest.Object {
 	return a
 }
 
-func (a AlertPolicy) GetValidator() validation.Validator[AlertPolicy] {
+func (a AlertPolicy) GetValidator() govy.Validator[AlertPolicy] {
 	return validator
 }

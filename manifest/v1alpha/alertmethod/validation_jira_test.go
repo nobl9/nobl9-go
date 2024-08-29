@@ -3,8 +3,9 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 )
 
 func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
@@ -35,7 +36,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.jira.url",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: JiraAlertMethod{
@@ -48,7 +49,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.jira.url",
-					Code: validation.ErrorCodeURL,
+					Code: rules.ErrorCodeURL,
 				},
 			},
 			AlertMethod: JiraAlertMethod{
@@ -76,7 +77,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.jira.username",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: JiraAlertMethod{
@@ -89,7 +90,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.jira.projectKey",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			AlertMethod: JiraAlertMethod{

@@ -7,7 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
@@ -68,31 +69,31 @@ const (
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
-var replayValidation = validation.New[Replay](
-	validation.For(func(r Replay) string { return r.Project }).
+var replayValidation = govy.New[Replay](
+	govy.For(func(r Replay) string { return r.Project }).
 		WithName("project").
 		Required(),
-	validation.For(func(r Replay) string { return r.Slo }).
+	govy.For(func(r Replay) string { return r.Slo }).
 		WithName("slo").
 		Required(),
-	validation.For(func(r Replay) ReplayDuration { return r.Duration }).
+	govy.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		When(
 			func(r Replay) bool {
 				return !isEmpty(r.Duration) || (r.TimeRange.StartDate.IsZero() && isEmpty(r.Duration))
 			},
 		).
-		Cascade(validation.CascadeModeStop).
+		Cascade(govy.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
-	validation.For(func(r Replay) time.Time { return r.TimeRange.StartDate }).
+	govy.For(func(r Replay) time.Time { return r.TimeRange.StartDate }).
 		WithName("startDate").
 		When(
 			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
 		Rules(replayStartTimeValidationRule()),
-	validation.For(func(r Replay) Replay { return r }).
-		Rules(validation.NewSingleRule(func(r Replay) error {
+	govy.For(func(r Replay) Replay { return r }).
+		Rules(govy.NewSingleRule(func(r Replay) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
 				return errors.New("only one of duration or startDate can be set")
 			}
@@ -100,15 +101,15 @@ var replayValidation = validation.New[Replay](
 		}).WithErrorCode(replayDurationAndStartDateValidationError)),
 )
 
-var replayDurationValidation = validation.New[ReplayDuration](
-	validation.For(func(d ReplayDuration) string { return d.Unit }).
+var replayDurationValidation = govy.New[ReplayDuration](
+	govy.For(func(d ReplayDuration) string { return d.Unit }).
 		WithName("unit").
 		Required().
-		Rules(validation.NewSingleRule(ValidateReplayDurationUnit).
+		Rules(govy.NewRule(ValidateReplayDurationUnit).
 			WithErrorCode(replayDurationUnitValidationErrorCode)),
-	validation.For(func(d ReplayDuration) int { return d.Value }).
+	govy.For(func(d ReplayDuration) int { return d.Value }).
 		WithName("value").
-		Rules(validation.GreaterThan(0)),
+		Rules(rules.GT(0)),
 )
 
 func (r Replay) Validate() error {
@@ -125,8 +126,8 @@ const (
 	replayDurationAndStartDateValidationError = "replay_duration_or_start_date"
 )
 
-func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
-	return validation.NewSingleRule(func(v ReplayDuration) error {
+func replayDurationValidationRule() govy.Rule[ReplayDuration] {
+	return govy.NewRule(func(v ReplayDuration) error {
 		duration, err := v.Duration()
 		if err != nil {
 			return err
@@ -139,8 +140,8 @@ func replayDurationValidationRule() validation.SingleRule[ReplayDuration] {
 	}).WithErrorCode(replayDurationValidationErrorCode)
 }
 
-func replayStartTimeValidationRule() validation.SingleRule[time.Time] {
-	return validation.NewSingleRule(func(v time.Time) error {
+func replayStartTimeValidationRule() govy.Rule[time.Time] {
+	return govy.NewRule(func(v time.Time) error {
 		duration := time.Since(v)
 		if duration > maximumAllowedReplayDuration {
 			return errors.Errorf("%s duration must not be greater than %s",
@@ -150,7 +151,7 @@ func replayStartTimeValidationRule() validation.SingleRule[time.Time] {
 	}).WithErrorCode(replayDurationValidationErrorCode)
 }
 
-// ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with validation.
+// ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.
 func ParseJSONToReplayStruct(data io.Reader) (Replay, error) {
 	replay := Replay{}
 	if err := json.NewDecoder(data).Decode(&replay); err != nil {

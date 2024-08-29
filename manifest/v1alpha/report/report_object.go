@@ -3,7 +3,8 @@
 package report
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -49,6 +50,6 @@ func (r Report) SetOrganization(org string) manifest.Object {
 	return r
 }
 
-func (r Report) GetValidator() validation.Validator[Report] {
+func (r Report) GetValidator() govy.Validator[Report] {
 	return validator
 }
