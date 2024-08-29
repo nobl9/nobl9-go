@@ -93,7 +93,7 @@ var replayValidation = govy.New[Replay](
 		).
 		Rules(replayStartTimeValidationRule()),
 	govy.For(func(r Replay) Replay { return r }).
-		Rules(govy.NewSingleRule(func(r Replay) error {
+		Rules(govy.NewRule(func(r Replay) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
 				return errors.New("only one of duration or startDate can be set")
 			}
