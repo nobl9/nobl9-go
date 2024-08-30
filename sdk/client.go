@@ -132,7 +132,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute request")
 	}
-	if err = processResponse(resp); err != nil {
+	if err = processHTTPResponse(resp); err != nil {
 		_ = resp.Body.Close()
 		return nil, err
 	}

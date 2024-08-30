@@ -12,18 +12,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestProcessResponseError(t *testing.T) {
+func TestAPIError(t *testing.T) {
 	t.Parallel()
 	t.Run("status code smaller than 300, no error", func(t *testing.T) {
 		t.Parallel()
 		for code := 200; code < 300; code++ {
-			require.NoError(t, processResponse(&http.Response{StatusCode: code}))
+			require.NoError(t, processHTTPResponse(&http.Response{StatusCode: code}))
 		}
 	})
 	t.Run("errors", func(t *testing.T) {
 		t.Parallel()
 		for code := 300; code < 600; code++ {
-			err := processResponse(&http.Response{
+			err := processHTTPResponse(&http.Response{
 				StatusCode: code,
 				Body:       io.NopCloser(bytes.NewBufferString("error!")),
 				Header:     http.Header{HeaderTraceID: []string{"123"}},
@@ -46,7 +46,7 @@ func TestProcessResponseError(t *testing.T) {
 	})
 	t.Run("missing trace id", func(t *testing.T) {
 		t.Parallel()
-		err := processResponse(&http.Response{
+		err := processHTTPResponse(&http.Response{
 			StatusCode: http.StatusBadRequest,
 			Body:       io.NopCloser(bytes.NewBufferString("error!")),
 			Request: &http.Request{
@@ -64,7 +64,7 @@ func TestProcessResponseError(t *testing.T) {
 	})
 	t.Run("missing status text", func(t *testing.T) {
 		t.Parallel()
-		err := processResponse(&http.Response{
+		err := processHTTPResponse(&http.Response{
 			StatusCode: 555,
 			Body:       io.NopCloser(bytes.NewBufferString("error!")),
 			Request: &http.Request{
@@ -82,7 +82,7 @@ func TestProcessResponseError(t *testing.T) {
 	})
 	t.Run("missing url", func(t *testing.T) {
 		t.Parallel()
-		err := processResponse(&http.Response{
+		err := processHTTPResponse(&http.Response{
 			StatusCode: 555,
 			Body:       io.NopCloser(bytes.NewBufferString("error!")),
 		})
@@ -92,9 +92,9 @@ func TestProcessResponseError(t *testing.T) {
 	})
 }
 
-func TestResponseError_IsConcurrencyIssue(t *testing.T) {
+func TestAPIError_IsConcurrencyIssue(t *testing.T) {
 	t.Parallel()
-	err := processResponse(&http.Response{
+	err := processHTTPResponse(&http.Response{
 		StatusCode: http.StatusInternalServerError,
 		Body:       io.NopCloser(bytes.NewBufferString(concurrencyIssueMessage)),
 		Request: &http.Request{
@@ -107,5 +107,5 @@ func TestResponseError_IsConcurrencyIssue(t *testing.T) {
 		},
 	})
 	require.Error(t, err)
-	assert.True(t, err.(*ResponseError).IsConcurrencyIssue())
+	assert.True(t, err.(*APIError).IsConcurrencyIssue())
 }

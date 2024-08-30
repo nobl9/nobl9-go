@@ -12,8 +12,8 @@ import (
 
 const concurrencyIssueMessage = "operation failed due to concurrency issue but can be retried"
 
-// ResponseError represents an HTTP error response from the API.
-type ResponseError struct {
+// APIError represents an HTTP error response from the API.
+type APIError struct {
 	Message    string `json:"message"`
 	StatusCode int    `json:"statusCode"`
 	Method     string `json:"method"`
@@ -23,15 +23,15 @@ type ResponseError struct {
 
 // IsConcurrencyIssue returns true if the underlying API error is a concurrency issue.
 // If so, the operation can be retried.
-func (r ResponseError) IsConcurrencyIssue() bool {
+func (r APIError) IsConcurrencyIssue() bool {
 	return r.StatusCode >= 500 && r.Message == concurrencyIssueMessage
 }
 
 // Error returns a string representation of the error.
-func (r ResponseError) Error() string {
+func (r APIError) Error() string {
 	buf := bytes.Buffer{}
-	buf.Grow(len(responseErrorTemplateData))
-	if err := responseErrorTemplate.Execute(&buf, responseErrorTemplateFields{
+	buf.Grow(len(apiErrorTemplateData))
+	if err := apiErrorTemplate.Execute(&buf, apiErrorTemplateFields{
 		Message:  r.Message,
 		Method:   r.Method,
 		URL:      r.URL,
@@ -39,20 +39,19 @@ func (r ResponseError) Error() string {
 		CodeText: http.StatusText(r.StatusCode),
 		Code:     r.StatusCode,
 	}); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to execute ResponseError template: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "failed to execute APIError template: %v\n", err)
 	}
 	return buf.String()
 }
 
-// processResponse processes an HTTP response and
-// returns an error if the response is erroneous.
-func processResponse(resp *http.Response) error {
+// processHTTPResponse processes an HTTP response and returns an error if the response is erroneous.
+func processHTTPResponse(resp *http.Response) error {
 	if resp.StatusCode < 300 {
 		return nil
 	}
 	rawBody, _ := io.ReadAll(resp.Body)
 	body := string(bytes.TrimSpace(rawBody))
-	respErr := ResponseError{
+	respErr := APIError{
 		StatusCode: resp.StatusCode,
 		TraceID:    resp.Header.Get(HeaderTraceID),
 		Message:    body,
@@ -66,12 +65,12 @@ func processResponse(resp *http.Response) error {
 	return &respErr
 }
 
-//go:embed response_error.tmpl
-var responseErrorTemplateData string
+//go:embed api_error.tmpl
+var apiErrorTemplateData string
 
-var responseErrorTemplate = template.Must(template.New("response_error").Parse(responseErrorTemplateData))
+var apiErrorTemplate = template.Must(template.New("api_error").Parse(apiErrorTemplateData))
 
-type responseErrorTemplateFields struct {
+type apiErrorTemplateFields struct {
 	Message  string
 	Method   string
 	URL      string
