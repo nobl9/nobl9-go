@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -21,19 +22,19 @@ func TestLogicMonitor(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -49,19 +50,19 @@ func TestLogicMonitor(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
-				Code: validation.ErrorCodeStringContains,
+				Code: rules.ErrorCodeStringContains,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
-				Code: validation.ErrorCodeGreaterThanOrEqualTo,
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
-				Code: validation.ErrorCodeGreaterThanOrEqualTo,
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})

@@ -1,4 +1,0 @@
-'metadata.name' with value '{"this":"this","THAT":"that"}':
-  - what a shame this happened
-  - this is outrageous...
-  - here's another error

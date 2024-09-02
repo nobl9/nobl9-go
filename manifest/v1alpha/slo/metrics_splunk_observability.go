@@ -1,15 +1,18 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // SplunkObservabilityMetric represents metric from SplunkObservability
 type SplunkObservabilityMetric struct {
 	Program *string `json:"program"`
 }
 
-var splunkObservabilityValidation = validation.New[SplunkObservabilityMetric](
-	validation.ForPointer(func(s SplunkObservabilityMetric) *string { return s.Program }).
+var splunkObservabilityValidation = govy.New(
+	govy.ForPointer(func(s SplunkObservabilityMetric) *string { return s.Program }).
 		WithName("program").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 )

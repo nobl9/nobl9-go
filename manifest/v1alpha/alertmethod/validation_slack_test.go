@@ -3,8 +3,9 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -44,7 +45,7 @@ func TestValidate_Spec_SlackAlertMethod(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.slack.url",
-					Code: validation.ErrorCodeStringURL,
+					Code: rules.ErrorCodeStringURL,
 				},
 			},
 			AlertMethod: SlackAlertMethod{

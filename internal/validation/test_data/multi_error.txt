@@ -1,3 +1,0 @@
-- this is just a test!
-- another error...
-- that is just fatal.

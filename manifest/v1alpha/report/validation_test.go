@@ -8,8 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -27,11 +28,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -47,11 +48,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		},
 	)
 }
@@ -68,7 +69,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			testutils.ExpectedError{
 				Prop: "spec.filters",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -160,7 +161,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: nil,
@@ -184,7 +185,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.projects[0]",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -196,7 +197,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -212,7 +213,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -229,7 +230,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -245,7 +246,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -262,7 +263,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -278,7 +279,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -295,7 +296,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -311,7 +312,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -381,11 +382,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 				{
 					Prop: "spec.sloHistory.rolling.count",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -398,7 +399,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.count",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -415,7 +416,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -432,7 +433,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.timeZone",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -500,7 +501,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.rowGroupBy",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -522,7 +523,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns",
-					Code: validation.ErrorCodeSliceMinLength,
+					Code: rules.ErrorCodeSliceMinLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -545,7 +546,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -600,7 +601,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns[0].labels",
-					Code: validation.ErrorCodeMapMinLength,
+					Code: rules.ErrorCodeMapMinLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -625,7 +626,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns[0].displayName",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -742,7 +743,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -761,7 +762,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -784,7 +785,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -813,7 +814,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -843,7 +844,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -869,11 +870,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.rrule",
-					Code: validation.ErrorCodeForbidden,
+					Code: rules.ErrorCodeForbidden,
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeForbidden,
+					Code: rules.ErrorCodeForbidden,
 				},
 			},
 			Config: SystemHealthReviewConfig{

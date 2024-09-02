@@ -3,7 +3,8 @@
 package agent
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (a Agent) SetOrganization(org string) manifest.Object {
 	return a
 }
 
-func (a Agent) GetValidator() validation.Validator[Agent] {
+func (a Agent) GetValidator() govy.Validator[Agent] {
 	return validator
 }

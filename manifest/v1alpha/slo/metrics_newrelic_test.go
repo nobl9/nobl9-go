@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -20,7 +21,7 @@ func TestNewRelic(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("empty", func(t *testing.T) {
@@ -29,7 +30,7 @@ func TestNewRelic(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
 }
@@ -94,7 +95,7 @@ uNtIL LIMIT MAX TIMESERIES`,
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
-					Code: validation.ErrorCodeStringDenyRegexp,
+					Code: rules.ErrorCodeStringDenyRegexp,
 				})
 			}
 		})

@@ -3,7 +3,8 @@
 package usergroup
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -49,6 +50,6 @@ func (u UserGroup) SetOrganization(org string) manifest.Object {
 	return u
 }
 
-func (u UserGroup) GetValidator() validation.Validator[UserGroup] {
+func (u UserGroup) GetValidator() govy.Validator[UserGroup] {
 	return validator
 }

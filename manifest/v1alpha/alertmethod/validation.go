@@ -7,8 +7,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -27,28 +29,28 @@ func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, a, manifest.KindAlertMethod)
 }
 
-var validator = validation.New[AlertMethod](
+var validator = govy.New[AlertMethod](
 	validationV1Alpha.FieldRuleAPIVersion(func(a AlertMethod) manifest.Version { return a.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(a AlertMethod) manifest.Kind { return a.Kind }, manifest.KindAlertMethod),
-	validation.For(func(a AlertMethod) Metadata { return a.Metadata }).
+	govy.For(func(a AlertMethod) Metadata { return a.Metadata }).
 		Include(metadataValidation),
-	validation.For(func(a AlertMethod) Spec { return a.Spec }).
+	govy.For(func(a AlertMethod) Spec { return a.Spec }).
 		WithName("spec").
 		Include(specValidation),
 )
 
-var metadataValidation = validation.New[Metadata](
+var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
 )
 
-var specValidation = validation.New[Spec](
-	validation.For(func(s Spec) string { return s.Description }).
+var specValidation = govy.New[Spec](
+	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
-		Rules(validation.StringLength(0, maxDescriptionLength)),
-	validation.For(validation.GetSelf[Spec]()).
-		Rules(validation.NewSingleRule(func(s Spec) error {
+		Rules(rules.StringLength(0, maxDescriptionLength)),
+	govy.For(govy.GetSelf[Spec]()).
+		Rules(govy.NewRule(func(s Spec) error {
 			alertMethodCounter := 0
 			if s.Webhook != nil {
 				alertMethodCounter++
@@ -82,39 +84,39 @@ var specValidation = validation.New[Spec](
 			}
 			return nil
 		})),
-	validation.ForPointer(func(s Spec) *WebhookAlertMethod { return s.Webhook }).
+	govy.ForPointer(func(s Spec) *WebhookAlertMethod { return s.Webhook }).
 		WithName("webhook").
 		Include(webhookValidation),
-	validation.ForPointer(func(s Spec) *PagerDutyAlertMethod { return s.PagerDuty }).
+	govy.ForPointer(func(s Spec) *PagerDutyAlertMethod { return s.PagerDuty }).
 		WithName("pagerduty").
 		Include(pagerDutyValidation),
-	validation.ForPointer(func(s Spec) *SlackAlertMethod { return s.Slack }).
+	govy.ForPointer(func(s Spec) *SlackAlertMethod { return s.Slack }).
 		WithName("slack").
 		Include(slackValidation),
-	validation.ForPointer(func(s Spec) *DiscordAlertMethod { return s.Discord }).
+	govy.ForPointer(func(s Spec) *DiscordAlertMethod { return s.Discord }).
 		WithName("discord").
 		Include(discordValidation),
-	validation.ForPointer(func(s Spec) *OpsgenieAlertMethod { return s.Opsgenie }).
+	govy.ForPointer(func(s Spec) *OpsgenieAlertMethod { return s.Opsgenie }).
 		WithName("opsgenie").
 		Include(opsgenieValidation),
-	validation.ForPointer(func(s Spec) *ServiceNowAlertMethod { return s.ServiceNow }).
+	govy.ForPointer(func(s Spec) *ServiceNowAlertMethod { return s.ServiceNow }).
 		WithName("servicenow").
 		Include(serviceNowValidation),
-	validation.ForPointer(func(s Spec) *JiraAlertMethod { return s.Jira }).
+	govy.ForPointer(func(s Spec) *JiraAlertMethod { return s.Jira }).
 		WithName("jira").
 		Include(jiraValidation),
-	validation.ForPointer(func(s Spec) *TeamsAlertMethod { return s.Teams }).
+	govy.ForPointer(func(s Spec) *TeamsAlertMethod { return s.Teams }).
 		WithName("msteams").
 		Include(teamsValidation),
-	validation.ForPointer(func(s Spec) *EmailAlertMethod { return s.Email }).
+	govy.ForPointer(func(s Spec) *EmailAlertMethod { return s.Email }).
 		WithName("email").
 		Include(emailValidation),
 )
 
-var webhookValidation = validation.New[WebhookAlertMethod](
-	validation.For(validation.GetSelf[WebhookAlertMethod]()).
+var webhookValidation = govy.New[WebhookAlertMethod](
+	govy.For(govy.GetSelf[WebhookAlertMethod]()).
 		Rules(
-			validation.NewSingleRule(func(w WebhookAlertMethod) error {
+			govy.NewRule(func(w WebhookAlertMethod) error {
 				if w.Template != nil && len(w.TemplateFields) > 0 {
 					return errors.New("must not contain both 'template' and 'templateFields'")
 				}
@@ -123,52 +125,52 @@ var webhookValidation = validation.New[WebhookAlertMethod](
 				}
 				return nil
 			})),
-	validation.For(func(w WebhookAlertMethod) string { return w.URL }).
+	govy.For(func(w WebhookAlertMethod) string { return w.URL }).
 		WithName("url").
 		HideValue().
 		Include(optionalUrlValidation()),
-	validation.ForPointer(func(w WebhookAlertMethod) *string { return w.Template }).
+	govy.ForPointer(func(w WebhookAlertMethod) *string { return w.Template }).
 		WithName("template").
-		Rules(validation.NewSingleRule(func(v string) error {
+		Rules(govy.NewRule(func(v string) error {
 			fields := extractTemplateFields(v)
 			return validateTemplateFields(fields)
 		})),
-	validation.For(func(w WebhookAlertMethod) []string { return w.TemplateFields }).
+	govy.For(func(w WebhookAlertMethod) []string { return w.TemplateFields }).
 		WithName("templateFields").
 		OmitEmpty().
-		Rules(validation.NewSingleRule(validateTemplateFields)),
-	validation.ForSlice(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
+		Rules(govy.NewRule(validateTemplateFields)),
+	govy.ForSlice(func(w WebhookAlertMethod) []WebhookHeader { return w.Headers }).
 		WithName("headers").
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.SliceMaxLength[[]WebhookHeader](maxWebhookHeaders)).
 		IncludeForEach(webhookHeaderValidation),
 )
 
-var pagerDutyValidation = validation.New[PagerDutyAlertMethod](
-	validation.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
+var pagerDutyValidation = govy.New[PagerDutyAlertMethod](
+	govy.For(func(p PagerDutyAlertMethod) string { return p.IntegrationKey }).
 		WithName("integrationKey").
 		HideValue().
 		When(
 			func(p PagerDutyAlertMethod) bool { return !isHiddenValue(p.IntegrationKey) },
-			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
 		).
-		Rules(validation.StringMaxLength(32)),
+		Rules(rules.StringMaxLength(32)),
 )
 
-var slackValidation = validation.New[SlackAlertMethod](
-	validation.For(func(s SlackAlertMethod) string { return s.URL }).
+var slackValidation = govy.New[SlackAlertMethod](
+	govy.For(func(s SlackAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
 		Include(optionalUrlValidation()),
 )
 
-var discordValidation = validation.New[DiscordAlertMethod](
-	validation.For(func(s DiscordAlertMethod) string { return s.URL }).
+var discordValidation = govy.New[DiscordAlertMethod](
+	govy.For(func(s DiscordAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
-		Cascade(validation.CascadeModeStop).
+		Cascade(govy.CascadeModeStop).
 		Rules(
-			validation.NewSingleRule(func(v string) error {
+			govy.NewRule(func(v string) error {
 				if strings.HasSuffix(strings.ToLower(v), "/slack") || strings.HasSuffix(strings.ToLower(v), "/github") {
 					return errors.New("must not end with /slack or /github")
 				}
@@ -177,19 +179,19 @@ var discordValidation = validation.New[DiscordAlertMethod](
 		Include(optionalUrlValidation()),
 )
 
-var opsgenieValidation = validation.New[OpsgenieAlertMethod](
-	validation.For(func(o OpsgenieAlertMethod) string { return o.URL }).
+var opsgenieValidation = govy.New[OpsgenieAlertMethod](
+	govy.For(func(o OpsgenieAlertMethod) string { return o.URL }).
 		WithName("url").
 		Include(optionalUrlValidation()),
-	validation.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
+	govy.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
 		HideValue().
 		When(
 			func(o OpsgenieAlertMethod) bool { return !isHiddenValue(o.Auth) },
-			validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
 		).
 		Rules(
-			validation.NewSingleRule(func(v string) error {
+			govy.NewRule(func(v string) error {
 				if !strings.HasPrefix(v, "Basic") &&
 					!strings.HasPrefix(v, "GenieKey") {
 					return errors.New("invalid auth format, should start with either GenieKey or Basic")
@@ -198,45 +200,45 @@ var opsgenieValidation = validation.New[OpsgenieAlertMethod](
 			})),
 )
 
-var serviceNowValidation = validation.New[ServiceNowAlertMethod](
-	validation.For(func(s ServiceNowAlertMethod) string { return s.Username }).
+var serviceNowValidation = govy.New[ServiceNowAlertMethod](
+	govy.For(func(s ServiceNowAlertMethod) string { return s.Username }).
 		WithName("username").
 		Required(),
-	validation.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
+	govy.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
 		WithName("instanceName").
 		Required(),
 )
 
-var jiraValidation = validation.New[JiraAlertMethod](
-	validation.Transform(func(j JiraAlertMethod) string { return j.URL }, url.Parse).
+var jiraValidation = govy.New[JiraAlertMethod](
+	govy.Transform(func(j JiraAlertMethod) string { return j.URL }, url.Parse).
 		WithName("url").
 		Required().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.URL()).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.URL()).
 		Rules(
-			validation.NewSingleRule(func(u *url.URL) error {
+			govy.NewRule(func(u *url.URL) error {
 				if u.Scheme != "https" {
 					return errors.New("requires https scheme")
 				}
 				return nil
 			}),
 		),
-	validation.For(func(s JiraAlertMethod) string { return s.Username }).
+	govy.For(func(s JiraAlertMethod) string { return s.Username }).
 		WithName("username").
 		Required(),
-	validation.For(func(s JiraAlertMethod) string { return s.ProjectKey }).
+	govy.For(func(s JiraAlertMethod) string { return s.ProjectKey }).
 		WithName("projectKey").
 		Required(),
 )
 
-var teamsValidation = validation.New[TeamsAlertMethod](
-	validation.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
+var teamsValidation = govy.New[TeamsAlertMethod](
+	govy.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
 		HideValue().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.URL()).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.URL()).
 		Rules(
-			validation.NewSingleRule(func(u *url.URL) error {
+			govy.NewRule(func(u *url.URL) error {
 				if u.Scheme != "https" {
 					return errors.New("requires https scheme")
 				}
@@ -245,73 +247,73 @@ var teamsValidation = validation.New[TeamsAlertMethod](
 		),
 ).When(
 	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
-	validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+	govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
 )
 
-var emailValidation = validation.New[EmailAlertMethod](
-	validation.For(validation.GetSelf[EmailAlertMethod]()).
+var emailValidation = govy.New[EmailAlertMethod](
+	govy.For(govy.GetSelf[EmailAlertMethod]()).
 		Rules(
-			validation.NewSingleRule(func(e EmailAlertMethod) error {
+			govy.NewRule(func(e EmailAlertMethod) error {
 				if len(e.To) == 0 && len(e.Cc) == 0 && len(e.Bcc) == 0 {
 					return errors.New("must contain at least one recipient")
 				}
 				return nil
 			})),
-	validation.For(func(s EmailAlertMethod) []string { return s.To }).
+	govy.For(func(s EmailAlertMethod) []string { return s.To }).
 		WithName("to").
-		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
-	validation.For(func(s EmailAlertMethod) []string { return s.Cc }).
+		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
+	govy.For(func(s EmailAlertMethod) []string { return s.Cc }).
 		WithName("cc").
-		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
-	validation.For(func(s EmailAlertMethod) []string { return s.Bcc }).
+		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
+	govy.For(func(s EmailAlertMethod) []string { return s.Bcc }).
 		WithName("bcc").
-		Rules(validation.SliceMaxLength[[]string](maxEmailRecipients)),
+		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
 )
 
-func optionalUrlValidation() validation.Validator[string] {
-	return validation.New[string](
-		validation.For(validation.GetSelf[string]()).
+func optionalUrlValidation() govy.Validator[string] {
+	return govy.New[string](
+		govy.For(govy.GetSelf[string]()).
 			When(
 				func(v string) bool { return !isHiddenValue(v) },
-				validation.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
-			Rules(validation.StringURL()),
+			Rules(rules.StringURL()),
 	)
 }
 
-var webhookHeaderValidation = validation.New[WebhookHeader](
-	validation.For(func(h WebhookHeader) string { return h.Name }).
+var webhookHeaderValidation = govy.New[WebhookHeader](
+	govy.For(func(h WebhookHeader) string { return h.Name }).
 		WithName("name").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			validation.StringMatchRegexp(headerNameRegex).
+			rules.StringNotEmpty(),
+			rules.StringMatchRegexp(headerNameRegex).
 				WithDetails("must be a valid header name")),
-	validation.For(validation.GetSelf[WebhookHeader]()).
+	govy.For(govy.GetSelf[WebhookHeader]()).
 		Include(
 			webhookHeaderValueValidation,
 			webhookHeaderSecretValueValidation),
 )
 
-var webhookHeaderValueValidation = validation.New[WebhookHeader](
-	validation.For(func(h WebhookHeader) string { return h.Value }).
+var webhookHeaderValueValidation = govy.New[WebhookHeader](
+	govy.For(func(h WebhookHeader) string { return h.Value }).
 		WithName("value").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 ).When(
 	func(h WebhookHeader) bool { return !h.IsSecret },
-	validation.WhenDescription("isSecret is false"),
+	govy.WhenDescription("isSecret is false"),
 )
 
-var webhookHeaderSecretValueValidation = validation.New[WebhookHeader](
-	validation.For(func(h WebhookHeader) string { return h.Value }).
+var webhookHeaderSecretValueValidation = govy.New[WebhookHeader](
+	govy.For(func(h WebhookHeader) string { return h.Value }).
 		WithName("value").
 		HideValue().
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 ).When(
 	func(h WebhookHeader) bool { return h.IsSecret },
-	validation.WhenDescription("isSecret is true"),
+	govy.WhenDescription("isSecret is true"),
 )
 
 func extractTemplateFields(template string) []string {

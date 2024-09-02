@@ -6,49 +6,50 @@ import (
 	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
-var systemHealthReviewValidation = validation.New[SystemHealthReviewConfig](
-	validation.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
+var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
+	govy.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
 		WithName("rowGroupBy").
 		Required().
 		Rules(RowGroupByValidation()),
-	validation.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
+	govy.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
 		WithName("columns").
-		Rules(validation.SliceMinLength[[]ColumnSpec](1)).
-		Rules(validation.SliceMaxLength[[]ColumnSpec](30)).
+		Rules(rules.SliceMinLength[[]ColumnSpec](1)).
+		Rules(rules.SliceMaxLength[[]ColumnSpec](30)).
 		IncludeForEach(columnValidation),
-	validation.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
+	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
 		Required().
 		Include(timeFrameValidation),
-	validation.For(func(s SystemHealthReviewConfig) Thresholds { return s.Thresholds }).
+	govy.For(func(s SystemHealthReviewConfig) Thresholds { return s.Thresholds }).
 		WithName("thresholds").
 		Required().
 		Include(reportThresholdsValidation),
 )
 
-var columnValidation = validation.New[ColumnSpec](
-	validation.For(func(s ColumnSpec) string { return s.DisplayName }).
+var columnValidation = govy.New[ColumnSpec](
+	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
 		Required(),
-	validation.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
+	govy.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
 		WithName("labels").
-		Rules(validation.MapMinLength[map[LabelKey][]LabelValue](1)),
+		Rules(rules.MapMinLength[map[LabelKey][]LabelValue](1)),
 )
 
-var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
-	validation.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
+var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
+	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(validation.NewSingleRule(func(v string) error {
+		Rules(govy.NewRule(func(v string) error {
 			if _, err := time.LoadLocation(v); err != nil {
 				return errors.Wrap(err, "not a valid time zone")
 			}
 			return nil
 		})),
-	validation.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
+	govy.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
 		WithName("snapshot").
 		Required().
 		Include(snapshotValidation).
@@ -56,23 +57,23 @@ var timeFrameValidation = validation.New[SystemHealthReviewTimeFrame](
 		Include(snapshotTimeFrameLatestPointValidation),
 )
 
-var reportThresholdsValidation = validation.New[Thresholds](
-	validation.For(validation.GetSelf[Thresholds]()).
+var reportThresholdsValidation = govy.New[Thresholds](
+	govy.For(govy.GetSelf[Thresholds]()).
 		Rules(redLteValidation),
-	validation.ForPointer(func(s Thresholds) *float64 { return s.RedLessThanOrEqual }).
+	govy.ForPointer(func(s Thresholds) *float64 { return s.RedLessThanOrEqual }).
 		WithName("redLte").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1.0)),
-	validation.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
+		Rules(rules.GTE(0.0), rules.LTE(1.0)),
+	govy.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
 		WithName("greenGt").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo(0.0), validation.LessThanOrEqualTo(1.0)),
+		Rules(rules.GTE(0.0), rules.LTE(1.0)),
 )
 
-var redLteValidation = validation.NewSingleRule(func(v Thresholds) error {
+var redLteValidation = govy.NewRule(func(v Thresholds) error {
 	if v.RedLessThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLessThanOrEqual >= *v.GreenGreaterThan {
-			return validation.NewPropertyError(
+			return govy.NewPropertyError(
 				"redLte",
 				v.RedLessThanOrEqual,
 				errors.Errorf("must be less than or equal to 'greenGt' (%v)", *v.GreenGreaterThan))
@@ -81,40 +82,40 @@ var redLteValidation = validation.NewSingleRule(func(v Thresholds) error {
 	return nil
 })
 
-var snapshotValidation = validation.New[SnapshotTimeFrame](
-	validation.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
+var snapshotValidation = govy.New[SnapshotTimeFrame](
+	govy.For(func(s SnapshotTimeFrame) SnapshotPoint { return s.Point }).
 		WithName("point").
 		Required().
 		Rules(SnapshotPointValidation()),
 )
 
-var snapshotTimeFramePastPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
+var snapshotTimeFramePastPointValidation = govy.New[SnapshotTimeFrame](
+	govy.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
 		WithName("dateTime").
 		Required(),
-	validation.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
+	govy.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
 		WithName("rrule"),
 ).When(
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointPast },
-	validation.WhenDescription("past snapshot point"),
+	govy.WhenDescription("past snapshot point"),
 )
 
-var snapshotTimeFrameLatestPointValidation = validation.New[SnapshotTimeFrame](
-	validation.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
+var snapshotTimeFrameLatestPointValidation = govy.New[SnapshotTimeFrame](
+	govy.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
 		WithName("dateTime").
 		Rules(
-			validation.Forbidden[time.Time]().WithDetails(
+			rules.Forbidden[time.Time]().WithDetails(
 				"dateTime is forbidden for latest snapshot point",
 			),
 		),
-	validation.For(func(s SnapshotTimeFrame) string { return s.Rrule }).
+	govy.For(func(s SnapshotTimeFrame) string { return s.Rrule }).
 		WithName("rrule").
 		Rules(
-			validation.Forbidden[string]().WithDetails(
+			rules.Forbidden[string]().WithDetails(
 				"rrule is forbidden for latest snapshot point",
 			),
 		),
 ).When(
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointLatest },
-	validation.WhenDescription("latest snapshot point"),
+	govy.WhenDescription("latest snapshot point"),
 )

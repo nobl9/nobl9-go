@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -26,7 +27,7 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 	t.Run("query timeslice duration must be the same for good and total", func(t *testing.T) {
@@ -56,7 +57,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
 }
@@ -68,7 +69,7 @@ func TestSumoLogic(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("invalid type", func(t *testing.T) {
@@ -77,7 +78,7 @@ func TestSumoLogic(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 	t.Run("missing query", func(t *testing.T) {
@@ -86,7 +87,7 @@ func TestSumoLogic(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.query",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -100,11 +101,11 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -140,7 +141,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }
@@ -165,11 +166,11 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
-				Code: validation.ErrorCodeForbidden,
+				Code: rules.ErrorCodeForbidden,
 			},
 		)
 	})

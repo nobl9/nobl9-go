@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/nobl9/go-yaml"
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -63,7 +63,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + strings.Repeat("l", 256),
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringLength,
+				Code:       rules.ErrorCodeStringLength,
 			},
 		},
 		"invalid: key starts with non letter": {
@@ -73,7 +73,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "9net",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: key ends with non alphanumeric char": {
@@ -83,7 +83,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "net_",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: key contains uppercase character": {
@@ -93,7 +93,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "nEt",
 				IsKeyError: true,
-				Code:       validation.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
 		},
 		"invalid: value is too long (over 1050 chars)": {
@@ -102,7 +102,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			error: testutils.ExpectedError{
 				Prop: propertyPath + "." + "net",
-				Code: validation.ErrorCodeStringMaxLength,
+				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},
 		"valid: value with uppercase characters": {

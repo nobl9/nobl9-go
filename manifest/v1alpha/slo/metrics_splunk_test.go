@@ -3,8 +3,9 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -20,7 +21,7 @@ func TestSplunk(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.splunk.query",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("empty", func(t *testing.T) {
@@ -29,7 +30,7 @@ func TestSplunk(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.splunk.query",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
 	t.Run("invalid query", func(t *testing.T) {
@@ -43,7 +44,7 @@ search index=svc-events source=udp:5072 sourcetype=syslog status<400 |
 bucket _time span=1m |
 stats avg(response_time) as n9value by _time |
 fields _time n9value`,
-				ExpectedCode: validation.ErrorCodeStringContains,
+				ExpectedCode: rules.ErrorCodeStringContains,
 			},
 			"missing n9value": {
 				Query: `
@@ -52,7 +53,7 @@ bucket _time span=1m |
 stats avg(response_time) as value by _time |
 rename _time as n9time |
 fields n9time value`,
-				ExpectedCode: validation.ErrorCodeStringContains,
+				ExpectedCode: rules.ErrorCodeStringContains,
 			},
 			"missing index": {
 				Query: `
@@ -61,7 +62,7 @@ bucket _time span=1m |
 stats avg(response_time) as n9value by _time |
 rename _time as n9time |
 fields n9time n9value`,
-				ExpectedCode: validation.ErrorCodeStringMatchRegexp,
+				ExpectedCode: rules.ErrorCodeStringMatchRegexp,
 			},
 		}
 		for name, test := range tests {
@@ -90,7 +91,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("empty", func(t *testing.T) {
@@ -99,7 +100,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
-			Code: validation.ErrorCodeStringNotEmpty,
+			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
 	t.Run("goodTotal mixed with total", func(t *testing.T) {
@@ -108,7 +109,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("goodTotal mixed with good", func(t *testing.T) {
@@ -117,7 +118,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("goodTotal mixed with bad", func(t *testing.T) {
@@ -126,10 +127,10 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.bad",
-			Code: joinErrorCodes(errCodeBadOverTotalDisabled, validation.ErrorCodeOneOf),
+			Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
 		}, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("invalid query", func(t *testing.T) {
@@ -144,7 +145,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
     | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
     ]
     | fields _time n9good n9total`,
-				ExpectedCode: validation.ErrorCodeStringContains,
+				ExpectedCode: rules.ErrorCodeStringContains,
 			},
 			"missing n9good": {
 				Query: `
@@ -154,7 +155,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
     ]
     | rename _time as n9time
     | fields n9time good n9total`,
-				ExpectedCode: validation.ErrorCodeStringContains,
+				ExpectedCode: rules.ErrorCodeStringContains,
 			},
 			"missing n9total": {
 				Query: `
@@ -164,7 +165,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
     ]
     | rename _time as n9time
     | fields n9time n9good total`,
-				ExpectedCode: validation.ErrorCodeStringContains,
+				ExpectedCode: rules.ErrorCodeStringContains,
 			},
 			"missing index": {
 				Query: `
@@ -174,7 +175,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
     ]
     | rename _time as n9time
     | fields n9time n9good n9total`,
-				ExpectedCode: validation.ErrorCodeStringMatchRegexp,
+				ExpectedCode: rules.ErrorCodeStringMatchRegexp,
 			},
 		}
 		for name, test := range tests {

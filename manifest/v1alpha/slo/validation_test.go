@@ -12,9 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/exp/slices"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -35,11 +39,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, slo, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -57,15 +61,15 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, slo, err, 5,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
 }
@@ -96,7 +100,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 		Prop: "spec.description",
-		Code: validation.ErrorCodeStringDescription,
+		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
 
@@ -115,7 +119,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.budgetingMethod",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("invalid method", func(t *testing.T) {
@@ -142,7 +146,7 @@ func TestValidate_Spec_Service(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.service",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 }
@@ -160,7 +164,7 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.alertPolicies[1]",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 }
@@ -188,7 +192,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.attachments",
-			Code: validation.ErrorCodeSliceLength,
+			Code: rules.ErrorCodeSliceLength,
 		})
 	})
 	t.Run("fails, invalid attachment", func(t *testing.T) {
@@ -202,15 +206,15 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.attachments[1].url",
-				Code: validation.ErrorCodeStringURL,
+				Code: rules.ErrorCodeStringURL,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.attachments[2].displayName",
-				Code: validation.ErrorCodeStringLength,
+				Code: rules.ErrorCodeStringLength,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.attachments[2].url",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -247,7 +251,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.target",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			"target too small": {
@@ -257,7 +261,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.target",
-					Code: validation.ErrorCodeGreaterThan,
+					Code: rules.ErrorCodeGreaterThan,
 				},
 			},
 			"target too large": {
@@ -267,7 +271,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.target",
-					Code: validation.ErrorCodeLessThan,
+					Code: rules.ErrorCodeLessThan,
 				},
 			},
 			"burn rate value too small": {
@@ -277,7 +281,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.burnRateCondition.value",
-					Code: validation.ErrorCodeGreaterThanOrEqualTo,
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
 			"burn rate value too large": {
@@ -287,7 +291,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.burnRateCondition.value",
-					Code: validation.ErrorCodeLessThanOrEqualTo,
+					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
 			"missing operator": {
@@ -297,7 +301,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.burnRateCondition.op",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			"invalid operator": {
@@ -307,7 +311,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 				},
 				ExpectedError: testutils.ExpectedError{
 					Prop: "spec.composite.burnRateCondition.op",
-					Code: validation.ErrorCodeEqualTo,
+					Code: rules.ErrorCodeEqualTo,
 				},
 			},
 		} {
@@ -329,7 +333,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.composite.burnRateCondition",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("burnRateCondition forbidden for timeslices", func(t *testing.T) {
@@ -343,7 +347,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.composite.burnRateCondition",
-			Code: validation.ErrorCodeForbidden,
+			Code: rules.ErrorCodeForbidden,
 		})
 	})
 }
@@ -380,7 +384,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods",
-						Code: validation.ErrorCodeSliceMinLength,
+						Code: rules.ErrorCodeSliceMinLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -402,19 +406,19 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[0].name",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[1].name",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[1].project",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[2].name",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 				},
 				ExpectedErrorsCount: 4,
@@ -433,7 +437,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods",
-						Code: validation.ErrorCodeSliceUnique,
+						Code: rules.ErrorCodeSliceUnique,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -485,7 +489,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.timeWindows",
-						Code: validation.ErrorCodeSliceLength,
+						Code: rules.ErrorCodeSliceLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -495,7 +499,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.timeWindows",
-						Code: validation.ErrorCodeSliceLength,
+						Code: rules.ErrorCodeSliceLength,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -509,11 +513,11 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.timeWindows[0].unit",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 					{
 						Prop: "spec.timeWindows[0].count",
-						Code: validation.ErrorCodeGreaterThan,
+						Code: rules.ErrorCodeGreaterThan,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -526,7 +530,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.timeWindows[0].unit",
-						Code: validation.ErrorCodeOneOf,
+						Code: rules.ErrorCodeOneOf,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -540,11 +544,11 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.timeWindows[0].calendar.startTime",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 					{
 						Prop: "spec.timeWindows[0].calendar.timeZone",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -735,7 +739,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -745,7 +749,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -755,7 +759,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -771,15 +775,15 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 					{
 						Prop: "spec.indicator.metricSource.project",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 					{
 						Prop: "spec.indicator.metricSource.kind",
-						Code: validation.ErrorCodeOneOf,
+						Code: rules.ErrorCodeOneOf,
 					},
 				},
 				ExpectedErrorsCount: 3,
@@ -842,7 +846,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.objectives",
-						Code: validation.ErrorCodeSliceMinLength,
+						Code: rules.ErrorCodeSliceMinLength,
 					},
 				},
 				ExpectedErrorsCount: 2,
@@ -874,27 +878,27 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.objectives[0].displayName",
-						Code: validation.ErrorCodeStringMaxLength,
+						Code: rules.ErrorCodeStringMaxLength,
 					},
 					{
 						Prop: "spec.objectives[0].name",
-						Code: validation.ErrorCodeStringIsDNSSubdomain,
+						Code: rules.ErrorCodeStringDNSLabel,
 					},
 					{
 						Prop: "spec.objectives[0].target",
-						Code: validation.ErrorCodeLessThan,
+						Code: rules.ErrorCodeLessThan,
 					},
 					{
 						Prop: "spec.objectives[1].value",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 					{
 						Prop: "spec.objectives[1].target",
-						Code: validation.ErrorCodeRequired,
+						Code: rules.ErrorCodeRequired,
 					},
 					{
 						Prop: "spec.objectives[2].target",
-						Code: validation.ErrorCodeGreaterThanOrEqualTo,
+						Code: rules.ErrorCodeGreaterThanOrEqualTo,
 					},
 				},
 				ExpectedErrorsCount: 6,
@@ -916,7 +920,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{{
 					Prop: "spec.objectives",
-					Code: validation.ErrorCodeSliceUnique,
+					Code: rules.ErrorCodeSliceUnique,
 				}},
 				ExpectedErrorsCount: 1,
 			},
@@ -929,7 +933,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{{
 					Prop: "spec.objectives[0].op",
-					Code: validation.ErrorCodeOneOf,
+					Code: rules.ErrorCodeOneOf,
 				}},
 				ExpectedErrorsCount: 1,
 			},
@@ -1025,7 +1029,7 @@ func TestValidate_Spec_Objectives_Primary(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.objectives",
-						Code: validation.ErrorCodeForbidden,
+						Code: rules.ErrorCodeForbidden,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -1047,11 +1051,11 @@ func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 		InputValue float64
 	}{
 		"timeSliceTarget too low": {
-			Code:       validation.ErrorCodeGreaterThan,
+			Code:       rules.ErrorCodeGreaterThan,
 			InputValue: 0.0,
 		},
 		"timeSliceTarget too high": {
-			Code:       validation.ErrorCodeLessThanOrEqualTo,
+			Code:       rules.ErrorCodeLessThanOrEqualTo,
 			InputValue: 1.1,
 		},
 	} {
@@ -1102,7 +1106,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].timeSliceTarget",
-			Code: joinErrorCodes(errCodeTimeSliceTarget, validation.ErrorCodeRequired),
+			Code: joinErrorCodes(errCodeTimeSliceTarget, rules.ErrorCodeRequired),
 		})
 	})
 	t.Run("invalid time slice target for budgeting method", func(t *testing.T) {
@@ -1112,7 +1116,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].timeSliceTarget",
-			Code: joinErrorCodes(errCodeTimeSliceTarget, validation.ErrorCodeForbidden),
+			Code: joinErrorCodes(errCodeTimeSliceTarget, rules.ErrorCodeForbidden),
 		})
 	})
 	t.Run("missing operator for raw metric", func(t *testing.T) {
@@ -1121,7 +1125,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].op",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -1174,7 +1178,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -1325,7 +1329,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.bad",
-			Code: joinErrorCodes(errCodeBadOverTotalDisabled, validation.ErrorCodeOneOf),
+			Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
 		})
 	})
 }
@@ -1741,5 +1745,5 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 func ptr[T any](v T) *T { return &v }
 
 func joinErrorCodes(codes ...string) string {
-	return strings.Join(codes, validation.ErrorCodeSeparator)
+	return strings.Join(codes, govy.ErrorCodeSeparator)
 }
