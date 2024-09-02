@@ -651,7 +651,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.thresholds",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -672,11 +672,11 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.thresholds.redLte",
-					Code: validation.ErrorCodeGreaterThanOrEqualTo,
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
 					Prop: "spec.systemHealthReview.thresholds.greenGt",
-					Code: validation.ErrorCodeLessThanOrEqualTo,
+					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
 			Config: SystemHealthReviewConfig{
