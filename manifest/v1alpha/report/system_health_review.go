@@ -15,7 +15,7 @@ type Thresholds struct {
 	// thresholds. If Red and Green are the same, Yellow is not used on the report.
 	GreenGreaterThan *float64 `json:"greenGt" validate:"required" example:"0.95"`
 	// ShowNoData customizes the report to either show or hide rows with no data.
-	ShowNoData bool `json:"noData"`
+	ShowNoData bool `json:"showNoData"`
 }
 
 type ColumnSpec struct {

@@ -143,7 +143,7 @@ func ExampleReport_systemHealthReview() {
 	//     thresholds:
 	//       redLte: 0.8
 	//       greenGt: 0.95
-	//       noData: false
+	//       showNoData: false
 }
 
 func ExampleReport_sloHistory() {
