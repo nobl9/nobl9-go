@@ -434,12 +434,12 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 			expectedError: "rrule must have at least hourly frequency",
 		},
 		{
-			name:          "single occurence rrule returns no error",
+			name:          "single occurrence rrule returns no error",
 			rule:          "FREQ=MINUTELY;COUNT=1",
 			expectedError: "",
 		},
 		{
-			name:          "two times minutely occurence rrule returns error",
+			name:          "two times minutely occurrence rrule returns error",
 			rule:          "FREQ=MINUTELY;COUNT=2",
 			expectedError: "rrule must have at least hourly frequency",
 		},
