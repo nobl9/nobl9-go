@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/teambition/rrule-go"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 
@@ -277,6 +278,41 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid freq in rrule",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=MINUTELY;INTERVAL=2",
+				Filters: Filters{
+					SLOs: []SLORef{{
+						Name:    "test",
+						Project: "project",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.rrule",
+					Message: "rrule must have at least hourly frequency",
+				},
+			},
+		},
+		{
+			name: "proper freq in rrule",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=HOURLY;INTERVAL=1",
+				Filters: Filters{
+					SLOs: []SLORef{{
+						Name:    "test",
+						Project: "project",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{},
+		},
+		{
 			name: "duplicate slo",
 			spec: Spec{
 				FirstEventStart: time.Now(),
@@ -373,5 +409,74 @@ func validBudgetAdjustment() BudgetAdjustment {
 				},
 			},
 		},
+	}
+}
+
+func TestAtLeastHourlyFreq(t *testing.T) {
+	tests := []struct {
+		name          string
+		rule          string
+		expectedError string
+	}{
+		{
+			name:          "nil rule returns nil error",
+			rule:          "",
+			expectedError: "",
+		},
+		{
+			name:          "frequency less than hourly returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=1",
+			expectedError: "rrule must have at least hourly frequency",
+		},
+		{
+			name:          "frequency less than hourly returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=59",
+			expectedError: "rrule must have at least hourly frequency",
+		},
+		{
+			name:          "single occurence rrule returns no error",
+			rule:          "FREQ=MINUTELY;COUNT=1",
+			expectedError: "",
+		},
+		{
+			name:          "two times minutely occurence rrule returns error",
+			rule:          "FREQ=MINUTELY;COUNT=2",
+			expectedError: "rrule must have at least hourly frequency",
+		},
+		{
+			name:          "hourly frequency returns no error",
+			rule:          "FREQ=HOURLY;INTERVAL=1",
+			expectedError: "",
+		},
+		{
+			name:          "daily frequency returns no error",
+			rule:          "FREQ=DAILY;INTERVAL=1",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in minutes no error",
+			rule:          "FREQ=MINUTELY;INTERVAL=61",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in seconds no error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3600",
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rule *rrule.RRule
+			if tt.rule != "" {
+				rule, _ = rrule.StrToRRule(tt.rule)
+			}
+			err := atLeastHourlyFreq.Validate(rule)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
 	}
 }

@@ -3,6 +3,7 @@ package budgetadjustment
 import (
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -46,7 +47,8 @@ var specValidation = govy.New(
 		Required().
 		Rules(rules.DurationPrecision(time.Minute)),
 	govy.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
-		WithName("rrule"),
+		WithName("rrule").
+		Rules(atLeastHourlyFreq),
 	govy.For(func(s Spec) Filters { return s.Filters }).
 		WithName("filters").
 		Include(filtersValidationRule),
@@ -72,3 +74,25 @@ var sloValidationRule = govy.New(
 		Required().
 		Rules(rules.StringDNSLabel()),
 )
+
+var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
+	if rule == nil {
+		return nil
+	}
+
+	var dt1, dt2 time.Time
+	var ok bool
+	n := rule.Iterator()
+	if dt1, ok = n(); !ok {
+		return nil
+	}
+	if dt2, ok = n(); !ok {
+		return nil
+	}
+
+	if dt2.Sub(dt1) < time.Hour {
+		return errors.New("rrule must have at least hourly frequency")
+	}
+
+	return nil
+})
