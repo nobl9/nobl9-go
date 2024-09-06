@@ -23,58 +23,7 @@ import (
 func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	project := generateV1alphaProject(t)
-
-	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
-		Project: project.GetName(),
-	})
-	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
-		Project: defaultProject,
-	})
-
-	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(v1alphaSLODependencyDirects(t), func(o manifest.Object) bool {
-		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
-		return typ == dataSourceType
-	})
-	require.Len(t, directs, 1)
-	direct := directs[0].(v1alphaDirect.Direct)
-
-	slo := getExample[v1alphaSLO.SLO](t,
-		manifest.KindSLO,
-		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(dataSourceTypeGetter)
-			return ok && dsGetter.GetDataSourceType() == dataSourceType
-		},
-	)
-	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = generateName()
-	slo.Metadata.Project = project.GetName()
-	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
-		Name:    direct.Metadata.Name,
-		Project: direct.Metadata.Project,
-		Kind:    manifest.KindDirect,
-	}
-	slo.Spec.AlertPolicies = nil
-	slo.Spec.Service = service.Metadata.Name
-	slo.Spec.Objectives[0].Name = "good"
-
-	defaultProjectSLO := deepCopyObject(t, slo)
-	defaultProjectSLO.Metadata.Name = generateName()
-	defaultProjectSLO.Metadata.Project = defaultProject
-	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
-
-	allObjects := make([]manifest.Object, 0)
-	allObjects = append(
-		allObjects,
-		project,
-		service,
-		defaultProjectService,
-		slo,
-		defaultProjectSLO,
-	)
+	slo := generateSLO(t)
 
 	budgetAdjustments := []v1alphaBudgetAdjustment.BudgetAdjustment{
 		v1alphaBudgetAdjustment.New(
@@ -116,28 +65,26 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			}),
 	}
 
-	for _, adjustment := range budgetAdjustments {
-		allObjects = append(allObjects, adjustment)
-	}
-
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	v1Apply(t, budgetAdjustments)
+	t.Cleanup(func() { v1Delete(t, budgetAdjustments) })
 
 	filterTest := map[string]struct {
 		request         objectsV1.GetBudgetAdjustmentRequest
 		expected        []v1alphaBudgetAdjustment.BudgetAdjustment
 		returnedObjects int
+		returnAll       bool
 	}{
 		"all": {
 			request:         objectsV1.GetBudgetAdjustmentRequest{},
-			expected:        manifest.FilterByKind[v1alphaBudgetAdjustment.BudgetAdjustment](allObjects),
+			expected:        budgetAdjustments,
 			returnedObjects: len(budgetAdjustments),
+			returnAll:       true,
 		},
 		"single adjustment": {
 			request: objectsV1.GetBudgetAdjustmentRequest{
 				Names: []string{budgetAdjustments[0].Metadata.Name},
 			},
-			expected:        manifest.FilterByKind[v1alphaBudgetAdjustment.BudgetAdjustment](allObjects),
+			expected:        []v1alphaBudgetAdjustment.BudgetAdjustment{budgetAdjustments[0]},
 			returnedObjects: 1,
 		},
 	}
@@ -147,11 +94,196 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			t.Parallel()
 			actual, err := client.Objects().V1().GetBudgetAdjustments(ctx, test.request)
 			require.NoError(t, err)
-			require.Len(t, actual, test.returnedObjects)
+			if !test.returnAll {
+				require.Len(t, actual, test.returnedObjects)
+			}
 
 			assertSubset(t, actual, test.expected, assertBudgetAdjustmentsAreEqual)
 		})
 	}
+}
+
+func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	slo := generateSLO(t)
+
+	validationTests := map[string]struct {
+		request v1alphaBudgetAdjustment.BudgetAdjustment
+		error   string
+	}{
+		"invalid name": {
+			request: v1alphaBudgetAdjustment.New(
+				v1alphaBudgetAdjustment.Metadata{
+					Name: "!#$%^&*()",
+				},
+				v1alphaBudgetAdjustment.Spec{
+					FirstEventStart: time.Now(),
+					Duration:        "1h",
+					Filters: v1alphaBudgetAdjustment.Filters{
+						SLOs: []v1alphaBudgetAdjustment.SLORef{
+							{
+								Name:    slo.Metadata.Name,
+								Project: slo.Metadata.Project,
+							},
+						},
+					},
+				}),
+			error: "RFC-1123 compliant label name must consist of lower case alphanumeric characters",
+		},
+		"missing duration": {
+			request: v1alphaBudgetAdjustment.New(
+				v1alphaBudgetAdjustment.Metadata{
+					Name: "missing-duration",
+				},
+				v1alphaBudgetAdjustment.Spec{
+					FirstEventStart: time.Now(),
+					Filters: v1alphaBudgetAdjustment.Filters{
+						SLOs: []v1alphaBudgetAdjustment.SLORef{
+							{
+								Name:    slo.Metadata.Name,
+								Project: slo.Metadata.Project,
+							},
+						},
+					},
+				}),
+			error: "spec.duration':\n    - property is required but was empty",
+		},
+		"missing first event start": {
+			request: v1alphaBudgetAdjustment.New(
+				v1alphaBudgetAdjustment.Metadata{
+					Name: "missing-duration",
+				},
+				v1alphaBudgetAdjustment.Spec{
+					Duration: "1h",
+					Filters: v1alphaBudgetAdjustment.Filters{
+						SLOs: []v1alphaBudgetAdjustment.SLORef{
+							{
+								Name:    slo.Metadata.Name,
+								Project: slo.Metadata.Project,
+							},
+						},
+					},
+				}),
+			error: "spec.firstEventStart':\n    - property is required but was empty",
+		},
+		"duplicated slo": {
+			request: v1alphaBudgetAdjustment.New(
+				v1alphaBudgetAdjustment.Metadata{
+					Name: "missing-duration",
+				},
+				v1alphaBudgetAdjustment.Spec{
+					FirstEventStart: time.Now(),
+					Duration:        "1h",
+					Filters: v1alphaBudgetAdjustment.Filters{
+						SLOs: []v1alphaBudgetAdjustment.SLORef{
+							{
+								Name:    slo.Metadata.Name,
+								Project: slo.Metadata.Project,
+							},
+							{
+								Name:    slo.Metadata.Name,
+								Project: slo.Metadata.Project,
+							},
+						},
+					},
+				}),
+			error: "SLOs must be unique",
+		},
+		"not existing slo": {
+			request: v1alphaBudgetAdjustment.New(
+				v1alphaBudgetAdjustment.Metadata{
+					Name: "missing-duration",
+				},
+				v1alphaBudgetAdjustment.Spec{
+					FirstEventStart: time.Now(),
+					Duration:        "1h",
+					Filters: v1alphaBudgetAdjustment.Filters{
+						SLOs: []v1alphaBudgetAdjustment.SLORef{
+							{
+								Name:    "foo",
+								Project: slo.Metadata.Project,
+							},
+						},
+					},
+				}),
+			error: "object SLO foo referenced in its spec does not exist",
+		},
+	}
+
+	for name, test := range validationTests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			err := client.Objects().V1().Apply(ctx, []manifest.Object{test.request})
+			if test.error != "" {
+				assert.ErrorContains(t, err, test.error)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
+	t.Helper()
+	project := generateV1alphaProject(t)
+
+	service := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    generateName(),
+		Project: project.GetName(),
+	})
+	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    generateName(),
+		Project: defaultProject,
+	})
+
+	dataSourceType := v1alpha.Datadog
+	directs := filterSlice(v1alphaSLODependencyDirects(t), func(o manifest.Object) bool {
+		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
+		return typ == dataSourceType
+	})
+	require.Len(t, directs, 1)
+	direct := directs[0].(v1alphaDirect.Direct)
+
+	slo = getExample[v1alphaSLO.SLO](t,
+		manifest.KindSLO,
+		func(example v1alphaExamples.Example) bool {
+			dsGetter, ok := example.(dataSourceTypeGetter)
+			return ok && dsGetter.GetDataSourceType() == dataSourceType
+		},
+	)
+	slo.Spec.AnomalyConfig = nil
+	slo.Metadata.Name = generateName()
+	slo.Metadata.Project = project.GetName()
+	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
+		Name:    direct.Metadata.Name,
+		Project: direct.Metadata.Project,
+		Kind:    manifest.KindDirect,
+	}
+	slo.Spec.AlertPolicies = nil
+	slo.Spec.Service = service.Metadata.Name
+	slo.Spec.Objectives[0].Name = "good"
+
+	defaultProjectSLO := deepCopyObject(t, slo)
+	defaultProjectSLO.Metadata.Name = generateName()
+	defaultProjectSLO.Metadata.Project = defaultProject
+	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
+
+	allObjects := make([]manifest.Object, 0)
+	allObjects = append(
+		allObjects,
+		project,
+		service,
+		defaultProjectService,
+		slo,
+		defaultProjectSLO,
+	)
+
+	v1Apply(t, allObjects)
+	t.Cleanup(func() { v1Delete(t, allObjects) })
+
+	return slo
 }
 
 func assertBudgetAdjustmentsAreEqual(t *testing.T, expected, actual v1alphaBudgetAdjustment.BudgetAdjustment) {
