@@ -107,7 +107,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, report, err, 2, testutils.ExpectedError{
 			Prop:    "spec",
 			Message: "exactly one report type configuration is required",
 		})
@@ -512,6 +512,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty columns": {
@@ -531,6 +535,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns:    []ColumnSpec{},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with too many columns": {
@@ -582,6 +590,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 					{DisplayName: "Column 30", Labels: properLabel},
 					{DisplayName: "Column 31", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty labels": {
@@ -602,6 +614,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -624,6 +640,60 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
+			},
+		},
+		"fails with empty thresholds": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds",
+					Code: rules.ErrorCodeRequired,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+			},
+		},
+		"fails with invalid thresholds": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds.redLte",
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				},
+				{
+					Prop: "spec.systemHealthReview.thresholds.greenGt",
+					Code: rules.ErrorCodeLessThanOrEqualTo,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(-0.1),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(1.1),
+				},
 			},
 		},
 	} {
@@ -634,6 +704,32 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
+
+	t.Run("fails when red is greater than green", func(t *testing.T) {
+		report := validReport()
+		report.Spec.SystemHealthReview = &SystemHealthReviewConfig{
+			TimeFrame: SystemHealthReviewTimeFrame{
+				Snapshot: SnapshotTimeFrame{
+					Point: SnapshotPointLatest,
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+			RowGroupBy: RowGroupByProject,
+			Columns: []ColumnSpec{
+				{DisplayName: "Column 1", Labels: properLabel},
+			},
+			Thresholds: Thresholds{
+				RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.2),
+				GreenGreaterThan:   func(f float64) *float64 { return &f }(0.1),
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec.systemHealthReview.thresholds.redLte",
+			Message: "must be less than or equal to 'greenGt' (0.1)",
+		},
+		)
+	})
 }
 
 func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
@@ -655,6 +751,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty point in snapshot": {
@@ -673,6 +773,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -694,6 +798,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -721,6 +829,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with invalid rrule in past point snapshot": {
@@ -746,6 +858,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -773,6 +889,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -852,6 +972,11 @@ func validReport() Report {
 							},
 						},
 					},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.8),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.95),
+					ShowNoData:         true,
 				},
 			},
 		},
