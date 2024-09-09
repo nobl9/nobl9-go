@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 const (
@@ -419,11 +420,11 @@ func IsTimeUnit(timeUnit string) bool {
 }
 
 func ValidateCalendarAlignedTimeUnit(timeUnit string) error {
-	return validation.OneOf[string](calendarWindowTimeUnitsList...).Validate(timeUnit)
+	return rules.OneOf[string](calendarWindowTimeUnitsList...).Validate(timeUnit)
 }
 
 func ValidateRollingWindowTimeUnit(timeUnit string) error {
-	return validation.OneOf[string](rollingWindowTimeUnitsList...).Validate(timeUnit)
+	return rules.OneOf[string](rollingWindowTimeUnitsList...).Validate(timeUnit)
 }
 
 func (tu TimeUnitEnum) String() string {
@@ -457,6 +458,6 @@ func ParseStartDate(startDateStr string) (time.Time, error) {
 	return startDate, nil
 }
 
-func ValidationRuleTimeUnit() validation.SingleRule[string] {
-	return validation.OneOf[string](timeUnitsList...)
+func ValidationRuleTimeUnit() govy.Rule[string] {
+	return rules.OneOf[string](timeUnitsList...)
 }

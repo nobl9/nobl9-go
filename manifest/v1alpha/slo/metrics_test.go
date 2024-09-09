@@ -4,8 +4,9 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 
 	"github.com/stretchr/testify/assert"
 
@@ -45,7 +46,7 @@ func Test_SingleQueryDisabled(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics.goodTotal",
-			Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, validation.ErrorCodeOneOf),
+			Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, rules.ErrorCodeOneOf),
 		})
 	}
 }

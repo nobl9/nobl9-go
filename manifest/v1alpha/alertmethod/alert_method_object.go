@@ -3,7 +3,8 @@
 package alertmethod
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (a AlertMethod) SetOrganization(org string) manifest.Object {
 	return a
 }
 
-func (a AlertMethod) GetValidator() validation.Validator[AlertMethod] {
+func (a AlertMethod) GetValidator() govy.Validator[AlertMethod] {
 	return validator
 }

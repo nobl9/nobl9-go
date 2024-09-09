@@ -7,7 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -35,7 +36,7 @@ func AssertNoError(t *testing.T, object interface{}, objErr *v1alpha.ObjectError
 // - at least one error which matches ExpectedError
 //
 // ExpectedError and actual error are considered equal if they point at the same property and either:
-// - validation.ErrorCode are equal
+// - rules.ErrorCode are equal
 // - error messages re equal
 // - ExpectedError.ContainsMessage is contained in actual error message
 //
@@ -54,7 +55,7 @@ func AssertContainsErrors(
 	// Count errors.
 	actualErrorsCount := 0
 	for _, actual := range objErr.Errors {
-		var propErr *validation.PropertyError
+		var propErr *govy.PropertyError
 		require.ErrorAs(t, actual, &propErr)
 		actualErrorsCount += len(propErr.Errors)
 	}
@@ -66,7 +67,7 @@ func AssertContainsErrors(
 	for _, expected := range expectedErrors {
 		found := false
 		for _, actual := range objErr.Errors {
-			var propErr *validation.PropertyError
+			var propErr *govy.PropertyError
 			require.ErrorAs(t, actual, &propErr)
 			if propErr.PropertyName != expected.Prop {
 				continue
@@ -75,17 +76,18 @@ func AssertContainsErrors(
 				continue
 			}
 			for _, actualRuleErr := range propErr.Errors {
+				actualMessage := actualRuleErr.Error()
 				matchedCtr := 0
-				if expected.Message == "" || expected.Message == actualRuleErr.Message {
+				if expected.Message == "" || expected.Message == actualMessage {
 					matchedCtr++
 				}
 				if expected.ContainsMessage == "" ||
-					strings.Contains(actualRuleErr.Message, expected.ContainsMessage) {
+					strings.Contains(actualMessage, expected.ContainsMessage) {
 					matchedCtr++
 				}
 				if expected.Code == "" ||
 					expected.Code == actualRuleErr.Code ||
-					validation.HasErrorCode(actualRuleErr, expected.Code) {
+					govy.HasErrorCode(actualRuleErr, expected.Code) {
 					matchedCtr++
 				}
 				if matchedCtr == 3 {

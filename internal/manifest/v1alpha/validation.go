@@ -2,65 +2,80 @@
 package v1alpha
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+const ErrorCodeStringDescription = "string_description"
+
+func StringDescription() govy.Rule[string] {
+	return rules.StringLength(0, 1050).WithErrorCode(ErrorCodeStringDescription)
+}
+
+func NewRequiredError() *govy.RuleError {
+	return govy.NewRuleError(
+		"property is required but was empty",
+		rules.ErrorCodeRequired,
+	)
+}
+
 func FieldRuleAPIVersion[S manifest.Object](
 	getter func(S) manifest.Version,
-) validation.PropertyRules[manifest.Version, S] {
-	return validation.For(getter).
+) govy.PropertyRules[manifest.Version, S] {
+	return govy.For(getter).
 		WithName("apiVersion").
 		Required().
-		Rules(validation.EqualTo(manifest.VersionV1alpha))
+		Rules(rules.EQ(manifest.VersionV1alpha))
 }
 
 func FieldRuleKind[S manifest.Object](
 	getter func(S) manifest.Kind, kind manifest.Kind,
-) validation.PropertyRules[manifest.Kind, S] {
-	return validation.For(getter).
+) govy.PropertyRules[manifest.Kind, S] {
+	return govy.For(getter).
 		WithName("kind").
 		Required().
-		Rules(validation.EqualTo(kind))
+		Rules(rules.EQ(kind))
 }
 
-func FieldRuleMetadataName[S any](getter func(S) string) validation.PropertyRules[string, S] {
-	return validation.For(getter).
+func FieldRuleMetadataName[S any](getter func(S) string) govy.PropertyRules[string, S] {
+	return govy.For(getter).
 		WithName("metadata.name").
 		Required().
-		Rules(validation.StringIsDNSSubdomain())
+		Rules(rules.StringDNSLabel())
 }
 
-func FieldRuleMetadataDisplayName[S any](getter func(S) string) validation.PropertyRules[string, S] {
-	return validation.For(getter).
+func FieldRuleMetadataDisplayName[S any](getter func(S) string) govy.PropertyRules[string, S] {
+	return govy.For(getter).
 		WithName("metadata.displayName").
 		OmitEmpty().
-		Rules(validation.StringLength(0, 63))
+		Rules(rules.StringLength(0, 63))
 }
 
-func FieldRuleMetadataProject[S any](getter func(S) string) validation.PropertyRules[string, S] {
-	return validation.For(getter).
+func FieldRuleMetadataProject[S any](getter func(S) string) govy.PropertyRules[string, S] {
+	return govy.For(getter).
 		WithName("metadata.project").
 		Required().
-		Rules(validation.StringIsDNSSubdomain())
+		Rules(rules.StringDNSLabel())
 }
 
-func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) validation.PropertyRules[v1alpha.Labels, S] {
-	return validation.For(getter).
+func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) govy.PropertyRules[v1alpha.Labels, S] {
+	return govy.For(getter).
 		WithName("metadata.labels").
 		Include(v1alpha.LabelsValidationRules())
 }
 
 func FieldRuleMetadataAnnotations[S any](getter func(S) v1alpha.MetadataAnnotations,
-) validation.PropertyRules[v1alpha.MetadataAnnotations, S] {
-	return validation.For(getter).
+) govy.PropertyRules[v1alpha.MetadataAnnotations, S] {
+	return govy.For(getter).
 		WithName("metadata.annotations").
 		Include(v1alpha.MetadataAnnotationsValidationRules())
 }
 
-func FieldRuleSpecDescription[S any](getter func(S) string) validation.PropertyRules[string, S] {
-	return validation.For(getter).
+func FieldRuleSpecDescription[S any](getter func(S) string) govy.PropertyRules[string, S] {
+	return govy.For(getter).
 		WithName("spec.description").
-		Rules(validation.StringDescription())
+		Rules(StringDescription())
 }

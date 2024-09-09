@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 func TestReplayStructDatesValidation(t *testing.T) {
@@ -18,7 +19,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		name      string
 		replay    Replay
 		isValid   bool
-		ErrorCode validation.ErrorCode
+		ErrorCode govy.ErrorCode
 	}{
 		{
 			name: "correct struct",
@@ -43,7 +44,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeRequired,
+			ErrorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing project",
@@ -56,7 +57,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeRequired,
+			ErrorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing duration unit",
@@ -68,7 +69,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeRequired,
+			ErrorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing duration value",
@@ -80,7 +81,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeGreaterThan,
+			ErrorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
 			name: "invalid duration unit",
@@ -106,7 +107,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeGreaterThan,
+			ErrorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
 			name: "maximum duration exceeded",
@@ -128,7 +129,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				Slo:     "slo",
 			},
 			isValid:   false,
-			ErrorCode: validation.ErrorCodeRequired,
+			ErrorCode: rules.ErrorCodeRequired,
 		},
 	}
 
@@ -142,8 +143,8 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				assert.Nil(t, err)
 			} else {
 				require.Error(t, err)
-				require.IsType(t, &validation.ValidatorError{}, err)
-				assert.True(t, validation.HasErrorCode(err, tc.ErrorCode))
+				require.IsType(t, &govy.ValidatorError{}, err)
+				assert.True(t, govy.HasErrorCode(err, tc.ErrorCode))
 			}
 		})
 	}

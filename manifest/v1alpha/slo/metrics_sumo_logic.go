@@ -8,7 +8,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -25,11 +27,11 @@ const (
 	sumoLogicTypeLogs   = "logs"
 )
 
-var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).
+var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			// Quantization must be equal for good and total.
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			govy.NewRule(func(c CountMetricsSpec) error {
 				if c.GoodMetric.SumoLogic.Quantization == nil || c.TotalMetric.SumoLogic.Quantization == nil {
 					return nil
 				}
@@ -37,9 +39,9 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("sumologic.quantization", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
 			// Query segment with timeslice declaration must have the same duration for good and total.
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			govy.NewRule(func(c CountMetricsSpec) error {
 				good := c.GoodMetric.SumoLogic
 				total := c.TotalMetric.SumoLogic
 				if *good.Type != "logs" || *total.Type != "logs" {
@@ -59,33 +61,33 @@ var sumoLogicCountMetricsLevelValidation = validation.New[CountMetricsSpec](
 							"${duration} must be the same for both 'good' and 'total' metrics")
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
 		),
 ).When(
 	whenCountMetricsIs(v1alpha.SumoLogic),
-	validation.WhenDescription("countMetrics is sumoLogic"),
+	govy.WhenDescription("countMetrics is sumoLogic"),
 )
 
-var sumoLogicValidation = validation.New[SumoLogicMetric](
-	validation.For(validation.GetSelf[SumoLogicMetric]()).
+var sumoLogicValidation = govy.New[SumoLogicMetric](
+	govy.For(govy.GetSelf[SumoLogicMetric]()).
 		Include(sumoLogicMetricTypeValidation).
 		Include(sumoLogicLogsTypeValidation),
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Type }).
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Type }).
 		WithName("type").
 		Required().
-		Rules(validation.OneOf(sumoLogicTypeLogs, sumoLogicTypeMetric)),
+		Rules(rules.OneOf(sumoLogicTypeLogs, sumoLogicTypeMetric)),
 )
 
 var sumoLogicValidRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
 
-var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
+var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
 		Required(),
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
 		WithName("quantization").
 		Required().
-		Rules(validation.NewSingleRule(func(s string) error {
+		Rules(govy.NewRule(func(s string) error {
 			const minQuantizationSeconds = 15
 			quantization, err := time.ParseDuration(s)
 			if err != nil {
@@ -97,37 +99,37 @@ var sumoLogicMetricTypeValidation = validation.New[SumoLogicMetric](
 			}
 			return nil
 		})),
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
 		WithName("rollup").
 		Required().
-		Rules(validation.OneOf(sumoLogicValidRollups...)),
+		Rules(rules.OneOf(sumoLogicValidRollups...)),
 ).
 	When(
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeMetric },
-		validation.WhenDescription("type is '%s'", sumoLogicTypeMetric),
+		govy.WhenDescription("type is '%s'", sumoLogicTypeMetric),
 	)
 
-var sumoLogicLogsTypeValidation = validation.New[SumoLogicMetric](
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
+var sumoLogicLogsTypeValidation = govy.New[SumoLogicMetric](
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
 		Required().
 		Rules(
-			validation.NewSingleRule(validateSumoLogicTimeslice),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
+			govy.NewRule(validateSumoLogicTimeslice),
+			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
 				WithDetails("n9_value is required"),
-			validation.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
+			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
 				WithDetails("aggregation function is required"),
 		),
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
 		WithName("quantization").
-		Rules(validation.Forbidden[string]()),
-	validation.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
+		Rules(rules.Forbidden[string]()),
+	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
 		WithName("rollup").
-		Rules(validation.Forbidden[string]()),
+		Rules(rules.Forbidden[string]()),
 ).
 	When(
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeLogs },
-		validation.WhenDescription("type is '%s'", sumoLogicTypeLogs),
+		govy.WhenDescription("type is '%s'", sumoLogicTypeLogs),
 	)
 
 func validateSumoLogicTimeslice(query string) error {

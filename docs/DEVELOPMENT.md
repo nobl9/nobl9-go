@@ -29,8 +29,7 @@ and makes local debugging easier.
 
 ## Testing
 
-Currently nobl9-go is automatically verified with unit tests only.
-It is encouraged to create a simple MVP program which verifies the introduced
+It is encouraged to create a simple MVP program which verifies that introduced
 changes work. There's a dedicated section in PR template `## Testing` which
 is a great place to add such `main.go` code snippet.
 Here's an example:
@@ -86,6 +85,20 @@ rules:
 
 If you wish to record the tests run `make test/record`.
 By default, the tests are recorded inside `./bin` folder.
+
+### End-to-end test
+
+Tests which are run against Nobl9 API are located under [tests](../tests/)
+folder.
+They are standard Go tests, annotated with build tag `e2e_test`, they can
+be executed with `make test/e2e`.
+In order to run them, a set of basic Nobl9 credentials is required:
+
+- *NOBL9_SDK_CLIENT_ID*
+- *NOBL9_SDK_CLIENT_SECRET*
+
+There's also a [dispatch action](https://github.com/nobl9/nobl9-go/actions/workflows/e2e-tests-dispatch.yml)
+available.
 
 ## Releases
 

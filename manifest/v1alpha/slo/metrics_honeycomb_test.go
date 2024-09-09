@@ -4,8 +4,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -29,7 +30,7 @@ func TestHoneycomb(t *testing.T) {
 				Errors: []testutils.ExpectedError{
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
-						Code: validation.ErrorCodeStringNotEmpty,
+						Code: rules.ErrorCodeStringNotEmpty,
 					},
 				},
 			},
@@ -41,7 +42,7 @@ func TestHoneycomb(t *testing.T) {
 				Errors: []testutils.ExpectedError{
 					{
 						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
-						Code: validation.ErrorCodeStringMaxLength,
+						Code: rules.ErrorCodeStringMaxLength,
 					},
 				},
 			},
@@ -66,7 +67,7 @@ func TestHoneycomb(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.honeycomb.calculation",
-			Code: validation.ErrorCodeOneOf,
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 }

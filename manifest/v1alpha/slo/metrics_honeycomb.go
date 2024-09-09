@@ -5,7 +5,8 @@ import (
 
 	"golang.org/x/exp/slices"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // HoneycombMetric represents metric from Honeycomb.
@@ -14,11 +15,11 @@ type HoneycombMetric struct {
 	Attribute   string `json:"attribute,omitempty"`
 }
 
-var honeycombValidation = validation.New[HoneycombMetric](
-	validation.For(func(h HoneycombMetric) string { return h.Calculation }).
+var honeycombValidation = govy.New[HoneycombMetric](
+	govy.For(func(h HoneycombMetric) string { return h.Calculation }).
 		WithName("calculation").
 		Required().
-		Rules(validation.OneOf(supportedHoneycombCalculationTypes...)),
+		Rules(rules.OneOf(supportedHoneycombCalculationTypes...)),
 )
 
 var supportedHoneycombCalculationTypes = []string{
@@ -27,13 +28,13 @@ var supportedHoneycombCalculationTypes = []string{
 	"RATE_AVG", "RATE_SUM", "RATE_MAX",
 }
 
-var attributeRequired = validation.New[HoneycombMetric](
-	validation.For(func(h HoneycombMetric) string { return h.Attribute }).
+var attributeRequired = govy.New[HoneycombMetric](
+	govy.For(func(h HoneycombMetric) string { return h.Attribute }).
 		WithName("attribute").
 		Required().
 		Rules(
-			validation.StringMaxLength(255),
-			validation.StringNotEmpty()),
+			rules.StringMaxLength(255),
+			rules.StringNotEmpty()),
 ).When(
 	func(h HoneycombMetric) bool {
 		return slices.Contains([]string{
@@ -42,6 +43,6 @@ var attributeRequired = validation.New[HoneycombMetric](
 			"RATE_AVG", "RATE_SUM", "RATE_MAX",
 		}, h.Calculation)
 	},
-	validation.WhenDescription("calculation is one of: %s",
+	govy.WhenDescription("calculation is one of: %s",
 		strings.Join(supportedHoneycombCalculationTypes, ", ")),
 )

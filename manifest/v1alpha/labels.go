@@ -4,7 +4,8 @@ import (
 	_ "embed"
 	"regexp"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // Labels are key-value pairs that can be attached to SLOs, services, projects, and alert policies.
@@ -26,22 +27,22 @@ var labelsExamples string
 
 var labelKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
-func LabelsValidationRules() validation.Validator[Labels] {
-	return validation.New(
-		validation.ForMap(validation.GetSelf[Labels]()).
+func LabelsValidationRules() govy.Validator[Labels] {
+	return govy.New[Labels](
+		govy.ForMap(govy.GetSelf[Labels]()).
 			RulesForKeys(
-				validation.StringLength(minLabelKeyLength, maxLabelKeyLength),
-				validation.StringMatchRegexp(labelKeyRegexp),
+				rules.StringLength(minLabelKeyLength, maxLabelKeyLength),
+				rules.StringMatchRegexp(labelKeyRegexp),
 			).
 			IncludeForValues(labelValuesValidation).
 			WithExamples(labelsExamples),
 	)
 }
 
-var labelValuesValidation = validation.New(
-	validation.ForSlice(validation.GetSelf[[]labelValue]()).
-		Rules(validation.SliceUnique(validation.SelfHashFunc[labelValue]())).
+var labelValuesValidation = govy.New[[]labelValue](
+	govy.ForSlice(govy.GetSelf[[]labelValue]()).
+		Rules(rules.SliceUnique(rules.HashFuncSelf[labelValue]())).
 		RulesForEach(
-			validation.StringMaxLength(maxLabelValueLength),
+			rules.StringMaxLength(maxLabelValueLength),
 		),
 )

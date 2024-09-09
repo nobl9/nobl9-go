@@ -3,7 +3,8 @@
 package annotation
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (a Annotation) SetOrganization(org string) manifest.Object {
 	return a
 }
 
-func (a Annotation) GetValidator() validation.Validator[Annotation] {
+func (a Annotation) GetValidator() govy.Validator[Annotation] {
 	return validator
 }

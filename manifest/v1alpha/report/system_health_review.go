@@ -6,6 +6,16 @@ type SystemHealthReviewConfig struct {
 	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame" validate:"required"`
 	RowGroupBy RowGroupBy                  `json:"rowGroupBy" validate:"required" example:"project"`
 	Columns    []ColumnSpec                `json:"columns" validate:"min=1,max=30"`
+	Thresholds Thresholds                  `json:"thresholds" validate:"required"`
+}
+
+type Thresholds struct {
+	RedLessThanOrEqual *float64 `json:"redLte" validate:"required" example:"0.8"`
+	// Yellow is calculated as the difference between Red and Green
+	// thresholds. If Red and Green are the same, Yellow is not used on the report.
+	GreenGreaterThan *float64 `json:"greenGt" validate:"required" example:"0.95"`
+	// ShowNoData customizes the report to either show or hide rows with no data.
+	ShowNoData bool `json:"showNoData"`
 }
 
 type ColumnSpec struct {

@@ -1,6 +1,6 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import "github.com/nobl9/govy/pkg/govy"
 
 // GCMMetric represents metric from GCM
 type GCMMetric struct {
@@ -8,11 +8,11 @@ type GCMMetric struct {
 	ProjectID string `json:"projectId"`
 }
 
-var gcmValidation = validation.New[GCMMetric](
-	validation.For(func(e GCMMetric) string { return e.Query }).
+var gcmValidation = govy.New[GCMMetric](
+	govy.For(func(e GCMMetric) string { return e.Query }).
 		WithName("query").
 		Required(),
-	validation.For(func(e GCMMetric) string { return e.ProjectID }).
+	govy.For(func(e GCMMetric) string { return e.ProjectID }).
 		WithName("projectId").
 		Required(),
 )

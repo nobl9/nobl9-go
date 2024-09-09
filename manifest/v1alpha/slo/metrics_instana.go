@@ -3,7 +3,9 @@ package slo
 import (
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -45,24 +47,24 @@ const (
 	instanaMetricRetrievalMethodSnapshot = "snapshot"
 )
 
-var instanaCountMetricsLevelValidation = validation.New[CountMetricsSpec](
-	validation.For(validation.GetSelf[CountMetricsSpec]()).
+var instanaCountMetricsLevelValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
-			validation.NewSingleRule(func(c CountMetricsSpec) error {
+			govy.NewRule(func(c CountMetricsSpec) error {
 				if c.GoodMetric.Instana.MetricType != c.TotalMetric.Instana.MetricType {
 					return countMetricsPropertyEqualityError("instana.metricType", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(validation.ErrorCodeEqualTo)),
+			}).WithErrorCode(rules.ErrorCodeEqualTo)),
 ).When(
 	whenCountMetricsIs(v1alpha.Instana),
-	validation.WhenDescription("countMetrics is instana"),
+	govy.WhenDescription("countMetrics is instana"),
 )
 
-var instanaValidation = validation.ForPointer(func(m MetricSpec) *InstanaMetric { return m.Instana }).
+var instanaValidation = govy.ForPointer(func(m MetricSpec) *InstanaMetric { return m.Instana }).
 	WithName("instana").
-	Cascade(validation.CascadeModeStop).
-	Rules(validation.NewSingleRule[InstanaMetric](func(v InstanaMetric) error {
+	Cascade(govy.CascadeModeStop).
+	Rules(govy.NewRule(func(v InstanaMetric) error {
 		if v.Application != nil && v.Infrastructure != nil {
 			return errors.New("cannot use both 'instana.application' and 'instana.infrastructure'")
 		}
@@ -83,42 +85,42 @@ var instanaValidation = validation.ForPointer(func(m MetricSpec) *InstanaMetric 
 		return nil
 	}))
 
-var instanaCountMetricsValidation = validation.New[MetricSpec](
+var instanaCountMetricsValidation = govy.New[MetricSpec](
 	instanaValidation.
-		Include(validation.New[InstanaMetric](
-			validation.For(func(i InstanaMetric) string { return i.MetricType }).
+		Include(govy.New[InstanaMetric](
+			govy.For(func(i InstanaMetric) string { return i.MetricType }).
 				WithName("metricType").
 				Required().
-				Rules(validation.EqualTo(instanaMetricTypeInfrastructure)),
-			validation.ForPointer(func(i InstanaMetric) *InstanaInfrastructureMetricType { return i.Infrastructure }).
+				Rules(rules.EQ(instanaMetricTypeInfrastructure)),
+			govy.ForPointer(func(i InstanaMetric) *InstanaInfrastructureMetricType { return i.Infrastructure }).
 				WithName("infrastructure").
 				Required().
 				Include(instanaInfrastructureMetricValidation),
-			validation.ForPointer(func(i InstanaMetric) *InstanaApplicationMetricType { return i.Application }).
+			govy.ForPointer(func(i InstanaMetric) *InstanaApplicationMetricType { return i.Application }).
 				WithName("application").
-				Rules(validation.Forbidden[InstanaApplicationMetricType]()),
+				Rules(rules.Forbidden[InstanaApplicationMetricType]()),
 		)),
 )
 
-var instanaRawMetricValidation = validation.New[MetricSpec](
+var instanaRawMetricValidation = govy.New[MetricSpec](
 	instanaValidation.
-		Include(validation.New[InstanaMetric](
-			validation.For(func(i InstanaMetric) string { return i.MetricType }).
+		Include(govy.New[InstanaMetric](
+			govy.For(func(i InstanaMetric) string { return i.MetricType }).
 				WithName("metricType").
 				Required().
-				Rules(validation.OneOf(instanaMetricTypeInfrastructure, instanaMetricTypeApplication)),
-			validation.ForPointer(func(i InstanaMetric) *InstanaInfrastructureMetricType { return i.Infrastructure }).
+				Rules(rules.OneOf(instanaMetricTypeInfrastructure, instanaMetricTypeApplication)),
+			govy.ForPointer(func(i InstanaMetric) *InstanaInfrastructureMetricType { return i.Infrastructure }).
 				WithName("infrastructure").
 				Include(instanaInfrastructureMetricValidation),
-			validation.ForPointer(func(i InstanaMetric) *InstanaApplicationMetricType { return i.Application }).
+			govy.ForPointer(func(i InstanaMetric) *InstanaApplicationMetricType { return i.Application }).
 				WithName("application").
 				Include(instanaApplicationMetricValidation),
 		)),
 )
 
-var instanaInfrastructureMetricValidation = validation.New[InstanaInfrastructureMetricType](
-	validation.For(validation.GetSelf[InstanaInfrastructureMetricType]()).
-		Rules(validation.NewSingleRule(func(i InstanaInfrastructureMetricType) error {
+var instanaInfrastructureMetricValidation = govy.New[InstanaInfrastructureMetricType](
+	govy.For(govy.GetSelf[InstanaInfrastructureMetricType]()).
+		Rules(govy.NewRule(func(i InstanaInfrastructureMetricType) error {
 			switch i.MetricRetrievalMethod {
 			case instanaMetricRetrievalMethodQuery:
 				if i.Query == nil {
@@ -137,14 +139,14 @@ var instanaInfrastructureMetricValidation = validation.New[InstanaInfrastructure
 			}
 			return nil
 		})),
-	validation.For(func(i InstanaInfrastructureMetricType) string { return i.MetricRetrievalMethod }).
+	govy.For(func(i InstanaInfrastructureMetricType) string { return i.MetricRetrievalMethod }).
 		WithName("metricRetrievalMethod").
 		Required().
-		Rules(validation.OneOf(instanaMetricRetrievalMethodQuery, instanaMetricRetrievalMethodSnapshot)),
-	validation.For(func(i InstanaInfrastructureMetricType) string { return i.MetricID }).
+		Rules(rules.OneOf(instanaMetricRetrievalMethodQuery, instanaMetricRetrievalMethodSnapshot)),
+	govy.For(func(i InstanaInfrastructureMetricType) string { return i.MetricID }).
 		WithName("metricId").
 		Required(),
-	validation.For(func(i InstanaInfrastructureMetricType) string { return i.PluginID }).
+	govy.For(func(i InstanaInfrastructureMetricType) string { return i.PluginID }).
 		WithName("pluginId").
 		Required(),
 )
@@ -154,26 +156,26 @@ var validInstanaLatencyAggregations = []string{
 	"p50", "p75", "p90", "p95", "p98", "p99",
 }
 
-var instanaApplicationMetricValidation = validation.New[InstanaApplicationMetricType](
-	validation.For(validation.GetSelf[InstanaApplicationMetricType]()).
-		Rules(validation.NewSingleRule(func(i InstanaApplicationMetricType) error {
+var instanaApplicationMetricValidation = govy.New[InstanaApplicationMetricType](
+	govy.For(govy.GetSelf[InstanaApplicationMetricType]()).
+		Rules(govy.NewRule(func(i InstanaApplicationMetricType) error {
 			switch i.MetricID {
 			case "calls", "erroneousCalls":
 				if i.Aggregation != "sum" {
-					return validation.NewRuleError(
+					return govy.NewRuleError(
 						"'aggregation' must be 'sum' when 'metricId' is 'calls' or 'erroneousCalls'",
-						validation.ErrorCodeEqualTo,
+						rules.ErrorCodeEqualTo,
 					)
 				}
 			case "errors":
 				if i.Aggregation != "mean" {
-					return validation.NewRuleError(
+					return govy.NewRuleError(
 						"'aggregation' must be 'mean' when 'metricId' is 'errors'",
-						validation.ErrorCodeEqualTo,
+						rules.ErrorCodeEqualTo,
 					)
 				}
 			case "latency":
-				if err := validation.OneOf(validInstanaLatencyAggregations...).
+				if err := rules.OneOf(validInstanaLatencyAggregations...).
 					WithDetails("when 'aggregation' is 'latency'").
 					Validate(i.Aggregation); err != nil {
 					return err
@@ -181,27 +183,27 @@ var instanaApplicationMetricValidation = validation.New[InstanaApplicationMetric
 			}
 			return nil
 		})),
-	validation.For(func(i InstanaApplicationMetricType) string { return i.MetricID }).
+	govy.For(func(i InstanaApplicationMetricType) string { return i.MetricID }).
 		WithName("metricId").
 		Required().
-		Rules(validation.OneOf("calls", "erroneousCalls", "errors", "latency")),
-	validation.For(func(i InstanaApplicationMetricType) string { return i.Aggregation }).
+		Rules(rules.OneOf("calls", "erroneousCalls", "errors", "latency")),
+	govy.For(func(i InstanaApplicationMetricType) string { return i.Aggregation }).
 		WithName("aggregation").
 		Required(),
-	validation.For(func(i InstanaApplicationMetricType) InstanaApplicationMetricGroupBy { return i.GroupBy }).
+	govy.For(func(i InstanaApplicationMetricType) InstanaApplicationMetricGroupBy { return i.GroupBy }).
 		WithName("groupBy").
 		Required().
-		Include(validation.New[InstanaApplicationMetricGroupBy](
-			validation.For(func(i InstanaApplicationMetricGroupBy) string { return i.Tag }).
+		Include(govy.New[InstanaApplicationMetricGroupBy](
+			govy.For(func(i InstanaApplicationMetricGroupBy) string { return i.Tag }).
 				WithName("tag").
 				Required(),
-			validation.For(func(i InstanaApplicationMetricGroupBy) string { return i.TagEntity }).
+			govy.For(func(i InstanaApplicationMetricGroupBy) string { return i.TagEntity }).
 				WithName("tagEntity").
 				Required().
-				Rules(validation.OneOf("DESTINATION", "SOURCE", "NOT_APPLICABLE")),
+				Rules(rules.OneOf("DESTINATION", "SOURCE", "NOT_APPLICABLE")),
 		)),
-	validation.For(func(i InstanaApplicationMetricType) string { return i.APIQuery }).
+	govy.For(func(i InstanaApplicationMetricType) string { return i.APIQuery }).
 		WithName("apiQuery").
 		Required().
-		Rules(validation.StringJSON()),
+		Rules(rules.StringJSON()),
 )

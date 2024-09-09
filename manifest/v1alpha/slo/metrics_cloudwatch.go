@@ -9,7 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/pkg/errors"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -46,10 +48,10 @@ type CloudWatchMetricDimension struct {
 	Value *string `json:"value"`
 }
 
-var cloudWatchValidation = validation.New[CloudWatchMetric](
-	validation.For(validation.GetSelf[CloudWatchMetric]()).
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.NewSingleRule(func(c CloudWatchMetric) error {
+var cloudWatchValidation = govy.New[CloudWatchMetric](
+	govy.For(govy.GetSelf[CloudWatchMetric]()).
+		Cascade(govy.CascadeModeStop).
+		Rules(govy.NewRule(func(c CloudWatchMetric) error {
 			var configOptions int
 			if c.IsStandardConfiguration() {
 				configOptions++
@@ -66,17 +68,17 @@ var cloudWatchValidation = validation.New[CloudWatchMetric](
 					" Standard{namespace, metricName, stat, dimensions}; JSON{json}; SQL{sql}")
 			}
 			return nil
-		}).WithErrorCode(validation.ErrorCodeOneOf)).
+		}).WithErrorCode(rules.ErrorCodeOneOf)).
 		Include(
 			cloudWatchStandardConfigValidation,
 			cloudWatchSQLConfigValidation,
 			cloudWatchJSONConfigValidation),
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Region }).
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Region }).
 		WithName("region").
 		Required().
 		Rules(
-			validation.StringMaxLength(255),
-			validation.OneOf(func() []string {
+			rules.StringMaxLength(255),
+			rules.OneOf(func() []string {
 				codes := make([]string, 0, len(v1alpha.AWSRegions()))
 				for _, region := range v1alpha.AWSRegions() {
 					codes = append(codes, region.Code)
@@ -85,66 +87,66 @@ var cloudWatchValidation = validation.New[CloudWatchMetric](
 			}()...)),
 )
 
-var cloudWatchSQLConfigValidation = validation.New[CloudWatchMetric](
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.SQL }).
+var cloudWatchSQLConfigValidation = govy.New[CloudWatchMetric](
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.SQL }).
 		WithName("sql").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 ).When(
 	func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() },
-	validation.WhenDescription("sql is provided"),
+	govy.WhenDescription("sql is provided"),
 )
 
-var cloudWatchJSONConfigValidation = validation.New[CloudWatchMetric](
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
+var cloudWatchJSONConfigValidation = govy.New[CloudWatchMetric](
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
 		WithName("json").
 		Required().
 		Rules(cloudWatchJSONValidationRule),
 ).When(
 	func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() },
-	validation.WhenDescription("json is provided"),
+	govy.WhenDescription("json is provided"),
 )
 
-var cloudWatchStandardConfigValidation = validation.New[CloudWatchMetric](
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
+var cloudWatchStandardConfigValidation = govy.New[CloudWatchMetric](
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
 		WithName("namespace").
 		Required().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.StringNotEmpty()).
-		Rules(validation.StringMatchRegexp(cloudWatchNamespaceRegexp)),
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.MetricName }).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringMatchRegexp(cloudWatchNamespaceRegexp)),
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.MetricName }).
 		WithName("metricName").
 		Required().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.StringNotEmpty()).
-		Rules(validation.StringMaxLength(255)),
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.Stat }).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringMaxLength(255)),
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Stat }).
 		WithName("stat").
 		Required().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.StringNotEmpty()).
-		Rules(validation.StringMatchRegexp(cloudWatchStatRegexp, cloudWatchExampleValidStats...)),
-	validation.ForSlice(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringMatchRegexp(cloudWatchStatRegexp, cloudWatchExampleValidStats...)),
+	govy.ForSlice(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
 		WithName("dimensions").
-		// If the slice is too long, don't proceed with validation.
+		// If the slice is too long, don't proceed with govy.
 		// We don't want to check names uniqueness if for example names are empty.
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.SliceMaxLength[[]CloudWatchMetricDimension](10)).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.SliceMaxLength[[]CloudWatchMetricDimension](10)).
 		IncludeForEach(cloudwatchMetricDimensionValidation).
-		Rules(validation.SliceUnique(func(c CloudWatchMetricDimension) string {
+		Rules(rules.SliceUnique(func(c CloudWatchMetricDimension) string {
 			if c.Name == nil {
 				return ""
 			}
 			return *c.Name
 		}).WithDetails("dimension 'name' must be unique for all dimensions")),
-	validation.ForPointer(func(c CloudWatchMetric) *string { return c.AccountID }).
+	govy.ForPointer(func(c CloudWatchMetric) *string { return c.AccountID }).
 		WithName("accountId").
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.StringNotEmpty()).
-		Rules(validation.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
 ).When(
 	func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
-	validation.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
+	govy.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
 )
 
 var (
@@ -155,27 +157,27 @@ var (
 	cloudWatchAccountIDRegexp = regexp.MustCompile(`^\d{12}$`)
 )
 
-var cloudwatchMetricDimensionValidation = validation.New[CloudWatchMetricDimension](
-	validation.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Name }).
+var cloudwatchMetricDimensionValidation = govy.New[CloudWatchMetricDimension](
+	govy.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Name }).
 		WithName("name").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			validation.StringMaxLength(255),
-			validation.StringASCII()),
-	validation.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Value }).
+			rules.StringNotEmpty(),
+			rules.StringMaxLength(255),
+			rules.StringASCII()),
+	govy.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Value }).
 		WithName("value").
 		Required().
 		Rules(
-			validation.StringNotEmpty(),
-			validation.StringMaxLength(255),
-			validation.StringASCII()),
+			rules.StringNotEmpty(),
+			rules.StringMaxLength(255),
+			rules.StringASCII()),
 )
 
-var cloudWatchJSONValidationRule = validation.NewSingleRule(func(v string) error {
+var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
 	var metricDataQuerySlice []*cloudwatch.MetricDataQuery
 	if err := json.Unmarshal([]byte(v), &metricDataQuerySlice); err != nil {
-		return validation.NewRuleError(err.Error(), validation.ErrorCodeStringJSON)
+		return govy.NewRuleError(err.Error(), rules.ErrorCodeStringJSON)
 	}
 
 	returnedData := len(metricDataQuerySlice)
@@ -205,19 +207,19 @@ var cloudWatchJSONValidationRule = validation.NewSingleRule(func(v string) error
 
 func validateCloudwatchJSONPeriod(period *int64, propName string, index int) error {
 	indexPropName := func() string {
-		return validation.SliceElementName(".", index) + "." + propName
+		return govy.SliceElementName(".", index) + "." + propName
 	}
 	const queryPeriod = 60
 	if period == nil {
-		return validation.NewRuleError(
+		return govy.NewRuleError(
 			fmt.Sprintf("'%s' property is required", indexPropName()),
-			validation.ErrorCodeRequired,
+			rules.ErrorCodeRequired,
 		)
 	}
 	if *period != queryPeriod {
-		return validation.NewRuleError(
+		return govy.NewRuleError(
 			fmt.Sprintf("'%s' property should be equal to %d", indexPropName(), queryPeriod),
-			validation.ErrorCodeEqualTo,
+			rules.ErrorCodeEqualTo,
 		)
 	}
 	return nil

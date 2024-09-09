@@ -9,8 +9,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -30,11 +34,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -51,11 +55,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, silence, err, 4,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
 }
@@ -67,7 +71,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -78,7 +82,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	err := validate(alertSilence)
 	testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 		Prop: "spec.description",
-		Code: validation.ErrorCodeStringDescription,
+		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
 
@@ -95,7 +99,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -104,7 +108,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -145,7 +149,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -154,7 +158,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.name",
-			Code: validation.ErrorCodeRequired,
+			Code: rules.ErrorCodeRequired,
 		})
 	})
 	t.Run("fails, invalid project", func(t *testing.T) {
@@ -163,7 +167,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 2, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.project",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails, inconsistent project", func(t *testing.T) {
@@ -186,7 +190,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.period",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("fails, both endTime and duration provided", func(t *testing.T) {
@@ -198,7 +202,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.period",
-			Code: validation.ErrorCodeMutuallyExclusive,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 }
@@ -228,7 +232,7 @@ func TestValidate_Spec_Period_Duration(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.period.duration",
-			Code: validation.ErrorCodeTransform,
+			Code: govy.ErrorCodeTransform,
 		})
 	})
 	t.Run("fails, invalid too small", func(t *testing.T) {
@@ -239,7 +243,7 @@ func TestValidate_Spec_Period_Duration(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.period.duration",
-			Code: validation.ErrorCodeGreaterThan,
+			Code: rules.ErrorCodeGreaterThan,
 		})
 	})
 }

@@ -8,8 +8,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -27,11 +28,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -47,11 +48,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		},
 	)
 }
@@ -68,7 +69,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			testutils.ExpectedError{
 				Prop: "spec.filters",
-				Code: validation.ErrorCodeRequired,
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -106,7 +107,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, report, err, 2, testutils.ExpectedError{
 			Prop:    "spec",
 			Message: "exactly one report type configuration is required",
 		})
@@ -160,7 +161,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: nil,
@@ -184,7 +185,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.projects[0]",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -196,7 +197,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -212,7 +213,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -229,7 +230,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -245,7 +246,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -262,7 +263,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -278,7 +279,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -295,7 +296,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Filters: &Filters{
@@ -311,7 +312,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 			Filters: &Filters{
@@ -381,11 +382,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 				{
 					Prop: "spec.sloHistory.rolling.count",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -398,7 +399,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.count",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -415,7 +416,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -432,7 +433,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.timeZone",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -500,7 +501,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.rowGroupBy",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -511,6 +512,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty columns": {
@@ -518,7 +523,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns",
-					Code: validation.ErrorCodeSliceMinLength,
+					Code: rules.ErrorCodeSliceMinLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -530,6 +535,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns:    []ColumnSpec{},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with too many columns": {
@@ -537,7 +546,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns",
-					Code: validation.ErrorCodeSliceMaxLength,
+					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -581,6 +590,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 					{DisplayName: "Column 30", Labels: properLabel},
 					{DisplayName: "Column 31", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty labels": {
@@ -588,7 +601,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns[0].labels",
-					Code: validation.ErrorCodeMapMinLength,
+					Code: rules.ErrorCodeMapMinLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -602,6 +615,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty displayName": {
@@ -609,7 +626,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns[0].displayName",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -623,6 +640,60 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
+			},
+		},
+		"fails with empty thresholds": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds",
+					Code: rules.ErrorCodeRequired,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+			},
+		},
+		"fails with invalid thresholds": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds.redLte",
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				},
+				{
+					Prop: "spec.systemHealthReview.thresholds.greenGt",
+					Code: rules.ErrorCodeLessThanOrEqualTo,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(-0.1),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(1.1),
+				},
 			},
 		},
 	} {
@@ -633,6 +704,32 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
+
+	t.Run("fails when red is greater than green", func(t *testing.T) {
+		report := validReport()
+		report.Spec.SystemHealthReview = &SystemHealthReviewConfig{
+			TimeFrame: SystemHealthReviewTimeFrame{
+				Snapshot: SnapshotTimeFrame{
+					Point: SnapshotPointLatest,
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+			RowGroupBy: RowGroupByProject,
+			Columns: []ColumnSpec{
+				{DisplayName: "Column 1", Labels: properLabel},
+			},
+			Thresholds: Thresholds{
+				RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.2),
+				GreenGreaterThan:   func(f float64) *float64 { return &f }(0.1),
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec.systemHealthReview.thresholds.redLte",
+			Message: "must be less than or equal to 'greenGt' (0.1)",
+		},
+		)
+	})
 }
 
 func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
@@ -646,13 +743,17 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -661,7 +762,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -673,6 +774,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with empty data in past point snapshot": {
@@ -680,7 +785,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -694,6 +799,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with wrong rrule format in past point snapshot": {
@@ -705,7 +814,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -720,6 +829,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with invalid rrule in past point snapshot": {
@@ -731,7 +844,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -746,6 +859,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
+				},
 			},
 		},
 		"fails with forbidden fields provided in latest point snapshot": {
@@ -753,11 +870,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.rrule",
-					Code: validation.ErrorCodeForbidden,
+					Code: rules.ErrorCodeForbidden,
 				},
 				{
 					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
-					Code: validation.ErrorCodeForbidden,
+					Code: rules.ErrorCodeForbidden,
 				},
 			},
 			Config: SystemHealthReviewConfig{
@@ -772,6 +889,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.0),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.2),
 				},
 			},
 		},
@@ -851,6 +972,11 @@ func validReport() Report {
 							},
 						},
 					},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: func(f float64) *float64 { return &f }(0.8),
+					GreenGreaterThan:   func(f float64) *float64 { return &f }(0.95),
+					ShowNoData:         true,
 				},
 			},
 		},

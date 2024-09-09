@@ -1,15 +1,18 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // OpenTSDBMetric represents metric from OpenTSDB.
 type OpenTSDBMetric struct {
 	Query *string `json:"query"`
 }
 
-var openTSDBValidation = validation.New[OpenTSDBMetric](
-	validation.ForPointer(func(o OpenTSDBMetric) *string { return o.Query }).
+var openTSDBValidation = govy.New[OpenTSDBMetric](
+	govy.ForPointer(func(o OpenTSDBMetric) *string { return o.Query }).
 		WithName("query").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 )

@@ -5,8 +5,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -19,7 +20,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeNotEqualTo,
+			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
 	t.Run("appDynamics applicationName mismatch for bad over total", func(t *testing.T) {
@@ -31,7 +32,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
-			Code: validation.ErrorCodeNotEqualTo,
+			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
 }
@@ -61,11 +62,11 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "applicationName",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 				{
 					Prop: "metricPath",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -76,7 +77,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			},
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "applicationName",
-				Code: validation.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringNotEmpty,
 			}},
 		},
 		"metric path wildcard not supported": {

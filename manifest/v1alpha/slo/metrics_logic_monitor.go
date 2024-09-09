@@ -1,6 +1,9 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // LogicMonitorMetric represents metric from LogicMonitor
 type LogicMonitorMetric struct {
@@ -10,21 +13,21 @@ type LogicMonitorMetric struct {
 	Line                       string `json:"line"`
 }
 
-var logicMonitorValidation = validation.New[LogicMonitorMetric](
-	validation.For(func(e LogicMonitorMetric) string { return e.QueryType }).
+var logicMonitorValidation = govy.New[LogicMonitorMetric](
+	govy.For(func(e LogicMonitorMetric) string { return e.QueryType }).
 		WithName("queryType").
 		Required().
-		Rules(validation.StringContains("device_metrics")),
-	validation.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
+		Rules(rules.StringContains("device_metrics")),
+	govy.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
 		WithName("deviceDataSourceInstanceId").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo(0)),
-	validation.For(func(e LogicMonitorMetric) int { return e.GraphID }).
+		Rules(rules.GTE(0)),
+	govy.For(func(e LogicMonitorMetric) int { return e.GraphID }).
 		WithName("graphId").
 		Required().
-		Rules(validation.GreaterThanOrEqualTo(0)),
-	validation.For(func(e LogicMonitorMetric) string { return e.Line }).
+		Rules(rules.GTE(0)),
+	govy.For(func(e LogicMonitorMetric) string { return e.Line }).
 		WithName("line").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 )

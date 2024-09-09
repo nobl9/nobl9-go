@@ -1,15 +1,18 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // GrafanaLokiMetric represents metric from GrafanaLokiMetric.
 type GrafanaLokiMetric struct {
 	Logql *string `json:"logql"`
 }
 
-var grafanaLokiValidation = validation.New[GrafanaLokiMetric](
-	validation.ForPointer(func(g GrafanaLokiMetric) *string { return g.Logql }).
+var grafanaLokiValidation = govy.New[GrafanaLokiMetric](
+	govy.ForPointer(func(g GrafanaLokiMetric) *string { return g.Logql }).
 		WithName("logql").
 		Required().
-		Rules(validation.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()),
 )

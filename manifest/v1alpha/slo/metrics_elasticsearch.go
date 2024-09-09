@@ -1,6 +1,9 @@
 package slo
 
-import "github.com/nobl9/nobl9-go/internal/validation"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
 // ElasticsearchMetric represents metric from Elasticsearch.
 type ElasticsearchMetric struct {
@@ -8,15 +11,15 @@ type ElasticsearchMetric struct {
 	Query *string `json:"query"`
 }
 
-var elasticsearchValidation = validation.New[ElasticsearchMetric](
-	validation.ForPointer(func(e ElasticsearchMetric) *string { return e.Index }).
+var elasticsearchValidation = govy.New[ElasticsearchMetric](
+	govy.ForPointer(func(e ElasticsearchMetric) *string { return e.Index }).
 		WithName("index").
 		Required().
-		Rules(validation.StringNotEmpty()),
-	validation.ForPointer(func(e ElasticsearchMetric) *string { return e.Query }).
+		Rules(rules.StringNotEmpty()),
+	govy.ForPointer(func(e ElasticsearchMetric) *string { return e.Query }).
 		WithName("query").
 		Required().
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.StringNotEmpty()).
-		Rules(validation.StringContains("{{.BeginTime}}", "{{.EndTime}}")),
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringContains("{{.BeginTime}}", "{{.EndTime}}")),
 )

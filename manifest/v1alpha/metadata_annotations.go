@@ -4,7 +4,8 @@ import (
 	_ "embed"
 	"regexp"
 
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
 )
 
 // MetadataAnnotations are non-identifiable key-value pairs that can be attached to
@@ -27,20 +28,20 @@ var metadataAnnotationsExamples string
 
 var annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
-func MetadataAnnotationsValidationRules() validation.Validator[MetadataAnnotations] {
-	return validation.New(
-		validation.ForMap(validation.GetSelf[MetadataAnnotations]()).
+func MetadataAnnotationsValidationRules() govy.Validator[MetadataAnnotations] {
+	return govy.New[MetadataAnnotations](
+		govy.ForMap(govy.GetSelf[MetadataAnnotations]()).
 			RulesForKeys(
-				validation.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
-				validation.StringMatchRegexp(annotationKeyRegexp),
+				rules.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
+				rules.StringMatchRegexp(annotationKeyRegexp),
 			).
 			IncludeForValues(annotationValueValidator).
 			WithExamples(metadataAnnotationsExamples),
 	)
 }
 
-var annotationValueValidator = validation.New(
-	validation.For(validation.GetSelf[string]()).
+var annotationValueValidator = govy.New[string](
+	govy.For(govy.GetSelf[string]()).
 		Rules(
-			validation.StringMaxLength(maxAnnotationValueLength),
+			rules.StringMaxLength(maxAnnotationValueLength),
 		))

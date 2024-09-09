@@ -9,8 +9,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+
+	"github.com/nobl9/govy/pkg/rules"
+
 	"github.com/nobl9/nobl9-go/internal/testutils"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -30,11 +33,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
 		testutils.ExpectedError{
 			Prop: "apiVersion",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
 			Prop: "kind",
-			Code: validation.ErrorCodeEqualTo,
+			Code: rules.ErrorCodeEqualTo,
 		},
 	)
 }
@@ -51,11 +54,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: validation.ErrorCodeStringIsDNSSubdomain,
+			Code: rules.ErrorCodeStringDNSLabel,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: validation.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringLength,
 		},
 	)
 }
@@ -77,7 +80,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.description",
-					Code: validation.ErrorCodeStringDescription,
+					Code: validationV1Alpha.ErrorCodeStringDescription,
 				},
 			},
 		},
@@ -90,7 +93,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.firstEventStart",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -103,7 +106,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.duration",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -136,7 +139,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.duration",
-					Code: validation.ErrorCodeDurationPrecision,
+					Code: rules.ErrorCodeDurationPrecision,
 				},
 			},
 		},
@@ -155,7 +158,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.duration",
-					Code: validation.ErrorCodeDurationPrecision,
+					Code: rules.ErrorCodeDurationPrecision,
 				},
 			},
 		},
@@ -173,7 +176,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -192,7 +195,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 		},
@@ -210,7 +213,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeRequired,
+					Code: rules.ErrorCodeRequired,
 				},
 			},
 		},
@@ -229,7 +232,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: validation.ErrorCodeStringIsDNSSubdomain,
+					Code: rules.ErrorCodeStringDNSLabel,
 				},
 			},
 		},
@@ -270,6 +273,51 @@ func TestValidate_Spec(t *testing.T) {
 				{
 					Prop:    "spec.rrule",
 					Message: "undefined frequency: TEST",
+				},
+			},
+		},
+		{
+			name: "duplicate slo",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
+				Filters: Filters{
+					SLOs: []SLORef{
+						{Name: "test", Project: "project"},
+						{Name: "test", Project: "project"},
+					},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos",
+					Code: rules.ErrorCodeSliceUnique,
+				},
+			},
+		},
+		{
+			name: "duplicate slo with multiple others",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
+				Filters: Filters{
+					SLOs: []SLORef{
+						{Name: "test1", Project: "project"},
+						{Name: "test1", Project: "project"},
+						{Name: "test2", Project: "project"},
+						{Name: "test3", Project: "project"},
+						{Name: "test4", Project: "project"},
+						{Name: "test5", Project: "project"},
+						{Name: "test6", Project: "project"},
+					},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.slos",
+					Code: rules.ErrorCodeSliceUnique,
 				},
 			},
 		},

@@ -3,7 +3,8 @@
 package service
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (s Service) SetOrganization(org string) manifest.Object {
 	return s
 }
 
-func (s Service) GetValidator() validation.Validator[Service] {
+func (s Service) GetValidator() govy.Validator[Service] {
 	return validator
 }

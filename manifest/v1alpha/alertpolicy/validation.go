@@ -7,8 +7,10 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/internal/validation"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -17,17 +19,17 @@ func validate(p AlertPolicy) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, p, manifest.KindAlertPolicy)
 }
 
-var validator = validation.New[AlertPolicy](
+var validator = govy.New[AlertPolicy](
 	validationV1Alpha.FieldRuleAPIVersion(func(a AlertPolicy) manifest.Version { return a.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(a AlertPolicy) manifest.Kind { return a.Kind }, manifest.KindAlertPolicy),
-	validation.For(func(p AlertPolicy) Metadata { return p.Metadata }).
+	govy.For(func(p AlertPolicy) Metadata { return p.Metadata }).
 		Include(metadataValidation),
-	validation.For(func(p AlertPolicy) Spec { return p.Spec }).
+	govy.For(func(p AlertPolicy) Spec { return p.Spec }).
 		WithName("spec").
 		Include(specValidation),
 )
 
-var metadataValidation = validation.New[Metadata](
+var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
@@ -37,38 +39,38 @@ var metadataValidation = validation.New[Metadata](
 	}),
 )
 
-var specValidation = validation.New[Spec](
-	validation.For(func(s Spec) string { return s.Description }).
+var specValidation = govy.New[Spec](
+	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
-		Rules(validation.StringDescription()),
-	validation.For(func(s Spec) string { return s.Severity }).
+		Rules(validationV1Alpha.StringDescription()),
+	govy.For(func(s Spec) string { return s.Severity }).
 		WithName("severity").
 		Required().
 		Rules(severityValidation()),
-	validation.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
+	govy.Transform(func(s Spec) string { return s.CoolDownDuration }, time.ParseDuration).
 		WithName("coolDown").
 		OmitEmpty().
-		Rules(validation.GreaterThanOrEqualTo(time.Minute*5)),
-	validation.ForSlice(func(s Spec) []AlertCondition { return s.Conditions }).
+		Rules(rules.GTE(time.Minute*5)),
+	govy.ForSlice(func(s Spec) []AlertCondition { return s.Conditions }).
 		WithName("conditions").
-		Cascade(validation.CascadeModeStop).
-		Rules(validation.SliceMinLength[[]AlertCondition](1)).
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.SliceMinLength[[]AlertCondition](1)).
 		IncludeForEach(conditionValidation),
-	validation.ForSlice(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
+	govy.ForSlice(func(s Spec) []AlertMethodRef { return s.AlertMethods }).
 		WithName("alertMethods").
 		IncludeForEach(alertMethodRefValidation),
 )
 
-var minimalAlertingWindowDurationRule = validation.GreaterThanOrEqualTo(time.Minute * 5)
+var minimalAlertingWindowDurationRule = rules.GTE(time.Minute * 5)
 
-var conditionValidation = validation.New[AlertCondition](
-	validation.For(func(c AlertCondition) string { return c.Measurement }).
+var conditionValidation = govy.New[AlertCondition](
+	govy.For(func(c AlertCondition) string { return c.Measurement }).
 		WithName("measurement").
 		Required().
 		Rules(measurementValidation()),
-	validation.For(validation.GetSelf[AlertCondition]()).
+	govy.For(govy.GetSelf[AlertCondition]()).
 		Rules(
-			validation.MutuallyExclusive(false, map[string]func(c AlertCondition) any{
+			rules.MutuallyExclusive(false, map[string]func(c AlertCondition) any{
 				"alertingWindow": func(c AlertCondition) any { return c.AlertingWindow },
 				"lastsFor":       func(c AlertCondition) any { return c.LastsForDuration },
 			}),
@@ -78,7 +80,7 @@ var conditionValidation = validation.New[AlertCondition](
 		).
 		Include(timeDurationBasedMeasurementsValueValidation).
 		Include(floatBasedMeasurementsValueValidation),
-	validation.Transform(func(c AlertCondition) string { return c.AlertingWindow },
+	govy.Transform(func(c AlertCondition) string { return c.AlertingWindow },
 		func(alertingWindow string) (time.Duration, error) {
 			value, err := time.ParseDuration(alertingWindow)
 			if err != nil {
@@ -92,26 +94,26 @@ var conditionValidation = validation.New[AlertCondition](
 		WithName("alertingWindow").
 		OmitEmpty().
 		Rules(
-			validation.DurationPrecision(time.Minute),
+			rules.DurationPrecision(time.Minute),
 			minimalAlertingWindowDurationRule,
-			validation.LessThanOrEqualTo(time.Hour*24*7),
+			rules.LTE(time.Hour*24*7),
 		),
-	validation.For(validation.GetSelf[AlertCondition]()).
+	govy.For(govy.GetSelf[AlertCondition]()).
 		WithName("op").
 		OmitEmpty().
 		Rules(operatorValidationRule),
-	validation.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).
+	govy.Transform(func(c AlertCondition) string { return c.LastsForDuration }, time.ParseDuration).
 		WithName("lastsFor").
 		OmitEmpty().
-		Rules(validation.GreaterThanOrEqualTo[time.Duration](0)),
+		Rules(rules.GTE[time.Duration](0)),
 )
 
-var alertMethodRefValidation = validation.New[AlertMethodRef](
+var alertMethodRefValidation = govy.New[AlertMethodRef](
 	validationV1Alpha.FieldRuleMetadataName(func(m AlertMethodRef) string { return m.Metadata.Name }),
-	validation.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
+	govy.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
 		WithName("metadata.project").
 		OmitEmpty().
-		Rules(validation.StringIsDNSSubdomain()),
+		Rules(rules.StringDNSLabel()),
 )
 
 const (
@@ -119,23 +121,23 @@ const (
 	errorCodeMeasurementWithLastsFor       = "measurement_regarding_lasts_for"
 )
 
-var timeDurationBasedMeasurementsValueValidation = validation.New[AlertCondition](
-	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
+var timeDurationBasedMeasurementsValueValidation = govy.New[AlertCondition](
+	govy.Transform(func(c AlertCondition) interface{} { return c.Value }, transformDurationValue).
 		WithName("value").
 		Required().
-		Rules(validation.GreaterThan[time.Duration](0)),
+		Rules(rules.GT[time.Duration](0)),
 ).
 	When(
 		func(c AlertCondition) bool {
 			return c.Measurement == MeasurementTimeToBurnBudget.String() ||
 				c.Measurement == MeasurementTimeToBurnEntireBudget.String()
 		},
-		validation.WhenDescription("measurement is is either '%s' or '%s'",
+		govy.WhenDescription("measurement is is either '%s' or '%s'",
 			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
 	)
 
-var floatBasedMeasurementsValueValidation = validation.New[AlertCondition](
-	validation.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
+var floatBasedMeasurementsValueValidation = govy.New[AlertCondition](
+	govy.Transform(func(c AlertCondition) interface{} { return c.Value }, transformFloat64Value).
 		WithName("value").
 		OmitEmpty(),
 ).
@@ -145,11 +147,11 @@ var floatBasedMeasurementsValueValidation = validation.New[AlertCondition](
 				c.Measurement == MeasurementAverageBurnRate.String() ||
 				c.Measurement == MeasurementBudgetDrop.String()
 		},
-		validation.WhenDescription("measurement is is either '%s', '%s' or '%s'",
+		govy.WhenDescription("measurement is is either '%s', '%s' or '%s'",
 			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBudgetDrop),
 	)
 
-var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
+var measurementWithAlertingWindowValidation = govy.NewRule(func(c AlertCondition) error {
 	isAlertingWindowSupported := false
 	for _, allowedMeasurement := range alertingWindowSupportedMeasurements() {
 		if allowedMeasurement == c.Measurement {
@@ -158,10 +160,10 @@ var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c Al
 		}
 	}
 	if c.AlertingWindow != "" && !isAlertingWindowSupported {
-		return validation.NewPropertyError(
+		return govy.NewPropertyError(
 			"measurement",
 			c.Measurement,
-			validation.NewRuleError(
+			govy.NewRuleError(
 				fmt.Sprintf(
 					`must be equal to one of '%s' when 'alertingWindow' is defined`,
 					strings.Join(alertingWindowSupportedMeasurements(), ","),
@@ -173,7 +175,7 @@ var measurementWithAlertingWindowValidation = validation.NewSingleRule(func(c Al
 	return nil
 })
 
-var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCondition) error {
+var measurementWithLastsForValidation = govy.NewRule(func(c AlertCondition) error {
 	isLastsForSupported := false
 	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
 		if allowedMeasurement == c.Measurement {
@@ -182,10 +184,10 @@ var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCon
 		}
 	}
 	if c.LastsForDuration != "" && !isLastsForSupported {
-		return validation.NewPropertyError(
+		return govy.NewPropertyError(
 			"measurement",
 			c.Measurement,
-			validation.NewRuleError(
+			govy.NewRuleError(
 				fmt.Sprintf(
 					`must be equal to one of '%s' when 'lastsFor' is defined`,
 					strings.Join(lastsForSupportedMeasurements(), ","),
@@ -197,7 +199,7 @@ var measurementWithLastsForValidation = validation.NewSingleRule(func(c AlertCon
 	return nil
 })
 
-var measurementWithRequiredAlertingWindowValidation = validation.NewSingleRule(func(c AlertCondition) error {
+var measurementWithRequiredAlertingWindowValidation = govy.NewRule(func(c AlertCondition) error {
 	isLastsForSupported := false
 	isAlertingWindowSupported := false
 	for _, allowedMeasurement := range lastsForSupportedMeasurements() {
@@ -213,14 +215,14 @@ var measurementWithRequiredAlertingWindowValidation = validation.NewSingleRule(f
 		}
 	}
 	if c.AlertingWindow == "" && isAlertingWindowSupported && !isLastsForSupported {
-		return validation.NewPropertyError(
+		return govy.NewPropertyError(
 			"measurement",
 			c.Measurement,
-			validation.NewRuleError(
+			govy.NewRuleError(
 				fmt.Sprintf(
 					`alerting window is required for measurement '%s'`, c.Measurement,
 				),
-				validation.ErrorCodeRequired,
+				rules.ErrorCodeRequired,
 			),
 		)
 	}
@@ -250,7 +252,7 @@ func transformFloat64Value(v interface{}) (float64, error) {
 	return parsedVal, nil
 }
 
-var operatorValidationRule = validation.NewSingleRule(
+var operatorValidationRule = govy.NewRule(
 	func(v AlertCondition) error {
 		if v.Operator == "" {
 			return nil
@@ -276,7 +278,7 @@ var operatorValidationRule = validation.NewSingleRule(
 		}
 
 		if operator != expectedOperator {
-			return validation.NewRuleError(
+			return govy.NewRuleError(
 				fmt.Sprintf(
 					`measurement '%s' determines operator must be defined with '%s' or left empty`,
 					measurement.String(), expectedOperator.String(),

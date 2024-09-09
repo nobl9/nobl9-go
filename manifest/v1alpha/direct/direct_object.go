@@ -3,7 +3,8 @@
 package direct
 
 import (
-	"github.com/nobl9/nobl9-go/internal/validation"
+	"github.com/nobl9/govy/pkg/govy"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -59,6 +60,6 @@ func (d Direct) SetOrganization(org string) manifest.Object {
 	return d
 }
 
-func (d Direct) GetValidator() validation.Validator[Direct] {
+func (d Direct) GetValidator() govy.Validator[Direct] {
 	return validator
 }
