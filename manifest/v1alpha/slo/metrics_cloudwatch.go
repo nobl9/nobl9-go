@@ -48,7 +48,7 @@ type CloudWatchMetricDimension struct {
 	Value *string `json:"value"`
 }
 
-var cloudWatchValidation = govy.New(
+var cloudWatchValidation = govy.New[CloudWatchMetric](
 	govy.For(govy.GetSelf[CloudWatchMetric]()).
 		Cascade(govy.CascadeModeStop).
 		Rules(govy.NewRule(func(c CloudWatchMetric) error {
@@ -87,7 +87,7 @@ var cloudWatchValidation = govy.New(
 			}()...)),
 )
 
-var cloudWatchSQLConfigValidation = govy.New(
+var cloudWatchSQLConfigValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.SQL }).
 		WithName("sql").
 		Required().
@@ -97,7 +97,7 @@ var cloudWatchSQLConfigValidation = govy.New(
 	govy.WhenDescription("sql is provided"),
 )
 
-var cloudWatchJSONConfigValidation = govy.New(
+var cloudWatchJSONConfigValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
 		WithName("json").
 		Required().
@@ -107,7 +107,7 @@ var cloudWatchJSONConfigValidation = govy.New(
 	govy.WhenDescription("json is provided"),
 )
 
-var cloudWatchStandardConfigValidation = govy.New(
+var cloudWatchStandardConfigValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
 		WithName("namespace").
 		Required().
@@ -157,7 +157,7 @@ var (
 	cloudWatchAccountIDRegexp = regexp.MustCompile(`^\d{12}$`)
 )
 
-var cloudwatchMetricDimensionValidation = govy.New(
+var cloudwatchMetricDimensionValidation = govy.New[CloudWatchMetricDimension](
 	govy.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Name }).
 		WithName("name").
 		Required().

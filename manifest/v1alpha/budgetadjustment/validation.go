@@ -14,10 +14,10 @@ import (
 )
 
 func validate(b BudgetAdjustment) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, b, manifest.KindBudgetAdjustment)
+	return v1alpha.ValidateObject[BudgetAdjustment](validator, b, manifest.KindBudgetAdjustment)
 }
 
-var validator = govy.New(
+var validator = govy.New[BudgetAdjustment](
 	validationV1Alpha.FieldRuleAPIVersion(func(b BudgetAdjustment) manifest.Version { return b.APIVersion }),
 	validationV1Alpha.FieldRuleKind(
 		func(b BudgetAdjustment) manifest.Kind { return b.Kind },
@@ -29,12 +29,12 @@ var validator = govy.New(
 		Include(specValidation),
 )
 
-var metadataValidation = govy.New(
+var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 )
 
-var specValidation = govy.New(
+var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validationV1Alpha.StringDescription()),
@@ -52,7 +52,7 @@ var specValidation = govy.New(
 		Include(filtersValidationRule),
 )
 
-var filtersValidationRule = govy.New(
+var filtersValidationRule = govy.New[Filters](
 	govy.ForSlice(func(f Filters) []SLORef { return f.SLOs }).
 		WithName("slos").
 		Rules(rules.SliceMinLength[[]SLORef](1)).
@@ -62,7 +62,7 @@ var filtersValidationRule = govy.New(
 		}, "SLOs must be unique")),
 )
 
-var sloValidationRule = govy.New(
+var sloValidationRule = govy.New[SLORef](
 	govy.For(func(s SLORef) string { return s.Project }).
 		WithName("project").
 		Required().

@@ -22,7 +22,7 @@ const (
 	errCodeTimeSliceTarget                  = "time_slice_target"
 )
 
-var specMetricsValidation = govy.New(
+var specMetricsValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
 		Rules(govy.NewRule(func(s Spec) error {
@@ -55,7 +55,7 @@ var specMetricsValidation = govy.New(
 		Rules(timeSliceTargetsValidationRule),
 )
 
-var countMetricsSpecValidation = govy.New(
+var countMetricsSpecValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Include(
 			azureMonitorCountMetricsLevelValidation,
@@ -96,7 +96,7 @@ var countMetricsSpecValidation = govy.New(
 			singleQueryMetricSpecValidation),
 )
 
-var rawMetricsValidation = govy.New(
+var rawMetricsValidation = govy.New[RawMetricSpec](
 	govy.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
 		WithName("query").
 		Required().
@@ -108,7 +108,7 @@ var rawMetricsValidation = govy.New(
 			instanaRawMetricValidation),
 )
 
-var countMetricsValidation = govy.New(
+var countMetricsValidation = govy.New[MetricSpec](
 	govy.For(govy.GetSelf[MetricSpec]()).
 		Include(
 			pingdomCountMetricsValidation,
@@ -116,13 +116,13 @@ var countMetricsValidation = govy.New(
 			instanaCountMetricsValidation),
 )
 
-var singleQueryMetricSpecValidation = govy.New(
+var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
 		WithName("splunk").
 		Include(splunkSingleQueryValidation),
 )
 
-var metricSpecValidation = govy.New(
+var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AppDynamicsMetric { return m.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),

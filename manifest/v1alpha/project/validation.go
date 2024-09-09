@@ -9,10 +9,10 @@ import (
 )
 
 func validate(p Project) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, p, manifest.KindProject)
+	return v1alpha.ValidateObject[Project](validator, p, manifest.KindProject)
 }
 
-var validator = govy.New(
+var validator = govy.New[Project](
 	validationV1Alpha.FieldRuleAPIVersion(func(p Project) manifest.Version { return p.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(p Project) manifest.Kind { return p.Kind }, manifest.KindProject),
 	validationV1Alpha.FieldRuleMetadataName(func(p Project) string { return p.Metadata.Name }),
