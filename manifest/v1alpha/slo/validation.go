@@ -336,10 +336,10 @@ var objectiveValidation = govy.New[Objective](
 		Rules(rules.GT(0.0), rules.LTE(1.0)),
 	govy.ForPointer(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
 		WithName("countMetrics").
-		Include(countMetricsSpecValidation),
+		Include(CountMetricsSpecValidation),
 	govy.ForPointer(func(o Objective) *RawMetricSpec { return o.RawMetric }).
 		WithName("rawMetric").
-		Include(rawMetricsValidation),
+		Include(RawMetricsValidation),
 )
 
 var rawMetricObjectiveValidation = govy.New[Objective](
