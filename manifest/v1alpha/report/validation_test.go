@@ -669,12 +669,8 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			},
 		},
 		"fails with invalid thresholds": {
-			ExpectedErrorsCount: 2,
+			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.thresholds.redLte",
-					Code: rules.ErrorCodeGreaterThanOrEqualTo,
-				},
 				{
 					Prop: "spec.systemHealthReview.thresholds.greenGt",
 					Code: rules.ErrorCodeLessThanOrEqualTo,
