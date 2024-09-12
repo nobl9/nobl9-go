@@ -8,7 +8,7 @@ type SLOListResponse struct {
 type Links struct {
 	Self   string `json:"self"`
 	Next   string `json:"next"`
-	Cursor string
+	Cursor string `json:"cursor"`
 }
 
 type SLODetails struct {

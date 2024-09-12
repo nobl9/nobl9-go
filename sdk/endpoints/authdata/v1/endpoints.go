@@ -53,7 +53,7 @@ func (e endpoints) GetAgentCredentials(
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return creds, errors.Wrap(err, "failed to execute request") // TODO PC-14087: replace with 'err'?
+		return creds, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
 	if err = sdk.ProcessResponseErrors(resp); err != nil {
