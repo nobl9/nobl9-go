@@ -4,8 +4,10 @@ package slostatusapi
 
 import (
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v1"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v2"
 )
 
 type Versions interface {
 	V1() v1.Endpoints
+	V2() v2.Endpoints
 }
