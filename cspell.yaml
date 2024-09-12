@@ -34,6 +34,7 @@ words:
   - 00u2y4e4atkzaYkXP4x8
   - BYHOUR
   - BYMINUTE
+  - BYSECOND
   - CONNECTIONFAILURES
   - CONNECTIONSESTABLISHED
   - CONNECTIONSUCCESSES
@@ -54,6 +55,7 @@ words:
   - awsiam
   - budgetadjustment
   - byday
+  - bysecond
   - clientcreds
   - codeowners
   - consumergroup
