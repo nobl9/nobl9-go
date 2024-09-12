@@ -298,7 +298,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
-			name: "rrule wih dtstart trows transform error",
+			name: "rrule with dtstart trows transform error",
 			spec: Spec{
 				FirstEventStart: time.Now(),
 				Duration:        "1m",
