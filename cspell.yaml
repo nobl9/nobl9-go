@@ -32,12 +32,6 @@ ignorePaths:
   - "docs/mock_example/mocks/*"
 words:
   - 00u2y4e4atkzaYkXP4x8
-  - CONNECTIONFAILURES
-  - CONNECTIONSESTABLISHED
-  - CONNECTIONSUCCESSES
-  - DzpxcSRh
-  - MAXRTT
-  - TIMEMAX
   - aggs
   - alertmethod
   - alertpolicy
@@ -50,9 +44,14 @@ words:
   - authdata
   - awsiam
   - budgetadjustment
+  - BYHOUR
+  - BYMINUTE
   - byday
   - clientcreds
   - codeowners
+  - CONNECTIONFAILURES
+  - CONNECTIONSESTABLISHED
+  - CONNECTIONSUCCESSES
   - consumergroup
   - cooldown
   - countasbad
@@ -66,6 +65,7 @@ words:
   - dnssec
   - doublestar
   - dynatrace
+  - DzpxcSRh
   - endef
   - enduml
   - errgroup
@@ -92,13 +92,14 @@ words:
   - instana
   - iowait
   - jsonyaml
-  - jwks
   - jwkset
+  - jwks
   - keyfunc
   - lightstep
   - logfmt
   - logql
   - mapstructure
+  - MAXRTT
   - memstats
   - mktemp
   - mockgen
@@ -148,6 +149,7 @@ words:
   - submatches
   - sumologic
   - testutils
+  - TIMEMAX
   - timeseries
   - timeslice
   - timeslices
