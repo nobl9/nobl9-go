@@ -444,9 +444,9 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name:          "frequency less than hourly for single event returns no error",
+			name:          "frequency less than hourly returns error",
 			rule:          "FREQ=MINUTELY;INTERVAL=1",
-			expectedError: "",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
 		},
 		{
 			name:          "frequency less than hourly returns error",
@@ -455,7 +455,7 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 		},
 		{
 			name:          "frequency less than hourly for single event returns no error",
-			rule:          "FREQ=MINUTELY;INTERVAL=59",
+			rule:          "FREQ=MINUTELY;INTERVAL=59;COUNT=1",
 			expectedError: "",
 		},
 		{
@@ -480,7 +480,12 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 		},
 		{
 			name:          "frequency greater than hourly in minutes no error",
-			rule:          "FREQ=MINUTELY;INTERVAL=61",
+			rule:          "FREQ=MINUTELY;INTERVAL=61;COUNT=10",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in seconds no error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3600;COUNT=10",
 			expectedError: "",
 		},
 		{
@@ -489,13 +494,18 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 			expectedError: "",
 		},
 		{
+			name:          "frequency shorter than hourly in seconds returns error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3500;COUNT=10",
+			expectedError: "interval must be at least 3600 seconds for secondly frequency",
+		},
+		{
 			name:          "minutely with by hour returns error",
 			rule:          "FREQ=MINUTELY;BYHOUR=6,8,9,10,11,12,13,14,15,16;COUNT=10",
 			expectedError: "interval must be at least 60 minutes for minutely frequency",
 		},
 		{
 			name:          "minutely with by hour returns error",
-			rule:          "FREQ=MINUTELY;INTERVAL=10;BYHOUR=6,8,9,10,11,12,13,14,15,16;COUNT=10",
+			rule:          "FREQ=MINUTELY;INTERVAL=10;BYHOUR=6,8,9,10,11,12,13,14,15,16",
 			expectedError: "interval must be at least 60 minutes for minutely frequency",
 		},
 		{

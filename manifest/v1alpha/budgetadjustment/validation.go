@@ -80,7 +80,7 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 		return nil
 	}
 
-	if rule.Options.Count <= 1 {
+	if rule.Options.Count == 1 {
 		return nil
 	}
 
