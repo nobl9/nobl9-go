@@ -55,7 +55,7 @@ var specMetricsValidation = govy.New(
 		Rules(timeSliceTargetsValidationRule),
 )
 
-var countMetricsSpecValidation = govy.New(
+var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Include(
 			azureMonitorCountMetricsLevelValidation,
@@ -96,7 +96,7 @@ var countMetricsSpecValidation = govy.New(
 			singleQueryMetricSpecValidation),
 )
 
-var rawMetricsValidation = govy.New(
+var RawMetricsValidation = govy.New[RawMetricSpec](
 	govy.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
 		WithName("query").
 		Required().
