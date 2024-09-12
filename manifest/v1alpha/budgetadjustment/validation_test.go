@@ -509,8 +509,18 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 			expectedError: "interval must be at least 60 minutes for minutely frequency",
 		},
 		{
+			name:          "hourly with by second returns error",
+			rule:          "FREQ=HOURLY;BYSECOND=6,8,9,10,11,12,13,14,15,16",
+			expectedError: "byminute and bysecond are not supported",
+		},
+		{
 			name:          "hourly with by minute returns no error",
 			rule:          "FREQ=HOURLY;BYHOUR=6,8,9,10,11,12,13,14,15,16;BYMINUTE=6,8,9,10,11,12,13,14,15,16,59;COUNT=10",
+			expectedError: "byminute and bysecond are not supported",
+		},
+		{
+			name:          "single by minute is supported",
+			rule:          "FREQ=HOURLY;BYMINUTE=6;COUNT=10",
 			expectedError: "",
 		},
 	}

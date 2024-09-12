@@ -92,5 +92,9 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 		return errors.New("interval must be at least 3600 seconds for secondly frequency")
 	}
 
+	if len(rule.Options.Byminute) > 1 || len(rule.Options.Bysecond) > 0 {
+		return errors.New("byminute and bysecond are not supported")
+	}
+
 	return nil
 })
