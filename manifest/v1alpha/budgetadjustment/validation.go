@@ -3,6 +3,7 @@ package budgetadjustment
 import (
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -46,7 +47,8 @@ var specValidation = govy.New[Spec](
 		Required().
 		Rules(rules.DurationPrecision(time.Minute)),
 	govy.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
-		WithName("rrule"),
+		WithName("rrule").
+		Rules(atLeastHourlyFreq),
 	govy.For(func(s Spec) Filters { return s.Filters }).
 		WithName("filters").
 		Include(filtersValidationRule),
@@ -72,3 +74,27 @@ var sloValidationRule = govy.New[SLORef](
 		Required().
 		Rules(rules.StringDNSLabel()),
 )
+
+var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
+	if rule == nil {
+		return nil
+	}
+
+	if rule.Options.Count == 1 {
+		return nil
+	}
+
+	if rule.Options.Freq == rrule.MINUTELY && rule.Options.Interval < 60 {
+		return errors.New("interval must be at least 60 minutes for minutely frequency")
+	}
+
+	if rule.Options.Freq == rrule.SECONDLY && rule.Options.Interval < 3600 {
+		return errors.New("interval must be at least 3600 seconds for secondly frequency")
+	}
+
+	if len(rule.Options.Byminute) > 1 || len(rule.Options.Bysecond) > 0 {
+		return errors.New("byminute and bysecond are not supported")
+	}
+
+	return nil
+})

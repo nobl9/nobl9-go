@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/teambition/rrule-go"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 
@@ -277,6 +278,61 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		},
 		{
+			name: "invalid freq in rrule",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=MINUTELY;INTERVAL=2;COUNT=10",
+				Filters: Filters{
+					SLOs: []SLORef{{
+						Name:    "test",
+						Project: "project",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.rrule",
+					Message: "interval must be at least 60 minutes for minutely frequency",
+				},
+			},
+		},
+		{
+			name: "rrule with dtstart trows transform error",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "DTSTART:20240909T065900Z\\nRRULE:FREQ=MINUTELY;BYHOUR=6,8,9,10,11,12,13,14,15,16;COUNT=10",
+				Filters: Filters{
+					SLOs: []SLORef{{
+						Name:    "test",
+						Project: "project",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.rrule",
+					Code: "transform",
+				},
+			},
+		},
+		{
+			name: "proper freq in rrule",
+			spec: Spec{
+				FirstEventStart: time.Now(),
+				Duration:        "1m",
+				Rrule:           "FREQ=HOURLY;INTERVAL=1",
+				Filters: Filters{
+					SLOs: []SLORef{{
+						Name:    "test",
+						Project: "project",
+					}},
+				},
+			},
+			expectedErrors: []testutils.ExpectedError{},
+		},
+		{
 			name: "duplicate slo",
 			spec: Spec{
 				FirstEventStart: time.Now(),
@@ -373,5 +429,116 @@ func validBudgetAdjustment() BudgetAdjustment {
 				},
 			},
 		},
+	}
+}
+
+func TestAtLeastHourlyFreq(t *testing.T) {
+	tests := []struct {
+		name          string
+		rule          string
+		expectedError string
+	}{
+		{
+			name:          "nil rule returns nil error",
+			rule:          "",
+			expectedError: "",
+		},
+		{
+			name:          "frequency less than hourly returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=1",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
+		},
+		{
+			name:          "frequency less than hourly returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=59;COUNT=10",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
+		},
+		{
+			name:          "frequency less than hourly for single event returns no error",
+			rule:          "FREQ=MINUTELY;INTERVAL=59;COUNT=1",
+			expectedError: "",
+		},
+		{
+			name:          "single occurrence rrule returns no error",
+			rule:          "FREQ=MINUTELY;COUNT=1",
+			expectedError: "",
+		},
+		{
+			name:          "two times minutely occurrence rrule returns error",
+			rule:          "FREQ=MINUTELY;COUNT=2",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
+		},
+		{
+			name:          "hourly frequency returns no error",
+			rule:          "FREQ=HOURLY;INTERVAL=1",
+			expectedError: "",
+		},
+		{
+			name:          "daily frequency returns no error",
+			rule:          "FREQ=DAILY;INTERVAL=1",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in minutes no error",
+			rule:          "FREQ=MINUTELY;INTERVAL=61;COUNT=10",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in seconds no error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3600;COUNT=10",
+			expectedError: "",
+		},
+		{
+			name:          "frequency greater than hourly in seconds no error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3600",
+			expectedError: "",
+		},
+		{
+			name:          "frequency shorter than hourly in seconds returns error",
+			rule:          "FREQ=SECONDLY;INTERVAL=3500;COUNT=10",
+			expectedError: "interval must be at least 3600 seconds for secondly frequency",
+		},
+		{
+			name:          "minutely with by hour returns error",
+			rule:          "FREQ=MINUTELY;BYHOUR=6,8,9,10,11,12,13,14,15,16;COUNT=10",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
+		},
+		{
+			name:          "minutely with by hour returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=10;BYHOUR=6,8,9,10,11,12,13,14,15,16",
+			expectedError: "interval must be at least 60 minutes for minutely frequency",
+		},
+		{
+			name:          "hourly with by second returns error",
+			rule:          "FREQ=HOURLY;BYSECOND=6,8,9,10,11,12,13,14,15,16",
+			expectedError: "byminute and bysecond are not supported",
+		},
+		{
+			name:          "hourly with by minute returns no error",
+			rule:          "FREQ=HOURLY;BYHOUR=6,8,9,10,11,12,13,14,15,16;BYMINUTE=6,8,9,10,11,12,13,14,15,16,59;COUNT=10",
+			expectedError: "byminute and bysecond are not supported",
+		},
+		{
+			name:          "single by minute is supported",
+			rule:          "FREQ=HOURLY;BYMINUTE=6;COUNT=10",
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rule *rrule.RRule
+			var err error
+			if tt.rule != "" {
+				rule, err = rrule.StrToRRule(tt.rule)
+				assert.NoError(t, err)
+			}
+			err = atLeastHourlyFreq.Validate(rule)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
 	}
 }
