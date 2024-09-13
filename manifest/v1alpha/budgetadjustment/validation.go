@@ -80,18 +80,20 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 		return nil
 	}
 
-	var dt1, dt2 time.Time
-	var ok bool
-	n := rule.Iterator()
-	if dt1, ok = n(); !ok {
-		return nil
-	}
-	if dt2, ok = n(); !ok {
+	if rule.Options.Count == 1 {
 		return nil
 	}
 
-	if dt2.Sub(dt1) < time.Hour {
-		return errors.New("rrule must have at least hourly frequency")
+	if rule.Options.Freq == rrule.MINUTELY && rule.Options.Interval < 60 {
+		return errors.New("interval must be at least 60 minutes for minutely frequency")
+	}
+
+	if rule.Options.Freq == rrule.SECONDLY && rule.Options.Interval < 3600 {
+		return errors.New("interval must be at least 3600 seconds for secondly frequency")
+	}
+
+	if len(rule.Options.Byminute) > 1 || len(rule.Options.Bysecond) > 0 {
+		return errors.New("byminute and bysecond are not supported")
 	}
 
 	return nil

@@ -78,6 +78,11 @@ func ExampleReport_systemHealthReview() {
 						},
 					},
 				},
+				Thresholds: report.Thresholds{
+					RedLessThanOrEqual: ptr(0.8),
+					GreenGreaterThan:   ptr(0.95),
+					ShowNoData:         false,
+				},
 			},
 		},
 	)
@@ -135,6 +140,10 @@ func ExampleReport_systemHealthReview() {
 	//       labels:
 	//         key3:
 	//         - value1
+	//     thresholds:
+	//       redLte: 0.8
+	//       greenGt: 0.95
+	//       showNoData: false
 }
 
 func ExampleReport_sloHistory() {
