@@ -27,7 +27,7 @@ const (
 	sumoLogicTypeLogs   = "logs"
 )
 
-var sumoLogicCountMetricsLevelValidation = govy.New(
+var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			// Quantization must be equal for good and total.
@@ -68,7 +68,7 @@ var sumoLogicCountMetricsLevelValidation = govy.New(
 	govy.WhenDescription("countMetrics is sumoLogic"),
 )
 
-var sumoLogicValidation = govy.New(
+var sumoLogicValidation = govy.New[SumoLogicMetric](
 	govy.For(govy.GetSelf[SumoLogicMetric]()).
 		Include(sumoLogicMetricTypeValidation).
 		Include(sumoLogicLogsTypeValidation),
@@ -80,7 +80,7 @@ var sumoLogicValidation = govy.New(
 
 var sumoLogicValidRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
 
-var sumoLogicMetricTypeValidation = govy.New(
+var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
 	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
 		Required(),
@@ -109,7 +109,7 @@ var sumoLogicMetricTypeValidation = govy.New(
 		govy.WhenDescription("type is '%s'", sumoLogicTypeMetric),
 	)
 
-var sumoLogicLogsTypeValidation = govy.New(
+var sumoLogicLogsTypeValidation = govy.New[SumoLogicMetric](
 	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
 		WithName("query").
 		Required().

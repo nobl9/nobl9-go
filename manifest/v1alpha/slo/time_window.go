@@ -53,7 +53,7 @@ const (
 	maximumCalendarTimeWindowSize = 366 * 24 * time.Hour // 366 days
 )
 
-var timeWindowsValidation = govy.New(
+var timeWindowsValidation = govy.New[TimeWindow](
 	govy.For(func(t TimeWindow) string { return t.Unit }).
 		WithName("unit").
 		Required().
@@ -63,7 +63,7 @@ var timeWindowsValidation = govy.New(
 		Rules(rules.GT(0)),
 	govy.ForPointer(func(t TimeWindow) *Calendar { return t.Calendar }).
 		WithName("calendar").
-		Include(govy.New(
+		Include(govy.New[Calendar](
 			govy.For(func(c Calendar) string { return c.StartTime }).
 				WithName("startTime").
 				Required().

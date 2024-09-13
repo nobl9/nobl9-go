@@ -11,7 +11,7 @@ type ElasticsearchMetric struct {
 	Query *string `json:"query"`
 }
 
-var elasticsearchValidation = govy.New(
+var elasticsearchValidation = govy.New[ElasticsearchMetric](
 	govy.ForPointer(func(e ElasticsearchMetric) *string { return e.Index }).
 		WithName("index").
 		Required().
