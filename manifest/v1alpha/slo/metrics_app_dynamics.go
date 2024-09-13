@@ -19,7 +19,7 @@ type AppDynamicsMetric struct {
 	MetricPath      *string `json:"metricPath"`
 }
 
-var appDynamicsCountMetricsLevelValidation = govy.New(
+var appDynamicsCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
 		govy.NewRule(func(c CountMetricsSpec) error {
 			total := c.TotalMetric
@@ -55,7 +55,7 @@ var appDynamicsCountMetricsLevelValidation = govy.New(
 
 var appDynamicsMetricPathWildcardRegex = regexp.MustCompile(`([^\s|]\*)|(\*[^\s|])`)
 
-var appDynamicsValidation = govy.New(
+var appDynamicsValidation = govy.New[AppDynamicsMetric](
 	govy.ForPointer(func(a AppDynamicsMetric) *string { return a.ApplicationName }).
 		WithName("applicationName").
 		Required().

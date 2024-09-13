@@ -10,7 +10,7 @@ type DynatraceMetric struct {
 	MetricSelector *string `json:"metricSelector"`
 }
 
-var dynatraceValidation = govy.New(
+var dynatraceValidation = govy.New[DynatraceMetric](
 	govy.ForPointer(func(d DynatraceMetric) *string { return d.MetricSelector }).
 		WithName("metricSelector").
 		Required().

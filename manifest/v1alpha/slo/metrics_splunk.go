@@ -16,7 +16,7 @@ type SplunkMetric struct {
 	Query *string `json:"query"`
 }
 
-var splunkCountMetricsLevelValidation = govy.New(
+var splunkCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			govy.NewRule(func(c CountMetricsSpec) error {
@@ -32,7 +32,7 @@ var splunkCountMetricsLevelValidation = govy.New(
 	govy.WhenDescription("countMetrics is splunk"),
 )
 
-var splunkValidation = govy.New(
+var splunkValidation = govy.New[SplunkMetric](
 	govy.ForPointer(func(s SplunkMetric) *string { return s.Query }).
 		WithName("query").
 		Required().
@@ -46,7 +46,7 @@ var splunkValidation = govy.New(
 				WithDetails(`query has to contain index=<NAME> or "index"=<NAME>`)),
 )
 
-var splunkSingleQueryValidation = govy.New(
+var splunkSingleQueryValidation = govy.New[SplunkMetric](
 	govy.ForPointer(func(s SplunkMetric) *string { return s.Query }).
 		WithName("query").
 		Required().

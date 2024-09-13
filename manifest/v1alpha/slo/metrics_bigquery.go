@@ -16,7 +16,7 @@ type BigQueryMetric struct {
 	Location  string `json:"location"`
 }
 
-var bigQueryCountMetricsLevelValidation = govy.New(
+var bigQueryCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			govy.NewRule(func(c CountMetricsSpec) error {
@@ -36,7 +36,7 @@ var bigQueryCountMetricsLevelValidation = govy.New(
 	govy.WhenDescription("countMetrics is bigQuery"),
 )
 
-var bigQueryValidation = govy.New(
+var bigQueryValidation = govy.New[BigQueryMetric](
 	govy.For(func(b BigQueryMetric) string { return b.ProjectID }).
 		WithName("projectId").
 		Required().

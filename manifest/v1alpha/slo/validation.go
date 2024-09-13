@@ -22,10 +22,10 @@ func validate(s SLO) *v1alpha.ObjectError {
 			}
 		}
 	}
-	return v1alpha.ValidateObject(validator, s, manifest.KindSLO)
+	return v1alpha.ValidateObject[SLO](validator, s, manifest.KindSLO)
 }
 
-var validator = govy.New(
+var validator = govy.New[SLO](
 	validationV1Alpha.FieldRuleAPIVersion(func(s SLO) manifest.Version { return s.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(s SLO) manifest.Kind { return s.Kind }, manifest.KindSLO),
 	govy.For(func(s SLO) SLO { return s }).
@@ -40,7 +40,7 @@ var validator = govy.New(
 		Include(specValidation),
 )
 
-var metadataValidation = govy.New(
+var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
@@ -68,7 +68,7 @@ func getCompositeObjectiveComponents(s SLO) []CompositeObjective {
 	return make([]CompositeObjective, 0)
 }
 
-var sloValidationComposite = govy.New(
+var sloValidationComposite = govy.New[SLO](
 	govy.For(govy.GetSelf[SLO]()).
 		Rules(
 			govy.NewRule(func(s SLO) error {
@@ -120,7 +120,7 @@ var sloValidationComposite = govy.New(
 	govy.WhenDescription("at least one composite objective is defined"),
 )
 
-var specValidation = govy.New(
+var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
 		Include(specMetricsValidation),
@@ -198,7 +198,7 @@ var specValidation = govy.New(
 		),
 )
 
-var attachmentValidation = govy.New(
+var attachmentValidation = govy.New[Attachment](
 	govy.For(func(a Attachment) string { return a.URL }).
 		WithName("url").
 		Required().
@@ -208,14 +208,14 @@ var attachmentValidation = govy.New(
 		Rules(rules.StringLength(0, 63)),
 )
 
-var compositeValidation = govy.New(
+var compositeValidation = govy.New[Composite](
 	govy.ForPointer(func(c Composite) *float64 { return c.BudgetTarget }).
 		WithName("target").
 		Required().
 		Rules(rules.GT(0.0), rules.LT(1.0)),
 	govy.ForPointer(func(c Composite) *CompositeBurnRateCondition { return c.BurnRateCondition }).
 		WithName("burnRateCondition").
-		Include(govy.New(
+		Include(govy.New[CompositeBurnRateCondition](
 			govy.For(func(b CompositeBurnRateCondition) float64 { return b.Value }).
 				WithName("value").
 				Rules(rules.GTE(0.0), rules.LTE(1000.0)),
@@ -253,7 +253,7 @@ var specCompositeValidationRule = govy.NewRule(func(s Spec) error {
 	return nil
 })
 
-var compositeObjectiveRule = govy.New(
+var compositeObjectiveRule = govy.New[CompositeObjective](
 	govy.For(func(c CompositeObjective) string { return c.Project }).
 		WithName("project").
 		Required().
@@ -279,16 +279,16 @@ var compositeObjectiveRule = govy.New(
 		)),
 )
 
-var anomalyConfigValidation = govy.New(
+var anomalyConfigValidation = govy.New[AnomalyConfig](
 	govy.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
-		Include(govy.New(
+		Include(govy.New[AnomalyConfigNoData](
 			govy.ForSlice(func(a AnomalyConfigNoData) []AnomalyConfigAlertMethod { return a.AlertMethods }).
 				WithName("alertMethods").
 				Cascade(govy.CascadeModeStop).
 				Rules(rules.SliceMinLength[[]AnomalyConfigAlertMethod](1)).
 				Rules(rules.SliceUnique(rules.HashFuncSelf[AnomalyConfigAlertMethod]())).
-				IncludeForEach(govy.New(
+				IncludeForEach(govy.New[AnomalyConfigAlertMethod](
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
 						Required().
@@ -300,10 +300,10 @@ var anomalyConfigValidation = govy.New(
 		)),
 )
 
-var indicatorValidation = govy.New(
+var indicatorValidation = govy.New[Indicator](
 	govy.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
 		WithName("metricSource").
-		Include(govy.New(
+		Include(govy.New[MetricSourceSpec](
 			govy.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
 				Required().
@@ -322,7 +322,7 @@ var indicatorValidation = govy.New(
 		Include(metricSpecValidation),
 )
 
-var objectiveValidation = govy.New(
+var objectiveValidation = govy.New[Objective](
 	govy.For(govy.GetSelf[Objective]()).
 		Include(rawMetricObjectiveValidation),
 	govy.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
@@ -342,7 +342,7 @@ var objectiveValidation = govy.New(
 		Include(RawMetricsValidation),
 )
 
-var rawMetricObjectiveValidation = govy.New(
+var rawMetricObjectiveValidation = govy.New[Objective](
 	govy.ForPointer(func(o Objective) *float64 { return o.ObjectiveBase.Value }).
 		WithName("value").
 		Required(),
@@ -356,7 +356,7 @@ var rawMetricObjectiveValidation = govy.New(
 		govy.WhenDescription("rawMetric is defined"),
 	)
 
-var objectiveBaseValidation = govy.New(
+var objectiveBaseValidation = govy.New[ObjectiveBase](
 	govy.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
 		OmitEmpty().
@@ -374,7 +374,7 @@ func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 	return *p1 == *p2
 }
 
-var specValidationNonComposite = govy.New(
+var specValidationNonComposite = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Required().
@@ -384,7 +384,7 @@ var specValidationNonComposite = govy.New(
 	govy.WhenDescription("none of the objectives is of composite type"),
 )
 
-var specValidationComposite = govy.New(
+var specValidationComposite = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Indicator { return s.Indicator }).
 		WithName("indicator").
 		Rules(
@@ -403,12 +403,12 @@ var specValidationComposite = govy.New(
 		WithName("objectives").
 		Rules(rules.SliceLength[[]Objective](1, 1).
 			WithMessage("this SLO contains a composite objective. No more objectives can be added to it")).
-		IncludeForEach(govy.New(
+		IncludeForEach(govy.New[Objective](
 			govy.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
 				Include(objectiveBaseValidation),
 			govy.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
-				Include(govy.New(
+				Include(govy.New[CompositeSpec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
 						Required(),

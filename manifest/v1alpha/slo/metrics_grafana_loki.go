@@ -10,7 +10,7 @@ type GrafanaLokiMetric struct {
 	Logql *string `json:"logql"`
 }
 
-var grafanaLokiValidation = govy.New(
+var grafanaLokiValidation = govy.New[GrafanaLokiMetric](
 	govy.ForPointer(func(g GrafanaLokiMetric) *string { return g.Logql }).
 		WithName("logql").
 		Required().

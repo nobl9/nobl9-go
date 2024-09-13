@@ -24,13 +24,13 @@ const (
 	ThousandEyesDNSSECValid             = "dns-dnssec-valid"
 )
 
-var thousandEyesCountMetricsValidation = govy.New(
+var thousandEyesCountMetricsValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
 		WithName("thousandEyes").
 		Rules(rules.Forbidden[ThousandEyesMetric]()),
 )
 
-var thousandEyesRawMetricValidation = govy.New(
+var thousandEyesRawMetricValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *ThousandEyesMetric { return m.ThousandEyes }).
 		WithName("thousandEyes").
 		Include(thousandEyesValidation),
@@ -49,7 +49,7 @@ var supportedThousandEyesTestTypes = []string{
 	ThousandEyesDNSSECValid,
 }
 
-var thousandEyesValidation = govy.New(
+var thousandEyesValidation = govy.New[ThousandEyesMetric](
 	govy.ForPointer(func(m ThousandEyesMetric) *int64 { return m.TestID }).
 		WithName("testID").
 		Required().

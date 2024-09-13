@@ -9,7 +9,7 @@ type GenericMetric struct {
 	Query *string `json:"query"`
 }
 
-var genericValidation = govy.New(
+var genericValidation = govy.New[GenericMetric](
 	govy.ForPointer(func(e GenericMetric) *string { return e.Query }).
 		WithName("query").
 		Required().

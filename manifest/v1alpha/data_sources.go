@@ -66,7 +66,7 @@ type HistoricalDataRetrieval struct {
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
-	return govy.New(
+	return govy.New[HistoricalDataRetrieval](
 		govy.For(govy.GetSelf[HistoricalDataRetrieval]()).
 			Rules(defaultDataRetrievalDurationValidation),
 		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
@@ -80,7 +80,7 @@ func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval]
 	)
 }
 
-var historicalRetrievalDurationValidation = govy.New(
+var historicalRetrievalDurationValidation = govy.New[HistoricalRetrievalDuration](
 	govy.ForPointer(func(h HistoricalRetrievalDuration) *int { return h.Value }).
 		WithName("value").
 		Required().
@@ -131,7 +131,7 @@ var maxQueryDelay = Duration{
 }
 
 func QueryDelayValidation() govy.Validator[QueryDelay] {
-	return govy.New(
+	return govy.New[QueryDelay](
 		govy.For(func(q QueryDelay) Duration { return q.Duration }).
 			Rules(govy.NewRule(func(d Duration) error {
 				if d.Duration() > maxQueryDelay.Duration() {

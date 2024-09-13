@@ -15,7 +15,7 @@ type HoneycombMetric struct {
 	Attribute   string `json:"attribute,omitempty"`
 }
 
-var honeycombValidation = govy.New(
+var honeycombValidation = govy.New[HoneycombMetric](
 	govy.For(func(h HoneycombMetric) string { return h.Calculation }).
 		WithName("calculation").
 		Required().
@@ -28,7 +28,7 @@ var supportedHoneycombCalculationTypes = []string{
 	"RATE_AVG", "RATE_SUM", "RATE_MAX",
 }
 
-var attributeRequired = govy.New(
+var attributeRequired = govy.New[HoneycombMetric](
 	govy.For(func(h HoneycombMetric) string { return h.Attribute }).
 		WithName("attribute").
 		Required().

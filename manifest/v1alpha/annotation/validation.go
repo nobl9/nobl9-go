@@ -12,10 +12,10 @@ import (
 )
 
 func validate(p Annotation) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, p, manifest.KindAnnotation)
+	return v1alpha.ValidateObject[Annotation](validator, p, manifest.KindAnnotation)
 }
 
-var validator = govy.New(
+var validator = govy.New[Annotation](
 	validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
 	govy.For(func(p Annotation) Metadata { return p.Metadata }).
@@ -25,7 +25,7 @@ var validator = govy.New(
 		Include(specValidation),
 )
 
-var metadataValidation = govy.New(
+var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	govy.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
@@ -33,7 +33,7 @@ var metadataValidation = govy.New(
 		Rules(rules.StringDNSLabel()),
 )
 
-var specValidation = govy.New(
+var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Slo }).
 		WithName("slo").
 		Required().

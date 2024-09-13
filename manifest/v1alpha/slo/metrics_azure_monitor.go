@@ -54,7 +54,7 @@ var supportedAzureMonitorDataTypes = []string{
 
 var azureMonitorResourceIDRegex = regexp.MustCompile(`^/subscriptions/[a-zA-Z0-9-]+/resourceGroups/[a-zA-Z0-9-._()]+/providers/[a-zA-Z0-9-.()_]+/[a-zA-Z0-9-_()]+/[a-zA-Z0-9-_()]+$`) //nolint:lll
 
-var azureMonitorValidation = govy.New(
+var azureMonitorValidation = govy.New[AzureMonitorMetric](
 	govy.For(govy.GetSelf[AzureMonitorMetric]()).
 		Include(azureMonitorMetricDataTypeValidation).
 		Include(azureMonitorMetricLogsDataTypeValidation),
@@ -64,7 +64,7 @@ var azureMonitorValidation = govy.New(
 		Rules(rules.OneOf(supportedAzureMonitorDataTypes...)),
 )
 
-var azureMonitorMetricDataTypeValidation = govy.New(
+var azureMonitorMetricDataTypeValidation = govy.New[AzureMonitorMetric](
 	govy.For(func(a AzureMonitorMetric) string { return a.MetricName }).
 		WithName("metricName").
 		Required(),
@@ -98,7 +98,7 @@ var azureMonitorMetricDataTypeValidation = govy.New(
 
 var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
 
-var azureMonitorMetricLogAnalyticsWorkspaceValidation = govy.New(
+var azureMonitorMetricLogAnalyticsWorkspaceValidation = govy.New[AzureMonitorMetricLogAnalyticsWorkspace](
 	govy.For(func(a AzureMonitorMetricLogAnalyticsWorkspace) string { return a.SubscriptionID }).
 		WithName("subscriptionId").
 		Required().
@@ -113,7 +113,7 @@ var azureMonitorMetricLogAnalyticsWorkspaceValidation = govy.New(
 		Rules(rules.StringUUID()),
 )
 
-var azureMonitorMetricLogsDataTypeValidation = govy.New(
+var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 	govy.ForPointer(func(a AzureMonitorMetric) *AzureMonitorMetricLogAnalyticsWorkspace { return a.Workspace }).
 		WithName("workspace").
 		Required().
@@ -147,7 +147,7 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New(
 	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
 )
 
-var azureMonitorMetricDimensionValidation = govy.New(
+var azureMonitorMetricDimensionValidation = govy.New[AzureMonitorMetricDimension](
 	govy.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
 		WithName("name").
 		Required().
@@ -164,7 +164,7 @@ var azureMonitorMetricDimensionValidation = govy.New(
 			rules.StringASCII()),
 )
 
-var azureMonitorCountMetricsLevelValidation = govy.New(
+var azureMonitorCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
 		govy.NewRule(func(c CountMetricsSpec) error {
 			total := c.TotalMetric
