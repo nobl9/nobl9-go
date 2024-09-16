@@ -47,7 +47,7 @@ const (
 	instanaMetricRetrievalMethodSnapshot = "snapshot"
 )
 
-var instanaCountMetricsLevelValidation = govy.New(
+var instanaCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			govy.NewRule(func(c CountMetricsSpec) error {
@@ -85,9 +85,9 @@ var instanaValidation = govy.ForPointer(func(m MetricSpec) *InstanaMetric { retu
 		return nil
 	}))
 
-var instanaCountMetricsValidation = govy.New(
+var instanaCountMetricsValidation = govy.New[MetricSpec](
 	instanaValidation.
-		Include(govy.New(
+		Include(govy.New[InstanaMetric](
 			govy.For(func(i InstanaMetric) string { return i.MetricType }).
 				WithName("metricType").
 				Required().
@@ -102,9 +102,9 @@ var instanaCountMetricsValidation = govy.New(
 		)),
 )
 
-var instanaRawMetricValidation = govy.New(
+var instanaRawMetricValidation = govy.New[MetricSpec](
 	instanaValidation.
-		Include(govy.New(
+		Include(govy.New[InstanaMetric](
 			govy.For(func(i InstanaMetric) string { return i.MetricType }).
 				WithName("metricType").
 				Required().
@@ -118,7 +118,7 @@ var instanaRawMetricValidation = govy.New(
 		)),
 )
 
-var instanaInfrastructureMetricValidation = govy.New(
+var instanaInfrastructureMetricValidation = govy.New[InstanaInfrastructureMetricType](
 	govy.For(govy.GetSelf[InstanaInfrastructureMetricType]()).
 		Rules(govy.NewRule(func(i InstanaInfrastructureMetricType) error {
 			switch i.MetricRetrievalMethod {
@@ -156,7 +156,7 @@ var validInstanaLatencyAggregations = []string{
 	"p50", "p75", "p90", "p95", "p98", "p99",
 }
 
-var instanaApplicationMetricValidation = govy.New(
+var instanaApplicationMetricValidation = govy.New[InstanaApplicationMetricType](
 	govy.For(govy.GetSelf[InstanaApplicationMetricType]()).
 		Rules(govy.NewRule(func(i InstanaApplicationMetricType) error {
 			switch i.MetricID {
@@ -193,7 +193,7 @@ var instanaApplicationMetricValidation = govy.New(
 	govy.For(func(i InstanaApplicationMetricType) InstanaApplicationMetricGroupBy { return i.GroupBy }).
 		WithName("groupBy").
 		Required().
-		Include(govy.New(
+		Include(govy.New[InstanaApplicationMetricGroupBy](
 			govy.For(func(i InstanaApplicationMetricGroupBy) string { return i.Tag }).
 				WithName("tag").
 				Required(),

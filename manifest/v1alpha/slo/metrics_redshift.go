@@ -17,7 +17,7 @@ type RedshiftMetric struct {
 	Query        *string `json:"query"`
 }
 
-var redshiftCountMetricsLevelValidation = govy.New(
+var redshiftCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
 			govy.NewRule(func(c CountMetricsSpec) error {
@@ -40,7 +40,7 @@ var redshiftCountMetricsLevelValidation = govy.New(
 	govy.WhenDescription("countMetrics is redshift"),
 )
 
-var redshiftValidation = govy.New(
+var redshiftValidation = govy.New[RedshiftMetric](
 	govy.ForPointer(func(r RedshiftMetric) *string { return r.Region }).
 		WithName("region").
 		Required().

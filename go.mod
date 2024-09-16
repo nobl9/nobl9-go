@@ -4,8 +4,8 @@ go 1.22
 
 require (
 	github.com/BurntSushi/toml v1.4.0
-	github.com/MicahParks/jwkset v0.5.18
-	github.com/MicahParks/keyfunc/v3 v3.3.3
+	github.com/MicahParks/jwkset v0.5.19
+	github.com/MicahParks/keyfunc/v3 v3.3.5
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/bmatcuk/doublestar/v4 v4.6.1
 	github.com/goccy/go-yaml v1.12.0

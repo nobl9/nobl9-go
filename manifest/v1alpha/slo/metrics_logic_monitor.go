@@ -13,7 +13,7 @@ type LogicMonitorMetric struct {
 	Line                       string `json:"line"`
 }
 
-var logicMonitorValidation = govy.New(
+var logicMonitorValidation = govy.New[LogicMonitorMetric](
 	govy.For(func(e LogicMonitorMetric) string { return e.QueryType }).
 		WithName("queryType").
 		Required().

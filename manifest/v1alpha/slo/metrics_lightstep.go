@@ -25,7 +25,7 @@ type LightstepMetric struct {
 	UQL        *string  `json:"uql,omitempty"`
 }
 
-var lightstepCountMetricsLevelValidation = govy.New(
+var lightstepCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(govy.NewRule(func(c CountMetricsSpec) error {
 			if c.GoodMetric.Lightstep.StreamID == nil || c.TotalMetric.Lightstep.StreamID == nil {
@@ -48,13 +48,13 @@ var lightstepCountMetricsLevelValidation = govy.New(
 func createLightstepMetricSpecValidation(
 	include govy.Validator[LightstepMetric],
 ) govy.Validator[MetricSpec] {
-	return govy.New(
+	return govy.New[MetricSpec](
 		govy.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
 			WithName("lightstep").
 			Include(include))
 }
 
-var lightstepRawMetricValidation = createLightstepMetricSpecValidation(govy.New(
+var lightstepRawMetricValidation = createLightstepMetricSpecValidation(govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
@@ -65,21 +65,21 @@ var lightstepRawMetricValidation = createLightstepMetricSpecValidation(govy.New(
 		)),
 ))
 
-var lightstepTotalCountMetricValidation = createLightstepMetricSpecValidation(govy.New(
+var lightstepTotalCountMetricValidation = createLightstepMetricSpecValidation(govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
 		Rules(rules.OneOf(LightstepTotalCountDataType, LightstepMetricDataType)),
 ))
 
-var lightstepGoodCountMetricValidation = createLightstepMetricSpecValidation(govy.New(
+var lightstepGoodCountMetricValidation = createLightstepMetricSpecValidation(govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.TypeOfData }).
 		WithName("typeOfData").
 		Required().
 		Rules(rules.OneOf(LightstepGoodCountDataType, LightstepMetricDataType)),
 ))
 
-var lightstepValidation = govy.New(
+var lightstepValidation = govy.New[LightstepMetric](
 	govy.For(govy.GetSelf[LightstepMetric]()).
 		Include(lightstepLatencyDataTypeValidation).
 		Include(lightstepMetricDataTypeValidation).
@@ -87,7 +87,7 @@ var lightstepValidation = govy.New(
 		Include(lightstepErrorRateDataTypeValidation),
 )
 
-var lightstepLatencyDataTypeValidation = govy.New(
+var lightstepLatencyDataTypeValidation = govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
 		WithName("streamId").
 		Required(),
@@ -106,7 +106,7 @@ var lightstepLatencyDataTypeValidation = govy.New(
 
 var lightstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
 
-var lightstepMetricDataTypeValidation = govy.New(
+var lightstepMetricDataTypeValidation = govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
 		WithName("streamId").
 		Rules(rules.Forbidden[string]()),
@@ -123,7 +123,7 @@ var lightstepMetricDataTypeValidation = govy.New(
 		govy.WhenDescription("typeOfData is '%s'", LightstepMetricDataType),
 	)
 
-var lightstepGoodAndTotalDataTypeValidation = govy.New(
+var lightstepGoodAndTotalDataTypeValidation = govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
 		WithName("streamId").
 		Required(),
@@ -144,7 +144,7 @@ var lightstepGoodAndTotalDataTypeValidation = govy.New(
 			LightstepGoodCountDataType, LightstepTotalCountDataType),
 	)
 
-var lightstepErrorRateDataTypeValidation = govy.New(
+var lightstepErrorRateDataTypeValidation = govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).
 		WithName("streamId").
 		Required(),
