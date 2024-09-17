@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/rules"
 
@@ -107,7 +108,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, report, err, 2, testutils.ExpectedError{
 			Prop:    "spec",
 			Message: "exactly one report type configuration is required",
 		})
@@ -512,6 +513,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 		"fails with empty columns": {
@@ -531,6 +536,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns:    []ColumnSpec{},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 		"fails with too many columns": {
@@ -582,6 +591,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 					{DisplayName: "Column 30", Labels: properLabel},
 					{DisplayName: "Column 31", Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 		"fails with empty labels": {
@@ -602,6 +615,10 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
 				},
 			},
 		},
@@ -624,6 +641,56 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				Columns: []ColumnSpec{
 					{Labels: properLabel},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
+			},
+		},
+		"fails with empty thresholds": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds",
+					Code: rules.ErrorCodeRequired,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+			},
+		},
+		"fails with invalid thresholds": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.thresholds.greenGt",
+					Code: rules.ErrorCodeLessThanOrEqualTo,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: properLabel},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(-0.1),
+					GreenGreaterThan:   ptr(1.1),
+				},
 			},
 		},
 	} {
@@ -634,6 +701,32 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
+
+	t.Run("fails when red is greater than green", func(t *testing.T) {
+		report := validReport()
+		report.Spec.SystemHealthReview = &SystemHealthReviewConfig{
+			TimeFrame: SystemHealthReviewTimeFrame{
+				Snapshot: SnapshotTimeFrame{
+					Point: SnapshotPointLatest,
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+			RowGroupBy: RowGroupByProject,
+			Columns: []ColumnSpec{
+				{DisplayName: "Column 1", Labels: properLabel},
+			},
+			Thresholds: Thresholds{
+				RedLessThanOrEqual: ptr(0.2),
+				GreenGreaterThan:   ptr(0.1),
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec.systemHealthReview.thresholds.redLte",
+			Message: "must be less than or equal to 'greenGt' (0.1)",
+		},
+		)
+	})
 }
 
 func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
@@ -655,6 +748,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 		"fails with empty point in snapshot": {
@@ -673,6 +770,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
 				},
 			},
 		},
@@ -694,6 +795,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
 				},
 			},
 		},
@@ -721,6 +826,10 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 		"fails with invalid rrule in past point snapshot": {
@@ -746,6 +855,37 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
+			},
+		},
+		"fails with rrule frequency less than DAILY in past point snapshot": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
+					Message: "rrule must have at least daily frequency",
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point:    SnapshotPointPast,
+						DateTime: ptr(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+						Rrule:    "FREQ=SECONDLY;INTERVAL=2",
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
 				},
 			},
 		},
@@ -774,6 +914,36 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				Columns: []ColumnSpec{
 					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
 				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
+			},
+		},
+		"fails with dateTime in the future in past point snapshot": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Message: "dateTime must be in the past",
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point:    SnapshotPointPast,
+						DateTime: ptr(time.Now().Add(time.Hour)),
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
 			},
 		},
 	} {
@@ -782,6 +952,71 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			report.Spec.SystemHealthReview = &test.Config
 			err := validate(report)
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
+}
+
+func TestAtLeastDailyFreq(t *testing.T) {
+	atLeastDailyFreqErr := "rrule must have at least daily frequency"
+	tests := []struct {
+		name          string
+		rule          string
+		expectedError string
+	}{
+		{
+			name:          "nil rule returns no error",
+			rule:          "",
+			expectedError: "",
+		},
+		{
+			name:          "hourly frequency returns error",
+			rule:          "FREQ=HOURLY;INTERVAL=1",
+			expectedError: atLeastDailyFreqErr,
+		},
+		{
+			name:          "minutely frequency returns error",
+			rule:          "FREQ=MINUTELY;INTERVAL=1",
+			expectedError: atLeastDailyFreqErr,
+		},
+		{
+			name:          "secondly frequency returns error",
+			rule:          "FREQ=SECONDLY;INTERVAL=1",
+			expectedError: atLeastDailyFreqErr,
+		},
+		{
+			name:          "daily frequency returns no error",
+			rule:          "FREQ=DAILY;INTERVAL=59",
+			expectedError: "",
+		},
+		{
+			name:          "weekly frequency returns no error",
+			rule:          "FREQ=WEEKLY;INTERVAL=59",
+			expectedError: "",
+		},
+		{
+			name:          "monthly frequency returns no error",
+			rule:          "FREQ=MONTHLY;INTERVAL=59",
+			expectedError: "",
+		},
+		{
+			name:          "yearly frequency returns no error",
+			rule:          "FREQ=YEARLY;INTERVAL=59",
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var rule *rrule.RRule
+			if tt.rule != "" {
+				rule, _ = rrule.StrToRRule(tt.rule)
+			}
+			err := atLeastDailyFreq.Validate(rule)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
 		})
 	}
 }
@@ -852,6 +1087,11 @@ func validReport() Report {
 							},
 						},
 					},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.8),
+					GreenGreaterThan:   ptr(0.95),
+					ShowNoData:         true,
 				},
 			},
 		},

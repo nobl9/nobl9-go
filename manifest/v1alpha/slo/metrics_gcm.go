@@ -8,7 +8,7 @@ type GCMMetric struct {
 	ProjectID string `json:"projectId"`
 }
 
-var gcmValidation = govy.New(
+var gcmValidation = govy.New[GCMMetric](
 	govy.For(func(e GCMMetric) string { return e.Query }).
 		WithName("query").
 		Required(),

@@ -10,7 +10,7 @@ type SplunkObservabilityMetric struct {
 	Program *string `json:"program"`
 }
 
-var splunkObservabilityValidation = govy.New(
+var splunkObservabilityValidation = govy.New[SplunkObservabilityMetric](
 	govy.ForPointer(func(s SplunkObservabilityMetric) *string { return s.Program }).
 		WithName("program").
 		Required().

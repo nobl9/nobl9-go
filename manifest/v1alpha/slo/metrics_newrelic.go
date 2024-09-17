@@ -12,7 +12,7 @@ type NewRelicMetric struct {
 	NRQL *string `json:"nrql"`
 }
 
-var newRelicValidation = govy.New(
+var newRelicValidation = govy.New[NewRelicMetric](
 	govy.ForPointer(func(n NewRelicMetric) *string { return n.NRQL }).
 		WithName("nrql").
 		Required().

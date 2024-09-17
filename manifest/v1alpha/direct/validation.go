@@ -14,10 +14,10 @@ import (
 )
 
 func validate(d Direct) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, d, manifest.KindDirect)
+	return v1alpha.ValidateObject[Direct](validator, d, manifest.KindDirect)
 }
 
-var validator = govy.New(
+var validator = govy.New[Direct](
 	validationV1Alpha.FieldRuleAPIVersion(func(d Direct) manifest.Version { return d.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(d Direct) manifest.Kind { return d.Kind }, manifest.KindDirect),
 	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
@@ -29,7 +29,7 @@ var validator = govy.New(
 		Include(specValidation),
 )
 
-var specValidation = govy.New(
+var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
 		Rules(exactlyOneDataSourceTypeValidationRule).
@@ -109,13 +109,13 @@ var specValidation = govy.New(
 )
 
 var (
-	datadogValidation = govy.New(
+	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
 			Rules(v1alpha.DataDogSiteValidationRule()),
 	)
-	newRelicValidation = govy.New(
+	newRelicValidation = govy.New[NewRelicConfig](
 		govy.For(func(n NewRelicConfig) int { return n.AccountID }).
 			WithName("accountId").
 			Required().
@@ -129,7 +129,7 @@ var (
 			).
 			Rules(rules.StringStartsWith("NRIQ-")),
 	)
-	appDynamicsValidation = govy.New(
+	appDynamicsValidation = govy.New[AppDynamicsConfig](
 		urlPropertyRules(func(a AppDynamicsConfig) string { return a.URL }),
 		govy.For(func(a AppDynamicsConfig) string { return a.ClientName }).
 			WithName("clientName").
@@ -138,13 +138,13 @@ var (
 			WithName("accountName").
 			Required(),
 	)
-	splunkObservabilityValidation = govy.New(
+	splunkObservabilityValidation = govy.New[SplunkObservabilityConfig](
 		govy.For(func(s SplunkObservabilityConfig) string { return s.Realm }).
 			WithName("realm").
 			Required(),
 	)
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
-	bigQueryValidation     = govy.New(
+	bigQueryValidation     = govy.New[BigQueryConfig](
 		govy.For(func(b BigQueryConfig) string { return b.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
@@ -154,26 +154,26 @@ var (
 			).
 			Rules(rules.StringJSON()),
 	)
-	splunkValidation = govy.New(
+	splunkValidation = govy.New[SplunkConfig](
 		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
 	)
 	cloudWatchValidation = govy.New[CloudWatchConfig]()
 	pingdomValidation    = govy.New[PingdomConfig]()
-	redshiftValidation   = govy.New(
+	redshiftValidation   = govy.New[RedshiftConfig](
 		govy.For(func(r RedshiftConfig) string { return r.SecretARN }).
 			WithName("secretARN").
 			Required(),
 	)
-	sumoLogicValidation = govy.New(
+	sumoLogicValidation = govy.New[SumoLogicConfig](
 		urlPropertyRules(func(s SumoLogicConfig) string { return s.URL }),
 	)
-	instanaValidation = govy.New(
+	instanaValidation = govy.New[InstanaConfig](
 		urlPropertyRules(func(i InstanaConfig) string { return i.URL }),
 	)
-	influxDBValidation = govy.New(
+	influxDBValidation = govy.New[InfluxDBConfig](
 		urlPropertyRules(func(i InfluxDBConfig) string { return i.URL }),
 	)
-	gcmValidation = govy.New(
+	gcmValidation = govy.New[GCMConfig](
 		govy.For(func(g GCMConfig) string { return g.ServiceAccountKey }).
 			WithName("serviceAccountKey").
 			HideValue().
@@ -183,7 +183,7 @@ var (
 			).
 			Rules(rules.StringJSON()),
 	)
-	lightstepValidation = govy.New(
+	lightstepValidation = govy.New[LightstepConfig](
 		govy.For(func(l LightstepConfig) string { return l.Organization }).
 			WithName("organization").
 			Required(),
@@ -195,17 +195,17 @@ var (
 			OmitEmpty().
 			Rules(rules.URL()),
 	)
-	dynatraceValidation = govy.New(
+	dynatraceValidation = govy.New[DynatraceConfig](
 		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
 	)
-	azureMonitorValidation = govy.New(
+	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
 	)
 	honeycombValidation    = govy.New[HoneycombConfig]()
-	logicMonitorValidation = govy.New(
+	logicMonitorValidation = govy.New[LogicMonitorConfig](
 		govy.For(func(l LogicMonitorConfig) string { return l.Account }).
 			WithName("account").
 			Required().

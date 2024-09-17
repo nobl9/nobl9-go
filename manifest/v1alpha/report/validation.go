@@ -12,10 +12,10 @@ import (
 )
 
 func validate(r Report) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject(validator, r, manifest.KindReport)
+	return v1alpha.ValidateObject[Report](validator, r, manifest.KindReport)
 }
 
-var validator = govy.New(
+var validator = govy.New[Report](
 	validationV1Alpha.FieldRuleAPIVersion(func(r Report) manifest.Version { return r.APIVersion }),
 	validationV1Alpha.FieldRuleKind(func(r Report) manifest.Kind { return r.Kind }, manifest.KindReport),
 	govy.For(func(r Report) Metadata { return r.Metadata }).
@@ -79,13 +79,13 @@ var filtersValidation = govy.New[Filters](
 		IncludeForEach(sloValidation),
 )
 
-var requiredNameValidation = govy.New(
+var requiredNameValidation = govy.New[string](
 	govy.For(govy.GetSelf[string]()).
 		Required().
 		Rules(rules.StringDNSLabel()),
 )
 
-var serviceValidation = govy.New(
+var serviceValidation = govy.New[Service](
 	govy.For(func(s Service) string { return s.Project }).
 		WithName("project").
 		Include(requiredNameValidation),
@@ -94,7 +94,7 @@ var serviceValidation = govy.New(
 		Include(requiredNameValidation),
 )
 
-var sloValidation = govy.New(
+var sloValidation = govy.New[SLO](
 	govy.For(func(s SLO) string { return s.Project }).
 		WithName("project").
 		Include(requiredNameValidation),

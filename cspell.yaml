@@ -32,9 +32,13 @@ ignorePaths:
   - "docs/mock_example/mocks/*"
 words:
   - 00u2y4e4atkzaYkXP4x8
+  - BYHOUR
+  - BYMINUTE
+  - BYSECOND
   - CONNECTIONFAILURES
   - CONNECTIONSESTABLISHED
   - CONNECTIONSUCCESSES
+  - DTSTART
   - DzpxcSRh
   - MAXRTT
   - TIMEMAX
@@ -51,6 +55,7 @@ words:
   - awsiam
   - budgetadjustment
   - byday
+  - bysecond
   - clientcreds
   - codeowners
   - consumergroup
@@ -65,6 +70,7 @@ words:
   - devel
   - dnssec
   - doublestar
+  - dtstart
   - dynatrace
   - endef
   - enduml

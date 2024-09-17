@@ -12,7 +12,7 @@ type InfluxDBMetric struct {
 	Query *string `json:"query"`
 }
 
-var influxdbValidation = govy.New(
+var influxdbValidation = govy.New[InfluxDBMetric](
 	govy.ForPointer(func(i InfluxDBMetric) *string { return i.Query }).
 		WithName("query").
 		Required().

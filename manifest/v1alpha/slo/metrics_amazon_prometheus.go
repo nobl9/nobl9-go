@@ -10,7 +10,7 @@ type AmazonPrometheusMetric struct {
 	PromQL *string `json:"promql"`
 }
 
-var amazonPrometheusValidation = govy.New(
+var amazonPrometheusValidation = govy.New[AmazonPrometheusMetric](
 	govy.ForPointer(func(p AmazonPrometheusMetric) *string { return p.PromQL }).
 		WithName("promql").
 		Required().
