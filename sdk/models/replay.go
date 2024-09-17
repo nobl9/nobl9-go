@@ -16,9 +16,10 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project  string         `json:"project"`
-	Slo      string         `json:"slo"`
-	Duration ReplayDuration `json:"duration"`
+	Project  string           `json:"project"`
+	Slo      string           `json:"slo"`
+	Duration ReplayDuration   `json:"duration"`
+	Source   *ReplaySourceSLO `json:"source,omitempty"`
 }
 
 type ReplayDuration struct {
@@ -38,6 +39,12 @@ type ReplayStatus struct {
 	Unit      string `json:"unit"`
 	Value     int    `json:"value"`
 	StartTime string `json:"startTime,omitempty"`
+}
+
+type ReplaySourceSLO struct {
+	Slo           string            `json:"slo"`
+	Project       string            `json:"project"`
+	ObjectivesMap map[string]string `json:"objectivesMap"`
 }
 
 // Variants of ReplayStatus.Status.
@@ -76,6 +83,9 @@ var replayValidation = govy.New[Replay](
 		Cascade(govy.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
+	govy.ForPointer(func(r Replay) *ReplaySourceSLO { return r.Source }).
+		WithName("source").
+		Include(replaySourceSLOValidation),
 )
 
 var replayDurationValidation = govy.New[ReplayDuration](
@@ -87,6 +97,18 @@ var replayDurationValidation = govy.New[ReplayDuration](
 	govy.For(func(d ReplayDuration) int { return d.Value }).
 		WithName("value").
 		Rules(rules.GT(0)),
+)
+
+var replaySourceSLOValidation = govy.New[ReplaySourceSLO](
+	govy.For(func(r ReplaySourceSLO) string { return r.Project }).
+		WithName("project").
+		Required(),
+	govy.For(func(r ReplaySourceSLO) string { return r.Slo }).
+		WithName("slo").
+		Required(),
+	govy.For(func(r ReplaySourceSLO) map[string]string { return r.ObjectivesMap }).
+		WithName("objectivesMap").
+		Required().Rules(rules.MapMinLength[map[string]string](1)),
 )
 
 func (r Replay) Validate() error {

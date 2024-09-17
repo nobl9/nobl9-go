@@ -131,6 +131,60 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			isValid:   false,
 			ErrorCode: rules.ErrorCodeRequired,
 		},
+		{
+			name: "missing objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				Source: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "slo",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "empty objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				Source: &ReplaySourceSLO{
+					Project:       "project",
+					Slo:           "slo",
+					ObjectivesMap: map[string]string{},
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeMapMinLength,
+		},
+		{
+			name: "not empty objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				Source: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "slo",
+					ObjectivesMap: map[string]string{
+						"objective-1": "objective-1",
+					},
+				},
+			},
+			isValid: true,
+		},
 	}
 
 	for _, tt := range tests {
