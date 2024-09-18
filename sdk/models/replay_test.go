@@ -140,13 +140,13 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "Day",
 					Value: 30,
 				},
-				Source: &ReplaySourceSLO{
+				SourceSLO: &ReplaySourceSLO{
 					Project: "project",
-					Slo:     "slo",
+					Name:    "slo",
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			ErrorCode: rules.ErrorCodeSliceMinLength,
 		},
 		{
 			name: "empty objectives map when replaying source slo",
@@ -157,14 +157,14 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "Day",
 					Value: 30,
 				},
-				Source: &ReplaySourceSLO{
+				SourceSLO: &ReplaySourceSLO{
 					Project:       "project",
-					Slo:           "slo",
-					ObjectivesMap: map[string]string{},
+					Name:          "slo",
+					ObjectivesMap: []ReplaySourceSLOItem{},
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeMapMinLength,
+			ErrorCode: rules.ErrorCodeSliceMinLength,
 		},
 		{
 			name: "not empty objectives map when replaying source slo",
@@ -175,11 +175,14 @@ func TestReplayStructDatesValidation(t *testing.T) {
 					Unit:  "Day",
 					Value: 30,
 				},
-				Source: &ReplaySourceSLO{
+				SourceSLO: &ReplaySourceSLO{
 					Project: "project",
-					Slo:     "slo",
-					ObjectivesMap: map[string]string{
-						"objective-1": "objective-1",
+					Name:    "slo",
+					ObjectivesMap: []ReplaySourceSLOItem{
+						{
+							Source: "objective-1",
+							Target: "objective-1",
+						},
 					},
 				},
 			},
