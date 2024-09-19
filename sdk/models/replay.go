@@ -65,14 +65,16 @@ type ReplayAvailability struct {
 
 // Variants of ReplayAvailability.Reason.
 const (
-	ReplayDataSourceTypeInvalid              = "datasource_type_invalid"
-	ReplayProjectDoesNotExist                = "project_does_not_exist"
-	ReplayDataSourceDoesNotExist             = "data_source_does_not_exist"
-	ReplayIntegrationDoesNotSupportReplay    = "integration_does_not_support_replay"
-	ReplayAgentVersionDoesNotSupportReplay   = "agent_version_does_not_support_replay"
-	ReplayMaxHistoricalDataRetrievalTooLow   = "max_historical_data_retrieval_too_low"
-	ReplayConcurrentReplayRunsLimitExhausted = "concurrent_replay_runs_limit_exhausted"
-	ReplayUnknownAgentVersion                = "unknown_agent_version"
+	ReplayDataSourceTypeInvalid                  = "datasource_type_invalid"
+	ReplayProjectDoesNotExist                    = "project_does_not_exist"
+	ReplayDataSourceDoesNotExist                 = "data_source_does_not_exist"
+	ReplayIntegrationDoesNotSupportReplay        = "integration_does_not_support_replay"
+	ReplayAgentVersionDoesNotSupportReplay       = "agent_version_does_not_support_replay"
+	ReplayMaxHistoricalDataRetrievalTooLow       = "max_historical_data_retrieval_too_low"
+	ReplayConcurrentReplayRunsLimitExhausted     = "concurrent_replay_runs_limit_exhausted"
+	ReplayUnknownAgentVersion                    = "unknown_agent_version"
+	ReplayCannotUseSourceSLOWhenItsRunningReplay = "cannot_use_source_slo_when_its_running_replay"
+	ReplayCannotRunReplayOnCurrentSourceSLO      = "cannot_run_replay_on_current_source_slo"
 )
 
 var replayValidation = govy.New[Replay](
