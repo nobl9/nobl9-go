@@ -132,6 +132,75 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			ErrorCode: rules.ErrorCodeRequired,
 		},
 		{
+			name: "correct struct start date",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration or start date can be set",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid:   false,
+			ErrorCode: replayDurationAndStartDateValidationError,
+		},
+		{
+			name: "start date cannot be in the future",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(time.Minute * 1),
+				},
+			},
+			isValid:   false,
+			ErrorCode: replayStartDateInTheFutureValidationError,
+		},
+		{
+			name: "use start date without duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "",
+					Value: 0,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			isValid: true,
+		},
+		{
 			name: "missing objectives map when replaying source slo",
 			replay: Replay{
 				Project: "project",
