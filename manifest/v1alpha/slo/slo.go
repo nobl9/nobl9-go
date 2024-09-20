@@ -68,7 +68,7 @@ type Attachment struct {
 // ObjectiveBase base structure representing an objective.
 type ObjectiveBase struct {
 	DisplayName string   `json:"displayName"`
-	Value       *float64 `json:"value"`
+	Value       *float64 `json:"value,omitempty"`
 	Name        string   `json:"name"`
 	NameChanged bool     `json:"-"`
 }
