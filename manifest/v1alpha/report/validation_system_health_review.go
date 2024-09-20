@@ -63,11 +63,11 @@ var reportThresholdsValidation = govy.New[Thresholds](
 	govy.ForPointer(func(s Thresholds) *float64 { return s.RedLessThanOrEqual }).
 		WithName("redLte").
 		Required().
-		Rules(rules.GTE(0.0), rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 	govy.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
 		WithName("greenGt").
 		Required().
-		Rules(rules.GTE(0.0), rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 )
 
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
@@ -92,9 +92,11 @@ var snapshotValidation = govy.New[SnapshotTimeFrame](
 var snapshotTimeFramePastPointValidation = govy.New[SnapshotTimeFrame](
 	govy.ForPointer(func(s SnapshotTimeFrame) *time.Time { return s.DateTime }).
 		WithName("dateTime").
-		Required(),
+		Required().
+		Rules(dateTimeInThePast),
 	govy.Transform(func(s SnapshotTimeFrame) string { return s.Rrule }, rrule.StrToRRule).
-		WithName("rrule"),
+		WithName("rrule").
+		Rules(atLeastDailyFreq),
 ).When(
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointPast },
 	govy.WhenDescription("past snapshot point"),
@@ -119,3 +121,22 @@ var snapshotTimeFrameLatestPointValidation = govy.New[SnapshotTimeFrame](
 	func(s SnapshotTimeFrame) bool { return s.Point == SnapshotPointLatest },
 	govy.WhenDescription("latest snapshot point"),
 )
+
+var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
+	if rule == nil {
+		return nil
+	}
+	if rule.Options.Freq == rrule.HOURLY ||
+		rule.Options.Freq == rrule.MINUTELY ||
+		rule.Options.Freq == rrule.SECONDLY {
+		return errors.New("rrule must have at least daily frequency")
+	}
+	return nil
+})
+
+var dateTimeInThePast = govy.NewRule(func(dateTime time.Time) error {
+	if time.Now().Before(dateTime) {
+		return errors.New("dateTime must be in the past")
+	}
+	return nil
+})

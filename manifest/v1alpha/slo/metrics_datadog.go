@@ -10,7 +10,7 @@ type DatadogMetric struct {
 	Query *string `json:"query"`
 }
 
-var datadogValidation = govy.New(
+var datadogValidation = govy.New[DatadogMetric](
 	govy.ForPointer(func(d DatadogMetric) *string { return d.Query }).
 		WithName("query").
 		Required().

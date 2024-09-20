@@ -28,7 +28,7 @@ var labelsExamples string
 var labelKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
 
 func LabelsValidationRules() govy.Validator[Labels] {
-	return govy.New(
+	return govy.New[Labels](
 		govy.ForMap(govy.GetSelf[Labels]()).
 			RulesForKeys(
 				rules.StringLength(minLabelKeyLength, maxLabelKeyLength),
@@ -39,7 +39,7 @@ func LabelsValidationRules() govy.Validator[Labels] {
 	)
 }
 
-var labelValuesValidation = govy.New(
+var labelValuesValidation = govy.New[[]labelValue](
 	govy.ForSlice(govy.GetSelf[[]labelValue]()).
 		Rules(rules.SliceUnique(rules.HashFuncSelf[labelValue]())).
 		RulesForEach(

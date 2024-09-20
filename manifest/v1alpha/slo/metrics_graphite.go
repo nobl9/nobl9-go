@@ -12,7 +12,7 @@ type GraphiteMetric struct {
 	MetricPath *string `json:"metricPath"`
 }
 
-var graphiteValidation = govy.New(
+var graphiteValidation = govy.New[GraphiteMetric](
 	govy.ForPointer(func(g GraphiteMetric) *string { return g.MetricPath }).
 		WithName("metricPath").
 		Required().

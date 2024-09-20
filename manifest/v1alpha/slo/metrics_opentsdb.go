@@ -10,7 +10,7 @@ type OpenTSDBMetric struct {
 	Query *string `json:"query"`
 }
 
-var openTSDBValidation = govy.New(
+var openTSDBValidation = govy.New[OpenTSDBMetric](
 	govy.ForPointer(func(o OpenTSDBMetric) *string { return o.Query }).
 		WithName("query").
 		Required().
