@@ -673,7 +673,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.thresholds.greenGt",
-					Code: rules.ErrorCodeLessThanOrEqualTo,
+					Code: rules.ErrorCodeLessThan,
 				},
 			},
 			Config: SystemHealthReviewConfig{
