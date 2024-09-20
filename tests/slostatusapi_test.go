@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -16,6 +17,8 @@ import (
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v1"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v2"
 )
 
 func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
@@ -64,13 +67,29 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	)
 
 	v1Apply(t, allObjects)
-	time.Sleep(3 * time.Second)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
+	var err error
+	var response v1.SLODetails
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
 
-	response, err := client.SLOStatusAPI().V1().GetSLO(ctx, sloName, project.GetName())
+	done := false
+	for !done {
+		select {
+		case <-ticker.C:
+			response, err = client.SLOStatusAPI().V1().GetSLO(ctx, sloName, project.GetName())
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, response)
-
 	assert.Equal(t, sloName, response.Name)
 }
 
@@ -116,33 +135,68 @@ func Test_SLOStatusAPI_V1_GetSLOList(t *testing.T) {
 	slo3.Metadata.Name = generateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = generateName()
-	slo5 := deepCopyObject(t, slo1)
-	slo5.Metadata.Name = generateName()
 
 	allObjects := make([]manifest.Object, 0)
 	allObjects = append(
 		allObjects,
 		project,
 		service,
-		slo1, slo2, slo3, slo4, slo5,
+		slo1, slo2, slo3, slo4,
 	)
 
 	v1Apply(t, allObjects)
-	time.Sleep(3 * time.Second)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	firstResponse, err := client.SLOStatusAPI().V1().GetSLOList(ctx, 2, "")
+	var err error
+	var firstResponse v1.SLOListResponse
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	limit := 2
+	done := false
+	for !done {
+		select {
+		case <-ticker.C:
+			firstResponse, err = client.SLOStatusAPI().V1().GetSLOList(ctx, limit, "")
+			if len(firstResponse.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(firstResponse.Data))
+			}
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
 	require.NoError(t, err)
-	require.NotEmpty(t, firstResponse)
+	assert.NotEmpty(t, firstResponse)
 
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := client.SLOStatusAPI().V1().GetSLOList(ctx, 2, firstCursor)
+	var secondResponse v1.SLOListResponse
+	ticker.Reset(5 * time.Second)
+	timer.Reset(time.Minute)
+	done = false
+	for !done {
+		select {
+		case <-ticker.C:
+			secondResponse, err = client.SLOStatusAPI().V1().GetSLOList(ctx, limit, firstCursor)
+			if len(secondResponse.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(secondResponse.Data))
+			}
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 
-	secondCursor := firstResponse.Links.Cursor
+	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
 
 	assert.NotEqual(t, firstResponse, secondResponse)
@@ -194,13 +248,29 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	)
 
 	v1Apply(t, allObjects)
-	time.Sleep(3 * time.Second)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
+	var err error
+	var response v2.SLODetails
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
 
-	response, err := client.SLOStatusAPI().V2().GetSLO(ctx, sloName, project.GetName())
+	done := false
+	for !done {
+		select {
+		case <-ticker.C:
+			response, err = client.SLOStatusAPI().V2().GetSLO(ctx, sloName, project.GetName())
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, response)
-
 	assert.Equal(t, sloName, response.Name)
 }
 
@@ -246,33 +316,68 @@ func Test_SLOStatusAPI_V2_GetSLOList(t *testing.T) {
 	slo3.Metadata.Name = generateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = generateName()
-	slo5 := deepCopyObject(t, slo1)
-	slo5.Metadata.Name = generateName()
 
 	allObjects := make([]manifest.Object, 0)
 	allObjects = append(
 		allObjects,
 		project,
 		service,
-		slo1, slo2, slo3, slo4, slo5,
+		slo1, slo2, slo3, slo4,
 	)
 
 	v1Apply(t, allObjects)
-	time.Sleep(3 * time.Second)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	firstResponse, err := client.SLOStatusAPI().V2().GetSLOList(ctx, 2, "")
+	var err error
+	var firstResponse v2.SLOListResponse
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	limit := 2
+	done := false
+	for !done {
+		select {
+		case <-ticker.C:
+			firstResponse, err = client.SLOStatusAPI().V2().GetSLOList(ctx, limit, "")
+			if len(firstResponse.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(firstResponse.Data))
+			}
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
 	require.NoError(t, err)
-	require.NotEmpty(t, firstResponse)
+	assert.NotEmpty(t, firstResponse)
 
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := client.SLOStatusAPI().V2().GetSLOList(ctx, 2, firstCursor)
+	var secondResponse v2.SLOListResponse
+	ticker.Reset(5 * time.Second)
+	timer.Reset(time.Minute)
+	done = false
+	for !done {
+		select {
+		case <-ticker.C:
+			secondResponse, err = client.SLOStatusAPI().V2().GetSLOList(ctx, limit, firstCursor)
+			if len(secondResponse.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(secondResponse.Data))
+			}
+			if err == nil {
+				done = true
+			}
+		case <-timer.C:
+			t.Error("timeout")
+		}
+	}
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 
-	secondCursor := firstResponse.Links.Cursor
+	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
 
 	assert.NotEqual(t, firstResponse, secondResponse)
