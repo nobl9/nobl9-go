@@ -63,11 +63,11 @@ var reportThresholdsValidation = govy.New[Thresholds](
 	govy.ForPointer(func(s Thresholds) *float64 { return s.RedLessThanOrEqual }).
 		WithName("redLte").
 		Required().
-		Rules(rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 	govy.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
 		WithName("greenGt").
 		Required().
-		Rules(rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 )
 
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
