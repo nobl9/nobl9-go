@@ -12,6 +12,7 @@
     "objectives": [
       {
         "displayName": "composite-obj",
+        "value": null,
         "name": "composite-obj",
         "target": 0.99,
         "composite": {
