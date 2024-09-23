@@ -293,5 +293,8 @@ func assertV1alphaSLOsAreEqual(t *testing.T, expected, actual v1alphaSLO.SLO) {
 	actual.Spec.CreatedBy = ""
 	actual.Status = nil
 	actual.Spec.TimeWindows[0].Period = nil
+	if actual.Spec.Objectives[0].Value == nil {
+		actual.Spec.Objectives[0].Value = ptr(0.0)
+	}
 	assert.Equal(t, expected, actual)
 }
