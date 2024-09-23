@@ -128,6 +128,30 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
+	t.Run("data source type using supported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.Datadog)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("data source type using unsupported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.Datadog)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: errUnsupportedReleaseChannel,
+		})
+	})
+	t.Run("data source type using unsupported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: errUnsupportedReleaseChannel,
+		})
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
