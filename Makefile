@@ -47,7 +47,7 @@ test/e2e:
 	@if [ "$(GITHUB_ACTIONS)" != "true" ]; then \
 		export NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE=true; \
 	fi; \
-	go test -count=1 -race -test.v -run Test_Objects_V1_V1alpha_BudgetAdjustments -timeout=5m -tags=e2e_test ./tests
+	go test -count=1 -race -test.v -timeout=5m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:
