@@ -211,7 +211,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 				SourceSLO: &ReplaySourceSLO{
 					Project: "project",
-					Name:    "slo",
+					Slo:     "slo",
 				},
 			},
 			isValid:   false,
@@ -228,7 +228,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 				SourceSLO: &ReplaySourceSLO{
 					Project:       "project",
-					Name:          "slo",
+					Slo:           "slo",
 					ObjectivesMap: []ReplaySourceSLOItem{},
 				},
 			},
@@ -246,7 +246,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 				},
 				SourceSLO: &ReplaySourceSLO{
 					Project: "project",
-					Name:    "slo",
+					Slo:     "slo",
 					ObjectivesMap: []ReplaySourceSLOItem{
 						{
 							Source: "objective-1",

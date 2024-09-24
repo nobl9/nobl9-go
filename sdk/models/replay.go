@@ -48,7 +48,7 @@ type ReplayStatus struct {
 }
 
 type ReplaySourceSLO struct {
-	Name          string                `json:"name"`
+	Slo           string                `json:"slo"`
 	Project       string                `json:"project"`
 	ObjectivesMap []ReplaySourceSLOItem `json:"objectivesMap"`
 }
@@ -71,16 +71,14 @@ type ReplayAvailability struct {
 
 // Variants of ReplayAvailability.Reason.
 const (
-	ReplayDataSourceTypeInvalid                  = "datasource_type_invalid"
-	ReplayProjectDoesNotExist                    = "project_does_not_exist"
-	ReplayDataSourceDoesNotExist                 = "data_source_does_not_exist"
-	ReplayIntegrationDoesNotSupportReplay        = "integration_does_not_support_replay"
-	ReplayAgentVersionDoesNotSupportReplay       = "agent_version_does_not_support_replay"
-	ReplayMaxHistoricalDataRetrievalTooLow       = "max_historical_data_retrieval_too_low"
-	ReplayConcurrentReplayRunsLimitExhausted     = "concurrent_replay_runs_limit_exhausted"
-	ReplayUnknownAgentVersion                    = "unknown_agent_version"
-	ReplayCannotUseSourceSLOWhenItsRunningReplay = "cannot_use_source_slo_when_its_running_replay"
-	ReplayCannotRunReplayOnCurrentSourceSLO      = "cannot_run_replay_on_current_source_slo"
+	ReplayDataSourceTypeInvalid              = "datasource_type_invalid"
+	ReplayProjectDoesNotExist                = "project_does_not_exist"
+	ReplayDataSourceDoesNotExist             = "data_source_does_not_exist"
+	ReplayIntegrationDoesNotSupportReplay    = "integration_does_not_support_replay"
+	ReplayAgentVersionDoesNotSupportReplay   = "agent_version_does_not_support_replay"
+	ReplayMaxHistoricalDataRetrievalTooLow   = "max_historical_data_retrieval_too_low"
+	ReplayConcurrentReplayRunsLimitExhausted = "concurrent_replay_runs_limit_exhausted"
+	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
 
 var replayValidation = govy.New[Replay](
@@ -136,8 +134,8 @@ var replaySourceSLOValidation = govy.New[ReplaySourceSLO](
 	govy.For(func(r ReplaySourceSLO) string { return r.Project }).
 		WithName("project").
 		Required(),
-	govy.For(func(r ReplaySourceSLO) string { return r.Name }).
-		WithName("name").
+	govy.For(func(r ReplaySourceSLO) string { return r.Slo }).
+		WithName("slo").
 		Required(),
 	govy.ForSlice(func(r ReplaySourceSLO) []ReplaySourceSLOItem { return r.ObjectivesMap }).
 		WithName("objectivesMap").
