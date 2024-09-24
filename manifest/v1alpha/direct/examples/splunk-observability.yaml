@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Splunk Observability Direct
-  releaseChannel: stable
+  releaseChannel: alpha
   splunkObservability:
     realm: us1
     accessToken: "[secret]"
