@@ -140,7 +140,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop: "spec.releaseChannel",
-			Code: errUnsupportedReleaseChannel,
+			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
 	t.Run("data source type using unsupported release channel", func(t *testing.T) {
@@ -149,7 +149,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop: "spec.releaseChannel",
-			Code: errUnsupportedReleaseChannel,
+			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
 }
@@ -615,11 +615,13 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 func TestValidateSpec_SplunkObservability(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
 	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{

@@ -224,7 +224,7 @@ var (
 const (
 	errCodeExactlyOneDataSourceType              = "exactly_one_data_source_type"
 	errCodeQueryDelayGreaterThanOrEqualToDefault = "query_delay_greater_than_or_equal_to_default"
-	errUnsupportedReleaseChannel                 = "unsupported_release_channel"
+	errCodeUnsupportedReleaseChannel             = "unsupported_release_channel"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -385,8 +385,6 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = govy.NewRule(func(spec
 	return nil
 }).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
 
-const errorCodeUnsupportedReleaseChannel = "unsupported_release_channel"
-
 var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	if typ != v1alpha.SplunkObservability && spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha {
@@ -401,12 +399,12 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		return govy.NewPropertyError(
 			"releaseChannel",
 			spec.ReleaseChannel,
-			errors.New("must be alpha for Splunk Observability"),
+			errors.New("must be 'alpha' for Splunk Observability"),
 		)
 	}
 
 	return nil
-}).WithErrorCode(errorCodeUnsupportedReleaseChannel)
+}).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
 const errorCodeHTTPSSchemeRequired = "https_scheme_required"
 
