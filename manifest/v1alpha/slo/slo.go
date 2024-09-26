@@ -163,10 +163,10 @@ type AnomalyConfigAlertMethod struct {
 type Status struct {
 	UpdatedAt       string           `json:"updatedAt,omitempty"`
 	ReplayStatus    *ReplayStatus    `json:"timeTravel,omitempty"`
-	SourceSLOStatus *SourceSloStatus `json:"sourceSlo,omitempty"`
+	SourceSLOStatus *TargetSloStatus `json:"targetSlo,omitempty"`
 }
 
-type SourceSloStatus struct {
+type TargetSloStatus struct {
 	TargetTimeTravel ReplayStatus `json:"targetTimeTravel"`
 }
 
