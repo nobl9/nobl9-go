@@ -201,6 +201,40 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			isValid: true,
 		},
 		{
+			name: "source slo is required",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "source project is required",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "",
+					Slo:     "slo",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeRequired,
+		},
+		{
 			name: "missing objectives map when replaying source slo",
 			replay: Replay{
 				Project: "project",
