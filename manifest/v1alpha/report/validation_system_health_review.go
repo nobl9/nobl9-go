@@ -33,7 +33,8 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 var columnValidation = govy.New[ColumnSpec](
 	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
-		Required(),
+		Required().
+		Rules(rules.StringLength(0, 63)),
 	govy.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
 		WithName("labels").
 		Rules(rules.MapMinLength[map[LabelKey][]LabelValue](1)),
