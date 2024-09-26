@@ -38,6 +38,10 @@ func Direct() []Example {
 	return examples
 }
 
+var alphaChannelDirects = []v1alpha.DataSourceType{
+	v1alpha.SplunkObservability,
+}
+
 var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
@@ -77,7 +81,9 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	if slices.Contains(betaChannelDirects, typ) {
+	if slices.Contains(alphaChannelDirects, typ) {
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+	} else if slices.Contains(betaChannelDirects, typ) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 	} else {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable

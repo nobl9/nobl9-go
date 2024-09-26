@@ -33,7 +33,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     objectDescription,
-				FirstEventStart: time.Now().Add(time.Hour).UTC(),
+				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Millisecond).UTC(),
 				Duration:        "1h",
 				Filters: v1alphaBudgetAdjustment.Filters{
 					SLOs: []v1alphaBudgetAdjustment.SLORef{
@@ -51,7 +51,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     objectDescription,
-				FirstEventStart: time.Now().Add(time.Hour).UTC(),
+				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Millisecond).UTC(),
 				Duration:        "5h",
 				Rrule:           "FREQ=DAILY;COUNT=5",
 				Filters: v1alphaBudgetAdjustment.Filters{
