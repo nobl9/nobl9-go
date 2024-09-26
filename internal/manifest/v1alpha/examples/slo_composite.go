@@ -74,7 +74,6 @@ func (s sloCompositeExample) SLO() v1alphaSLO.SLO {
 				{
 					ObjectiveBase: v1alphaSLO.ObjectiveBase{
 						DisplayName: "User experience",
-						Value:       ptr(0.0),
 						Name:        "user-experience",
 					},
 					BudgetTarget:    ptr(0.95),
