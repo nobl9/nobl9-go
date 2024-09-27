@@ -41,10 +41,12 @@ type ReplayWithStatus struct {
 }
 
 type ReplayStatus struct {
-	Status    string `json:"status"`
-	Unit      string `json:"unit"`
-	Value     int    `json:"value"`
-	StartTime string `json:"startTime,omitempty"`
+	Source      string `json:"source"`
+	Status      string `json:"status"`
+	TriggeredBy string `json:"triggeredBy"`
+	Unit        string `json:"unit"`
+	Value       int    `json:"value"`
+	StartTime   string `json:"startTime"`
 }
 
 type ReplaySourceSLO struct {
