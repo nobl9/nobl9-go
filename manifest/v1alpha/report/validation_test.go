@@ -652,7 +652,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.columns[0].displayName",
-					Code: rules.ErrorCodeStringLength,
+					Code: rules.ErrorCodeStringMaxLength,
 				},
 			},
 			Config: SystemHealthReviewConfig{
