@@ -63,6 +63,7 @@ type HistoricalDataRetrieval struct {
 	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
 	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
+	TriggeredBy         *TriggeredBy                `json:"triggeredBy,omitempty"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
@@ -107,6 +108,11 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 		}
 		return nil
 	})
+
+type TriggeredBy struct {
+	Edit     bool `json:"edit"`
+	Creation bool `json:"creation"`
+}
 
 type Interval struct {
 	Duration `yaml:",inline"`
