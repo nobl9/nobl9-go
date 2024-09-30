@@ -83,7 +83,7 @@ func (e endpoints) GetSLOList(ctx context.Context, limit int, cursor string) (sl
 	if slos.Links.Next != "" {
 		nextURL, err := url.Parse(slos.Links.Next)
 		if err != nil {
-			return slos, errors.Wrap(err, "failed to parse 'next' URL")
+			return slos, errors.Wrap(err, "failed to parse 'next' cursor link URL")
 		}
 		cursorValues := nextURL.Query()["cursor"]
 		if len(cursorValues) > 0 {
