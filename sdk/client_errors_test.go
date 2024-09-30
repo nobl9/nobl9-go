@@ -92,20 +92,36 @@ func TestAPIError(t *testing.T) {
 	})
 }
 
-func TestAPIError_IsConcurrencyIssue(t *testing.T) {
+func TestAPIError_IsRetryable(t *testing.T) {
 	t.Parallel()
-	err := processHTTPResponse(&http.Response{
-		StatusCode: http.StatusInternalServerError,
-		Body:       io.NopCloser(bytes.NewBufferString(concurrencyIssueMessage)),
-		Request: &http.Request{
-			Method: http.MethodPut,
-			URL: &url.URL{
-				Scheme: "https",
-				Host:   "app.nobl9.com",
-				Path:   "/api/apply",
+	tests := []*http.Response{
+		&http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Body:       io.NopCloser(bytes.NewBufferString("operation failed due to concurrency issue but can be retried")),
+			Request: &http.Request{
+				Method: http.MethodPut,
+				URL: &url.URL{
+					Scheme: "https",
+					Host:   "app.nobl9.com",
+					Path:   "/api/apply",
+				},
 			},
 		},
-	})
-	require.Error(t, err)
-	assert.True(t, err.(*APIError).IsConcurrencyIssue())
+		&http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Request: &http.Request{
+				Method: http.MethodPut,
+				URL: &url.URL{
+					Scheme: "https",
+					Host:   "app.nobl9.com",
+					Path:   "/api/apply",
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		err := processHTTPResponse(test)
+		require.Error(t, err)
+		assert.True(t, err.(*APIError).IsRetryable())
+	}
 }

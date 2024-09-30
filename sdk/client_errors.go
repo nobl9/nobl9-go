@@ -10,8 +10,6 @@ import (
 	"text/template"
 )
 
-const concurrencyIssueMessage = "operation failed due to concurrency issue but can be retried"
-
 // APIError represents an HTTP error response from the API.
 type APIError struct {
 	Message    string `json:"message"`
@@ -21,10 +19,9 @@ type APIError struct {
 	TraceID    string `json:"traceId,omitempty"`
 }
 
-// IsConcurrencyIssue returns true if the underlying API error is a concurrency issue.
-// If so, the operation can be retried.
-func (r APIError) IsConcurrencyIssue() bool {
-	return r.StatusCode >= 500 && r.Message == concurrencyIssueMessage
+// IsRetryableError returns true if the underlying API error can be retried.
+func (r APIError) IsRetryable() bool {
+	return r.StatusCode >= 500
 }
 
 // Error returns a string representation of the error.
@@ -49,8 +46,11 @@ func processHTTPResponse(resp *http.Response) error {
 	if resp.StatusCode < 300 {
 		return nil
 	}
-	rawBody, _ := io.ReadAll(resp.Body)
-	body := string(bytes.TrimSpace(rawBody))
+	var body string
+	if resp.Body != nil {
+		rawBody, _ := io.ReadAll(resp.Body)
+		body = string(bytes.TrimSpace(rawBody))
+	}
 	respErr := APIError{
 		StatusCode: resp.StatusCode,
 		TraceID:    resp.Header.Get(HeaderTraceID),
