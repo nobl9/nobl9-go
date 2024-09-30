@@ -31,25 +31,9 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	var err error
-	var response v1.SLODetails
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
-
-	done := false
-	for !done {
-		select {
-		case <-ticker.C:
-			response, err = client.SLOStatusAPI().V1().GetSLO(ctx, slo.GetName(), project.GetName())
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	response, err := tryExecuteSLOStatusAPIRequest(t, func() (v1.SLODetails, error) {
+		return client.SLOStatusAPI().V1().GetSLO(ctx, slo.GetName(), project.GetName())
+	})
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, response)
@@ -139,25 +123,9 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	var err error
-	var response v2.SLODetails
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
-
-	done := false
-	for !done {
-		select {
-		case <-ticker.C:
-			response, err = client.SLOStatusAPI().V2().GetSLO(ctx, slo.GetName(), project.GetName())
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	response, err := tryExecuteSLOStatusAPIRequest(t, func() (v2.SLODetails, error) {
+		return client.SLOStatusAPI().V2().GetSLO(ctx, slo.GetName(), project.GetName())
+	})
 
 	require.NoError(t, err)
 	assert.NotEmpty(t, response)
@@ -272,4 +240,28 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	slo.Spec.Objectives[0].Name = "good"
 
 	return []manifest.Object{project, service, slo}
+}
+
+func tryExecuteSLOStatusAPIRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
+	t.Helper()
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	var (
+		response T
+		err      error
+	)
+	for {
+		select {
+		case <-ticker.C:
+			response, err = reqFunc()
+			if err == nil {
+				return response, nil
+			}
+		case <-timer.C:
+			t.Error("timeout")
+			return response, err
+		}
+	}
 }
