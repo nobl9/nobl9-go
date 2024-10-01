@@ -95,7 +95,7 @@ func TestAPIError(t *testing.T) {
 func TestAPIError_IsRetryable(t *testing.T) {
 	t.Parallel()
 	tests := []*http.Response{
-		&http.Response{
+		{
 			StatusCode: http.StatusInternalServerError,
 			Body:       io.NopCloser(bytes.NewBufferString("operation failed due to concurrency issue but can be retried")),
 			Request: &http.Request{
@@ -107,7 +107,7 @@ func TestAPIError_IsRetryable(t *testing.T) {
 				},
 			},
 		},
-		&http.Response{
+		{
 			StatusCode: http.StatusInternalServerError,
 			Request: &http.Request{
 				Method: http.MethodPut,
