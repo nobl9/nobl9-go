@@ -34,5 +34,5 @@ func (r *ReleaseChannel) UnmarshalText(text []byte) error {
 }
 
 func ReleaseChannelValidation() govy.Rule[ReleaseChannel] {
-	return rules.OneOf(ReleaseChannelStable, ReleaseChannelBeta)
+	return rules.OneOf(ReleaseChannelStable, ReleaseChannelBeta, ReleaseChannelAlpha)
 }

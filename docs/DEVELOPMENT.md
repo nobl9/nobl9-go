@@ -124,8 +124,9 @@ We use the following tools to do that:
 
 ## Validation
 
-We're using our own validation library to write validation for all objects.
-Refer to this [README.md](../internal/validation/README.md) for more information.
+We're using [govy](https://github.com/nobl9/govy) library for validation.
+If you encounter any bugs or shortcomings feel free to open an issue or PR
+at govy's GitHub page.
 
 ## Dependencies
 

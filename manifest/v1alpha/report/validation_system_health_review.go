@@ -33,7 +33,8 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 var columnValidation = govy.New[ColumnSpec](
 	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
-		Required(),
+		Required().
+		Rules(rules.StringMaxLength(63)),
 	govy.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
 		WithName("labels").
 		Rules(rules.MapMinLength[map[LabelKey][]LabelValue](1)),
@@ -63,11 +64,11 @@ var reportThresholdsValidation = govy.New[Thresholds](
 	govy.ForPointer(func(s Thresholds) *float64 { return s.RedLessThanOrEqual }).
 		WithName("redLte").
 		Required().
-		Rules(rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 	govy.ForPointer(func(s Thresholds) *float64 { return s.GreenGreaterThan }).
 		WithName("greenGt").
 		Required().
-		Rules(rules.LTE(1.0)),
+		Rules(rules.LT(1.0)),
 )
 
 var redLteValidation = govy.NewRule(func(v Thresholds) error {

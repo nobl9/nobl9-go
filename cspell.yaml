@@ -81,6 +81,7 @@ words:
   - generify
   - gobin
   - gofile
+  - gofmt
   - goimports
   - golangci
   - gomnd

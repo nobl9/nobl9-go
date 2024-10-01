@@ -43,6 +43,11 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Run tests
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: make test/e2e
         env:
           NOBL9_SDK_CLIENT_ID: ${{ inputs.clientId }}
           NOBL9_SDK_CLIENT_SECRET: ${{ secrets.clientSecret }}
@@ -50,4 +55,3 @@ jobs:
           NOBL9_SDK_OKTA_AUTH_SERVER: ${{ inputs.oktaAuthServer }}
           NOBL9_SDK_NO_CONFIG_FILE: true
           NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE: ${{ inputs.sequentialApplyAndDelete }}
-        run: make test/e2e
