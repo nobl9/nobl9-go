@@ -19,7 +19,7 @@ type APIError struct {
 	TraceID    string `json:"traceId,omitempty"`
 }
 
-// IsRetryableError returns true if the underlying API error can be retried.
+// IsRetryable returns true if the underlying API error can be retried.
 func (r APIError) IsRetryable() bool {
 	return r.StatusCode >= 500
 }
