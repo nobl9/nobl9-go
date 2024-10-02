@@ -63,8 +63,10 @@ type HistoricalDataRetrieval struct {
 	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
 	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
-	// TriggeredBy is not supported yet, applying it will have no effect
-	TriggeredBy *TriggeredBy `json:"triggeredBy,omitempty"`
+	// TriggeredByCreation is not supported yet, applying it will have no effect
+	TriggeredByCreation *HistoricalRetrievalDuration `json:"triggeredByCreation,omitempty"`
+	// TriggeredByEdit is not supported yet, applying it will have no effect
+	TriggeredByEdit *HistoricalRetrievalDuration `json:"triggeredByEdit,omitempty"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
@@ -78,6 +80,14 @@ func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval]
 		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.DefaultDuration }).
 			WithName("defaultDuration").
 			Required().
+			Include(historicalRetrievalDurationValidation),
+		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredByCreation }).
+			WithName("triggeredByCreation").
+			OmitEmpty().
+			Include(historicalRetrievalDurationValidation),
+		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredByEdit }).
+			WithName("triggeredByEdit").
+			OmitEmpty().
 			Include(historicalRetrievalDurationValidation),
 	)
 }
@@ -109,11 +119,6 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 		}
 		return nil
 	})
-
-type TriggeredBy struct {
-	Edit     bool `json:"edit"`
-	Creation bool `json:"creation"`
-}
 
 type Interval struct {
 	Duration `yaml:",inline"`

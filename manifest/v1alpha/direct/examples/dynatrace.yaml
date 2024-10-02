@@ -17,6 +17,12 @@ spec:
     defaultDuration:
       value: 14
       unit: Day
+    triggeredByCreation:
+      value: 14
+      unit: Day
+    triggeredByEdit:
+      value: 14
+      unit: Day
   queryDelay:
     value: 3
     unit: Minute

@@ -219,8 +219,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			agent := validAgent(v1alpha.Prometheus)
 			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				MaxDuration:         v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredByCreation: &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredByEdit:     &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 			}
 			err := validate(agent)
 			testutils.AssertNoError(t, agent, err)
@@ -344,8 +346,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			agent := validAgent(v1alpha.Prometheus)
 			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				MaxDuration:         v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				DefaultDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredByCreation: &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredByEdit:     &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
 			}
 			err := validate(agent)
 			testutils.AssertNoError(t, agent, err)
@@ -359,6 +363,14 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				Unit:  v1alpha.HRDHour,
 			},
 			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(10),
+				Unit:  v1alpha.HRDHour,
+			},
+			TriggeredByCreation: &v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(10),
+				Unit:  v1alpha.HRDHour,
+			},
+			TriggeredByEdit: &v1alpha.HistoricalRetrievalDuration{
 				Value: ptr(10),
 				Unit:  v1alpha.HRDHour,
 			},
