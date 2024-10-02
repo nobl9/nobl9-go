@@ -39,7 +39,8 @@ var gcmValidation = govy.New[GCMMetric](
 				configOptions++
 			}
 			if configOptions != 1 {
-				return errors.New("exactly one of configuration option is required [query, promqlQuery]")
+				return errors.New("exactly one of configuration option is required, the available types [MQL, PromQL]" +
+					" are represented by the following properties: MQL{query}; PromQL{promqlQuery}")
 			}
 			return nil
 		}).WithErrorCode(rules.ErrorCodeOneOf),
