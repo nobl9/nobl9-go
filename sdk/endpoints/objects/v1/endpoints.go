@@ -78,8 +78,8 @@ func (e endpoints) DeleteByName(
 	if err != nil {
 		return err
 	}
-	defer func() { _ = resp.Body.Close() }()
-	return sdk.ProcessResponseErrors(resp)
+	_ = resp.Body.Close()
+	return nil
 }
 
 func (e endpoints) Get(
@@ -104,9 +104,6 @@ func (e endpoints) Get(
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return nil, err
-	}
 	return e.readObjects(ctx, resp.Body)
 }
 
@@ -147,8 +144,8 @@ func (e endpoints) applyOrDeleteObjects(
 	if err != nil {
 		return err
 	}
-	defer func() { _ = resp.Body.Close() }()
-	return sdk.ProcessResponseErrors(resp)
+	_ = resp.Body.Close()
+	return nil
 }
 
 func (e endpoints) setOrganizationForObjects(
