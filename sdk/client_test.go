@@ -145,8 +145,8 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 			KID: kid,
 		},
 	})
-	jwks := jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{jwk.Marshal()}}
 	require.NoError(t, err)
+	jwks := jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{jwk.Marshal()}}
 
 	// Prepare the token.
 	claims := jwt.MapClaims{
