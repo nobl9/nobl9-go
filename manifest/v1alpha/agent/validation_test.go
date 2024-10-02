@@ -179,16 +179,29 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			})
 		}
 	})
-	t.Run("delay larger than max query delay", func(t *testing.T) {
+	t.Run("delay larger than default max query delay", func(t *testing.T) {
 		agent := validAgent(v1alpha.Prometheus)
+
 		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
 			Value: ptr(1441),
 			Unit:  v1alpha.Minute,
 		}}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop:    "spec.queryDelay",
-			Message: "must be less than or equal to 1440m",
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+	t.Run("delay larger than data source max query delay", func(t *testing.T) {
+		agent := validAgent(v1alpha.SplunkObservability)
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(16),
+			Unit:  v1alpha.Minute,
+		}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
 	t.Run("delay less than default", func(t *testing.T) {
@@ -203,7 +216,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 					Prop: "spec.queryDelay",
-					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
+					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
 		}
