@@ -256,8 +256,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -381,8 +383,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -415,6 +419,14 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			},
 			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
 				Value: ptr(2),
+				Unit:  v1alpha.HRDHour,
+			},
+			TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(10),
+				Unit:  v1alpha.HRDHour,
+			},
+			TriggeredBySloEdit: &v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(10),
 				Unit:  v1alpha.HRDHour,
 			},
 		}

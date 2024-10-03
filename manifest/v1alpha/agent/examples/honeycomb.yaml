@@ -15,10 +15,10 @@ spec:
     defaultDuration:
       value: 3
       unit: Day
-    triggeredByCreation:
+    triggeredBySloCreation:
       value: 3
       unit: Day
-    triggeredByEdit:
+    triggeredBySloEdit:
       value: 3
       unit: Day
   queryDelay:

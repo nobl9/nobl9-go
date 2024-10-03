@@ -418,19 +418,19 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}
 
-	if spec.HistoricalDataRetrieval.TriggeredByCreation != nil &&
-		spec.HistoricalDataRetrieval.TriggeredByCreation.BiggerThan(maxDurationAllowed) {
+	if spec.HistoricalDataRetrieval.TriggeredBySloCreation != nil &&
+		spec.HistoricalDataRetrieval.TriggeredBySloCreation.BiggerThan(maxDurationAllowed) {
 		return govy.NewPropertyError(
-			"historicalDataRetrieval.triggeredByCreation",
-			spec.HistoricalDataRetrieval.TriggeredByCreation,
+			"historicalDataRetrieval.triggeredBySloCreation",
+			spec.HistoricalDataRetrieval.TriggeredBySloCreation,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}
-	if spec.HistoricalDataRetrieval.TriggeredByEdit != nil &&
-		spec.HistoricalDataRetrieval.TriggeredByEdit.BiggerThan(maxDurationAllowed) {
+	if spec.HistoricalDataRetrieval.TriggeredBySloEdit != nil &&
+		spec.HistoricalDataRetrieval.TriggeredBySloEdit.BiggerThan(maxDurationAllowed) {
 		return govy.NewPropertyError(
-			"historicalDataRetrieval.triggeredByEdit",
-			spec.HistoricalDataRetrieval.TriggeredByEdit,
+			"historicalDataRetrieval.triggeredBySloEdit",
+			spec.HistoricalDataRetrieval.TriggeredBySloEdit,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}

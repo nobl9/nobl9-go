@@ -71,10 +71,10 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Unit:  maxDuration.Unit,
 		}
 		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration:         maxDuration,
-			DefaultDuration:     defaultDuration,
-			TriggeredByCreation: &defaultDuration,
-			TriggeredByEdit:     &defaultDuration,
+			MaxDuration:            maxDuration,
+			DefaultDuration:        defaultDuration,
+			TriggeredBySloCreation: &defaultDuration,
+			TriggeredBySloEdit:     &defaultDuration,
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]

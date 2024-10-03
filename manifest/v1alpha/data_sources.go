@@ -238,10 +238,10 @@ type HistoricalDataRetrieval struct {
 	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
 	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
-	// TriggeredByCreation is not supported yet, applying it will have no effect
-	TriggeredByCreation *HistoricalRetrievalDuration `json:"triggeredByCreation,omitempty"`
-	// TriggeredByEdit is not supported yet, applying it will have no effect
-	TriggeredByEdit *HistoricalRetrievalDuration `json:"triggeredByEdit,omitempty"`
+	// TriggeredBySloCreation is not supported yet, applying it will have no effect
+	TriggeredBySloCreation *HistoricalRetrievalDuration `json:"triggeredBySloCreation,omitempty"`
+	// TriggeredBySloEdit is not supported yet, applying it will have no effect
+	TriggeredBySloEdit *HistoricalRetrievalDuration `json:"triggeredBySloEdit,omitempty"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
@@ -256,11 +256,11 @@ func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval]
 			WithName("defaultDuration").
 			Required().
 			Include(historicalRetrievalDurationValidation),
-		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredByCreation }).
+		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredBySloCreation }).
 			WithName("triggeredByCreation").
 			OmitEmpty().
 			Include(historicalRetrievalDurationValidation),
-		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredByEdit }).
+		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredBySloEdit }).
 			WithName("triggeredByEdit").
 			OmitEmpty().
 			Include(historicalRetrievalDurationValidation),

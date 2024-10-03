@@ -65,10 +65,10 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Unit:  maxDuration.Unit,
 		}
 		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration:         maxDuration,
-			DefaultDuration:     defaultDuration,
-			TriggeredByCreation: &defaultDuration,
-			TriggeredByEdit:     &defaultDuration,
+			MaxDuration:            maxDuration,
+			DefaultDuration:        defaultDuration,
+			TriggeredBySloCreation: &defaultDuration,
+			TriggeredBySloEdit:     &defaultDuration,
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]
