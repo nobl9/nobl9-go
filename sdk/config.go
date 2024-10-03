@@ -44,7 +44,7 @@ func GetDefaultConfigPath() (string, error) {
 // - config file
 // - default values where applicable
 //
-// Detailed flow can be found in config_activity.png (generated from config_activity.puml).
+// Detailed flow can be found in config_activity.mmd.
 func ReadConfig(options ...ConfigOption) (*Config, error) {
 	conf, err := newConfig(options)
 	if err != nil {
@@ -243,7 +243,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 	for _, applyOption := range options {
 		applyOption(conf)
 	}
-	if err := conf.processEnvVariables(&conf.options, false); err != nil {
+	if err = conf.processEnvVariables(&conf.options, false); err != nil {
 		return nil, err
 	}
 	return conf, nil

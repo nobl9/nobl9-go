@@ -251,9 +251,6 @@ func (e endpoints) GetAlerts(
 		return nil, 0, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return nil, 0, err
-	}
 
 	objects, err := e.readObjects(ctx, resp.Body)
 	if err != nil {
