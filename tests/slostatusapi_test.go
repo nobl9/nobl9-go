@@ -31,7 +31,7 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	response, err := tryExecuteSLOStatusAPIRequest(t, func() (v1.SLODetails, error) {
+	response, err := tryExecuteGetSLORequest(t, func() (v1.SLODetails, error) {
 		return client.SLOStatusAPI().V1().GetSLO(ctx, slo.GetName(), project.GetName())
 	})
 
@@ -40,76 +40,52 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	assert.Equal(t, slo.GetName(), response.Name)
 }
 
-func Test_SLOStatusAPI_V1_GetSLOList(t *testing.T) {
+func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	allObjects := setupSLOListTest(t)
-	_, _, slo := allObjects[0], allObjects[1], allObjects[2]
+	initialObjects := setupSLOListTest(t)
+	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
 	slo1 := slo.(*v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = generateName()
+	initialObjects = append(initialObjects, slo2)
+	v1Apply(t, initialObjects)
+
 	slo3 := deepCopyObject(t, slo1)
 	slo3.Metadata.Name = generateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = generateName()
-	allObjects = append(allObjects, slo2, slo3, slo4)
+	v1Apply(t, []manifest.Object{slo3, slo4})
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	slo5 := deepCopyObject(t, slo1)
+	slo5.Metadata.Name = generateName()
+	v1Apply(t, []manifest.Object{slo5})
 
-	var err error
-	var firstResponse v1.SLOListResponse
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
+	t.Cleanup(func() { v1Delete(t, initialObjects) })
+	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+
 	limit := 2
-	done := false
-	for !done {
-		select {
-		case <-ticker.C:
-			firstResponse, err = client.SLOStatusAPI().V1().GetSLOList(ctx, limit, "")
-			if len(firstResponse.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(firstResponse.Data))
-			}
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	firstResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
+		return client.SLOStatusAPI().V1().GetSLOs(ctx, limit, "")
+	}, limit)
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
 
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	var secondResponse v1.SLOListResponse
-	ticker.Reset(5 * time.Second)
-	timer.Reset(time.Minute)
-	done = false
-	for !done {
-		select {
-		case <-ticker.C:
-			secondResponse, err = client.SLOStatusAPI().V1().GetSLOList(ctx, limit, firstCursor)
-			if len(secondResponse.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(secondResponse.Data))
-			}
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	secondResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
+		return client.SLOStatusAPI().V1().GetSLOs(ctx, limit, firstCursor)
+	}, limit)
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 
 	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
-
+	assert.NotEqual(t, firstCursor, secondCursor)
 	assert.NotEqual(t, firstResponse, secondResponse)
 }
 
@@ -123,7 +99,7 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	response, err := tryExecuteSLOStatusAPIRequest(t, func() (v2.SLODetails, error) {
+	response, err := tryExecuteGetSLORequest(t, func() (v2.SLODetails, error) {
 		return client.SLOStatusAPI().V2().GetSLO(ctx, slo.GetName(), project.GetName())
 	})
 
@@ -132,80 +108,57 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	assert.Equal(t, slo.GetName(), response.Name)
 }
 
-func Test_SLOStatusAPI_V2_GetSLOList(t *testing.T) {
+func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
-	allObjects := setupSLOListTest(t)
-	_, _, slo := allObjects[0], allObjects[1], allObjects[2]
+	initialObjects := setupSLOListTest(t)
+	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
 	slo1 := slo.(*v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = generateName()
+	initialObjects = append(initialObjects, slo2)
+	v1Apply(t, initialObjects)
+
 	slo3 := deepCopyObject(t, slo1)
 	slo3.Metadata.Name = generateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = generateName()
-	allObjects = append(allObjects, slo2, slo3, slo4)
+	v1Apply(t, []manifest.Object{slo3, slo4})
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	slo5 := deepCopyObject(t, slo1)
+	slo5.Metadata.Name = generateName()
+	v1Apply(t, []manifest.Object{slo5})
 
-	var err error
-	var firstResponse v2.SLOListResponse
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
+	t.Cleanup(func() { v1Delete(t, initialObjects) })
+	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+
 	limit := 2
-	done := false
-	for !done {
-		select {
-		case <-ticker.C:
-			firstResponse, err = client.SLOStatusAPI().V2().GetSLOList(ctx, limit, "")
-			if len(firstResponse.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(firstResponse.Data))
-			}
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	firstResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
+		return client.SLOStatusAPI().V2().GetSLOs(ctx, limit, "")
+	}, limit)
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
 
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	var secondResponse v2.SLOListResponse
-	ticker.Reset(5 * time.Second)
-	timer.Reset(time.Minute)
-	done = false
-	for !done {
-		select {
-		case <-ticker.C:
-			secondResponse, err = client.SLOStatusAPI().V2().GetSLOList(ctx, limit, firstCursor)
-			if len(secondResponse.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(secondResponse.Data))
-			}
-			if err == nil {
-				done = true
-			}
-		case <-timer.C:
-			t.Error("timeout")
-		}
-	}
+	secondResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
+		return client.SLOStatusAPI().V2().GetSLOs(ctx, limit, firstCursor)
+	}, limit)
+
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 
 	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
-
+	assert.NotEqual(t, firstCursor, secondCursor)
 	assert.NotEqual(t, firstResponse, secondResponse)
 }
 
 func setupSLOListTest(t *testing.T) []manifest.Object {
+	t.Helper()
 	project := generateV1alphaProject(t)
 	service := newV1alphaService(t, v1alphaService.Metadata{
 		Name:    generateName(),
@@ -242,7 +195,7 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	return []manifest.Object{project, service, slo}
 }
 
-func tryExecuteSLOStatusAPIRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
+func tryExecuteGetSLORequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
 	t.Helper()
 	ticker := time.NewTicker(5 * time.Second)
 	timer := time.NewTimer(time.Minute)
@@ -256,6 +209,64 @@ func tryExecuteSLOStatusAPIRequest[T any](t *testing.T, reqFunc func() (T, error
 		select {
 		case <-ticker.C:
 			response, err = reqFunc()
+			if err == nil {
+				return response, nil
+			}
+		case <-timer.C:
+			t.Error("timeout")
+			return response, err
+		}
+	}
+}
+
+func tryExecuteGetSLOsV1Request(
+	t *testing.T, reqFunc func() (v1.SLOListResponse, error), limit int,
+) (v1.SLOListResponse, error) {
+	t.Helper()
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	var (
+		response v1.SLOListResponse
+		err      error
+	)
+	for {
+		select {
+		case <-ticker.C:
+			response, err = reqFunc()
+			if len(response.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+			}
+			if err == nil {
+				return response, nil
+			}
+		case <-timer.C:
+			t.Error("timeout")
+			return response, err
+		}
+	}
+}
+
+func tryExecuteGetSLOsV2Request(
+	t *testing.T, reqFunc func() (v2.SLOListResponse, error), limit int,
+) (v2.SLOListResponse, error) {
+	t.Helper()
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	var (
+		response v2.SLOListResponse
+		err      error
+	)
+	for {
+		select {
+		case <-ticker.C:
+			response, err = reqFunc()
+			if len(response.Data) != limit {
+				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+			}
 			if err == nil {
 				return response, nil
 			}

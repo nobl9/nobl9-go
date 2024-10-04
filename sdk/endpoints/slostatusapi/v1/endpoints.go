@@ -45,16 +45,14 @@ func (e endpoints) GetSLO(ctx context.Context, name, project string) (slo SLODet
 		return slo, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return slo, err
-	}
+
 	if err = json.NewDecoder(resp.Body).Decode(&slo); err != nil {
 		return slo, errors.Wrap(err, "failed to decode response body")
 	}
 	return slo, nil
 }
 
-func (e endpoints) GetSLOList(ctx context.Context, limit int, cursor string) (slos SLOListResponse, err error) {
+func (e endpoints) GetSLOs(ctx context.Context, limit int, cursor string) (slos SLOListResponse, err error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
@@ -74,9 +72,7 @@ func (e endpoints) GetSLOList(ctx context.Context, limit int, cursor string) (sl
 		return slos, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return slos, err
-	}
+
 	if err = json.NewDecoder(resp.Body).Decode(&slos); err != nil {
 		return slos, errors.Wrap(err, "failed to decode response body")
 	}
@@ -85,10 +81,7 @@ func (e endpoints) GetSLOList(ctx context.Context, limit int, cursor string) (sl
 		if err != nil {
 			return slos, errors.Wrap(err, "failed to parse 'next' cursor link URL")
 		}
-		cursorValues := nextURL.Query()["cursor"]
-		if len(cursorValues) > 0 {
-			slos.Links.Cursor = cursorValues[0]
-		}
+		slos.Links.Cursor = nextURL.Query().Get("cursor")
 	}
 	return slos, nil
 }

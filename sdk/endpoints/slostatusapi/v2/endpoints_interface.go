@@ -8,5 +8,5 @@ import (
 
 type Endpoints interface {
 	GetSLO(ctx context.Context, name, project string) (slo SLODetails, err error)
-	GetSLOList(ctx context.Context, limit int, cursor string) (slos SLOListResponse, err error)
+	GetSLOs(ctx context.Context, limit int, cursor string) (slos SLOListResponse, err error)
 }
