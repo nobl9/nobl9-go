@@ -27,17 +27,15 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	response, err := tryExecuteGetSLORequest(t, func() (v1.SLODetails, error) {
+	responseSLO, err := tryExecuteGetSLORequest(t, func() (v1.SLODetails, error) {
 		return client.SLOStatusAPI().V1().GetSLO(ctx, slo.GetName(), project.GetName())
 	})
-
 	require.NoError(t, err)
-	assert.NotEmpty(t, response)
-	assert.Equal(t, slo.GetName(), response.Name)
+	assert.NotEmpty(t, responseSLO)
+	assert.Equal(t, slo.GetName(), responseSLO.Name)
 }
 
 func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
@@ -67,22 +65,22 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 
 	limit := 2
 	firstResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
-		return client.SLOStatusAPI().V1().GetSLOs(ctx, limit, "")
+		return client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit})
 	}, limit)
-
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
-
+	assert.NotEmpty(t, firstResponse.Links.Self, "expected first response's self link to be set")
+	assert.NotEmpty(t, firstResponse.Links.Next, "expected first response's next link to be set")
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
 	secondResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
-		return client.SLOStatusAPI().V1().GetSLOs(ctx, limit, firstCursor)
+		return client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 	}, limit)
-
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
-
+	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
+	assert.NotEmpty(t, secondResponse.Links.Next, "expected second response's next link to be set")
 	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
 	assert.NotEqual(t, firstCursor, secondCursor)
@@ -95,17 +93,15 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	response, err := tryExecuteGetSLORequest(t, func() (v2.SLODetails, error) {
+	responseSLO, err := tryExecuteGetSLORequest(t, func() (v2.SLODetails, error) {
 		return client.SLOStatusAPI().V2().GetSLO(ctx, slo.GetName(), project.GetName())
 	})
-
 	require.NoError(t, err)
-	assert.NotEmpty(t, response)
-	assert.Equal(t, slo.GetName(), response.Name)
+	assert.NotEmpty(t, responseSLO)
+	assert.Equal(t, slo.GetName(), responseSLO.Name)
 }
 
 func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
@@ -135,22 +131,22 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 
 	limit := 2
 	firstResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
-		return client.SLOStatusAPI().V2().GetSLOs(ctx, limit, "")
+		return client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit})
 	}, limit)
-
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
-
+	assert.NotEmpty(t, firstResponse.Links.Self, "expected first response's self link to be set")
+	assert.NotEmpty(t, firstResponse.Links.Next, "expected first response's next link to be set")
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
 	secondResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
-		return client.SLOStatusAPI().V2().GetSLOs(ctx, limit, firstCursor)
+		return client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 	}, limit)
-
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
-
+	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
+	assert.NotEmpty(t, secondResponse.Links.Next, "expected second response's next link to be set")
 	secondCursor := secondResponse.Links.Cursor
 	require.NotEmpty(t, secondCursor)
 	assert.NotEqual(t, firstCursor, secondCursor)
@@ -191,7 +187,6 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	slo.Spec.AlertPolicies = nil
 	slo.Spec.Service = service.Metadata.Name
 	slo.Spec.Objectives[0].Name = "good"
-
 	return []manifest.Object{project, service, slo}
 }
 

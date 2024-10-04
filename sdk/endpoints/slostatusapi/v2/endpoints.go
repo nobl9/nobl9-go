@@ -52,15 +52,15 @@ func (e endpoints) GetSLO(ctx context.Context, name, project string) (slo SLODet
 	return slo, nil
 }
 
-func (e endpoints) GetSLOs(ctx context.Context, limit int, cursor string) (slos SLOListResponse, err error) {
+func (e endpoints) GetSLOs(ctx context.Context, params GetSLOsRequest) (slos SLOListResponse, err error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
 		apiSLOStatusAPIPath,
 		nil,
 		url.Values{
-			QueryKeyLimit:  []string{strconv.Itoa(limit)},
-			QueryKeyCursor: []string{cursor},
+			QueryKeyLimit:  []string{strconv.Itoa(params.Limit)},
+			QueryKeyCursor: []string{params.Cursor},
 		},
 		nil,
 	)
