@@ -28,7 +28,7 @@ type endpoints struct {
 	client endpointsHelpers.Client
 }
 
-func (e endpoints) GetSLO(ctx context.Context, name, project string) (slo SLODetails, err error) {
+func (e endpoints) GetSLO(ctx context.Context, project, name string) (slo SLODetails, err error) {
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,

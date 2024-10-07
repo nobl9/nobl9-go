@@ -31,7 +31,7 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteGetSLORequest(t, func() (v1.SLODetails, error) {
-		return client.SLOStatusAPI().V1().GetSLO(ctx, slo.GetName(), project.GetName())
+		return client.SLOStatusAPI().V1().GetSLO(ctx, project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, responseSLO)
@@ -64,9 +64,16 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
-	firstResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
-		return client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit})
-	}, limit)
+	firstResponse, err := tryExecuteGetSLORequest(t, func() (v1.SLOListResponse, error) {
+		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit})
+		if err != nil {
+			return response, err
+		}
+		if len(response.Data) != limit {
+			err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+		}
+		return response, err
+	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
 	assert.NotEmpty(t, firstResponse.Links.Self, "expected first response's self link to be set")
@@ -74,9 +81,16 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := tryExecuteGetSLOsV1Request(t, func() (v1.SLOListResponse, error) {
-		return client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
-	}, limit)
+	secondResponse, err := tryExecuteGetSLORequest(t, func() (v1.SLOListResponse, error) {
+		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
+		if err != nil {
+			return response, err
+		}
+		if len(response.Data) != limit {
+			err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+		}
+		return response, err
+	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
@@ -97,7 +111,7 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteGetSLORequest(t, func() (v2.SLODetails, error) {
-		return client.SLOStatusAPI().V2().GetSLO(ctx, slo.GetName(), project.GetName())
+		return client.SLOStatusAPI().V2().GetSLO(ctx, project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, responseSLO)
@@ -130,9 +144,16 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
-	firstResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
-		return client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit})
-	}, limit)
+	firstResponse, err := tryExecuteGetSLORequest(t, func() (v2.SLOListResponse, error) {
+		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit})
+		if err != nil {
+			return response, err
+		}
+		if len(response.Data) != limit {
+			err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+		}
+		return response, err
+	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, firstResponse)
 	assert.NotEmpty(t, firstResponse.Links.Self, "expected first response's self link to be set")
@@ -140,9 +161,16 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := tryExecuteGetSLOsV2Request(t, func() (v2.SLOListResponse, error) {
-		return client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
-	}, limit)
+	secondResponse, err := tryExecuteGetSLORequest(t, func() (v2.SLOListResponse, error) {
+		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
+		if err != nil {
+			return response, err
+		}
+		if len(response.Data) != limit {
+			err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
+		}
+		return response, err
+	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, secondResponse)
 	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
@@ -204,64 +232,6 @@ func tryExecuteGetSLORequest[T any](t *testing.T, reqFunc func() (T, error)) (T,
 		select {
 		case <-ticker.C:
 			response, err = reqFunc()
-			if err == nil {
-				return response, nil
-			}
-		case <-timer.C:
-			t.Error("timeout")
-			return response, err
-		}
-	}
-}
-
-func tryExecuteGetSLOsV1Request(
-	t *testing.T, reqFunc func() (v1.SLOListResponse, error), limit int,
-) (v1.SLOListResponse, error) {
-	t.Helper()
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
-	var (
-		response v1.SLOListResponse
-		err      error
-	)
-	for {
-		select {
-		case <-ticker.C:
-			response, err = reqFunc()
-			if len(response.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
-			}
-			if err == nil {
-				return response, nil
-			}
-		case <-timer.C:
-			t.Error("timeout")
-			return response, err
-		}
-	}
-}
-
-func tryExecuteGetSLOsV2Request(
-	t *testing.T, reqFunc func() (v2.SLOListResponse, error), limit int,
-) (v2.SLOListResponse, error) {
-	t.Helper()
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
-	var (
-		response v2.SLOListResponse
-		err      error
-	)
-	for {
-		select {
-		case <-ticker.C:
-			response, err = reqFunc()
-			if len(response.Data) != limit {
-				err = fmt.Errorf("expected %d SLOs, got %d", limit, len(response.Data))
-			}
 			if err == nil {
 				return response, nil
 			}
