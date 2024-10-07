@@ -56,9 +56,6 @@ func (e endpoints) GetAgentCredentials(
 		return creds, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return creds, err
-	}
 	if err = json.NewDecoder(resp.Body).Decode(&creds); err != nil {
 		return creds, errors.Wrap(err, "failed to decode response body")
 	}
@@ -82,9 +79,6 @@ func (e endpoints) getIAMRoleIDs(ctx context.Context, endpoint, project string) 
 		return nil, errors.Wrap(err, "failed to execute request")
 	}
 	defer func() { _ = resp.Body.Close() }()
-	if err = sdk.ProcessResponseErrors(resp); err != nil {
-		return nil, err
-	}
 	var response IAMRoleIDs
 	if err = json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, errors.Wrap(err, "failed to decode response body")

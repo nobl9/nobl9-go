@@ -647,6 +647,34 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 			},
 		},
+		"fails with too long displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.systemHealthReview.columns[0].displayName",
+					Code: rules.ErrorCodeStringMaxLength,
+				},
+			},
+			Config: SystemHealthReviewConfig{
+				TimeFrame: SystemHealthReviewTimeFrame{
+					Snapshot: SnapshotTimeFrame{
+						Point: SnapshotPointLatest,
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+				RowGroupBy: RowGroupByProject,
+				Columns: []ColumnSpec{
+					{
+						DisplayName: "it is a very long display name, longer than sixty three characters",
+						Labels:      properLabel,
+					},
+				},
+				Thresholds: Thresholds{
+					RedLessThanOrEqual: ptr(0.0),
+					GreenGreaterThan:   ptr(0.2),
+				},
+			},
+		},
 		"fails with empty thresholds": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
@@ -673,7 +701,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.systemHealthReview.thresholds.greenGt",
-					Code: rules.ErrorCodeLessThanOrEqualTo,
+					Code: rules.ErrorCodeLessThan,
 				},
 			},
 			Config: SystemHealthReviewConfig{

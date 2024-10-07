@@ -35,7 +35,8 @@ var specValidation = govy.New[Spec](
 		Rules(exactlyOneDataSourceTypeValidationRule).
 		Rules(
 			historicalDataRetrievalValidationRule,
-			queryDelayGreaterThanOrEqualToDefaultValidationRule),
+			queryDelayValidationRule,
+			releaseChannelValidationRule),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -221,8 +222,9 @@ var (
 )
 
 const (
-	errCodeExactlyOneDataSourceType              = "exactly_one_data_source_type"
-	errCodeQueryDelayGreaterThanOrEqualToDefault = "query_delay_greater_than_or_equal_to_default"
+	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
+	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
+	errCodeUnsupportedReleaseChannel = "unsupported_release_channel"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -367,21 +369,54 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	return nil
 })
 
-var queryDelayGreaterThanOrEqualToDefaultValidationRule = govy.NewRule(func(spec Spec) error {
+var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	if spec.QueryDelay == nil {
 		return nil
 	}
 	typ, _ := spec.GetType()
-	directDefault := v1alpha.GetQueryDelayDefaults()[typ]
-	if spec.QueryDelay.LessThan(directDefault) {
+	maxQueryDelay := v1alpha.GetQueryDelayMax(typ)
+	maxQueryDelayAllowed := v1alpha.Duration{
+		Value: maxQueryDelay.Value,
+		Unit:  maxQueryDelay.Unit,
+	}
+	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
 		return govy.NewPropertyError(
 			"queryDelay",
 			spec.QueryDelay,
-			errors.Errorf("should be greater than or equal to %s", directDefault),
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
+	}
+	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
+	if spec.QueryDelay.LessThan(agentDefault) {
+		return govy.NewPropertyError(
+			"queryDelay",
+			spec.QueryDelay,
+			errors.Errorf("should be greater than or equal to %s", agentDefault),
 		)
 	}
 	return nil
-}).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
+}).WithErrorCode(errCodeQueryDelayOutOfBounds)
+
+var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
+	typ, _ := spec.GetType()
+	if typ != v1alpha.SplunkObservability && spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha {
+		return govy.NewPropertyError(
+			"releaseChannel",
+			spec.ReleaseChannel,
+			errors.New("must be one of [stable, beta]"),
+		)
+	}
+
+	if typ == v1alpha.SplunkObservability && spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
+		return govy.NewPropertyError(
+			"releaseChannel",
+			spec.ReleaseChannel,
+			errors.New("must be 'alpha' for Splunk Observability"),
+		)
+	}
+
+	return nil
+}).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
 const errorCodeHTTPSSchemeRequired = "https_scheme_required"
 

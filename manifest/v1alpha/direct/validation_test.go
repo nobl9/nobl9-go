@@ -128,6 +128,30 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
+	t.Run("data source type using supported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.Datadog)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("data source type using unsupported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.Datadog)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: errCodeUnsupportedReleaseChannel,
+		})
+	})
+	t.Run("data source type using unsupported release channel", func(t *testing.T) {
+		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: errCodeUnsupportedReleaseChannel,
+		})
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
@@ -184,10 +208,24 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			Value: ptr(1441),
 			Unit:  v1alpha.Minute,
 		}}
+
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.queryDelay",
-			Message: "must be less than or equal to 1440m",
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+
+	t.Run("delay larger than data source max query delay", func(t *testing.T) {
+		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(16),
+			Unit:  v1alpha.Minute,
+		}}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
 	t.Run("delay less than default", func(t *testing.T) {
@@ -202,7 +240,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				err := validate(direct)
 				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 					Prop: "spec.queryDelay",
-					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
+					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
 		}
@@ -591,11 +629,13 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 func TestValidateSpec_SplunkObservability(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
 	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{

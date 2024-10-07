@@ -131,6 +131,166 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			isValid:   false,
 			ErrorCode: rules.ErrorCodeRequired,
 		},
+		{
+			name: "correct struct start date",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration or start date can be set",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid:   false,
+			ErrorCode: replayDurationAndStartDateValidationError,
+		},
+		{
+			name: "start date cannot be in the future",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(time.Minute * 1),
+				},
+			},
+			isValid:   false,
+			ErrorCode: replayStartDateInTheFutureValidationError,
+		},
+		{
+			name: "use start date without duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "",
+					Value: 0,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid: true,
+		},
+		{
+			name: "only one of duration",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				TimeRange: ReplayTimeRange{
+					StartDate: time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			},
+			isValid: true,
+		},
+		{
+			name: "source slo is required",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "source project is required",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "",
+					Slo:     "slo",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "missing objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "slo",
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeSliceMinLength,
+		},
+		{
+			name: "empty objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project:       "project",
+					Slo:           "slo",
+					ObjectivesMap: []ReplaySourceSLOItem{},
+				},
+			},
+			isValid:   false,
+			ErrorCode: rules.ErrorCodeSliceMinLength,
+		},
+		{
+			name: "not empty objectives map when replaying source slo",
+			replay: Replay{
+				Project: "project",
+				Slo:     "slo",
+				Duration: ReplayDuration{
+					Unit:  "Day",
+					Value: 30,
+				},
+				SourceSLO: &ReplaySourceSLO{
+					Project: "project",
+					Slo:     "slo",
+					ObjectivesMap: []ReplaySourceSLOItem{
+						{
+							Source: "objective-1",
+							Target: "objective-1",
+						},
+					},
+				},
+			},
+			isValid: true,
+		},
 	}
 
 	for _, tt := range tests {

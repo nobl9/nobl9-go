@@ -16,14 +16,21 @@ const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
-	Project  string         `json:"project"`
-	Slo      string         `json:"slo"`
-	Duration ReplayDuration `json:"duration"`
+	Project   string           `json:"project"`
+	Slo       string           `json:"slo"`
+	Duration  ReplayDuration   `json:"duration"`
+	TimeRange ReplayTimeRange  `json:"timeRange,omitempty"`
+	SourceSLO *ReplaySourceSLO `json:"sourceSlo,omitempty"`
 }
 
 type ReplayDuration struct {
 	Unit  string `json:"unit"`
 	Value int    `json:"value"`
+}
+
+type ReplayTimeRange struct {
+	StartDate time.Time `json:"startDate,omitempty"`
+	EndDate   time.Time `json:"endDate,omitempty"` // not supported yet
 }
 
 // ReplayWithStatus used for returning Replay data with status.
@@ -34,10 +41,23 @@ type ReplayWithStatus struct {
 }
 
 type ReplayStatus struct {
-	Status    string `json:"status"`
-	Unit      string `json:"unit"`
-	Value     int    `json:"value"`
-	StartTime string `json:"startTime,omitempty"`
+	Source      string `json:"source"`
+	Status      string `json:"status"`
+	TriggeredBy string `json:"triggeredBy"`
+	Unit        string `json:"unit"`
+	Value       int    `json:"value"`
+	StartTime   string `json:"startTime"`
+}
+
+type ReplaySourceSLO struct {
+	Slo           string                `json:"slo"`
+	Project       string                `json:"project"`
+	ObjectivesMap []ReplaySourceSLOItem `json:"objectivesMap"`
+}
+
+type ReplaySourceSLOItem struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
 }
 
 // Variants of ReplayStatus.Status.
@@ -72,10 +92,33 @@ var replayValidation = govy.New[Replay](
 		Required(),
 	govy.For(func(r Replay) ReplayDuration { return r.Duration }).
 		WithName("duration").
-		Required().
+		When(
+			func(r Replay) bool {
+				return !isEmpty(r.Duration) || (r.TimeRange.StartDate.IsZero() && isEmpty(r.Duration))
+			},
+		).
 		Cascade(govy.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
+	govy.ForPointer(func(r Replay) *ReplaySourceSLO { return r.SourceSLO }).
+		WithName("sourceSLO").
+		Include(replaySourceSLOValidation),
+	govy.For(func(r Replay) time.Time { return r.TimeRange.StartDate }).
+		WithName("startDate").
+		When(
+			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
+		).
+		Rules(
+			replayStartTimeValidationRule(),
+			replayStartTimeNotInFutureValidationRule(),
+		),
+	govy.For(func(r Replay) Replay { return r }).
+		Rules(govy.NewRule(func(r Replay) error {
+			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
+				return errors.New("only one of duration or startDate can be set")
+			}
+			return nil
+		}).WithErrorCode(replayDurationAndStartDateValidationError)),
 )
 
 var replayDurationValidation = govy.New[ReplayDuration](
@@ -89,6 +132,28 @@ var replayDurationValidation = govy.New[ReplayDuration](
 		Rules(rules.GT(0)),
 )
 
+var replaySourceSLOValidation = govy.New[ReplaySourceSLO](
+	govy.For(func(r ReplaySourceSLO) string { return r.Project }).
+		WithName("project").
+		Required(),
+	govy.For(func(r ReplaySourceSLO) string { return r.Slo }).
+		WithName("slo").
+		Required(),
+	govy.ForSlice(func(r ReplaySourceSLO) []ReplaySourceSLOItem { return r.ObjectivesMap }).
+		WithName("objectivesMap").
+		Rules(rules.SliceMinLength[[]ReplaySourceSLOItem](1)).
+		IncludeForEach(replaySourceSLOItemValidation),
+)
+
+var replaySourceSLOItemValidation = govy.New[ReplaySourceSLOItem](
+	govy.For(func(r ReplaySourceSLOItem) string { return r.Source }).
+		WithName("source").
+		Required(),
+	govy.For(func(r ReplaySourceSLOItem) string { return r.Target }).
+		WithName("target").
+		Required(),
+)
+
 func (r Replay) Validate() error {
 	// Explicitly return an error as the interface is initialized with the type otherwise.
 	if err := replayValidation.Validate(r); err != nil {
@@ -98,8 +163,10 @@ func (r Replay) Validate() error {
 }
 
 const (
-	replayDurationValidationErrorCode     = "replay_duration"
-	replayDurationUnitValidationErrorCode = "replay_duration_unit"
+	replayDurationValidationErrorCode         = "replay_duration"
+	replayDurationUnitValidationErrorCode     = "replay_duration_unit"
+	replayDurationAndStartDateValidationError = "replay_duration_or_start_date"
+	replayStartDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
 
 func replayDurationValidationRule() govy.Rule[ReplayDuration] {
@@ -114,6 +181,27 @@ func replayDurationValidationRule() govy.Rule[ReplayDuration] {
 		}
 		return nil
 	}).WithErrorCode(replayDurationValidationErrorCode)
+}
+
+func replayStartTimeValidationRule() govy.Rule[time.Time] {
+	return govy.NewRule(func(v time.Time) error {
+		duration := time.Since(v)
+		if duration > maximumAllowedReplayDuration {
+			return errors.Errorf("%s duration must not be greater than %s",
+				duration, maximumAllowedReplayDuration)
+		}
+		return nil
+	}).WithErrorCode(replayDurationValidationErrorCode)
+}
+
+func replayStartTimeNotInFutureValidationRule() govy.Rule[time.Time] {
+	return govy.NewRule(func(v time.Time) error {
+		now := time.Now()
+		if v.After(now) {
+			return errors.Errorf("startDate %s must not be in the future", v)
+		}
+		return nil
+	}).WithErrorCode(replayStartDateInTheFutureValidationError)
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.
@@ -167,4 +255,8 @@ func ValidateReplayDurationUnit(unit string) error {
 		}
 	}
 	return ErrInvalidReplayDurationUnit
+}
+
+func isEmpty(duration ReplayDuration) bool {
+	return duration.Unit == "" || duration.Value == 0
 }
