@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	apiSLOStatusAPIPath = "v1/slos"
+	baseAPIPath = "v1/slos"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
@@ -32,7 +32,7 @@ func (e endpoints) GetSLO(ctx context.Context, name, project string) (slo SLODet
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
-		path.Join(apiSLOStatusAPIPath, name),
+		path.Join(baseAPIPath, name),
 		http.Header{sdk.HeaderProject: {project}},
 		nil,
 		nil,
@@ -56,7 +56,7 @@ func (e endpoints) GetSLOs(ctx context.Context, params GetSLOsRequest) (slos SLO
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
-		apiSLOStatusAPIPath,
+		baseAPIPath,
 		nil,
 		url.Values{
 			QueryKeyLimit:  []string{strconv.Itoa(params.Limit)},
