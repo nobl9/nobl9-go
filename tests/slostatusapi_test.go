@@ -30,7 +30,7 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	responseSLO, err := tryExecuteGetSLORequest(t, func() (v1.SLODetails, error) {
+	responseSLO, err := tryExecuteRequest(t, func() (v1.SLODetails, error) {
 		return client.SLOStatusAPI().V1().GetSLO(ctx, project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
@@ -64,7 +64,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
-	firstResponse, err := tryExecuteGetSLORequest(t, func() (v1.SLOListResponse, error) {
+	firstResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
 		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit})
 		if err != nil {
 			return response, err
@@ -81,7 +81,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := tryExecuteGetSLORequest(t, func() (v1.SLOListResponse, error) {
+	secondResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
 		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 		if err != nil {
 			return response, err
@@ -110,7 +110,7 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	v1Apply(t, allObjects)
 	t.Cleanup(func() { v1Delete(t, allObjects) })
 
-	responseSLO, err := tryExecuteGetSLORequest(t, func() (v2.SLODetails, error) {
+	responseSLO, err := tryExecuteRequest(t, func() (v2.SLODetails, error) {
 		return client.SLOStatusAPI().V2().GetSLO(ctx, project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
@@ -144,7 +144,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
-	firstResponse, err := tryExecuteGetSLORequest(t, func() (v2.SLOListResponse, error) {
+	firstResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {
 		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit})
 		if err != nil {
 			return response, err
@@ -161,7 +161,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	firstCursor := firstResponse.Links.Cursor
 	require.NotEmpty(t, firstCursor)
 
-	secondResponse, err := tryExecuteGetSLORequest(t, func() (v2.SLOListResponse, error) {
+	secondResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {
 		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 		if err != nil {
 			return response, err
@@ -218,7 +218,7 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	return []manifest.Object{project, service, slo}
 }
 
-func tryExecuteGetSLORequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
+func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
 	t.Helper()
 	ticker := time.NewTicker(5 * time.Second)
 	timer := time.NewTimer(time.Minute)
