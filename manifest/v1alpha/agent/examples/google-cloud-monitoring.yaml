@@ -15,6 +15,12 @@ spec:
     defaultDuration:
       value: 15
       unit: Day
+    triggeredBySloCreation:
+      value: 15
+      unit: Day
+    triggeredBySloEdit:
+      value: 15
+      unit: Day
   queryDelay:
     value: 3
     unit: Minute
