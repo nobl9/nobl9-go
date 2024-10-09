@@ -66,12 +66,15 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 	direct = d.generateVariant(direct)
 	typ, _ := direct.Spec.GetType()
 	if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ); err == nil {
+		defaultDuration := v1alpha.HistoricalRetrievalDuration{
+			Value: ptr(*maxDuration.Value / 2),
+			Unit:  maxDuration.Unit,
+		}
 		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration: maxDuration,
-			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(*maxDuration.Value / 2),
-				Unit:  maxDuration.Unit,
-			},
+			MaxDuration:            maxDuration,
+			DefaultDuration:        defaultDuration,
+			TriggeredBySloCreation: &defaultDuration,
+			TriggeredBySloEdit:     &defaultDuration,
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]

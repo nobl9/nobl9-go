@@ -146,6 +146,7 @@ words:
   - sloerrorbudgetstatus
   - sloname
   - slos
+  - slostatusapi
   - sourcetype
   - stablebetaalpha
   - startuml
