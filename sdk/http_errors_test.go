@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAPIError(t *testing.T) {
+func TestHTTPError(t *testing.T) {
 	t.Parallel()
 	t.Run("status code smaller than 300, no error", func(t *testing.T) {
 		t.Parallel()
@@ -92,7 +92,7 @@ func TestAPIError(t *testing.T) {
 	})
 }
 
-func TestAPIError_IsRetryable(t *testing.T) {
+func TestHTTPError_IsRetryable(t *testing.T) {
 	t.Parallel()
 	tests := []*http.Response{
 		{
@@ -122,6 +122,6 @@ func TestAPIError_IsRetryable(t *testing.T) {
 	for _, test := range tests {
 		err := processHTTPResponse(test)
 		require.Error(t, err)
-		assert.True(t, err.(*APIError).IsRetryable())
+		assert.True(t, err.(*HTTPError).IsRetryable())
 	}
 }
