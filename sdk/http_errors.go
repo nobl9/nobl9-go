@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -64,12 +65,8 @@ func (r HTTPError) IsRetryable() bool {
 func (r HTTPError) Error() string {
 	buf := bytes.Buffer{}
 	buf.Grow(len(httpErrorTemplateData))
-	var message string
-	if len(r.Errors) == 1 && r.Errors[0].Source == nil {
-		message = r.Errors[0].Title
-	}
 	if err := httpErrorTemplate.Execute(&buf, httpErrorTemplateFields{
-		Message:  message,
+		Errors:   r.Errors,
 		Method:   r.Method,
 		URL:      r.URL,
 		TraceID:  r.TraceID,
@@ -112,7 +109,7 @@ func processAPIErrors(resp *http.Response) ([]APIError, error) {
 	if resp.Body == nil {
 		return []APIError{{Title: "unknown error"}}, nil
 	}
-	if resp.Header.Get("content-type") != "application/json" {
+	if resp.Header.Get("Content-Type") != "application/json" {
 		rawBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read response body")
@@ -130,10 +127,10 @@ func processAPIErrors(resp *http.Response) ([]APIError, error) {
 //go:embed http_error.tmpl
 var httpErrorTemplateData string
 
-var httpErrorTemplate = template.Must(template.New("").Parse(httpErrorTemplateData))
+var httpErrorTemplate = template.Must(template.New("").Parse(strings.TrimSpace(httpErrorTemplateData)))
 
 type httpErrorTemplateFields struct {
-	Message  string
+	Errors   []APIError
 	Method   string
 	URL      string
 	TraceID  string
