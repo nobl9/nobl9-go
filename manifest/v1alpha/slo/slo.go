@@ -182,7 +182,7 @@ type ProcessStatus struct {
 type TargetSloStatus struct {
 	// Deprecated: use TargetSloStatus.Replay instead.
 	TargetTimeTravel ReplayStatus  `json:"targetTimeTravel,omitempty"`
-	Replay           ProcessStatus `json:"replay,omitempty,omitempty"`
+	Replay           ProcessStatus `json:"replay,omitempty"`
 }
 
 // Deprecated: ReplayStatus exists for historical compatibility
