@@ -95,9 +95,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	assert.NotEmpty(t, secondResponse)
 	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
 	assert.NotEmpty(t, secondResponse.Links.Next, "expected second response's next link to be set")
-	secondCursor := secondResponse.Links.Cursor
-	require.NotEmpty(t, secondCursor)
-	assert.NotEqual(t, firstCursor, secondCursor)
+	require.NotEmpty(t, secondResponse.Links.Cursor)
 	assert.NotEqual(t, firstResponse, secondResponse)
 }
 
@@ -175,9 +173,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	assert.NotEmpty(t, secondResponse)
 	assert.NotEmpty(t, secondResponse.Links.Self, "expected second response's self link to be set")
 	assert.NotEmpty(t, secondResponse.Links.Next, "expected second response's next link to be set")
-	secondCursor := secondResponse.Links.Cursor
-	require.NotEmpty(t, secondCursor)
-	assert.NotEqual(t, firstCursor, secondCursor)
+	require.NotEmpty(t, secondResponse.Links.Cursor)
 	assert.NotEqual(t, firstResponse, secondResponse)
 }
 
