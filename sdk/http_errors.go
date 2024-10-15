@@ -109,19 +109,19 @@ func processAPIErrors(resp *http.Response) ([]APIError, error) {
 	if resp.Body == nil {
 		return []APIError{{Title: "unknown error"}}, nil
 	}
-	if resp.Header.Get("Content-Type") != "application/json" {
-		rawBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to read response body")
+	if typ := resp.Header.Get("Content-Type"); typ != "" && strings.HasPrefix(typ, "application/json") {
+		dec := json.NewDecoder(resp.Body)
+		var apiErrors []APIError
+		if err := dec.Decode(&apiErrors); err != nil {
+			return nil, errors.Wrap(err, "failed to decode JSON response body")
 		}
-		return []APIError{{Title: string(bytes.TrimSpace(rawBody))}}, nil
+		return apiErrors, nil
 	}
-	dec := json.NewDecoder(resp.Body)
-	var apiErrors []APIError
-	if err := dec.Decode(&apiErrors); err != nil {
-		return nil, errors.Wrap(err, "failed to decode JSON response body")
+	rawBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response body")
 	}
-	return apiErrors, nil
+	return []APIError{{Title: string(bytes.TrimSpace(rawBody))}}, nil
 }
 
 //go:embed http_error.tmpl

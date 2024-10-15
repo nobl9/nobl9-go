@@ -218,6 +218,24 @@ func TestHTTPError(t *testing.T) {
 		require.Error(t, err)
 		assert.Error(t, err, "failed to decode JSON response body")
 	})
+	t.Run("content type with charset", func(t *testing.T) {
+		t.Parallel()
+		apiErrors := []APIError{{Title: "error"}}
+		data, err := json.Marshal(apiErrors)
+		require.NoError(t, err)
+
+		err = processHTTPResponse(&http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{"Content-Type": []string{"application/json; charset=utf-8"}},
+			Body:       io.NopCloser(bytes.NewBuffer(data)),
+		})
+		require.Error(t, err)
+		expectedError := &HTTPError{
+			StatusCode: 400,
+			Errors:     apiErrors,
+		}
+		assert.Equal(t, expectedError, err)
+	})
 }
 
 type mockReadCloser struct{ err error }
