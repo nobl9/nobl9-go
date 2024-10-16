@@ -162,7 +162,7 @@ type AnomalyConfigAlertMethod struct {
 // Status is not part of the static object definition.
 type Status struct {
 	UpdatedAt             string           `json:"updatedAt,omitempty"`
-	CompositeSLO          *ProcessStatus   `json:"compositeSLO,omitempty"`
+	CompositeSLO          *ProcessStatus   `json:"compositeSlo,omitempty"`
 	ErrorBudgetAdjustment *ProcessStatus   `json:"errorBudgetAdjustment,omitempty"`
 	Replay                *ProcessStatus   `json:"replay,omitempty"`
 	TargetSLO             *TargetSloStatus `json:"targetSlo,omitempty"`
