@@ -1,0 +1,8 @@
+{{- if and (len .Errors | eq 1) (not (index .Errors 0).Source) }}
+    {{- if .CodeText }}{{ .CodeText }}: {{ end -}}{{ (index .Errors 0).Title }} (code: {{ .Code }}{{- if .URL }}, endpoint: {{ .Method }} {{ .URL }}{{- end }}{{- if .TraceID }}, traceId: {{ .TraceID }}{{- end }})
+{{- else }}
+    {{- if .CodeText }}{{ .CodeText }} {{ end -}} (code: {{ .Code }}{{- if .URL }}, endpoint: {{ .Method }} {{ .URL }}{{- end }}{{- if .TraceID }}, traceId: {{ .TraceID }}{{- end }})
+    {{- range .Errors }}
+  - {{ .Title }}{{- if .Source }} (source: '{{ .Source.PropertyName }}'{{- if .Source.PropertyValue }}, value: '{{ .Source.PropertyValue }}'{{- end }}){{- end }}
+    {{- end }}
+{{- end }}
