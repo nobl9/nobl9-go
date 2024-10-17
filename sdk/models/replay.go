@@ -9,6 +9,8 @@ import (
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
@@ -47,6 +49,16 @@ type ReplayStatus struct {
 	Unit        string `json:"unit"`
 	Value       int    `json:"value"`
 	StartTime   string `json:"startTime"`
+}
+
+func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
+	return slo.ProcessStatus{
+		Status:      status.Status,
+		TriggeredBy: status.TriggeredBy,
+		Unit:        status.Unit,
+		Value:       status.Value,
+		StartTime:   status.StartTime,
+	}
 }
 
 type ReplaySourceSLO struct {

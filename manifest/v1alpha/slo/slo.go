@@ -162,15 +162,32 @@ type AnomalyConfigAlertMethod struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	UpdatedAt       string           `json:"updatedAt,omitempty"`
-	ReplayStatus    *ReplayStatus    `json:"timeTravel,omitempty"`
-	TargetSLOStatus *TargetSloStatus `json:"targetSlo,omitempty"`
+	UpdatedAt             string           `json:"updatedAt,omitempty"`
+	CompositeSLO          *ProcessStatus   `json:"compositeSlo,omitempty"`
+	ErrorBudgetAdjustment *ProcessStatus   `json:"errorBudgetAdjustment,omitempty"`
+	Replay                *ProcessStatus   `json:"replay,omitempty"`
+	TargetSLO             *TargetSloStatus `json:"targetSlo,omitempty"`
+	// Deprecated: use Status.Replay instead.
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 
+type ProcessStatus struct {
+	Status      string `json:"status"`
+	TriggeredBy string `json:"triggeredBy"`
+	Unit        string `json:"unit"`
+	Value       int    `json:"value"`
+	StartTime   string `json:"startTime"`
+}
+
+// TargetSloStatus represents the status of Replay  a target SLO process.
 type TargetSloStatus struct {
-	TargetTimeTravel ReplayStatus `json:"targetTimeTravel"`
+	// Deprecated: use TargetSloStatus.Replay instead.
+	TargetTimeTravel ReplayStatus  `json:"targetTimeTravel,omitempty"`
+	Replay           ProcessStatus `json:"replay,omitempty"`
 }
 
+// Deprecated: ReplayStatus exists for historical compatibility
+// and should not be used.
 type ReplayStatus struct {
 	Source      string `json:"source"`
 	Status      string `json:"status"`
