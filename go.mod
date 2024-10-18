@@ -7,19 +7,19 @@ require (
 	github.com/MicahParks/jwkset v0.5.20
 	github.com/MicahParks/keyfunc/v3 v3.3.5
 	github.com/aws/aws-sdk-go v1.55.5
-	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/goccy/go-yaml v1.12.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/go-yaml v1.0.1
-	github.com/nobl9/govy v0.3.0
+	github.com/nobl9/govy v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	golang.org/x/sync v0.8.0
-	golang.org/x/text v0.18.0
-	golang.org/x/time v0.6.0
+	golang.org/x/text v0.19.0
+	golang.org/x/time v0.7.0
 )
 
 require (
