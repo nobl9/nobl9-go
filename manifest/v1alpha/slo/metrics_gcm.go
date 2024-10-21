@@ -10,9 +10,9 @@ import (
 
 // GCMMetric represents metric from GCM
 type GCMMetric struct {
-	Query       string `json:"query,omitempty"`
-	ProjectID   string `json:"projectId"`
-	PromqlQuery string `json:"promqlQuery,omitempty"`
+	Query     string `json:"query,omitempty"`
+	ProjectID string `json:"projectId"`
+	PromQL    string `json:"promql,omitempty"`
 }
 
 // IsMQLConfiguration returns true if the metric is configured with MQL query.
@@ -22,7 +22,7 @@ func (g GCMMetric) IsMQLConfiguration() bool {
 
 // IsPromqlConfiguration returns true if the metric is configured with promql query.
 func (g GCMMetric) IsPromqlConfiguration() bool {
-	return g.PromqlQuery != ""
+	return g.PromQL != ""
 }
 
 var gcmValidation = govy.New[GCMMetric](
@@ -40,7 +40,7 @@ var gcmValidation = govy.New[GCMMetric](
 			}
 			if configOptions != 1 {
 				return errors.New("exactly one of configuration option is required, the available types [MQL, PromQL]" +
-					" are represented by the following properties: MQL{query}; PromQL{promqlQuery}")
+					" are represented by the following properties: MQL{query}; PromQL{promql}")
 			}
 			return nil
 		}).WithErrorCode(rules.ErrorCodeOneOf),
@@ -59,7 +59,7 @@ var gcmCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 
 			if good != nil {
 				if total.GCM.IsPromqlConfiguration() && !good.GCM.IsPromqlConfiguration() {
-					return countMetricsPropertyEqualityError("query format [gcm.promqlQuery]", goodMetric)
+					return countMetricsPropertyEqualityError("query format [gcm.promql]", goodMetric)
 				}
 				if total.GCM.IsMQLConfiguration() && !good.GCM.IsMQLConfiguration() {
 					return countMetricsPropertyEqualityError("query format [gcm.query]", goodMetric)

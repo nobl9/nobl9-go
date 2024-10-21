@@ -47,9 +47,9 @@ func TestGCM(t *testing.T) {
 		t.Run("both mql and promql defined", func(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.GCM)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.GCM = &GCMMetric{
-				ProjectID:   "123",
-				Query:       "123",
-				PromqlQuery: "123",
+				ProjectID: "123",
+				Query:     "123",
+				PromQL:    "123",
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
@@ -69,12 +69,12 @@ func TestGCM(t *testing.T) {
 		t.Run("passes promql", func(t *testing.T) {
 			slo := validCountMetricSLO(v1alpha.GCM)
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.GCM = &GCMMetric{
-				ProjectID:   "123",
-				PromqlQuery: "123",
+				ProjectID: "123",
+				PromQL:    "123",
 			}
 			slo.Spec.Objectives[0].CountMetrics.TotalMetric.GCM = &GCMMetric{
-				ProjectID:   "123",
-				PromqlQuery: "123",
+				ProjectID: "123",
+				PromQL:    "123",
 			}
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
@@ -82,8 +82,8 @@ func TestGCM(t *testing.T) {
 		t.Run("good is mql, total is promql", func(t *testing.T) {
 			slo := validCountMetricSLO(v1alpha.GCM)
 			slo.Spec.Objectives[0].CountMetrics.TotalMetric.GCM = &GCMMetric{
-				ProjectID:   "123",
-				PromqlQuery: "123",
+				ProjectID: "123",
+				PromQL:    "123",
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
@@ -96,8 +96,8 @@ func TestGCM(t *testing.T) {
 		t.Run("good is promql, total is mql", func(t *testing.T) {
 			slo := validCountMetricSLO(v1alpha.GCM)
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.GCM = &GCMMetric{
-				ProjectID:   "123",
-				PromqlQuery: "123",
+				ProjectID: "123",
+				PromQL:    "123",
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
