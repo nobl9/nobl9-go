@@ -53,7 +53,7 @@
     sloHistory:
       timeFrame:
         rolling:
-          unit: day
+          unit: Day
           count: 3
         timeZone: Europe/Warsaw
 - apiVersion: n9/v1alpha
