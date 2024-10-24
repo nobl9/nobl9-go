@@ -184,7 +184,7 @@ func ExampleReport_sloHistory() {
 				TimeFrame: report.SLOHistoryTimeFrame{
 					Rolling: &report.RollingTimeFrame{
 						Repeat: report.Repeat{
-							Unit:  ptr("week"),
+							Unit:  ptr("Week"),
 							Count: ptr(2),
 						},
 					},
@@ -230,7 +230,7 @@ func ExampleReport_sloHistory() {
 	//   sloHistory:
 	//     timeFrame:
 	//       rolling:
-	//         unit: week
+	//         unit: Week
 	//         count: 2
 	//       timeZone: America/New_York
 }

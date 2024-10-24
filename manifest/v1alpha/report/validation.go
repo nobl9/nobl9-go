@@ -102,3 +102,5 @@ var sloValidation = govy.New[SLO](
 		WithName("name").
 		Include(requiredNameValidation),
 )
+
+func ptr[T any](v T) *T { return &v }
