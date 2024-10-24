@@ -74,8 +74,11 @@ type ReplaySourceSLOItem struct {
 
 // Variants of ReplayStatus.Status.
 const (
-	ReplayStatusFailed    = "failed"
-	ReplayStatusCompleted = "completed"
+	ReplayStatusQueued     = "queued"
+	ReplayStatusInProgress = "in progress"
+	ReplayStatusFailed     = "failed"
+	ReplayStatusCompleted  = "completed"
+	ReplayStatusUnknown    = "unknown"
 )
 
 type ReplayAvailability struct {
