@@ -53,7 +53,7 @@ func TestHistoricalRetrievalDuration_durationInMinutes(t *testing.T) {
 				Value: &tt.fields.Value,
 				Unit:  tt.fields.Unit,
 			}
-			assert.Equal(t, tt.want, d.duration())
+			assert.Equal(t, tt.want, d.Duration())
 		})
 	}
 }
@@ -64,7 +64,7 @@ func TestHistoricalRetrievalDuration_durationInMinutes_unsupportedUnit(t *testin
 		Value: ptr(12),
 		Unit:  testUnit,
 	}
-	assert.Equal(t, time.Duration(0), duration.duration())
+	assert.Equal(t, time.Duration(0), duration.Duration())
 }
 
 func TestGetDataRetrievalMaxDuration(t *testing.T) {
