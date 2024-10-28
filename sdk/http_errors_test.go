@@ -157,27 +157,29 @@ func TestHTTPError(t *testing.T) {
 	})
 	t.Run("read JSON API errors", func(t *testing.T) {
 		t.Parallel()
-		apiErrors := []APIError{
-			{
-				Title: "error1",
-			},
-			{
-				Title: "error2",
-				Code:  "some_code",
-			},
-			{
-				Title: "error3",
-				Code:  "other_code",
-				Source: &APIErrorSource{
-					PropertyName: "$.data",
+		apiErrors := APIErrors{
+			Errors: []APIError{
+				{
+					Title: "error1",
 				},
-			},
-			{
-				Title: "error4",
-				Code:  "yet_another_code",
-				Source: &APIErrorSource{
-					PropertyName:  "$.data[1].name",
-					PropertyValue: "value",
+				{
+					Title: "error2",
+					Code:  "some_code",
+				},
+				{
+					Title: "error3",
+					Code:  "other_code",
+					Source: &APIErrorSource{
+						PropertyName: "$.data",
+					},
+				},
+				{
+					Title: "error4",
+					Code:  "yet_another_code",
+					Source: &APIErrorSource{
+						PropertyName:  "$.data[1].name",
+						PropertyValue: "value",
+					},
 				},
 			},
 		}
@@ -206,7 +208,7 @@ func TestHTTPError(t *testing.T) {
 			Method:     "GET",
 			URL:        "https://app.nobl9.com/api/slos",
 			TraceID:    "123",
-			APIErrors:  APIErrors{Errors: apiErrors},
+			APIErrors:  apiErrors,
 		}
 		assert.Equal(t, expectedError, err)
 		expectedMessage := `Bad Request (code: 400, endpoint: GET https://app.nobl9.com/api/slos, traceId: 123)
@@ -228,7 +230,7 @@ func TestHTTPError(t *testing.T) {
 	})
 	t.Run("content type with charset", func(t *testing.T) {
 		t.Parallel()
-		apiErrors := []APIError{{Title: "error"}}
+		apiErrors := APIErrors{Errors: []APIError{{Title: "error"}}}
 		data, err := json.Marshal(apiErrors)
 		require.NoError(t, err)
 
@@ -240,7 +242,7 @@ func TestHTTPError(t *testing.T) {
 		require.Error(t, err)
 		expectedError := &HTTPError{
 			StatusCode: 400,
-			APIErrors:  APIErrors{Errors: apiErrors},
+			APIErrors:  apiErrors,
 		}
 		assert.Equal(t, expectedError, err)
 	})
