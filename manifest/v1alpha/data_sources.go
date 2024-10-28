@@ -392,14 +392,14 @@ func HistoricalRetrievalDurationUnitFromString(unit string) (HistoricalRetrieval
 }
 
 func (d HistoricalRetrievalDuration) BiggerThan(b HistoricalRetrievalDuration) bool {
-	return d.duration() > b.duration()
+	return d.Duration() > b.Duration()
 }
 
 func (d HistoricalRetrievalDuration) IsZero() bool {
 	return d.Value == nil || *d.Value == 0
 }
 
-func (d HistoricalRetrievalDuration) duration() time.Duration {
+func (d HistoricalRetrievalDuration) Duration() time.Duration {
 	if d.Value == nil {
 		return time.Duration(0)
 	}
