@@ -16,6 +16,7 @@ import (
 
 // HTTPError represents an HTTP error response from the API.
 type HTTPError struct {
+	APIErrors
 	// StatusCode is the HTTP status code of the response.
 	// Example: 200, 400, 404, 500.
 	StatusCode int `json:"statusCode"`
@@ -29,6 +30,10 @@ type HTTPError struct {
 	//
 	// [Nobl9 support]: https://nobl9.com/contact/support
 	TraceID string `json:"traceId,omitempty"`
+}
+
+// APIErrors is an object returned directly by the API which conveys specific API error(s) details.
+type APIErrors struct {
 	// Errors is a list of errors returned by the API.
 	// At least one error is always guaranteed to be set.
 	// At the very minimum it will contain just the [APIError.Title].
@@ -90,7 +95,9 @@ func processHTTPResponse(resp *http.Response) error {
 	httpErr := HTTPError{
 		StatusCode: resp.StatusCode,
 		TraceID:    resp.Header.Get(HeaderTraceID),
-		Errors:     apiErrors,
+		APIErrors: APIErrors{
+			Errors: apiErrors,
+		},
 	}
 	if resp.Request != nil {
 		if resp.Request.URL != nil {

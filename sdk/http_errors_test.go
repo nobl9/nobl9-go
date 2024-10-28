@@ -44,7 +44,9 @@ func TestHTTPError(t *testing.T) {
 				Method:     "GET",
 				URL:        "https://app.nobl9.com/api/slos",
 				TraceID:    "123",
-				Errors:     []APIError{{Title: "error!"}},
+				APIErrors: APIErrors{
+					Errors: []APIError{{Title: "error!"}},
+				},
 			}
 			require.Equal(t, expectedError, err)
 			expectedMessage := fmt.Sprintf("error! (code: %d, endpoint: GET https://app.nobl9.com/api/slos, traceId: 123)", code)
@@ -73,7 +75,9 @@ func TestHTTPError(t *testing.T) {
 			StatusCode: 400,
 			Method:     "GET",
 			URL:        "https://app.nobl9.com/api/slos",
-			Errors:     []APIError{{Title: "error!"}},
+			APIErrors: APIErrors{
+				Errors: []APIError{{Title: "error!"}},
+			},
 		}
 		require.Equal(t, expectedError, err)
 		expectedMessage := "Bad Request: error! (code: 400, endpoint: GET https://app.nobl9.com/api/slos)"
@@ -98,7 +102,9 @@ func TestHTTPError(t *testing.T) {
 			StatusCode: 555,
 			Method:     "GET",
 			URL:        "https://app.nobl9.com/api/slos",
-			Errors:     []APIError{{Title: "error!"}},
+			APIErrors: APIErrors{
+				Errors: []APIError{{Title: "error!"}},
+			},
 		}
 		require.Equal(t, expectedError, err)
 		expectedMessage := "error! (code: 555, endpoint: GET https://app.nobl9.com/api/slos)"
@@ -113,7 +119,9 @@ func TestHTTPError(t *testing.T) {
 		require.Error(t, err)
 		expectedError := &HTTPError{
 			StatusCode: 555,
-			Errors:     []APIError{{Title: "error!"}},
+			APIErrors: APIErrors{
+				Errors: []APIError{{Title: "error!"}},
+			},
 		}
 		require.Equal(t, expectedError, err)
 		expectedMessage := "error! (code: 555)"
@@ -198,7 +206,7 @@ func TestHTTPError(t *testing.T) {
 			Method:     "GET",
 			URL:        "https://app.nobl9.com/api/slos",
 			TraceID:    "123",
-			Errors:     apiErrors,
+			APIErrors:  APIErrors{Errors: apiErrors},
 		}
 		assert.Equal(t, expectedError, err)
 		expectedMessage := `Bad Request (code: 400, endpoint: GET https://app.nobl9.com/api/slos, traceId: 123)
@@ -232,7 +240,7 @@ func TestHTTPError(t *testing.T) {
 		require.Error(t, err)
 		expectedError := &HTTPError{
 			StatusCode: 400,
-			Errors:     apiErrors,
+			APIErrors:  APIErrors{Errors: apiErrors},
 		}
 		assert.Equal(t, expectedError, err)
 	})
