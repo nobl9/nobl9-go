@@ -16,6 +16,7 @@ import (
 
 // HTTPError represents an HTTP error response from the API.
 type HTTPError struct {
+	APIErrors
 	// StatusCode is the HTTP status code of the response.
 	// Example: 200, 400, 404, 500.
 	StatusCode int `json:"statusCode"`
@@ -29,6 +30,10 @@ type HTTPError struct {
 	//
 	// [Nobl9 support]: https://nobl9.com/contact/support
 	TraceID string `json:"traceId,omitempty"`
+}
+
+// APIErrors is an object returned directly by the API which conveys specific API error(s) details.
+type APIErrors struct {
 	// Errors is a list of errors returned by the API.
 	// At least one error is always guaranteed to be set.
 	// At the very minimum it will contain just the [APIError.Title].
@@ -90,7 +95,7 @@ func processHTTPResponse(resp *http.Response) error {
 	httpErr := HTTPError{
 		StatusCode: resp.StatusCode,
 		TraceID:    resp.Header.Get(HeaderTraceID),
-		Errors:     apiErrors,
+		APIErrors:  apiErrors,
 	}
 	if resp.Request != nil {
 		if resp.Request.URL != nil {
@@ -101,27 +106,27 @@ func processHTTPResponse(resp *http.Response) error {
 	return &httpErr
 }
 
-// processAPIErrors processes an HTTP response and returns a list of [APIError].
+// processAPIErrors processes an HTTP response and returns an [APIErrors].
 // It checks for the 'content-type' header, if it's set to 'application/json'
-// it will decode the response body directly into a slice of [APIError].
+// it will decode the response body directly into [APIErrors].
 // Otherwise, a single [APIError] is created with the response body as the [APIError.Title].
-func processAPIErrors(resp *http.Response) ([]APIError, error) {
+func processAPIErrors(resp *http.Response) (APIErrors, error) {
 	if resp.Body == nil {
-		return []APIError{{Title: "unknown error"}}, nil
+		return APIErrors{Errors: []APIError{{Title: "unknown error"}}}, nil
 	}
 	if typ := resp.Header.Get("Content-Type"); typ != "" && strings.HasPrefix(typ, "application/json") {
 		dec := json.NewDecoder(resp.Body)
-		var apiErrors []APIError
+		var apiErrors APIErrors
 		if err := dec.Decode(&apiErrors); err != nil {
-			return nil, errors.Wrap(err, "failed to decode JSON response body")
+			return APIErrors{}, errors.Wrap(err, "failed to decode JSON response body")
 		}
 		return apiErrors, nil
 	}
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read response body")
+		return APIErrors{}, errors.Wrap(err, "failed to read response body")
 	}
-	return []APIError{{Title: string(bytes.TrimSpace(rawBody))}}, nil
+	return APIErrors{Errors: []APIError{{Title: string(bytes.TrimSpace(rawBody))}}}, nil
 }
 
 //go:embed http_error.tmpl
