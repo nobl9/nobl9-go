@@ -248,6 +248,40 @@ func TestHTTPError(t *testing.T) {
 	})
 }
 
+func TestAPIErrors_Error(t *testing.T) {
+	apiErrors := APIErrors{
+		Errors: []APIError{
+			{
+				Title: "error1",
+			},
+			{
+				Title: "error2",
+				Code:  "some_code",
+			},
+			{
+				Title: "error3",
+				Code:  "other_code",
+				Source: &APIErrorSource{
+					PropertyName: "$.data",
+				},
+			},
+			{
+				Title: "error4",
+				Code:  "yet_another_code",
+				Source: &APIErrorSource{
+					PropertyName:  "$.data[1].name",
+					PropertyValue: "value",
+				},
+			},
+		},
+	}
+	expectedMessage := `- error1
+- error2
+- error3 (source: '$.data')
+- error4 (source: '$.data[1].name', value: 'value')`
+	assert.EqualError(t, apiErrors, expectedMessage)
+}
+
 type mockReadCloser struct{ err error }
 
 func (mo *mockReadCloser) Read(p []byte) (n int, err error) { return 0, mo.err }

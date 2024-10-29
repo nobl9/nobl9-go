@@ -56,7 +56,7 @@ type APIError struct {
 func (r APIErrors) Error() string {
 	buf := bytes.Buffer{}
 	buf.Grow(len(httpErrorTemplateData))
-	if err := httpErrorTemplate.Execute(&buf, httpErrorTemplateFields{
+	if err := httpErrorTemplate.ExecuteTemplate(&buf, "api_errors", httpErrorTemplateFields{
 		Errors: r.Errors,
 	}); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", r, err)
@@ -82,7 +82,7 @@ func (r HTTPError) IsRetryable() bool {
 func (r HTTPError) Error() string {
 	buf := bytes.Buffer{}
 	buf.Grow(len(httpErrorTemplateData))
-	if err := httpErrorTemplate.Execute(&buf, httpErrorTemplateFields{
+	if err := httpErrorTemplate.ExecuteTemplate(&buf, "http_error", httpErrorTemplateFields{
 		Errors:   r.Errors,
 		Method:   r.Method,
 		URL:      r.URL,
