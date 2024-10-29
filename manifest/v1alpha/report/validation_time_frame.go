@@ -74,12 +74,12 @@ var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
 
 					from, err := time.Parse(IsoDateOnlyLayout, *t.From)
 					if err != nil {
-						return errors.New("error parsing 'from' date")
+						return errors.New("error parsing 'from' date, valid date format: YYYY-MM-DD")
 					}
 
 					to, err := time.Parse(IsoDateOnlyLayout, *t.To)
 					if err != nil {
-						return errors.New("error parsing 'to' date")
+						return errors.New("error parsing 'to' date, valid date format: YYYY-MM-DD")
 					}
 
 					now := time.Now()
