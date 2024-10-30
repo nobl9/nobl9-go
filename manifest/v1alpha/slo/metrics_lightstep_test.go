@@ -320,7 +320,6 @@ spans count | rate | group_by [], sum
 			"spans_sample joined UQL": `(
 spans_sample count | delta | filter error == true && service == android | group_by [], sum;
 spans_sample count | delta | filter service == android | group_by [], sum) | join left/right * 100`,
-			"constant UQL":     "constant .5",
 			"spans_sample UQL": "spans_sample span filter",
 			"assemble UQL":     "assemble span",
 		} {
