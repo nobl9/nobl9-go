@@ -138,6 +138,9 @@ var specValidation = govy.New[Spec](
 			_, err := ParseBudgetingMethod(v)
 			return err
 		})),
+	govy.ForPointer(func(s Spec) *string { return s.Tier }).
+		WithName("tier").
+		Rules(rules.StringLength(0, 63)),
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
