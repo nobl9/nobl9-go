@@ -43,7 +43,7 @@ var rollingTimeFrameCountAndUnitValidation = govy.NewRule(func(t RollingTimeFram
 		return nil
 	}
 	return errors.New(
-		"valid 'unit' and 'count' pairs are: 1 week, 2 weeks, 4 weeks, 1 month, 1 quarter, 1 year",
+		"valid 'unit' and 'count' pairs are: 1 Week, 2 Week, 4 Week, 1 Month, 1 Quarter, 1 Year",
 	)
 })
 
@@ -97,7 +97,7 @@ var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
 			govy.NewRule(func(t CalendarTimeFrame) error {
 				if t.Count != nil && t.Unit != nil &&
 					!(*t.Count == 1 && (*t.Unit == week || *t.Unit == month || *t.Unit == quarter || *t.Unit == year)) {
-					return errors.New("valid 'unit' and 'count' pairs are: 1 week, 1 month, 1 quarter, 1 year")
+					return errors.New("valid 'unit' and 'count' pairs are: 1 Week, 1 Month, 1 Quarter, 1 Year")
 				}
 				return nil
 			})),

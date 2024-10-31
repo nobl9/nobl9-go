@@ -337,8 +337,8 @@ func TestValidate_Spec_Filters(t *testing.T) {
 
 func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 	validUnitAndCountRollingPairs := "valid 'unit' and 'count' pairs are: " +
-		"1 week, 2 weeks, 4 weeks, 1 month, 1 quarter, 1 year"
-	validUnitAndCountCalendarPairs := "valid 'unit' and 'count' pairs are: 1 week, 1 month, 1 quarter, 1 year"
+		"1 Week, 2 Week, 4 Week, 1 Month, 1 Quarter, 1 Year"
+	validUnitAndCountCalendarPairs := "valid 'unit' and 'count' pairs are: 1 Week, 1 Month, 1 Quarter, 1 Year"
 	validCalendarPairs := "must contain either 'unit' and 'count' pair or 'from' and 'to' pair"
 	futureDate := time.Now().Add(time.Hour * 24)
 
