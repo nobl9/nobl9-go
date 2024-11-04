@@ -53,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	direct.ManifestSource = "/home/me/direct.yaml"
 	err := validate(direct)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, direct, err, 5,
+	testutils.AssertContainsErrors(t, direct, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

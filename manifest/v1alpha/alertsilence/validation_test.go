@@ -52,7 +52,7 @@ func TestValidate_Metadata(t *testing.T) {
 	silence.ManifestSource = "/home/me/alertsilence.yaml"
 	err := validate(silence)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, silence, err, 4,
+	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

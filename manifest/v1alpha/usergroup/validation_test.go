@@ -45,7 +45,7 @@ func TestValidate_Metadata(t *testing.T) {
 	group.ManifestSource = "/home/me/usergroup.yaml"
 	err := validate(group)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, group, err, 2,
+	testutils.AssertContainsErrors(t, group, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

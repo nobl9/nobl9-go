@@ -54,7 +54,7 @@ func TestValidate_Metadata(t *testing.T) {
 	policy.ManifestSource = "/home/me/alertpolicy.yaml"
 	err := validate(policy)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, policy, err, 4,
+	testutils.AssertContainsErrors(t, policy, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,
@@ -881,11 +881,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 			},
 		}
 		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].metadata.name",
-				Code: rules.ErrorCodeStringDNSLabel,
-			},
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.name",
 				Code: rules.ErrorCodeStringDNSLabel,
@@ -903,11 +899,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 			},
 		}
 		err := validate(alertPolicy)
-		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.alertMethods[0].metadata.project",
-				Code: rules.ErrorCodeStringDNSLabel,
-			},
+		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.project",
 				Code: rules.ErrorCodeStringDNSLabel,
