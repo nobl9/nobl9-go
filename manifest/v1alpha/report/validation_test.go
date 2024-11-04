@@ -100,8 +100,8 @@ func TestValidate_Spec(t *testing.T) {
 					TimeZone: "Europe/Warsaw",
 					Rolling: &RollingTimeFrame{
 						Repeat{
-							Unit:  func(s string) *string { return &s }("day"),
-							Count: func(i int) *int { return &i }(3),
+							Unit:  func(s string) *string { return &s }("Week"),
+							Count: func(i int) *int { return &i }(1),
 						},
 					},
 				},
@@ -336,12 +336,18 @@ func TestValidate_Spec_Filters(t *testing.T) {
 }
 
 func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
+	validUnitAndCountRollingPairs := "valid 'unit' and 'count' pairs are: " +
+		"1 Week, 2 Week, 4 Week, 1 Month, 1 Quarter, 1 Year"
+	validUnitAndCountCalendarPairs := "valid 'unit' and 'count' pairs are: 1 Week, 1 Month, 1 Quarter, 1 Year"
+	validCalendarPairs := "must contain either 'unit' and 'count' pair or 'from' and 'to' pair"
+	futureDate := time.Now().Add(time.Hour * 24)
+
 	for name, timeFrame := range map[string]SLOHistoryTimeFrame{
 		"passes with valid rolling time frame": {
 			Rolling: &RollingTimeFrame{
 				Repeat{
-					Unit:  func(s string) *string { return &s }("day"),
-					Count: func(i int) *int { return &i }(3),
+					Unit:  func(s string) *string { return &s }("Week"),
+					Count: func(i int) *int { return &i }(1),
 				},
 			},
 			TimeZone: "Europe/Warsaw",
@@ -349,8 +355,8 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 		"passes with valid calendar repeating time frame": {
 			Calendar: &CalendarTimeFrame{
 				Repeat: Repeat{
-					Unit:  func(s string) *string { return &s }("day"),
-					Count: func(i int) *int { return &i }(3),
+					Unit:  func(s string) *string { return &s }("Quarter"),
+					Count: func(i int) *int { return &i }(1),
 				},
 			},
 			TimeZone: "Europe/Warsaw",
@@ -373,13 +379,14 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			testutils.AssertNoError(t, report, err)
 		})
 	}
+
 	for name, test := range map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
 		TimeFrame           SLOHistoryTimeFrame
 	}{
 		"fails with empty rolling time frame": {
-			ExpectedErrorsCount: 2,
+			ExpectedErrorsCount: 3,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
@@ -388,6 +395,10 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 				{
 					Prop: "spec.sloHistory.rolling.count",
 					Code: rules.ErrorCodeRequired,
+				},
+				{
+					Prop:    "spec.sloHistory.rolling",
+					Message: validUnitAndCountRollingPairs,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
@@ -396,34 +407,82 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			},
 		},
 		"fails with empty count in rolling time frame": {
-			ExpectedErrorsCount: 1,
+			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.count",
 					Code: rules.ErrorCodeRequired,
 				},
+				{
+					Prop:    "spec.sloHistory.rolling",
+					Message: validUnitAndCountRollingPairs,
+				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
 				Rolling: &RollingTimeFrame{
 					Repeat{
-						Unit: func(s string) *string { return &s }("day"),
+						Unit: func(s string) *string { return &s }("Week"),
 					},
 				},
 				TimeZone: "Europe/Warsaw",
 			},
 		},
 		"fails with empty unit in rolling time frame": {
-			ExpectedErrorsCount: 1,
+			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.sloHistory.rolling.unit",
 					Code: rules.ErrorCodeRequired,
+				},
+				{
+					Prop:    "spec.sloHistory.rolling",
+					Message: validUnitAndCountRollingPairs,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
 				Rolling: &RollingTimeFrame{
 					Repeat{
 						Count: func(i int) *int { return &i }(3),
+					},
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with wrong unit in rolling time frame": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.sloHistory.rolling.unit",
+					Code: rules.ErrorCodeOneOf,
+				},
+				{
+					Prop:    "spec.sloHistory.rolling",
+					Message: validUnitAndCountRollingPairs,
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Rolling: &RollingTimeFrame{
+					Repeat{
+						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Day"),
+					},
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with wrong unit and count pair in rolling time frame": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.sloHistory.rolling",
+					Message: validUnitAndCountRollingPairs,
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Rolling: &RollingTimeFrame{
+					Repeat{
+						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Week"),
 					},
 				},
 				TimeZone: "Europe/Warsaw",
@@ -440,8 +499,8 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			TimeFrame: SLOHistoryTimeFrame{
 				Rolling: &RollingTimeFrame{
 					Repeat{
-						Unit:  func(s string) *string { return &s }("day"),
-						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Week"),
+						Count: func(i int) *int { return &i }(1),
 					},
 				},
 			},
@@ -457,8 +516,8 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			TimeFrame: SLOHistoryTimeFrame{
 				Rolling: &RollingTimeFrame{
 					Repeat{
-						Unit:  func(s string) *string { return &s }("day"),
-						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Week"),
+						Count: func(i int) *int { return &i }(1),
 					},
 				},
 				TimeZone: "x",
@@ -469,11 +528,84 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.sloHistory.calendar",
-					Message: "must contain either unit and count pair or from and to pair",
+					Message: validCalendarPairs,
 				},
 			},
 			TimeFrame: SLOHistoryTimeFrame{
 				Calendar: &CalendarTimeFrame{},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with half empty calendar time frame": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.sloHistory.calendar",
+					Message: validCalendarPairs,
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Calendar: &CalendarTimeFrame{
+					Repeat: Repeat{
+						Count: func(i int) *int { return &i }(1),
+					},
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with wrong unit in calendar time frame": {
+			ExpectedErrorsCount: 2,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.sloHistory.calendar.unit",
+					Code: rules.ErrorCodeOneOf,
+				},
+				{
+					Prop:    "spec.sloHistory.calendar",
+					Message: validUnitAndCountCalendarPairs,
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Calendar: &CalendarTimeFrame{
+					Repeat: Repeat{
+						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Day"),
+					},
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with wrong unit and count pair in calendar time frame": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.sloHistory.calendar",
+					Message: validUnitAndCountCalendarPairs,
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Calendar: &CalendarTimeFrame{
+					Repeat: Repeat{
+						Count: func(i int) *int { return &i }(3),
+						Unit:  func(s string) *string { return &s }("Week"),
+					},
+				},
+				TimeZone: "Europe/Warsaw",
+			},
+		},
+		"fails with dates in the past in calendar time frame": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.sloHistory.calendar",
+					Message: "dates must be in the past",
+				},
+			},
+			TimeFrame: SLOHistoryTimeFrame{
+				Calendar: &CalendarTimeFrame{
+					From: func(s string) *string { return &s }("2024-01-01"),
+					To:   func(s string) *string { return &s }(futureDate.Format(time.DateOnly)),
+				},
 				TimeZone: "Europe/Warsaw",
 			},
 		},
@@ -1125,5 +1257,3 @@ func validReport() Report {
 		},
 	}
 }
-
-func ptr[T any](v T) *T { return &v }

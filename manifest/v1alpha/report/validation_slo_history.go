@@ -33,29 +33,3 @@ var sloHistoryValidation = govy.New[SLOHistoryConfig](
 		WithName("calendar").
 		Include(calendarTimeFrameValidation),
 )
-
-var rollingTimeFrameValidation = govy.New[RollingTimeFrame](
-	govy.ForPointer(func(t RollingTimeFrame) *string { return t.Unit }).
-		WithName("unit").
-		Required(),
-	govy.ForPointer(func(t RollingTimeFrame) *int { return t.Count }).
-		WithName("count").
-		Required(),
-)
-
-var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
-	govy.For(govy.GetSelf[CalendarTimeFrame]()).
-		Rules(
-			govy.NewRule(func(t CalendarTimeFrame) error {
-				allFieldsSet := t.Count != nil && t.Unit != nil && t.From != nil && t.To != nil
-				noFieldSet := t.Count == nil && t.Unit == nil && t.From == nil && t.To == nil
-				onlyCountSet := t.Count != nil && t.Unit == nil
-				onlyUnitSet := t.Count == nil && t.Unit != nil
-				onlyFromSet := t.From != nil && t.To == nil
-				onlyToSet := t.From == nil && t.To != nil
-				if allFieldsSet || noFieldSet || onlyCountSet || onlyUnitSet || onlyFromSet || onlyToSet {
-					return errors.New("must contain either unit and count pair or from and to pair")
-				}
-				return nil
-			})),
-)

@@ -87,8 +87,8 @@ func Report() []Example {
 						TimeFrame: report.SLOHistoryTimeFrame{
 							Rolling: &report.RollingTimeFrame{
 								Repeat: report.Repeat{
-									Unit:  ptr("day"),
-									Count: ptr(3),
+									Unit:  ptr("Week"),
+									Count: ptr(2),
 								},
 							},
 							TimeZone: "Europe/Warsaw",
