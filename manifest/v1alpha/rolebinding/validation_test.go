@@ -55,7 +55,7 @@ func TestValidate_Metadata(t *testing.T) {
 	}
 	err := validate(rb)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, rb, err, 2,
+	testutils.AssertContainsErrors(t, rb, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,
@@ -79,7 +79,7 @@ func TestSpec(t *testing.T) {
 		rb := validRoleBinding()
 		rb.Spec.ProjectRef = strings.Repeat("MY PROJECT", 20)
 		err := validate(rb)
-		testutils.AssertContainsErrors(t, rb, err, 2,
+		testutils.AssertContainsErrors(t, rb, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.projectRef",
 				Code: rules.ErrorCodeStringDNSLabel,

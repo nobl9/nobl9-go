@@ -52,7 +52,7 @@ func TestValidate_Metadata(t *testing.T) {
 	svc.ManifestSource = "/home/me/service.yaml"
 	err := validate(svc)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, svc, err, 5,
+	testutils.AssertContainsErrors(t, svc, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

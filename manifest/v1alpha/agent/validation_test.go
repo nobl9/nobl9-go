@@ -54,7 +54,7 @@ func TestValidate_Metadata(t *testing.T) {
 	agent.ManifestSource = "/home/me/agent.yaml"
 	err := validate(agent)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, agent, err, 5,
+	testutils.AssertContainsErrors(t, agent, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

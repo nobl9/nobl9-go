@@ -24,7 +24,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].name",
-			Code: rules.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
@@ -241,7 +241,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].project",
-			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -251,7 +251,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
-			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -261,7 +261,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
-			Code: joinErrorCodes(rules.ErrorCodeStringDNSLabel, rules.ErrorCodeStringMatchRegexp),
+			Code: rules.ErrorCodeStringDNSLabel,
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {

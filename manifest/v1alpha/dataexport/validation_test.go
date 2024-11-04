@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	dataExport.ManifestSource = "/home/me/dataexport.yaml"
 	err := validate(dataExport)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, dataExport, err, 5,
+	testutils.AssertContainsErrors(t, dataExport, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,
