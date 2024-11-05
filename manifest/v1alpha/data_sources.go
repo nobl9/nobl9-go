@@ -434,6 +434,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
 	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
+	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
