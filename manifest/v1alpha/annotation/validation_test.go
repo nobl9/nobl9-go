@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	annotation.ManifestSource = "/home/me/annotation.yaml"
 	err := validate(annotation)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, annotation, err, 4,
+	testutils.AssertContainsErrors(t, annotation, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

@@ -104,7 +104,7 @@ var lightstepLatencyDataTypeValidation = govy.New[LightstepMetric](
 		govy.WhenDescription("typeOfData is '%s'", LightstepLatencyDataType),
 	)
 
-var lightstepUQLRegexp = regexp.MustCompile(`((constant|spans_sample|assemble)\s+[a-z\d.])`)
+var lightstepUQLRegexp = regexp.MustCompile(`((spans_sample|assemble)\s+[a-z\d.])`)
 
 var lightstepMetricDataTypeValidation = govy.New[LightstepMetric](
 	govy.ForPointer(func(l LightstepMetric) *string { return l.StreamID }).

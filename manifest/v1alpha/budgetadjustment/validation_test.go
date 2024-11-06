@@ -52,7 +52,7 @@ func TestValidate_Metadata(t *testing.T) {
 	budgetAdjustment.ManifestSource = "/home/me/budget-adjustment.yaml"
 	err := validate(budgetAdjustment)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, budgetAdjustment, err, 3,
+	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,

@@ -3,9 +3,9 @@ module mock_example
 go 1.22
 
 require (
-	github.com/nobl9/nobl9-go v0.86.0
+	github.com/nobl9/nobl9-go v0.88.0
 	github.com/stretchr/testify v1.9.0
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nobl9/go-yaml v1.0.1 // indirect
-	github.com/nobl9/govy v0.2.0 // indirect
+	github.com/nobl9/govy v0.3.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
