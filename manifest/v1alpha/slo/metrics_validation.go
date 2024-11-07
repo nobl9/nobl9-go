@@ -19,6 +19,7 @@ const (
 	errCodeSingleQueryGoodOverTotalDisabled = "single_query_good_over_total_disabled"
 	errCodeExactlyOneMetricSpecType         = "exactly_one_metric_spec_type"
 	errCodeEitherBadOrGoodCountMetric       = "either_bad_or_good_count_metric"
+	errCodeCountMetricsMustBePair           = "count_metrics_must_be_pair"
 	errCodeTimeSliceTarget                  = "time_slice_target"
 )
 
@@ -47,6 +48,17 @@ var specMetricsValidation = govy.New[Spec](
 						govy.NewRuleError(
 							"cannot have both 'bad' and 'good' metrics defined",
 							errCodeEitherBadOrGoodCountMetric,
+						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
+				}
+				noGooNoBad := objective.CountMetrics.GoodMetric == nil && objective.CountMetrics.BadMetric == nil
+				if objective.CountMetrics.GoodTotalMetric == nil &&
+					(objective.CountMetrics.TotalMetric == nil || noGooNoBad) {
+					return govy.NewPropertyError(
+						"countMetrics",
+						nil,
+						govy.NewRuleError(
+							"count metrics reqires a pair of ('good' and 'total') or ('bad' and 'total') metrics",
+							errCodeCountMetricsMustBePair,
 						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
 				}
 			}

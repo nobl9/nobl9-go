@@ -1220,6 +1220,42 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 			Code: errCodeEitherBadOrGoodCountMetric,
 		})
 	})
+	t.Run("only bad provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			BadMetric:   validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: errCodeCountMetricsMustBePair,
+		})
+	})
+	t.Run("only good provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			GoodMetric:  validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: errCodeCountMetricsMustBePair,
+		})
+	})
+	t.Run("only total provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			TotalMetric: validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: errCodeCountMetricsMustBePair,
+		})
+	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
 		for name, metrics := range map[string][]*CountMetricsSpec{
 			"single objective - total": {
