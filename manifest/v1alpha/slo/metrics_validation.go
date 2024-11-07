@@ -57,7 +57,7 @@ var specMetricsValidation = govy.New[Spec](
 						"countMetrics",
 						nil,
 						govy.NewRuleError(
-							"count metrics reqires a pair of ('good' and 'total') or ('bad' and 'total') metrics",
+							"count metrics requires a pair of ('good' and 'total') or ('bad' and 'total') metrics",
 							errCodeCountMetricsMustBePair,
 						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
 				}
