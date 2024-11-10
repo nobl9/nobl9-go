@@ -66,7 +66,9 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			instanaCountMetricsLevelValidation,
 			redshiftCountMetricsLevelValidation,
 			bigQueryCountMetricsLevelValidation,
-			splunkCountMetricsLevelValidation),
+			splunkCountMetricsLevelValidation,
+			gcmCountMetricsLevelValidation,
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
