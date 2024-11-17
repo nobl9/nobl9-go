@@ -123,7 +123,7 @@ var sloValidationComposite = govy.New[SLO](
 var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
-		Include(specMetricsValidation),
+		Include(specMetricsValidation), // TODO push new validators there?
 	govy.For(govy.GetSelf[Spec]()).
 		WithName("composite").
 		When(func(s Spec) bool { return s.Composite != nil }).
@@ -167,6 +167,21 @@ var specValidation = govy.New[Spec](
 		RulesForEach(timeWindowValidationRule()),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
+		RulesForEach(
+			govy.For(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
+				WithName("countMetrics").
+				Cascade(govy.CascadeModeStop).
+				When(func(o Objective) bool { return o.CountMetrics != nil }).
+				Rules(
+					rules.MutuallyExclusive(true, map[string]func(*CountMetricsSpec) any{
+						"goodAndTotal":    func(c *CountMetricsSpec) any { return c.GoodMetric != nil && c.TotalMetric != nil },
+						"badAndTotal":     func(c *CountMetricsSpec) any { return c.BadMetric != nil && c.TotalMetric != nil },
+						"goodTotalMetric": func(c *CountMetricsSpec) any { return c.GoodTotalMetric },
+					}).WithMessage("provide a pair of ('good' and 'total') or ('bad' and 'total') or a goodTotalMetric single query"),
+				),
+		),
+	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
+		WithName("objectives").
 		Cascade(govy.CascadeModeStop).
 		When(
 			func(s Spec) bool { return !s.HasCompositeObjectives() },
@@ -179,26 +194,8 @@ var specValidation = govy.New[Spec](
 				return 0
 			}
 			return *v.Value
-		}, "objectives[*].value must be different for each objective")),
-	govy.For(func(s Spec) []Objective { return s.Objectives }).
-		WithName("objectives").
-		Rules(
-			govy.NewRule(func(o []Objective) error {
-				hasPrimary := false
-				for _, obj := range o {
-					if obj.Primary != nil && *obj.Primary {
-						if hasPrimary {
-							return govy.NewRuleError(
-								"there can be max 1 primary objective",
-								rules.ErrorCodeForbidden,
-							)
-						}
-						hasPrimary = true
-					}
-				}
-				return nil
-			}),
-		),
+		}, "objectives[*].value must be different for each objective")).
+		Rules(onePrimaryObjectiveRule),
 )
 
 var attachmentValidation = govy.New[Attachment](
@@ -376,6 +373,22 @@ func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 	}
 	return *p1 == *p2
 }
+
+var onePrimaryObjectiveRule = govy.NewRule(func(o []Objective) error {
+	hasPrimary := false
+	for _, obj := range o {
+		if obj.Primary != nil && *obj.Primary {
+			if hasPrimary {
+				return govy.NewRuleError(
+					"there can be max 1 primary objective",
+					rules.ErrorCodeForbidden,
+				)
+			}
+			hasPrimary = true
+		}
+	}
+	return nil
+})
 
 var specValidationNonComposite = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Indicator { return s.Indicator }).

@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	errCodeExactlyOneMetricType             = "exactly_one_metric_type"
 	errCodeBadOverTotalDisabled             = "bad_over_total_disabled"
 	errCodeSingleQueryGoodOverTotalDisabled = "single_query_good_over_total_disabled"
 	errCodeExactlyOneMetricSpecType         = "exactly_one_metric_spec_type"
@@ -26,44 +25,14 @@ const (
 var specMetricsValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
-		Rules(govy.NewRule(func(s Spec) error {
-			if !s.HasCompositeObjectives() {
-				if s.HasRawMetric() == s.HasCountMetrics() {
-					return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
-				}
-			}
-			return nil
-		}).WithErrorCode(errCodeExactlyOneMetricType)).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(s Spec) any{
+				"rawMetrics":   func(s Spec) any { return !s.HasCompositeObjectives() && s.HasRawMetric() },
+				"countMetrics": func(s Spec) any { return !s.HasCompositeObjectives() && s.HasCountMetrics() },
+				"composite":    func(s Spec) any { return s.HasCompositeObjectives() },
+			}),
+		).
 		Rules(exactlyOneMetricSpecTypeValidationRule).
-		// Each objective should have exactly two count metrics.
-		Rules(govy.NewRule(func(s Spec) error {
-			for i, objective := range s.Objectives {
-				if objective.CountMetrics == nil {
-					return nil
-				}
-				if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.BadMetric != nil {
-					return govy.NewPropertyError(
-						"countMetrics",
-						nil,
-						govy.NewRuleError(
-							"cannot have both 'bad' and 'good' metrics defined",
-							errCodeEitherBadOrGoodCountMetric,
-						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
-				}
-				noGooNoBad := objective.CountMetrics.GoodMetric == nil && objective.CountMetrics.BadMetric == nil
-				if objective.CountMetrics.GoodTotalMetric == nil &&
-					(objective.CountMetrics.TotalMetric == nil || noGooNoBad) {
-					return govy.NewPropertyError(
-						"countMetrics",
-						nil,
-						govy.NewRuleError(
-							"count metrics requires a pair of ('good' and 'total') or ('bad' and 'total') metrics",
-							errCodeCountMetricsMustBePair,
-						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
-				}
-			}
-			return nil
-		})).
 		Rules(timeSliceTargetsValidationRule),
 )
 

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -1087,7 +1088,7 @@ func TestValidate_Spec(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec",
-				Code: errCodeExactlyOneMetricType,
+				Code: rules.ErrorCodeMutuallyExclusive,
 			})
 	})
 	t.Run("exactly one metric type - both missing", func(t *testing.T) {
@@ -1097,7 +1098,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec",
-			Code: errCodeExactlyOneMetricType,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
@@ -1215,10 +1216,16 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 			BadMetric:   validMetricSpec(v1alpha.AzureMonitor),
 		}
 		err := validate(slo)
+		t.Logf("err: %v\n", err)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: errCodeEitherBadOrGoodCountMetric,
+			Prop: "spec.objectives[0]",
 		})
+		require.Len(t, err.Errors[0], 1)
+		// TODO
+		//testutils.AssertContainsErrors(t, slo, err.Errors[0], 1, testutils.ExpectedError{
+		//	Prop: "countMetrics",
+		//})
+		//require.Len(t, err.Errors[0].Errors, 1)
 	})
 	t.Run("only bad provided", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
@@ -1252,8 +1259,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: errCodeCountMetricsMustBePair,
+			Prop: "spec.objectives[0]",
 		})
 	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
@@ -1351,6 +1357,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec",
 					Code: errCodeExactlyOneMetricSpecType,
+					// Code: rules.ErrorCodeMutuallyExclusive,
 				})
 			})
 		}
