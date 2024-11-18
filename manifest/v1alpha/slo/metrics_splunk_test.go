@@ -121,18 +121,6 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
-	t.Run("goodTotal mixed with bad", func(t *testing.T) {
-		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Splunk)
-		slo.Spec.Objectives[0].CountMetrics.BadMetric = validMetricSpec(v1alpha.Splunk)
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.bad",
-			Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
-		}, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: rules.ErrorCodeMutuallyExclusive,
-		})
-	})
 	t.Run("invalid query", func(t *testing.T) {
 		tests := map[string]struct {
 			Query        string

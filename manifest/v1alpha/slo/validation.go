@@ -167,19 +167,7 @@ var specValidation = govy.New[Spec](
 		RulesForEach(timeWindowValidationRule()),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
-		RulesForEach(
-			govy.For(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
-				WithName("countMetrics").
-				Cascade(govy.CascadeModeStop).
-				When(func(o Objective) bool { return o.CountMetrics != nil }).
-				Rules(
-					rules.MutuallyExclusive(true, map[string]func(*CountMetricsSpec) any{
-						"goodAndTotal":    func(c *CountMetricsSpec) any { return c.GoodMetric != nil && c.TotalMetric != nil },
-						"badAndTotal":     func(c *CountMetricsSpec) any { return c.BadMetric != nil && c.TotalMetric != nil },
-						"goodTotalMetric": func(c *CountMetricsSpec) any { return c.GoodTotalMetric },
-					}).WithMessage("provide a pair of ('good' and 'total') or ('bad' and 'total') or a goodTotalMetric single query"),
-				),
-		),
+		RulesForEach(),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Cascade(govy.CascadeModeStop).

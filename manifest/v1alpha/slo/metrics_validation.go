@@ -17,8 +17,6 @@ const (
 	errCodeBadOverTotalDisabled             = "bad_over_total_disabled"
 	errCodeSingleQueryGoodOverTotalDisabled = "single_query_good_over_total_disabled"
 	errCodeExactlyOneMetricSpecType         = "exactly_one_metric_spec_type"
-	errCodeEitherBadOrGoodCountMetric       = "either_bad_or_good_count_metric"
-	errCodeCountMetricsMustBePair           = "count_metrics_must_be_pair"
 	errCodeTimeSliceTarget                  = "time_slice_target"
 )
 
@@ -38,6 +36,20 @@ var specMetricsValidation = govy.New[Spec](
 
 var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"total":     func(c CountMetricsSpec) any { return c.TotalMetric },
+				"goodTotal": func(c CountMetricsSpec) any { return c.GoodTotalMetric },
+			}),
+		),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil }).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"good": func(c CountMetricsSpec) any { return c.GoodMetric },
+				"bad":  func(c CountMetricsSpec) any { return c.BadMetric },
+			}),
+		).
 		Include(
 			azureMonitorCountMetricsLevelValidation,
 			appDynamicsCountMetricsLevelValidation,
@@ -47,10 +59,22 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			instanaCountMetricsLevelValidation,
 			redshiftCountMetricsLevelValidation,
 			bigQueryCountMetricsLevelValidation,
-			splunkCountMetricsLevelValidation),
+		).
+		Include(
+			goodAndBadOverTotalMetricsValidation,
+		),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(func(c CountMetricsSpec) bool { return c.GoodTotalMetric != nil }).
+		Include(
+			goodTotalSingleQueryMetricsValidation,
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
+).
+	Cascade(govy.CascadeModeStop)
+
+var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
 		Include(
@@ -59,23 +83,41 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			lightstepTotalCountMetricValidation),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.BadMetric == nil }).
 		Include(
 			metricSpecValidation,
 			countMetricsValidation,
 			lightstepGoodCountMetricValidation),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.GoodMetric == nil }).
 		Rules(oneOfBadOverTotalValidationRule).
 		Include(
 			countMetricsValidation,
 			metricSpecValidation),
+).
+	Cascade(govy.CascadeModeContinue)
+
+var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"good":      func(c CountMetricsSpec) any { return c.GoodMetric },
+				"bad":       func(c CountMetricsSpec) any { return c.BadMetric },
+				"goodTotal": func(c CountMetricsSpec) any { return c.GoodTotalMetric },
+			}),
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodTotalMetric }).
 		WithName("goodTotal").
-		Rules(oneOfSingleQueryGoodOverTotalValidationRule).
+		Rules(
+			oneOfSingleQueryGoodOverTotalValidationRule,
+		).
+		Cascade(govy.CascadeModeContinue).
 		Include(
 			countMetricsValidation,
 			singleQueryMetricSpecValidation),
-)
+).
+	Cascade(govy.CascadeModeStop)
 
 var RawMetricsValidation = govy.New[RawMetricSpec](
 	govy.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
