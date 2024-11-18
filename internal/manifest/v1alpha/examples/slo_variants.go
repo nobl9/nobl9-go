@@ -197,9 +197,10 @@ func exampleAttachments() []v1alphaSLO.Attachment {
 type metricVariant = string
 
 const (
-	metricVariantThreshold metricVariant = "threshold"
-	metricVariantGoodRatio metricVariant = "good over total"
-	metricVariantBadRatio  metricVariant = "bad over total"
+	metricVariantThreshold            metricVariant = "threshold"
+	metricVariantGoodRatio            metricVariant = "good over total"
+	metricVariantBadRatio             metricVariant = "bad over total"
+	metricVariantSingleQueryGoodRatio metricVariant = "single query good over total"
 )
 
 // metricSubVariant allows extending standard metric variants with metric source specific sub-variants.
@@ -316,6 +317,10 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}), newMetricSpec(v1alphaSLO.SplunkMetric{
 				Query: ptr(`index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value`),
 			}))
+			// case metricVariantSingleQueryGoodRatio:
+			// 	return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SplunkMetric{
+			// 		Query: ptr(""),
+			// 	}))
 		}
 	case v1alpha.Lightstep:
 		slo.Spec.Objectives[0].CountMetrics.Incremental = ptr(false)
@@ -963,26 +968,9 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		}
 	case v1alpha.Honeycomb:
 		switch s.MetricVariant {
-		case metricVariantThreshold:
-			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "AVG",
-				Attribute:   "requestsLatency",
-			}))
-		case metricVariantGoodRatio:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterGood",
-			}), newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterTotal",
-			}))
-		case metricVariantBadRatio:
-			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterBad",
-			}), newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterTotal",
+		case metricVariantSingleQueryGoodRatio:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
+				Attribute: "dc.sli.some-service-availability",
 			}))
 		}
 	case v1alpha.LogicMonitor:
@@ -1057,6 +1045,7 @@ func setGoodOverTotalMetric(slo v1alphaSLO.SLO, good, total *v1alphaSLO.MetricSp
 	slo.Spec.Objectives[0].RawMetric = nil
 	slo.Spec.Objectives[0].CountMetrics.GoodMetric = good
 	slo.Spec.Objectives[0].CountMetrics.TotalMetric = total
+	slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric = nil
 	return slo
 }
 
@@ -1064,6 +1053,15 @@ func setBadOverTotalMetric(slo v1alphaSLO.SLO, bad, total *v1alphaSLO.MetricSpec
 	slo.Spec.Objectives[0].RawMetric = nil
 	slo.Spec.Objectives[0].CountMetrics.GoodMetric = bad
 	slo.Spec.Objectives[0].CountMetrics.TotalMetric = total
+	slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric = nil
+	return slo
+}
+
+func setSingleQueryGoodOverTotalMetric(slo v1alphaSLO.SLO, goodTotal *v1alphaSLO.MetricSpec) v1alphaSLO.SLO {
+	slo.Spec.Objectives[0].RawMetric = nil
+	slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
+	slo.Spec.Objectives[0].CountMetrics.TotalMetric = nil
+	slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric = goodTotal
 	return slo
 }
 

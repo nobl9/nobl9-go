@@ -3,12 +3,14 @@ package slo
 import (
 	"fmt"
 
+	"slices"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -193,7 +195,7 @@ var metricSpecValidation = govy.New[MetricSpec](
 		Include(genericValidation),
 	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
 		WithName("honeycomb").
-		Include(honeycombValidation, attributeRequired),
+		Include(honeycombValidation),
 	govy.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
@@ -202,31 +204,17 @@ var metricSpecValidation = govy.New[MetricSpec](
 		Include(azurePrometheusValidation),
 )
 
-// When updating this list, make sure you also update the generated examples.
-var badOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.CloudWatch,
-	v1alpha.AppDynamics,
-	v1alpha.AzureMonitor,
-	v1alpha.Honeycomb,
-	v1alpha.LogicMonitor,
-	v1alpha.AzurePrometheus,
-}
-
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 var oneOfBadOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(badOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.BadOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeBadOverTotalDisabled)
-
-var singleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.Splunk,
-}
 
 // Support for single query good/total metrics is experimental.
 // Splunk is the only datasource integration to have this feature
 // - extend the list while adding support for next integrations.
 var oneOfSingleQueryGoodOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(singleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.SingleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeSingleQueryGoodOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = govy.NewRule(func(v Spec) error {
@@ -430,7 +418,7 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 // the count metrics is of the given type.
 func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
 	return func(c CountMetricsSpec) bool {
-		if slices.Contains(singleQueryGoodOverTotalEnabledSources, typ) {
+		if slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
 			if c.GoodTotalMetric != nil && typ != c.GoodTotalMetric.DataSourceType() {
 				return false
 			}
@@ -442,7 +430,7 @@ func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) boo
 		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
 			return false
 		}
-		if slices.Contains(badOverTotalEnabledSources, typ) {
+		if slices.Contains(internal.BadOverTotalEnabledSources, typ) {
 			if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
 				return false
 			}

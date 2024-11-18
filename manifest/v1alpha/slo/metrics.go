@@ -12,7 +12,8 @@ type CountMetricsSpec struct {
 	GoodMetric  *MetricSpec `json:"good,omitempty"`
 	BadMetric   *MetricSpec `json:"bad,omitempty"`
 	TotalMetric *MetricSpec `json:"total,omitempty"`
-	// Experimental: Splunk only, a single query returning both good and total counts.
+	// Experimental: Splunk and Honeycomb only.
+  // Single query returning both good and total counts.
 	GoodTotalMetric *MetricSpec `json:"goodTotal,omitempty"`
 }
 

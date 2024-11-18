@@ -9,10 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"slices"
+
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
@@ -1195,12 +1197,23 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		})
 	})
 	t.Run("bad over total enabled", func(t *testing.T) {
-		for _, typ := range badOverTotalEnabledSources {
+		for _, typ := range internal.BadOverTotalEnabledSources {
 			slo := validSLO()
 			slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
 				Incremental: ptr(true),
 				TotalMetric: validMetricSpec(typ),
 				BadMetric:   validMetricSpec(typ),
+			}
+			err := validate(slo)
+			testutils.AssertNoError(t, slo, err)
+		}
+	})
+	t.Run("goodTotal enabled", func(t *testing.T) {
+		for _, typ := range internal.SingleQueryGoodOverTotalEnabledSources {
+			slo := validSLO()
+			slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+				Incremental:     ptr(true),
+				GoodTotalMetric: validMetricSpec(typ),
 			}
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
@@ -1320,17 +1333,43 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 	})
 	t.Run("bad over total disabled", func(t *testing.T) {
-		slo := validSLO()
-		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
-			Incremental: ptr(true),
-			TotalMetric: validMetricSpec(v1alpha.Prometheus),
-			BadMetric:   validMetricSpec(v1alpha.Prometheus),
+		for _, typ := range v1alpha.DataSourceTypeValues() {
+			if slices.Contains(internal.BadOverTotalEnabledSources, typ) {
+				continue
+			}
+			t.Run(typ.String(), func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+					Incremental: ptr(true),
+					TotalMetric: validMetricSpec(v1alpha.Prometheus),
+					BadMetric:   validMetricSpec(v1alpha.Prometheus),
+				}
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].countMetrics.bad",
+					Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
+				})
+			})
 		}
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.bad",
-			Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
-		})
+	})
+	t.Run("goodTotal disabled", func(t *testing.T) {
+		for _, typ := range v1alpha.DataSourceTypeValues() {
+			if slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
+				continue
+			}
+			t.Run(typ.String(), func(t *testing.T) {
+				slo := validSLO()
+				slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+					Incremental:     ptr(true),
+					GoodTotalMetric: validMetricSpec(v1alpha.Prometheus),
+				}
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].countMetrics.goodTotal",
+					Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, rules.ErrorCodeOneOf),
+				})
+			})
+		}
 	})
 }
 
@@ -1356,7 +1395,7 @@ func validCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 // nolint:unparam
 func validSingleQueryGoodOverTotalCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
-	if !slices.Contains(singleQueryGoodOverTotalEnabledSources, metricType) {
+	if !slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, metricType) {
 		panic("metric type not supported")
 	}
 	s.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
@@ -1708,8 +1747,7 @@ fetch consumed_api
 		Query: ptr("anything is valid"),
 	}},
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
-		Calculation: "SUM",
-		Attribute:   "http.status_code",
+		Attribute: "dc.sli.some-service-availability",
 	}},
 	v1alpha.LogicMonitor: {LogicMonitor: &LogicMonitorMetric{
 		QueryType:                  "device_metrics",
