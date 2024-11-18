@@ -1369,7 +1369,6 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 					Prop: "spec",
 					Code: errCodeExactlyOneMetricSpecType,
-					// Code: rules.ErrorCodeMutuallyExclusive,
 				})
 			})
 		}
