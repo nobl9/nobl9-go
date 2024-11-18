@@ -52,3 +52,11 @@ func TestHoneycomb(t *testing.T) {
 		}
 	})
 }
+
+func TestHoneycomb_CountMetrics_SingleQuery(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Honeycomb)
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+}

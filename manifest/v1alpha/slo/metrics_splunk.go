@@ -3,35 +3,14 @@ package slo
 import (
 	"regexp"
 
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
-
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 // SplunkMetric represents metric from Splunk
 type SplunkMetric struct {
 	Query *string `json:"query"`
 }
-
-// FIXME: Move this out!
-var splunkCountMetricsLevelValidation = govy.New[CountMetricsSpec](
-	govy.For(govy.GetSelf[CountMetricsSpec]()).
-		Rules(
-			govy.NewRule(func(c CountMetricsSpec) error {
-				if c.GoodTotalMetric != nil {
-					if c.GoodMetric != nil || c.BadMetric != nil || c.TotalMetric != nil {
-						return errors.New("goodTotal is mutually exclusive with good, bad, and total")
-					}
-				}
-				return nil
-			}).WithErrorCode(rules.ErrorCodeMutuallyExclusive)),
-).When(
-	whenCountMetricsIs(v1alpha.Splunk),
-	govy.WhenDescription("countMetrics is splunk"),
-)
 
 var splunkValidation = govy.New[SplunkMetric](
 	govy.ForPointer(func(s SplunkMetric) *string { return s.Query }).

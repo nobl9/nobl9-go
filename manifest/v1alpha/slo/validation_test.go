@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
-
-	"slices"
 
 	"github.com/stretchr/testify/assert"
 
@@ -1089,7 +1088,7 @@ func TestValidate_Spec(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec",
-				Code: errCodeExactlyOneMetricType,
+				Code: rules.ErrorCodeMutuallyExclusive,
 			})
 	})
 	t.Run("exactly one metric type - both missing", func(t *testing.T) {
@@ -1099,7 +1098,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec",
-			Code: errCodeExactlyOneMetricType,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
@@ -1210,14 +1209,24 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 	t.Run("goodTotal enabled", func(t *testing.T) {
 		for _, typ := range internal.SingleQueryGoodOverTotalEnabledSources {
-			slo := validSLO()
-			slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
-				Incremental:     ptr(true),
-				GoodTotalMetric: validMetricSpec(typ),
-			}
+			slo := validSingleQueryGoodOverTotalCountMetricSLO(typ)
 			err := validate(slo)
 			testutils.AssertNoError(t, slo, err)
 		}
+	})
+	t.Run("both goodTotal and total provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental:     ptr(true),
+			TotalMetric:     validMetricSpec(v1alpha.Splunk),
+			GoodTotalMetric: validMetricSpec(v1alpha.Splunk),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "[goodTotal, total] properties are mutually exclusive, provide only one of them",
+			Code:    rules.ErrorCodeMutuallyExclusive,
+		})
 	})
 	t.Run("bad provided with good", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.AzureMonitor)
@@ -1229,8 +1238,48 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: errCodeEitherBadOrGoodCountMetric,
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "[bad, good] properties are mutually exclusive, provide only one of them",
+			Code:    rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("only bad provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			BadMetric:   validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "one of [goodTotal, total] properties must be set, none was provided",
+			Code:    rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("only good provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			GoodMetric:  validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "one of [goodTotal, total] properties must be set, none was provided",
+			Code:    rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("only total provided", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.AzureMonitor)
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			TotalMetric: validMetricSpec(v1alpha.AzureMonitor),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec.objectives[0].countMetrics",
+			Message: "one of [bad, good] properties must be set, none was provided",
+			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
@@ -1392,7 +1441,6 @@ func validCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	return s
 }
 
-// nolint:unparam
 func validSingleQueryGoodOverTotalCountMetricSLO(metricType v1alpha.DataSourceType) SLO {
 	s := validSLO()
 	if !slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, metricType) {
@@ -1777,6 +1825,9 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
     ]
     | rename _time as n9time
     | fields n9time n9good n9total`),
+	}},
+	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
+		Attribute: "dc.sli.some-service-availability",
 	}},
 }
 

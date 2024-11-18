@@ -9,6 +9,19 @@ spec:
   releaseChannel: stable
   elasticsearch:
     url: http://elasticsearch-main.elasticsearch:9200
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+    triggeredBySloCreation:
+      value: 15
+      unit: Day
+    triggeredBySloEdit:
+      value: 15
+      unit: Day
   queryDelay:
     value: 2
     unit: Minute
