@@ -123,7 +123,7 @@ var sloValidationComposite = govy.New[SLO](
 var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
-		Include(specMetricsValidation), // TODO push new validators there?
+		Include(specMetricsValidation),
 	govy.For(govy.GetSelf[Spec]()).
 		WithName("composite").
 		When(func(s Spec) bool { return s.Composite != nil }).
