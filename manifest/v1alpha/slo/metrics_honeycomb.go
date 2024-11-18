@@ -18,3 +18,15 @@ var honeycombValidation = govy.New[HoneycombMetric](
 			rules.StringMaxLength(255),
 			rules.StringNotEmpty()),
 )
+
+var honeycombCountMetricsValidation = govy.New[MetricSpec](
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Rules(rules.Forbidden[HoneycombMetric]()),
+)
+
+var honeycombRawMetricValidation = govy.New[MetricSpec](
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Rules(rules.Forbidden[HoneycombMetric]()),
+)

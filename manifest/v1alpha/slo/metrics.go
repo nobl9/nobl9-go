@@ -13,7 +13,7 @@ type CountMetricsSpec struct {
 	BadMetric   *MetricSpec `json:"bad,omitempty"`
 	TotalMetric *MetricSpec `json:"total,omitempty"`
 	// Experimental: Splunk and Honeycomb only.
-  // Single query returning both good and total counts.
+	// Single query returning both good and total counts.
 	GoodTotalMetric *MetricSpec `json:"goodTotal,omitempty"`
 }
 
@@ -101,11 +101,6 @@ func (s *Spec) RawMetrics() []*MetricSpec {
 	return rawMetrics
 }
 
-// HasRawMetricQuery returns true if Objective has raw metric with query set.
-func (o *Objective) HasRawMetricQuery() bool {
-	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
-}
-
 // ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
 func (s *Spec) ObjectivesRawMetricsCount() int {
 	var count int
@@ -125,11 +120,6 @@ func (s *Spec) HasCountMetrics() bool {
 		}
 	}
 	return false
-}
-
-// HasCountMetrics returns true if Objective has count metrics.
-func (o *Objective) HasCountMetrics() bool {
-	return o.CountMetrics != nil
 }
 
 // CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.

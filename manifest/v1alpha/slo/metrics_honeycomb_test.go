@@ -12,9 +12,53 @@ import (
 
 func TestHoneycomb(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.Honeycomb)
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Honeycomb)
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("raw metric is not supported", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Honeycomb)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery = validSingleQueryMetricSpec(v1alpha.Honeycomb)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.honeycomb",
+			Code: rules.ErrorCodeForbidden,
+		})
+	})
+	t.Run("good over total not supported", func(t *testing.T) {
+		for path, metrics := range map[string]CountMetricsSpec{
+			"spec.objectives[0].countMetrics.good.honeycomb": {
+				Incremental: ptr(true),
+				GoodMetric:  validSingleQueryMetricSpec(v1alpha.Honeycomb),
+				TotalMetric: validSingleQueryMetricSpec(v1alpha.Datadog),
+			},
+			"spec.objectives[0].countMetrics.total.honeycomb": {
+				Incremental: ptr(true),
+				GoodMetric:  validSingleQueryMetricSpec(v1alpha.Honeycomb),
+				TotalMetric: validSingleQueryMetricSpec(v1alpha.Honeycomb),
+			},
+		} {
+			slo := validSLO()
+			slo.Spec.Objectives[0].CountMetrics = &metrics
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+				Prop: path,
+				Code: rules.ErrorCodeForbidden,
+			})
+		}
+	})
+	t.Run("bad over total not supported", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			BadMetric:   validSingleQueryMetricSpec(v1alpha.Honeycomb),
+			TotalMetric: validSingleQueryMetricSpec(v1alpha.Datadog),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.bad",
+			Code: errCodeBadOverTotalDisabled,
+		})
 	})
 	t.Run("string properties", func(t *testing.T) {
 		for _, test := range []struct {
@@ -28,7 +72,7 @@ func TestHoneycomb(t *testing.T) {
 				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
+						Prop: "spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute",
 						Code: rules.ErrorCodeStringNotEmpty,
 					},
 				},
@@ -39,24 +83,16 @@ func TestHoneycomb(t *testing.T) {
 				}, ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives[0].rawMetric.query.honeycomb.attribute",
+						Prop: "spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute",
 						Code: rules.ErrorCodeStringMaxLength,
 					},
 				},
 			},
 		} {
-			slo := validRawMetricSLO(v1alpha.Honeycomb)
-			slo.Spec.Objectives[0].RawMetric.MetricQuery.Honeycomb = test.Metric
+			slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Honeycomb)
+			slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Honeycomb = test.Metric
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, test.ErrorsCount, test.Errors...)
 		}
-	})
-}
-
-func TestHoneycomb_CountMetrics_SingleQuery(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Honeycomb)
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
 	})
 }

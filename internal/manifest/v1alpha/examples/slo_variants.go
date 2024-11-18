@@ -120,6 +120,8 @@ func (s sloExample) SLO() v1alphaSLO.SLO {
 		objective.Value = ptr(1.0)
 	case metricVariantBadRatio:
 		objective.Value = ptr(1.0)
+	case metricVariantSingleQueryGoodRatio:
+		objective.Value = ptr(1.0)
 	default:
 		panic(fmt.Sprintf("unsupported metric variant: %s", s.MetricVariant))
 	}
@@ -317,10 +319,16 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}), newMetricSpec(v1alphaSLO.SplunkMetric{
 				Query: ptr(`index=* source=udp:5072 sourcetype=syslog | bucket _time span=1m | stats count as n9value by _time | rename _time as n9time | fields n9time n9value`),
 			}))
-			// case metricVariantSingleQueryGoodRatio:
-			// 	return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SplunkMetric{
-			// 		Query: ptr(""),
-			// 	}))
+		case metricVariantSingleQueryGoodRatio:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SplunkMetric{
+				Query: ptr(`
+| mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
+| join type=left _time [
+| mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
+]
+| rename _time as n9time
+| fields n9time n9good n9total`),
+			}))
 		}
 	case v1alpha.Lightstep:
 		slo.Spec.Objectives[0].CountMetrics.Incremental = ptr(false)

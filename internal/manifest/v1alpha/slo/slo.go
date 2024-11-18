@@ -6,7 +6,6 @@ var BadOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.CloudWatch,
 	v1alpha.AppDynamics,
 	v1alpha.AzureMonitor,
-	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
 }

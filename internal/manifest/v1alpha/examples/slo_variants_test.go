@@ -4,10 +4,11 @@ import (
 	"slices"
 	"testing"
 
-	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 func TestSLOVariants(t *testing.T) {
@@ -19,22 +20,25 @@ func TestSLOVariants(t *testing.T) {
 		CountMetricsGoodTotal bool
 	})
 	for _, variant := range SLO() {
-		v, ok := variant.(interface {
-			GetDataSourceType() v1alpha.DataSourceType
-		})
-    require.True(t, ok)
-		example := examples[v.GetDataSourceType()]
-		switch v.MetricVariant {
-		case metricVariantThreshold:
-			example.Threshold = true
-		case metricVariantGoodRatio:
-			example.CountMetricsGood = true
-		case metricVariantBadRatio:
-			example.CountMetricsBad = true
-		case metricVariantSingleQueryGoodRatio:
-			example.CountMetricsGoodTotal = true
+		switch v := variant.(type) {
+		case sloExample:
+			example := examples[v.GetDataSourceType()]
+			switch v.MetricVariant {
+			case metricVariantThreshold:
+				example.Threshold = true
+			case metricVariantGoodRatio:
+				example.CountMetricsGood = true
+			case metricVariantBadRatio:
+				example.CountMetricsBad = true
+			case metricVariantSingleQueryGoodRatio:
+				example.CountMetricsGoodTotal = true
+			}
+			examples[v.DataSourceType] = example
+		case sloCompositeExample:
+			continue
+		default:
+			t.Fatalf("unexpected variant type %T", v)
 		}
-		examples[v.DataSourceType] = example
 	}
 
 	for _, dataSourceType := range dataSourceTypes {

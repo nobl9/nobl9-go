@@ -2,7 +2,6 @@ package slo
 
 import (
 	"fmt"
-
 	"slices"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -99,7 +98,7 @@ var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 			countMetricsValidation,
 			metricSpecValidation),
 ).
-	Cascade(govy.CascadeModeContinue)
+	Cascade(govy.CascadeModeStop)
 
 var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
@@ -116,9 +115,7 @@ var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
 			oneOfSingleQueryGoodOverTotalValidationRule,
 		).
 		Cascade(govy.CascadeModeContinue).
-		Include(
-			countMetricsValidation,
-			singleQueryMetricSpecValidation),
+		Include(singleQueryMetricSpecValidation),
 ).
 	Cascade(govy.CascadeModeStop)
 
@@ -131,7 +128,8 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			lightstepRawMetricValidation,
 			pingdomRawMetricValidation,
 			thousandEyesRawMetricValidation,
-			instanaRawMetricValidation),
+			instanaRawMetricValidation,
+			honeycombRawMetricValidation),
 )
 
 var countMetricsValidation = govy.New[MetricSpec](
@@ -139,13 +137,17 @@ var countMetricsValidation = govy.New[MetricSpec](
 		Include(
 			pingdomCountMetricsValidation,
 			thousandEyesCountMetricsValidation,
-			instanaCountMetricsValidation),
+			instanaCountMetricsValidation,
+			honeycombCountMetricsValidation),
 )
 
 var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
 		WithName("splunk").
 		Include(splunkSingleQueryValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -215,9 +217,6 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *GenericMetric { return m.Generic }).
 		WithName("generic").
 		Include(genericValidation),
-	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
-		WithName("honeycomb").
-		Include(honeycombValidation),
 	govy.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
@@ -436,30 +435,23 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 	return nil
 }).WithErrorCode(errCodeTimeSliceTarget)
 
-// whenCountMetricsIs is a helper function that returns a govy.Predicate which will only pass if
+// whenCountMetricsIs is a helper function that returns a [govy.Predicate] which will only pass if
 // the count metrics is of the given type.
 func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
-	return func(c CountMetricsSpec) bool {
-		if slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
-			if c.GoodTotalMetric != nil && typ != c.GoodTotalMetric.DataSourceType() {
-				return false
-			}
-			return c.GoodMetric != nil || c.BadMetric != nil || c.TotalMetric != nil
-		}
-		if c.TotalMetric == nil {
-			return false
-		}
-		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
-			return false
-		}
-		if slices.Contains(internal.BadOverTotalEnabledSources, typ) {
-			if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
-				return false
-			}
-			return c.BadMetric != nil || c.GoodMetric != nil
-		}
-		return c.GoodMetric != nil
+	return func(c CountMetricsSpec) bool { return countMetricIsOfType(c, typ) }
+}
+
+func countMetricIsOfType(c CountMetricsSpec, typ v1alpha.DataSourceType) bool {
+	if c.GoodTotalMetric != nil && slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
+		return typ == c.GoodTotalMetric.DataSourceType()
 	}
+	if c.TotalMetric == nil {
+		return false
+	}
+	if c.BadMetric != nil && slices.Contains(internal.BadOverTotalEnabledSources, typ) {
+		return typ == c.BadMetric.DataSourceType()
+	}
+	return c.GoodMetric != nil && typ == c.GoodMetric.DataSourceType()
 }
 
 const (
