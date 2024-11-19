@@ -98,7 +98,7 @@ var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 			countMetricsValidation,
 			metricSpecValidation),
 ).
-	Cascade(govy.CascadeModeStop)
+	Cascade(govy.CascadeModeContinue)
 
 var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).

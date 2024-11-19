@@ -26,26 +26,23 @@ func TestHoneycomb(t *testing.T) {
 		})
 	})
 	t.Run("good over total not supported", func(t *testing.T) {
-		for path, metrics := range map[string]CountMetricsSpec{
-			"spec.objectives[0].countMetrics.good.honeycomb": {
-				Incremental: ptr(true),
-				GoodMetric:  validSingleQueryMetricSpec(v1alpha.Honeycomb),
-				TotalMetric: validSingleQueryMetricSpec(v1alpha.Datadog),
-			},
-			"spec.objectives[0].countMetrics.total.honeycomb": {
-				Incremental: ptr(true),
-				GoodMetric:  validSingleQueryMetricSpec(v1alpha.Honeycomb),
-				TotalMetric: validSingleQueryMetricSpec(v1alpha.Honeycomb),
-			},
-		} {
-			slo := validSLO()
-			slo.Spec.Objectives[0].CountMetrics = &metrics
-			err := validate(slo)
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: path,
-				Code: rules.ErrorCodeForbidden,
-			})
+		slo := validSLO()
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(true),
+			GoodMetric:  validSingleQueryMetricSpec(v1alpha.Honeycomb),
+			TotalMetric: validSingleQueryMetricSpec(v1alpha.Honeycomb),
 		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.total.honeycomb",
+				Code: rules.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.good.honeycomb",
+				Code: rules.ErrorCodeForbidden,
+			},
+		)
 	})
 	t.Run("bad over total not supported", func(t *testing.T) {
 		slo := validSLO()
@@ -55,10 +52,16 @@ func TestHoneycomb(t *testing.T) {
 			TotalMetric: validSingleQueryMetricSpec(v1alpha.Datadog),
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.bad",
-			Code: errCodeBadOverTotalDisabled,
-		})
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.bad",
+				Code: errCodeBadOverTotalDisabled,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.bad.honeycomb",
+				Code: rules.ErrorCodeForbidden,
+			},
+		)
 	})
 	t.Run("string properties", func(t *testing.T) {
 		for _, test := range []struct {

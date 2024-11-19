@@ -12,11 +12,19 @@ func Test_whenCountMetricsIs(t *testing.T) {
 		spec       CountMetricsSpec
 		expected   bool
 	}{
-		"false - splunk - single query": {
+		"true - splunk - single query": {
 			datasource: v1alpha.Splunk,
 			spec: CountMetricsSpec{
 				Incremental:     ptr(false),
 				GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Splunk),
+			},
+			expected: true,
+		},
+		"false - splunk mixed with honeycomb - single query": {
+			datasource: v1alpha.Splunk,
+			spec: CountMetricsSpec{
+				Incremental:     ptr(false),
+				GoodTotalMetric: validSingleQueryMetricSpec(v1alpha.Honeycomb),
 			},
 			expected: false,
 		},
