@@ -7,7 +7,7 @@ import (
 
 // HoneycombMetric represents metric from Honeycomb.
 type HoneycombMetric struct {
-	Attribute string `json:"attribute,omitempty"`
+	Attribute string `json:"attribute"`
 }
 
 var honeycombValidation = govy.New[HoneycombMetric](
