@@ -321,8 +321,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 		case metricVariantSingleQueryGoodRatio:
 			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SplunkMetric{
-				Query: ptr(`
-| mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
+				Query: ptr(`| mstats avg("spl.intr.resource_usage.IOWait.data.avg_cpu_pct") as n9good WHERE index="_metrics" span=15s
 | join type=left _time [
 | mstats avg("spl.intr.resource_usage.IOWait.data.max_cpus_pct") as n9total WHERE index="_metrics" span=15s
 ]
