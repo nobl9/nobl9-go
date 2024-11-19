@@ -20,6 +20,7 @@ const (
 	TplVarObjectiveName                   TemplateVariable = "objective_name"
 	TplVarTimestamp                       TemplateVariable = "timestamp"
 	TplVarIsoTimestamp                    TemplateVariable = "iso_timestamp"
+	TplVarAlertID                         TemplateVariable = "alert_id"
 	TplVarBackwardCompatibleObjectiveName TemplateVariable = "experience_name"
 )
 
@@ -40,5 +41,6 @@ var notificationTemplateAllowedFields = map[TemplateVariable]struct{}{
 	TplVarObjectiveName:                   {},
 	TplVarTimestamp:                       {},
 	TplVarIsoTimestamp:                    {},
+	TplVarAlertID:                         {},
 	TplVarBackwardCompatibleObjectiveName: {},
 }
