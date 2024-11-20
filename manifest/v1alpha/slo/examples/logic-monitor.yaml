@@ -43,15 +43,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -116,15 +122,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -187,15 +199,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -261,15 +279,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -331,15 +355,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -404,15 +434,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -475,15 +511,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -549,15 +591,21 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       primary: true
     service: api-server
     timeWindows:
@@ -618,9 +666,12 @@
         query:
           logicMonitor:
             queryType: device_metrics
+            line: TIMEMAX
             deviceDataSourceInstanceId: 933147615
             graphId: 9978
-            line: TIMEMAX
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       op: lte
       primary: true
     service: api-server
@@ -685,9 +736,12 @@
         query:
           logicMonitor:
             queryType: device_metrics
+            line: TIMEMAX
             deviceDataSourceInstanceId: 933147615
             graphId: 9978
-            line: TIMEMAX
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       op: lte
       primary: true
     service: api-server
@@ -750,9 +804,12 @@
         query:
           logicMonitor:
             queryType: device_metrics
+            line: TIMEMAX
             deviceDataSourceInstanceId: 933147615
             graphId: 9978
-            line: TIMEMAX
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       op: lte
       primary: true
     service: api-server
@@ -818,9 +875,12 @@
         query:
           logicMonitor:
             queryType: device_metrics
+            line: TIMEMAX
             deviceDataSourceInstanceId: 933147615
             graphId: 9978
-            line: TIMEMAX
+            websiteId: ""
+            checkpointId: ""
+            graphName: ""
       op: lte
       primary: true
     service: api-server
