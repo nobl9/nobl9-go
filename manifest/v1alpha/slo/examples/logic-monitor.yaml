@@ -665,13 +665,13 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            line: TIMEMAX
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            queryType: website_metrics
+            line: MIN RTT
+            deviceDataSourceInstanceId: 0
+            graphId: 0
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -735,13 +735,13 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            line: TIMEMAX
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            queryType: website_metrics
+            line: MIN RTT
+            deviceDataSourceInstanceId: 0
+            graphId: 0
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -803,13 +803,13 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            line: TIMEMAX
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            queryType: website_metrics
+            line: MIN RTT
+            deviceDataSourceInstanceId: 0
+            graphId: 0
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -874,13 +874,13 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            line: TIMEMAX
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            queryType: website_metrics
+            line: MIN RTT
+            deviceDataSourceInstanceId: 0
+            graphId: 0
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server

@@ -989,10 +989,11 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant {
 		case metricVariantThreshold:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    9978,
-				Line:                       "TIMEMAX",
+				QueryType:    "website_metrics",
+				WebsiteID:    "1",
+				CheckpointID: "1044712023",
+				GraphName:    "responseTime",
+				Line:         "MIN RTT",
 			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
