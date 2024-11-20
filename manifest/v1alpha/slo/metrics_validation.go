@@ -128,8 +128,7 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			lightstepRawMetricValidation,
 			pingdomRawMetricValidation,
 			thousandEyesRawMetricValidation,
-			instanaRawMetricValidation,
-			honeycombRawMetricValidation),
+			instanaRawMetricValidation),
 )
 
 var countMetricsValidation = govy.New[MetricSpec](
@@ -137,8 +136,7 @@ var countMetricsValidation = govy.New[MetricSpec](
 		Include(
 			pingdomCountMetricsValidation,
 			thousandEyesCountMetricsValidation,
-			instanaCountMetricsValidation,
-			honeycombCountMetricsValidation),
+			instanaCountMetricsValidation),
 )
 
 var singleQueryMetricSpecValidation = govy.New[MetricSpec](
@@ -147,7 +145,7 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 		Include(splunkSingleQueryValidation),
 	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
 		WithName("honeycomb").
-		Include(honeycombValidation),
+		Include(honeycombSingleQueryValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -223,6 +221,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombLegacyValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.

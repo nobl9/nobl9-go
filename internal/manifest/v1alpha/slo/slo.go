@@ -8,6 +8,7 @@ var BadOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.AzureMonitor,
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
+	v1alpha.Honeycomb,
 }
 
 var SingleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{

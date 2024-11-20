@@ -1383,8 +1383,8 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 	t.Run("bad over total disabled", func(t *testing.T) {
 		for _, typ := range v1alpha.DataSourceTypeValues() {
-			// Honeycomb and ThousandEyes are not supported for good/bad over total at all.
-			if typ == v1alpha.Honeycomb || typ == v1alpha.ThousandEyes {
+			// ThousandEyes is not supported for good/bad over total at all.
+			if typ == v1alpha.ThousandEyes {
 				continue
 			}
 			if slices.Contains(internal.BadOverTotalEnabledSources, typ) {
@@ -1810,7 +1810,8 @@ fetch consumed_api
 		PromQL: "sum(rate(prometheus_http_requests_total[1h]))",
 	}},
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
-		Attribute: "dc.sli.some-service-availability",
+		Calculation: "SUM",
+		Attribute:   "http.status_code",
 	}},
 }
 
@@ -1831,7 +1832,9 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
     | rename _time as n9time
     | fields n9time n9good n9total`),
 	}},
-	v1alpha.Honeycomb: *validMetricSpec(v1alpha.Honeycomb),
+	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
+		Attribute: "dc.sli.some-service-availability",
+	}},
 }
 
 func ptr[T any](v T) *T { return &v }

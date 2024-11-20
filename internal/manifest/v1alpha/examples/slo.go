@@ -118,6 +118,9 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 	},
 	v1alpha.Honeycomb: {
 		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
+		metricVariantGoodRatio:            []metricSubVariant{},
+		metricVariantBadRatio:             []metricSubVariant{},
+		metricVariantThreshold:            []metricSubVariant{},
 	},
 	v1alpha.Splunk: {
 		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
