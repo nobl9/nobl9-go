@@ -14,7 +14,7 @@ import (
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
-const maximumAllowedReplayDuration = time.Hour * 24 * 30
+const maximumAllowedReplayDuration = time.Hour * 24 * 80 // Due to IC-82. It should be parametrized..
 
 // Replay Struct used for posting replay entity.
 type Replay struct {
