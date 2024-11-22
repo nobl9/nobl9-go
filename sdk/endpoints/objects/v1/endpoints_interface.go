@@ -26,7 +26,9 @@ import (
 
 type Endpoints interface {
 	Apply(ctx context.Context, objects []manifest.Object) error
+	// Deprecated: use [sdk.Client.Objects().V2().Delete] instead.
 	Delete(ctx context.Context, objects []manifest.Object) error
+	// Deprecated: use [sdk.Client.Objects().V2().DeleteByName] instead.
 	DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error
 	Get(ctx context.Context, kind manifest.Kind, header http.Header, query url.Values) ([]manifest.Object, error)
 	GetV1alphaProjects(ctx context.Context, params GetProjectsRequest) ([]v1alphaProject.Project, error)

@@ -23,6 +23,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 const (
@@ -111,7 +112,7 @@ func v1ApplyOrDeleteBatch(
 			applyAndDeleteLock.Lock()
 			defer applyAndDeleteLock.Unlock()
 			if delete {
-				return client.Objects().V1().Delete(ctx, batch)
+				return client.Objects().V2().Delete(ctx, objectsV2.DeleteRequest{Objects: batch})
 			}
 			return client.Objects().V1().Apply(ctx, batch)
 		})
