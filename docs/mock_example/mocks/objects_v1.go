@@ -39,7 +39,6 @@ import (
 type MockObjectsV1Endpoints struct {
 	ctrl     *gomock.Controller
 	recorder *MockObjectsV1EndpointsMockRecorder
-	isgomock struct{}
 }
 
 // MockObjectsV1EndpointsMockRecorder is the mock recorder for MockObjectsV1Endpoints.
@@ -60,17 +59,17 @@ func (m *MockObjectsV1Endpoints) EXPECT() *MockObjectsV1EndpointsMockRecorder {
 }
 
 // Apply mocks base method.
-func (m *MockObjectsV1Endpoints) Apply(ctx context.Context, objects []manifest.Object) error {
+func (m *MockObjectsV1Endpoints) Apply(arg0 context.Context, arg1 []manifest.Object) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Apply", ctx, objects)
+	ret := m.ctrl.Call(m, "Apply", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Apply indicates an expected call of Apply.
-func (mr *MockObjectsV1EndpointsMockRecorder) Apply(ctx, objects any) *MockObjectsV1EndpointsApplyCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) Apply(arg0, arg1 any) *MockObjectsV1EndpointsApplyCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Apply), ctx, objects)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Apply), arg0, arg1)
 	return &MockObjectsV1EndpointsApplyCall{Call: call}
 }
 
@@ -98,17 +97,17 @@ func (c *MockObjectsV1EndpointsApplyCall) DoAndReturn(f func(context.Context, []
 }
 
 // Delete mocks base method.
-func (m *MockObjectsV1Endpoints) Delete(ctx context.Context, objects []manifest.Object) error {
+func (m *MockObjectsV1Endpoints) Delete(arg0 context.Context, arg1 []manifest.Object) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, objects)
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockObjectsV1EndpointsMockRecorder) Delete(ctx, objects any) *MockObjectsV1EndpointsDeleteCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) Delete(arg0, arg1 any) *MockObjectsV1EndpointsDeleteCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Delete), ctx, objects)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Delete), arg0, arg1)
 	return &MockObjectsV1EndpointsDeleteCall{Call: call}
 }
 
@@ -136,10 +135,10 @@ func (c *MockObjectsV1EndpointsDeleteCall) DoAndReturn(f func(context.Context, [
 }
 
 // DeleteByName mocks base method.
-func (m *MockObjectsV1Endpoints) DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error {
+func (m *MockObjectsV1Endpoints) DeleteByName(arg0 context.Context, arg1 manifest.Kind, arg2 string, arg3 ...string) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, kind, project}
-	for _, a := range names {
+	varargs := []any{arg0, arg1, arg2}
+	for _, a := range arg3 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DeleteByName", varargs...)
@@ -148,9 +147,9 @@ func (m *MockObjectsV1Endpoints) DeleteByName(ctx context.Context, kind manifest
 }
 
 // DeleteByName indicates an expected call of DeleteByName.
-func (mr *MockObjectsV1EndpointsMockRecorder) DeleteByName(ctx, kind, project any, names ...any) *MockObjectsV1EndpointsDeleteByNameCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) DeleteByName(arg0, arg1, arg2 any, arg3 ...any) *MockObjectsV1EndpointsDeleteByNameCall {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, kind, project}, names...)
+	varargs := append([]any{arg0, arg1, arg2}, arg3...)
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByName", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).DeleteByName), varargs...)
 	return &MockObjectsV1EndpointsDeleteByNameCall{Call: call}
 }
@@ -179,18 +178,18 @@ func (c *MockObjectsV1EndpointsDeleteByNameCall) DoAndReturn(f func(context.Cont
 }
 
 // Get mocks base method.
-func (m *MockObjectsV1Endpoints) Get(ctx context.Context, kind manifest.Kind, header http.Header, query url.Values) ([]manifest.Object, error) {
+func (m *MockObjectsV1Endpoints) Get(arg0 context.Context, arg1 manifest.Kind, arg2 http.Header, arg3 url.Values) ([]manifest.Object, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", ctx, kind, header, query)
+	ret := m.ctrl.Call(m, "Get", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].([]manifest.Object)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockObjectsV1EndpointsMockRecorder) Get(ctx, kind, header, query any) *MockObjectsV1EndpointsGetCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) Get(arg0, arg1, arg2, arg3 any) *MockObjectsV1EndpointsGetCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Get), ctx, kind, header, query)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).Get), arg0, arg1, arg2, arg3)
 	return &MockObjectsV1EndpointsGetCall{Call: call}
 }
 
@@ -218,9 +217,9 @@ func (c *MockObjectsV1EndpointsGetCall) DoAndReturn(f func(context.Context, mani
 }
 
 // GetAlerts mocks base method.
-func (m *MockObjectsV1Endpoints) GetAlerts(ctx context.Context, header http.Header, query url.Values) ([]manifest.Object, int, error) {
+func (m *MockObjectsV1Endpoints) GetAlerts(arg0 context.Context, arg1 http.Header, arg2 url.Values) ([]manifest.Object, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAlerts", ctx, header, query)
+	ret := m.ctrl.Call(m, "GetAlerts", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]manifest.Object)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -228,9 +227,9 @@ func (m *MockObjectsV1Endpoints) GetAlerts(ctx context.Context, header http.Head
 }
 
 // GetAlerts indicates an expected call of GetAlerts.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetAlerts(ctx, header, query any) *MockObjectsV1EndpointsGetAlertsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetAlerts(arg0, arg1, arg2 any) *MockObjectsV1EndpointsGetAlertsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetAlerts), ctx, header, query)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetAlerts), arg0, arg1, arg2)
 	return &MockObjectsV1EndpointsGetAlertsCall{Call: call}
 }
 
@@ -258,18 +257,18 @@ func (c *MockObjectsV1EndpointsGetAlertsCall) DoAndReturn(f func(context.Context
 }
 
 // GetBudgetAdjustments mocks base method.
-func (m *MockObjectsV1Endpoints) GetBudgetAdjustments(ctx context.Context, params v1.GetBudgetAdjustmentRequest) ([]budgetadjustment.BudgetAdjustment, error) {
+func (m *MockObjectsV1Endpoints) GetBudgetAdjustments(arg0 context.Context, arg1 v1.GetBudgetAdjustmentRequest) ([]budgetadjustment.BudgetAdjustment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBudgetAdjustments", ctx, params)
+	ret := m.ctrl.Call(m, "GetBudgetAdjustments", arg0, arg1)
 	ret0, _ := ret[0].([]budgetadjustment.BudgetAdjustment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetBudgetAdjustments indicates an expected call of GetBudgetAdjustments.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetBudgetAdjustments(ctx, params any) *MockObjectsV1EndpointsGetBudgetAdjustmentsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetBudgetAdjustments(arg0, arg1 any) *MockObjectsV1EndpointsGetBudgetAdjustmentsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBudgetAdjustments", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetBudgetAdjustments), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBudgetAdjustments", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetBudgetAdjustments), arg0, arg1)
 	return &MockObjectsV1EndpointsGetBudgetAdjustmentsCall{Call: call}
 }
 
@@ -297,18 +296,18 @@ func (c *MockObjectsV1EndpointsGetBudgetAdjustmentsCall) DoAndReturn(f func(cont
 }
 
 // GetReports mocks base method.
-func (m *MockObjectsV1Endpoints) GetReports(ctx context.Context, params v1.GetReportsRequest) ([]report.Report, error) {
+func (m *MockObjectsV1Endpoints) GetReports(arg0 context.Context, arg1 v1.GetReportsRequest) ([]report.Report, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetReports", ctx, params)
+	ret := m.ctrl.Call(m, "GetReports", arg0, arg1)
 	ret0, _ := ret[0].([]report.Report)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetReports indicates an expected call of GetReports.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetReports(ctx, params any) *MockObjectsV1EndpointsGetReportsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetReports(arg0, arg1 any) *MockObjectsV1EndpointsGetReportsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReports", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetReports), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReports", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetReports), arg0, arg1)
 	return &MockObjectsV1EndpointsGetReportsCall{Call: call}
 }
 
@@ -336,18 +335,18 @@ func (c *MockObjectsV1EndpointsGetReportsCall) DoAndReturn(f func(context.Contex
 }
 
 // GetV1alphaAgents mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAgents(ctx context.Context, params v1.GetAgentsRequest) ([]agent.Agent, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAgents(arg0 context.Context, arg1 v1.GetAgentsRequest) ([]agent.Agent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAgents", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAgents", arg0, arg1)
 	ret0, _ := ret[0].([]agent.Agent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAgents indicates an expected call of GetV1alphaAgents.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAgents(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAgentsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAgents(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAgentsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAgents", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAgents), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAgents", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAgents), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAgentsCall{Call: call}
 }
 
@@ -375,18 +374,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAgentsCall) DoAndReturn(f func(context.
 }
 
 // GetV1alphaAlertMethods mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAlertMethods(ctx context.Context, params v1.GetAlertMethodsRequest) ([]alertmethod.AlertMethod, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAlertMethods(arg0 context.Context, arg1 v1.GetAlertMethodsRequest) ([]alertmethod.AlertMethod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAlertMethods", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAlertMethods", arg0, arg1)
 	ret0, _ := ret[0].([]alertmethod.AlertMethod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAlertMethods indicates an expected call of GetV1alphaAlertMethods.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertMethods(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAlertMethodsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertMethods(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAlertMethodsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertMethods", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertMethods), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertMethods", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertMethods), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAlertMethodsCall{Call: call}
 }
 
@@ -414,18 +413,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAlertMethodsCall) DoAndReturn(f func(co
 }
 
 // GetV1alphaAlertPolicies mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAlertPolicies(ctx context.Context, params v1.GetAlertPolicyRequest) ([]alertpolicy.AlertPolicy, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAlertPolicies(arg0 context.Context, arg1 v1.GetAlertPolicyRequest) ([]alertpolicy.AlertPolicy, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAlertPolicies", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAlertPolicies", arg0, arg1)
 	ret0, _ := ret[0].([]alertpolicy.AlertPolicy)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAlertPolicies indicates an expected call of GetV1alphaAlertPolicies.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertPolicies(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAlertPoliciesCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertPolicies(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAlertPoliciesCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertPolicies", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertPolicies), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertPolicies", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertPolicies), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAlertPoliciesCall{Call: call}
 }
 
@@ -453,18 +452,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAlertPoliciesCall) DoAndReturn(f func(c
 }
 
 // GetV1alphaAlertSilences mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAlertSilences(ctx context.Context, params v1.GetAlertSilencesRequest) ([]alertsilence.AlertSilence, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAlertSilences(arg0 context.Context, arg1 v1.GetAlertSilencesRequest) ([]alertsilence.AlertSilence, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAlertSilences", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAlertSilences", arg0, arg1)
 	ret0, _ := ret[0].([]alertsilence.AlertSilence)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAlertSilences indicates an expected call of GetV1alphaAlertSilences.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertSilences(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAlertSilencesCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlertSilences(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAlertSilencesCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertSilences", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertSilences), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlertSilences", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlertSilences), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAlertSilencesCall{Call: call}
 }
 
@@ -492,18 +491,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAlertSilencesCall) DoAndReturn(f func(c
 }
 
 // GetV1alphaAlerts mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAlerts(ctx context.Context, params v1.GetAlertsRequest) (*v1.GetAlertsResponse, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAlerts(arg0 context.Context, arg1 v1.GetAlertsRequest) (*v1.GetAlertsResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAlerts", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAlerts", arg0, arg1)
 	ret0, _ := ret[0].(*v1.GetAlertsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAlerts indicates an expected call of GetV1alphaAlerts.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlerts(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAlertsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAlerts(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAlertsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlerts), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAlerts), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAlertsCall{Call: call}
 }
 
@@ -531,18 +530,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAlertsCall) DoAndReturn(f func(context.
 }
 
 // GetV1alphaAnnotations mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaAnnotations(ctx context.Context, params v1.GetAnnotationsRequest) ([]annotation.Annotation, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaAnnotations(arg0 context.Context, arg1 v1.GetAnnotationsRequest) ([]annotation.Annotation, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaAnnotations", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaAnnotations", arg0, arg1)
 	ret0, _ := ret[0].([]annotation.Annotation)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaAnnotations indicates an expected call of GetV1alphaAnnotations.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAnnotations(ctx, params any) *MockObjectsV1EndpointsGetV1alphaAnnotationsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaAnnotations(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaAnnotationsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAnnotations", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAnnotations), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaAnnotations", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaAnnotations), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaAnnotationsCall{Call: call}
 }
 
@@ -570,18 +569,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaAnnotationsCall) DoAndReturn(f func(con
 }
 
 // GetV1alphaDataExports mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaDataExports(ctx context.Context, params v1.GetDataExportsRequest) ([]dataexport.DataExport, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaDataExports(arg0 context.Context, arg1 v1.GetDataExportsRequest) ([]dataexport.DataExport, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaDataExports", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaDataExports", arg0, arg1)
 	ret0, _ := ret[0].([]dataexport.DataExport)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaDataExports indicates an expected call of GetV1alphaDataExports.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaDataExports(ctx, params any) *MockObjectsV1EndpointsGetV1alphaDataExportsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaDataExports(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaDataExportsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaDataExports", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaDataExports), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaDataExports", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaDataExports), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaDataExportsCall{Call: call}
 }
 
@@ -609,18 +608,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaDataExportsCall) DoAndReturn(f func(con
 }
 
 // GetV1alphaDirects mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaDirects(ctx context.Context, params v1.GetDirectsRequest) ([]direct.Direct, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaDirects(arg0 context.Context, arg1 v1.GetDirectsRequest) ([]direct.Direct, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaDirects", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaDirects", arg0, arg1)
 	ret0, _ := ret[0].([]direct.Direct)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaDirects indicates an expected call of GetV1alphaDirects.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaDirects(ctx, params any) *MockObjectsV1EndpointsGetV1alphaDirectsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaDirects(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaDirectsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaDirects", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaDirects), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaDirects", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaDirects), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaDirectsCall{Call: call}
 }
 
@@ -648,18 +647,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaDirectsCall) DoAndReturn(f func(context
 }
 
 // GetV1alphaProjects mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaProjects(ctx context.Context, params v1.GetProjectsRequest) ([]project.Project, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaProjects(arg0 context.Context, arg1 v1.GetProjectsRequest) ([]project.Project, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaProjects", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaProjects", arg0, arg1)
 	ret0, _ := ret[0].([]project.Project)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaProjects indicates an expected call of GetV1alphaProjects.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaProjects(ctx, params any) *MockObjectsV1EndpointsGetV1alphaProjectsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaProjects(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaProjectsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaProjects", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaProjects), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaProjects", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaProjects), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaProjectsCall{Call: call}
 }
 
@@ -687,18 +686,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaProjectsCall) DoAndReturn(f func(contex
 }
 
 // GetV1alphaRoleBindings mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaRoleBindings(ctx context.Context, params v1.GetRoleBindingsRequest) ([]rolebinding.RoleBinding, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaRoleBindings(arg0 context.Context, arg1 v1.GetRoleBindingsRequest) ([]rolebinding.RoleBinding, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaRoleBindings", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaRoleBindings", arg0, arg1)
 	ret0, _ := ret[0].([]rolebinding.RoleBinding)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaRoleBindings indicates an expected call of GetV1alphaRoleBindings.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaRoleBindings(ctx, params any) *MockObjectsV1EndpointsGetV1alphaRoleBindingsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaRoleBindings(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaRoleBindingsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaRoleBindings", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaRoleBindings), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaRoleBindings", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaRoleBindings), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaRoleBindingsCall{Call: call}
 }
 
@@ -726,18 +725,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaRoleBindingsCall) DoAndReturn(f func(co
 }
 
 // GetV1alphaSLOs mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaSLOs(ctx context.Context, params v1.GetSLOsRequest) ([]slo.SLO, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaSLOs(arg0 context.Context, arg1 v1.GetSLOsRequest) ([]slo.SLO, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaSLOs", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaSLOs", arg0, arg1)
 	ret0, _ := ret[0].([]slo.SLO)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaSLOs indicates an expected call of GetV1alphaSLOs.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaSLOs(ctx, params any) *MockObjectsV1EndpointsGetV1alphaSLOsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaSLOs(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaSLOsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaSLOs", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaSLOs), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaSLOs", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaSLOs), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaSLOsCall{Call: call}
 }
 
@@ -765,18 +764,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaSLOsCall) DoAndReturn(f func(context.Co
 }
 
 // GetV1alphaServices mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaServices(ctx context.Context, params v1.GetServicesRequest) ([]service.Service, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaServices(arg0 context.Context, arg1 v1.GetServicesRequest) ([]service.Service, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaServices", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaServices", arg0, arg1)
 	ret0, _ := ret[0].([]service.Service)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaServices indicates an expected call of GetV1alphaServices.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaServices(ctx, params any) *MockObjectsV1EndpointsGetV1alphaServicesCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaServices(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaServicesCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaServices", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaServices), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaServices", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaServices), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaServicesCall{Call: call}
 }
 
@@ -804,18 +803,18 @@ func (c *MockObjectsV1EndpointsGetV1alphaServicesCall) DoAndReturn(f func(contex
 }
 
 // GetV1alphaUserGroups mocks base method.
-func (m *MockObjectsV1Endpoints) GetV1alphaUserGroups(ctx context.Context, params v1.GetAnnotationsRequest) ([]usergroup.UserGroup, error) {
+func (m *MockObjectsV1Endpoints) GetV1alphaUserGroups(arg0 context.Context, arg1 v1.GetAnnotationsRequest) ([]usergroup.UserGroup, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetV1alphaUserGroups", ctx, params)
+	ret := m.ctrl.Call(m, "GetV1alphaUserGroups", arg0, arg1)
 	ret0, _ := ret[0].([]usergroup.UserGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetV1alphaUserGroups indicates an expected call of GetV1alphaUserGroups.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaUserGroups(ctx, params any) *MockObjectsV1EndpointsGetV1alphaUserGroupsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetV1alphaUserGroups(arg0, arg1 any) *MockObjectsV1EndpointsGetV1alphaUserGroupsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaUserGroups", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaUserGroups), ctx, params)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetV1alphaUserGroups", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetV1alphaUserGroups), arg0, arg1)
 	return &MockObjectsV1EndpointsGetV1alphaUserGroupsCall{Call: call}
 }
 

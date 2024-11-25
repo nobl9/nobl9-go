@@ -22,7 +22,6 @@ import (
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
-	isgomock struct{}
 }
 
 // MockClientMockRecorder is the mock recorder for MockClient.
@@ -43,18 +42,18 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // GetOrganization mocks base method.
-func (m *MockClient) GetOrganization(ctx context.Context) (string, error) {
+func (m *MockClient) GetOrganization(arg0 context.Context) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrganization", ctx)
+	ret := m.ctrl.Call(m, "GetOrganization", arg0)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetOrganization indicates an expected call of GetOrganization.
-func (mr *MockClientMockRecorder) GetOrganization(ctx any) *MockClientGetOrganizationCall {
+func (mr *MockClientMockRecorder) GetOrganization(arg0 any) *MockClientGetOrganizationCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockClient)(nil).GetOrganization), ctx)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrganization", reflect.TypeOf((*MockClient)(nil).GetOrganization), arg0)
 	return &MockClientGetOrganizationCall{Call: call}
 }
 
