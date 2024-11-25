@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"time"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -172,13 +174,43 @@ type AnomalyConfigAlertMethod struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	UpdatedAt             string           `json:"updatedAt,omitempty"`
-	CompositeSLO          *ProcessStatus   `json:"compositeSlo,omitempty"`
-	ErrorBudgetAdjustment *ProcessStatus   `json:"errorBudgetAdjustment,omitempty"`
-	Replay                *ProcessStatus   `json:"replay,omitempty"`
-	TargetSLO             *TargetSloStatus `json:"targetSlo,omitempty"`
+	UpdatedAt                    string                                `json:"updatedAt,omitempty"`
+	CompositeSLO                 *ProcessStatus                        `json:"compositeSlo,omitempty"`
+	ErrorBudgetAdjustment        *ProcessStatus                        `json:"errorBudgetAdjustment,omitempty"`
+	Replay                       *ProcessStatus                        `json:"replay,omitempty"`
+	TargetSLO                    *TargetSloStatus                      `json:"targetSlo,omitempty"`
+	ObjectiveIndicatorValidation []*ObjectiveIndicatorValidationStatus `json:"objectiveIndicatorValidation,omitempty"`
 	// Deprecated: use Status.Replay instead.
 	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+}
+
+type ObjectiveIndicatorValidationStatus struct {
+	ObjectiveName string `json:"objectiveName"`
+	QueryValidationStatus
+}
+
+type QueryValidationStatus struct {
+	ValidationStatus `json:"validationStatus"`
+}
+
+type ValidationStatus struct {
+	GoodMetricValidation  *ValidationDetails `json:"goodMetric,omitempty"`
+	BadMetricValidation   *ValidationDetails `json:"badMetric,omitempty"`
+	TotalMetricValidation *ValidationDetails `json:"totalMetric,omitempty"`
+	RawMetricValidation   *ValidationDetails `json:"rawMetric,omitempty"`
+}
+
+type ErrorDetails struct {
+	Message          *string    `json:"message"`
+	ValidationResult string     `json:"validationResult"`
+	LogTimestamp     *time.Time `json:"logTimestamp"`
+	HTTPStatusCode   *int       `json:"httpStatusCode"`
+	Query            string     `json:"query"`
+}
+
+type ValidationDetails struct {
+	*ErrorDetails
+	*MetricSpec
 }
 
 type ProcessStatus struct {

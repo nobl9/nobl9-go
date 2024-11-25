@@ -1,9 +1,15 @@
 package slo
 
 import (
+	"encoding/json"
+	"fmt"
+	"math"
 	"sort"
+	"strings"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // CountMetricsSpec represents set of two time series of good and total counts
@@ -357,4 +363,81 @@ func (m *MetricSpec) Query() interface{} {
 	default:
 		return nil
 	}
+}
+
+// TODO: use this in ts.go
+func (m *MetricSpec) FormatQuery(query json.RawMessage) *string {
+	switch m.DataSourceType() {
+	case v1alpha.Dynatrace:
+		return m.Dynatrace.MetricSelector
+	case v1alpha.Datadog:
+		return m.Datadog.Query
+	case v1alpha.NewRelic:
+		return m.NewRelic.NRQL
+	case v1alpha.SplunkObservability:
+		return m.SplunkObservability.Program
+	case v1alpha.SumoLogic:
+		return m.SumoLogic.Query
+	default:
+		var formattedQuery string
+		if len(query) > 0 {
+			formattedQuery = formatRawJSONMetricQueryToString(query)
+		}
+		return &formattedQuery
+	}
+}
+
+func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
+	var formatJSONToString func(jsonObjAny any, prefix string) string
+	var queryObj map[string]any
+
+	err := json.Unmarshal(queryAsJSON, &queryObj)
+	if err != nil {
+		return ""
+	}
+
+	toTitle := func(s string) string {
+		return cases.Title(language.English).String(s)
+	}
+
+	formatJSONToString = func(jsonObjAny any, prefix string) string {
+		var sb strings.Builder
+
+		switch jsonObj := jsonObjAny.(type) {
+		case string:
+			sb.WriteString(fmt.Sprintf("%s\n", jsonObj))
+		case float64:
+			number := jsonObj
+			if math.Floor(number) == number {
+				sb.WriteString(fmt.Sprintf("%d\n", int64(number)))
+			} else {
+				sb.WriteString(fmt.Sprintf("%f\n", number))
+			}
+		case map[string]any:
+			keys := make([]string, 0, len(jsonObj))
+			for k := range jsonObj {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				sb.WriteString(
+					fmt.Sprintf("%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix)),
+				)
+			}
+		case []any:
+			sb.WriteString("\n")
+			prefix += " "
+			for i, val := range jsonObj {
+				sb.WriteString(
+					fmt.Sprintf("%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" ")),
+				)
+			}
+		default:
+			sb.WriteString("")
+		}
+
+		return sb.String()
+	}
+
+	return formatJSONToString(queryObj, "")
 }
