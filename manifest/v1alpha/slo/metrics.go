@@ -365,7 +365,6 @@ func (m *MetricSpec) Query() interface{} {
 	}
 }
 
-// TODO: use this in ts.go
 func (m *MetricSpec) FormatQuery(query json.RawMessage) *string {
 	switch m.DataSourceType() {
 	case v1alpha.Dynatrace:
