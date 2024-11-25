@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Elasticsearch Agent
-  releaseChannel: stable
+  releaseChannel: beta
   elasticsearch:
     url: http://elasticsearch-main.elasticsearch:9200
   historicalDataRetrieval:
