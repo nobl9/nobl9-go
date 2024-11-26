@@ -7,9 +7,10 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 // CountMetricsSpec represents set of two time series of good and total counts
