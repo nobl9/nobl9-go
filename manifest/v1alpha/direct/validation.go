@@ -2,6 +2,7 @@ package direct
 
 import (
 	"net/url"
+	"slices"
 
 	"github.com/pkg/errors"
 
@@ -415,7 +416,7 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 
 var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
-	if typ != v1alpha.SplunkObservability && spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha {
+	if !slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
 		return govy.NewPropertyError(
 			"releaseChannel",
 			spec.ReleaseChannel,
