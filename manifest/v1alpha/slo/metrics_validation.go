@@ -2,13 +2,14 @@ package slo
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -114,9 +115,7 @@ var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
 			oneOfSingleQueryGoodOverTotalValidationRule,
 		).
 		Cascade(govy.CascadeModeContinue).
-		Include(
-			countMetricsValidation,
-			singleQueryMetricSpecValidation),
+		Include(singleQueryMetricSpecValidation),
 ).
 	Cascade(govy.CascadeModeStop)
 
@@ -144,6 +143,9 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
 		WithName("splunk").
 		Include(splunkSingleQueryValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombSingleQueryValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -213,42 +215,28 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *GenericMetric { return m.Generic }).
 		WithName("generic").
 		Include(genericValidation),
-	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
-		WithName("honeycomb").
-		Include(honeycombValidation, attributeRequired),
 	govy.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
 	govy.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombLegacyValidation),
 )
-
-// When updating this list, make sure you also update the generated examples.
-var badOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.CloudWatch,
-	v1alpha.AppDynamics,
-	v1alpha.AzureMonitor,
-	v1alpha.Honeycomb,
-	v1alpha.LogicMonitor,
-	v1alpha.AzurePrometheus,
-}
 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 var oneOfBadOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(badOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.BadOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeBadOverTotalDisabled)
-
-var singleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.Splunk,
-}
 
 // Support for single query good/total metrics is experimental.
 // Splunk is the only datasource integration to have this feature
 // - extend the list while adding support for next integrations.
 var oneOfSingleQueryGoodOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(singleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.SingleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeSingleQueryGoodOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = govy.NewRule(func(v Spec) error {
@@ -448,30 +436,23 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 	return nil
 }).WithErrorCode(errCodeTimeSliceTarget)
 
-// whenCountMetricsIs is a helper function that returns a govy.Predicate which will only pass if
+// whenCountMetricsIs is a helper function that returns a [govy.Predicate] which will only pass if
 // the count metrics is of the given type.
 func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
-	return func(c CountMetricsSpec) bool {
-		if slices.Contains(singleQueryGoodOverTotalEnabledSources, typ) {
-			if c.GoodTotalMetric != nil && typ != c.GoodTotalMetric.DataSourceType() {
-				return false
-			}
-			return c.GoodMetric != nil || c.BadMetric != nil || c.TotalMetric != nil
-		}
-		if c.TotalMetric == nil {
-			return false
-		}
-		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
-			return false
-		}
-		if slices.Contains(badOverTotalEnabledSources, typ) {
-			if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
-				return false
-			}
-			return c.BadMetric != nil || c.GoodMetric != nil
-		}
-		return c.GoodMetric != nil
+	return func(c CountMetricsSpec) bool { return countMetricIsOfType(c, typ) }
+}
+
+func countMetricIsOfType(c CountMetricsSpec, typ v1alpha.DataSourceType) bool {
+	if c.GoodTotalMetric != nil && slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
+		return typ == c.GoodTotalMetric.DataSourceType()
 	}
+	if c.TotalMetric == nil {
+		return false
+	}
+	if c.BadMetric != nil && slices.Contains(internal.BadOverTotalEnabledSources, typ) {
+		return typ == c.BadMetric.DataSourceType()
+	}
+	return c.GoodMetric != nil && typ == c.GoodMetric.DataSourceType()
 }
 
 const (
