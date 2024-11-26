@@ -152,6 +152,12 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
+	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
+		direct := validDirect(v1alpha.Honeycomb)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {

@@ -480,6 +480,13 @@ func DataDogSiteValidationRule() govy.Rule[string] {
 		"ap1.datadoghq.com")
 }
 
+func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {
+	return []DataSourceType{
+		SplunkObservability,
+		Honeycomb,
+	}
+}
+
 func ptr[T interface{}](val T) *T {
 	return &val
 }
