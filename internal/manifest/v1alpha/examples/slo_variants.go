@@ -1063,7 +1063,7 @@ func setGoodOverTotalMetric(slo v1alphaSLO.SLO, good, total *v1alphaSLO.MetricSp
 
 func setBadOverTotalMetric(slo v1alphaSLO.SLO, bad, total *v1alphaSLO.MetricSpec) v1alphaSLO.SLO {
 	slo.Spec.Objectives[0].RawMetric = nil
-	slo.Spec.Objectives[0].CountMetrics.GoodMetric = bad
+	slo.Spec.Objectives[0].CountMetrics.BadMetric = bad
 	slo.Spec.Objectives[0].CountMetrics.TotalMetric = total
 	return slo
 }

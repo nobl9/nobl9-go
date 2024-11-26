@@ -40,7 +40,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
@@ -113,7 +113,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
@@ -184,7 +184,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
@@ -258,7 +258,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
