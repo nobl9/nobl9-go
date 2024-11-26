@@ -40,7 +40,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           honeycomb:
             calculation: SUM
             attribute: counterBad
@@ -109,7 +109,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           honeycomb:
             calculation: SUM
             attribute: counterBad
@@ -176,7 +176,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           honeycomb:
             calculation: SUM
             attribute: counterBad
@@ -246,7 +246,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           honeycomb:
             calculation: SUM
             attribute: counterBad

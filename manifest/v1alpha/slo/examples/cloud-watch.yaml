@@ -41,7 +41,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             json: |-
@@ -125,7 +125,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             json: |-
@@ -207,7 +207,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             json: |-
@@ -292,7 +292,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             json: |-
@@ -373,7 +373,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
@@ -443,7 +443,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
@@ -511,7 +511,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
@@ -582,7 +582,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             sql: SELECT AVG(CPUUtilization) FROM "AWS/EC2"
@@ -649,7 +649,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             namespace: AWS/ApplicationELB
@@ -731,7 +731,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             namespace: AWS/ApplicationELB
@@ -811,7 +811,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             namespace: AWS/ApplicationELB
@@ -894,7 +894,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           cloudWatch:
             region: us-west-2
             namespace: AWS/ApplicationELB
