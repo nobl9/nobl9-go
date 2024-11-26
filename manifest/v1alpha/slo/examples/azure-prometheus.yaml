@@ -40,7 +40,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azurePrometheus:
             promql: sum(api_server_requests_total{code="5xx"})
         total:
@@ -107,7 +107,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azurePrometheus:
             promql: sum(api_server_requests_total{code="5xx"})
         total:
@@ -172,7 +172,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azurePrometheus:
             promql: sum(api_server_requests_total{code="5xx"})
         total:
@@ -240,7 +240,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azurePrometheus:
             promql: sum(api_server_requests_total{code="5xx"})
         total:
