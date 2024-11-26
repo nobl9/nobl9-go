@@ -41,7 +41,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: logs
             workspace:
@@ -128,7 +128,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: logs
             workspace:
@@ -213,7 +213,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: logs
             workspace:
@@ -301,7 +301,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: logs
             workspace:
@@ -385,7 +385,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: metrics
             resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
@@ -459,7 +459,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: metrics
             resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
@@ -531,7 +531,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: metrics
             resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
@@ -606,7 +606,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           azureMonitor:
             dataType: metrics
             resourceId: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.Compute/virtualMachines/api-server
