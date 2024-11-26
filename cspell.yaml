@@ -97,6 +97,7 @@ words:
   - httpurls
   - ifacemaker
   - instana
+  - invalidjson
   - iowait
   - jsonyaml
   - jwks
@@ -107,6 +108,7 @@ words:
   - logql
   - mapstructure
   - memstats
+  - Metricname
   - mktemp
   - mockgen
   - mprofile
