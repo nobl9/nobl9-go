@@ -47,34 +47,18 @@ func TestLogicMonitor(t *testing.T) {
 			QueryType: LMQueryTypeDeviceMetrics,
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1,
-
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
-				Code: rules.ErrorCodeStringNotEmpty,
-			},
-		)
-	})
-	t.Run("invalid parameters for device_metrics", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.LogicMonitor)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.LogicMonitor = &LogicMonitorMetric{
-			QueryType:                  LMQueryTypeDeviceMetrics,
-			DeviceDataSourceInstanceID: -1,
-			GraphID:                    -1,
-		}
-		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
-				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
-				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
+				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
 	})
@@ -111,8 +95,8 @@ func TestLogicMonitor(t *testing.T) {
 			CheckpointID:               "1",
 			GraphName:                  "MaxPoints",
 			Line:                       "MAX",
-			DeviceDataSourceInstanceID: 1,
-			GraphID:                    1,
+			DeviceDataSourceInstanceID: "111",
+			GraphID:                    "1113",
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
@@ -130,8 +114,8 @@ func TestLogicMonitor(t *testing.T) {
 			CheckpointID:               "1",
 			GraphName:                  "MaxPoints",
 			Line:                       "MAX",
-			DeviceDataSourceInstanceID: 1,
-			GraphID:                    1,
+			DeviceDataSourceInstanceID: "1",
+			GraphID:                    "1",
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,

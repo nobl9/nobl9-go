@@ -16,12 +16,12 @@ type LogicMonitorMetric struct {
 	QueryType string `json:"queryType"`
 	Line      string `json:"line"`
 	// QueryType = device_metrics
-	DeviceDataSourceInstanceID int `json:"deviceDataSourceInstanceId"`
-	GraphID                    int `json:"graphId"`
+	DeviceDataSourceInstanceID string `json:"deviceDataSourceInstanceId,omitempty"`
+	GraphID                    string `json:"graphId,omitempty"`
 	// QueryType = website_metrics
-	WebsiteID    string `json:"websiteId"`
-	CheckpointID string `json:"checkpointId"`
-	GraphName    string `json:"graphName"`
+	WebsiteID    string `json:"websiteId,omitempty"`
+	CheckpointID string `json:"checkpointId,omitempty"`
+	GraphName    string `json:"graphName,omitempty"`
 }
 
 func (e LogicMonitorMetric) IsDeviceMetric() bool {
@@ -37,18 +37,18 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 		WithName("queryType").
 		Required().
 		Rules(rules.OneOf(LMQueryTypeDeviceMetrics, LMQueryTypeWebsiteMetrics)),
-	govy.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
+	govy.For(func(e LogicMonitorMetric) string { return e.DeviceDataSourceInstanceID }).
 		WithName("deviceDataSourceInstanceId").
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.GTE(0)),
-	govy.For(func(e LogicMonitorMetric) int { return e.GraphID }).
+		Rules(rules.StringNotEmpty()),
+	govy.For(func(e LogicMonitorMetric) string { return e.GraphID }).
 		WithName("graphId").
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.GTE(0)),
+		Rules(rules.StringNotEmpty()),
 	govy.For(func(e LogicMonitorMetric) string { return e.WebsiteID }).
 		WithName("websiteId").
 		When(
@@ -76,7 +76,7 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 	govy.For(govy.GetSelf[LogicMonitorMetric]()).
 		When(func(c LogicMonitorMetric) bool { return c.IsWebsiteMetric() }).
 		Rules(govy.NewRule(func(e LogicMonitorMetric) error {
-			if e.DeviceDataSourceInstanceID != 0 || e.GraphID != 0 {
+			if e.DeviceDataSourceInstanceID != "" || e.GraphID != "" {
 				return errors.New("deviceDataSourceInstanceId and graphId must be empty for website_metrics")
 			}
 			return nil

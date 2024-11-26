@@ -44,20 +44,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11437
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11437"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -123,20 +117,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11437
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11437"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -200,20 +188,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11437
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11437"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -280,20 +262,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11437
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11437"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -356,20 +332,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11438
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11438"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -435,20 +405,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11438
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11438"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -512,20 +476,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11438
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11438"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -592,20 +550,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11438
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11438"
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: 933147615
-            graphId: 11436
-            websiteId: ""
-            checkpointId: ""
-            graphName: ""
+            deviceDataSourceInstanceId: "933147615"
+            graphId: "11436"
       primary: true
     service: api-server
     timeWindows:
@@ -667,8 +619,6 @@
           logicMonitor:
             queryType: website_metrics
             line: MIN RTT
-            deviceDataSourceInstanceId: 0
-            graphId: 0
             websiteId: "1"
             checkpointId: "1044712023"
             graphName: responseTime
@@ -737,8 +687,6 @@
           logicMonitor:
             queryType: website_metrics
             line: MIN RTT
-            deviceDataSourceInstanceId: 0
-            graphId: 0
             websiteId: "1"
             checkpointId: "1044712023"
             graphName: responseTime
@@ -805,8 +753,6 @@
           logicMonitor:
             queryType: website_metrics
             line: MIN RTT
-            deviceDataSourceInstanceId: 0
-            graphId: 0
             websiteId: "1"
             checkpointId: "1044712023"
             graphName: responseTime
@@ -876,8 +822,6 @@
           logicMonitor:
             queryType: website_metrics
             line: MIN RTT
-            deviceDataSourceInstanceId: 0
-            graphId: 0
             websiteId: "1"
             checkpointId: "1044712023"
             graphName: responseTime

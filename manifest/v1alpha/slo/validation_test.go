@@ -1767,8 +1767,8 @@ fetch consumed_api
 	}},
 	v1alpha.LogicMonitor: {LogicMonitor: &LogicMonitorMetric{
 		QueryType:                  "device_metrics",
-		DeviceDataSourceInstanceID: 1029,
-		GraphID:                    11354,
+		DeviceDataSourceInstanceID: "1029",
+		GraphID:                    "11354",
 		Line:                       "MAXRTT",
 	}},
 	v1alpha.AzurePrometheus: {AzurePrometheus: &AzurePrometheusMetric{
