@@ -22,6 +22,7 @@ func TestQuery(t *testing.T) {
 	}
 }
 
+// nolint:lll
 func TestFormatRawJSONMetricQueryToString(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
