@@ -43,6 +43,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.GCM,
 	// In order to use AWS cross-account o11y.
 	v1alpha.CloudWatch,
+	// Support for Replay only in beta.
+	v1alpha.Elasticsearch,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {

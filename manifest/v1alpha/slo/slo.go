@@ -109,6 +109,16 @@ func (o Objective) IsComposite() bool {
 	return o.Composite != nil
 }
 
+// HasRawMetricQuery returns true if Objective has raw metric with query set.
+func (o Objective) HasRawMetricQuery() bool {
+	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
+}
+
+// HasCountMetrics returns true if Objective has count metrics.
+func (o Objective) HasCountMetrics() bool {
+	return o.CountMetrics != nil
+}
+
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage.
 type Indicator struct {
 	MetricSource MetricSourceSpec `json:"metricSource"`

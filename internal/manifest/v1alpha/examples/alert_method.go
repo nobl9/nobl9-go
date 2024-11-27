@@ -96,17 +96,9 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 	switch a.typ {
 	case v1alpha.AlertMethodTypeEmail:
 		am.Spec.Email = &v1alphaAlertMethod.EmailAlertMethod{
-			To:      []string{"alerts-tests@nobl9.com"},
-			Cc:      []string{"alerts-tests+cc@nobl9.com"},
-			Bcc:     []string{"alerts-tests+bcc@nobl9.com"},
-			Subject: "Your SLO $slo_name needs attention!",
-			Body: `$alert_policy_name has triggered with the following conditions:
-  $alert_policy_conditions[]
-  Time: $timestamp
-  Severity: $severity
-  Project: $project_name
-  Service: $service_name
-  Organization: $organization`,
+			To:  []string{"alerts-tests@nobl9.com"},
+			Cc:  []string{"alerts-tests+cc@nobl9.com"},
+			Bcc: []string{"alerts-tests+bcc@nobl9.com"},
 		}
 	case v1alpha.AlertMethodTypeDiscord:
 		am.Spec.Discord = &v1alphaAlertMethod.DiscordAlertMethod{
