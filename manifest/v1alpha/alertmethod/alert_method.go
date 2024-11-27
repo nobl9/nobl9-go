@@ -148,8 +148,4 @@ type EmailAlertMethod struct {
 	To  []string `json:"to,omitempty"`
 	Cc  []string `json:"cc,omitempty"`
 	Bcc []string `json:"bcc,omitempty"`
-	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
-	Subject string `json:"subject,omitempty"`
-	// Deprecated: Defining custom template for email alert method is now deprecated. This property is ignored.
-	Body string `json:"body,omitempty"`
 }

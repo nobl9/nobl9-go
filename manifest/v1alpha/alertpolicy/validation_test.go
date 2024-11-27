@@ -7,8 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"slices"
+
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 
