@@ -24,6 +24,11 @@ on:
         required: false
         type: boolean
         default: true
+      httpRequestTimeout:
+        description: Timeout for every HTTP request to the Nobl9 API
+        required: false
+        type: string
+        default: 1m
     secrets:
       clientSecret:
         description: Client secret to use for authentication
@@ -55,3 +60,4 @@ jobs:
           NOBL9_SDK_OKTA_AUTH_SERVER: ${{ inputs.oktaAuthServer }}
           NOBL9_SDK_NO_CONFIG_FILE: true
           NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE: ${{ inputs.sequentialApplyAndDelete }}
+          NOBL9_SDK_TIMEOUT: ${{ inputs.httpRequestTimeout }}
