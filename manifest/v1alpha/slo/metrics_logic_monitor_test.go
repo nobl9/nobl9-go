@@ -87,7 +87,7 @@ func TestLogicMonitor(t *testing.T) {
 			},
 		)
 	})
-	t.Run("invalid DeviceDataSourceInstanceID and GraphID for website_metrics", func(t *testing.T) {
+	t.Run("invalid parameters passed: 'DeviceDataSourceInstanceID', 'GraphID' for website_metrics", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.LogicMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.LogicMonitor = &LogicMonitorMetric{
 			QueryType:                  LMQueryTypeWebsiteMetrics,
