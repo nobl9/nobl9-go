@@ -1,8 +1,8 @@
 package slo
 
 import (
-        "github.com/pkg/errors"
-        
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 )
