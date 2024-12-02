@@ -61,6 +61,7 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			redshiftCountMetricsLevelValidation,
 			bigQueryCountMetricsLevelValidation,
 			gcmCountMetricsLevelValidation,
+			logicMonitorCountMetricsQueryTypeValidation,
 		).
 		Include(
 			goodAndBadOverTotalMetricsValidation,

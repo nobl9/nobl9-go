@@ -3,6 +3,8 @@ package slo
 import (
 	"github.com/pkg/errors"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 )
@@ -90,4 +92,31 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 			}
 			return nil
 		})),
+)
+
+var logicMonitorCountMetricsQueryTypeValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
+		govy.NewRule(func(c CountMetricsSpec) error {
+			total := c.TotalMetric
+			good := c.GoodMetric
+			bad := c.BadMetric
+
+			if total == nil {
+				return nil
+			}
+			if good != nil {
+				if good.LogicMonitor.QueryType != total.LogicMonitor.QueryType {
+					return countMetricsPropertyEqualityError("logicMonitor.queryType", goodMetric)
+				}
+			}
+			if bad != nil {
+				if bad.LogicMonitor.QueryType != total.LogicMonitor.QueryType {
+					return countMetricsPropertyEqualityError("logicMonitor.queryType", badMetric)
+				}
+			}
+			return nil
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+).When(
+	whenCountMetricsIs(v1alpha.LogicMonitor),
+	govy.WhenDescription("countMetrics is logicMonitor"),
 )
