@@ -41,6 +41,7 @@ words:
   - DTSTART
   - DzpxcSRh
   - MAXRTT
+  - Metricname
   - TIMEMAX
   - aggs
   - alertmethod
@@ -97,6 +98,7 @@ words:
   - httpurls
   - ifacemaker
   - instana
+  - invalidjson
   - iowait
   - jsonyaml
   - jwks
