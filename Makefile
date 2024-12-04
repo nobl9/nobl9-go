@@ -62,7 +62,7 @@ check: check/vet check/lint check/gosec check/spell check/trailing check/markdow
 ## Run 'go vet' on the whole project.
 check/vet:
 	$(call _print_check_step,Running go vet)
-	go vet ./...
+	go vet -tags=e2e_test ./...
 
 ## Run golangci-lint all-in-one linter with configuration defined inside .golangci.yml.
 check/lint:
