@@ -70,23 +70,30 @@ func assertSubset[T manifest.Object](t *testing.T, actual, expected []T, f objec
 
 func v1Apply[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, len(objects)+1)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, len(objects)+1)
 }
 
 func v1Delete[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, len(objects)+1)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, len(objects)+1)
 }
 
 func v1ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), false, batchSize)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, batchSize)
 }
 
 func v1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), true, batchSize)
+	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, batchSize)
 }
+
+type apiOperation int
+
+const (
+	apiOperationApply apiOperation = iota
+	apiOperationDelete
+)
 
 // v1ApplyOrDeleteBatch applies or deletes objects in batches.
 // The batch size is determined by the batchSize parameter.
@@ -94,7 +101,7 @@ func v1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) 
 func v1ApplyOrDeleteBatch(
 	t *testing.T,
 	objects []manifest.Object,
-	delete bool,
+	operation apiOperation,
 	batchSize int,
 ) {
 	t.Helper()
@@ -110,10 +117,14 @@ func v1ApplyOrDeleteBatch(
 		group.Go(func() error {
 			applyAndDeleteLock.Lock()
 			defer applyAndDeleteLock.Unlock()
-			if delete {
+			switch operation {
+			case apiOperationApply:
+				return client.Objects().V1().Apply(ctx, batch)
+			case apiOperationDelete:
 				return client.Objects().V1().Delete(ctx, batch)
+			default:
+				return errors.New("invalid API operation")
 			}
-			return client.Objects().V1().Apply(ctx, batch)
 		})
 	}
 	err := group.Wait()
@@ -127,7 +138,7 @@ func v1ApplyOrDeleteBatch(
 		t.Logf("timeout encountered, the apply/delete operation will be retried in %s; test: %s; error: %v",
 			waitFor, t.Name(), err)
 		time.Sleep(waitFor)
-		v1ApplyOrDeleteBatch(t, objects, delete, batchSize)
+		v1ApplyOrDeleteBatch(t, objects, apiOperationDelete, batchSize)
 	} else {
 		require.NoError(t, err)
 	}
@@ -140,7 +151,8 @@ func generateName() string {
 
 // annotateLabels adds origin label to the provided labels,
 // so it's easier to locate the leftovers from these tests.
-// It also adds unique test identifier label to the provided labels so that we can reliably retrieve objects created withing a given test without .
+// It also adds unique test identifier label to the provided labels
+// so that we can reliably retrieve objects created within a given test without.
 func annotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	t.Helper()
 	if labels == nil {
