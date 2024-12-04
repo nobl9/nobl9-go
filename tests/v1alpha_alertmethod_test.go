@@ -108,7 +108,6 @@ func newV1alphaAlertMethod(
 func assertV1alphaAlertMethodsAreEqual(t *testing.T, expected, actual v1alphaAlertMethod.AlertMethod) {
 	t.Helper()
 	expected = deepCopyObject(t, expected)
-	actual.Status = nil
 	typ, err := expected.Spec.GetType()
 	require.NoError(t, err)
 	switch typ {
