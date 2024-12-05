@@ -12,7 +12,7 @@ GOLANGCI_LINT_VERSION := v1.60.1
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
 GOVULNCHECK_VERSION := v1.1.3
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
-GOIMPORTS_VERSION := v0.27.0
+GOIMPORTS_VERSION := v0.28.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.2.1
 
@@ -62,7 +62,7 @@ check: check/vet check/lint check/gosec check/spell check/trailing check/markdow
 ## Run 'go vet' on the whole project.
 check/vet:
 	$(call _print_check_step,Running go vet)
-	go vet ./...
+	go vet -tags=e2e_test ./...
 
 ## Run golangci-lint all-in-one linter with configuration defined inside .golangci.yml.
 check/lint:

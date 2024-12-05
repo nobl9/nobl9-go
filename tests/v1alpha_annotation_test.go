@@ -188,23 +188,6 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	}
 }
 
-func newV1alphaAnnotation(
-	t *testing.T,
-	metadata v1alphaAnnotation.Metadata,
-	variant,
-	subVariant string,
-) v1alphaAnnotation.Annotation {
-	t.Helper()
-	ap := getExample[v1alphaAnnotation.Annotation](t,
-		manifest.KindAnnotation,
-		func(example v1alphaExamples.Example) bool {
-			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
-		},
-	)
-	ap.Spec.Description = objectDescription
-	return v1alphaAnnotation.New(metadata, ap.Spec)
-}
-
 func assertV1alphaAnnotationsAreEqual(t *testing.T, expected, actual v1alphaAnnotation.Annotation) {
 	t.Helper()
 	if assert.NotNil(t, actual.Status) {

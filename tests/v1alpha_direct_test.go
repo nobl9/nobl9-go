@@ -22,9 +22,7 @@ func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	project := generateV1alphaProject(t)
-	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), func(typ v1alpha.DataSourceType) bool {
-		return v1alphaDirect.IsValidDirectType(typ)
-	})
+	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), v1alphaDirect.IsValidDirectType)
 	allObjects := make([]manifest.Object, 0, len(directTypes)+1)
 	allObjects = append(allObjects, project)
 

@@ -108,7 +108,6 @@ func newV1alphaAlertMethod(
 func assertV1alphaAlertMethodsAreEqual(t *testing.T, expected, actual v1alphaAlertMethod.AlertMethod) {
 	t.Helper()
 	expected = deepCopyObject(t, expected)
-	actual.Status = nil
 	typ, err := expected.Spec.GetType()
 	require.NoError(t, err)
 	switch typ {
@@ -126,6 +125,7 @@ func assertV1alphaAlertMethodsAreEqual(t *testing.T, expected, actual v1alphaAle
 		expected.Spec.Slack.URL = "[hidden]"
 	case v1alpha.AlertMethodTypeTeams:
 		expected.Spec.Teams.URL = "[hidden]"
+	case v1alpha.AlertMethodTypeEmail:
 	case v1alpha.AlertMethodTypeWebhook:
 		expected.Spec.Webhook.URL = "[hidden]"
 		for i, header := range expected.Spec.Webhook.Headers {
