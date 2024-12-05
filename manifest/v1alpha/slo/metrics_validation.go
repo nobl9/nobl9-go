@@ -2,61 +2,55 @@ package slo
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 const (
-	errCodeExactlyOneMetricType             = "exactly_one_metric_type"
 	errCodeBadOverTotalDisabled             = "bad_over_total_disabled"
 	errCodeSingleQueryGoodOverTotalDisabled = "single_query_good_over_total_disabled"
 	errCodeExactlyOneMetricSpecType         = "exactly_one_metric_spec_type"
-	errCodeEitherBadOrGoodCountMetric       = "either_bad_or_good_count_metric"
 	errCodeTimeSliceTarget                  = "time_slice_target"
 )
 
 var specMetricsValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Cascade(govy.CascadeModeStop).
-		Rules(govy.NewRule(func(s Spec) error {
-			if !s.HasCompositeObjectives() {
-				if s.HasRawMetric() == s.HasCountMetrics() {
-					return errors.New("must have exactly one metric type, either 'rawMetric' or 'countMetrics'")
-				}
-			}
-			return nil
-		}).WithErrorCode(errCodeExactlyOneMetricType)).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(s Spec) any{
+				"rawMetrics":   func(s Spec) any { return !s.HasCompositeObjectives() && s.HasRawMetric() },
+				"countMetrics": func(s Spec) any { return !s.HasCompositeObjectives() && s.HasCountMetrics() },
+				"composite":    func(s Spec) any { return s.HasCompositeObjectives() },
+			}),
+		).
 		Rules(exactlyOneMetricSpecTypeValidationRule).
-		// Each objective should have exactly two count metrics.
-		Rules(govy.NewRule(func(s Spec) error {
-			for i, objective := range s.Objectives {
-				if objective.CountMetrics == nil {
-					return nil
-				}
-				if objective.CountMetrics.GoodMetric != nil && objective.CountMetrics.BadMetric != nil {
-					return govy.NewPropertyError(
-						"countMetrics",
-						nil,
-						govy.NewRuleError(
-							"cannot have both 'bad' and 'good' metrics defined",
-							errCodeEitherBadOrGoodCountMetric,
-						)).PrependParentPropertyName(govy.SliceElementName("objectives", i))
-				}
-			}
-			return nil
-		})).
 		Rules(timeSliceTargetsValidationRule),
 )
 
 var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"total":     func(c CountMetricsSpec) any { return c.TotalMetric },
+				"goodTotal": func(c CountMetricsSpec) any { return c.GoodTotalMetric },
+			}),
+		),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil }).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"good": func(c CountMetricsSpec) any { return c.GoodMetric },
+				"bad":  func(c CountMetricsSpec) any { return c.BadMetric },
+			}),
+		).
 		Include(
 			azureMonitorCountMetricsLevelValidation,
 			appDynamicsCountMetricsLevelValidation,
@@ -66,10 +60,23 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			instanaCountMetricsLevelValidation,
 			redshiftCountMetricsLevelValidation,
 			bigQueryCountMetricsLevelValidation,
-			splunkCountMetricsLevelValidation),
+			gcmCountMetricsLevelValidation,
+		).
+		Include(
+			goodAndBadOverTotalMetricsValidation,
+		),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(func(c CountMetricsSpec) bool { return c.GoodTotalMetric != nil }).
+		Include(
+			goodTotalSingleQueryMetricsValidation,
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *bool { return c.Incremental }).
 		WithName("incremental").
 		Required(),
+).
+	Cascade(govy.CascadeModeStop)
+
+var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.TotalMetric }).
 		WithName("total").
 		Include(
@@ -78,23 +85,39 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			lightstepTotalCountMetricValidation),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.BadMetric == nil }).
 		Include(
 			metricSpecValidation,
 			countMetricsValidation,
 			lightstepGoodCountMetricValidation),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
+		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.GoodMetric == nil }).
 		Rules(oneOfBadOverTotalValidationRule).
 		Include(
 			countMetricsValidation,
 			metricSpecValidation),
+).
+	Cascade(govy.CascadeModeContinue)
+
+var goodTotalSingleQueryMetricsValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(CountMetricsSpec) any{
+				"good":      func(c CountMetricsSpec) any { return c.GoodMetric },
+				"bad":       func(c CountMetricsSpec) any { return c.BadMetric },
+				"goodTotal": func(c CountMetricsSpec) any { return c.GoodTotalMetric },
+			}),
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodTotalMetric }).
 		WithName("goodTotal").
-		Rules(oneOfSingleQueryGoodOverTotalValidationRule).
-		Include(
-			countMetricsValidation,
-			singleQueryMetricSpecValidation),
-)
+		Rules(
+			oneOfSingleQueryGoodOverTotalValidationRule,
+		).
+		Cascade(govy.CascadeModeContinue).
+		Include(singleQueryMetricSpecValidation),
+).
+	Cascade(govy.CascadeModeStop)
 
 var RawMetricsValidation = govy.New[RawMetricSpec](
 	govy.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
@@ -120,6 +143,9 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *SplunkMetric { return m.Splunk }).
 		WithName("splunk").
 		Include(splunkSingleQueryValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombSingleQueryValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -189,42 +215,28 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *GenericMetric { return m.Generic }).
 		WithName("generic").
 		Include(genericValidation),
-	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
-		WithName("honeycomb").
-		Include(honeycombValidation, attributeRequired),
 	govy.ForPointer(func(m MetricSpec) *LogicMonitorMetric { return m.LogicMonitor }).
 		WithName("logicMonitor").
 		Include(logicMonitorValidation),
 	govy.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Include(honeycombLegacyValidation),
 )
-
-// When updating this list, make sure you also update the generated examples.
-var badOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.CloudWatch,
-	v1alpha.AppDynamics,
-	v1alpha.AzureMonitor,
-	v1alpha.Honeycomb,
-	v1alpha.LogicMonitor,
-	v1alpha.AzurePrometheus,
-}
 
 // Support for bad/total metrics will be enabled gradually.
 // CloudWatch is first delivered datasource integration - extend the list while adding support for next integrations.
 var oneOfBadOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(badOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.BadOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeBadOverTotalDisabled)
-
-var singleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{
-	v1alpha.Splunk,
-}
 
 // Support for single query good/total metrics is experimental.
 // Splunk is the only datasource integration to have this feature
 // - extend the list while adding support for next integrations.
 var oneOfSingleQueryGoodOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
-	return rules.OneOf(singleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
+	return rules.OneOf(internal.SingleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())
 }).WithErrorCode(errCodeSingleQueryGoodOverTotalDisabled)
 
 var exactlyOneMetricSpecTypeValidationRule = govy.NewRule(func(v Spec) error {
@@ -424,30 +436,23 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 	return nil
 }).WithErrorCode(errCodeTimeSliceTarget)
 
-// whenCountMetricsIs is a helper function that returns a govy.Predicate which will only pass if
+// whenCountMetricsIs is a helper function that returns a [govy.Predicate] which will only pass if
 // the count metrics is of the given type.
 func whenCountMetricsIs(typ v1alpha.DataSourceType) func(c CountMetricsSpec) bool {
-	return func(c CountMetricsSpec) bool {
-		if slices.Contains(singleQueryGoodOverTotalEnabledSources, typ) {
-			if c.GoodTotalMetric != nil && typ != c.GoodTotalMetric.DataSourceType() {
-				return false
-			}
-			return c.GoodMetric != nil || c.BadMetric != nil || c.TotalMetric != nil
-		}
-		if c.TotalMetric == nil {
-			return false
-		}
-		if c.GoodMetric != nil && typ != c.GoodMetric.DataSourceType() {
-			return false
-		}
-		if slices.Contains(badOverTotalEnabledSources, typ) {
-			if c.BadMetric != nil && typ != c.BadMetric.DataSourceType() {
-				return false
-			}
-			return c.BadMetric != nil || c.GoodMetric != nil
-		}
-		return c.GoodMetric != nil
+	return func(c CountMetricsSpec) bool { return countMetricIsOfType(c, typ) }
+}
+
+func countMetricIsOfType(c CountMetricsSpec, typ v1alpha.DataSourceType) bool {
+	if c.GoodTotalMetric != nil && slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, typ) {
+		return typ == c.GoodTotalMetric.DataSourceType()
 	}
+	if c.TotalMetric == nil {
+		return false
+	}
+	if c.BadMetric != nil && slices.Contains(internal.BadOverTotalEnabledSources, typ) {
+		return typ == c.BadMetric.DataSourceType()
+	}
+	return c.GoodMetric != nil && typ == c.GoodMetric.DataSourceType()
 }
 
 const (

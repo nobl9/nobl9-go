@@ -43,6 +43,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.GCM,
 	// In order to use AWS cross-account o11y.
 	v1alpha.CloudWatch,
+	// Support for Replay only in beta.
+	v1alpha.Elasticsearch,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -60,12 +62,15 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 	agent = a.generateVariant(agent)
 	typ, _ := agent.Spec.GetType()
 	if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err == nil {
+		defaultDuration := v1alpha.HistoricalRetrievalDuration{
+			Value: ptr(*maxDuration.Value / 2),
+			Unit:  maxDuration.Unit,
+		}
 		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration: maxDuration,
-			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(*maxDuration.Value / 2),
-				Unit:  maxDuration.Unit,
-			},
+			MaxDuration:            maxDuration,
+			DefaultDuration:        defaultDuration,
+			TriggeredBySloCreation: &defaultDuration,
+			TriggeredBySloEdit:     &defaultDuration,
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]

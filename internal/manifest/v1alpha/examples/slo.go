@@ -12,7 +12,6 @@ var standardGoodOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.Prometheus,
 	v1alpha.Datadog,
 	v1alpha.NewRelic,
-	v1alpha.Splunk,
 	v1alpha.SplunkObservability,
 	v1alpha.Dynatrace,
 	v1alpha.Elasticsearch,
@@ -30,7 +29,6 @@ var standardGoodOverTotalMetrics = []v1alpha.DataSourceType{
 var standardBadOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.AppDynamics,
 	v1alpha.LogicMonitor,
-	v1alpha.Honeycomb,
 	v1alpha.AzurePrometheus,
 }
 
@@ -117,6 +115,17 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 			metricSubVariantAzureMonitorMetrics,
 			metricSubVariantAzureMonitorLogs,
 		},
+	},
+	v1alpha.Honeycomb: {
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
+		metricVariantGoodRatio:            []metricSubVariant{},
+		metricVariantBadRatio:             []metricSubVariant{},
+		metricVariantThreshold:            []metricSubVariant{},
+	},
+	v1alpha.Splunk: {
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
+		metricVariantGoodRatio:            []metricSubVariant{},
+		metricVariantThreshold:            []metricSubVariant{},
 	},
 }
 

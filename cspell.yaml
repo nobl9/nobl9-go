@@ -41,6 +41,7 @@ words:
   - DTSTART
   - DzpxcSRh
   - MAXRTT
+  - Metricname
   - TIMEMAX
   - aggs
   - alertmethod
@@ -81,6 +82,7 @@ words:
   - generify
   - gobin
   - gofile
+  - gofmt
   - goimports
   - golangci
   - gomnd
@@ -96,6 +98,7 @@ words:
   - httpurls
   - ifacemaker
   - instana
+  - invalidjson
   - iowait
   - jsonyaml
   - jwks
@@ -145,6 +148,7 @@ words:
   - sloerrorbudgetstatus
   - sloname
   - slos
+  - slostatusapi
   - sourcetype
   - stablebetaalpha
   - startuml

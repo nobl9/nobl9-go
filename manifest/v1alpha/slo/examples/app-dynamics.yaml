@@ -40,7 +40,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           appDynamics:
             applicationName: api-server
             metricPath: End User Experience|App|Slow Requests
@@ -109,7 +109,7 @@
       target: 0.95
       countMetrics:
         incremental: true
-        good:
+        bad:
           appDynamics:
             applicationName: api-server
             metricPath: End User Experience|App|Slow Requests
@@ -176,7 +176,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           appDynamics:
             applicationName: api-server
             metricPath: End User Experience|App|Slow Requests
@@ -246,7 +246,7 @@
       timeSliceTarget: 0.9
       countMetrics:
         incremental: true
-        good:
+        bad:
           appDynamics:
             applicationName: api-server
             metricPath: End User Experience|App|Slow Requests

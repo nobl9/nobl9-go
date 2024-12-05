@@ -138,6 +138,9 @@ var specValidation = govy.New[Spec](
 			_, err := ParseBudgetingMethod(v)
 			return err
 		})),
+	govy.ForPointer(func(s Spec) *string { return s.Tier }).
+		WithName("tier").
+		Rules(rules.StringLength(0, 63)),
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
@@ -164,6 +167,9 @@ var specValidation = govy.New[Spec](
 		RulesForEach(timeWindowValidationRule()),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
+		RulesForEach(),
+	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
+		WithName("objectives").
 		Cascade(govy.CascadeModeStop).
 		When(
 			func(s Spec) bool { return !s.HasCompositeObjectives() },
@@ -176,26 +182,8 @@ var specValidation = govy.New[Spec](
 				return 0
 			}
 			return *v.Value
-		}, "objectives[*].value must be different for each objective")),
-	govy.For(func(s Spec) []Objective { return s.Objectives }).
-		WithName("objectives").
-		Rules(
-			govy.NewRule(func(o []Objective) error {
-				hasPrimary := false
-				for _, obj := range o {
-					if obj.Primary != nil && *obj.Primary {
-						if hasPrimary {
-							return govy.NewRuleError(
-								"there can be max 1 primary objective",
-								rules.ErrorCodeForbidden,
-							)
-						}
-						hasPrimary = true
-					}
-				}
-				return nil
-			}),
-		),
+		}, "objectives[*].value must be different for each objective")).
+		Rules(onePrimaryObjectiveRule),
 )
 
 var attachmentValidation = govy.New[Attachment](
@@ -373,6 +361,22 @@ func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
 	}
 	return *p1 == *p2
 }
+
+var onePrimaryObjectiveRule = govy.NewRule(func(o []Objective) error {
+	hasPrimary := false
+	for _, obj := range o {
+		if obj.Primary != nil && *obj.Primary {
+			if hasPrimary {
+				return govy.NewRuleError(
+					"there can be max 1 primary objective",
+					rules.ErrorCodeForbidden,
+				)
+			}
+			hasPrimary = true
+		}
+	}
+	return nil
+})
 
 var specValidationNonComposite = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Indicator { return s.Indicator }).

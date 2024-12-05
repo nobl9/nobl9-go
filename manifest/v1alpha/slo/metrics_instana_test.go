@@ -11,16 +11,38 @@ import (
 
 func TestInstana_CountMetrics(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		slo := validCountMetricSLO(v1alpha.Instana)
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
+		for _, slo := range []SLO{
+			validCountMetricSLO(v1alpha.Instana),
+			func() SLO {
+				slo := validSLO()
+				metric := validInstanaInfrastructureMetric()
+				slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+					Incremental: ptr(false),
+					TotalMetric: &MetricSpec{Instana: metric},
+					GoodMetric:  &MetricSpec{Instana: metric},
+				}
+				return slo
+			}(),
+			func() SLO {
+				slo := validSLO()
+				metric := validInstanaApplicationMetric()
+				slo.Spec.Objectives[0].CountMetrics = nil
+				slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
+					MetricQuery: &MetricSpec{Instana: metric},
+				}
+				return slo
+			}(),
+		} {
+			err := validate(slo)
+			testutils.AssertNoError(t, slo, err)
+		}
 	})
 	t.Run("metricType must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Instana)
-		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana.MetricType = instanaMetricTypeApplication
-		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana.MetricType = instanaMetricTypeInfrastructure
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Instana = validInstanaApplicationMetric()
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Instana = validInstanaInfrastructureMetric()
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].countMetrics",
 			Code: rules.ErrorCodeEqualTo,
 		})
@@ -424,6 +446,18 @@ func validInstanaApplicationMetric() *InstanaMetric {
   ]
 }
 `,
+		},
+	}
+}
+
+func validInstanaInfrastructureMetric() *InstanaMetric {
+	return &InstanaMetric{
+		MetricType: instanaMetricTypeInfrastructure,
+		Infrastructure: &InstanaInfrastructureMetricType{
+			MetricRetrievalMethod: "query",
+			Query:                 ptr("entity.selfType:zookeeper AND entity.label:replica.1"),
+			MetricID:              "max_request_latency",
+			PluginID:              "zooKeeper",
 		},
 	}
 }

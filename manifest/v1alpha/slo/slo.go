@@ -1,6 +1,8 @@
 package slo
 
 import (
+	"time"
+
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -57,6 +59,7 @@ type Spec struct {
 	// Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
+	Tier          *string        `json:"tier,omitempty"`
 }
 
 // Attachment represents user defined URL attached to SLO.
@@ -106,6 +109,16 @@ func (o Objective) GetBudgetTarget() float64 {
 
 func (o Objective) IsComposite() bool {
 	return o.Composite != nil
+}
+
+// HasRawMetricQuery returns true if Objective has raw metric with query set.
+func (o Objective) HasRawMetricQuery() bool {
+	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
+}
+
+// HasCountMetrics returns true if Objective has count metrics.
+func (o Objective) HasCountMetrics() bool {
+	return o.CountMetrics != nil
 }
 
 // Indicator represents integration with metric source can be. e.g. Prometheus, Datadog, for internal usage.
@@ -161,13 +174,67 @@ type AnomalyConfigAlertMethod struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	UpdatedAt    string        `json:"updatedAt,omitempty"`
+	UpdatedAt                    string                                `json:"updatedAt,omitempty"`
+	CompositeSLO                 *ProcessStatus                        `json:"compositeSlo,omitempty"`
+	ErrorBudgetAdjustment        *ProcessStatus                        `json:"errorBudgetAdjustment,omitempty"`
+	Replay                       *ProcessStatus                        `json:"replay,omitempty"`
+	TargetSLO                    *TargetSloStatus                      `json:"targetSlo,omitempty"`
+	ObjectiveIndicatorValidation []*ObjectiveIndicatorValidationStatus `json:"objectiveIndicatorValidation,omitempty"`
+	// Deprecated: use Status.Replay instead.
 	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
 }
 
+type ObjectiveIndicatorValidationStatus struct {
+	ObjectiveName string `json:"objectiveName"`
+	QueryValidationStatus
+}
+
+type QueryValidationStatus struct {
+	ValidationStatus `json:"validationStatus"`
+}
+
+type ValidationStatus struct {
+	GoodMetricValidation  *ValidationDetails `json:"goodMetric,omitempty"`
+	BadMetricValidation   *ValidationDetails `json:"badMetric,omitempty"`
+	TotalMetricValidation *ValidationDetails `json:"totalMetric,omitempty"`
+	RawMetricValidation   *ValidationDetails `json:"rawMetric,omitempty"`
+}
+
+type ErrorDetails struct {
+	Message          *string    `json:"message"`
+	ValidationResult string     `json:"validationResult"`
+	LogTimestamp     *time.Time `json:"logTimestamp"`
+	HTTPStatusCode   *int       `json:"httpStatusCode"`
+	Query            string     `json:"query"`
+}
+
+type ValidationDetails struct {
+	*ErrorDetails
+	*MetricSpec
+}
+
+type ProcessStatus struct {
+	Status      string `json:"status"`
+	TriggeredBy string `json:"triggeredBy"`
+	Unit        string `json:"unit"`
+	Value       int    `json:"value"`
+	StartTime   string `json:"startTime"`
+}
+
+// TargetSloStatus represents the status of Replay  a target SLO process.
+type TargetSloStatus struct {
+	// Deprecated: use TargetSloStatus.Replay instead.
+	TargetTimeTravel ReplayStatus  `json:"targetTimeTravel,omitempty"`
+	Replay           ProcessStatus `json:"replay,omitempty"`
+}
+
+// Deprecated: ReplayStatus exists for historical compatibility
+// and should not be used.
 type ReplayStatus struct {
-	Status    string `json:"status"`
-	Unit      string `json:"unit"`
-	Value     int    `json:"value"`
-	StartTime string `json:"startTime,omitempty"`
+	Source      string `json:"source"`
+	Status      string `json:"status"`
+	TriggeredBy string `json:"triggeredBy"`
+	Unit        string `json:"unit"`
+	Value       int    `json:"value"`
+	StartTime   string `json:"startTime"`
 }

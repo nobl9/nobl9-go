@@ -1,0 +1,26 @@
+{{/* The trailing '-' is intentional as we'll let the template calling "api_error" decide how to indent it */}}
+{{- define "api_error" -}}
+- {{ .Title }}{{- if .Source }} (source: '{{ .Source.PropertyName }}'{{- if .Source.PropertyValue }}, value: '{{ .Source.PropertyValue }}'{{- end }}){{- end }}
+{{- end }}
+
+{{/* It's hard to remove the leading newline otherwise, that's why the if statement has a trailing '-' */}}
+{{- define "api_errors" }}
+{{- range $i, $err := .Errors }}
+{{- if eq $i 0 -}}
+{{ template "api_error" $err }}
+{{- else }}
+{{ template "api_error" $err }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "http_error" }}
+{{- if and (len .Errors | eq 1) (not (index .Errors 0).Source) }}
+  {{- if .CodeText }}{{ .CodeText }}: {{ end -}}{{ (index .Errors 0).Title }} (code: {{ .Code }}{{- if .URL }}, endpoint: {{ .Method }} {{ .URL }}{{- end }}{{- if .TraceID }}, traceId: {{ .TraceID }}{{- end }})
+{{- else }}
+  {{- if .CodeText }}{{ .CodeText }} {{ end -}} (code: {{ .Code }}{{- if .URL }}, endpoint: {{ .Method }} {{ .URL }}{{- end }}{{- if .TraceID }}, traceId: {{ .TraceID }}{{- end }})
+  {{- range .Errors }}
+  {{ template "api_error" . }}
+  {{- end }}
+{{- end }}
+{{- end }}

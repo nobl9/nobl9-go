@@ -53,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	direct.ManifestSource = "/home/me/direct.yaml"
 	err := validate(direct)
 	assert.Regexp(t, validationMessageRegexp, err.Error())
-	testutils.AssertContainsErrors(t, direct, err, 5,
+	testutils.AssertContainsErrors(t, direct, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
 			Code: rules.ErrorCodeStringDNSLabel,
@@ -152,6 +152,12 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
+	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
+		direct := validDirect(v1alpha.Honeycomb)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
@@ -208,10 +214,24 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			Value: ptr(1441),
 			Unit:  v1alpha.Minute,
 		}}
+
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.queryDelay",
-			Message: "must be less than or equal to 1440m",
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+
+	t.Run("delay larger than data source max query delay", func(t *testing.T) {
+		direct := validDirect(v1alpha.SplunkObservability)
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{
+			Value: ptr(16),
+			Unit:  v1alpha.Minute,
+		}}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
 	t.Run("delay less than default", func(t *testing.T) {
@@ -226,7 +246,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				err := validate(direct)
 				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 					Prop: "spec.queryDelay",
-					Code: errCodeQueryDelayGreaterThanOrEqualToDefault,
+					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
 		}
@@ -242,8 +262,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -367,8 +389,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -392,24 +416,39 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			Message: "historical data retrieval is not supported for Instana Direct",
 		})
 	})
-	t.Run("data retrieval default larger than max", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(1),
-				Unit:  v1alpha.HRDHour,
-			},
-			DefaultDuration: v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(2),
-				Unit:  v1alpha.HRDHour,
-			},
-		}
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.historicalDataRetrieval.defaultDuration",
-			Message: "must be less than or equal to 'maxDuration' (1 Hour)",
+	t.Run("data retrieval default, triggeredBySloCreation and TriggeredBySloEdit larger than max",
+		func(t *testing.T) {
+			direct := validDirect(v1alpha.Datadog)
+			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration: v1alpha.HistoricalRetrievalDuration{
+					Value: ptr(1),
+					Unit:  v1alpha.HRDHour,
+				},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{
+					Value: ptr(2),
+					Unit:  v1alpha.HRDHour,
+				},
+				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{
+					Value: ptr(10),
+					Unit:  v1alpha.HRDHour,
+				},
+				TriggeredBySloEdit: &v1alpha.HistoricalRetrievalDuration{
+					Value: ptr(10),
+					Unit:  v1alpha.HRDHour,
+				},
+			}
+			err := validate(direct)
+			testutils.AssertContainsErrors(t, direct, err, 3, testutils.ExpectedError{
+				Prop:    "spec.historicalDataRetrieval.defaultDuration",
+				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
+			}, testutils.ExpectedError{
+				Prop:    "spec.historicalDataRetrieval.triggeredBySloCreation",
+				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
+			}, testutils.ExpectedError{
+				Prop:    "spec.historicalDataRetrieval.triggeredBySloEdit",
+				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
+			})
 		})
-	})
 	t.Run("data retrieval max greater than max allowed", func(t *testing.T) {
 		for typ := range validDirectTypes {
 			maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ)

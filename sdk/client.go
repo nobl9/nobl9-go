@@ -16,6 +16,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 )
 
 // ProjectsWildcard is used in HeaderProject when requesting for all projects.
@@ -88,6 +89,10 @@ func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
 }
 
+func (c *Client) SLOStatusAPI() slostatusapi.Versions {
+	return slostatusapi.NewVersions(c)
+}
+
 // CreateRequest creates a new http.Request pointing at the Nobl9 API URL.
 // It also adds all the mandatory headers to the request and encodes query parameters.
 func (c *Client) CreateRequest(
@@ -131,6 +136,10 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute request")
+	}
+	if err = processHTTPResponse(resp); err != nil {
+		_ = resp.Body.Close()
+		return nil, err
 	}
 	return resp, nil
 }

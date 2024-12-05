@@ -1,7 +1,14 @@
 package slo
 
 import (
+	"encoding/json"
+	"fmt"
+	"math"
 	"sort"
+	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -12,7 +19,8 @@ type CountMetricsSpec struct {
 	GoodMetric  *MetricSpec `json:"good,omitempty"`
 	BadMetric   *MetricSpec `json:"bad,omitempty"`
 	TotalMetric *MetricSpec `json:"total,omitempty"`
-	// Experimental: Splunk only, a single query returning both good and total counts.
+	// Experimental: Splunk and Honeycomb only.
+	// Single query returning both good and total counts.
 	GoodTotalMetric *MetricSpec `json:"goodTotal,omitempty"`
 }
 
@@ -100,11 +108,6 @@ func (s *Spec) RawMetrics() []*MetricSpec {
 	return rawMetrics
 }
 
-// HasRawMetricQuery returns true if Objective has raw metric with query set.
-func (o *Objective) HasRawMetricQuery() bool {
-	return o.RawMetric != nil && o.RawMetric.MetricQuery != nil
-}
-
 // ObjectivesRawMetricsCount returns total number of all raw metrics defined in this SLO Spec's objectives.
 func (s *Spec) ObjectivesRawMetricsCount() int {
 	var count int
@@ -124,11 +127,6 @@ func (s *Spec) HasCountMetrics() bool {
 		}
 	}
 	return false
-}
-
-// HasCountMetrics returns true if Objective has count metrics.
-func (o *Objective) HasCountMetrics() bool {
-	return o.CountMetrics != nil
 }
 
 // CountMetricsCount returns total number of all count metrics defined in this SLOSpec's objectives.
@@ -366,4 +364,80 @@ func (m *MetricSpec) Query() interface{} {
 	default:
 		return nil
 	}
+}
+
+func (m *MetricSpec) FormatQuery(query json.RawMessage) *string {
+	switch m.DataSourceType() {
+	case v1alpha.Dynatrace:
+		return m.Dynatrace.MetricSelector
+	case v1alpha.Datadog:
+		return m.Datadog.Query
+	case v1alpha.NewRelic:
+		return m.NewRelic.NRQL
+	case v1alpha.SplunkObservability:
+		return m.SplunkObservability.Program
+	case v1alpha.SumoLogic:
+		return m.SumoLogic.Query
+	default:
+		var formattedQuery string
+		if len(query) > 0 {
+			formattedQuery = formatRawJSONMetricQueryToString(query)
+		}
+		return &formattedQuery
+	}
+}
+
+func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
+	var formatJSONToString func(jsonObjAny any, prefix string) string
+	var queryObj map[string]any
+
+	err := json.Unmarshal(queryAsJSON, &queryObj)
+	if err != nil {
+		return ""
+	}
+
+	toTitle := func(s string) string {
+		return cases.Title(language.English).String(s)
+	}
+
+	formatJSONToString = func(jsonObjAny any, prefix string) string {
+		var sb strings.Builder
+
+		switch jsonObj := jsonObjAny.(type) {
+		case string:
+			sb.WriteString(fmt.Sprintf("%s\n", jsonObj))
+		case float64:
+			number := jsonObj
+			if math.Floor(number) == number {
+				sb.WriteString(fmt.Sprintf("%d\n", int64(number)))
+			} else {
+				sb.WriteString(fmt.Sprintf("%f\n", number))
+			}
+		case map[string]any:
+			keys := make([]string, 0, len(jsonObj))
+			for k := range jsonObj {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				sb.WriteString(
+					fmt.Sprintf("%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix)),
+				)
+			}
+		case []any:
+			sb.WriteString("\n")
+			prefix += " "
+			for i, val := range jsonObj {
+				sb.WriteString(
+					fmt.Sprintf("%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" ")),
+				)
+			}
+		default:
+			sb.WriteString("")
+		}
+
+		return sb.String()
+	}
+
+	return formatJSONToString(queryObj, "")
 }

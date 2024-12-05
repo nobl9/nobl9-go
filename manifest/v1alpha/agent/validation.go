@@ -37,7 +37,7 @@ var specValidation = govy.New[Spec](
 		Rules(exactlyOneDataSourceTypeValidationRule).
 		Rules(
 			historicalDataRetrievalValidationRule,
-			queryDelayGreaterThanOrEqualToDefaultValidationRule),
+			queryDelayValidationRule),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -239,8 +239,8 @@ var (
 )
 
 const (
-	errCodeExactlyOneDataSourceType              = "exactly_one_data_source_type"
-	errCodeQueryDelayGreaterThanOrEqualToDefault = "query_delay_greater_than_or_equal_to_default"
+	errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
+	errCodeQueryDelayOutOfBounds    = "query_delay_out_of_bounds"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -417,14 +417,43 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
 	}
+
+	if spec.HistoricalDataRetrieval.TriggeredBySloCreation != nil &&
+		spec.HistoricalDataRetrieval.TriggeredBySloCreation.BiggerThan(maxDurationAllowed) {
+		return govy.NewPropertyError(
+			"historicalDataRetrieval.triggeredBySloCreation",
+			spec.HistoricalDataRetrieval.TriggeredBySloCreation,
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
+	}
+	if spec.HistoricalDataRetrieval.TriggeredBySloEdit != nil &&
+		spec.HistoricalDataRetrieval.TriggeredBySloEdit.BiggerThan(maxDurationAllowed) {
+		return govy.NewPropertyError(
+			"historicalDataRetrieval.triggeredBySloEdit",
+			spec.HistoricalDataRetrieval.TriggeredBySloEdit,
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
+	}
 	return nil
 })
 
-var queryDelayGreaterThanOrEqualToDefaultValidationRule = govy.NewRule(func(spec Spec) error {
+var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	if spec.QueryDelay == nil {
 		return nil
 	}
 	typ, _ := spec.GetType()
+	maxQueryDelay := v1alpha.GetQueryDelayMax(typ)
+	maxQueryDelayAllowed := v1alpha.Duration{
+		Value: maxQueryDelay.Value,
+		Unit:  maxQueryDelay.Unit,
+	}
+	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
+		return govy.NewPropertyError(
+			"queryDelay",
+			spec.QueryDelay,
+			errors.Errorf("must be less than or equal to %d %s",
+				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
+	}
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
 		return govy.NewPropertyError(
@@ -434,7 +463,7 @@ var queryDelayGreaterThanOrEqualToDefaultValidationRule = govy.NewRule(func(spec
 		)
 	}
 	return nil
-}).WithErrorCode(errCodeQueryDelayGreaterThanOrEqualToDefault)
+}).WithErrorCode(errCodeQueryDelayOutOfBounds)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
 func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {

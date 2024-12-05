@@ -13,5 +13,3 @@ spec:
     - alerts-tests+cc@nobl9.com
     bcc:
     - alerts-tests+bcc@nobl9.com
-    subject: Your SLO $slo_name needs attention!
-    body: "$alert_policy_name has triggered with the following conditions:\n  $alert_policy_conditions[]\n  Time: $timestamp\n  Severity: $severity\n  Project: $project_name\n  Service: $service_name\n  Organization: $organization"
