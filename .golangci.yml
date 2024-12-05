@@ -2,6 +2,8 @@ run:
   timeout: 5m
   modules-download-mode: readonly
   skip-dirs-use-default: true
+  build-tags:
+    - e2e_test
 
 issues:
   # Enable all checks (which was as default disabled e.g. comments).

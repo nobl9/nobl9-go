@@ -26,6 +26,7 @@ import (
 
 const slosPerService = 50
 
+// nolint: gocognit
 func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
@@ -264,9 +265,7 @@ func v1alphaSLODependencyAgents(t *testing.T) []manifest.Object {
 
 func v1alphaSLODependencyDirects(t *testing.T) []manifest.Object {
 	t.Helper()
-	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), func(typ v1alpha.DataSourceType) bool {
-		return v1alphaDirect.IsValidDirectType(typ)
-	})
+	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), v1alphaDirect.IsValidDirectType)
 	directs := make([]manifest.Object, 0, len(directTypes)+1)
 	for _, typ := range directTypes {
 		direct := newV1alphaDirect(t,
