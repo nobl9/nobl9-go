@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	"bytes"
@@ -46,32 +46,23 @@ type endpoints struct {
 	dryRun      bool
 }
 
-func (e endpoints) Apply(ctx context.Context, objects []manifest.Object) error {
-	return e.applyOrDeleteObjects(ctx, objects, apiApply)
-}
+func (e endpoints) Apply(ctx context.Context, params ApplyRequest) error {
+	objects, err := e.setOrganizationForObjects(ctx, params.Objects)
+	if err != nil {
+		return err
+	}
+	buf := new(bytes.Buffer)
+	if err = json.NewEncoder(buf).Encode(objects); err != nil {
+		return fmt.Errorf("cannot marshal: %w", err)
+	}
 
-// Deprecated: use [sdk.Client.Objects().V2().Delete] instead.
-func (e endpoints) Delete(ctx context.Context, objects []manifest.Object) error {
-	return e.applyOrDeleteObjects(ctx, objects, apiDelete)
-}
-
-// Deprecated: use [sdk.Client.Objects().V2().DeleteByName] instead.
-func (e endpoints) DeleteByName(
-	ctx context.Context,
-	kind manifest.Kind,
-	project string,
-	names ...string,
-) error {
 	req, err := e.client.CreateRequest(
 		ctx,
-		http.MethodDelete,
-		path.Join(apiDelete, kind.ToLower()),
-		http.Header{sdk.HeaderProject: {project}},
-		url.Values{
-			QueryKeyName:   names,
-			QueryKeyDryRun: []string{strconv.FormatBool(e.dryRun)},
-		},
+		http.MethodPut,
+		apiApply,
 		nil,
+		e.setDryRunQuery(url.Values{}, params.DryRun),
+		buf,
 	)
 	if err != nil {
 		return err
@@ -84,38 +75,8 @@ func (e endpoints) DeleteByName(
 	return nil
 }
 
-func (e endpoints) Get(
-	ctx context.Context,
-	kind manifest.Kind,
-	header http.Header,
-	query url.Values,
-) ([]manifest.Object, error) {
-	req, err := e.client.CreateRequest(
-		ctx,
-		http.MethodGet,
-		resolveGetObjectEndpoint(kind),
-		header,
-		query,
-		nil,
-	)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := e.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	return e.readObjects(ctx, resp.Body)
-}
-
-func (e endpoints) applyOrDeleteObjects(
-	ctx context.Context,
-	objects []manifest.Object,
-	apiMode string,
-) error {
-	var err error
-	objects, err = e.setOrganizationForObjects(ctx, objects)
+func (e endpoints) Delete(ctx context.Context, params DeleteRequest) error {
+	objects, err := e.setOrganizationForObjects(ctx, params.Objects)
 	if err != nil {
 		return err
 	}
@@ -124,20 +85,42 @@ func (e endpoints) applyOrDeleteObjects(
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
 
-	var method string
-	switch apiMode {
-	case apiApply:
-		method = http.MethodPut
-	case apiDelete:
-		method = http.MethodDelete
+	query := url.Values{
+		QueryKeyCascadeDelete: []string{strconv.FormatBool(params.Cascade)},
 	}
+	query = e.setDryRunQuery(query, params.DryRun)
 	req, err := e.client.CreateRequest(
 		ctx,
-		method,
-		apiMode,
+		http.MethodDelete,
+		apiDelete,
 		nil,
-		url.Values{QueryKeyDryRun: []string{strconv.FormatBool(e.dryRun)}},
+		query,
 		buf,
+	)
+	if err != nil {
+		return err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return err
+	}
+	_ = resp.Body.Close()
+	return nil
+}
+
+func (e endpoints) DeleteByName(ctx context.Context, params DeleteByNameRequest) error {
+	query := url.Values{
+		QueryKeyName:          params.Names,
+		QueryKeyCascadeDelete: []string{strconv.FormatBool(params.Cascade)},
+	}
+	query = e.setDryRunQuery(query, params.DryRun)
+	req, err := e.client.CreateRequest(
+		ctx,
+		http.MethodDelete,
+		path.Join(apiDelete, params.Kind.ToLower()),
+		http.Header{sdk.HeaderProject: {params.Project}},
+		query,
+		nil,
 	)
 	if err != nil {
 		return err
@@ -168,11 +151,11 @@ func (e endpoints) setOrganizationForObjects(
 	return objects, nil
 }
 
-func resolveGetObjectEndpoint(kind manifest.Kind) string {
-	switch kind {
-	case manifest.KindUserGroup:
-		return apiGetGroups
-	default:
-		return path.Join(apiGet, kind.ToLower())
+func (e endpoints) setDryRunQuery(u url.Values, requestDryRun *bool) url.Values {
+	dryRun := e.dryRun
+	if requestDryRun != nil {
+		dryRun = *requestDryRun
 	}
+	u.Set(QueryKeyDryRun, strconv.FormatBool(dryRun))
+	return u
 }

@@ -4,8 +4,10 @@ package objects
 
 import (
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 type Versions interface {
 	V1() v1.Endpoints
+	V2() v2.Endpoints
 }
