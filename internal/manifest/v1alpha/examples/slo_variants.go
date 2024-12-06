@@ -1005,33 +1005,34 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant {
 		case metricVariantThreshold:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    9978,
-				Line:                       "TIMEMAX",
+				QueryType:    v1alphaSLO.LMQueryTypeWebsiteMetrics,
+				WebsiteID:    "1",
+				CheckpointID: "1044712023",
+				GraphName:    "responseTime",
+				Line:         "MIN RTT",
 			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    11438,
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
+				DeviceDataSourceInstanceID: "933147615",
+				GraphID:                    "11438",
 				Line:                       "CONNECTIONSUCCESSES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    11436,
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
+				DeviceDataSourceInstanceID: "933147615",
+				GraphID:                    "11436",
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		case metricVariantBadRatio:
 			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    11437,
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
+				DeviceDataSourceInstanceID: "933147615",
+				GraphID:                    "11437",
 				Line:                       "CONNECTIONFAILURES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    11436,
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
+				DeviceDataSourceInstanceID: "933147615",
+				GraphID:                    "11436",
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		}
