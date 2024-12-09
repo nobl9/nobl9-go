@@ -1,8 +1,9 @@
 package slo
 
 import (
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
