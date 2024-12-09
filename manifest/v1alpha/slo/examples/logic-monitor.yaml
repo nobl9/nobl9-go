@@ -124,7 +124,7 @@
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
-            graphId: "11436"
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
