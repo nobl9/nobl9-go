@@ -1,9 +1,8 @@
 package slo
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
@@ -19,8 +18,8 @@ type LogicMonitorMetric struct {
 	QueryType string `json:"queryType"`
 	Line      string `json:"line"`
 	// QueryType = device_metrics
-	DeviceDataSourceInstanceID string `json:"deviceDataSourceInstanceId,omitempty"`
-	GraphID                    string `json:"graphId,omitempty"`
+	DeviceDataSourceInstanceID int `json:"deviceDataSourceInstanceId,omitempty"`
+	GraphID                    int `json:"graphId,omitempty"`
 	// QueryType = website_metrics
 	WebsiteID    string `json:"websiteId,omitempty"`
 	CheckpointID string `json:"checkpointId,omitempty"`
@@ -40,18 +39,18 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 		WithName("queryType").
 		Required().
 		Rules(rules.OneOf(LMQueryTypeDeviceMetrics, LMQueryTypeWebsiteMetrics)),
-	govy.For(func(e LogicMonitorMetric) string { return e.DeviceDataSourceInstanceID }).
+	govy.For(func(e LogicMonitorMetric) int { return e.DeviceDataSourceInstanceID }).
 		WithName("deviceDataSourceInstanceId").
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.StringNotEmpty()),
-	govy.For(func(e LogicMonitorMetric) string { return e.GraphID }).
+		Rules(rules.GTE(0)),
+	govy.For(func(e LogicMonitorMetric) int { return e.GraphID }).
 		WithName("graphId").
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.StringNotEmpty()),
+		Rules(rules.GTE(0)),
 	govy.For(func(e LogicMonitorMetric) string { return e.WebsiteID }).
 		WithName("websiteId").
 		When(
@@ -79,8 +78,9 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 	govy.For(govy.GetSelf[LogicMonitorMetric]()).
 		When(func(c LogicMonitorMetric) bool { return c.IsWebsiteMetric() }).
 		Rules(govy.NewRule(func(e LogicMonitorMetric) error {
-			if e.DeviceDataSourceInstanceID != "" || e.GraphID != "" {
-				return errors.New("deviceDataSourceInstanceId and graphId must be empty for website_metrics")
+			if e.DeviceDataSourceInstanceID != 0 || e.GraphID != 0 {
+				return errors.Errorf("deviceDataSourceInstanceId and graphId must be empty for %s",
+					LMQueryTypeWebsiteMetrics)
 			}
 			return nil
 		})),
@@ -88,7 +88,8 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 		When(func(c LogicMonitorMetric) bool { return c.IsDeviceMetric() }).
 		Rules(govy.NewRule(func(e LogicMonitorMetric) error {
 			if len(e.GraphName) > 0 || len(e.CheckpointID) > 0 || len(e.WebsiteID) > 0 {
-				return errors.New("graphName, checkpointId and websiteId must be empty for device_metrics")
+				return errors.Errorf("graphName, checkpointId and websiteId must be empty for %s",
+					LMQueryTypeDeviceMetrics)
 			}
 			return nil
 		})),

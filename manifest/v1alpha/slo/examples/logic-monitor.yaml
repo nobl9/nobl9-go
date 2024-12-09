@@ -44,14 +44,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11437"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11437
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -117,13 +117,13 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11437"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11437
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
+            deviceDataSourceInstanceId: 933147615
             graphId: "11436"
       primary: true
     service: api-server
@@ -188,14 +188,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11437"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11437
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -262,14 +262,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONFAILURES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11437"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11437
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -332,14 +332,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11438"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11438
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -405,14 +405,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11438"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11438
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -476,14 +476,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11438"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11438
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:
@@ -550,14 +550,14 @@
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSUCCESSES
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11438"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11438
         total:
           logicMonitor:
             queryType: device_metrics
             line: CONNECTIONSESTABLISHED
-            deviceDataSourceInstanceId: "933147615"
-            graphId: "11436"
+            deviceDataSourceInstanceId: 933147615
+            graphId: 11436
       primary: true
     service: api-server
     timeWindows:

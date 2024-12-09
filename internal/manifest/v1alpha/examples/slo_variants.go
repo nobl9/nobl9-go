@@ -1014,25 +1014,25 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
 				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
-				DeviceDataSourceInstanceID: "933147615",
-				GraphID:                    "11438",
+				DeviceDataSourceInstanceID: 933147615,
+				GraphID:                    11438,
 				Line:                       "CONNECTIONSUCCESSES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
 				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
-				DeviceDataSourceInstanceID: "933147615",
-				GraphID:                    "11436",
+				DeviceDataSourceInstanceID: 933147615,
+				GraphID:                    11436,
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		case metricVariantBadRatio:
 			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
 				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
-				DeviceDataSourceInstanceID: "933147615",
-				GraphID:                    "11437",
+				DeviceDataSourceInstanceID: 933147615,
+				GraphID:                    11437,
 				Line:                       "CONNECTIONFAILURES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
 				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
-				DeviceDataSourceInstanceID: "933147615",
-				GraphID:                    "11436",
+				DeviceDataSourceInstanceID: 933147615,
+				GraphID:                    11436,
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		}

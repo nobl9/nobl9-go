@@ -44,7 +44,9 @@ func TestLogicMonitor(t *testing.T) {
 	t.Run("line required for device_metrics", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.LogicMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.LogicMonitor = &LogicMonitorMetric{
-			QueryType: LMQueryTypeDeviceMetrics,
+			QueryType:                  LMQueryTypeDeviceMetrics,
+			DeviceDataSourceInstanceID: -1,
+			GraphID:                    -1,
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
@@ -54,11 +56,11 @@ func TestLogicMonitor(t *testing.T) {
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
-				Code: rules.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
-				Code: rules.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 		)
 	})
@@ -95,8 +97,8 @@ func TestLogicMonitor(t *testing.T) {
 			CheckpointID:               "1",
 			GraphName:                  "MaxPoints",
 			Line:                       "MAX",
-			DeviceDataSourceInstanceID: "111",
-			GraphID:                    "1113",
+			DeviceDataSourceInstanceID: 111,
+			GraphID:                    1113,
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
@@ -114,8 +116,8 @@ func TestLogicMonitor(t *testing.T) {
 			CheckpointID:               "1",
 			GraphName:                  "MaxPoints",
 			Line:                       "MAX",
-			DeviceDataSourceInstanceID: "1",
-			GraphID:                    "1",
+			DeviceDataSourceInstanceID: 1,
+			GraphID:                    1,
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
