@@ -234,18 +234,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
-			var actualComposites []v1alphaSLO.SLO
-			for _, slo := range actual {
-				if slo.Spec.HasCompositeObjectives() {
-					actualComposites = append(actualComposites, slo)
-				}
-			}
-			var expectedComposites []v1alphaSLO.SLO
-			for _, slo := range test.expected {
-				if slo.Spec.HasCompositeObjectives() {
-					expectedComposites = append(expectedComposites, slo)
-				}
-			}
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Equal(t, len(actual), len(test.expected),
