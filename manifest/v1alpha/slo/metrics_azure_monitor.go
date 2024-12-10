@@ -170,10 +170,10 @@ var azureMonitorKQLQueryRule = govy.NewRule(func(kqlQuery string) error {
 		return errors.New("summarize is required")
 	}
 
-	binBy := regexp.MustCompile(`summarize.*by\s+bin\s*\(.* ([0-9]+\w+)\)`).
+	binBy := regexp.MustCompile(`summarize.*by\s+bin\s*\(.* (\d+\w+)\)`).
 		FindAllStringSubmatch(summarizePart, -1)
 	if len(binBy) == 1 {
-		const minResolution = time.Duration(15 * time.Second)
+		const minResolution = 15 * time.Second
 
 		binDuration, err := time.ParseDuration(binBy[0][1])
 		if err != nil {

@@ -218,7 +218,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.
-			AzureMonitor.KQLQuery = "logs | summarize n9_value = sum(value) | project TimeGenerated as n9_missing_time, 1 as n9_value"
+			AzureMonitor.KQLQuery = "logs | summarize n9_val = sum(value) | project TimeGenerated as n9_missing_time, 1 as n9_value"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
