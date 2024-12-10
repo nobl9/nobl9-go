@@ -126,7 +126,7 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 		WithName("kqlQuery").
 		Required().
 		Rules(
-			azureMonitorkqlQueryRule,
+			azureMonitorKQLQueryRule,
 			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
 				WithDetails("n9_time is required"),
 			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
@@ -152,7 +152,7 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
 )
 
-var azureMonitorkqlQueryRule = govy.NewRule(func(kqlQuery string) error {
+var azureMonitorKQLQueryRule = govy.NewRule(func(kqlQuery string) error {
 	// supported formats:
 	// - summarize n9_value = <aggregation>(<value>) by bin(<timestamp_value>, <duration>)
 	// - summarize n9_value = <aggregation>(<value>)
