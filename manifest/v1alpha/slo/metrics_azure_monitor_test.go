@@ -642,6 +642,87 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 	}
 }
 
+func TestAzureMonitor_kqlQuery(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		kqlQuery     string
+		isValid      bool
+		errorMessage string
+	}{
+		{
+			"valid query without bin",
+			"Logs | summarize n9_value = max(value) | project TimeGenerated as n9_time, 1 as n9_value",
+			true,
+			"",
+		},
+		{
+			"valid query with bin",
+			"Logs | summarize n9_value = max(value) by bin(time, 15s) | project TimeGenerated as n9_time, 1 as n9_value",
+			true,
+			"",
+		},
+		{
+			"no summarize",
+			"Logs | project TimeGenerated as n9_time, 1 as n9_value",
+			false,
+			"summarize is required",
+		},
+		{
+			"summarize without bin",
+			"Logs | summarize n9_value = avg(value) | project TimeGenerated as n9_time, 1 as n9_value",
+			true,
+			"",
+		},
+		{
+			"summarize without bin with time aggregation",
+			"Logs | summarize n9_value = avg(value) by time | project TimeGenerated as n9_time, 1 as n9_value",
+			false,
+			"'summarize .* by' requires 'bin'(time, resolution) clause",
+		},
+		{
+			"invalid aggregation resolution",
+			"Logs | summarize n9_value = avg(value) by bin(time, 15) | project TimeGenerated as n9_time, 1 as n9_value",
+			false,
+			"bin duration is required in short 'timespan' format. E.g. '15s'",
+		},
+		{
+			"aggregation resolution to small",
+			"Logs | summarize n9_value = avg(value) by bin(time, 10ms) | project TimeGenerated as n9_time, 1 as n9_value",
+			false,
+			"bin duration must be at least 15s but was 10ms",
+		},
+		{
+			"summarize used two times - valid",
+			"Logs | summarize n9_value = avg(value) by time | summarize n9_value = avg(value) | project TimeGenerated as n9_time, 1 as n9_value",
+			true,
+			"",
+		},
+		{
+			"summarize used two times - invalid",
+			"Logs | summarize n9_value = avg(value) | summarize n9_value = avg(value) by time | project TimeGenerated as n9_time, 1 as n9_value",
+			false,
+			"'summarize .* by' requires 'bin'(time, resolution) clause",
+		},
+	}
+	for _, tC := range testCases {
+		t.Run(tC.desc, func(t *testing.T) {
+			slo := validRawMetricSLO(v1alpha.AzureMonitor)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.KQLQuery = tC.kqlQuery
+
+			err := validate(slo)
+			if tC.isValid {
+				testutils.AssertNoError(t, slo, err)
+			} else {
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop:    "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
+					Message: tC.errorMessage,
+				})
+			}
+		})
+	}
+}
+
 func validAzureMonitorMetricsDataType() *AzureMonitorMetric {
 	return &AzureMonitorMetric{DataType: AzureMonitorDataTypeMetrics,
 		ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
@@ -658,7 +739,7 @@ func validAzureMonitorLogsDataType() *AzureMonitorMetric {
 			ResourceGroup:  "rg",
 			WorkspaceID:    "11111111-1111-1111-1111-111111111111",
 		},
-		KQLQuery: "A | project TimeGenerated as n9_time, 1 as n9_value",
+		KQLQuery: "A | summarize n9_value = max(value) | project TimeGenerated as n9_time, 1 as n9_value",
 	}
 }
 

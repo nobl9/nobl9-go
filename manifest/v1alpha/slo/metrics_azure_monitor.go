@@ -1,10 +1,14 @@
 package slo
 
 import (
+	"fmt"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -122,6 +126,7 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 		WithName("kqlQuery").
 		Required().
 		Rules(
+			azureMonitorkqlQueryRule,
 			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_time\b`)).
 				WithDetails("n9_time is required"),
 			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
@@ -146,6 +151,49 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs },
 	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
 )
+
+var azureMonitorkqlQueryRule = govy.NewRule(func(kqlQuery string) error {
+	// supported formats:
+	// - summarize n9_value = <aggregation>(<value>) by bin(<timestamp_value>, <duration>)
+	// - summarize n9_value = <aggregation>(<value>)
+
+	parts := strings.Split(kqlQuery, "|")
+	summarizePart := ""
+	for _, part := range parts {
+		if strings.Contains(part, "summarize") {
+			summarizePart = part
+			// getting the last summarize as this will be our result resolution
+		}
+	}
+
+	if summarizePart == "" {
+		return errors.New("summarize is required")
+	}
+
+	binBy := regexp.MustCompile(`summarize.*by\s+bin\s*\(.* ([0-9]+\w+)\)`).
+		FindAllStringSubmatch(summarizePart, -1)
+	if len(binBy) == 1 {
+		const minResolution = time.Duration(15 * time.Second)
+
+		binDuration, err := time.ParseDuration(binBy[0][1])
+		if err != nil {
+			return fmt.Errorf("bin duration is required in short 'timespan' format. E.g. '15s'")
+		}
+		if binDuration < minResolution {
+			return fmt.Errorf(
+				"bin duration must be at least %s but was %s",
+				minResolution,
+				binDuration,
+			)
+		}
+	}
+
+	if strings.Contains(summarizePart, "by") && !strings.Contains(summarizePart, "bin") {
+		return errors.New("'summarize .* by' requires 'bin'(time, resolution) clause")
+	}
+
+	return nil
+})
 
 var azureMonitorMetricDimensionValidation = govy.New[AzureMonitorMetricDimension](
 	govy.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Name }).
