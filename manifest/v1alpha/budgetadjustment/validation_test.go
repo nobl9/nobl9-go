@@ -542,3 +542,43 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 		})
 	}
 }
+
+func TestAtLeastSecondTimeResolution(t *testing.T) {
+	tests := []struct {
+		name          string
+		time          time.Time
+		expectedError string
+	}{
+		{
+			name:          "time with nanosecond returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1, time.UTC),
+			expectedError: "time must be defined with second resolution",
+		},
+		{
+			name:          "time with second resolution returns no error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC),
+			expectedError: "",
+		},
+		{
+			name:          "time with millisecond resolution returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1000000, time.UTC),
+			expectedError: "time must be defined with second resolution",
+		},
+		{
+			name:          "time with microsecond resolution returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 526, time.UTC),
+			expectedError: "time must be defined with second resolution",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := atLeastSecondTimeResolution.Validate(tt.time)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
+	}
+}
