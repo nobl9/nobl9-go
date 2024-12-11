@@ -102,7 +102,7 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 
 var atLeastSecondTimeResolution = govy.NewRule(func(t time.Time) error {
 	if t.Nanosecond() != 0 {
-		return errors.New("time must be defined with second resolution")
+		return errors.New("time must be specified with a resolution of seconds")
 	}
 
 	return nil
