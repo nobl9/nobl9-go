@@ -74,7 +74,7 @@ func TestValidate_Spec(t *testing.T) {
 			name: "description too long",
 			spec: Spec{
 				Description:     strings.Repeat("A", 2000),
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters:         Filters{SLOs: []SLORef{{Name: "my-slo", Project: "default"}}},
 			},
@@ -101,7 +101,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "duration required",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Filters:         Filters{SLOs: []SLORef{{Name: "my-slo", Project: "default"}}},
 			},
 			expectedErrors: []testutils.ExpectedError{
@@ -114,7 +114,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "no slo filters",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters:         Filters{},
 			},
@@ -128,7 +128,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "too short duration",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1s",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -147,7 +147,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "duration contains seconds",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m1s",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -166,7 +166,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "slo is defined without name",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -184,7 +184,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "slo is defined with invalid slo name",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -203,7 +203,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "slo is defined without project",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -221,7 +221,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "slo is defined with invalid project name",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Filters: Filters{
 					SLOs: []SLORef{{
@@ -240,7 +240,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "wrong rrule format",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "some test",
 				Filters: Filters{
@@ -260,7 +260,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "invalid rrule",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=TEST;INTERVAL=2",
 				Filters: Filters{
@@ -280,7 +280,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "invalid freq in rrule",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=MINUTELY;INTERVAL=2;COUNT=10",
 				Filters: Filters{
@@ -300,7 +300,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "rrule with dtstart trows transform error",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "DTSTART:20240909T065900Z\\nRRULE:FREQ=MINUTELY;BYHOUR=6,8,9,10,11,12,13,14,15,16;COUNT=10",
 				Filters: Filters{
@@ -320,7 +320,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "proper freq in rrule",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=HOURLY;INTERVAL=1",
 				Filters: Filters{
@@ -335,7 +335,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "duplicate slo",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
@@ -355,7 +355,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "duplicate slo with multiple others",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
@@ -380,7 +380,7 @@ func TestValidate_Spec(t *testing.T) {
 		{
 			name: "proper spec",
 			spec: Spec{
-				FirstEventStart: time.Now(),
+				FirstEventStart: time.Now().Truncate(time.Second),
 				Duration:        "1m",
 				Rrule:           "FREQ=WEEKLY;INTERVAL=2",
 				Filters: Filters{
@@ -418,7 +418,7 @@ func validBudgetAdjustment() BudgetAdjustment {
 			DisplayName: "My Budget Adjustment",
 		},
 		Spec: Spec{
-			FirstEventStart: time.Now(),
+			FirstEventStart: time.Now().Truncate(time.Second),
 			Duration:        "1m",
 			Filters: Filters{
 				SLOs: []SLORef{
@@ -534,6 +534,46 @@ func TestAtLeastHourlyFreq(t *testing.T) {
 				assert.NoError(t, err)
 			}
 			err = atLeastHourlyFreq.Validate(rule)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestAtLeastSecondTimeResolution(t *testing.T) {
+	tests := []struct {
+		name          string
+		time          time.Time
+		expectedError string
+	}{
+		{
+			name:          "time with nanosecond returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1, time.UTC),
+			expectedError: "time must be defined with 1s precision",
+		},
+		{
+			name:          "time with second resolution returns no error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 0, time.UTC),
+			expectedError: "",
+		},
+		{
+			name:          "time with millisecond resolution returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1000000, time.UTC),
+			expectedError: "time must be defined with 1s precision",
+		},
+		{
+			name:          "time with microsecond resolution returns error",
+			time:          time.Date(2023, time.January, 1, 0, 0, 0, 526, time.UTC),
+			expectedError: "time must be defined with 1s precision",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := secondTimePrecision.Validate(tt.time)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

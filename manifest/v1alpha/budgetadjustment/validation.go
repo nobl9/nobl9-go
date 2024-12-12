@@ -41,7 +41,8 @@ var specValidation = govy.New[Spec](
 		Rules(validationV1Alpha.StringDescription()),
 	govy.For(func(s Spec) time.Time { return s.FirstEventStart }).
 		WithName("firstEventStart").
-		Required(),
+		Required().
+		Rules(secondTimePrecision),
 	govy.Transform(func(s Spec) string { return s.Duration }, time.ParseDuration).
 		WithName("duration").
 		Required().
@@ -94,6 +95,14 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 
 	if len(rule.Options.Byminute) > 1 || len(rule.Options.Bysecond) > 0 {
 		return errors.New("byminute and bysecond are not supported")
+	}
+
+	return nil
+})
+
+var secondTimePrecision = govy.NewRule(func(t time.Time) error {
+	if t.Nanosecond() != 0 {
+		return errors.New("time must be defined with 1s precision")
 	}
 
 	return nil
