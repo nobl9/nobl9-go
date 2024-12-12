@@ -42,7 +42,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) time.Time { return s.FirstEventStart }).
 		WithName("firstEventStart").
 		Required().
-		Rules(atLeastSecondTimeResolution),
+		Rules(secondTimePrecision),
 	govy.Transform(func(s Spec) string { return s.Duration }, time.ParseDuration).
 		WithName("duration").
 		Required().
@@ -100,9 +100,9 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	return nil
 })
 
-var atLeastSecondTimeResolution = govy.NewRule(func(t time.Time) error {
+var secondTimePrecision = govy.NewRule(func(t time.Time) error {
 	if t.Nanosecond() != 0 {
-		return errors.New("time must be specified with a resolution of seconds")
+		return errors.New("time must be defined with 1s precision")
 	}
 
 	return nil

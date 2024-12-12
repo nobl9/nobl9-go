@@ -552,7 +552,7 @@ func TestAtLeastSecondTimeResolution(t *testing.T) {
 		{
 			name:          "time with nanosecond returns error",
 			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1, time.UTC),
-			expectedError: "time must be specified with a resolution of seconds",
+			expectedError: "time must be defined with 1s precision",
 		},
 		{
 			name:          "time with second resolution returns no error",
@@ -562,18 +562,18 @@ func TestAtLeastSecondTimeResolution(t *testing.T) {
 		{
 			name:          "time with millisecond resolution returns error",
 			time:          time.Date(2023, time.January, 1, 0, 0, 0, 1000000, time.UTC),
-			expectedError: "time must be specified with a resolution of seconds",
+			expectedError: "time must be defined with 1s precision",
 		},
 		{
 			name:          "time with microsecond resolution returns error",
 			time:          time.Date(2023, time.January, 1, 0, 0, 0, 526, time.UTC),
-			expectedError: "time must be specified with a resolution of seconds",
+			expectedError: "time must be defined with 1s precision",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := atLeastSecondTimeResolution.Validate(tt.time)
+			err := secondTimePrecision.Validate(tt.time)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
