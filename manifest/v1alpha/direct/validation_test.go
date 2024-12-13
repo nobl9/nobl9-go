@@ -262,10 +262,8 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
-				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Unit: unit, Value: ptr(0)},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -389,10 +387,8 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		} {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:            v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				DefaultDuration:        v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
-				TriggeredBySloEdit:     &v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
+				DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(10), Unit: unit},
 			}
 			err := validate(direct)
 			testutils.AssertNoError(t, direct, err)
@@ -416,7 +412,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			Message: "historical data retrieval is not supported for Instana Direct",
 		})
 	})
-	t.Run("data retrieval default, triggeredBySloCreation and TriggeredBySloEdit larger than max",
+	t.Run("data retrieval default, defaultDuration larger than max",
 		func(t *testing.T) {
 			direct := validDirect(v1alpha.Datadog)
 			direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
@@ -428,24 +424,10 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 					Value: ptr(2),
 					Unit:  v1alpha.HRDHour,
 				},
-				TriggeredBySloCreation: &v1alpha.HistoricalRetrievalDuration{
-					Value: ptr(10),
-					Unit:  v1alpha.HRDHour,
-				},
-				TriggeredBySloEdit: &v1alpha.HistoricalRetrievalDuration{
-					Value: ptr(10),
-					Unit:  v1alpha.HRDHour,
-				},
 			}
 			err := validate(direct)
-			testutils.AssertContainsErrors(t, direct, err, 3, testutils.ExpectedError{
+			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 				Prop:    "spec.historicalDataRetrieval.defaultDuration",
-				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
-			}, testutils.ExpectedError{
-				Prop:    "spec.historicalDataRetrieval.triggeredBySloCreation",
-				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
-			}, testutils.ExpectedError{
-				Prop:    "spec.historicalDataRetrieval.triggeredBySloEdit",
 				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 			})
 		})

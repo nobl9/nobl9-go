@@ -238,20 +238,12 @@ type HistoricalDataRetrieval struct {
 	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
 	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
 	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
-	// TriggeredBySloCreation is not supported yet, applying it will have no effect
-	TriggeredBySloCreation *HistoricalRetrievalDuration `json:"triggeredBySloCreation,omitempty"`
-	// TriggeredBySloEdit is not supported yet, applying it will have no effect
-	TriggeredBySloEdit *HistoricalRetrievalDuration `json:"triggeredBySloEdit,omitempty"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
 	return govy.New[HistoricalDataRetrieval](
 		govy.For(govy.GetSelf[HistoricalDataRetrieval]()).
 			Rules(defaultDataRetrievalDurationValidation),
-		govy.For(govy.GetSelf[HistoricalDataRetrieval]()).
-			Rules(triggeredBySloCreationValidation),
-		govy.For(govy.GetSelf[HistoricalDataRetrieval]()).
-			Rules(triggeredBySloEditValidation),
 		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.MaxDuration }).
 			WithName("maxDuration").
 			Required().
@@ -259,14 +251,6 @@ func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval]
 		govy.For(func(h HistoricalDataRetrieval) HistoricalRetrievalDuration { return h.DefaultDuration }).
 			WithName("defaultDuration").
 			Required().
-			Include(historicalRetrievalDurationValidation),
-		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredBySloCreation }).
-			WithName("triggeredByCreation").
-			OmitEmpty().
-			Include(historicalRetrievalDurationValidation),
-		govy.ForPointer(func(h HistoricalDataRetrieval) *HistoricalRetrievalDuration { return h.TriggeredBySloEdit }).
-			WithName("triggeredByEdit").
-			OmitEmpty().
 			Include(historicalRetrievalDurationValidation),
 	)
 }
@@ -292,42 +276,6 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 			return govy.NewPropertyError(
 				"defaultDuration",
 				dataRetrieval.DefaultDuration,
-				errors.Errorf(
-					"must be less than or equal to 'maxDuration' (%d %s)",
-					maxDurationValue, dataRetrieval.MaxDuration.Unit))
-		}
-		return nil
-	})
-
-var triggeredBySloCreationValidation = govy.NewRule(
-	func(dataRetrieval HistoricalDataRetrieval) error {
-		if dataRetrieval.TriggeredBySloCreation != nil &&
-			dataRetrieval.TriggeredBySloCreation.BiggerThan(dataRetrieval.MaxDuration) {
-			var maxDurationValue int
-			if dataRetrieval.MaxDuration.Value != nil {
-				maxDurationValue = *dataRetrieval.MaxDuration.Value
-			}
-			return govy.NewPropertyError(
-				"triggeredBySloCreation",
-				dataRetrieval.TriggeredBySloCreation,
-				errors.Errorf(
-					"must be less than or equal to 'maxDuration' (%d %s)",
-					maxDurationValue, dataRetrieval.MaxDuration.Unit))
-		}
-		return nil
-	})
-
-var triggeredBySloEditValidation = govy.NewRule(
-	func(dataRetrieval HistoricalDataRetrieval) error {
-		if dataRetrieval.TriggeredBySloEdit != nil &&
-			dataRetrieval.TriggeredBySloEdit.BiggerThan(dataRetrieval.MaxDuration) {
-			var maxDurationValue int
-			if dataRetrieval.MaxDuration.Value != nil {
-				maxDurationValue = *dataRetrieval.MaxDuration.Value
-			}
-			return govy.NewPropertyError(
-				"triggeredBySloEdit",
-				dataRetrieval.TriggeredBySloEdit,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",
 					maxDurationValue, dataRetrieval.MaxDuration.Unit))
