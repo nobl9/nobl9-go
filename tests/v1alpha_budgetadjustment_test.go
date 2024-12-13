@@ -33,7 +33,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     objectDescription,
-				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Millisecond).UTC(),
+				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
 				Duration:        "1h",
 				Filters: v1alphaBudgetAdjustment.Filters{
 					SLOs: []v1alphaBudgetAdjustment.SLORef{
@@ -51,7 +51,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     objectDescription,
-				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Millisecond).UTC(),
+				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
 				Duration:        "5h",
 				Rrule:           "FREQ=DAILY;COUNT=5",
 				Filters: v1alphaBudgetAdjustment.Filters{
@@ -107,6 +107,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	slo := generateSLO(t)
+	ts := time.Now().Truncate(time.Second).UTC()
 
 	validationTests := map[string]struct {
 		request v1alphaBudgetAdjustment.BudgetAdjustment
@@ -118,7 +119,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 					Name: "!#$%^&*()",
 				},
 				v1alphaBudgetAdjustment.Spec{
-					FirstEventStart: time.Now(),
+					FirstEventStart: ts,
 					Duration:        "1h",
 					Filters: v1alphaBudgetAdjustment.Filters{
 						SLOs: []v1alphaBudgetAdjustment.SLORef{
@@ -137,7 +138,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 					Name: "missing-duration",
 				},
 				v1alphaBudgetAdjustment.Spec{
-					FirstEventStart: time.Now(),
+					FirstEventStart: ts,
 					Filters: v1alphaBudgetAdjustment.Filters{
 						SLOs: []v1alphaBudgetAdjustment.SLORef{
 							{
@@ -173,7 +174,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 					Name: "missing-duration",
 				},
 				v1alphaBudgetAdjustment.Spec{
-					FirstEventStart: time.Now(),
+					FirstEventStart: ts,
 					Duration:        "1h",
 					Filters: v1alphaBudgetAdjustment.Filters{
 						SLOs: []v1alphaBudgetAdjustment.SLORef{
@@ -196,7 +197,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 					Name: "missing-duration",
 				},
 				v1alphaBudgetAdjustment.Spec{
-					FirstEventStart: time.Now(),
+					FirstEventStart: ts,
 					Duration:        "1h",
 					Filters: v1alphaBudgetAdjustment.Filters{
 						SLOs: []v1alphaBudgetAdjustment.SLORef{
