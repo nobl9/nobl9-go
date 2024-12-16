@@ -45,13 +45,13 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.GTE(0)),
+		Rules(rules.GT(0)),
 	govy.For(func(e LogicMonitorMetric) int { return e.GraphID }).
 		WithName("graphId").
 		When(
 			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() },
 		).
-		Rules(rules.GTE(0)),
+		Rules(rules.GT(0)),
 	govy.For(func(e LogicMonitorMetric) string { return e.WebsiteID }).
 		WithName("websiteId").
 		When(
@@ -72,9 +72,7 @@ var logicMonitorValidation = govy.New[LogicMonitorMetric](
 		Rules(rules.StringNotEmpty()),
 	govy.For(func(e LogicMonitorMetric) string { return e.Line }).
 		WithName("line").
-		When(
-			func(e LogicMonitorMetric) bool { return e.IsDeviceMetric() || e.IsWebsiteMetric() },
-		).
+		Required().
 		Rules(rules.StringNotEmpty()),
 	govy.For(govy.GetSelf[LogicMonitorMetric]()).
 		When(func(c LogicMonitorMetric) bool { return c.IsWebsiteMetric() }).

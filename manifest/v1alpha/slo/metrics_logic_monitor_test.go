@@ -19,9 +19,13 @@ func TestLogicMonitor(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.LogicMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.LogicMonitor = &LogicMonitorMetric{}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1,
+		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -33,11 +37,15 @@ func TestLogicMonitor(t *testing.T) {
 			Line:      "",
 		}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1,
+		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
 				Code:    rules.ErrorCodeOneOf,
 				Message: "must be one of [device_metrics, website_metrics]",
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
+				Code: rules.ErrorCodeRequired,
 			},
 		)
 	})
@@ -52,15 +60,15 @@ func TestLogicMonitor(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
-				Code: rules.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
-				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				Code: rules.ErrorCodeGreaterThan,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
-				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				Code: rules.ErrorCodeGreaterThan,
 			},
 		)
 	})
@@ -73,7 +81,7 @@ func TestLogicMonitor(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
-				Code: rules.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.websiteId",
