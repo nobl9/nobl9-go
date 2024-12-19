@@ -167,9 +167,6 @@ var specValidation = govy.New[Spec](
 		RulesForEach(timeWindowValidationRule()),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
-		RulesForEach(),
-	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
-		WithName("objectives").
 		Cascade(govy.CascadeModeStop).
 		When(
 			func(s Spec) bool { return !s.HasCompositeObjectives() },
