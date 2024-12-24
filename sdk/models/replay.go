@@ -49,6 +49,7 @@ type ReplayStatus struct {
 	Unit        string `json:"unit"`
 	Value       int    `json:"value"`
 	StartTime   string `json:"startTime"`
+	EndTime     string `json:"endTime,omitempty"`
 }
 
 func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
@@ -58,6 +59,7 @@ func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
 		Unit:        status.Unit,
 		Value:       status.Value,
 		StartTime:   status.StartTime,
+		EndTime:     status.EndTime,
 	}
 }
 
