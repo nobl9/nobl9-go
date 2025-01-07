@@ -22,12 +22,12 @@ var (
 	}
 )
 
-// httpNonRetryableError signifies to the retryablehttp.Client that the request should not be retired.
+// httpNonRetryableError signifies to the [retryablehttp.Client] that the request should not be retired.
 type httpNonRetryableError struct{ Err error }
 
 func (n httpNonRetryableError) Error() string { return n.Err.Error() }
 
-// newRetryableHTTPClient returns http.Client with preconfigured retry feature.
+// newRetryableHTTPClient returns [http.Client] with preconfigured retry feature.
 func newRetryableHTTPClient(timeout time.Duration, rt http.RoundTripper) *http.Client {
 	rc := retryablehttp.NewClient()
 	rc.Logger = httpNoopLogger{}
@@ -91,7 +91,7 @@ func httpShouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry boo
 
 type httpNoopLogger struct{}
 
-// Printf is empty, because we only want to fulfill `retryablehttp.Logger` interface.
-// `retryablehttp.Client.Logger` makes extensive use of the logger yielding way too much info.
+// Printf is empty, because we only want to fulfill [retryablehttp.Logger] interface.
+// [retryablehttp.Client.Logger] makes extensive use of the logger yielding way too much info.
 // We silence the logger and print the info where needed.
 func (l httpNoopLogger) Printf(string, ...interface{}) {}

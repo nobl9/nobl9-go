@@ -43,7 +43,8 @@ type jwtClaimsProfile interface {
 
 // stringOrObject has to be used to wrap our profiles as currently
 // they can either contain the profile object or an empty string.
-// Once PC-12146 is done, it can be removed.
+//
+// TODO: Once PC-12146 is done, it can be removed.
 type stringOrObject[T jwtClaimsProfile] struct {
 	Value *T
 }
@@ -176,7 +177,7 @@ func (j *jwtParser) initKeyfunc() error {
 }
 
 // newJWKStorage is almost a direct copy of the [jwkset.NewDefaultHTTPClientCtx].
-// One notable change is that we're setting NoErrorReturnFirstHTTPReq to false,
+// One notable change is that we're setting [jwkset.HTTPClientStorageOptions.NoErrorReturnFirstHTTPReq] to false,
 // this ensures that if an error occurs when fetching keys inside the constructor,
 // it is returned immediately.
 // We also modify the timeout value.

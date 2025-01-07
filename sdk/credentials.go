@@ -15,7 +15,7 @@ type accessTokenParser interface {
 	Parse(token, clientID string) (*jwtClaims, error)
 }
 
-// accessTokenProvider fetches the access token based on client it and client secret.
+// accessTokenProvider fetches the access token based on the provided clientID and clientSecret.
 type accessTokenProvider interface {
 	RequestAccessToken(ctx context.Context, clientID, clientSecret string) (token string, err error)
 }
@@ -24,12 +24,12 @@ type accessTokenProvider interface {
 // It can be used, for example, to update persistent access token storage.
 type accessTokenPostRequestHook = func(token string) error
 
-func newCredentials(config *Config) *credentials {
+func newCredentials(config *Config) *credentialsStore {
 	if config.DisableOkta {
-		return &credentials{config: config}
+		return &credentialsStore{config: config}
 	}
 	authServerURL := oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)
-	return &credentials{
+	return &credentialsStore{
 		config: config,
 		tokenParser: newJWTParser(
 			authServerURL.String(),
@@ -41,11 +41,11 @@ func newCredentials(config *Config) *credentials {
 	}
 }
 
-// credentials stores and manages IDP app credentials and claims.
+// credentialsStore stores and manages IDP app credentials and claims.
 // It governs access token life cycle, providing means of refreshing it
 // and exposing claims delivered with the token.
 // Currently, the only supported IDP is Okta.
-type credentials struct {
+type credentialsStore struct {
 	config *Config
 	// Set after the token is fetched.
 	accessToken string
@@ -76,8 +76,8 @@ type credentials struct {
 
 // GetEnvironment first ensures a token has been parsed before returning the environment,
 // as it is extracted from the token claims.
-// credentials.environment should no tbe accessed directly, but rather through this method.
-func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
+// [credentialsStore.environment] should no tbe accessed directly, but rather through this method.
+func (c *credentialsStore) GetEnvironment(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get environment")
 	}
@@ -86,8 +86,8 @@ func (c *credentials) GetEnvironment(ctx context.Context) (string, error) {
 
 // GetOrganization first ensures a token has been parsed before returning the organization,
 // as it is extracted from the token claims.
-// credentials.organization should no tbe accessed directly, but rather through this method.
-func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
+// [credentialsStore.organization] should no tbe accessed directly, but rather through this method.
+func (c *credentialsStore) GetOrganization(ctx context.Context) (string, error) {
 	if c.config.DisableOkta {
 		return c.config.Organization, nil
 	}
@@ -102,8 +102,8 @@ func (c *credentials) GetOrganization(ctx context.Context) (string, error) {
 
 // GetUser first ensures a token has been parsed before returning the user,
 // as it is extracted from the token claims.
-// credentials.<profile>.User should not be accessed directly, but rather through this method.
-func (c *credentials) GetUser(ctx context.Context) (string, error) {
+// [credentialsStore.claims].<profile>.User should not be accessed directly, but rather through this method.
+func (c *credentialsStore) GetUser(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get user")
 	}
@@ -124,10 +124,10 @@ func (c *credentials) GetUser(ctx context.Context) (string, error) {
 var cleanCredentialsHTTPClient = &http.Client{}
 
 // RoundTrip is responsible for making sure the access token is set and also update it
-// if the expiry is imminent. It also sets the HeaderOrganization.
-// It will wrap any errors returned from refreshAccessToken
-// in retryhttp.httpNonRetryableError to ensure the request is not retried by the wrapping client.
-func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
+// if the expiry is imminent. It also sets the [HeaderOrganization].
+// It will wrap any errors returned from [credentialsStore.refreshAccessToken]
+// in [httpNonRetryableError] to ensure the request is not retried by the wrapping client.
+func (c *credentialsStore) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
 		return nil, httpNonRetryableError{Err: err}
@@ -140,7 +140,7 @@ func (c *credentials) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // setAuthorizationHeader sets an authorization header which should be included
 // if access token was set in request to the resource server.
-func (c *credentials) setAuthorizationHeader(r *http.Request) {
+func (c *credentialsStore) setAuthorizationHeader(r *http.Request) {
 	if c.accessToken == "" {
 		return
 	}
@@ -153,7 +153,7 @@ func (c *credentials) setAuthorizationHeader(r *http.Request) {
 // refreshAccessToken checks the accessToken expiry with an offset to detect if the token
 // is soon to be expired. If so, it will request a new token and update the credentials state.
 // If the token was not yet set, it will request a new one all the same.
-func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err error) {
+func (c *credentialsStore) refreshAccessToken(ctx context.Context) (updated bool, err error) {
 	if c.config.DisableOkta {
 		return false, nil
 	}
@@ -187,16 +187,17 @@ func (c *credentials) refreshAccessToken(ctx context.Context) (updated bool, err
 const tokenExpiryOffset = 2 * time.Minute
 
 // shouldRefresh defines token expiry policy for the JWT managed by credentials
-// or if the config.ClientID or config.ClientSecret have been updated.
-func (c *credentials) shouldRefresh() bool {
+// or if the [Config.ClientID] or [Config.ClientSecret] have been updated.
+func (c *credentialsStore) shouldRefresh() bool {
 	return c.claims == nil ||
 		c.claims.ExpiresAt.Before(time.Now().Add(tokenExpiryOffset)) ||
 		c.clientID != c.config.ClientID ||
 		c.clientSecret != c.config.ClientSecret
 }
 
-// requestNewToken uses tokenProvider to fetch the new token and parse it via setNewToken function.
-func (c *credentials) requestNewToken(ctx context.Context) (err error) {
+// requestNewToken uses [accessTokenProvider] to fetch the new token
+// and parse it via [credentialsStore.setNewToken] function.
+func (c *credentialsStore) requestNewToken(ctx context.Context) (err error) {
 	c.clientID = c.config.ClientID
 	c.clientSecret = c.config.ClientSecret
 	token, err := c.tokenProvider.RequestAccessToken(ctx, c.config.ClientID, c.config.ClientSecret)
@@ -206,10 +207,10 @@ func (c *credentials) requestNewToken(ctx context.Context) (err error) {
 	return c.setNewToken(token)
 }
 
-// setNewToken parses and verifies the provided JWT using tokenParser.
-// It will then decode 'm2mProfile' from the extracted claims and set
-// the new values for m2mProfile, accessToken and claims credentials fields.
-func (c *credentials) setNewToken(token string) error {
+// setNewToken parses and verifies the provided JWT using [accessTokenParser].
+// It will then decode the user profile (e.g. m2mProfile) from the extracted claims and set
+// the new values for the profile, access token and claims fields.
+func (c *credentialsStore) setNewToken(token string) error {
 	claims, err := c.tokenParser.Parse(token, c.config.ClientID)
 	if err != nil {
 		return err

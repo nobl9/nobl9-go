@@ -189,7 +189,7 @@ func resolveGlobPattern(path string) (paths []string, err error) {
 }
 
 // hasSupportedFileExtension checks if we're dealing with YAML or JSON file comparing file extension suffix.
-// It's faster to do the simple comparison strings.HasSuffix does then call filepath.Ext.
+// It's faster to do the simple comparison [strings.HasSuffix] does then call [filepath.Ext].
 func hasSupportedFileExtension(fp string) bool {
 	ext := filepath.Ext(fp)
 	for i := range supportedFileExtensions {

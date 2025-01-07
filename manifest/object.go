@@ -11,34 +11,34 @@ import (
 // Object represents a generic Nobl9 object definition.
 // All Nobl9 objects implement this interface.
 type Object interface {
-	// GetVersion returns the API version of the Object.
+	// GetVersion returns the API version of the [Object].
 	GetVersion() Version
-	// GetKind returns the Kind of the Object.
+	// GetKind returns the Kind of the [Object].
 	GetKind() Kind
-	// GetName returns the name of the Object (RFC 1123 compliant DNS).
+	// GetName returns the name of the [Object] (RFC 1123 compliant DNS).
 	GetName() string
-	// Validate performs static validation of the Object.
+	// Validate performs static validation of the [Object].
 	Validate() error
-	// GetManifestSource returns the source of the Object's manifest.
+	// GetManifestSource returns the source of the [Object] manifest.
 	GetManifestSource() string
-	// SetManifestSource sets the source of the Object's manifest.
+	// SetManifestSource sets the source of the [Object] manifest.
 	SetManifestSource(src string) Object
 }
 
-// ProjectScopedObject an Object which is tied to a specific KindProject.
-// Example of such an object is v1alpha.SLO.
-// On the other hand v1alpha.RoleBinding is an example of organization
-// scoped Object which is not tied to any KindProject.
+// ProjectScopedObject an [Object] which is tied to a specific [KindProject].
+// Example of such an object is [github.com/nobl9/nobl9-go/manifest/v1alpha/slo.SLO].
+// On the other hand [github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding.RoleBinding]
+// is an example of organization-scoped [Object] which is not tied to any [KindProject].
 type ProjectScopedObject interface {
 	Object
-	// GetProject returns the name of the project which the ProjectScopedObject belongs to.
+	// GetProject returns the name of the project which the [ProjectScopedObject] belongs to.
 	GetProject() string
-	// SetProject sets the name of the project which the ProjectScopedObject should belong to.
-	// It returns the copy of the Object with the updated Project.
+	// SetProject sets the name of the project which the [ProjectScopedObject] should belong to.
+	// It returns the copy of the [Object] with the updated project name.
 	SetProject(project string) Object
 }
 
-// FilterByKind filters Object slice and returns its subset matching the type constraint.
+// FilterByKind filters [Object] slice and returns its subset matching the type constraint.
 func FilterByKind[T Object](objects []Object) []T {
 	var filtered []T
 	for i := range objects {
@@ -68,7 +68,7 @@ func Validate(objects []Object) []error {
 }
 
 // SetDefaultProject sets the default project for each object only if the object is
-// ProjectScopedObject, and it does not yet have project assigned to it.
+// [ProjectScopedObject], and it does not yet have project assigned to it.
 func SetDefaultProject(objects []Object, project string) []Object {
 	for i := range objects {
 		v, ok := objects[i].(ProjectScopedObject)
@@ -81,7 +81,7 @@ func SetDefaultProject(objects []Object, project string) []Object {
 
 // validateObjectsUniqueness checks if all objects are uniquely named.
 // The uniqueness key consists of the objects' kind, name and project.
-// Project is only part of the key if Object does not implement ProjectScopedObject.
+// Project is only part of the key if [Object] does not implement [ProjectScopedObject].
 func validateObjectsUniqueness(objects []Object) (err error) {
 	type uniqueKey struct {
 		Kind    Kind

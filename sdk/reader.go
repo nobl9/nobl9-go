@@ -19,14 +19,14 @@ import (
 
 const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
 
-type (
-	// RawObjectSource may be interpreted as:
-	// - file path as [ObjectSourceTypeFile] or [ObjectSourceTypeDirectory]
-	// - glob pattern as [ObjectSourceTypeGlobPattern]
-	// - URL as [ObjectSourceTypeURL]
-	// - input provided via [io.Reader], like [os.Stdin] as [ObjectSourceTypeReader]
-	RawObjectSource = string
+// RawObjectSource may be interpreted as:
+//   - file path as [ObjectSourceTypeFile] or [ObjectSourceTypeDirectory]
+//   - glob pattern as [ObjectSourceTypeGlobPattern]
+//   - URL as [ObjectSourceTypeURL]
+//   - input provided via [io.Reader], like [os.Stdin] as [ObjectSourceTypeReader]
+type RawObjectSource = string
 
+type (
 	// rawDefinition stores both the resolved source and raw resource definition.
 	rawDefinition struct {
 		// ResolvedSource
