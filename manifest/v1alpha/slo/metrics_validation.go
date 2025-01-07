@@ -150,6 +150,13 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
+	govy.For(govy.GetSelf[MetricSpec]()).
+		Rules(govy.NewRule(func(m MetricSpec) error {
+			if m == (MetricSpec{}) {
+				return errors.New("exactly one valid metric spec has to be provided (e.g. 'prometheus')")
+			}
+			return nil
+		})),
 	govy.ForPointer(func(m MetricSpec) *AppDynamicsMetric { return m.AppDynamics }).
 		WithName("appDynamics").
 		Include(appDynamicsValidation),
@@ -403,9 +410,6 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 				return err
 			}
 		}
-	}
-	if onlyType == 0 {
-		return errors.New("must have exactly one metric spec type, none were provided")
 	}
 	return nil
 }
