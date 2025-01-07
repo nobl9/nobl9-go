@@ -217,8 +217,8 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 	t.Run("required query token - n9_time", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.
-			AzureMonitor.KQLQuery = "logs | summarize n9_val = sum(value) | project TimeGenerated as n9_missing_time, 1 as n9_value"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.
+			KQLQuery = "logs | summarize n9_val = sum(value) | project TimeGenerated as n9_missing_time, 1 as n9_value"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
@@ -230,8 +230,8 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 	t.Run("required query token - n9_value", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.
-			AzureMonitor.KQLQuery = "logs | summarize n9_val = sum(value) | project TimeGenerated as n9_time, 1 as n9_missing_value"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.
+			KQLQuery = "logs | summarize n9_val = sum(value) | project TimeGenerated as n9_time, 1 as n9_missing_value"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
@@ -693,12 +693,14 @@ func TestAzureMonitor_kqlQuery(t *testing.T) {
 		},
 		{
 			"summarize used two times - valid",
+			// nolint:lll
 			"Logs | summarize n9_value = avg(value) by time | summarize n9_value = avg(value) | project TimeGenerated as n9_time, 1 as n9_value",
 			true,
 			"",
 		},
 		{
 			"summarize used two times - invalid",
+			// nolint:lll
 			"Logs | summarize n9_value = avg(value) | summarize n9_value = avg(value) by time | project TimeGenerated as n9_time, 1 as n9_value",
 			false,
 			"'summarize .* by' requires 'bin'(time, resolution) clause",

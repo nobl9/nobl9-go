@@ -162,12 +162,12 @@ var azureMonitorKQLQueryRule = govy.NewRule(func(kqlQuery string) error {
 	for _, part := range parts {
 		if strings.Contains(part, "summarize") {
 			summarizePart = part
-			// getting the last summarize as this will be our result resolution
+			// getting the last summarize as this will be the query result resolution
 		}
 	}
 
 	if summarizePart == "" {
-		return errors.New("summarize is required")
+		return errors.New("summarize clause is required")
 	}
 
 	binBy := regexp.MustCompile(`summarize.*by\s+bin\s*\(.* (\d+\w+)\)`).
