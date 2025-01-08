@@ -17,13 +17,13 @@ type FileConfig struct {
 	filePath string
 }
 
-// GetPath retrieves the file path FileConfig was loaded from.
+// GetPath retrieves the file path [FileConfig] was loaded from.
 func (f *FileConfig) GetPath() string {
 	return f.filePath
 }
 
 // Load reads the config file from the provided path.
-// If the file does not exist, it will create a default configuration file.
+// If the file does not exist, it will create a default configuration file at the provided path.
 func (f *FileConfig) Load(path string) error {
 	f.filePath = path
 	if _, err := os.Stat(path); err != nil {
@@ -40,7 +40,7 @@ func (f *FileConfig) Load(path string) error {
 	return nil
 }
 
-// Save saves FileConfig into provided path, encoding it in TOML format.
+// Save saves [FileConfig] into provided path, encoding it in TOML format.
 func (f *FileConfig) Save(path string) (err error) {
 	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path))
 	if err != nil {

@@ -8,7 +8,7 @@ import "strings"
 // ENUM(v1alpha = n9/v1alpha)
 type Version string
 
-// VersionString returns the second element of the Version.
+// VersionString returns the second element of the [Version].
 // For example, given "n9/v1alpha", it returns "v1alpha".
 func (v Version) VersionString() string {
 	return strings.TrimPrefix(v.String(), "n9/")

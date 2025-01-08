@@ -14,14 +14,14 @@ import (
 
 func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 	t.Run("access token is not set, do not set the header", func(t *testing.T) {
-		creds := &credentials{accessToken: ""}
+		creds := &credentialsStore{accessToken: ""}
 		req := &http.Request{}
 		creds.setAuthorizationHeader(req)
 		assert.Empty(t, req.Header)
 	})
 
 	t.Run("set the header", func(t *testing.T) {
-		creds := &credentials{accessToken: "123"}
+		creds := &credentialsStore{accessToken: "123"}
 		req := &http.Request{}
 		creds.setAuthorizationHeader(req)
 		require.Contains(t, req.Header, HeaderAuthorization)
@@ -31,7 +31,7 @@ func TestCredentials_SetAuthorizationHeader(t *testing.T) {
 
 func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("don't run in offline mode", func(t *testing.T) {
-		creds := &credentials{config: &Config{DisableOkta: true, Organization: "my-org"}}
+		creds := &credentialsStore{config: &Config{DisableOkta: true, Organization: "my-org"}}
 		tokenUpdated, err := creds.refreshAccessToken(context.Background())
 		require.NoError(t, err)
 		assert.False(t, tokenUpdated)
@@ -69,7 +69,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
-			creds := &credentials{
+			creds := &credentialsStore{
 				config:        &Config{DisableOkta: false},
 				claims:        test.Claims,
 				tokenProvider: tokenProvider,
@@ -111,7 +111,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tokenProvider := &mockTokenProvider{}
 			tokenParser := &mockTokenParser{}
-			creds := &credentials{
+			creds := &credentialsStore{
 				config: &Config{
 					ClientID:     test.ClientID,
 					ClientSecret: test.ClientSecret,
@@ -137,7 +137,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("parse token when Config.AccessToken is set", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{}
 		tokenParser := &mockTokenParser{}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        &Config{AccessToken: "token"},
 			tokenProvider: tokenProvider,
 			tokenParser:   tokenParser,
@@ -151,7 +151,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("do not parse token when Config.AccessToken is set, but token was already fetched", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{}
 		tokenParser := &mockTokenParser{}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        &Config{AccessToken: "token"},
 			tokenProvider: tokenProvider,
 			tokenParser:   tokenParser,
@@ -177,7 +177,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			},
 		}
 		tokenProvider := &mockTokenProvider{}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        &Config{AccessToken: "token"},
 			tokenParser:   tokenParser,
 			tokenProvider: tokenProvider,
@@ -221,7 +221,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		}
 		tokenProvider := &mockTokenProvider{}
 		conf := &Config{AccessToken: "token"}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        conf,
 			tokenParser:   tokenParser,
 			tokenProvider: tokenProvider,
@@ -242,7 +242,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 	t.Run("try setting new access token", func(t *testing.T) {
 		tokenParser := &mockTokenParser{err: errors.New("token error")}
 		tokenProvider := &mockTokenProvider{}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        &Config{AccessToken: "token"},
 			tokenParser:   tokenParser,
 			tokenProvider: tokenProvider,
@@ -269,7 +269,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 				}},
 		}
 		hookCalled := false
-		creds := &credentials{
+		creds := &credentialsStore{
 			config: &Config{
 				ClientID:     "client-id",
 				ClientSecret: "my-secret",
@@ -314,7 +314,7 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 			},
 		}
 		hookCalled := false
-		creds := &credentials{
+		creds := &credentialsStore{
 			config: &Config{
 				ClientID:     "client-id",
 				ClientSecret: "my-secret",
@@ -350,7 +350,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 	t.Run("don't call hook if parser fails", func(t *testing.T) {
 		parserErr := errors.New("parser failed!")
 		hookCalled := false
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:          &Config{},
 			tokenParser:     &mockTokenParser{err: parserErr},
 			postRequestHook: func(token string) error { hookCalled = true; return nil },
@@ -366,7 +366,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 			claims: jwtClaims{},
 		}
 		hookErr := errors.New("hook failed!")
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:          &Config{},
 			tokenParser:     tokenParser,
 			postRequestHook: func(token string) error { return hookErr },
@@ -383,7 +383,7 @@ func TestCredentials_setNewToken(t *testing.T) {
 func TestClient_RoundTrip(t *testing.T) {
 	t.Run("wrap errors with httpNonRetryableError", func(t *testing.T) {
 		tokenProvider := &mockTokenProvider{err: errors.New("token fetching failed!")}
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:        &Config{},
 			tokenProvider: tokenProvider,
 			tokenParser:   &mockTokenParser{},
@@ -397,7 +397,7 @@ func TestClient_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("set auth header if not present", func(t *testing.T) {
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:      &Config{},
 			accessToken: "my-token",
 			claims: &jwtClaims{
@@ -416,7 +416,7 @@ func TestClient_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("update auth header if token was updated", func(t *testing.T) {
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:      &Config{},
 			accessToken: "my-old-token",
 			claims: &jwtClaims{
@@ -435,7 +435,7 @@ func TestClient_RoundTrip(t *testing.T) {
 	})
 
 	t.Run("don't update auth header if token was not updated", func(t *testing.T) {
-		creds := &credentials{
+		creds := &credentialsStore{
 			config:      &Config{},
 			accessToken: "my-old-token",
 			claims: &jwtClaims{
@@ -456,7 +456,7 @@ func TestClient_RoundTrip(t *testing.T) {
 
 func TestCredentials_GetEnvironment(t *testing.T) {
 	tokenProvider := &mockTokenProvider{}
-	creds := &credentials{
+	creds := &credentialsStore{
 		config:        &Config{},
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{
@@ -485,7 +485,7 @@ func TestCredentials_GetEnvironment(t *testing.T) {
 
 func TestCredentials_GetOrganization(t *testing.T) {
 	tokenProvider := &mockTokenProvider{}
-	creds := &credentials{
+	creds := &credentialsStore{
 		config:        &Config{},
 		tokenProvider: tokenProvider,
 		tokenParser: &mockTokenParser{

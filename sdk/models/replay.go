@@ -35,7 +35,7 @@ type ReplayTimeRange struct {
 	EndDate   time.Time `json:"endDate,omitempty"` // not supported yet
 }
 
-// ReplayWithStatus used for returning Replay data with status.
+// ReplayWithStatus used for returning [Replay] data with status.
 type ReplayWithStatus struct {
 	Project string       `json:"project"`
 	Slo     string       `json:"slo"`
@@ -74,7 +74,7 @@ type ReplaySourceSLOItem struct {
 	Target string `json:"target"`
 }
 
-// Variants of ReplayStatus.Status.
+// Variants of [ReplayStatus.Status].
 const (
 	ReplayStatusFailed    = "failed"
 	ReplayStatusCompleted = "completed"
@@ -85,7 +85,7 @@ type ReplayAvailability struct {
 	Reason    string `json:"reason,omitempty"`
 }
 
-// Variants of ReplayAvailability.Reason.
+// Variants of [ReplayAvailability.Reason].
 const (
 	ReplayDataSourceTypeInvalid              = "datasource_type_invalid"
 	ReplayProjectDoesNotExist                = "project_does_not_exist"
@@ -245,7 +245,7 @@ var allowedDurationUnit = []string{
 	DurationUnitDay,
 }
 
-// Duration converts unit and value to time.Duration.
+// Duration converts unit and value to [time.Duration].
 func (d ReplayDuration) Duration() (time.Duration, error) {
 	if err := ValidateReplayDurationUnit(d.Unit); err != nil {
 		return 0, err

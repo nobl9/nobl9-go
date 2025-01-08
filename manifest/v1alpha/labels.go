@@ -8,8 +8,8 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
-// Labels are key-value pairs that can be attached to SLOs, services, projects, and alert policies.
-// Labels are used to select and filter Nobl9 objects.
+// Labels are key-value pairs that can be attached to certain objects.
+// Labels are used to select and filter these objects.
 type Labels map[labelKey][]labelValue
 type (
 	labelKey   = string

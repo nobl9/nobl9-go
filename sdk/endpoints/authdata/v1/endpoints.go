@@ -36,7 +36,7 @@ func (e endpoints) GetDirectIAMRoleIDs(ctx context.Context, project, directName 
 	return e.getIAMRoleIDs(ctx, path.Join(apiGetDirectIAMRoleIDs, directName), project)
 }
 
-// GetAgentCredentials retrieves manifest.KindAgent credentials.
+// GetAgentCredentials retrieves [nobl9-go/manifest.KindAgent] credentials.
 func (e endpoints) GetAgentCredentials(
 	ctx context.Context,
 	project, agentsName string,
