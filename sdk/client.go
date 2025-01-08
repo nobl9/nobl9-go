@@ -19,7 +19,7 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 )
 
-// ProjectsWildcard is used in HeaderProject when requesting for all projects.
+// ProjectsWildcard is used in [HeaderProject] when requesting for all projects.
 const ProjectsWildcard = "*"
 
 const (
@@ -31,22 +31,23 @@ const (
 	HeaderTraceID           = internal.HeaderTraceID
 )
 
-type Response struct {
-	Objects      []manifest.Object
-	TruncatedMax int
-}
-
-// Client represents API high level client.
+// Client is the entrypoint for interacting with Nobl9 API.
+// It provides access to the following APIs:
+//   - [Client.Objects] for accessing the [manifest.Object] API.
+//   - [Client.AuthData] for accessing the authentication APIs.
+//   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
+//
+// [SLO Status API]: https://docs.nobl9.com/api/slo-v2
 type Client struct {
 	Config *Config
 	HTTP   *http.Client
 
-	credentials *credentials
+	credentials *credentialsStore
 	userAgent   string
 	dryRun      bool
 }
 
-// DefaultClient returns fully configured instance of Client with default Config and HTTP client.
+// DefaultClient returns fully configured instance of [Client] with default [Config] and [http.Client].
 func DefaultClient() (*Client, error) {
 	config, err := ReadConfig()
 	if err != nil {
@@ -55,7 +56,7 @@ func DefaultClient() (*Client, error) {
 	return NewClient(config)
 }
 
-// NewClient creates a new Client instance with provided Config.
+// NewClient creates a new [Client] instance with provided [Config].
 func NewClient(config *Config) (*Client, error) {
 	creds := newCredentials(config)
 	client := &Client{
@@ -70,6 +71,7 @@ func NewClient(config *Config) (*Client, error) {
 	return client, nil
 }
 
+// Objects is used to access specific [manifest.Object] API version.
 func (c *Client) Objects() objects.Versions {
 	return objects.NewVersions(
 		c,
@@ -85,15 +87,17 @@ func (c *Client) Objects() objects.Versions {
 	)
 }
 
+// AuthData is used to access specific authentication API version.
 func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
 }
 
+// SLOStatusAPI is used to access specific SLO Status API version.
 func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 	return slostatusapi.NewVersions(c)
 }
 
-// CreateRequest creates a new http.Request pointing at the Nobl9 API URL.
+// CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.
 // It also adds all the mandatory headers to the request and encodes query parameters.
 func (c *Client) CreateRequest(
 	ctx context.Context,
@@ -132,6 +136,7 @@ func (c *Client) CreateRequest(
 	return req, nil
 }
 
+// Do is a wrapper around [http.Client.Do] that adds error handling and response processing.
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
@@ -144,7 +149,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
-// WithDryRun configures the Client to run all supported state changing operations in dry-run mode.
+// WithDryRun configures the [Client] to run all supported state changing operations in dry-run mode.
 func (c *Client) WithDryRun() *Client {
 	c.dryRun = true
 	return c
@@ -160,7 +165,7 @@ func (c *Client) GetUser(ctx context.Context) (string, error) {
 	return c.credentials.GetUser(ctx)
 }
 
-// SetUserAgent will set HeaderUserAgent to the provided value.
+// SetUserAgent will set [HeaderUserAgent] to the provided value.
 func (c *Client) SetUserAgent(userAgent string) {
 	c.userAgent = userAgent
 }
@@ -170,7 +175,7 @@ func (c *Client) SetUserAgent(userAgent string) {
 var urlScheme = "https"
 
 // getAPIURL by default uses environment from JWT claims as a host.
-// If Config.URL was provided it is used instead.
+// If [Config.URL] was provided it is used instead.
 func (c *Client) getAPIURL(ctx context.Context) (*url.URL, error) {
 	if c.Config.URL != nil {
 		return c.Config.URL, nil
