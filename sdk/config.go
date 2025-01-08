@@ -29,7 +29,7 @@ const (
 
 var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
-// GetDefaultConfigPath returns the default path to Nobl9 configuration file, config.toml.
+// GetDefaultConfigPath returns the default path to Nobl9 configuration file (config.toml).
 func GetDefaultConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -39,12 +39,12 @@ func GetDefaultConfigPath() (string, error) {
 }
 
 // ReadConfig reads the configuration from either (with precedence from top to bottom):
-// - provided ConfigOption
-// - environment variables
-// - config file
-// - default values where applicable
+//   - provided [ConfigOption]
+//   - environment variables
+//   - config file
+//   - default values where applicable
 //
-// Detailed flow can be found in config_activity.mmd.
+// Detailed flow can be found in the main README.md.
 func ReadConfig(options ...ConfigOption) (*Config, error) {
 	conf, err := newConfig(options)
 	if err != nil {
@@ -56,19 +56,43 @@ func ReadConfig(options ...ConfigOption) (*Config, error) {
 	return conf, nil
 }
 
-// Config combines the ContextlessConfig and ContextConfig of the current, selected context.
+// Config combines the [ContextlessConfig] and [ContextConfig] of the current, selected context.
 type Config struct {
-	ClientID             string
-	ClientSecret         string
-	AccessToken          string
-	Project              string
-	URL                  *url.URL
-	OktaOrgURL           *url.URL
-	OktaAuthServer       string
-	DisableOkta          bool
-	Organization         string
-	Timeout              time.Duration
-	FilesPromptEnabled   bool
+	// ClientID is the client ID of the generated access key used to interact with the API.
+	// It is required, unless AccessToken is provided.
+	ClientID string
+	// ClientSecret is the client secret of the generated access key used to interact with the API.
+	// It is required, unless AccessToken is provided.
+	ClientSecret string
+	// AccessToken is an access token used to perform a request to the API.
+	// It is required, unless ClientID and ClientSecret are provided.
+	// Otherwise, it is generated based on the provided ClientID and ClientSecret.
+	AccessToken string
+	// Project is the name of the default project used by some of the API requests.
+	// It defaults to [DefaultProject].
+	Project string
+	// URL is the base URL of the Nobl9 API.
+	// It is optional and should not be set in most scenarios.
+	URL *url.URL
+	// OktaOrgURL is the base URL of the Okta organization.
+	// It is optional and should not be set in most scenarios.
+	OktaOrgURL *url.URL
+	// OktaAuthServer is the ID of the Okta authorization server.
+	// It is optional and should not be set in most scenarios.
+	OktaAuthServer string
+	// DisableOkta is a flag that disables Okta authorization.
+	// It defaults to false and should not be overridden in most scenarios.
+	DisableOkta bool
+	// Organization is the name of the organization set in [HeaderOrganization] header.
+	// It is optional and should not be set in most scenarios.
+	Organization string
+	// Timeout is the timeout duration of each HTTP request run against the API.
+	Timeout time.Duration
+	// FilesPromptEnabled is a flag that enables a prompt for applying/deleting large numbers of files.
+	// It is sloctl exclusive.
+	FilesPromptEnabled bool
+	// FilesPromptThreshold is the number of files that trigger the prompt.
+	// It is sloctl exclusive.
 	FilesPromptThreshold int
 
 	currentContext    string
@@ -101,7 +125,7 @@ type ContextConfig struct {
 	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
 }
 
-// ConfigOption conveys extra configuration details for ReadConfig function.
+// ConfigOption conveys extra configuration details for [ReadConfig] function.
 type ConfigOption func(conf *Config)
 
 // ConfigOptionWithCredentials creates a minimal configuration using provided client id and secret.
@@ -112,39 +136,39 @@ func ConfigOptionWithCredentials(clientID, clientSecret string) ConfigOption {
 	}
 }
 
-// ConfigOptionNoConfigFile instructs Config to not try reading config.toml file at all.
+// ConfigOptionNoConfigFile instructs [Config] to not try reading config.toml file at all.
 func ConfigOptionNoConfigFile() ConfigOption {
 	return func(conf *Config) { conf.options.NoConfigFile = ptr(true) }
 }
 
-// ConfigOptionUseContext instructs Config to use the provided context name.
+// ConfigOptionUseContext instructs [Config] to use the provided context name.
 // It has no effect if ConfigOptionNoConfigFile is provided.
 func ConfigOptionUseContext(context string) ConfigOption {
 	return func(conf *Config) { conf.options.context = context }
 }
 
-// ConfigOptionFilePath instructs Config to load config file from the provided path.
-// It has no effect if ConfigOptionNoConfigFile is provided.
+// ConfigOptionFilePath instructs [Config] to load config file from the provided path.
+// It has no effect if [ConfigOptionNoConfigFile] is provided.
 func ConfigOptionFilePath(path string) ConfigOption {
 	return func(conf *Config) { conf.options.FilePath = path }
 }
 
-// ConfigOptionEnvPrefix instructs Config to lookup environment variables with the provided prefix.
+// ConfigOptionEnvPrefix instructs [Config] to lookup environment variables with the provided prefix.
 // Example:
 //
-//	ConfigOptionEnvPrefix("SLOCTL_") --> looks up SLOCTL_CLIENT_ID env and assigns it to Config.ClientID
+//	ConfigOptionEnvPrefix("SLOCTL_") --> looks up "SLOCTL_CLIENT_ID" env and assigns it to [Config.ClientID]
 func ConfigOptionEnvPrefix(prefix string) ConfigOption {
 	return func(conf *Config) { conf.options.envPrefix = prefix }
 }
 
-// optionsConfig contains options provided through ConfigOption.
+// optionsConfig contains options provided through [ConfigOption].
 // Some of these options may also be provided though environment variables.
 type optionsConfig struct {
 	// FilePath is the path to the config.toml file.
 	FilePath string `env:"CONFIG_FILE_PATH"`
-	// NoConfigFile
+	// NoConfigFile instructs [Config] to not attempt to read config.toml file.
 	NoConfigFile *bool `env:"NO_CONFIG_FILE"`
-	// context is the name of context loaded into Config.ContextConfig.
+	// context is the name of context loaded into [Config.contextConfig].
 	context string
 	// envPrefix defines the prefix for all environment variables.
 	envPrefix    string
@@ -152,6 +176,7 @@ type optionsConfig struct {
 	clientSecret string
 }
 
+// IsNoFileConfig returns true if [ConfigOptionNoConfigFile] was provided.
 func (o optionsConfig) IsNoFileConfig() bool {
 	if o.NoConfigFile == nil {
 		return false
@@ -169,16 +194,17 @@ Either set them in '%s' configuration file or provide them through env variables
  - %s`
 )
 
+// GetCurrentContext returns the current Nobl9 environment context.
 func (c *Config) GetCurrentContext() string {
 	return c.currentContext
 }
 
-// GetFileConfig returns a copy of FileConfig.
+// GetFileConfig returns a copy of [FileConfig].
 func (c *Config) GetFileConfig() FileConfig {
 	return *c.fileConfig
 }
 
-// Verify checks if Config fulfills the minimum requirements.
+// Verify checks if [Config] fulfills the minimum requirements.
 func (c *Config) Verify() error {
 	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
 		return errors.Errorf(errFmtCredentialsNotFound,
@@ -318,7 +344,6 @@ func (c *Config) saveAccessToken(token string) error {
 
 // processEnvVariables takes a struct pointer and scans its fields tags looking for "env"
 // tag which should contain the environment variable name of the given struct field.
-// Example:
 func (c *Config) processEnvVariables(iv interface{}, overwrite bool) error {
 	v := reflect.ValueOf(iv)
 	if v.Kind() != reflect.Ptr {
@@ -373,7 +398,7 @@ func (c *Config) processEnvVariables(iv interface{}, overwrite bool) error {
 	return nil
 }
 
-// setConfigFieldValue sets the value of the Config field using reflection.
+// setConfigFieldValue sets the value of the [Config] field using reflection.
 func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 	if v == "" {
 		return nil

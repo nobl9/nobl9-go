@@ -18,7 +18,9 @@ import (
 var ErrNoDefinitionsFound = errors.New("no definitions in input")
 
 // DecodeObjects reads objects from the provided bytes slice.
-// It detects if the input is in JSON (manifest.RawObjectFormatJSON) or YAML (manifest.RawObjectFormatYAML format.
+// It detects if the input is in either of the formats:
+//   - JSON ([manifest.RawObjectFormatJSON])
+//   - YAML ([manifest.RawObjectFormatYAML])
 func DecodeObjects(data []byte) ([]manifest.Object, error) {
 	if isJSONBuffer(data) {
 		return decodeJSON(data)
@@ -26,7 +28,7 @@ func DecodeObjects(data []byte) ([]manifest.Object, error) {
 	return decodeYAML(data)
 }
 
-// DecodeObject returns a single, concrete object implementing manifest.Object.
+// DecodeObject returns a single, concrete object implementing [manifest.Object].
 // It expects exactly one object in the decoded byte slice.
 func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 	objects, err := DecodeObjects(data)
@@ -44,7 +46,7 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 	return object, nil
 }
 
-// processRawDefinitions function converts raw definitions to a slice of manifest.Object.
+// processRawDefinitions function converts raw definitions to a slice of [manifest.Object].
 func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	result := make([]manifest.Object, 0, len(rds))
 	for _, rd := range rds {
@@ -62,7 +64,7 @@ func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
 	return result, nil
 }
 
-// annotateWithManifestSource annotates manifest.Object with the manifest definition source.
+// annotateWithManifestSource annotates [manifest.Object] with the manifest definition source.
 func annotateWithManifestSource(object manifest.Object, source string) manifest.Object {
 	if object.GetManifestSource() == "" && source != "" {
 		object = object.SetManifestSource(source)
@@ -235,7 +237,7 @@ func getYamlIdent(data []byte) ident {
 // document separator located at the beginning of the file.
 const yamlDocSep = "\n---"
 
-// splitYAMLDocument is a bufio.SplitFunc for splitting YAML streams into individual documents.
+// splitYAMLDocument is a [bufio.SplitFunc] for splitting YAML streams into individual documents.
 func splitYAMLDocument(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	if atEOF && len(data) == 0 {
 		return 0, nil, nil

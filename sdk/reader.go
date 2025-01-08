@@ -19,14 +19,14 @@ import (
 
 const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
 
-type (
-	// RawObjectSource may be interpreted as (with interpretation):
-	// - file path  (ObjectSourceTypeFile or ObjectSourceTypeDirectory)
-	// - glob pattern (ObjectSourceTypeGlobPattern)
-	// - URL (ObjectSourceTypeURL)
-	// - input provided via io.Reader, like os.Stdin (ObjectSourceTypeReader)
-	RawObjectSource = string
+// RawObjectSource may be interpreted as:
+//   - file path as [ObjectSourceTypeFile] or [ObjectSourceTypeDirectory]
+//   - glob pattern as [ObjectSourceTypeGlobPattern]
+//   - URL as [ObjectSourceTypeURL]
+//   - input provided via [io.Reader], like [os.Stdin] as [ObjectSourceTypeReader]
+type RawObjectSource = string
 
+type (
 	// rawDefinition stores both the resolved source and raw resource definition.
 	rawDefinition struct {
 		// ResolvedSource
@@ -38,8 +38,10 @@ type (
 	rawDefinitions = map[ /* raw definition hash */ string]rawDefinition
 )
 
-// ReadObjects resolves the RawObjectSource(s) it receives and calls
-// ReadObjectsFromSources on the resolved ObjectSource(s).
+// ReadObjects resolves the [RawObjectSource] it receives
+// and reads all [manifest.Object] from the resolved [ObjectSource].
+//
+// Refer to [ReadObjectsFromSources] for more details on the objects' reading logic.
 func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]manifest.Object, error) {
 	sources, err := ResolveObjectSources(rawSources...)
 	if err != nil {
@@ -50,16 +52,39 @@ func ReadObjects(ctx context.Context, rawSources ...RawObjectSource) ([]manifest
 
 const unknownSource = "-"
 
-// ReadObjectsFromSources reads from the provided ObjectSource(s) based on the
-// ObjectSourceType. For ObjectSourceTypeReader it will read directly from ObjectSource.Reader,
-// otherwise it reads from all the ObjectSource.Paths. It calculates a sum for
-// each definition read from ObjectSource and won't create duplicates. This
-// allows the user to combine ObjectSource(s) with possibly overlapping paths.
-// If the same exact definition is identified with multiple sources, it
-// will choose the first ObjectSource path it encounters. If the ObjectSource is of
-// type ObjectSourceTypeGlobPattern or ObjectSourceTypeDirectory and a file does not
-// contain the required APIVersionRegex, it is skipped. However in case
-// of ObjectSourceTypeFile, it will thrown ErrInvalidFile error.
+// ReadObjectsFromSources reads from the provided [ObjectSource] based on the [ObjectSourceType].
+// It calculates a sum for each definition read from [ObjectSource] and won't create duplicates.
+// This allows the user to combine [ObjectSource] with potentially overlapping paths.
+// If the same exact definition is identified with multiple sources,
+// it will pick the first [ObjectSource] path it encounters.
+//
+// If the [ObjectSource] is of type [ObjectSourceTypeGlobPattern] or [ObjectSourceTypeDirectory]
+// and a file does not contain the required [APIVersionRegex], it is skipped.
+// However, in case of [ObjectSourceTypeFile], it will throw [ErrInvalidFile] error.
+//
+// Each [ObjectSourceType] is handled according to the following logic:
+//
+//  1. [ObjectSourceTypeFile] and [ObjectSourceTypeDirectory]
+//     The path can point to a single file or a directory.
+//     If it's a directory, all files with the supported extension will be read.
+//
+//  2. [ObjectSourceTypeGlobPattern]
+//     All files matching the pattern will be read.
+//     On top of what is supported by [filepath.Match],
+//     the pattern may contain double star '**' wildcard placeholders.
+//     The double start will be interpreted as a recursive directory search.
+//
+//  3. [ObjectSourceTypeURL]
+//     The URL to fetch object definitions from.
+//     The endpoint at the provided URL should handle GET request by responding
+//     with status code 200 and JSON or YAML encoded representation of [manifest.Object].
+//
+//     Note: This URL is not designed to fetch [manifest.Object] from the Nobl9 API.
+//     It can be used, for instance, to fetch the objects from the users internal repository.
+//     In order to read [manifest.Object] from the Nobl9 API, use [Client.Objects] API.
+//
+//  4. [ObjectSourceTypeReader]
+//     The [ObjectSource.Reader] is read directly and [ObjectSource.Paths] is ignored.
 func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]manifest.Object, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw

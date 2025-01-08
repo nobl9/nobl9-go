@@ -11,8 +11,8 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-// ResolveObjectSources calls ResolveObjectSource on all supplied RawObjectSource(s)
-// and aggregates the resolved ObjectSource(s).
+// ResolveObjectSources calls [ResolveObjectSource] on all supplied [RawObjectSource]
+// and aggregates the resolved [ObjectSource].
 // It fails fast on the first encountered error.
 func ResolveObjectSources(rawSources ...RawObjectSource) ([]*ObjectSource, error) {
 	sources := make([]*ObjectSource, 0, len(rawSources))
@@ -26,10 +26,11 @@ func ResolveObjectSources(rawSources ...RawObjectSource) ([]*ObjectSource, error
 	return sources, nil
 }
 
-// ResolveObjectSource attempts to resolve a single RawObjectSource producing a ObjectSource
-// instance read to be passed to ReadObjectsFromSources.
-// It interprets the provided URI and associates it with a specific ObjectSourceType.
-// If you wish to create a ObjectSourceTypeReader ObjectSource you should use a separate method: NewObjectSourceReader.
+// ResolveObjectSource attempts to resolve a single [RawObjectSource] producing an [ObjectSource]
+// instance read to be passed to [ReadObjectsFromSources].
+// It interprets the provided URI and associates it with a specific [ObjectSourceType].
+// If you wish to create an [ObjectSource] of type [ObjectSourceTypeReader]
+// you should use a separate method: [NewObjectSourceReader].
 func ResolveObjectSource(rawSource RawObjectSource) (src *ObjectSource, err error) {
 	src = &ObjectSource{Raw: rawSource}
 	switch {
@@ -45,8 +46,8 @@ func ResolveObjectSource(rawSource RawObjectSource) (src *ObjectSource, err erro
 	return src, err
 }
 
-// NewObjectSourceReader creates a special instance of ObjectSource with ObjectSourceTypeReader.
-// ReadObjectsFromSources will process the ObjectSource by reading form the provided io.Reader.
+// NewObjectSourceReader creates a special instance of [ObjectSource] with [ObjectSourceTypeReader].
+// [ReadObjectsFromSources] will process the ObjectSource by reading form the provided io.Reader.
 func NewObjectSourceReader(r io.Reader, source RawObjectSource) *ObjectSource {
 	return &ObjectSource{
 		Type:   ObjectSourceTypeReader,
@@ -58,25 +59,26 @@ func NewObjectSourceReader(r io.Reader, source RawObjectSource) *ObjectSource {
 
 // ObjectSource represents a single resource definition source.
 type ObjectSource struct {
-	// Type defines how the ObjectSource should be read when passed to ReadObjectsFromSources.
+	// Type defines how the [ObjectSource] should be read when passed to [ReadObjectsFromSources].
 	Type ObjectSourceType
-	// Paths lists all resolved URIs the ObjectSource points at.
+	// Paths lists all resolved URIs the [ObjectSource] points at.
 	Paths []string
-	// Reader may be optionally provided with ObjectSourceTypeReader for ReadObjectsFromSources to read from the io.Reader.
+	// Reader may be optionally provided with [ObjectSourceTypeReader]
+	// for [ReadObjectsFromSources] to read from the [io.Reader].
 	Reader io.Reader
-	// Raw is the original, unresolved RawObjectSource, an example might be a relative path
-	// which was resolved to its absolute form.
+	// Raw is the original, unresolved [RawObjectSource].
+	// Example: a relative path which was resolved to its absolute form.
 	Raw RawObjectSource
 }
 
-// String implements fmt.Stringer interface.
+// String implements [fmt.Stringer] interface.
 func (o ObjectSource) String() string {
 	return fmt.Sprintf("{ObjectSourceType: %s, Raw: %s}", o.Type, o.Raw)
 }
 
 //go:generate ../bin/go-enum --names
 
-// ObjectSourceType represents the origin (where does it come from) of manifest.Object definition.
+// ObjectSourceType represents the source (where does it come from) of the [manifest.Object] definition.
 /* ENUM(
 File = 1
 Directory
@@ -132,12 +134,12 @@ func resolveFSPath(path string) (typ ObjectSourceType, paths []string, err error
 	return typ, paths, nil
 }
 
-// resolveGlobPattern evaluates patterns defined in filepath.Match documentation.
-// It supports double '**' wildcards directory expansion via a 3rd party library:
-// https://github.com/bmatcuk/doublestar. The library is a pure (no dependencies)
-// implementation of glob patterns with double wildcard support.
+// resolveGlobPattern evaluates patterns defined in [filepath.Match] documentation.
+// It supports double '**' wildcards directory expansion via a 3rd party library: [doublestar].
+// The library is a pure (no dependencies) implementation of glob patterns with double wildcard support.
 // Whenever a double wildcard is detected doublestar.Glob is used, otherwise we
-// use filepath.Glob to minimize the impact of potential bugs in doublestar.Glob.
+// use [filepath.Glob] to minimize the impact of potential bugs in [doublestar.Glob].
+//
 // The reasons for Go's lack of '**' support are outlined in this issue:
 // https://github.com/golang/go/issues/11862.
 func resolveGlobPattern(path string) (paths []string, err error) {
@@ -187,7 +189,7 @@ func resolveGlobPattern(path string) (paths []string, err error) {
 }
 
 // hasSupportedFileExtension checks if we're dealing with YAML or JSON file comparing file extension suffix.
-// It's faster to do the simple comparison strings.HasSuffix does then call filepath.Ext.
+// It's faster to do the simple comparison [strings.HasSuffix] does then call [filepath.Ext].
 func hasSupportedFileExtension(fp string) bool {
 	ext := filepath.Ext(fp)
 	for i := range supportedFileExtensions {
@@ -205,7 +207,7 @@ func hasURLSchema(path string) bool {
 	return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
 }
 
-// hasGlobMeta reports whether path contains any of the magic characters recognized by filepath.Match.
+// hasGlobMeta reports whether path contains any of the magic characters recognized by [filepath.Match].
 // Copied from filepath/match.go.
 func hasGlobMeta(path string) bool {
 	magicChars := `*?[`
