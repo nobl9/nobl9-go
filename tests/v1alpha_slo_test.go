@@ -229,6 +229,13 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			},
 			expected: []v1alphaSLO.SLO{inputs[3]},
 		},
+		"filter by service": {
+			request: objectsV1.GetSLOsRequest{
+				Project: project.GetName(),
+				Service: inputs[3].Metadata.Name,
+			},
+			expected: []v1alphaSLO.SLO{inputs[3]},
+		},
 	}
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {

@@ -21,6 +21,7 @@ type GetSLOsRequest struct {
 	Project string
 	Names   []string
 	Labels  v1alpha.Labels
+	Service string
 }
 
 type GetAgentsRequest struct {
