@@ -232,9 +232,9 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		"filter by service": {
 			request: objectsV1.GetSLOsRequest{
 				Project: project.GetName(),
-				Service: inputs[3].Metadata.Name,
+				Service: inputs[1].Spec.Service,
 			},
-			expected: []v1alphaSLO.SLO{inputs[3]},
+			expected: inputs[1:slosPerService],
 		},
 	}
 	for name, test := range filterTests {
@@ -243,7 +243,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
-				require.Equal(t, len(actual), len(test.expected),
+				require.Equal(t, len(test.expected), len(actual),
 					"actual number of SLOs does not match the expected")
 			}
 			assertSubset(t, actual, test.expected, assertV1alphaSLOsAreEqual)
