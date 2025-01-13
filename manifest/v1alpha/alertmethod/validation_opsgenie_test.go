@@ -11,12 +11,21 @@ import (
 
 func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 	for name, spec := range map[string]OpsgenieAlertMethod{
-		"passes with valid http url": {
-			URL:  "http://example.com",
+		"passes with valid opsgenie http url": {
+			URL:  "https://api.opsgenie.com",
 			Auth: "Basic token",
 		},
-		"passes with valid https url": {
-			URL: "https://example.com",
+		"passes with valid opsgenie eu http url": {
+			URL:  "https://api.eu.opsgenie.com",
+			Auth: "Basic token",
+		},
+		"passes with valid opsgenie http url and suffix": {
+			URL:  "https://api.opsgenie.com/test",
+			Auth: "Basic token",
+		},
+		"passes with valid opsgenie eu http url and suffix": {
+			URL:  "https://api.eu.opsgenie.com/test",
+			Auth: "Basic token",
 		},
 		"passes with undefined url": {},
 		"passes with empty url": {
@@ -52,15 +61,31 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 		AlertMethod         OpsgenieAlertMethod
 	}{
 		"fails with invalid url": {
-			ExpectedErrorsCount: 1,
+			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.opsgenie.url",
 					Code: rules.ErrorCodeStringURL,
 				},
+				{
+					Prop: "spec.opsgenie.url",
+					Code: rules.ErrorCodeStringStartsWith,
+				},
 			},
 			AlertMethod: OpsgenieAlertMethod{
 				URL: "example.com",
+			},
+		},
+		"fails with invalid prefix": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.opsgenie.url",
+					Code: rules.ErrorCodeStringStartsWith,
+				},
+			},
+			AlertMethod: OpsgenieAlertMethod{
+				URL: "https://opsgenie.com/test",
 			},
 		},
 		"fails with invalid auth": {
