@@ -229,12 +229,19 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			},
 			expected: []v1alphaSLO.SLO{inputs[3]},
 		},
-		"filter by service": {
+		"filter by one service": {
 			request: objectsV1.GetSLOsRequest{
-				Project: project.GetName(),
-				Service: inputs[1].Spec.Service,
+				Project:  project.GetName(),
+				Services: []string{inputs[1].Spec.Service},
 			},
 			expected: inputs[1:slosPerService],
+		},
+		"filter by two services": {
+			request: objectsV1.GetSLOsRequest{
+				Project:  project.GetName(),
+				Services: []string{inputs[1].Spec.Service, inputs[slosPerService].Spec.Service},
+			},
+			expected: inputs[1 : 2*slosPerService],
 		},
 	}
 	for name, test := range filterTests {

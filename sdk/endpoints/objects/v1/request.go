@@ -18,10 +18,10 @@ type GetServicesRequest struct {
 }
 
 type GetSLOsRequest struct {
-	Project string
-	Names   []string
-	Labels  v1alpha.Labels
-	Service string
+	Project  string
+	Names    []string
+	Labels   v1alpha.Labels
+	Services []string
 }
 
 type GetAgentsRequest struct {

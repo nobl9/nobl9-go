@@ -63,8 +63,8 @@ func (e endpoints) GetV1alphaSLOs(
 		Project(params.Project).
 		Labels(params.Labels).
 		Strings(QueryKeyName, params.Names)
-	if params.Service != "" {
-		f = f.Strings(QueryKeyServiceName, []string{params.Service})
+	if len(params.Services) > 0 {
+		f = f.Strings(QueryKeyServiceName, params.Services)
 	}
 	objects, err := e.Get(ctx, manifest.KindSLO, f.header, f.query)
 	if err != nil {
