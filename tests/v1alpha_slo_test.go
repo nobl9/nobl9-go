@@ -212,7 +212,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			request: objectsV1.GetSLOsRequest{
 				Project: project.GetName(),
 			},
-			expected: inputs[1:],
+			expected: inputs[1 : len(inputs)-len(serviceNameFilterSLOs)],
 		},
 		"filter by name": {
 			request: objectsV1.GetSLOsRequest{
@@ -238,7 +238,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		},
 		"filter by one service": {
 			request: objectsV1.GetSLOsRequest{
-				Project:  project.GetName(),
+				Project:  serviceNameFilterSLOs[0].GetProject(),
 				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
 			},
 			expected: serviceNameFilterSLOs[0:3],
@@ -248,18 +248,21 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 				Project:  sdk.ProjectsWildcard,
 				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
 			},
-			expected: append(serviceNameFilterSLOs[0:3], serviceNameFilterSLOs[4]),
+			expected: append(slices.Clone(serviceNameFilterSLOs[0:3]), serviceNameFilterSLOs[4]),
 		},
 		"filter by two services": {
 			request: objectsV1.GetSLOsRequest{
-				Project:  project.GetName(),
-				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
+				Project: serviceNameFilterSLOs[0].GetProject(),
+				Services: []string{
+					serviceNameFilterSLOs[0].Spec.Service,
+					serviceNameFilterSLOs[3].Spec.Service,
+				},
 			},
 			expected: serviceNameFilterSLOs[0:4],
 		},
 		"filter by project, label and service": {
 			request: objectsV1.GetSLOsRequest{
-				Project:  project.GetName(),
+				Project:  serviceNameFilterSLOs[1].GetProject(),
 				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
 				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo", "bar"}}),
 			},
@@ -267,7 +270,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		},
 		"filter by project, label, service and name": {
 			request: objectsV1.GetSLOsRequest{
-				Project:  project.GetName(),
+				Project:  serviceNameFilterSLOs[2].GetProject(),
 				Names:    []string{serviceNameFilterSLOs[2].GetName()},
 				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo"}}),
 				Services: []string{serviceNameFilterSLOs[2].Spec.Service},
@@ -278,6 +281,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
@@ -424,9 +428,9 @@ func assertV1alphaSLOsAreEqual(t *testing.T, expected, actual v1alphaSLO.SLO) {
 
 func clone[T any](t *testing.T, object T) T {
 	t.Helper()
-	cloneBytes, err := json.Marshal(object)
+	data, err := json.Marshal(object)
 	require.NoError(t, err)
-	var clone T
-	require.NoError(t, json.Unmarshal(cloneBytes, &clone))
-	return clone
+	var cloned T
+	require.NoError(t, json.Unmarshal(data, &cloned))
+	return cloned
 }
