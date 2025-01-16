@@ -157,11 +157,13 @@ var pagerDutyValidation = govy.New[PagerDutyAlertMethod](
 		Rules(rules.StringMaxLength(32)),
 )
 
+const validSlackURLPrefix = "https://hooks.slack.com/services/"
+
 var slackValidation = govy.New[SlackAlertMethod](
 	govy.For(func(s SlackAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
-		Include(optionalUrlValidation()),
+		Include(optionalUrlWithPrefixValidation(validSlackURLPrefix)),
 )
 
 var discordValidation = govy.New[DiscordAlertMethod](
@@ -179,10 +181,15 @@ var discordValidation = govy.New[DiscordAlertMethod](
 		Include(optionalUrlValidation()),
 )
 
+const (
+	validOpsgenieURL   = "https://api.opsgenie.com"
+	validOpsgenieEuURL = "https://api.eu.opsgenie.com"
+)
+
 var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 	govy.For(func(o OpsgenieAlertMethod) string { return o.URL }).
 		WithName("url").
-		Include(optionalUrlValidation()),
+		Include(optionalUrlWithPrefixValidation(validOpsgenieURL, validOpsgenieEuURL)),
 	govy.For(func(o OpsgenieAlertMethod) string { return o.Auth }).
 		WithName("auth").
 		HideValue().
@@ -269,6 +276,17 @@ var emailValidation = govy.New[EmailAlertMethod](
 		WithName("bcc").
 		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
 )
+
+func optionalUrlWithPrefixValidation(prefixes ...string) govy.Validator[string] {
+	return govy.New[string](
+		govy.For(govy.GetSelf[string]()).
+			When(
+				func(v string) bool { return !isHiddenValue(v) },
+				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			).
+			Rules(rules.StringURL(), rules.StringStartsWith(prefixes...)),
+	)
+}
 
 func optionalUrlValidation() govy.Validator[string] {
 	return govy.New[string](
