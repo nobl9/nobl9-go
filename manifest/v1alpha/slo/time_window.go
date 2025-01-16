@@ -127,7 +127,7 @@ func rollingWindowSizeValidation(timeWindow TimeWindow) error {
 func calendarWindowSizeValidation(timeWindow TimeWindow) error {
 	tw, err := twindow.NewCalendarTimeWindow(
 		twindow.MustParseTimeUnit(timeWindow.Unit),
-		uint32(timeWindow.Count),
+		uint32(timeWindow.Count), // #nosec G115
 		time.UTC,
 		time.Now().UTC(),
 	)
