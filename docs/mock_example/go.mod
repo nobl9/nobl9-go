@@ -3,8 +3,8 @@ module mock_example
 go 1.22
 
 require (
-	github.com/nobl9/nobl9-go v0.88.0
-	github.com/stretchr/testify v1.9.0
+	github.com/nobl9/nobl9-go v0.92.4
+	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.0
 )
 
@@ -13,9 +13,9 @@ require (
 	github.com/MicahParks/jwkset v0.6.0 // indirect
 	github.com/MicahParks/keyfunc/v3 v3.3.5 // indirect
 	github.com/aws/aws-sdk-go v1.55.5 // indirect
-	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.7.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fatih/color v1.17.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
@@ -23,7 +23,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nobl9/go-yaml v1.0.1 // indirect
-	github.com/nobl9/govy v0.3.0 // indirect
+	github.com/nobl9/govy v0.9.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
