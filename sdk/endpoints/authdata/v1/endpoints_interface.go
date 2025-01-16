@@ -9,6 +9,6 @@ import (
 type Endpoints interface {
 	GetDataExportIAMRoleIDs(ctx context.Context) (*IAMRoleIDs, error)
 	GetDirectIAMRoleIDs(ctx context.Context, project, directName string) (*IAMRoleIDs, error)
-	// GetAgentCredentials retrieves manifest.KindAgent credentials.
+	// GetAgentCredentials retrieves [nobl9-go/manifest.KindAgent] credentials.
 	GetAgentCredentials(ctx context.Context, project, agentsName string) (creds M2MAppCredentials, err error)
 }
