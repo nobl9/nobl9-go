@@ -45,6 +45,9 @@ func runTestMain(m *testing.M) int {
 		printErrorf("failed to get test organization: %v", err)
 		return 1
 	}
+	fmt.Printf("Running SDK end-to-end tests\nOrganization: %s\nAuth Server: %s\nClient ID: %s\n\n",
+		org, client.Config.OktaOrgURL.JoinPath(client.Config.OktaAuthServer), client.Config.ClientID)
+
 	if err = client.Objects().V1().Apply(context.Background(), []manifest.Object{v1alphaProject.New(
 		v1alphaProject.Metadata{
 			Name:        defaultProject,
@@ -58,8 +61,6 @@ func runTestMain(m *testing.M) int {
 		printErrorf("failed to create '%s' Project: %v", defaultProject, err)
 		return 1
 	}
-	fmt.Printf("Running SDK end-to-end tests\nOrganization: %s\nAuth Server: %s\nClient ID: %s\n\n",
-		org, client.Config.OktaOrgURL.JoinPath(client.Config.OktaAuthServer), client.Config.ClientID)
 	defer cleanupLabels()
 
 	return m.Run()

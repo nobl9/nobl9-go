@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
@@ -63,17 +64,14 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	// allowing them to depend on the SLOs listed before them.
 	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
 		var intI, intJ int
-
 		iSlo := i.GetObject().(v1alphaSLO.SLO)
 		if iSlo.Spec.HasCompositeObjectives() {
 			intI = 1
 		}
-
 		jSlo := j.GetObject().(v1alphaSLO.SLO)
 		if jSlo.Spec.HasCompositeObjectives() {
 			intJ = 1
 		}
-
 		return intI - intJ
 	})
 
@@ -177,6 +175,15 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		slos = append(slos, slo)
 	}
 
+	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(
+		t,
+		agentsAndDirects[0].(v1alphaAgent.Agent),
+	)
+	for _, slo := range serviceNameFilterSLOs {
+		slos = append(slos, slo)
+	}
+	dependencies = append(dependencies, serviceNameFilterDependencies...)
+
 	t.Cleanup(func() {
 		slices.Reverse(slos)
 		v1DeleteBatch(t, slos, 50)
@@ -205,7 +212,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			request: objectsV1.GetSLOsRequest{
 				Project: project.GetName(),
 			},
-			expected: inputs[1:],
+			expected: inputs[1 : len(inputs)-len(serviceNameFilterSLOs)],
 		},
 		"filter by name": {
 			request: objectsV1.GetSLOsRequest{
@@ -229,19 +236,143 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			},
 			expected: []v1alphaSLO.SLO{inputs[3]},
 		},
+		"filter by one service": {
+			request: objectsV1.GetSLOsRequest{
+				Project:  serviceNameFilterSLOs[0].GetProject(),
+				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
+			},
+			expected: serviceNameFilterSLOs[0:3],
+		},
+		"filter by one service with project wildcard": {
+			request: objectsV1.GetSLOsRequest{
+				Project:  sdk.ProjectsWildcard,
+				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
+			},
+			expected: append(slices.Clone(serviceNameFilterSLOs[0:3]), serviceNameFilterSLOs[4]),
+		},
+		"filter by two services": {
+			request: objectsV1.GetSLOsRequest{
+				Project: serviceNameFilterSLOs[0].GetProject(),
+				Services: []string{
+					serviceNameFilterSLOs[0].Spec.Service,
+					serviceNameFilterSLOs[3].Spec.Service,
+				},
+			},
+			expected: serviceNameFilterSLOs[0:4],
+		},
+		"filter by project, label and service": {
+			request: objectsV1.GetSLOsRequest{
+				Project:  serviceNameFilterSLOs[1].GetProject(),
+				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
+				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo", "bar"}}),
+			},
+			expected: serviceNameFilterSLOs[1:3],
+		},
+		"filter by project, label, service and name": {
+			request: objectsV1.GetSLOsRequest{
+				Project:  serviceNameFilterSLOs[2].GetProject(),
+				Names:    []string{serviceNameFilterSLOs[2].GetName()},
+				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo"}}),
+				Services: []string{serviceNameFilterSLOs[2].Spec.Service},
+			},
+			expected: serviceNameFilterSLOs[2:3],
+		},
 	}
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
-				require.Equal(t, len(actual), len(test.expected),
+				require.Equal(t, len(test.expected), len(actual),
 					"actual number of SLOs does not match the expected")
 			}
 			assertSubset(t, actual, test.expected, assertV1alphaSLOsAreEqual)
 		})
 	}
+}
+
+func prepareObjectsForServiceNameFilteringTests(
+	t *testing.T,
+	agent v1alphaAgent.Agent,
+) (
+	slos []v1alphaSLO.SLO,
+	dependencies []manifest.Object,
+) {
+	t.Helper()
+	agentType, err := agent.Spec.GetType()
+	require.NoError(t, err)
+
+	// Projects.
+	project1 := generateV1alphaProject(t)
+	project2 := generateV1alphaProject(t)
+	// Services.
+	service1Proj1 := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    generateName(),
+		Project: project1.GetName(),
+	})
+	service2Proj1 := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    generateName(),
+		Project: project1.GetName(),
+	})
+	service1Proj2 := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    service1Proj1.GetName(),
+		Project: project2.GetName(),
+	})
+
+	dependencies = append(
+		dependencies,
+		project1,
+		project2,
+		service1Proj1,
+		service2Proj1,
+		service1Proj2,
+	)
+
+	// SLOs.
+	var sloTemplate v1alphaSLO.SLO
+	for _, example := range examplesRegistry[manifest.KindSLO] {
+		slo := example.GetObject().(v1alphaSLO.SLO)
+		metricSpecs := slo.Spec.AllMetricSpecs()
+		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
+		if !slo.Spec.HasCompositeObjectives() && metricSpecs[0].DataSourceType() == agentType {
+			sloTemplate = slo
+			break
+		}
+	}
+	require.NotNil(t, sloTemplate, "expected at least 1 SLO with metric source of type %s", agentType)
+
+	for i, params := range []struct {
+		project string
+		service string
+		labels  v1alpha.Labels
+	}{
+		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{}},
+		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{"service-name-filter": []string{"bar"}}},
+		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{"service-name-filter": []string{"foo"}}},
+		{project1.GetName(), service2Proj1.GetName(), v1alpha.Labels{}},
+		{project2.GetName(), service1Proj2.GetName(), v1alpha.Labels{}},
+	} {
+		slo := clone(t, sloTemplate)
+		slo.Metadata = v1alphaSLO.Metadata{
+			Name:        generateName(),
+			DisplayName: fmt.Sprintf("SLO filtered by service %d", i),
+			Project:     params.project,
+			Labels:      annotateLabels(t, params.labels),
+			Annotations: commonAnnotations,
+		}
+		slo.Spec.Service = params.service
+		slo.Spec.AlertPolicies = []string{}
+		slo.Spec.AnomalyConfig = nil
+		slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
+			Name:    agent.GetName(),
+			Project: agent.GetProject(),
+			Kind:    agent.GetKind(),
+		}
+		slos = append(slos, slo)
+	}
+	return slos, dependencies
 }
 
 func v1alphaSLODependencyAgents(t *testing.T) []manifest.Object {
@@ -293,4 +424,13 @@ func assertV1alphaSLOsAreEqual(t *testing.T, expected, actual v1alphaSLO.SLO) {
 	actual.Status = nil
 	actual.Spec.TimeWindows[0].Period = nil
 	assert.Equal(t, expected, actual)
+}
+
+func clone[T any](t *testing.T, object T) T {
+	t.Helper()
+	data, err := json.Marshal(object)
+	require.NoError(t, err)
+	var cloned T
+	require.NoError(t, json.Unmarshal(data, &cloned))
+	return cloned
 }
