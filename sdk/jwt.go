@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"net/url"
 	"sync"
 	"time"
 
@@ -182,15 +181,10 @@ func (j *jwtParser) initKeyfunc() error {
 // it is returned immediately.
 // We also modify the timeout value.
 func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
-	parsed, err := url.ParseRequestURI(jwkFetchURL)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse given URL %q", jwkFetchURL)
-	}
-	jwkFetchURI := parsed.String()
 	refreshErrorHandler := func(ctx context.Context, err error) {
 		slog.Default().ErrorContext(ctx, "Failed to refresh HTTP JWK Set from remote HTTP resource.",
 			"error", err,
-			"url", jwkFetchURI,
+			"url", jwkFetchURL,
 		)
 	}
 	options := jwkset.HTTPClientStorageOptions{
@@ -199,12 +193,12 @@ func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
 		RefreshInterval:           time.Hour,
 		HTTPTimeout:               jwksRequestTimeout,
 	}
-	storage, err := jwkset.NewStorageFromHTTP(parsed, options)
+	storage, err := jwkset.NewStorageFromHTTP(jwkFetchURL, options)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURI)
+		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURL)
 	}
 	return jwkset.NewHTTPClient(jwkset.HTTPClientOptions{
-		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURI: storage},
+		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURL: storage},
 		RefreshUnknownKID: rate.NewLimiter(rate.Every(5*time.Minute), 1),
 	})
 }
