@@ -88,7 +88,7 @@ func TestValidate_Spec(t *testing.T) {
 		alertMethod := validAlertMethod()
 		alertMethod.Spec = Spec{
 			Slack: &SlackAlertMethod{
-				URL: "https://example.com",
+				URL: "https://hooks.slack.com/services/321/123/secret",
 			},
 			Teams: &TeamsAlertMethod{
 				URL: "https://example.com",
@@ -113,7 +113,7 @@ func validAlertMethod() AlertMethod {
 		},
 		Spec{
 			Slack: &SlackAlertMethod{
-				URL: "https://example.com",
+				URL: "https://hooks.slack.com/services/321/123/secret",
 			},
 		},
 	)
