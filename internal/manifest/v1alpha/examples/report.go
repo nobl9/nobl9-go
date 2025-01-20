@@ -9,6 +9,7 @@ import (
 func Report() []Example {
 	examples := []standardExample{
 		{
+			SubVariant: "SHR",
 			Object: report.New(
 				report.Metadata{
 					Name:        "shr-report",
@@ -50,6 +51,7 @@ func Report() []Example {
 			),
 		},
 		{
+			SubVariant: "SLO history",
 			Object: report.New(
 				report.Metadata{
 					Name:        "slo-history-report",
@@ -98,6 +100,7 @@ func Report() []Example {
 			),
 		},
 		{
+			SubVariant: "EBS",
 			Object: report.New(
 				report.Metadata{
 					Name:        "ebs-report",
