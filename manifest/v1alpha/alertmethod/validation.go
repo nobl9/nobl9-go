@@ -163,7 +163,7 @@ var slackValidation = govy.New[SlackAlertMethod](
 	govy.For(func(s SlackAlertMethod) string { return s.URL }).
 		WithName("url").
 		HideValue().
-		Include(optionalUrlWithPrefixValidation(validSlackURLPrefix)),
+		Include(optionalUrlValidation()),
 )
 
 var discordValidation = govy.New[DiscordAlertMethod](
