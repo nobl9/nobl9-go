@@ -110,9 +110,9 @@ check/format:
 	$(call _print_check_step,Checking if files are formatted)
 	./scripts/check-formatting.sh
 
-.PHONY: generate generate/code generate/examples
+.PHONY: generate generate/code generate/examples generate/docs
 ## Auto generate files.
-generate: generate/code generate/examples
+generate: generate/code generate/examples generate/docs
 
 ## Generate Golang code.
 generate/code:
@@ -126,6 +126,11 @@ generate/code:
 generate/examples:
 	echo "Generating examples..."
 	go run internal/cmd/examplegen/main.go
+
+## Generate documentation.
+generate/docs:
+	echo "Generating documentation..."
+	go run internal/cmd/docgen/*
 
 .PHONY: format format/go format/cspell
 ## Format files.
