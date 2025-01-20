@@ -9,6 +9,7 @@ func Project() []Example {
 		Object: v1alphaProject.New(
 			v1alphaProject.Metadata{
 				Name:        "default",
+				DisplayName: "Default Project",
 				Labels:      exampleLabels(),
 				Annotations: exampleMetadataAnnotations(),
 			},

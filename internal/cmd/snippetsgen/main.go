@@ -51,7 +51,7 @@ func main() {
 			) {
 				continue
 			}
-			genericObject, err := addPlaceholders(object)
+			genericObject, err := formatObject(object)
 			if err != nil {
 				panic(err)
 			}
@@ -92,7 +92,7 @@ func main() {
 	}
 }
 
-func addPlaceholders(object manifest.Object) (manifest.Object, error) {
+func formatObject(object manifest.Object) (manifest.Object, error) {
 	data, err := json.Marshal(object)
 	if err != nil {
 		return nil, err
@@ -101,14 +101,31 @@ func addPlaceholders(object manifest.Object) (manifest.Object, error) {
 	if err = json.Unmarshal(data, &generic); err != nil {
 		return nil, err
 	}
+
+	placeholderIndex := 1
+	getPlaceholder := func() string {
+		return fmt.Sprintf("$%d", placeholderIndex)
+	}
+
 	metadata := generic["metadata"].(map[string]any)
-	metadata["name"] = "$1"
+	metadata["name"] = getPlaceholder()
 	if metadata["displayName"] != nil {
-		metadata["displayName"] = "$1"
+		metadata["displayName"] = getPlaceholder()
 	}
+	placeholderIndex++
 	if metadata["project"] != nil {
-		metadata["project"] = "$2"
+		metadata["project"] = getPlaceholder()
+		placeholderIndex++
 	}
+	// Simplify the snippets.
+	delete(metadata, "labels")
+	delete(metadata, "annotations")
 	generic["metadata"] = metadata
+
+	spec := generic["spec"].(map[string]any)
+	if spec["description"] != nil {
+		spec["description"] = getPlaceholder()
+		placeholderIndex++
+	}
 	return generic, nil
 }
