@@ -59,7 +59,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -203,7 +203,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -347,7 +347,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -491,7 +491,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -630,7 +630,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -764,7 +764,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
