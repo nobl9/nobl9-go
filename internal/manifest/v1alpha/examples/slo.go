@@ -52,6 +52,7 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 			metricSubVariantThousandEyesNetLoss,
 			metricSubVariantThousandEyesDOMLoad,
 			metricSubVariantThousandEyesTransactionTime,
+			metricSubVariantThousandEyesAPITransactionTime,
 			metricSubVariantThousandEyesServerAvailability,
 			metricSubVariantThousandEyesServerThroughput,
 		},

@@ -220,6 +220,7 @@ const (
 	metricSubVariantThousandEyesNetLoss            metricVariant = "net loss"
 	metricSubVariantThousandEyesDOMLoad            metricVariant = "DOM load"
 	metricSubVariantThousandEyesTransactionTime    metricVariant = "transaction time"
+	metricSubVariantThousandEyesAPITransactionTime metricVariant = "API transaction time"
 	metricSubVariantThousandEyesServerAvailability metricVariant = "server availability"
 	metricSubVariantThousandEyesServerThroughput   metricVariant = "server throughput"
 	// CloudWatch.
@@ -439,6 +440,11 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
 				TestID:   ptr[int64](2280492),
 				TestType: ptr(v1alphaSLO.ThousandEyesWebTransactionTime),
+			}))
+		case metricVariantThreshold + metricSubVariantThousandEyesAPITransactionTime:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
+				TestID:   ptr[int64](2280492),
+				TestType: ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesServerAvailability:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
