@@ -12,11 +12,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
-	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
-
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	internal "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/slo"
 
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -1074,7 +1074,7 @@ func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 }
 
 func TestValidate_Spec(t *testing.T) {
-	t.Run("exactly one metric type - both provided", func(t *testing.T) {
+	t.Run("exactly one metric type - both provided within the same objective", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
 			MetricQuery: validMetricSpec(v1alpha.Prometheus),
@@ -1087,18 +1087,49 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec",
-				Code: rules.ErrorCodeMutuallyExclusive,
+				Prop:    "spec",
+				Message: "[countMetrics, rawMetrics] properties are mutually exclusive, provide only one of them",
+				Code:    rules.ErrorCodeMutuallyExclusive,
 			})
 	})
-	t.Run("exactly one metric type - both missing", func(t *testing.T) {
+	t.Run("exactly one metric type - both missing within the same objective", func(t *testing.T) {
 		slo := validSLO()
 		slo.Spec.Objectives[0].RawMetric = nil
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec",
-			Code: rules.ErrorCodeMutuallyExclusive,
+			Prop:    "spec",
+			Message: "one of [composite, countMetrics, rawMetrics] properties must be set, none was provided",
+			Code:    rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("exactly one metric type - both provided in different objectives", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{
+			MetricQuery: validMetricSpec(v1alpha.Prometheus),
+		}
+		slo.Spec.Objectives = append(slo.Spec.Objectives, validCountMetricsObjective())
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop:    "spec",
+				Message: "[countMetrics, rawMetrics] properties are mutually exclusive, provide only one of them",
+				Code:    rules.ErrorCodeMutuallyExclusive,
+			})
+	})
+	t.Run("exactly one metric type - both missing from different objectives", func(t *testing.T) {
+		slo := validSLO()
+		slo.Spec.Objectives[0].RawMetric = nil
+		slo.Spec.Objectives[0].CountMetrics = nil
+		slo.Spec.Objectives[0].Value = ptr(1.0)
+		slo.Spec.Objectives = append(slo.Spec.Objectives, validCountMetricsObjective())
+		slo.Spec.Objectives[1].Value = ptr(2.0)
+		slo.Spec.Objectives[1].CountMetrics = nil
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:    "spec",
+			Message: "one of [composite, countMetrics, rawMetrics] properties must be set, none was provided",
+			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("required time slice target for budgeting method", func(t *testing.T) {
@@ -1137,8 +1168,8 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Prometheus = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
-			Message: "must have exactly one metric spec type, none were provided",
+			Prop:    "spec.objectives[0].rawMetric.query",
+			Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
 		})
 	})
 	t.Run("exactly one metric spec type", func(t *testing.T) {
@@ -1187,13 +1218,19 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 func TestValidate_Spec_CountMetrics(t *testing.T) {
 	t.Run("no metric spec provided", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Prometheus)
-		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Prometheus = nil
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Prometheus = nil
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Prometheus = nil
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
-			Message: "must have exactly one metric spec type, none were provided",
-		})
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.good",
+				Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
+			},
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.total",
+				Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
+			},
+		)
 	})
 	t.Run("bad over total enabled", func(t *testing.T) {
 		for _, typ := range internal.BadOverTotalEnabledSources {
@@ -1486,22 +1523,7 @@ func validSLO() SLO {
 					Kind:    manifest.KindAgent,
 				},
 			},
-			Objectives: []Objective{
-				{
-					ObjectiveBase: ObjectiveBase{
-						DisplayName: "Good",
-						Value:       ptr(120.),
-						Name:        "good",
-					},
-					BudgetTarget: ptr(0.9),
-					CountMetrics: &CountMetricsSpec{
-						Incremental: ptr(false),
-						TotalMetric: validMetricSpec(v1alpha.Prometheus),
-						GoodMetric:  validMetricSpec(v1alpha.Prometheus),
-					},
-					Operator: ptr(v1alpha.LessThan.String()),
-				},
-			},
+			Objectives: []Objective{validCountMetricsObjective()},
 			TimeWindows: []TimeWindow{
 				{
 					Unit:      "Day",
@@ -1511,6 +1533,23 @@ func validSLO() SLO {
 			},
 		},
 	)
+}
+
+func validCountMetricsObjective() Objective {
+	return Objective{
+		ObjectiveBase: ObjectiveBase{
+			DisplayName: "Good",
+			Value:       ptr(120.),
+			Name:        "good",
+		},
+		BudgetTarget: ptr(0.9),
+		CountMetrics: &CountMetricsSpec{
+			Incremental: ptr(false),
+			TotalMetric: validMetricSpec(v1alpha.Prometheus),
+			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+		},
+		Operator: ptr(v1alpha.LessThan.String()),
+	}
 }
 
 func validCompositeObjective() Objective {

@@ -11,11 +11,11 @@ import (
 
 func TestValidate_Spec_SlackAlertMethod(t *testing.T) {
 	for name, spec := range map[string]SlackAlertMethod{
-		"passes with valid http url": {
-			URL: "http://example.com",
+		"passes with valid slack http url": {
+			URL: "https://hooks.slack.com/services/",
 		},
-		"passes with valid https url": {
-			URL: "https://example.com",
+		"passes with slack https url and suffix": {
+			URL: "https://hooks.slack.com/services/test",
 		},
 		"passes with undefined url": {},
 		"passes with empty url": {
@@ -41,15 +41,31 @@ func TestValidate_Spec_SlackAlertMethod(t *testing.T) {
 		AlertMethod         SlackAlertMethod
 	}{
 		"fails with invalid url": {
-			ExpectedErrorsCount: 1,
+			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.slack.url",
 					Code: rules.ErrorCodeStringURL,
 				},
+				{
+					Prop: "spec.slack.url",
+					Code: rules.ErrorCodeStringStartsWith,
+				},
 			},
 			AlertMethod: SlackAlertMethod{
 				URL: "example.com",
+			},
+		},
+		"fails with invalid prefix": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.slack.url",
+					Code: rules.ErrorCodeStringStartsWith,
+				},
+			},
+			AlertMethod: SlackAlertMethod{
+				URL: "https://slack.com/services/test",
 			},
 		},
 	} {

@@ -219,6 +219,8 @@ const (
 	metricSubVariantThousandEyesNetLatency         metricVariant = "net latency"
 	metricSubVariantThousandEyesNetLoss            metricVariant = "net loss"
 	metricSubVariantThousandEyesDOMLoad            metricVariant = "DOM load"
+	metricSubVariantThousandEyesTransactionTime    metricVariant = "transaction time"
+	metricSubVariantThousandEyesAPITransactionTime metricVariant = "API transaction time"
 	metricSubVariantThousandEyesServerAvailability metricVariant = "server availability"
 	metricSubVariantThousandEyesServerThroughput   metricVariant = "server throughput"
 	// CloudWatch.
@@ -433,6 +435,16 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
 				TestID:   ptr[int64](2280492),
 				TestType: ptr(v1alphaSLO.ThousandEyesWebDOMLoad),
+			}))
+		case metricVariantThreshold + metricSubVariantThousandEyesTransactionTime:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
+				TestID:   ptr[int64](2280492),
+				TestType: ptr(v1alphaSLO.ThousandEyesWebTransactionTime),
+			}))
+		case metricVariantThreshold + metricSubVariantThousandEyesAPITransactionTime:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
+				TestID:   ptr[int64](2280492),
+				TestType: ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesServerAvailability:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
@@ -1005,31 +1017,32 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant {
 		case metricVariantThreshold:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
-				DeviceDataSourceInstanceID: 933147615,
-				GraphID:                    9978,
-				Line:                       "TIMEMAX",
+				QueryType:    v1alphaSLO.LMQueryTypeWebsiteMetrics,
+				WebsiteID:    "1",
+				CheckpointID: "1044712023",
+				GraphName:    "responseTime",
+				Line:         "MIN RTT",
 			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
 				DeviceDataSourceInstanceID: 933147615,
 				GraphID:                    11438,
 				Line:                       "CONNECTIONSUCCESSES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
 				DeviceDataSourceInstanceID: 933147615,
 				GraphID:                    11436,
 				Line:                       "CONNECTIONSESTABLISHED",
 			}))
 		case metricVariantBadRatio:
 			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
 				DeviceDataSourceInstanceID: 933147615,
 				GraphID:                    11437,
 				Line:                       "CONNECTIONFAILURES",
 			}), newMetricSpec(v1alphaSLO.LogicMonitorMetric{
-				QueryType:                  "device_metrics",
+				QueryType:                  v1alphaSLO.LMQueryTypeDeviceMetrics,
 				DeviceDataSourceInstanceID: 933147615,
 				GraphID:                    11436,
 				Line:                       "CONNECTIONSESTABLISHED",

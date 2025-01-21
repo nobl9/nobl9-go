@@ -4,8 +4,9 @@ import "github.com/pkg/errors"
 
 // RawMessage is a raw encoded JSON or YAML value.
 // It implements:
-// - [json.Marshaler] and [json.Unmarshaler]
-// - [yaml.BytesMarshaler] and [yaml.BytesUnmarshaler]
+//   - [json.Marshaler] and [json.Unmarshaler]
+//   - [yaml.BytesMarshaler] and [yaml.BytesUnmarshaler]
+//
 // It can be used to delay JSON/YAML decoding or precompute a JSON/YAML encoding.
 type RawMessage []byte
 

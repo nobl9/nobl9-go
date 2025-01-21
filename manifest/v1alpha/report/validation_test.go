@@ -385,15 +385,15 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 3,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.rolling.unit",
+					Prop: "spec.sloHistory.timeFrame.rolling.unit",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: "spec.sloHistory.rolling.count",
+					Prop: "spec.sloHistory.timeFrame.rolling.count",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.rolling",
+					Prop:    "spec.sloHistory.timeFrame.rolling",
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -406,11 +406,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.rolling.count",
+					Prop: "spec.sloHistory.timeFrame.rolling.count",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.rolling",
+					Prop:    "spec.sloHistory.timeFrame.rolling",
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -427,11 +427,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.rolling.unit",
+					Prop: "spec.sloHistory.timeFrame.rolling.unit",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.rolling",
+					Prop:    "spec.sloHistory.timeFrame.rolling",
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -448,11 +448,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.rolling.unit",
+					Prop: "spec.sloHistory.timeFrame.rolling.unit",
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    "spec.sloHistory.rolling",
+					Prop:    "spec.sloHistory.timeFrame.rolling",
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -470,7 +470,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.rolling",
+					Prop:    "spec.sloHistory.timeFrame.rolling",
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -488,7 +488,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeZone",
+					Prop: "spec.sloHistory.timeFrame.timeZone",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -505,7 +505,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeZone",
+					Prop:    "spec.sloHistory.timeFrame.timeZone",
 					Message: "not a valid time zone: unknown time zone x",
 				},
 			},
@@ -523,7 +523,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.calendar",
+					Prop:    "spec.sloHistory.timeFrame.calendar",
 					Message: validCalendarPairs,
 				},
 			},
@@ -536,7 +536,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.calendar",
+					Prop:    "spec.sloHistory.timeFrame.calendar",
 					Message: validCalendarPairs,
 				},
 			},
@@ -553,11 +553,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.calendar.unit",
+					Prop: "spec.sloHistory.timeFrame.calendar.unit",
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    "spec.sloHistory.calendar",
+					Prop:    "spec.sloHistory.timeFrame.calendar",
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -575,7 +575,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.calendar",
+					Prop:    "spec.sloHistory.timeFrame.calendar",
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -593,7 +593,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.calendar",
+					Prop:    "spec.sloHistory.timeFrame.calendar",
 					Message: "dates must be in the past",
 				},
 			},

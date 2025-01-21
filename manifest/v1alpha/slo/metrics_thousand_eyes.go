@@ -16,6 +16,8 @@ const (
 	ThousandEyesNetLoss                 = "net-loss"
 	ThousandEyesWebPageLoad             = "web-page-load"
 	ThousandEyesWebDOMLoad              = "web-dom-load"
+	ThousandEyesWebTransactionTime      = "web-transaction-time"
+	ThousandEyesAPITransactionTime      = "api-transaction-time"
 	ThousandEyesHTTPResponseTime        = "http-response-time"
 	ThousandEyesServerAvailability      = "http-server-availability"
 	ThousandEyesServerThroughput        = "http-server-throughput"
@@ -41,6 +43,8 @@ var supportedThousandEyesTestTypes = []string{
 	ThousandEyesNetLoss,
 	ThousandEyesWebPageLoad,
 	ThousandEyesWebDOMLoad,
+	ThousandEyesWebTransactionTime,
+	ThousandEyesAPITransactionTime,
 	ThousandEyesHTTPResponseTime,
 	ThousandEyesServerAvailability,
 	ThousandEyesServerThroughput,

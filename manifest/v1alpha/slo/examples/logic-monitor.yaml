@@ -43,15 +43,15 @@
         bad:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -59,7 +59,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -116,15 +116,15 @@
         bad:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -187,15 +187,15 @@
         bad:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -203,7 +203,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -261,15 +261,15 @@
         bad:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONFAILURES
             deviceDataSourceInstanceId: 933147615
             graphId: 11437
-            line: CONNECTIONFAILURES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -331,15 +331,15 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -347,7 +347,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -404,15 +404,15 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -475,15 +475,15 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -491,7 +491,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -549,15 +549,15 @@
         good:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSUCCESSES
             deviceDataSourceInstanceId: 933147615
             graphId: 11438
-            line: CONNECTIONSUCCESSES
         total:
           logicMonitor:
             queryType: device_metrics
+            line: CONNECTIONSESTABLISHED
             deviceDataSourceInstanceId: 933147615
             graphId: 11436
-            line: CONNECTIONSESTABLISHED
       primary: true
     service: api-server
     timeWindows:
@@ -617,10 +617,11 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            line: TIMEMAX
+            queryType: website_metrics
+            line: MIN RTT
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -629,7 +630,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -684,10 +685,11 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            line: TIMEMAX
+            queryType: website_metrics
+            line: MIN RTT
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -749,10 +751,11 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            line: TIMEMAX
+            queryType: website_metrics
+            line: MIN RTT
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server
@@ -761,7 +764,7 @@
       count: 1
       isRolling: false
       calendar:
-        startTime: 2022-12-01 00:00:00
+        startTime: "2022-12-01 00:00:00"
         timeZone: UTC
     alertPolicies:
     - fast-burn-5x-for-last-10m
@@ -817,10 +820,11 @@
       rawMetric:
         query:
           logicMonitor:
-            queryType: device_metrics
-            deviceDataSourceInstanceId: 933147615
-            graphId: 9978
-            line: TIMEMAX
+            queryType: website_metrics
+            line: MIN RTT
+            websiteId: "1"
+            checkpointId: "1044712023"
+            graphName: responseTime
       op: lte
       primary: true
     service: api-server

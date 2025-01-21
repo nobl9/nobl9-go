@@ -32,13 +32,13 @@ func AssertNoError(t *testing.T, object interface{}, objErr *v1alpha.ObjectError
 }
 
 // AssertContainsErrors asserts that the given object has:
-// - the expected number of errors
-// - at least one error which matches ExpectedError
+//   - the expected number of errors
+//   - at least one error which matches ExpectedError
 //
 // ExpectedError and actual error are considered equal if they point at the same property and either:
-// - rules.ErrorCode are equal
-// - error messages re equal
-// - ExpectedError.ContainsMessage is contained in actual error message
+//   - rules.ErrorCode are equal
+//   - error messages re equal
+//   - ExpectedError.ContainsMessage is contained in actual error message
 //
 // nolint: gocognit
 func AssertContainsErrors(

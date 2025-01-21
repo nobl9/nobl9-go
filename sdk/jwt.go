@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"net/url"
 	"sync"
 	"time"
 
@@ -43,7 +42,8 @@ type jwtClaimsProfile interface {
 
 // stringOrObject has to be used to wrap our profiles as currently
 // they can either contain the profile object or an empty string.
-// Once PC-12146 is done, it can be removed.
+//
+// TODO: Once PC-12146 is done, it can be removed.
 type stringOrObject[T jwtClaimsProfile] struct {
 	Value *T
 }
@@ -176,20 +176,15 @@ func (j *jwtParser) initKeyfunc() error {
 }
 
 // newJWKStorage is almost a direct copy of the [jwkset.NewDefaultHTTPClientCtx].
-// One notable change is that we're setting NoErrorReturnFirstHTTPReq to false,
+// One notable change is that we're setting [jwkset.HTTPClientStorageOptions.NoErrorReturnFirstHTTPReq] to false,
 // this ensures that if an error occurs when fetching keys inside the constructor,
 // it is returned immediately.
 // We also modify the timeout value.
 func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
-	parsed, err := url.ParseRequestURI(jwkFetchURL)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to parse given URL %q", jwkFetchURL)
-	}
-	jwkFetchURI := parsed.String()
 	refreshErrorHandler := func(ctx context.Context, err error) {
 		slog.Default().ErrorContext(ctx, "Failed to refresh HTTP JWK Set from remote HTTP resource.",
 			"error", err,
-			"url", jwkFetchURI,
+			"url", jwkFetchURL,
 		)
 	}
 	options := jwkset.HTTPClientStorageOptions{
@@ -198,12 +193,12 @@ func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
 		RefreshInterval:           time.Hour,
 		HTTPTimeout:               jwksRequestTimeout,
 	}
-	storage, err := jwkset.NewStorageFromHTTP(parsed, options)
+	storage, err := jwkset.NewStorageFromHTTP(jwkFetchURL, options)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURI)
+		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURL)
 	}
 	return jwkset.NewHTTPClient(jwkset.HTTPClientOptions{
-		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURI: storage},
+		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURL: storage},
 		RefreshUnknownKID: rate.NewLimiter(rate.Every(5*time.Minute), 1),
 	})
 }
