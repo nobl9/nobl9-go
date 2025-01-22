@@ -139,8 +139,8 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.duration",
-					Code: rules.ErrorCodeDurationPrecision,
+					Prop:    "spec.duration",
+					Message: "duration must be at least 1 minute",
 				},
 			},
 		},
@@ -156,12 +156,7 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.duration",
-					Code: rules.ErrorCodeDurationPrecision,
-				},
-			},
+			expectedErrors: nil,
 		},
 		{
 			name: "slo is defined without name",
