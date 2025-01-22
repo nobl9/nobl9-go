@@ -1,6 +1,7 @@
 package budgetadjustment
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
@@ -46,7 +47,7 @@ var specValidation = govy.New[Spec](
 	govy.Transform(func(s Spec) string { return s.Duration }, time.ParseDuration).
 		WithName("duration").
 		Required().
-		Rules(rules.DurationPrecision(time.Minute)),
+		Rules(durationPrecision),
 	govy.Transform(func(s Spec) string { return s.Rrule }, rrule.StrToRRule).
 		WithName("rrule").
 		Rules(atLeastHourlyFreq),
@@ -103,6 +104,18 @@ var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 var secondTimePrecision = govy.NewRule(func(t time.Time) error {
 	if t.Nanosecond() != 0 {
 		return errors.New("time must be defined with 1s precision")
+	}
+
+	return nil
+})
+
+var durationPrecision = govy.NewRule(func(t time.Duration) error {
+	fmt.Println(t.Nanoseconds())
+	if t.Minutes() < 1 {
+		return errors.New("duration must be at least 1 minute")
+	}
+	if t.Nanoseconds()%int64(time.Second) != 0 {
+		return errors.New("duration must be defined with 1s precision")
 	}
 
 	return nil
