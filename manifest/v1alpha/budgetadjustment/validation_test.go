@@ -590,6 +590,11 @@ func TestDurationPrecision(t *testing.T) {
 		expectedError string
 	}{
 		{
+			name:          "59ns returns error",
+			duration:      time.Nanosecond * 59,
+			expectedError: "duration must be at least 1 minute",
+		},
+		{
 			name:          "59s returns error",
 			duration:      time.Second * 59,
 			expectedError: "duration must be at least 1 minute",
@@ -598,6 +603,11 @@ func TestDurationPrecision(t *testing.T) {
 			name:          "1m no error",
 			duration:      time.Minute,
 			expectedError: "",
+		},
+		{
+			name:          "1m60ns returns error",
+			duration:      time.Minute + 60*time.Nanosecond,
+			expectedError: "duration must be defined with 1s precision",
 		},
 		{
 			name:          "1m1s no error",
@@ -616,8 +626,13 @@ func TestDurationPrecision(t *testing.T) {
 		},
 		{
 			name:          "1h1m1s returns no error",
-			duration:      time.Hour + time.Second,
+			duration:      time.Hour + time.Minute + time.Second,
 			expectedError: "",
+		},
+		{
+			name:          "1h1m1ns returns error",
+			duration:      time.Hour + time.Minute + time.Nanosecond,
+			expectedError: "duration must be defined with 1s precision",
 		},
 	}
 
