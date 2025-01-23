@@ -129,7 +129,9 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			lightstepRawMetricValidation,
 			pingdomRawMetricValidation,
 			thousandEyesRawMetricValidation,
-			instanaRawMetricValidation),
+			instanaRawMetricValidation,
+			honeycombRawMetricValidation,
+		),
 )
 
 var countMetricsValidation = govy.New[MetricSpec](

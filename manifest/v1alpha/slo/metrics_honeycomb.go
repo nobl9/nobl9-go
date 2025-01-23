@@ -18,3 +18,9 @@ var honeycombSingleQueryValidation = govy.New[HoneycombMetric](
 			rules.StringMaxLength(255),
 			rules.StringNotEmpty()),
 )
+
+var honeycombRawMetricValidation = govy.New[MetricSpec](
+	govy.For(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Rules(rules.Forbidden[*HoneycombMetric]()),
+)
