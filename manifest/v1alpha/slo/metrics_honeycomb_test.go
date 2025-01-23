@@ -58,7 +58,10 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 func TestHoneycomb_rawMetrics(t *testing.T) {
 	slo := validRawMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
-	testutils.AssertNoError(t, slo, err)
+	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+		Prop: "spec.objectives[0].rawMetric",
+		Code: rules.ErrorCodeForbidden,
+	})
 }
 
 func TestHoneycomb_countMetrics(t *testing.T) {

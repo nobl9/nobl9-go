@@ -32,8 +32,7 @@ var specMetricsValidation = govy.New[Spec](
 			}),
 		).
 		Rules(exactlyOneMetricSpecTypeValidationRule).
-		Rules(timeSliceTargetsValidationRule).
-		Rules(onlySupportCountMetricOnHoneycomb),
+		Rules(timeSliceTargetsValidationRule),
 )
 
 var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
@@ -254,16 +253,6 @@ var exactlyOneMetricSpecTypeValidationRule = govy.NewRule(func(v Spec) error {
 	}
 	return validateExactlyOneMetricSpecType(v.CountMetrics()...)
 }).WithErrorCode(errCodeExactlyOneMetricSpecType)
-
-var onlySupportCountMetricOnHoneycomb = govy.NewRule(func(v Spec) error {
-	if v.Indicator == nil {
-		return nil
-	}
-	if v.HasRawMetric() {
-		return errors.Errorf("only counts metrics are supported for Honeycomb")
-	}
-	return nil
-})
 
 // nolint: gocognit, gocyclo
 func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
