@@ -987,27 +987,6 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		}
 	case v1alpha.Honeycomb:
 		switch s.MetricVariant {
-		case metricVariantThreshold:
-			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "AVG",
-				Attribute:   "requestsLatency",
-			}))
-		case metricVariantGoodRatio:
-			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterGood",
-			}), newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterTotal",
-			}))
-		case metricVariantBadRatio:
-			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterBad",
-			}), newMetricSpec(v1alphaSLO.HoneycombMetric{
-				Calculation: "SUM",
-				Attribute:   "counterTotal",
-			}))
 		case metricVariantSingleQueryGoodRatio:
 			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.HoneycombMetric{
 				Attribute: "dc.sli.some-service-availability",

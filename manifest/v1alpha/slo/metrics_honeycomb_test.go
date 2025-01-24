@@ -55,7 +55,7 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 	})
 }
 
-func TestHoneycomb_rawMetrics_forbidded(t *testing.T) {
+func TestHoneycomb_rawMetrics_forbidden(t *testing.T) {
 	slo := validRawMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
