@@ -139,8 +139,8 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.duration",
-					Code: rules.ErrorCodeDurationPrecision,
+					Prop:    "spec.duration",
+					Message: "duration must be at least 1 minute",
 				},
 			},
 		},
@@ -156,12 +156,7 @@ func TestValidate_Spec(t *testing.T) {
 					}},
 				},
 			},
-			expectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.duration",
-					Code: rules.ErrorCodeDurationPrecision,
-				},
-			},
+			expectedErrors: nil,
 		},
 		{
 			name: "slo is defined without name",
@@ -574,6 +569,71 @@ func TestAtLeastSecondTimeResolution(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := secondTimePrecision.Validate(tt.time)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestDurationPrecision(t *testing.T) {
+	tests := []struct {
+		name          string
+		duration      time.Duration
+		expectedError string
+	}{
+		{
+			name:          "59ns returns error",
+			duration:      time.Nanosecond * 59,
+			expectedError: "duration must be at least 1 minute",
+		},
+		{
+			name:          "59s returns error",
+			duration:      time.Second * 59,
+			expectedError: "duration must be at least 1 minute",
+		},
+		{
+			name:          "1m no error",
+			duration:      time.Minute,
+			expectedError: "",
+		},
+		{
+			name:          "1m60ns returns error",
+			duration:      time.Minute + 60*time.Nanosecond,
+			expectedError: "duration must be defined with 1s precision",
+		},
+		{
+			name:          "1m1s no error",
+			duration:      time.Minute + time.Second,
+			expectedError: "",
+		},
+		{
+			name:          "1h returns no error",
+			duration:      time.Hour,
+			expectedError: "",
+		},
+		{
+			name:          "1h1s no error",
+			duration:      time.Hour + time.Second,
+			expectedError: "",
+		},
+		{
+			name:          "1h1m1s returns no error",
+			duration:      time.Hour + time.Minute + time.Second,
+			expectedError: "",
+		},
+		{
+			name:          "1h1m1ns returns error",
+			duration:      time.Hour + time.Minute + time.Nanosecond,
+			expectedError: "duration must be defined with 1s precision",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := durationPrecision.Validate(tt.duration)
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
