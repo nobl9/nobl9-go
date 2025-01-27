@@ -41,6 +41,7 @@ type Spec struct {
 	StartTime     time.Time `json:"startTime"`
 	EndTime       time.Time `json:"endTime"`
 	Category      string    `json:"category,omitempty"`
+	CreatedBy     string    `json:"createdBy,omitempty"`
 }
 
 // Status represents content of Status optional for Annotation Object
