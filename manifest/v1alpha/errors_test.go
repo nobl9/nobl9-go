@@ -3,7 +3,7 @@ package v1alpha
 import (
 	"embed"
 	"encoding/json"
-	"path/filepath"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -91,7 +91,7 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 
 func expectedErrorOutput(t *testing.T, name string) string {
 	t.Helper()
-	data, err := errorsTestData.ReadFile(filepath.Join("test_data", "errors", name))
+	data, err := errorsTestData.ReadFile(path.Join("test_data", "errors", name))
 	require.NoError(t, err)
 	return string(data)
 }

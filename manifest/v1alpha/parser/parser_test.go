@@ -3,6 +3,7 @@ package parser
 import (
 	"embed"
 	"encoding/json"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -147,7 +148,7 @@ func Test_ParseObject_DoubleQuotedJSONHandling(t *testing.T) {
 
 func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectFormat) {
 	t.Helper()
-	data, err := parserTestData.ReadFile(filepath.Join("test_data", filename))
+	data, err := parserTestData.ReadFile(path.Join("test_data", filename))
 	require.NoError(t, err)
 	format, err := manifest.ParseObjectFormat(filepath.Ext(filename)[1:])
 	require.NoError(t, err)

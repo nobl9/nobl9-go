@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -198,7 +199,7 @@ func TestDecodeSingle(t *testing.T) {
 
 func readInputFile(t *testing.T, name string) []byte {
 	t.Helper()
-	data, err := decodeTestData.ReadFile(filepath.Join("test_data", "decode", name))
+	data, err := decodeTestData.ReadFile(path.Join("test_data", "decode", name))
 	require.NoError(t, err)
 	return data
 }

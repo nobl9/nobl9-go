@@ -2,11 +2,11 @@ package sdk
 
 import (
 	"embed"
-	_ "embed"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -418,7 +418,7 @@ func setupConfigTestData(t *testing.T) (tempDir string) {
 }
 
 func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
-	embeddedFile, err := configTestData.Open(filepath.Join(configTestDataPath, sourceName))
+	embeddedFile, err := configTestData.Open(path.Join(configTestDataPath, sourceName))
 	require.NoError(t, err)
 	defer func() { _ = embeddedFile.Close() }()
 

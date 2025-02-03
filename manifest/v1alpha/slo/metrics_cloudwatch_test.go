@@ -2,7 +2,7 @@ package slo
 
 import (
 	"embed"
-	"path/filepath"
+	"path"
 	"strconv"
 	"strings"
 	"testing"
@@ -391,7 +391,7 @@ var testData embed.FS
 
 func getCloudWatchJSON(t *testing.T, name string) *string {
 	t.Helper()
-	data, err := testData.ReadFile(filepath.Join("test_data", name+".json"))
+	data, err := testData.ReadFile(path.Join("test_data", name+".json"))
 	require.NoError(t, err)
 	s := string(data)
 	return &s
