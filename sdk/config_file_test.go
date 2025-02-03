@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"testing"
 	"time"
@@ -92,15 +93,13 @@ func TestFileConfig_Save(t *testing.T) {
 
 	t.Run("path is directory", func(t *testing.T) {
 		filePath := filepath.Join(tempDir, "directory")
-		err := os.Mkdir(filePath, 0o755)
+		err := os.Mkdir(filePath, 0o700)
 		require.NoError(t, err)
 
 		config := &FileConfig{filePath: filePath}
 
 		err = config.Save(filePath)
-		require.Error(t, err)
-		// Rename will fail with EEXIST errno if the new file is a directory.
-		assert.ErrorIs(t, err, syscall.EEXIST)
+		assert.Error(t, err)
 	})
 
 	t.Run("save config file", func(t *testing.T) {

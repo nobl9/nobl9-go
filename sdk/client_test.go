@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -91,10 +92,19 @@ func TestDefaultUserAgent(t *testing.T) {
 		return ""
 	}
 	tempDir := t.TempDir()
-	path := filepath.Join(tempDir, "test-binary")
+	binName := "test-binary"
+	if runtime.GOOS == "windows" {
+		binName += ".exe"
+	}
+	path := filepath.Join(tempDir, binName)
 	// Build binary. This is the only way for debug package to work,
 	// it needs to operate on a binary built from a module.
-	_, err := exec.Command("go", "build", "-o", path, filepath.FromSlash("./test_data/client/simple_module/main.go")).Output()
+	_, err := exec.Command(
+		"go",
+		"build",
+		"-o", path,
+		filepath.FromSlash("./test_data/client/simple_module/main.go"),
+	).Output()
 	require.NoError(t, err, getStderrFromExec(err))
 	// Execute the binary.
 	out, err := exec.Command(path).Output()
