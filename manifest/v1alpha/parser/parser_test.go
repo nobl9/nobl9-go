@@ -119,7 +119,7 @@ func TestParseAlertPolicy(t *testing.T) {
 			jsonData, _ := readParserTestFile(t, testCase.expected)
 			require.NoError(t, err)
 
-			assert.Equal(t, marshalledJson, jsonData)
+			assert.Equal(t, string(marshalledJson), string(jsonData))
 		})
 	}
 }

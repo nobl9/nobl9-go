@@ -92,7 +92,7 @@ func TestFileConfig_Save(t *testing.T) {
 
 	t.Run("path is directory", func(t *testing.T) {
 		filePath := filepath.Join(tempDir, "directory")
-		err := os.Mkdir(filePath, 0o700)
+		err := os.Mkdir(filePath, 0o755)
 		require.NoError(t, err)
 
 		config := &FileConfig{filePath: filePath}
