@@ -7,6 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/nobl9/nobl9-go/internal/testutils"
 )
 
 func TestFilterByKind(t *testing.T) {
@@ -109,7 +111,11 @@ func TestValidate(t *testing.T) {
 				project: "default"},
 		})
 		assert.Len(t, errs, 1)
-		assert.EqualError(t, errs[0], strings.ReplaceAll(expectedUniquenessConstraintMessage, "\n", "; "))
+		assert.EqualError(
+			t,
+			errs[0],
+			testutils.RemoveCR(strings.ReplaceAll(expectedUniquenessConstraintMessage, "\n", "; ")),
+		)
 	})
 }
 
