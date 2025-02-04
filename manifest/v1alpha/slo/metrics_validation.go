@@ -92,13 +92,6 @@ var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 			metricSpecValidation,
 			countMetricsValidation,
 			lightstepGoodCountMetricValidation),
-	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
-		WithName("good").
-		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.BadMetric == nil }).
-		Include(
-			metricSpecValidation,
-			countMetricsValidation,
-			lightstepGoodCountMetricValidation),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
 		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.GoodMetric == nil }).
