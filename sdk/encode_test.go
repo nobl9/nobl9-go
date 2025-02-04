@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
@@ -49,14 +49,14 @@ func TestEncodeObjects(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := EncodeObjects(objects, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectsJSON), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectsJSON), buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := EncodeObjects(objects, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectsYAML), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectsYAML), buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {
@@ -87,14 +87,14 @@ func TestEncodeObject(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := EncodeObject(object, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectJSON), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectJSON), buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := EncodeObject(object, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectYAML), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectYAML), buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {
@@ -135,14 +135,14 @@ func TestPrintObjects(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := PrintObjects(objects, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectsJSON), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectsJSON), buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := PrintObjects(objects, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectsYAML), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectsYAML), buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {
@@ -167,14 +167,14 @@ func TestPrintObject(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := PrintObject(object, buf, manifest.ObjectFormatJSON)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectJSON), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectJSON), buf.String())
 	})
 
 	t.Run("YAML format", func(t *testing.T) {
 		buf := &bytes.Buffer{}
 		err := PrintObject(object, buf, manifest.ObjectFormatYAML)
 		assert.NoError(t, err)
-		assert.Equal(t, testutils.RemoveCR(expectedObjectYAML), buf.String())
+		assert.Equal(t, stringutils.RemoveCR(expectedObjectYAML), buf.String())
 	})
 
 	t.Run("Unsupported format", func(t *testing.T) {

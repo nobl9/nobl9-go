@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/internal/testutils"
+	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
@@ -153,7 +153,7 @@ func readParserTestFile(t *testing.T, filename string) ([]byte, manifest.ObjectF
 	require.NoError(t, err)
 	format, err := manifest.ParseObjectFormat(filepath.Ext(filename)[1:])
 	require.NoError(t, err)
-	return []byte(testutils.RemoveCR(string(data))), format
+	return []byte(stringutils.RemoveCR(string(data))), format
 }
 
 func validAlertPolicy() alertpolicy.AlertPolicy {
