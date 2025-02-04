@@ -38,8 +38,9 @@ func TestMain(m *testing.M) {
 func TestResolveSources(t *testing.T) {
 	tmp := t.TempDir()
 	for _, fn := range []string{"slo.yaml", "slo.yml", "slo.json", "slo.xml"} {
-		_, err := os.Create(filepath.Join(tmp, fn))
+		f, err := os.Create(filepath.Join(tmp, fn))
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = f.Close() })
 	}
 
 	rawSources := []RawObjectSource{
@@ -448,8 +449,9 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 		err := templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
 		require.NoError(t, err)
 		var decoded interface{}
-		err = json.Unmarshal(buf.Bytes(), &decoded)
-		require.NoError(t, err)
+		bytez := buf.Bytes()
+		err = json.Unmarshal(bytez, &decoded)
+		require.NoError(t, err, fmt.Sprintf("%q", string(bytez)))
 		switch v := decoded.(type) {
 		case []interface{}:
 			for _, i := range v {
