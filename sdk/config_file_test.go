@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"os"
 	"path/filepath"
-	"runtime"
 	"syscall"
 	"testing"
 	"time"
