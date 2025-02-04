@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"text/template"
 
@@ -449,9 +450,12 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 		err := templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
 		require.NoError(t, err)
 		var decoded interface{}
-		bytez := buf.Bytes()
-		err = json.Unmarshal(bytez, &decoded)
-		require.NoError(t, err, fmt.Sprintf("%q", string(bytez)))
+		data := buf.Bytes()
+		if runtime.GOOS == "windows" {
+			data = bytes.ReplaceAll(data, []byte(`\`), []byte(`\\`))
+		}
+		err = json.Unmarshal(data, &decoded)
+		require.NoError(t, err, string(data))
 		switch v := decoded.(type) {
 		case []interface{}:
 			for _, i := range v {
