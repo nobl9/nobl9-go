@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"text/template"
 
@@ -37,8 +39,9 @@ func TestMain(m *testing.M) {
 func TestResolveSources(t *testing.T) {
 	tmp := t.TempDir()
 	for _, fn := range []string{"slo.yaml", "slo.yml", "slo.json", "slo.xml"} {
-		_, err := os.Create(filepath.Join(tmp, fn))
+		f, err := os.Create(filepath.Join(tmp, fn))
 		require.NoError(t, err)
+		t.Cleanup(func() { _ = f.Close() })
 	}
 
 	rawSources := []RawObjectSource{
@@ -447,8 +450,12 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 		err := templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
 		require.NoError(t, err)
 		var decoded interface{}
-		err = json.Unmarshal(buf.Bytes(), &decoded)
-		require.NoError(t, err)
+		data := buf.Bytes()
+		if runtime.GOOS == "windows" {
+			data = bytes.ReplaceAll(data, []byte(`\`), []byte(`\\`))
+		}
+		err = json.Unmarshal(data, &decoded)
+		require.NoError(t, err, string(data))
 		switch v := decoded.(type) {
 		case []interface{}:
 			for _, i := range v {
@@ -466,7 +473,7 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 // readTestFile attempts to read the designated file from test_data folder.
 func readTestFile(t *testing.T, filename string) *bytes.Buffer {
 	t.Helper()
-	data, err := readerTestData.ReadFile(filepath.Join("test_data", "reader", "inputs", filename))
+	data, err := readerTestData.ReadFile(path.Join("test_data", "reader", "inputs", filename))
 	require.NoError(t, err)
 	return bytes.NewBuffer(data)
 }

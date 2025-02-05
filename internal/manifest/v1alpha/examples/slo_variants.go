@@ -3,7 +3,7 @@ package v1alphaExamples
 import (
 	"embed"
 	"fmt"
-	"path/filepath"
+	"path"
 	"reflect"
 	"slices"
 
@@ -1174,7 +1174,7 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 }
 
 func mustLoadQuery(name string) string {
-	data, err := queriesFS.ReadFile(filepath.Join("queries", name))
+	data, err := queriesFS.ReadFile(path.Join("queries", name))
 	if err != nil {
 		panic(fmt.Sprintf("failed to load query: %s", err))
 	}
