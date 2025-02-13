@@ -6,7 +6,7 @@ BIN_DIR := ./bin
 # renovate datasource=github-releases depName=abice/go-enum
 GO_ENUM_VERSION := v0.6.0
 # renovate datasource=github-releases depName=securego/gosec
-GOSEC_VERSION := v2.22.0
+GOSEC_VERSION := v2.22.1
 # renovate datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION := v1.60.1
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
