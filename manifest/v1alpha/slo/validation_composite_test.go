@@ -283,7 +283,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[0].whenDelayed",
 			Code:    rules.ErrorCodeOneOf,
-			Message: "must be one of [CountAsGood, CountAsBad, Ignore]",
+			Message: "must be one of: CountAsGood, CountAsBad, Ignore",
 		})
 	})
 	t.Run("passes - only one slo as objective", func(t *testing.T) {
