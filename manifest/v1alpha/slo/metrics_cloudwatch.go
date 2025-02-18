@@ -125,7 +125,7 @@ var cloudWatchStandardConfigValidation = govy.New[CloudWatchMetric](
 		Required().
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.StringNotEmpty()).
-		Rules(rules.StringMatchRegexp(cloudWatchStatRegexp, cloudWatchExampleValidStats...)),
+		Rules(rules.StringMatchRegexp(cloudWatchStatRegexp).WithExamples(cloudWatchExampleValidStats...)),
 	govy.ForSlice(func(c CloudWatchMetric) []CloudWatchMetricDimension { return c.Dimensions }).
 		WithName("dimensions").
 		// If the slice is too long, don't proceed with govy.
@@ -143,7 +143,7 @@ var cloudWatchStandardConfigValidation = govy.New[CloudWatchMetric](
 		WithName("accountId").
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.StringNotEmpty()).
-		Rules(rules.StringMatchRegexp(cloudWatchAccountIDRegexp, "123456789012")),
+		Rules(rules.StringMatchRegexp(cloudWatchAccountIDRegexp).WithExamples("123456789012")),
 ).When(
 	func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
 	govy.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
