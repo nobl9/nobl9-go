@@ -21,8 +21,8 @@ var splunkValidation = govy.New[SplunkMetric](
 		Rules(
 			rules.StringContains("n9time", "n9value"),
 			rules.StringMatchRegexp(
-				regexp.MustCompile(`(\bindex\s*=.+)|("\bindex"\s*=.+)`),
-				"index=svc-events", `"index"=svc-events`).
+				regexp.MustCompile(`(\bindex\s*=.+)|("\bindex"\s*=.+)`)).
+				WithExamples("index=svc-events", `"index"=svc-events`).
 				WithDetails(`query has to contain index=<NAME> or "index"=<NAME>`)),
 )
 
@@ -35,7 +35,7 @@ var splunkSingleQueryValidation = govy.New[SplunkMetric](
 		Rules(
 			rules.StringContains("n9time", "n9good", "n9total"),
 			rules.StringMatchRegexp(
-				regexp.MustCompile(`(\bindex\s*=.+)|("\bindex"\s*=.+)`),
-				"index=svc-events", `"index"=svc-events`).
+				regexp.MustCompile(`(\bindex\s*=.+)|("\bindex"\s*=.+)`)).
+				WithExamples("index=svc-events", `"index"=svc-events`).
 				WithDetails(`query has to contain index=<NAME> or "index"=<NAME>`)),
 )
