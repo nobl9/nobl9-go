@@ -616,7 +616,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop:    "spec.timeWindows[0]",
-						Message: "invalid time window unit for Rolling window type: must be one of [Minute, Hour, Day]",
+						Message: "invalid time window unit for Rolling window type: must be one of: Minute, Hour, Day",
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -634,7 +634,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop:    "spec.timeWindows[0]",
-						Message: "invalid time window unit for Calendar window type: must be one of [Day, Week, Month, Quarter, Year]",
+						Message: "invalid time window unit for Calendar window type: must be one of: Day, Week, Month, Quarter, Year",
 					},
 				},
 				ExpectedErrorsCount: 1,

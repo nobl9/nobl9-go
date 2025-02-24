@@ -2,12 +2,13 @@ package sdk
 
 import (
 	"embed"
-	_ "embed"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +48,7 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 	})
 
 	t.Run("default config file", func(t *testing.T) {
-		t.Setenv("HOME", tempDir)
+		setHomeEnv(t, tempDir)
 		filePath := filepath.Join(tempDir, defaultRelativeConfigPath)
 		copyEmbeddedFile(t, "minimal_config.toml", filePath)
 
@@ -116,7 +117,7 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 
 	t.Run("default config file", func(t *testing.T) {
 		filePath := filepath.Join(tempDir, defaultRelativeConfigPath)
-		t.Setenv("HOME", tempDir)
+		setHomeEnv(t, tempDir)
 		require.NoFileExists(t, filePath)
 
 		conf, err := ReadConfig(ConfigOptionWithCredentials("clientId", "clientSecret"))
@@ -194,7 +195,7 @@ func TestReadConfig_Defaults(t *testing.T) {
 func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 	// So that we don't run into conflicts with existing config.toml.
 	tempDir := t.TempDir()
-	t.Setenv("HOME", tempDir)
+	setHomeEnv(t, tempDir)
 
 	for k, v := range map[string]string{
 		"NO_CONFIG_FILE": "true",
@@ -228,7 +229,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 	tempDir := setupConfigTestData(t)
 	filePath := filepath.Join(tempDir, "full_config_env_override.toml")
 	// So that we don't run into conflicts with existing config.toml.
-	t.Setenv("HOME", tempDir)
+	setHomeEnv(t, tempDir)
 
 	for _, envPrefix := range []string{EnvPrefix, "MY_PREFIX_", ""} {
 		for k, v := range map[string]string{
@@ -418,7 +419,7 @@ func setupConfigTestData(t *testing.T) (tempDir string) {
 }
 
 func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
-	embeddedFile, err := configTestData.Open(filepath.Join(configTestDataPath, sourceName))
+	embeddedFile, err := configTestData.Open(path.Join(configTestDataPath, sourceName))
 	require.NoError(t, err)
 	defer func() { _ = embeddedFile.Close() }()
 
@@ -431,4 +432,12 @@ func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
 
 	_, err = io.Copy(tmpFile, embeddedFile)
 	require.NoError(t, err)
+}
+
+func setHomeEnv(t *testing.T, homePath string) {
+	envKey := "HOME"
+	if runtime.GOOS == "windows" {
+		envKey = "USERPROFILE"
+	}
+	t.Setenv(envKey, homePath)
 }

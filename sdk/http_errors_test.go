@@ -12,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/internal/stringutils"
 )
 
 func TestHTTPError(t *testing.T) {
@@ -216,7 +218,7 @@ func TestHTTPError(t *testing.T) {
   - error2
   - error3 (source: '$.data')
   - error4 (source: '$.data[1].name', value: 'value')`
-		assert.EqualError(t, err, expectedMessage)
+		assert.Equal(t, stringutils.RemoveCR(err.Error()), expectedMessage)
 	})
 	t.Run("failed to read JSON", func(t *testing.T) {
 		t.Parallel()
@@ -279,7 +281,7 @@ func TestAPIErrors_Error(t *testing.T) {
 - error2
 - error3 (source: '$.data')
 - error4 (source: '$.data[1].name', value: 'value')`
-	assert.EqualError(t, apiErrors, expectedMessage)
+	assert.Equal(t, stringutils.RemoveCR(apiErrors.Error()), expectedMessage)
 }
 
 type mockReadCloser struct{ err error }

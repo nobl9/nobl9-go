@@ -3,7 +3,6 @@ package sdk
 import (
 	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
@@ -41,40 +40,31 @@ func (f *FileConfig) Load(path string) error {
 }
 
 // Save saves [FileConfig] into provided path, encoding it in TOML format.
-func (f *FileConfig) Save(path string) (err error) {
-	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path))
+func (f *FileConfig) Save(path string) error {
+	tmpFileName, err := f.writeToTempFile(path)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to create and write a temporary config file used for saving the config changes")
 	}
-
-	defer func() {
-		handleFSErr := func(fsErr error) {
-			// If error was encountered in the outer scope or no FS error, return.
-			if err != nil || fsErr == nil {
-				return
-			}
-			if v, isPathErr := fsErr.(*os.PathError); isPathErr &&
-				(v.Err == os.ErrClosed || v.Err == syscall.ENOENT) {
-				return
-			}
-			err = fsErr
-		}
-		// Close and remove temporary file.
-		handleFSErr(tmpFile.Close())
-		handleFSErr(os.Remove(tmpFile.Name()))
-	}()
-
-	if err = toml.NewEncoder(tmpFile).Encode(f); err != nil {
-		return err
-	}
-	if err = tmpFile.Sync(); err != nil {
-		return err
-	}
-	if err = os.Rename(tmpFile.Name(), path); err != nil {
+	if err = os.Rename(tmpFileName, path); err != nil {
 		return err
 	}
 	f.filePath = path
 	return nil
+}
+
+func (f *FileConfig) writeToTempFile(path string) (tmpFileName string, err error) {
+	tmpFile, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path))
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = tmpFile.Close() }()
+	if err = toml.NewEncoder(tmpFile).Encode(f); err != nil {
+		return "", err
+	}
+	if err = tmpFile.Sync(); err != nil {
+		return "", err
+	}
+	return tmpFile.Name(), nil
 }
 
 func createDefaultConfigFile(path string) error {
