@@ -129,7 +129,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.budgetingMethod",
-			Message: "'invalid' is not a valid budgeting method",
+			Message: "must be one of: Occurrences, Timeslices",
 		})
 	})
 }

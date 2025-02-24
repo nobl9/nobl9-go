@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/maps"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
@@ -134,10 +135,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.BudgetingMethod }).
 		WithName("budgetingMethod").
 		Required().
-		Rules(govy.NewRule(func(v string) error {
-			_, err := ParseBudgetingMethod(v)
-			return err
-		})),
+		Rules(rules.OneOf(maps.Keys(getBudgetingMethodNames())...)),
 	govy.ForPointer(func(s Spec) *string { return s.Tier }).
 		WithName("tier").
 		Rules(rules.StringLength(0, 63)),
