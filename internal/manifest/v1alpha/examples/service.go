@@ -8,13 +8,14 @@ func Service() []Example {
 	return newExampleSlice(standardExample{
 		Object: v1alphaService.New(
 			v1alphaService.Metadata{
-				Name:        "prometheus",
+				Name:        "web",
+				DisplayName: "Web Service",
 				Project:     "default",
 				Labels:      exampleLabels(),
 				Annotations: exampleMetadataAnnotations(),
 			},
 			v1alphaService.Spec{
-				Description: "Example Service",
+				Description: "Example web Service",
 			},
 		)},
 	)
