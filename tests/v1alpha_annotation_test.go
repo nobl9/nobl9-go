@@ -194,5 +194,7 @@ func assertV1alphaAnnotationsAreEqual(t *testing.T, expected, actual v1alphaAnno
 		assert.False(t, actual.Status.IsSystem)
 	}
 	actual.Status = nil
+	assert.Regexp(t, userIDRegexp, actual.Spec.CreatedBy)
+	actual.Spec.CreatedBy = ""
 	assert.Equal(t, expected, actual)
 }

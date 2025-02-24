@@ -23,8 +23,8 @@ var graphiteValidation = govy.New[GraphiteMetric](
 			// https://graphite.readthedocs.io/en/latest/render_api.html#paths-and-wildcards
 			rules.StringDenyRegexp(regexp.MustCompile(`\*`)).
 				WithDetails("wildcards are not allowed"),
-			rules.StringDenyRegexp(regexp.MustCompile(`\[[^.]*\]`), "[a-z0-9]").
+			rules.StringDenyRegexp(regexp.MustCompile(`\[[^.]*\]`)).WithExamples("[a-z0-9]").
 				WithDetails("character list or range is not allowed"),
-			rules.StringDenyRegexp(regexp.MustCompile(`{[^.]*}`), "{user,system,iowait}").
+			rules.StringDenyRegexp(regexp.MustCompile(`{[^.]*}`)).WithExamples("{user,system,iowait}").
 				WithDetails("value list is not allowed")),
 )

@@ -154,6 +154,7 @@ words:
   - startuml
   - stimeslice
   - strconv
+  - stringutils
   - structs
   - submatches
   - sumologic

@@ -41,7 +41,7 @@ func TestLogicMonitor(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
 				Code:    rules.ErrorCodeOneOf,
-				Message: "must be one of [device_metrics, website_metrics]",
+				Message: "must be one of: device_metrics, website_metrics",
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",

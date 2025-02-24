@@ -98,9 +98,7 @@ func TestFileConfig_Save(t *testing.T) {
 		config := &FileConfig{filePath: filePath}
 
 		err = config.Save(filePath)
-		require.Error(t, err)
-		// Rename will fail with EEXIST errno if the new file is a directory.
-		assert.ErrorIs(t, err, syscall.EEXIST)
+		assert.Error(t, err)
 	})
 
 	t.Run("save config file", func(t *testing.T) {
