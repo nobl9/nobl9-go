@@ -1,22 +1,20 @@
 package slo
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 // HoneycombMetric represents metric from Honeycomb.
 type HoneycombMetric struct {
-	// Deprecated: Once Honeycomb good/bad over total and raw metrics support will be discontinued,
-	// this property will be removed.
-	Calculation string `json:"calculation,omitempty"`
-	Attribute   string `json:"attribute"`
+	Attribute string `json:"attribute"`
 }
 
 var honeycombSingleQueryValidation = govy.New[HoneycombMetric](
-	govy.For(func(h HoneycombMetric) string { return h.Calculation }).
-		WithName("calculation").
-		Rules(rules.Forbidden[string]()),
 	govy.For(func(h HoneycombMetric) string { return h.Attribute }).
 		WithName("attribute").
 		Required().
@@ -25,22 +23,22 @@ var honeycombSingleQueryValidation = govy.New[HoneycombMetric](
 			rules.StringNotEmpty()),
 )
 
-// Deprecated: Honeycomb support for good/bad over total and raw metrics will no longer be supported in the future.
-var honeycombLegacyValidation = govy.New[HoneycombMetric](
-	govy.For(func(h HoneycombMetric) string { return h.Calculation }).
-		WithName("calculation").
-		Required().
-		Rules(rules.OneOf(supportedHoneycombCalculationTypes...)),
-	govy.For(func(h HoneycombMetric) string { return h.Attribute }).
-		WithName("attribute").
-		Required().
-		Rules(
-			rules.StringMaxLength(255),
-			rules.StringNotEmpty()),
+var honeycombRawMetricValidation = govy.New[MetricSpec](
+	govy.For(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
+		WithName("honeycomb").
+		Rules(rules.Forbidden[*HoneycombMetric]()),
 )
 
-var supportedHoneycombCalculationTypes = []string{
-	"CONCURRENCY", "COUNT", "SUM", "AVG", "COUNT_DISTINCT", "MAX", "MIN",
-	"P001", "P01", "P05", "P10", "P25", "P50", "P75", "P90", "P95", "P99", "P999",
-	"RATE_AVG", "RATE_SUM", "RATE_MAX",
-}
+var honeycombCountMetricsValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			govy.NewRule(func(c CountMetricsSpec) error {
+				if c.GoodMetric != nil || c.TotalMetric != nil {
+					return errors.New("only one metric ('goodTotal') allowed")
+				}
+				return nil
+			}).WithErrorCode(rules.ErrorCodeForbidden)),
+).When(
+	whenCountMetricsIs(v1alpha.Honeycomb),
+	govy.WhenDescription("countMetrics is honeycomb"),
+)

@@ -62,6 +62,7 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			bigQueryCountMetricsLevelValidation,
 			gcmCountMetricsLevelValidation,
 			logicMonitorCountMetricsQueryTypeValidation,
+			honeycombCountMetricsValidation,
 		).
 		Include(
 			goodAndBadOverTotalMetricsValidation,
@@ -129,7 +130,9 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			lightstepRawMetricValidation,
 			pingdomRawMetricValidation,
 			thousandEyesRawMetricValidation,
-			instanaRawMetricValidation),
+			instanaRawMetricValidation,
+			honeycombRawMetricValidation,
+		),
 )
 
 var countMetricsValidation = govy.New[MetricSpec](
@@ -229,9 +232,6 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
-	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
-		WithName("honeycomb").
-		Include(honeycombLegacyValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -241,7 +241,7 @@ var oneOfBadOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
 }).WithErrorCode(errCodeBadOverTotalDisabled)
 
 // Support for single query good/total metrics is experimental.
-// Splunk is the only datasource integration to have this feature
+// Splunk and HC are the only datasource integration to have this feature
 // - extend the list while adding support for next integrations.
 var oneOfSingleQueryGoodOverTotalValidationRule = govy.NewRule(func(v MetricSpec) error {
 	return rules.OneOf(internal.SingleQueryGoodOverTotalEnabledSources...).Validate(v.DataSourceType())

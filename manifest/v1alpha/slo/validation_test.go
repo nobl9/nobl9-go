@@ -1849,8 +1849,7 @@ fetch consumed_api
 		PromQL: "sum(rate(prometheus_http_requests_total[1h]))",
 	}},
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
-		Calculation: "SUM",
-		Attribute:   "http.status_code",
+		Attribute: "http.status_code",
 	}},
 }
 
