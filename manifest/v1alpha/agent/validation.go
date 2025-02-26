@@ -129,6 +129,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(s Spec) *CoralogixConfig { return s.Coralogix }).
+		WithName("coralogix").
+		Include(coralogixValidation),
 )
 
 var (
@@ -227,6 +230,7 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	coralogixValidation     = newURLValidator(func(c CoralogixConfig) string { return c.URL })
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()
@@ -388,6 +392,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.AzurePrometheus != nil {
 		if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
+			return err
+		}
+	}
+	if spec.Coralogix != nil {
+		if err := typesMatch(v1alpha.Coralogix); err != nil {
 			return err
 		}
 	}

@@ -1,0 +1,21 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: coralogix
+  displayName: Coralogix Agent
+  project: default
+spec:
+  description: Example Coralogix Agent
+  releaseChannel: stable
+  coralogix:
+    url: https://ingress.eu2.coralogix.com/prometheus/v1
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 1
+    unit: Second
