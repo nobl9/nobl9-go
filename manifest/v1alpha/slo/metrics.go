@@ -284,6 +284,7 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 }
 
 // Query returns interface containing metric query for this MetricSpec.
+// nolint: gocyclo
 func (m *MetricSpec) Query() interface{} {
 	switch m.DataSourceType() {
 	case v1alpha.Prometheus:
