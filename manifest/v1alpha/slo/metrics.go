@@ -58,6 +58,7 @@ type MetricSpec struct {
 	Honeycomb           *HoneycombMetric           `json:"honeycomb,omitempty"`
 	LogicMonitor        *LogicMonitorMetric        `json:"logicMonitor,omitempty"`
 	AzurePrometheus     *AzurePrometheusMetric     `json:"azurePrometheus,omitempty"`
+	Coralogix           *CoralogixMetric           `json:"coralogix,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -275,12 +276,15 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.LogicMonitor
 	case m.AzurePrometheus != nil:
 		return v1alpha.AzurePrometheus
+	case m.Coralogix != nil:
+		return v1alpha.Coralogix
 	default:
 		return 0
 	}
 }
 
 // Query returns interface containing metric query for this MetricSpec.
+// nolint: gocyclo
 func (m *MetricSpec) Query() interface{} {
 	switch m.DataSourceType() {
 	case v1alpha.Prometheus:
@@ -361,6 +365,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.LogicMonitor
 	case v1alpha.AzurePrometheus:
 		return m.AzurePrometheus
+	case v1alpha.Coralogix:
+		return m.Coralogix
 	default:
 		return nil
 	}
