@@ -105,12 +105,12 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
 
 		if slo.Spec.HasCompositeObjectives() {
-			for componentIndex, component := range slo.Spec.Objectives[0].Composite.Components.Objectives {
+			for componentIndex, component := range slo.Spec.Objectives[0].Composite.Objectives {
 				componentSlo := slos[len(slos)-1-componentIndex].(v1alphaSLO.SLO)
 				component.Project = componentSlo.Metadata.Project
 				component.SLO = componentSlo.Metadata.Name
 				component.Objective = componentSlo.Spec.Objectives[0].Name
-				slo.Spec.Objectives[0].Composite.Components.Objectives[componentIndex] = component
+				slo.Spec.Objectives[0].Composite.Objectives[componentIndex] = component
 			}
 		} else {
 			slo.Spec.AnomalyConfig.NoData.AlertMethods = []v1alphaSLO.AnomalyConfigAlertMethod{

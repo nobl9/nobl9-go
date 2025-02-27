@@ -2,6 +2,7 @@ package report
 
 import (
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 //go:generate go run ../../../internal/cmd/objectimpl Report
@@ -62,10 +63,10 @@ type CustomPeriod struct {
 }
 
 type Filters struct {
-	Projects []string `json:"projects,omitempty"`
-	Services Services `json:"services,omitempty"`
-	SLOs     SLOs     `json:"slos,omitempty"`
-	Labels   Labels   `json:"labels,omitempty"`
+	Projects []string       `json:"projects,omitempty"`
+	Services Services       `json:"services,omitempty"`
+	SLOs     SLOs           `json:"slos,omitempty"`
+	Labels   v1alpha.Labels `json:"labels,omitempty"`
 }
 
 type Services []Service
@@ -79,9 +80,5 @@ type SLO struct {
 	Name    string `json:"name" validate:"required"`
 	Project string `json:"project" validate:"required"`
 }
-
-type Labels map[LabelKey][]LabelValue
-type LabelKey = string
-type LabelValue = string
 
 type ErrorBudgetStatusConfig struct{}
