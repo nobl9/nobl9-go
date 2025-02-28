@@ -13,6 +13,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
@@ -85,7 +86,7 @@ func TestValidate_Spec(t *testing.T) {
 				Columns: []ColumnSpec{
 					{
 						DisplayName: "Column 1",
-						Labels: map[LabelKey][]LabelValue{
+						Labels: v1alpha.Labels{
 							"key1": {"value1"},
 						},
 					},
@@ -172,7 +173,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 				},
 			},
 			Filters: &Filters{
-				Labels: map[LabelKey][]LabelValue{
+				Labels: v1alpha.Labels{
 					"key1": {"value1"},
 				},
 			},
@@ -619,7 +620,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 }
 
 func TestValidate_Spec_SystemHealthReview(t *testing.T) {
-	properLabel := map[LabelKey][]LabelValue{"key1": {"value1"}}
+	properLabel := v1alpha.Labels{"key1": {"value1"}}
 	for name, test := range map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
@@ -742,7 +743,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -902,7 +903,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			Config: SystemHealthReviewConfig{
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -925,7 +926,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -950,7 +951,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -980,7 +981,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -1010,7 +1011,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -1037,7 +1038,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -1068,7 +1069,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),
@@ -1094,7 +1095,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 				},
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: map[LabelKey][]LabelValue{"key1": {"value1"}}},
+					{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 				},
 				Thresholds: Thresholds{
 					RedLessThanOrEqual: ptr(0.0),

@@ -28,7 +28,7 @@ func (s sloCompositeExample) GetSubVariant() string {
 
 func (s sloCompositeExample) GetYAMLComments() []string {
 	return []string{
-		fmt.Sprintf("Composite SLO"),
+		"Composite SLO",
 		fmt.Sprintf("Budgeting method: %s", s.BudgetingMethod),
 		fmt.Sprintf("Time window type: %s", s.TimeWindowType),
 	}

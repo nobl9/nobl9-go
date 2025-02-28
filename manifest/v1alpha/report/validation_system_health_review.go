@@ -8,6 +8,8 @@ import (
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
@@ -35,9 +37,9 @@ var columnValidation = govy.New[ColumnSpec](
 		WithName("displayName").
 		Required().
 		Rules(rules.StringMaxLength(63)),
-	govy.ForMap(func(c ColumnSpec) map[LabelKey][]LabelValue { return c.Labels }).
+	govy.ForMap(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
 		WithName("labels").
-		Rules(rules.MapMinLength[map[LabelKey][]LabelValue](1)),
+		Rules(rules.MapMinLength[v1alpha.Labels](1)),
 )
 
 var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](

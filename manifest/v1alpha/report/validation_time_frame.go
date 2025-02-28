@@ -96,7 +96,7 @@ var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
 			}),
 			govy.NewRule(func(t CalendarTimeFrame) error {
 				if t.Count != nil && t.Unit != nil &&
-					!(*t.Count == 1 && (*t.Unit == week || *t.Unit == month || *t.Unit == quarter || *t.Unit == year)) {
+					(*t.Count != 1 || *t.Unit != week && *t.Unit != month && *t.Unit != quarter && *t.Unit != year) {
 					return errors.New("valid 'unit' and 'count' pairs are: 1 Week, 1 Month, 1 Quarter, 1 Year")
 				}
 				return nil
