@@ -232,6 +232,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AzurePrometheusMetric { return m.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(m MetricSpec) *CoralogixMetric { return m.Coralogix }).
+		WithName("coralogix").
+		Include(coralogixValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -407,6 +410,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.AzurePrometheus != nil {
 			if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
+				return err
+			}
+		}
+		if metric.Coralogix != nil {
+			if err := typesMatch(v1alpha.Coralogix); err != nil {
 				return err
 			}
 		}
