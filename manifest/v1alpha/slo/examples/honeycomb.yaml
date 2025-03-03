@@ -39,7 +39,7 @@
       name: ok
       target: 0.95
       countMetrics:
-        incremental: false
+        incremental: true
         goodTotal:
           honeycomb:
             attribute: dc.sli.some-service-availability
@@ -103,7 +103,7 @@
       name: ok
       target: 0.95
       countMetrics:
-        incremental: false
+        incremental: true
         goodTotal:
           honeycomb:
             attribute: dc.sli.some-service-availability
@@ -165,7 +165,7 @@
       target: 0.95
       timeSliceTarget: 0.9
       countMetrics:
-        incremental: false
+        incremental: true
         goodTotal:
           honeycomb:
             attribute: dc.sli.some-service-availability
@@ -230,7 +230,7 @@
       target: 0.95
       timeSliceTarget: 0.9
       countMetrics:
-        incremental: false
+        incremental: true
         goodTotal:
           honeycomb:
             attribute: dc.sli.some-service-availability
