@@ -162,6 +162,7 @@ words:
   - timeseries
   - timeslice
   - timeslices
+  - timespan
   - tmpl
   - tpng
   - tsdb
