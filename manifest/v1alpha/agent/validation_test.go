@@ -962,6 +962,11 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				TenantID: "e190c630-8873-11ee-b9d1-0242ac120002",
 			},
 		},
+		v1alpha.Coralogix: {
+			Coralogix: &CoralogixConfig{
+				URL: "https://ingress.eu2.coralogix.com/prometheus/v1",
+			},
+		},
 	}
 
 	return specs[typ]
