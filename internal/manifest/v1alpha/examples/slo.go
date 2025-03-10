@@ -24,6 +24,7 @@ var standardGoodOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.InfluxDB,
 	v1alpha.GCM,
 	v1alpha.Generic,
+	v1alpha.Coralogix,
 }
 
 var standardBadOverTotalMetrics = []v1alpha.DataSourceType{
