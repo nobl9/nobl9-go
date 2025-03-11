@@ -1052,13 +1052,13 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant {
 		case metricVariantThreshold:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.CoralogixMetric{
-				PromQL: ptr(`api_server_requestMsec{host="*",job="nginx"}`),
+				PromQL: `api_server_requestMsec{host="*",job="nginx"}`,
 			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CoralogixMetric{
-				PromQL: ptr(`sum(http_request_duration_seconds_bucket{handler="/api/v1/slos",le="2.5"})`),
+				PromQL: `sum(http_request_duration_seconds_bucket{handler="/api/v1/slos",le="2.5"})`,
 			}), newMetricSpec(v1alphaSLO.CoralogixMetric{
-				PromQL: ptr(`sum(http_request_duration_seconds_count{handler="/api/v1/slos"})`),
+				PromQL: `sum(http_request_duration_seconds_count{handler="/api/v1/slos"})`,
 			}))
 		}
 	default:

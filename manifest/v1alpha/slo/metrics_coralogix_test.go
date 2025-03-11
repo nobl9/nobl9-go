@@ -17,7 +17,7 @@ func TestCoralogix(t *testing.T) {
 	})
 	t.Run("required", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Coralogix)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Coralogix.PromQL = nil
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Coralogix.PromQL = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.coralogix.promql",
@@ -26,7 +26,7 @@ func TestCoralogix(t *testing.T) {
 	})
 	t.Run("empty", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Coralogix)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Coralogix.PromQL = ptr("")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Coralogix.PromQL = "  "
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.coralogix.promql",

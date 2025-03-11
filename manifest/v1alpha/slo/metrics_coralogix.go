@@ -7,11 +7,11 @@ import (
 
 // CoralogixMetric represents metric from Coralogix
 type CoralogixMetric struct {
-	PromQL *string `json:"promql"`
+	PromQL string `json:"promql"`
 }
 
 var coralogixValidation = govy.New[CoralogixMetric](
-	govy.ForPointer(func(p CoralogixMetric) *string { return p.PromQL }).
+	govy.For(func(p CoralogixMetric) string { return p.PromQL }).
 		WithName("promql").
 		Required().
 		Rules(rules.StringNotEmpty()),

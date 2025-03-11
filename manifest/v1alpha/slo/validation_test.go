@@ -1852,7 +1852,7 @@ fetch consumed_api
 		Attribute: "http.status_code",
 	}},
 	v1alpha.Coralogix: {Coralogix: &CoralogixMetric{
-		PromQL: ptr(`sum(rate(prometheus_http_req`),
+		PromQL: `sum(rate(prometheus_http_req`,
 	}},
 }
 
