@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
@@ -42,7 +43,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 					Columns: []v1alphaReport.ColumnSpec{
 						{
 							DisplayName: "Column 1",
-							Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+							Labels: v1alpha.Labels{
 								"team": {"grey"},
 							},
 						},
@@ -76,7 +77,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 					Columns: []v1alphaReport.ColumnSpec{
 						{
 							DisplayName: "Column 1",
-							Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+							Labels: v1alpha.Labels{
 								"team": {"grey"},
 							},
 						},
@@ -111,7 +112,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 					Columns: []v1alphaReport.ColumnSpec{
 						{
 							DisplayName: "Column 1",
-							Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+							Labels: v1alpha.Labels{
 								"team": {"grey"},
 							},
 						},
@@ -146,7 +147,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 					Columns: []v1alphaReport.ColumnSpec{
 						{
 							DisplayName: "Column 1",
-							Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+							Labels: v1alpha.Labels{
 								"team": {"grey"},
 							},
 						},
@@ -179,7 +180,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 					Columns: []v1alphaReport.ColumnSpec{
 						{
 							DisplayName: "Column 1",
-							Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+							Labels: v1alpha.Labels{
 								"team": {"grey"},
 							},
 						},
@@ -286,7 +287,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 						Columns: []v1alphaReport.ColumnSpec{
 							{
 								DisplayName: "Column 1",
-								Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+								Labels: v1alpha.Labels{
 									"team": {"grey"},
 								},
 							},
@@ -327,7 +328,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 						Columns: []v1alphaReport.ColumnSpec{
 							{
 								DisplayName: "Column 1",
-								Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+								Labels: v1alpha.Labels{
 									"team": {"grey"},
 								},
 							},
@@ -368,7 +369,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 						Columns: []v1alphaReport.ColumnSpec{
 							{
 								DisplayName: "Column 1",
-								Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+								Labels: v1alpha.Labels{
 									"team": {"grey"},
 								},
 							},
@@ -392,7 +393,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 					Shared: true,
 					Filters: &v1alphaReport.Filters{
 						Projects: []string{project.GetName()},
-						Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+						Labels: v1alpha.Labels{
 							"non-existing-label": {"non-existing-value"},
 						},
 					},
@@ -407,7 +408,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 						Columns: []v1alphaReport.ColumnSpec{
 							{
 								DisplayName: "Column 1",
-								Labels: map[v1alphaReport.LabelKey][]v1alphaReport.LabelValue{
+								Labels: v1alpha.Labels{
 									"team": {"grey"},
 								},
 							},

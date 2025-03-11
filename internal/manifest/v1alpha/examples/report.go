@@ -3,6 +3,7 @@ package v1alphaExamples
 import (
 	"time"
 
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 )
 
@@ -35,7 +36,7 @@ func Report() []Example {
 						Columns: []report.ColumnSpec{
 							{
 								DisplayName: "Column 1",
-								Labels: map[report.LabelKey][]report.LabelValue{
+								Labels: v1alpha.Labels{
 									"key1": {"value1"},
 									"key2": {"value2", "value3"},
 								},

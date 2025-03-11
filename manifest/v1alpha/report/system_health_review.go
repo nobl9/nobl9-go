@@ -1,6 +1,10 @@
 package report
 
-import "time"
+import (
+	"time"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+)
 
 type SystemHealthReviewConfig struct {
 	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame" validate:"required"`
@@ -19,8 +23,8 @@ type Thresholds struct {
 }
 
 type ColumnSpec struct {
-	DisplayName string `json:"displayName" validate:"required"`
-	Labels      Labels `json:"labels" validate:"required"`
+	DisplayName string         `json:"displayName" validate:"required"`
+	Labels      v1alpha.Labels `json:"labels" validate:"required"`
 }
 
 type SnapshotTimeFrame struct {
