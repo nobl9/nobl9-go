@@ -186,7 +186,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.ThousandEyes = &v1alphaAgent.ThousandEyesConfig{}
 	case v1alpha.Coralogix:
 		agent.Spec.Coralogix = &v1alphaAgent.CoralogixConfig{
-			URL: "https://ingress.eu2.coralogix.com/prometheus/v1",
+			Domain: "coralogix.com",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))

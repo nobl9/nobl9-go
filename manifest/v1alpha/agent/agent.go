@@ -271,7 +271,9 @@ type AzurePrometheusConfig struct {
 	TenantID string `json:"tenantId"`
 }
 
-// CoralogixConfig represents content of Coralogix configuration typical for Agent Object.
 type CoralogixConfig struct {
-	URL string `json:"url"`
+	// Domain is the Coralogix domain as defined [here].
+	//
+	// [here]: https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/#domains
+	Domain string `json:"domain"`
 }

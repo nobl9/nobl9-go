@@ -219,6 +219,12 @@ var (
 			Required().
 			Rules(rules.StringUUID()),
 	)
+	coralogixValidation = govy.New[CoralogixConfig](
+		govy.For(func(a CoralogixConfig) string { return a.Domain }).
+			WithName("domain").
+			Required().
+			Rules(rules.StringNotEmpty()),
+	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
 	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
@@ -230,7 +236,6 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
-	coralogixValidation     = newURLValidator(func(c CoralogixConfig) string { return c.URL })
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()

@@ -8,7 +8,7 @@ spec:
   description: Example Coralogix Agent
   releaseChannel: stable
   coralogix:
-    url: https://ingress.eu2.coralogix.com/prometheus/v1
+    domain: coralogix.com
   historicalDataRetrieval:
     maxDuration:
       value: 30
