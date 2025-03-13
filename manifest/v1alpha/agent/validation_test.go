@@ -826,6 +826,37 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_Coralogix(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Coralogix)
+		agent.Spec.Coralogix.Domain = "eu2.coralogix.com"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		agent := validAgent(v1alpha.Coralogix)
+		agent.Spec.Coralogix.Domain = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.coralogix.domain",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid domain", func(t *testing.T) {
+		agent := validAgent(v1alpha.Coralogix)
+		agent.Spec.Coralogix.Domain = "foo"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.coralogix.domain",
+				Code: rules.ErrorCodeStringFQDN,
+			},
+		)
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
@@ -960,6 +991,11 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			AzurePrometheus: &AzurePrometheusConfig{
 				URL:      "https://prometheus-service.monitoring:8080",
 				TenantID: "e190c630-8873-11ee-b9d1-0242ac120002",
+			},
+		},
+		v1alpha.Coralogix: {
+			Coralogix: &CoralogixConfig{
+				Domain: "coralogix.com",
 			},
 		},
 	}
