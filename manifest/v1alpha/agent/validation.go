@@ -223,7 +223,7 @@ var (
 		govy.For(func(a CoralogixConfig) string { return a.Domain }).
 			WithName("domain").
 			Required().
-			Rules(rules.StringNotEmpty()),
+			Rules(rules.StringFQDN()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })

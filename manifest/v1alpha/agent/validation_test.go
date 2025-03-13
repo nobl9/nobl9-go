@@ -844,14 +844,14 @@ func TestValidateSpec_Coralogix(t *testing.T) {
 			},
 		)
 	})
-	t.Run("invalid fields", func(t *testing.T) {
+	t.Run("invalid domain", func(t *testing.T) {
 		agent := validAgent(v1alpha.Coralogix)
-		agent.Spec.Coralogix.Domain = "  "
+		agent.Spec.Coralogix.Domain = "foo"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.coralogix.domain",
-				Code: rules.ErrorCodeStringNotEmpty,
+				Code: rules.ErrorCodeStringFQDN,
 			},
 		)
 	})
