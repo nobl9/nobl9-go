@@ -6,7 +6,7 @@ metadata:
   project: default
 spec:
   description: Example Splunk Observability Agent
-  releaseChannel: stable
+  releaseChannel: alpha
   splunkObservability:
     realm: us1
   queryDelay:
