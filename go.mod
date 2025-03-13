@@ -1,6 +1,8 @@
 module github.com/nobl9/nobl9-go
 
-go 1.22
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/BurntSushi/toml v1.4.0
@@ -12,14 +14,14 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/go-yaml v1.0.1
-	github.com/nobl9/govy v0.12.1
+	github.com/nobl9/govy v0.13.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
-	golang.org/x/sync v0.11.0
-	golang.org/x/text v0.22.0
-	golang.org/x/time v0.10.0
+	golang.org/x/sync v0.12.0
+	golang.org/x/text v0.23.0
+	golang.org/x/time v0.11.0
 )
 
 require (
