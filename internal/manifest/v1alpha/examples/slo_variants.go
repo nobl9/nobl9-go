@@ -1048,6 +1048,19 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				PromQL: `sum(api_server_requests_total{})`,
 			}))
 		}
+	case v1alpha.Coralogix:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.CoralogixMetric{
+				PromQL: `api_server_requestMsec{host="*",job="nginx"}`,
+			}))
+		case metricVariantGoodRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CoralogixMetric{
+				PromQL: `sum(http_request_duration_seconds_bucket{handler="/api/v1/slos",le="2.5"})`,
+			}), newMetricSpec(v1alphaSLO.CoralogixMetric{
+				PromQL: `sum(http_request_duration_seconds_count{handler="/api/v1/slos"})`,
+			}))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1146,6 +1159,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.LogicMonitor = &v
 	case v1alphaSLO.AzurePrometheusMetric:
 		spec.AzurePrometheus = &v
+	case v1alphaSLO.CoralogixMetric:
+		spec.Coralogix = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}
