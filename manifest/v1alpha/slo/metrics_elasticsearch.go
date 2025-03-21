@@ -2,10 +2,10 @@ package slo
 
 import (
 	"strings"
-	"text/template"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+	"github.com/pkg/errors"
 )
 
 // ElasticsearchMetric represents metric from Elasticsearch.
@@ -34,18 +34,16 @@ func xor() govy.Rule[string] {
 		containsBeginEndTimeMs := strings.Contains(s,
 			"{{.BeginTimeInMilliseconds}}") && strings.Contains(s, "{{.EndTimeInMilliseconds}}")
 		if containsBeginEndTime && containsBeginEndTimeMs {
-			return govy.NewRuleErrorTemplate(govy.TemplateVars{
-				PropertyValue: s,
-			})
+			return errors.New(
+				"Query must contain either {{.BeginTime}}/{{.EndTime}} or {{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}, but not both",
+			)
 		}
 		if !containsBeginEndTime && !containsBeginEndTimeMs {
-			return govy.NewRuleErrorTemplate(govy.TemplateVars{
-				PropertyValue: s,
-			})
+			return errors.New(
+				"query must contain either {{.BeginTime}}/{{.EndTime}} or {{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}",
+			)
 		}
 		return nil
 	}).
-		WithErrorCode(rules.ErrorCodeStringContains).
-		WithMessageTemplate(template.Must(template.New("msg").
-			Parse("Query must contain either BeginTime/EndTime or BeginTimeInMilliseconds/EndTimeInMilliseconds, but not both")))
+		WithErrorCode(rules.ErrorCodeStringContains)
 }
