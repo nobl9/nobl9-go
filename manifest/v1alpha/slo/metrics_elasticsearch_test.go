@@ -56,6 +56,10 @@ func TestElasticsearch(t *testing.T) {
 			"invalid",
 			"{{.EndTime}} got that",
 			"{{.BeginTime}} got that",
+			"{{.BeginTimeInMilliseconds}} {{.EndTime}} got that",
+			"{{.BeginTime}} {{.EndTimeInMilliseconds}} got that",
+			"{{.EndTimeInMilliseconds}} got that",
+			"{{.BeginTimeInMilliseconds}} got that",
 		} {
 			slo := validRawMetricSLO(v1alpha.Elasticsearch)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Elasticsearch = &ElasticsearchMetric{

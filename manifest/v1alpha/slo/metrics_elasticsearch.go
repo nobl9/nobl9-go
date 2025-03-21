@@ -1,8 +1,11 @@
 package slo
 
 import (
+	"strings"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+	"github.com/pkg/errors"
 )
 
 // ElasticsearchMetric represents metric from Elasticsearch.
@@ -21,5 +24,28 @@ var elasticsearchValidation = govy.New[ElasticsearchMetric](
 		Required().
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.StringNotEmpty()).
-		Rules(rules.StringContains("{{.BeginTime}}", "{{.EndTime}}")),
+		Rules(xor()),
 )
+
+func xor() govy.Rule[string] {
+	return govy.NewRule(func(s string) error {
+		containsBeginEndTime := strings.Contains(s,
+			"{{.BeginTime}}") && strings.Contains(s, "{{.EndTime}}")
+		containsBeginEndTimeMs := strings.Contains(s,
+			"{{.BeginTimeInMilliseconds}}") && strings.Contains(s, "{{.EndTimeInMilliseconds}}")
+		if containsBeginEndTime && containsBeginEndTimeMs {
+			return errors.New(
+				`Query must contain either {{.BeginTime}}/{{.EndTime}} or
+				{{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}, but not both`,
+			)
+		}
+		if !containsBeginEndTime && !containsBeginEndTimeMs {
+			return errors.New(
+				`query must contain either {{.BeginTime}}/{{.EndTime}} or
+				{{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}`,
+			)
+		}
+		return nil
+	}).
+		WithErrorCode(rules.ErrorCodeStringContains)
+}
