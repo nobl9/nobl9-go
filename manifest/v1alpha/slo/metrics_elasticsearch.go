@@ -35,12 +35,14 @@ func xor() govy.Rule[string] {
 			"{{.BeginTimeInMilliseconds}}") && strings.Contains(s, "{{.EndTimeInMilliseconds}}")
 		if containsBeginEndTime && containsBeginEndTimeMs {
 			return errors.New(
-				"Query must contain either {{.BeginTime}}/{{.EndTime}} or {{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}, but not both",
+				`Query must contain either {{.BeginTime}}/{{.EndTime}} or
+				{{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}, but not both`,
 			)
 		}
 		if !containsBeginEndTime && !containsBeginEndTimeMs {
 			return errors.New(
-				"query must contain either {{.BeginTime}}/{{.EndTime}} or {{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}",
+				`query must contain either {{.BeginTime}}/{{.EndTime}} or
+				{{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}`,
 			)
 		}
 		return nil
