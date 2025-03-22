@@ -56,6 +56,12 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			isValid: true,
 		},
+		"valid: key contains uppercase character": {
+			Annotations: v1alpha.MetadataAnnotations{
+				"nEt": "x",
+			},
+			isValid: true,
+		},
 		"invalid: key is too long": {
 			Annotations: v1alpha.MetadataAnnotations{
 				strings.Repeat("l", 256): "x",
@@ -82,16 +88,6 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "net_",
-				IsKeyError: true,
-				Code:       rules.ErrorCodeStringMatchRegexp,
-			},
-		},
-		"invalid: key contains uppercase character": {
-			Annotations: v1alpha.MetadataAnnotations{
-				"nEt": "x",
-			},
-			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "nEt",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
