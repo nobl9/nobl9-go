@@ -26,7 +26,7 @@ const (
 //go:embed metadata_annotations_examples.yaml
 var metadataAnnotationsExamples string
 
-var annotationKeyRegexp = regexp.MustCompile(`^\p{Ll}([_\-0-9\p{Ll}]*[0-9\p{Ll}])?$`)
+var annotationKeyRegexp = regexp.MustCompile(`^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$`)
 
 func MetadataAnnotationsValidationRules() govy.Validator[MetadataAnnotations] {
 	return govy.New[MetadataAnnotations](
@@ -35,13 +35,7 @@ func MetadataAnnotationsValidationRules() govy.Validator[MetadataAnnotations] {
 				rules.StringLength(minAnnotationKeyLength, maxAnnotationKeyLength),
 				rules.StringMatchRegexp(annotationKeyRegexp),
 			).
-			IncludeForValues(annotationValueValidator).
+			RulesForValues(rules.StringMaxLength(maxAnnotationValueLength)).
 			WithExamples(metadataAnnotationsExamples),
 	)
 }
-
-var annotationValueValidator = govy.New[string](
-	govy.For(govy.GetSelf[string]()).
-		Rules(
-			rules.StringMaxLength(maxAnnotationValueLength),
-		))
