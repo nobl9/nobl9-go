@@ -67,11 +67,13 @@ const (
 	LogicMonitor
 	// AzurePrometheus is a DataSourceType of type AzurePrometheus.
 	AzurePrometheus
+	// Coralogix is a DataSourceType of type Coralogix.
+	Coralogix
 )
 
 var ErrInvalidDataSourceType = errors.New("not a valid DataSourceType")
 
-const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycombLogicMonitorAzurePrometheus"
+const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycombLogicMonitorAzurePrometheusCoralogix"
 
 // DataSourceTypeValues returns a list of the values for DataSourceType
 func DataSourceTypeValues() []DataSourceType {
@@ -103,6 +105,7 @@ func DataSourceTypeValues() []DataSourceType {
 		Honeycomb,
 		LogicMonitor,
 		AzurePrometheus,
+		Coralogix,
 	}
 }
 
@@ -134,6 +137,7 @@ var _DataSourceTypeMap = map[DataSourceType]string{
 	Honeycomb:             _DataSourceTypeName[244:253],
 	LogicMonitor:          _DataSourceTypeName[253:265],
 	AzurePrometheus:       _DataSourceTypeName[265:280],
+	Coralogix:             _DataSourceTypeName[280:289],
 }
 
 // String implements the Stringer interface.
@@ -179,6 +183,7 @@ var _DataSourceTypeValue = map[string]DataSourceType{
 	_DataSourceTypeName[244:253]: Honeycomb,
 	_DataSourceTypeName[253:265]: LogicMonitor,
 	_DataSourceTypeName[265:280]: AzurePrometheus,
+	_DataSourceTypeName[280:289]: Coralogix,
 }
 
 // ParseDataSourceType attempts to convert a string to a DataSourceType.

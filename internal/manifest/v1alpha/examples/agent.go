@@ -184,6 +184,10 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.ThousandEyes:
 		agent.Spec.ThousandEyes = &v1alphaAgent.ThousandEyesConfig{}
+	case v1alpha.Coralogix:
+		agent.Spec.Coralogix = &v1alphaAgent.CoralogixConfig{
+			Domain: "coralogix.com",
+		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))
 	}

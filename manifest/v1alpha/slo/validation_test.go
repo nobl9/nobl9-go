@@ -1851,6 +1851,9 @@ fetch consumed_api
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
 		Attribute: "http.status_code",
 	}},
+	v1alpha.Coralogix: {Coralogix: &CoralogixMetric{
+		PromQL: `sum(rate(prometheus_http_req`,
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
