@@ -1048,7 +1048,7 @@ func TestValidate_Spec_Objectives_Primary(t *testing.T) {
 
 func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 	for name, test := range map[string]struct {
-		Code       string
+		Code       govy.ErrorCode
 		InputValue float64
 	}{
 		"timeSliceTarget too low": {
@@ -1851,6 +1851,9 @@ fetch consumed_api
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
 		Attribute: "http.status_code",
 	}},
+	v1alpha.Coralogix: {Coralogix: &CoralogixMetric{
+		PromQL: `sum(rate(prometheus_http_req`,
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
@@ -1877,6 +1880,11 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 
 func ptr[T any](v T) *T { return &v }
 
-func joinErrorCodes(codes ...string) string {
-	return strings.Join(codes, govy.ErrorCodeSeparator)
+func joinErrorCodes(codes ...govy.ErrorCode) govy.ErrorCode {
+	var result govy.ErrorCode
+	slices.Reverse(codes)
+	for _, code := range codes {
+		result = result.Add(code)
+	}
+	return result
 }

@@ -69,6 +69,7 @@ type Spec struct {
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
+	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -142,6 +143,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.LogicMonitor, nil
 	case s.AzurePrometheus != nil:
 		return v1alpha.AzurePrometheus, nil
+	case s.Coralogix != nil:
+		return v1alpha.Coralogix, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -266,4 +269,11 @@ type LogicMonitorConfig struct {
 type AzurePrometheusConfig struct {
 	URL      string `json:"url"`
 	TenantID string `json:"tenantId"`
+}
+
+type CoralogixConfig struct {
+	// Domain is the Coralogix domain as defined [here].
+	//
+	// [here]: https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/#domains
+	Domain string `json:"domain"`
 }

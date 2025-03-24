@@ -129,6 +129,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(s Spec) *CoralogixConfig { return s.Coralogix }).
+		WithName("coralogix").
+		Include(coralogixValidation),
 )
 
 var (
@@ -215,6 +218,12 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
+	)
+	coralogixValidation = govy.New[CoralogixConfig](
+		govy.For(func(a CoralogixConfig) string { return a.Domain }).
+			WithName("domain").
+			Required().
+			Rules(rules.StringFQDN()),
 	)
 	// URL only.
 	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
@@ -388,6 +397,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.AzurePrometheus != nil {
 		if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
+			return err
+		}
+	}
+	if spec.Coralogix != nil {
+		if err := typesMatch(v1alpha.Coralogix); err != nil {
 			return err
 		}
 	}

@@ -13,15 +13,15 @@ import (
 )
 
 type ExpectedError struct {
-	Prop            string `json:"property"`
-	Code            string `json:"code,omitempty"`
-	Message         string `json:"message,omitempty"`
-	ContainsMessage string `json:"containsMessage,omitempty"`
-	IsKeyError      bool   `json:"isKeyError,omitempty"`
+	Prop            string         `json:"property"`
+	Code            govy.ErrorCode `json:"code,omitempty"`
+	Message         string         `json:"message,omitempty"`
+	ContainsMessage string         `json:"containsMessage,omitempty"`
+	IsKeyError      bool           `json:"isKeyError,omitempty"`
 }
 
 // AssertNoError asserts that the provided v1alpha.ObjectError is nil.
-func AssertNoError(t *testing.T, object interface{}, objErr *v1alpha.ObjectError) {
+func AssertNoError(t *testing.T, object any, objErr *v1alpha.ObjectError) {
 	t.Helper()
 	rec.Record(t, object, 0, nil)
 
