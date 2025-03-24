@@ -41,8 +41,8 @@ func xor() govy.Rule[string] {
 		}
 		if !containsBeginEndTime && !containsBeginEndTimeMs {
 			return errors.New(
-				`query must contain either {{.BeginTime}}/{{.EndTime}} or
-				{{.BeginTimeInMilliseconds}}/{{.EndTimeInMilliseconds}}`,
+				`query must contain either {{.BeginTime}} and {{.EndTime}} or
+				{{.BeginTimeInMilliseconds}} and {{.EndTimeInMilliseconds}}`,
 			)
 		}
 		return nil
