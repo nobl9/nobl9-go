@@ -27,7 +27,7 @@ var elasticsearchValidation = govy.New[ElasticsearchMetric](
 		Rules(xor()),
 )
 
-func xor() govy.Rule[string] {
+func elasticsearchQueryValidationRule() govy.Rule[string] {
 	return govy.NewRule(func(s string) error {
 		containsBeginEndTime := strings.Contains(s,
 			"{{.BeginTime}}") && strings.Contains(s, "{{.EndTime}}")
