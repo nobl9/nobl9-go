@@ -3,6 +3,7 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -36,7 +37,7 @@ func TestSplunk(t *testing.T) {
 	t.Run("invalid query", func(t *testing.T) {
 		tests := map[string]struct {
 			Query        string
-			ExpectedCode string
+			ExpectedCode govy.ErrorCode
 		}{
 			"missing n9time": {
 				Query: `
@@ -124,7 +125,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 	t.Run("invalid query", func(t *testing.T) {
 		tests := map[string]struct {
 			Query        string
-			ExpectedCode string
+			ExpectedCode govy.ErrorCode
 		}{
 			"missing n9time": {
 				Query: `

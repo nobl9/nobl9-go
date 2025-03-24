@@ -44,8 +44,8 @@ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWE
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/nobl9/go-yaml v1.0.1 h1:Aj1kSaYdRQTKlvS6ihvXzQJhCpoHhtf9nfA95zqWH4Q=
 github.com/nobl9/go-yaml v1.0.1/go.mod h1:t7vCO8ctYdBweZxU5lUgxzAw31+ZcqJYeqRtrv+5RHI=
-github.com/nobl9/govy v0.13.0 h1:upaRM7cjo0Mg1rFmClFWj/9+j/c2e7mdyTudHpVr/tU=
-github.com/nobl9/govy v0.13.0/go.mod h1:O+xSiKwZ6gs/orRvH5qLkfkgyT7CkuXprRIq3C5uNXQ=
+github.com/nobl9/govy v0.14.0 h1:OvfXTL0Li7ZPuPsfye3EDD/p/umLSru2hit5/Xa9PCQ=
+github.com/nobl9/govy v0.14.0/go.mod h1:O+xSiKwZ6gs/orRvH5qLkfkgyT7CkuXprRIq3C5uNXQ=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
