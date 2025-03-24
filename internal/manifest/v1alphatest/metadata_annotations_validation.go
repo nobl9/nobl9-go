@@ -68,6 +68,12 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			isValid: true,
 		},
+		"valid: key with dots and slashes": {
+			Annotations: v1alpha.MetadataAnnotations{
+				"nobl9.com/this": "foo",
+			},
+			isValid: true,
+		},
 		"invalid: key is too long": {
 			Annotations: v1alpha.MetadataAnnotations{
 				strings.Repeat("l", 318): "x",

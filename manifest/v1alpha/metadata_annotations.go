@@ -28,7 +28,7 @@ const (
 //go:embed metadata_annotations_examples.yaml
 var metadataAnnotationsExamples string
 
-var annotationKeyRegexp = regexp.MustCompile(`^\p{L}([_\-0-9\p{L}]*[0-9\p{L}])?$`)
+var annotationKeyRegexp = regexp.MustCompile(`^\p{L}([./_\-0-9\p{L}]*[0-9\p{L}])?$`)
 
 func MetadataAnnotationsValidationRules() govy.Validator[MetadataAnnotations] {
 	return govy.New[MetadataAnnotations](
