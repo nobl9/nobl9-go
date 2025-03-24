@@ -24,7 +24,7 @@ var elasticsearchValidation = govy.New[ElasticsearchMetric](
 		Required().
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.StringNotEmpty()).
-		Rules(xor()),
+		Rules(elasticsearchQueryValidationRule()),
 )
 
 func elasticsearchQueryValidationRule() govy.Rule[string] {
