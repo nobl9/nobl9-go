@@ -18,8 +18,10 @@ type (
 )
 
 const (
-	minAnnotationKeyLength   = 1
-	maxAnnotationKeyLength   = 63
+	minAnnotationKeyLength = 1
+	// Subdomain + separator + qualified name.
+	// This way we're keeping it roughly compatible with OpenSLO.
+	maxAnnotationKeyLength   = 253 + 1 + 63
 	maxAnnotationValueLength = 1050
 )
 

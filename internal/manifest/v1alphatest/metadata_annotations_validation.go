@@ -62,12 +62,18 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			isValid: true,
 		},
+		"valid: key length limit": {
+			Annotations: v1alpha.MetadataAnnotations{
+				strings.Repeat("l", 317): "x",
+			},
+			isValid: true,
+		},
 		"invalid: key is too long": {
 			Annotations: v1alpha.MetadataAnnotations{
-				strings.Repeat("l", 256): "x",
+				strings.Repeat("l", 318): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + strings.Repeat("l", 256),
+				Prop:       propertyPath + "." + strings.Repeat("l", 318),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringLength,
 			},
