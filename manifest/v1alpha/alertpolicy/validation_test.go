@@ -933,13 +933,13 @@ func validAlertCondition() AlertCondition {
 
 type valuesWithCodeExpect struct {
 	values          []string
-	expectedCode    string
+	expectedCode    govy.ErrorCode
 	expectedMessage string
 }
 
 type measurementDetermined struct {
 	values          []interface{}
 	measurements    []Measurement
-	expectedCode    string
+	expectedCode    govy.ErrorCode
 	expectedMessage string
 }

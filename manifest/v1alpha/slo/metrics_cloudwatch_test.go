@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -194,7 +195,7 @@ func TestCloudWatchJSON(t *testing.T) {
 		JSON            *string
 		ContainsMessage string
 		Message         string
-		Code            string
+		Code            govy.ErrorCode
 	}{
 		"invalid JSON": {
 			JSON: ptr("{]}"),
