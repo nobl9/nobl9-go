@@ -184,6 +184,8 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 				"slo_name",
 				"objective_name",
 				"timestamp",
+				"noDataPeriod",
+				"anomalyType",
 			}
 		}
 	default:
