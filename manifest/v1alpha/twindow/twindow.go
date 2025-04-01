@@ -119,7 +119,8 @@ func (monthPeriodCalculator) periodsCountDiff(timeWindow CalendarTimeWindow, dat
 	// then the difference in months should be 1 and not 2. This mirrors the way AddDate normalizes dates, where
 	// 31st of February is normalized to 3rd of March.
 	var correction int
-	if timeWindowDay > daysIn(timestampMonth-1, timestampYear) && timestampDay <= timeWindowDay-daysIn(timestampMonth-1, timestampYear) {
+	daysInPreviousMonth := daysIn(timestampMonth-1, timestampYear)
+	if timeWindowDay > daysInPreviousMonth && timestampDay <= timeWindowDay-daysInPreviousMonth {
 		correction = -1
 	}
 
