@@ -61,6 +61,7 @@ func parseGoDocs() map[string]goTypeDoc {
 	return typeDocs
 }
 
+// nolint: staticcheck
 func newPackageParser(astPkg *ast.Package, relPath string) packageParser {
 	pkgDoc := doc.New(astPkg, ".", doc.AllDecls)
 	return packageParser{

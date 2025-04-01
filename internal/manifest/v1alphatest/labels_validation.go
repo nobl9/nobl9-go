@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
