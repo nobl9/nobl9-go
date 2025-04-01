@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/nobl9/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/nobl9-go/manifest"
