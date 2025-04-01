@@ -50,6 +50,7 @@ Generic
 Honeycomb
 LogicMonitor
 AzurePrometheus
+Coralogix
 )*/
 type DataSourceType int
 
@@ -229,6 +230,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		Honeycomb:           {Value: ptr(5), Unit: Minute},
 		LogicMonitor:        {Value: ptr(2), Unit: Minute},
 		AzurePrometheus:     {Value: ptr(0), Unit: Second},
+		Coralogix:           {Value: ptr(0), Unit: Second},
 	}
 }
 
@@ -383,6 +385,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
 	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
+	Coralogix:             {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{

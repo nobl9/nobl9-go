@@ -66,7 +66,7 @@ func ExampleAlert() {
 	//   severity: Medium
 	//   status: Triggered
 	//   triggeredMetricTime: ""
-	//   triggeredClockTime: 2022-01-16T00:28:05Z
+	//   triggeredClockTime: "2022-01-16T00:28:05Z"
 	//   coolDown: ""
 	//   conditions: []
 }

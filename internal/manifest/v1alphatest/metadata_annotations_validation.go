@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
@@ -56,25 +56,45 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			},
 			isValid: true,
 		},
+		"valid: key contains uppercase character": {
+			Annotations: v1alpha.MetadataAnnotations{
+				"nEt": "x",
+			},
+			isValid: true,
+		},
+		"valid: key length limit": {
+			Annotations: v1alpha.MetadataAnnotations{
+				strings.Repeat("l", 253) + "/" + strings.Repeat("l", 63): "x",
+			},
+			isValid: true,
+		},
+		"valid: key with dots and slashes": {
+			Annotations: v1alpha.MetadataAnnotations{
+				"nobl9.com/this": "foo",
+			},
+			isValid: true,
+		},
+		"valid: value key length limit": {
+			Annotations: v1alpha.MetadataAnnotations{
+				"net": strings.Repeat("l", 1050),
+			},
+			isValid: true,
+		},
 		"invalid: key is too long": {
 			Annotations: v1alpha.MetadataAnnotations{
-				strings.Repeat("l", 256): "x",
+				strings.Repeat("l", 254) + "/" + strings.Repeat("l", 64): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + strings.Repeat("l", 256),
+				Prop:       propertyPath + "." + strings.Repeat("l", 254) + "/" + strings.Repeat("l", 64),
 				IsKeyError: true,
-				Code:       rules.ErrorCodeStringLength,
+				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
 		},
-		"invalid: key starts with non letter": {
+		"valid: key starts with non letter": {
 			Annotations: v1alpha.MetadataAnnotations{
 				"9net": "x",
 			},
-			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "9net",
-				IsKeyError: true,
-				Code:       rules.ErrorCodeStringMatchRegexp,
-			},
+			isValid: true,
 		},
 		"invalid: key ends with non alphanumeric char": {
 			Annotations: v1alpha.MetadataAnnotations{
@@ -83,22 +103,12 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 			error: testutils.ExpectedError{
 				Prop:       propertyPath + "." + "net_",
 				IsKeyError: true,
-				Code:       rules.ErrorCodeStringMatchRegexp,
-			},
-		},
-		"invalid: key contains uppercase character": {
-			Annotations: v1alpha.MetadataAnnotations{
-				"nEt": "x",
-			},
-			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "nEt",
-				IsKeyError: true,
-				Code:       rules.ErrorCodeStringMatchRegexp,
+				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
 		},
 		"invalid: value is too long (over 1050 chars)": {
 			Annotations: v1alpha.MetadataAnnotations{
-				"net": strings.Repeat("l", 2051),
+				"net": strings.Repeat("l", 1051),
 			},
 			error: testutils.ExpectedError{
 				Prop: propertyPath + "." + "net",
