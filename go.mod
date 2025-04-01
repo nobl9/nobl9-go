@@ -8,7 +8,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.3.10
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bmatcuk/doublestar/v4 v4.8.1
-	github.com/goccy/go-yaml v1.17.0
+	github.com/goccy/go-yaml v1.17.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/govy v0.14.0
