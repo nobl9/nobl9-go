@@ -47,18 +47,6 @@ type Date interface {
 	Date() (year int, month time.Month, day int)
 }
 
-func BeforeDate(a Date, b Date) bool {
-	aYear, aMonth, aDay := a.Date()
-	bYear, bMonth, bDay := b.Date()
-	if aYear != bYear {
-		return aYear < bYear
-	}
-	if aMonth != bMonth {
-		return aMonth < bMonth
-	}
-	return aDay < bDay
-}
-
 // TimeOfDay represents valid time of day
 type TimeOfDay interface {
 	Clock() (hour, minute, sec int)
