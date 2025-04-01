@@ -47,6 +47,18 @@ type Date interface {
 	Date() (year int, month time.Month, day int)
 }
 
+func BeforeDate(a Date, b Date) bool {
+	aYear, aMonth, aDay := a.Date()
+	bYear, bMonth, bDay := b.Date()
+	if aYear != bYear {
+		return aYear < bYear
+	}
+	if aMonth != bMonth {
+		return aMonth < bMonth
+	}
+	return aDay < bDay
+}
+
 // TimeOfDay represents valid time of day
 type TimeOfDay interface {
 	Clock() (hour, minute, sec int)
@@ -111,9 +123,24 @@ func (yearPeriodCalculator) addPeriods(timestamp time.Time, numberOfPeriods int)
 type monthPeriodCalculator struct{}
 
 func (monthPeriodCalculator) periodsCountDiff(timeWindow CalendarTimeWindow, date Date) int {
-	timeWindowYear, timeWindowMonth, _ := timeWindow.DateWithTime.Date()
-	timestampYear, timestampMonth, _ := date.Date()
-	return (timestampYear-timeWindowYear)*int(monthsInYear) + int(timestampMonth) - int(timeWindowMonth)
+	timeWindowYear, timeWindowMonth, timeWindowDay := timeWindow.DateWithTime.Date()
+	timestampYear, timestampMonth, timestampDay := date.Date()
+
+	// This corrects for the situation when starting date of monthly calendar time window is at a day that doesn't
+	// occur in certain months. For example, if the starting date is 31st of January and the timestamp is 1st of March
+	// then the difference in months should be 1 and not 2. This mirrors the way AddDate normalizes dates, where
+	// 31st of February is normalized to 3rd of March.
+	var correction int
+	if timeWindowDay > daysIn(timestampMonth-1, timestampYear) && timestampDay <= timeWindowDay-daysIn(timestampMonth-1, timestampYear) {
+		correction = -1
+	}
+
+	return (timestampYear-timeWindowYear)*int(monthsInYear) + int(timestampMonth) - int(timeWindowMonth) + correction
+}
+
+func daysIn(month time.Month, year int) int {
+	t := time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC)
+	return t.Day()
 }
 
 func (monthPeriodCalculator) periodsThresholdAtDate(timeWindow CalendarTimeWindow, date Date) time.Time {
