@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/BurntSushi/toml v1.5.0
-	github.com/MicahParks/jwkset v0.8.0
+	github.com/MicahParks/jwkset v0.9.0
 	github.com/MicahParks/keyfunc/v3 v3.3.10
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bmatcuk/doublestar/v4 v4.8.1
