@@ -41,8 +41,7 @@
           "end": "2024-02-28T09:58:42Z"
         }
       }
-    ],
-    "alertPolicies": null
+    ]
   },
   "manifestSrc": "{{ .ManifestSrc }}"
 }
