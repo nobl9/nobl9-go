@@ -14,7 +14,7 @@ GOVULNCHECK_VERSION := v1.1.4
 # renovate datasource=go depName=golang.org/x/tools/cmd/goimports
 GOIMPORTS_VERSION := v0.31.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
-IFACEMAKER_VERSION := v1.2.1
+IFACEMAKER_VERSION := v1.3.0
 
 # Check if the program is present in $PATH and install otherwise.
 # ${1} - oneOf{binary,yarn}
