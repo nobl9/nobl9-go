@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/BurntSushi/toml v1.5.0
-	github.com/MicahParks/jwkset v0.9.0
+	github.com/MicahParks/jwkset v0.9.5
 	github.com/MicahParks/keyfunc/v3 v3.3.10
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/bmatcuk/doublestar/v4 v4.8.1
@@ -16,8 +16,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	golang.org/x/sync v0.12.0
-	golang.org/x/text v0.23.0
+	golang.org/x/sync v0.13.0
+	golang.org/x/text v0.24.0
 	golang.org/x/time v0.11.0
 )
 
