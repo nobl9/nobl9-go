@@ -4,6 +4,11 @@ metadata:
   name: pingdom
   displayName: Pingdom Agent
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example Pingdom Agent
   releaseChannel: stable

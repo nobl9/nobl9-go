@@ -4,6 +4,11 @@ metadata:
   name: prometheus
   displayName: Prometheus Agent
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example Prometheus Agent
   releaseChannel: stable
