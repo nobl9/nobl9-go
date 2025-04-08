@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -120,7 +119,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					Project: alertMethod.Metadata.Project,
 				},
 			}
-			slo.Spec.AnomalyConfig.NoData.Period = ptr(1 * time.Hour)
+			slo.Spec.AnomalyConfig.NoData.Period = "1h"
 
 			metricSpecs := slo.Spec.AllMetricSpecs()
 			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")

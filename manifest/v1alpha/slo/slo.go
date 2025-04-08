@@ -162,7 +162,7 @@ type AnomalyConfig struct {
 // AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
 type AnomalyConfigNoData struct {
 	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods"`
-	Period       *time.Duration             `json:"period,omitempty"`
+	Period       string                     `json:"period,omitempty"`
 }
 
 // AnomalyConfigAlertMethod represents a single alert method used in AnomalyConfig

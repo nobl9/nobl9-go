@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -368,7 +367,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			}}}},
 			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
 				Name: "my-name",
-			}}, Period: ptr(10 * time.Minute)}},
+			}}, Period: "10m"}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
@@ -453,13 +452,14 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 						{
 							Name: "my-name",
 						}},
-					Period: ptr(0 * time.Minute),
+					Period: "0",
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.period",
-						Code: rules.ErrorCodeGreaterThanOrEqualTo,
+						Prop:    "spec.anomalyConfig.noData.period",
+						Code:    govy.ErrorCodeTransform,
+						Message: `should be greater than or equal to '5m0s'`,
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -470,7 +470,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 						{
 							Name: "my-name",
 						}},
-					Period: ptr(365 * 24 * time.Hour),
+					Period: "8760h", // 1 year
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{

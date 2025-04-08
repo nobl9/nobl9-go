@@ -65,7 +65,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: bad over total
 # Budgeting method: Occurrences
 # Time window type: Rolling
@@ -130,7 +130,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: bad over total
 # Budgeting method: Timeslices
 # Time window type: Calendar
@@ -199,7 +199,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: bad over total
 # Budgeting method: Timeslices
 # Time window type: Rolling
@@ -265,7 +265,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: good over total
 # Budgeting method: Occurrences
 # Time window type: Calendar
@@ -333,7 +333,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: good over total
 # Budgeting method: Occurrences
 # Time window type: Rolling
@@ -398,7 +398,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: good over total
 # Budgeting method: Timeslices
 # Time window type: Calendar
@@ -467,7 +467,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: good over total
 # Budgeting method: Timeslices
 # Time window type: Rolling
@@ -533,7 +533,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: threshold
 # Budgeting method: Occurrences
 # Time window type: Calendar
@@ -601,7 +601,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: threshold
 # Budgeting method: Occurrences
 # Time window type: Rolling
@@ -666,7 +666,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: threshold
 # Budgeting method: Timeslices
 # Time window type: Calendar
@@ -735,7 +735,7 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h
 # Metric type: threshold
 # Budgeting method: Timeslices
 # Time window type: Rolling
@@ -801,4 +801,4 @@
         alertMethods:
         - name: slack-notification
           project: default
-        period: 1h0m0s
+        period: 1h

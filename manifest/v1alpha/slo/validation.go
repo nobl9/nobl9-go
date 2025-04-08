@@ -263,7 +263,7 @@ var compositeObjectiveRule = govy.New[CompositeObjective](
 			WhenDelayedIgnore,
 		)),
 )
-
+var minimalNoDataPeriodRule = rules.GTE(5 * time.Minute)
 var anomalyConfigValidation = govy.New[AnomalyConfig](
 	govy.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
@@ -282,12 +282,22 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						WithName("project").
 						Rules(rules.StringDNSLabel()),
 				)),
-			govy.ForPointer(func(a AnomalyConfigNoData) *time.Duration { return a.Period }).
+			govy.Transform(func(a AnomalyConfigNoData) string { return a.Period },
+				func(period string) (time.Duration, error) {
+					value, err := time.ParseDuration(period)
+					if err != nil {
+						return 0, err
+					}
+					if period != "" && value == 0 {
+						return 0, minimalNoDataPeriodRule.Validate(value)
+					}
+					return value, err
+				}).
 				WithName("period").
 				OmitEmpty().
 				Rules(
 					rules.DurationPrecision(time.Minute),
-					rules.GTE(5*time.Minute),
+					minimalNoDataPeriodRule,
 					rules.LTE(31*time.Hour*24)),
 		)),
 )
