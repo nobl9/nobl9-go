@@ -76,6 +76,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure query
 # Budgeting method: Occurrences
@@ -151,6 +152,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
@@ -230,6 +232,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
@@ -306,6 +309,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
@@ -384,6 +388,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
@@ -459,6 +464,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
@@ -538,6 +544,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
@@ -614,6 +621,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: application
 # Budgeting method: Occurrences
@@ -720,6 +728,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: application
 # Budgeting method: Occurrences
@@ -823,6 +832,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: application
 # Budgeting method: Timeslices
@@ -930,6 +940,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: application
 # Budgeting method: Timeslices
@@ -1034,6 +1045,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure query
 # Budgeting method: Occurrences
@@ -1104,6 +1116,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure query
 # Budgeting method: Occurrences
@@ -1171,6 +1184,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
@@ -1242,6 +1256,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure query
 # Budgeting method: Timeslices
@@ -1310,6 +1325,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
@@ -1380,6 +1396,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Occurrences
@@ -1447,6 +1464,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
@@ -1518,6 +1536,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: infrastructure snapshot id
 # Budgeting method: Timeslices
@@ -1586,3 +1605,4 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s

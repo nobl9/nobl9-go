@@ -68,6 +68,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: transaction
 # Budgeting method: Occurrences
@@ -135,6 +136,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: transaction
 # Budgeting method: Timeslices
@@ -206,6 +208,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: transaction
 # Budgeting method: Timeslices
@@ -274,6 +277,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: uptime
 # Budgeting method: Occurrences
@@ -346,6 +350,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: uptime
 # Budgeting method: Occurrences
@@ -415,6 +420,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: uptime
 # Budgeting method: Timeslices
@@ -488,6 +494,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: uptime
 # Budgeting method: Timeslices
@@ -558,6 +565,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: uptime
 # Budgeting method: Occurrences
@@ -625,6 +633,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: uptime
 # Budgeting method: Occurrences
@@ -689,6 +698,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: uptime
 # Budgeting method: Timeslices
@@ -757,6 +767,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: uptime
 # Budgeting method: Timeslices
@@ -822,3 +833,4 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s

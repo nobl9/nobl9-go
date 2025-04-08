@@ -82,6 +82,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: JSON
 # Budgeting method: Occurrences
@@ -163,6 +164,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -248,6 +250,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -330,6 +333,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -400,6 +404,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -467,6 +472,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -538,6 +544,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -606,6 +613,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -688,6 +696,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -767,6 +776,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -850,6 +860,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: bad over total
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -930,6 +941,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: JSON
 # Budgeting method: Occurrences
@@ -1014,6 +1026,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: JSON
 # Budgeting method: Occurrences
@@ -1095,6 +1108,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -1180,6 +1194,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -1262,6 +1277,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -1332,6 +1348,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -1399,6 +1416,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -1470,6 +1488,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -1538,6 +1557,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -1620,6 +1640,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -1699,6 +1720,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -1782,6 +1804,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: good over total
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -1862,6 +1885,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: JSON
 # Budgeting method: Occurrences
@@ -1971,6 +1995,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: JSON
 # Budgeting method: Occurrences
@@ -2077,6 +2102,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -2187,6 +2213,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: JSON
 # Budgeting method: Timeslices
@@ -2294,6 +2321,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -2360,6 +2388,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: sql query
 # Budgeting method: Occurrences
@@ -2423,6 +2452,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -2490,6 +2520,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: sql query
 # Budgeting method: Timeslices
@@ -2554,6 +2585,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -2626,6 +2658,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: standard configuration
 # Budgeting method: Occurrences
@@ -2695,6 +2728,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -2768,6 +2802,7 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
 # Metric type: threshold
 # Metric variant: standard configuration
 # Budgeting method: Timeslices
@@ -2838,3 +2873,4 @@
         alertMethods:
         - name: slack-notification
           project: default
+        period: 1h0m0s
