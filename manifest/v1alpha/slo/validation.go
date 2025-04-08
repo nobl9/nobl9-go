@@ -287,7 +287,7 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 				OmitEmpty().
 				Rules(
 					rules.DurationPrecision(time.Minute),
-					rules.GTE(time.Minute*5),
+					rules.GTE(5*time.Minute),
 					rules.LTE(31*time.Hour*24)),
 		)),
 )
