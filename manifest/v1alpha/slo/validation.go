@@ -282,6 +282,13 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						WithName("project").
 						Rules(rules.StringDNSLabel()),
 				)),
+			govy.ForPointer(func(a AnomalyConfigNoData) *time.Duration { return a.Period }).
+				WithName("period").
+				OmitEmpty().
+				Rules(
+					rules.DurationPrecision(time.Minute),
+					rules.GTE(time.Minute*5),
+					rules.LTE(31*time.Hour*24)),
 		)),
 )
 

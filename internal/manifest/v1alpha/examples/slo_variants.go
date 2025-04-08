@@ -6,6 +6,7 @@ import (
 	"path"
 	"reflect"
 	"slices"
+	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -181,6 +182,7 @@ func exampleAnomalyConfig() *v1alphaSLO.AnomalyConfig {
 					Project: sdk.DefaultProject,
 				},
 			},
+			Period: ptr(1 * time.Hour),
 		},
 	}
 }

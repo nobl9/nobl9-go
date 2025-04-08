@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -365,6 +366,9 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				Name:    "my-name",
 				Project: "default",
 			}}}},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name: "my-name",
+			}}, Period: ptr(10 * time.Minute)}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
@@ -439,6 +443,40 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods",
 						Code: rules.ErrorCodeSliceUnique,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"period is too short": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					Period: ptr(0 * time.Minute),
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop: "spec.anomalyConfig.noData.period",
+						Code: rules.ErrorCodeGreaterThanOrEqualTo,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"period is too long": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					Period: ptr(365 * 24 * time.Hour),
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop: "spec.anomalyConfig.noData.period",
+						Code: rules.ErrorCodeLessThanOrEqualTo,
 					},
 				},
 				ExpectedErrorsCount: 1,
