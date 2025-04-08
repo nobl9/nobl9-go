@@ -4,6 +4,11 @@ metadata:
   name: pagerduty
   displayName: PagerDuty Alert Method
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example PagerDuty Alert Method
   pagerduty:

@@ -136,9 +136,9 @@ func (c *MockObjectsV1EndpointsDeleteCall) DoAndReturn(f func(context.Context, [
 }
 
 // DeleteByName mocks base method.
-func (m *MockObjectsV1Endpoints) DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error {
+func (m *MockObjectsV1Endpoints) DeleteByName(ctx context.Context, kind manifest.Kind, arg2 string, names ...string) error {
 	m.ctrl.T.Helper()
-	varargs := []any{ctx, kind, project}
+	varargs := []any{ctx, kind, arg2}
 	for _, a := range names {
 		varargs = append(varargs, a)
 	}
@@ -148,9 +148,9 @@ func (m *MockObjectsV1Endpoints) DeleteByName(ctx context.Context, kind manifest
 }
 
 // DeleteByName indicates an expected call of DeleteByName.
-func (mr *MockObjectsV1EndpointsMockRecorder) DeleteByName(ctx, kind, project any, names ...any) *MockObjectsV1EndpointsDeleteByNameCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) DeleteByName(ctx, kind, arg2 any, names ...any) *MockObjectsV1EndpointsDeleteByNameCall {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, kind, project}, names...)
+	varargs := append([]any{ctx, kind, arg2}, names...)
 	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByName", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).DeleteByName), varargs...)
 	return &MockObjectsV1EndpointsDeleteByNameCall{Call: call}
 }

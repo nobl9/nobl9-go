@@ -5,6 +5,11 @@
     name: webhook
     displayName: Webhook Alert Method
     project: default
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
   spec:
     description: Example Webhook Alert Method
     webhook:
@@ -40,6 +45,11 @@
     name: webhook
     displayName: Webhook Alert Method
     project: default
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
   spec:
     description: Example Webhook Alert Method
     webhook:
