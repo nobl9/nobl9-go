@@ -7,7 +7,7 @@ toolchain go1.24.2
 require (
 	github.com/nobl9/nobl9-go v0.99.0
 	github.com/stretchr/testify v1.10.0
-	go.uber.org/mock v0.5.0
+	go.uber.org/mock v0.5.1
 )
 
 require (
