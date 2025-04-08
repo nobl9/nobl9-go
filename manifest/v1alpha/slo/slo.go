@@ -48,7 +48,7 @@ type Spec struct {
 	Objectives      []Objective  `json:"objectives"`
 	Service         string       `json:"service"`
 	TimeWindows     []TimeWindow `json:"timeWindows"`
-	AlertPolicies   []string     `json:"alertPolicies"`
+	AlertPolicies   []string     `json:"alertPolicies,omitempty"`
 	Attachments     []Attachment `json:"attachments,omitempty"`
 	// CreatedAt is the date of the [SLO] creation in RFC3339 format.
 	// Read-only field.

@@ -39,8 +39,7 @@
           "value": 150,
           "target": 0.50
         }
-      ],
-      "alertPolicies": null
+      ]
     },
     "manifestSrc": "{{ .ManifestSrc }}"
   }
