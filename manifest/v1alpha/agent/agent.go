@@ -33,9 +33,10 @@ type Agent struct {
 }
 
 type Metadata struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName,omitempty"`
-	Project     string `json:"project,omitempty"`
+	Name        string                      `json:"name"`
+	DisplayName string                      `json:"displayName,omitempty"`
+	Project     string                      `json:"project,omitempty"`
+	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
 // Spec represents content of Spec typical for Agent Object

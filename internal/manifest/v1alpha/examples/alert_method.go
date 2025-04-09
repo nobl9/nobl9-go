@@ -84,6 +84,7 @@ func (a alertMethodExample) Generate() v1alphaAlertMethod.AlertMethod {
 			Name:        strings.ToLower(a.Variant),
 			DisplayName: a.Variant + " Alert Method",
 			Project:     sdk.DefaultProject,
+			Annotations: exampleMetadataAnnotations(),
 		},
 		v1alphaAlertMethod.Spec{
 			Description: fmt.Sprintf("Example %s Alert Method", a.Variant),

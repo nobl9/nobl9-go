@@ -4,6 +4,11 @@ metadata:
   name: open-t-s-d-b
   displayName: OpenTSDB Agent
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example OpenTSDB Agent
   releaseChannel: stable

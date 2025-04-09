@@ -43,6 +43,9 @@ var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(m Metadata) string { return m.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(m Metadata) string { return m.Project }),
+	validationV1Alpha.FieldRuleMetadataAnnotations(func(m Metadata) v1alpha.MetadataAnnotations {
+		return m.Annotations
+	}),
 )
 
 var specValidation = govy.New[Spec](

@@ -1461,6 +1461,95 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("ElasticSearch OTel milliseconds query", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Elasticsearch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Elasticsearch.Query = ptr(`
+{"query": {
+	"bool": {
+	"must": [
+		{ "term": { "operationName": "HTTP GET" } },
+		{
+		"nested": {
+			"path": "tags",
+			"query": {
+			"bool": {
+				"must": [
+				{
+					"bool": {
+					"must": [
+						{ "match": { "tags.key": "http.url" } },
+						{ "regexp": { "tags.value": "http://localhost:8080/api/cart.*" } }
+					]
+					}
+				}
+				]
+			}
+			}
+		}
+		},
+		{
+		"nested": {
+			"path": "tags",
+			"query": {
+			"bool": {
+				"must": [
+				{
+					"bool": {
+					"must": [
+						{ "match": { "tags.key": "http.status_code" } },
+						{ "term": { "tags.value": "200" } }
+					]
+					}
+				}
+				]
+			}
+			}
+		}
+		},
+		{
+		"bool": {
+			"should": [
+			{
+				"range": {
+				"startTimeMillis": {
+					"gte": "{{.BeginTimeInMilliseconds}}",
+					"lte": "{{.EndTimeInMilliseconds}}"
+				}
+				}
+			}
+			],
+			"minimum_should_match": 1
+		}
+		}
+	]
+	}
+},
+"aggs": {
+	"resolution": {
+	"date_histogram": {
+		"field": "startTimeMillis",
+		"interval": "{{.Resolution}}",
+		"min_doc_count": 0,
+		"extended_bounds": {
+		"min": "{{.BeginTimeInMilliseconds}}",
+		"max": "{{.EndTimeInMilliseconds}}"
+		}
+	},
+	"aggs": {
+		"n9-val": {
+		"value_count": {
+			"field": "_id"
+		}
+		}
+	}
+	}
+}
+}
+		`)
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
 }
 
 func validRawMetricSLO(metricType v1alpha.DataSourceType) SLO {

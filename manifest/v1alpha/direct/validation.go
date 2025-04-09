@@ -24,6 +24,9 @@ var validator = govy.New[Direct](
 	validationV1Alpha.FieldRuleMetadataName(func(d Direct) string { return d.Metadata.Name }),
 	validationV1Alpha.FieldRuleMetadataDisplayName(func(d Direct) string { return d.Metadata.DisplayName }),
 	validationV1Alpha.FieldRuleMetadataProject(func(d Direct) string { return d.Metadata.Project }),
+	validationV1Alpha.FieldRuleMetadataAnnotations(func(d Direct) v1alpha.MetadataAnnotations {
+		return d.Metadata.Annotations
+	}),
 	validationV1Alpha.FieldRuleSpecDescription(func(d Direct) string { return d.Spec.Description }),
 	govy.For(func(d Direct) Spec { return d.Spec }).
 		WithName("spec").
