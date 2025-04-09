@@ -33,9 +33,10 @@ type AlertMethod struct {
 
 // Metadata provides identity information for AlertMethod.
 type Metadata struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName,omitempty"`
-	Project     string `json:"project,omitempty"`
+	Name        string                      `json:"name"`
+	DisplayName string                      `json:"displayName,omitempty"`
+	Project     string                      `json:"project,omitempty"`
+	Annotations v1alpha.MetadataAnnotations `json:"annotations,omitempty"`
 }
 
 // Spec holds detailed information specific to AlertMethod.

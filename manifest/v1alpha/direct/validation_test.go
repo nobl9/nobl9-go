@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 
 	"github.com/nobl9/govy/pkg/rules"
 
@@ -67,6 +68,16 @@ func TestValidate_Metadata(t *testing.T) {
 			Code: rules.ErrorCodeStringDNSLabel,
 		},
 	)
+}
+
+func TestValidate_Metadata_Annotations(t *testing.T) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Direct](t, "metadata.annotations") {
+		t.Run(name, func(t *testing.T) {
+			svc := validDirect(v1alpha.Datadog)
+			svc.Metadata.Annotations = test.Annotations
+			test.Test(t, svc, validate)
+		})
+	}
 }
 
 func TestValidateSpec(t *testing.T) {
