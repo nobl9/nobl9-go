@@ -57,6 +57,7 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Name:        d.Variant,
 			DisplayName: titleName + " Direct",
 			Project:     sdk.DefaultProject,
+			Annotations: exampleMetadataAnnotations(),
 		},
 		v1alphaDirect.Spec{
 			Description:    fmt.Sprintf("Example %s Direct", titleName),
