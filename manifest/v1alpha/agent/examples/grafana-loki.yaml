@@ -4,6 +4,11 @@ metadata:
   name: grafana-loki
   displayName: Grafana Loki Agent
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example Grafana Loki Agent
   releaseChannel: stable

@@ -54,6 +54,7 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Name:        a.Variant,
 			DisplayName: titleName + " Agent",
 			Project:     sdk.DefaultProject,
+			Annotations: exampleMetadataAnnotations(),
 		},
 		v1alphaAgent.Spec{
 			Description: fmt.Sprintf("Example %s Agent", titleName),
