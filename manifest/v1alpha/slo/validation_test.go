@@ -457,7 +457,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.anomalyConfig.noData.alterAfter",
+						Prop:    "spec.anomalyConfig.noData.alertAfter",
 						Code:    govy.ErrorCodeTransform,
 						Message: `should be greater than or equal to '5m0s'`,
 					},
@@ -475,7 +475,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.alterAfter",
+						Prop: "spec.anomalyConfig.noData.alertAfter",
 						Code: rules.ErrorCodeLessThanOrEqualTo,
 					},
 				},
