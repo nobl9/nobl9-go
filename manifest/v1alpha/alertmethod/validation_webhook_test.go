@@ -36,7 +36,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			Template: ptr("{\"slo\": \"$slo_name\"}"),
 		},
 		"passes with valid template for no data anomaly": {
-			Template: ptr("{\"no_data_period\": \"$no_data_period\"}"),
+			Template: ptr("{\"no_data_alert_after\": \"no_data_alert_after\"}"),
 		},
 		"passes with valid template fields": {
 			TemplateFields: getAllowedTemplateFields(),
