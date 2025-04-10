@@ -66,6 +66,8 @@
       - slo_name
       - objective_name
       - timestamp
+      - no_data_alert_after
+      - anomaly_type
       headers:
       - name: Authorization
         value: very-secret
