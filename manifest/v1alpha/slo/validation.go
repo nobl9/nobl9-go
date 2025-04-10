@@ -282,7 +282,7 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						WithName("project").
 						Rules(rules.StringDNSLabel()),
 				)),
-			govy.Transform(func(a AnomalyConfigNoData) string { return a.Period },
+			govy.Transform(func(a AnomalyConfigNoData) string { return a.AlertAfter },
 				func(period string) (time.Duration, error) {
 					value, err := time.ParseDuration(period)
 					if err != nil {

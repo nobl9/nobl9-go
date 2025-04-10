@@ -189,11 +189,11 @@ var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
 			returnedData--
 		}
 		if metricData.MetricStat != nil {
-			if err := validateCloudwatchJSONPeriod(metricData.MetricStat.Period, "MetricStat.Period", i); err != nil {
+			if err := validateCloudwatchJSONPeriod(metricData.MetricStat.Period, "MetricStat.AlertAfter", i); err != nil {
 				return err
 			}
 		} else {
-			if err := validateCloudwatchJSONPeriod(metricData.Period, "Period", i); err != nil {
+			if err := validateCloudwatchJSONPeriod(metricData.Period, "AlertAfter", i); err != nil {
 				return err
 			}
 		}

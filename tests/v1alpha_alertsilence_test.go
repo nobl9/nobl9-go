@@ -222,7 +222,7 @@ func assertV1alphaAlertSilencesAreEqual(t *testing.T, expected, actual v1alphaAl
 	if expected.Spec.AlertPolicy.Project == "" {
 		expected.Spec.AlertPolicy.Project = defaultProject
 	}
-	// Period's start and end times are filled automatically by the API if not set in some scenarios.
+	// AlertAfter's start and end times are filled automatically by the API if not set in some scenarios.
 	isDurationOnlyDefined := expected.Spec.Period.Duration != "" && expected.Spec.Period.StartTime == nil
 	isEndTimeOnlyDefined := expected.Spec.Period.EndTime != nil &&
 		expected.Spec.Period.StartTime == nil &&

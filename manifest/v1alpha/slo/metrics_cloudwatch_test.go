@@ -214,22 +214,22 @@ func TestCloudWatchJSON(t *testing.T) {
 			JSON:            getCloudWatchJSON(t, "cloudwatch_more_than_one_returned_data_json"),
 			ContainsMessage: "exactly one returned data required",
 		},
-		"missing Period": {
+		"missing AlertAfter": {
 			JSON:    getCloudWatchJSON(t, "cloudwatch_missing_period_json"),
-			Message: "'.[0].Period' property is required",
+			Message: "'.[0].AlertAfter' property is required",
 		},
-		"missing MetricStat.Period": {
+		"missing MetricStat.AlertAfter": {
 			JSON: getCloudWatchJSON(t, "cloudwatch_missing_metric_stat_period_json"),
 			// Returned by AWS SDK govy.
-			ContainsMessage: "missing required field, MetricDataQuery.MetricStat.Period",
+			ContainsMessage: "missing required field, MetricDataQuery.MetricStat.AlertAfter",
 		},
-		"invalid Period": {
+		"invalid AlertAfter": {
 			JSON:    getCloudWatchJSON(t, "cloudwatch_invalid_period_json"),
-			Message: "'.[0].Period' property should be equal to 60",
+			Message: "'.[0].AlertAfter' property should be equal to 60",
 		},
-		"invalid MetricStat.Period": {
+		"invalid MetricStat.AlertAfter": {
 			JSON:    getCloudWatchJSON(t, "cloudwatch_invalid_metric_stat_period_json"),
-			Message: "'.[1].MetricStat.Period' property should be equal to 60",
+			Message: "'.[1].MetricStat.AlertAfter' property should be equal to 60",
 		},
 	}
 	for name, test := range tests {

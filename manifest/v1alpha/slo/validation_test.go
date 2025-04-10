@@ -367,7 +367,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			}}}},
 			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
 				Name: "my-name",
-			}}, Period: "10m"}},
+			}}, AlertAfter: "10m"}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
@@ -446,13 +446,13 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrorsCount: 1,
 			},
-			"period is too short": {
+			"alert after is too short": {
 				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
 					AlertMethods: []AnomalyConfigAlertMethod{
 						{
 							Name: "my-name",
 						}},
-					Period: "0",
+					AlertAfter: "0",
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
@@ -464,13 +464,13 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrorsCount: 1,
 			},
-			"period is too long": {
+			"alert after is too long": {
 				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
 					AlertMethods: []AnomalyConfigAlertMethod{
 						{
 							Name: "my-name",
 						}},
-					Period: "8760h", // 1 year
+					AlertAfter: "8760h", // 1 year
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
