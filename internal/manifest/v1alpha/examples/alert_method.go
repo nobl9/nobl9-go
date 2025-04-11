@@ -84,6 +84,7 @@ func (a alertMethodExample) Generate() v1alphaAlertMethod.AlertMethod {
 			Name:        strings.ToLower(a.Variant),
 			DisplayName: a.Variant + " Alert Method",
 			Project:     sdk.DefaultProject,
+			Annotations: exampleMetadataAnnotations(),
 		},
 		v1alphaAlertMethod.Spec{
 			Description: fmt.Sprintf("Example %s Alert Method", a.Variant),
@@ -184,6 +185,8 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 				"slo_name",
 				"objective_name",
 				"timestamp",
+				"no_data_alert_after",
+				"anomaly_type",
 			}
 		}
 	default:

@@ -4,6 +4,11 @@ metadata:
   name: servicenow
   displayName: ServiceNow Alert Method
   project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
 spec:
   description: Example ServiceNow Alert Method
   servicenow:
