@@ -119,6 +119,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					Project: alertMethod.Metadata.Project,
 				},
 			}
+			slo.Spec.AnomalyConfig.NoData.AlertAfter = ptr("1h")
 
 			metricSpecs := slo.Spec.AllMetricSpecs()
 			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")

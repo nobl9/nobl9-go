@@ -263,7 +263,7 @@ var compositeObjectiveRule = govy.New[CompositeObjective](
 			WhenDelayedIgnore,
 		)),
 )
-
+var minimalNoDataAlertAfterRule = rules.GTE(5 * time.Minute)
 var anomalyConfigValidation = govy.New[AnomalyConfig](
 	govy.ForPointer(func(a AnomalyConfig) *AnomalyConfigNoData { return a.NoData }).
 		WithName("noData").
@@ -282,8 +282,16 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						WithName("project").
 						Rules(rules.StringDNSLabel()),
 				)),
-		)),
-)
+			govy.ForPointer(func(a AnomalyConfigNoData) *string { return a.AlertAfter }).
+				WithName("alertAfter").
+				Include(govy.New[string](
+					govy.Transform(govy.GetSelf[string](), time.ParseDuration).
+						Rules(
+							rules.DurationPrecision(time.Minute),
+							minimalNoDataAlertAfterRule,
+							rules.LTE(31*time.Hour*24)),
+				)),
+		)))
 
 var indicatorValidation = govy.New[Indicator](
 	govy.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
