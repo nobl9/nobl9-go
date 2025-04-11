@@ -487,7 +487,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 						{
 							Name: "my-name",
 						}},
-					AlertAfter: ptr("1h30m"),
+					AlertAfter: ptr("1h30m30s"),
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
