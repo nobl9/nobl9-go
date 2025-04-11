@@ -181,7 +181,7 @@ func exampleAnomalyConfig() *v1alphaSLO.AnomalyConfig {
 					Project: sdk.DefaultProject,
 				},
 			},
-			AlertAfter: "1h",
+			AlertAfter: ptr("1h"),
 		},
 	}
 }

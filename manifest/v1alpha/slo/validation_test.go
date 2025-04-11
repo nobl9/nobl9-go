@@ -367,7 +367,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			}}}},
 			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
 				Name: "my-name",
-			}}, AlertAfter: "10m"}},
+			}}, AlertAfter: ptr("10m")}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
@@ -452,13 +452,13 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 						{
 							Name: "my-name",
 						}},
-					AlertAfter: "0",
+					AlertAfter: ptr("0"),
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop:    "spec.anomalyConfig.noData.alertAfter",
-						Code:    govy.ErrorCodeTransform,
+						Code:    rules.ErrorCodeGreaterThanOrEqualTo,
 						Message: `should be greater than or equal to '5m0s'`,
 					},
 				},
@@ -470,13 +470,31 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 						{
 							Name: "my-name",
 						}},
-					AlertAfter: "8760h", // 1 year
+					AlertAfter: ptr("8760h"), // 1 year
 				},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.anomalyConfig.noData.alertAfter",
 						Code: rules.ErrorCodeLessThanOrEqualTo,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"not minute precision": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					AlertAfter: ptr("1h30m"),
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop:    "spec.anomalyConfig.noData.alertAfter",
+						Code:    rules.ErrorCodeDurationPrecision,
+						Message: "duration must be defined with 1m0s precision",
 					},
 				},
 				ExpectedErrorsCount: 1,
