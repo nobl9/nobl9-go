@@ -17,8 +17,8 @@ const (
 )
 
 const (
-	alertMethodSpecSubVariantOpsgenieKeyAuth   metricVariant = "keyAuth"
-	alertMethodSpecSubVariantOpsgenieBasicAuth metricVariant = "basicAuth"
+	alertMethodSpecSubVariantOpsgenieKeyAuth   metricVariant = "GenieKey"
+	alertMethodSpecSubVariantOpsgenieBasicAuth metricVariant = "Basic"
 )
 
 var standardAlertMethods = []v1alpha.AlertMethodType{
