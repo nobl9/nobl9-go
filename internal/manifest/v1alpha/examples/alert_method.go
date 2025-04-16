@@ -122,7 +122,7 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 		}
 	case v1alpha.AlertMethodTypeOpsgenie:
 		am.Spec.Opsgenie = &v1alphaAlertMethod.OpsgenieAlertMethod{
-			URL:  "https://api.opsgenie.com",
+			URL: "https://api.opsgenie.com",
 		}
 		switch a.SubVariant {
 		case alertMethodSpecSubVariantOpsgenieBasicAuth:
