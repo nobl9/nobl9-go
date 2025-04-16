@@ -1,32 +1,16 @@
-- apiVersion: n9/v1alpha
-  kind: AlertMethod
-  metadata:
-    name: opsgenie-key-auth
-    displayName: Opsgenie Alert Method with GenieKey auth
-    project: default
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Opsgenie Alert Method with GenieKey auth
-    opsgenie:
-      auth: GenieKey 123
-      url: https://api.opsgenie.com
-- apiVersion: n9/v1alpha
-  kind: AlertMethod
-  metadata:
-    name: opsgenie-basic-auth
-    displayName: Opsgenie Alert Method with Basic auth
-    project: default
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Opsgenie Alert Method with Basic auth
-    opsgenie:
-      auth: Basic 123
-      url: https://api.opsgenie.com
+apiVersion: n9/v1alpha
+kind: AlertMethod
+metadata:
+  name: opsgenie
+  displayName: Opsgenie Alert Method
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Opsgenie Alert Method
+  opsgenie:
+    auth: GenieKey 123
+    url: https://api.opsgenie.com
