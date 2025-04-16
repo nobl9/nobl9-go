@@ -16,11 +16,15 @@ const (
 	alertMethodSpecSubVariantWebhookTemplateFields metricVariant = "templateFields"
 )
 
+const (
+	alertMethodSpecSubVariantOpsgenieKeyAuth   metricVariant = "keyAuth"
+	alertMethodSpecSubVariantOpsgenieBasicAuth metricVariant = "basicAuth"
+)
+
 var standardAlertMethods = []v1alpha.AlertMethodType{
 	v1alpha.AlertMethodTypePagerDuty,
 	v1alpha.AlertMethodTypeSlack,
 	v1alpha.AlertMethodTypeDiscord,
-	v1alpha.AlertMethodTypeOpsgenie,
 	v1alpha.AlertMethodTypeServiceNow,
 	v1alpha.AlertMethodTypeJira,
 	v1alpha.AlertMethodTypeTeams,
@@ -31,6 +35,10 @@ var customAlertMethodsSubVariants = map[v1alpha.AlertMethodType][]alertMethodSpe
 	v1alpha.AlertMethodTypeWebhook: {
 		alertMethodSpecSubVariantWebhookTemplate,
 		alertMethodSpecSubVariantWebhookTemplateFields,
+	},
+	v1alpha.AlertMethodTypeOpsgenie: {
+		alertMethodSpecSubVariantOpsgenieKeyAuth,
+		alertMethodSpecSubVariantOpsgenieBasicAuth,
 	},
 }
 
@@ -114,9 +122,15 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 		}
 	case v1alpha.AlertMethodTypeOpsgenie:
 		am.Spec.Opsgenie = &v1alphaAlertMethod.OpsgenieAlertMethod{
-			Auth: "GenieKey 123",
 			URL:  "https://api.opsgenie.com",
 		}
+		switch a.SubVariant {
+		case alertMethodSpecSubVariantOpsgenieBasicAuth:
+			am.Spec.Opsgenie.Auth = "Basic 123"
+		case alertMethodSpecSubVariantOpsgenieKeyAuth:
+			am.Spec.Opsgenie.Auth = "GenieKey 123"
+		}
+
 	case v1alpha.AlertMethodTypePagerDuty:
 		am.Spec.PagerDuty = &v1alphaAlertMethod.PagerDutyAlertMethod{
 			IntegrationKey: "123456789",
