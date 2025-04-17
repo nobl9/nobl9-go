@@ -150,7 +150,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 				slo.Spec.Service = defaultProjectService.GetName()
 				// We don't need to have these field filled,
 				// the first SLO is only here to test default project querying.
-				slo.Spec.AlertPolicies = []string{}
+				slo.Spec.AlertPolicies = nil
 				slo.Spec.AnomalyConfig = nil
 			case 1:
 				slo.Metadata.Labels["team"] = []string{"green"}
@@ -364,7 +364,7 @@ func prepareObjectsForServiceNameFilteringTests(
 			Annotations: commonAnnotations,
 		}
 		slo.Spec.Service = params.service
-		slo.Spec.AlertPolicies = []string{}
+		slo.Spec.AlertPolicies = nil
 		slo.Spec.AnomalyConfig = nil
 		slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 			Name:    agent.GetName(),
