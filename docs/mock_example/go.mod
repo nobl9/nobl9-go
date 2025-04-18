@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.2
 
 require (
-	github.com/nobl9/nobl9-go v0.100.0
+	github.com/nobl9/nobl9-go v0.101.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.1
 )
@@ -13,7 +13,7 @@ require (
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/MicahParks/jwkset v0.9.5 // indirect
-	github.com/MicahParks/keyfunc/v3 v3.3.10 // indirect
+	github.com/MicahParks/keyfunc/v3 v3.3.11 // indirect
 	github.com/aws/aws-sdk-go v1.55.6 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.8.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
