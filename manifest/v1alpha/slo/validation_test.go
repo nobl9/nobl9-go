@@ -365,6 +365,9 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				Name:    "my-name",
 				Project: "default",
 			}}}},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name: "my-name",
+			}}, AlertAfter: ptr("10m")}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
@@ -439,6 +442,59 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods",
 						Code: rules.ErrorCodeSliceUnique,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"alert after is too short": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					AlertAfter: ptr("0"),
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop:    "spec.anomalyConfig.noData.alertAfter",
+						Code:    rules.ErrorCodeGreaterThanOrEqualTo,
+						Message: `should be greater than or equal to '5m0s'`,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"alert after is too long": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					AlertAfter: ptr("8760h"), // 1 year
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop: "spec.anomalyConfig.noData.alertAfter",
+						Code: rules.ErrorCodeLessThanOrEqualTo,
+					},
+				},
+				ExpectedErrorsCount: 1,
+			},
+			"not minute precision": {
+				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
+					AlertMethods: []AnomalyConfigAlertMethod{
+						{
+							Name: "my-name",
+						}},
+					AlertAfter: ptr("1h30m30s"),
+				},
+				},
+				ExpectedErrors: []testutils.ExpectedError{
+					{
+						Prop:    "spec.anomalyConfig.noData.alertAfter",
+						Code:    rules.ErrorCodeDurationPrecision,
+						Message: "duration must be defined with 1m0s precision",
 					},
 				},
 				ExpectedErrorsCount: 1,

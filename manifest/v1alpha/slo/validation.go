@@ -282,8 +282,16 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						WithName("project").
 						Rules(rules.StringDNSLabel()),
 				)),
-		)),
-)
+			govy.ForPointer(func(a AnomalyConfigNoData) *string { return a.AlertAfter }).
+				WithName("alertAfter").
+				Include(govy.New[string](
+					govy.Transform(govy.GetSelf[string](), time.ParseDuration).
+						Rules(
+							rules.DurationPrecision(time.Minute),
+							rules.GTE(5*time.Minute),
+							rules.LTE(31*24*time.Hour)),
+				)),
+		)))
 
 var indicatorValidation = govy.New[Indicator](
 	govy.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).
