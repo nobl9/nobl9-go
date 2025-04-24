@@ -207,7 +207,7 @@ var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
 
 func validateCloudwatchJSONPeriod(period *int64, propName string, index int) error {
 	indexPropName := func() string {
-		return govy.SliceElementName(".", index) + "." + propName
+		return fmt.Sprintf(".[%d].%s", index, propName)
 	}
 	const queryPeriod = 60
 	if period == nil {
