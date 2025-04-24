@@ -11,7 +11,7 @@ require (
 	github.com/goccy/go-yaml v1.17.1
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/nobl9/govy v0.14.0
+	github.com/nobl9/govy v0.16.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
@@ -29,6 +29,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/tools v0.31.0 // indirect
+	golang.org/x/tools v0.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

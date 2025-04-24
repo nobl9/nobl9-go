@@ -120,8 +120,8 @@ func objectPlansToDocs(plan *govy.ValidatorPlan) []PropertyDoc {
 		docs = append(docs, PropertyDoc{
 			Doc:        "TODO",
 			Path:       plan.Path,
-			Type:       plan.Type,
-			Package:    plan.Package,
+			Type:       plan.TypeInfo.Name,
+			Package:    plan.TypeInfo.Package,
 			Examples:   plan.Examples,
 			Rules:      plan.Rules,
 			IsOptional: plan.IsOptional,
