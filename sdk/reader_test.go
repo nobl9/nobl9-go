@@ -214,7 +214,7 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "some error reason", http.StatusForbidden)
 		}))
-		httpClientFactory = func(url string) *http.Client { return srv.Client() }
+		httpClientFactory = func(string) *http.Client { return srv.Client() }
 		defer srv.Close()
 
 		_, err := ReadObjects(context.Background(), srv.URL)
@@ -430,6 +430,52 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 	}
 }
 
+func TestReadRawDefinitionsFromSources(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "test.yaml")
+	f, err := os.Create(path)
+	require.NoError(t, err)
+	defer func() { _ = f.Close() }()
+
+	_, err = f.WriteString(`apiVersion: foo`)
+	require.NoError(t, err)
+
+	tests := map[string]struct {
+		typ ObjectSourceType
+		src RawObjectSource
+	}{
+		"single file": {
+			typ: ObjectSourceTypeFile,
+			src: path,
+		},
+		"directory": {
+			typ: ObjectSourceTypeDirectory,
+			src: tmp,
+		},
+		"glob pattern": {
+			typ: ObjectSourceTypeGlobPattern,
+			src: filepath.Join(tmp, "**"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			src, err := ResolveObjectSource(tc.src)
+			require.NoError(t, err)
+
+			definitions, err := ReadRawDefinitionsFromSources(context.Background(), src)
+			require.NoError(t, err)
+			require.Len(t, definitions, 1)
+			expected := RawDefinition{
+				SourceType:     tc.typ,
+				ResolvedSource: path,
+				Definition:     []byte(`apiVersion: foo`),
+			}
+			assert.Equal(t, expected, *definitions[0])
+		})
+	}
+}
+
 type expectedMeta struct {
 	Name        string
 	ManifestSrc string
@@ -440,16 +486,16 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 
 	rawActual, err := json.Marshal(definitions)
 	require.NoError(t, err)
-	var actual []interface{}
+	var actual []any
 	err = json.Unmarshal(rawActual, &actual)
 	require.NoError(t, err)
 
-	expectedAcc := make([]interface{}, 0, len(definitions))
+	expectedAcc := make([]any, 0, len(definitions))
 	for _, m := range meta {
 		buf := bytes.NewBuffer([]byte{})
-		err := templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
+		err = templates.ExecuteTemplate(buf, m.Name+".tpl.json", m)
 		require.NoError(t, err)
-		var decoded interface{}
+		var decoded any
 		data := buf.Bytes()
 		if runtime.GOOS == "windows" {
 			data = bytes.ReplaceAll(data, []byte(`\`), []byte(`\\`))
@@ -457,11 +503,11 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 		err = json.Unmarshal(data, &decoded)
 		require.NoError(t, err, string(data))
 		switch v := decoded.(type) {
-		case []interface{}:
+		case []any:
 			for _, i := range v {
-				expectedAcc = append(expectedAcc, i.(map[string]interface{}))
+				expectedAcc = append(expectedAcc, i.(map[string]any))
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			expectedAcc = append(expectedAcc, v)
 		}
 	}
