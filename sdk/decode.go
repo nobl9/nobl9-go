@@ -46,19 +46,21 @@ func DecodeObject[T manifest.Object](data []byte) (object T, err error) {
 	return object, nil
 }
 
+var apiVersionRegex = regexp.MustCompile(APIVersionRegex)
+
 // processRawDefinitions function converts raw definitions to a slice of [manifest.Object].
-func processRawDefinitions(rds rawDefinitions) ([]manifest.Object, error) {
-	result := make([]manifest.Object, 0, len(rds))
-	for _, rd := range rds {
-		objects, err := DecodeObjects(rd.Definition)
+func processRawDefinitions(definitions []*RawDefinition) ([]manifest.Object, error) {
+	result := make([]manifest.Object, 0, len(definitions))
+	for _, def := range definitions {
+		objects, err := DecodeObjects(def.Definition)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", rd.ResolvedSource, err)
+			return nil, fmt.Errorf("%s: %w", def.ResolvedSource, err)
 		}
 		for _, obj := range objects {
 			if obj == nil {
 				continue
 			}
-			result = append(result, annotateWithManifestSource(obj, rd.ResolvedSource))
+			result = append(result, annotateWithManifestSource(obj, def.ResolvedSource))
 		}
 	}
 	return result, nil

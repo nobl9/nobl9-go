@@ -1,13 +1,15 @@
 package sdk
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
-	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -27,15 +29,17 @@ const APIVersionRegex = `"?apiVersion"?\s*:\s*"?n9`
 type RawObjectSource = string
 
 type (
-	// rawDefinition stores both the resolved source and raw resource definition.
-	rawDefinition struct {
-		// ResolvedSource
+	// RawDefinition stores both the resolved source and raw resource definition.
+	RawDefinition struct {
+		// SourceType is the original [ObjectSource.Type].
+		SourceType ObjectSourceType
+		// ResolvedSource is a single definition's source descriptor.
+		// For instance, if the definition was read by applying glob pattern to [ResolveObjectSources],
+		// the [ResolvedSource] will be a specific file path.
 		ResolvedSource string
-		Definition     []byte
+		// Definition is the raw bytes content of the resource source.
+		Definition []byte
 	}
-	// rawDefinitions simulates a set, map of unique resource definitions.
-	// Uniqueness is calculated on all bytes via SHA256 sum.
-	rawDefinitions = map[ /* raw definition hash */ string]rawDefinition
 )
 
 // ReadObjects resolves the [RawObjectSource] it receives
@@ -86,10 +90,25 @@ const unknownSource = "-"
 //  4. [ObjectSourceTypeReader]
 //     The [ObjectSource.Reader] is read directly and [ObjectSource.Paths] is ignored.
 func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]manifest.Object, error) {
+	definitions, err := ReadRawDefinitionsFromSources(ctx, sources...)
+	if err != nil {
+		return nil, err
+	}
+	definitions, err = filterRawDefinitions(definitions)
+	if err != nil {
+		return nil, err
+	}
+	return processRawDefinitions(definitions)
+}
+
+// ReadRawDefinitionsFromSources is a low level function which allows reading
+// resource definitions from a list of resolved [ObjectSource].
+// For more details refer to [ReadObjectsFromSources] docs.
+func ReadRawDefinitionsFromSources(ctx context.Context, sources ...*ObjectSource) ([]*RawDefinition, error) {
 	sort.Slice(sources, func(i, j int) bool {
 		return sources[i].Raw > sources[j].Raw
 	})
-	definitions := make(rawDefinitions, len(sources))
+	uniqueDefinitions := make(map[string]*RawDefinition, len(sources))
 	var (
 		err error
 		def []byte
@@ -111,13 +130,7 @@ func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]ma
 				def, err = readFromReader(src.Reader)
 			case ObjectSourceTypeURL:
 				def, err = readFromURL(ctx, path)
-			case ObjectSourceTypeDirectory, ObjectSourceTypeGlobPattern:
-				def, err = readFromFile(path)
-				// We only want to fail on the regex check when a single file is supplied.
-				if errors.Is(err, ErrInvalidFile) {
-					continue
-				}
-			case ObjectSourceTypeFile:
+			case ObjectSourceTypeDirectory, ObjectSourceTypeGlobPattern, ObjectSourceTypeFile:
 				def, err = readFromFile(path)
 			default:
 				err = ErrInvalidSourceType
@@ -125,10 +138,26 @@ func ReadObjectsFromSources(ctx context.Context, sources ...*ObjectSource) ([]ma
 			if err != nil {
 				return nil, errors.Wrapf(err, "failed to read resource definitions from '%s'", src)
 			}
-			appendUniqueDefinition(definitions, path, def)
+			hash := getRawDefinitionHash(def)
+			if _, srcExists := uniqueDefinitions[hash]; !srcExists {
+				uniqueDefinitions[hash] = &RawDefinition{
+					SourceType:     src.Type,
+					ResolvedSource: path,
+					Definition:     def,
+				}
+			}
 		}
 	}
-	return processRawDefinitions(definitions)
+	definitions := slices.SortedFunc(
+		maps.Values(uniqueDefinitions),
+		func(a, b *RawDefinition) int {
+			if cmpSource := cmp.Compare(a.SourceType, b.SourceType); cmpSource != 0 {
+				return cmpSource
+			}
+			return cmp.Compare(a.ResolvedSource, b.ResolvedSource)
+		},
+	)
+	return definitions, nil
 }
 
 var (
@@ -148,13 +177,9 @@ var (
 		strings.Join(supportedFileExtensions, ","))
 )
 
-func appendUniqueDefinition(defs rawDefinitions, src string, def []byte) {
+func getRawDefinitionHash(def []byte) string {
 	sum := sha256.Sum256(def)
-	hash := string(sum[:])
-	if _, srcExists := defs[hash]; srcExists {
-		return
-	}
-	defs[hash] = rawDefinition{ResolvedSource: src, Definition: def}
+	return string(sum[:])
 }
 
 func readFromReader(in io.Reader) ([]byte, error) {
@@ -162,6 +187,25 @@ func readFromReader(in io.Reader) ([]byte, error) {
 		return nil, ErrIoReaderIsNil
 	}
 	return io.ReadAll(in)
+}
+
+func filterRawDefinitions(definitions []*RawDefinition) ([]*RawDefinition, error) {
+	filtered := make([]*RawDefinition, 0, len(definitions))
+	for _, def := range definitions {
+		// nolint: exhaustive
+		switch def.SourceType {
+		case ObjectSourceTypeFile:
+			if !apiVersionRegex.Match(def.Definition) {
+				return nil, ErrInvalidFile
+			}
+		case ObjectSourceTypeDirectory, ObjectSourceTypeGlobPattern:
+			if !apiVersionRegex.Match(def.Definition) {
+				continue
+			}
+		}
+		filtered = append(filtered, def)
+	}
+	return filtered, nil
 }
 
 // TODO: in the future if we'd run sloctl daemon or web server, this should become a pool instead.
@@ -189,20 +233,11 @@ func readFromURL(ctx context.Context, url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-var apiVersionRegex = regexp.MustCompile(APIVersionRegex)
-
 func readFromFile(fp string) ([]byte, error) {
 	// #nosec G304
 	data, err := os.ReadFile(fp)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to read %s file", fp)
-	}
-	// The exact version is not provided as it might change.
-	// The n9 prefix however is not likely to ever change.
-	// Since the version is always at the top of the document bytes.Contain
-	// should quickly find the first match.
-	if !apiVersionRegex.Match(data) {
-		return nil, ErrInvalidFile
 	}
 	return data, nil
 }
