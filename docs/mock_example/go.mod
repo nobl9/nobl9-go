@@ -2,7 +2,7 @@ module mock_example
 
 go 1.24
 
-toolchain go1.24.2
+toolchain go1.24.3
 
 require (
 	github.com/nobl9/nobl9-go v0.102.0
