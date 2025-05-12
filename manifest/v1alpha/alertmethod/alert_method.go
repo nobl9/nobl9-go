@@ -139,7 +139,8 @@ type TeamsAlertMethod struct {
 
 // EmailAlertMethod represents a set of properties required to send an email.
 type EmailAlertMethod struct {
-	To  []string `json:"to,omitempty"`
-	Cc  []string `json:"cc,omitempty"`
-	Bcc []string `json:"bcc,omitempty"`
+	To              []string `json:"to,omitempty"`
+	Cc              []string `json:"cc,omitempty"`
+	Bcc             []string `json:"bcc,omitempty"`
+	SendAsPlainText *bool    `json:"sendAsPlainText,omitempty"`
 }
