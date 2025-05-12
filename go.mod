@@ -21,6 +21,9 @@ require (
 	golang.org/x/time v0.11.0
 )
 
+// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
+replace github.com/goccy/go-yaml v1.17.1 => github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
