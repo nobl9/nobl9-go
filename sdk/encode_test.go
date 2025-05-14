@@ -6,11 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 //go:embed test_data/encode/expected_objects.json
@@ -183,4 +185,19 @@ func TestPrintObject(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, "unsupported format: ObjectFormat(-1)", err.Error())
 	})
+}
+
+// Issue: https://github.com/goccy/go-yaml/pull/698
+func TestEncodeObjectBug(t *testing.T) {
+	x := slo.SLO{
+		// With APIVersion either not supplied or set explicitly to an empty string
+		// results in an internal panic in the github.com/goccy/go-yaml YAML encoder.
+		// APIVersion: "",
+		Metadata: slo.Metadata{
+			Name:    "foo",
+			Project: "bar",
+		},
+	}
+	buf := bytes.NewBuffer(nil)
+	require.NoError(t, EncodeObject(x, buf, manifest.ObjectFormatYAML))
 }
