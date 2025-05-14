@@ -158,6 +158,10 @@ var pagerDutyValidation = govy.New[PagerDutyAlertMethod](
 			govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
 		).
 		Rules(rules.StringMaxLength(32)),
+	govy.For(func(p PagerDutyAlertMethod) string { return *p.SendResolution.Message }).
+		WithName("sendResolution.message").
+		OmitEmpty().
+		Rules(rules.StringMaxLength(128)),
 )
 
 const validSlackURLPrefix = "https://hooks.slack.com/services/"
@@ -217,6 +221,10 @@ var serviceNowValidation = govy.New[ServiceNowAlertMethod](
 	govy.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
 		WithName("instanceName").
 		Required(),
+	govy.For(func(p ServiceNowAlertMethod) string { return *p.SendResolution.Message }).
+		WithName("sendResolution.message").
+		OmitEmpty().
+		Rules(rules.StringMaxLength(128)),
 )
 
 var jiraValidation = govy.New[JiraAlertMethod](
