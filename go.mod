@@ -8,7 +8,8 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.3.11
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/bmatcuk/doublestar/v4 v4.8.1
-	github.com/goccy/go-yaml v1.17.1
+	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
+	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/nobl9/govy v0.16.0
@@ -20,9 +21,6 @@ require (
 	golang.org/x/text v0.25.0
 	golang.org/x/time v0.11.0
 )
-
-// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
-replace github.com/goccy/go-yaml v1.17.1 => github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
