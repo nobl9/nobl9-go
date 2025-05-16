@@ -8,10 +8,11 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.3.11
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/bmatcuk/doublestar/v4 v4.8.1
-	github.com/goccy/go-yaml v1.17.1
+	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
+	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/nobl9/govy v0.16.0
+	github.com/nobl9/govy v0.17.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
@@ -21,9 +22,6 @@ require (
 	golang.org/x/time v0.11.0
 )
 
-// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
-replace github.com/goccy/go-yaml v1.17.1 => github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
-
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -32,6 +30,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
+	golang.org/x/tools v0.33.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
