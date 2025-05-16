@@ -18,3 +18,4 @@ spec:
     - alerts-tests+cc@nobl9.com
     bcc:
     - alerts-tests+bcc@nobl9.com
+    sendAsPlainText: false
