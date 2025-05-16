@@ -386,6 +386,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
 	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
 	Coralogix:             {Value: ptr(30), Unit: HRDDay},
+	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
@@ -401,6 +402,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	GoogleCloudMonitoring: {Value: ptr(30), Unit: HRDDay},
 	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
+	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
