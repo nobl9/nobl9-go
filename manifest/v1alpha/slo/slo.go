@@ -215,12 +215,13 @@ type ValidationDetails struct {
 }
 
 type ProcessStatus struct {
-	Status      string `json:"status"`
-	TriggeredBy string `json:"triggeredBy"`
-	Unit        string `json:"unit"`
-	Value       int    `json:"value"`
-	StartTime   string `json:"startTime"`
-	EndTime     string `json:"endTime,omitempty"`
+	Status       string `json:"status"`
+	Cancellation string `json:"cancellation"`
+	TriggeredBy  string `json:"triggeredBy"`
+	Unit         string `json:"unit"`
+	Value        int    `json:"value"`
+	StartTime    string `json:"startTime"`
+	EndTime      string `json:"endTime,omitempty"`
 }
 
 // TargetSloStatus represents the status of Replay  a target SLO process.
