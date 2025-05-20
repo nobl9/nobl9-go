@@ -217,6 +217,7 @@ type ValidationDetails struct {
 type ProcessStatus struct {
 	Status       string `json:"status"`
 	Cancellation string `json:"cancellation"`
+	CanceledBy   string `json:"canceledBy,omitempty"`
 	TriggeredBy  string `json:"triggeredBy"`
 	Unit         string `json:"unit"`
 	Value        int    `json:"value"`
