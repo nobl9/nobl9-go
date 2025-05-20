@@ -114,9 +114,10 @@ type OpsgenieAlertMethod struct {
 
 // ServiceNowAlertMethod represents a set of properties required to send message to ServiceNow.
 type ServiceNowAlertMethod struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"` // Field required when AlertMethod is created.
-	InstanceName string `json:"instanceName"`
+	Username       string          `json:"username"`
+	Password       string          `json:"password"` // Field required when AlertMethod is created.
+	InstanceName   string          `json:"instanceName"`
+	SendResolution *SendResolution `json:"sendResolution,omitempty"`
 }
 
 // DiscordAlertMethod represents a set of properties required to send message to Discord.
