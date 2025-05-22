@@ -15,3 +15,5 @@ spec:
     username: user
     password: super-strong-password
     instanceName: vm123
+    sendResolution:
+      message: Alert is now resolved
