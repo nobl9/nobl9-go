@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -51,8 +52,12 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(users) == 1 {
+	switch len(users) {
+	case 1:
 		return users[0], nil
+	case 0:
+		return nil, nil
+	default:
+		return nil, errors.Errorf("unexpected number of users returned: %d", len(users))
 	}
-	return nil, nil
 }
