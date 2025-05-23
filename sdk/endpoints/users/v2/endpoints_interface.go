@@ -9,7 +9,10 @@ import (
 type Endpoints interface {
 	// GetUsers fetches a list of [User] filtered by the provided search phrase.
 	GetUsers(ctx context.Context, params GetUsersRequest) ([]*User, error)
-	// GetUser fetches a user by the id.
+	// GetUser fetches a user by a unique identifier, this can be either:
+	//   - external id (e.g. 0ooeenig0o2XzD3i5416)
+	//   - email (e.g. foo.bar@nobl9.com)
+	//
 	// It returns nil if the user was not found.
 	GetUser(ctx context.Context, id string) (*User, error)
 }
