@@ -1,5 +1,5 @@
 package v2
 
-type GetUsersRequest struct {
+type getUsersRequest struct {
 	Phrase string
 }

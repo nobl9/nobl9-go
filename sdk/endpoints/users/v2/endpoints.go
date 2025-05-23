@@ -31,7 +31,7 @@ type endpoints struct {
 //
 // It returns nil if the user was not found.
 func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
-	users, err := e.getUsers(ctx, GetUsersRequest{Phrase: id})
+	users, err := e.getUsers(ctx, getUsersRequest{Phrase: id})
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 }
 
 // getUsers fetches a list of [User] filtered by the provided search phrase.
-func (e endpoints) getUsers(ctx context.Context, params GetUsersRequest) ([]*User, error) {
+func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*User, error) {
 	q := url.Values{"phrase": []string{params.Phrase}}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, baseAPIPath, nil, q, nil)
 	if err != nil {
