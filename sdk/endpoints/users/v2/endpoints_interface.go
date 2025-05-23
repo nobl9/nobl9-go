@@ -8,7 +8,7 @@ import (
 
 type Endpoints interface {
 	// GetUser fetches a user by a unique identifier, this can be either:
-	//   - external id (e.g. 00u2y4e4atkzgetUsersRequest
+	//   - external id (e.g. 00u2y4e4atkzaYkXP4x8)
 	//   - email (e.g. foo.bar@nobl9.com)
 	//
 	// It returns nil if the user was not found.
