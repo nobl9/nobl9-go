@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -212,28 +211,4 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	slo.Spec.Service = service.Metadata.Name
 	slo.Spec.Objectives[0].Name = "good"
 	return []manifest.Object{project, service, slo}
-}
-
-func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
-	t.Helper()
-	ticker := time.NewTicker(5 * time.Second)
-	timer := time.NewTimer(time.Minute)
-	defer ticker.Stop()
-	defer timer.Stop()
-	var (
-		response T
-		err      error
-	)
-	for {
-		select {
-		case <-ticker.C:
-			response, err = reqFunc()
-			if err == nil {
-				return response, nil
-			}
-		case <-timer.C:
-			t.Error("timeout")
-			return response, err
-		}
-	}
 }

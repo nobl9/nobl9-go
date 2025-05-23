@@ -17,6 +17,7 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
 )
 
 // ProjectsWildcard is used in [HeaderProject] when requesting for all projects.
@@ -95,6 +96,11 @@ func (c *Client) AuthData() authdata.Versions {
 // SLOStatusAPI is used to access specific SLO Status API version.
 func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 	return slostatusapi.NewVersions(c)
+}
+
+// Users is used to access specific users management API version.
+func (c *Client) Users() users.Versions {
+	return users.NewVersions(c)
 }
 
 // CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.

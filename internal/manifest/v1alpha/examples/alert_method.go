@@ -144,6 +144,9 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 			Username:     "user",
 			Password:     "super-strong-password",
 			InstanceName: "vm123",
+			SendResolution: &v1alphaAlertMethod.SendResolution{
+				Message: ptr("Alert is now resolved"),
+			},
 		}
 	case v1alpha.AlertMethodTypeSlack:
 		am.Spec.Slack = &v1alphaAlertMethod.SlackAlertMethod{
