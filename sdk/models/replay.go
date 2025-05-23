@@ -46,6 +46,7 @@ type ReplayStatus struct {
 	Source       string `json:"source"`
 	Status       string `json:"status"`
 	Cancellation string `json:"cancellation"`
+	CanceledBy   string `json:"canceledBy,omitempty"`
 	TriggeredBy  string `json:"triggeredBy"`
 	Unit         string `json:"unit"`
 	Value        int    `json:"value"`
@@ -57,6 +58,7 @@ func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
 	return slo.ProcessStatus{
 		Status:       status.Status,
 		Cancellation: status.Cancellation,
+		CanceledBy:   status.CanceledBy,
 		TriggeredBy:  status.TriggeredBy,
 		Unit:         status.Unit,
 		Value:        status.Value,
