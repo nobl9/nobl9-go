@@ -214,4 +214,28 @@ func mustParseTime(s string) time.Time {
 	return t
 }
 
+func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
+	t.Helper()
+	ticker := time.NewTicker(5 * time.Second)
+	timer := time.NewTimer(time.Minute)
+	defer ticker.Stop()
+	defer timer.Stop()
+	var (
+		response T
+		err      error
+	)
+	for {
+		select {
+		case <-ticker.C:
+			response, err = reqFunc()
+			if err == nil {
+				return response, nil
+			}
+		case <-timer.C:
+			t.Error("timeout")
+			return response, err
+		}
+	}
+}
+
 func ptr[T any](v T) *T { return &v }
