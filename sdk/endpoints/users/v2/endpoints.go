@@ -1,4 +1,4 @@
-package v1
+package v2
 
 import (
 	"context"
@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"net/url"
 
-	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/pkg/errors"
+
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 )
 
 const (
