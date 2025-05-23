@@ -25,8 +25,28 @@ type endpoints struct {
 	client endpointsHelpers.Client
 }
 
-// GetUsers fetches a list of [User] filtered by the provided search phrase.
-func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]*User, error) {
+// GetUser fetches a user by a unique identifier, this can be either:
+//   - external id (e.g. 00u2y4e4atkzaYkXP4x8)
+//   - email (e.g. foo.bar@nobl9.com)
+//
+// It returns nil if the user was not found.
+func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
+	users, err := e.getUsers(ctx, GetUsersRequest{Phrase: id})
+	if err != nil {
+		return nil, err
+	}
+	switch len(users) {
+	case 1:
+		return users[0], nil
+	case 0:
+		return nil, nil
+	default:
+		return nil, errors.Errorf("unexpected number of users returned: %d", len(users))
+	}
+}
+
+// getUsers fetches a list of [User] filtered by the provided search phrase.
+func (e endpoints) getUsers(ctx context.Context, params GetUsersRequest) ([]*User, error) {
 	q := url.Values{"phrase": []string{params.Phrase}}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, baseAPIPath, nil, q, nil)
 	if err != nil {
@@ -44,24 +64,4 @@ func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]*Use
 		return nil, err
 	}
 	return users.Users, nil
-}
-
-// GetUser fetches a user by a unique identifier, this can be either:
-//   - external id (e.g. 00u2y4e4atkzaYkXP4x8)
-//   - email (e.g. foo.bar@nobl9.com)
-//
-// It returns nil if the user was not found.
-func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
-	users, err := e.GetUsers(ctx, GetUsersRequest{Phrase: id})
-	if err != nil {
-		return nil, err
-	}
-	switch len(users) {
-	case 1:
-		return users[0], nil
-	case 0:
-		return nil, nil
-	default:
-		return nil, errors.Errorf("unexpected number of users returned: %d", len(users))
-	}
 }
