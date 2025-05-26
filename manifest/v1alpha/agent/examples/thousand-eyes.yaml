@@ -11,7 +11,7 @@ metadata:
     team: sales
 spec:
   description: Example ThousandEyes Agent
-  releaseChannel: stable
+  releaseChannel: beta
   thousandEyes: {}
   historicalDataRetrieval:
     maxDuration:

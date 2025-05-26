@@ -45,6 +45,7 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.CloudWatch,
 	// Support for Replay only in beta.
 	v1alpha.Elasticsearch,
+	v1alpha.ThousandEyes,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {

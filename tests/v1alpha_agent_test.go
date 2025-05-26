@@ -122,6 +122,9 @@ func assertV1alphaAgentsAreEqual(t *testing.T, expected, actual v1alphaAgent.Age
 	actual.Spec.Timeout = nil
 	actual.Spec.Jitter = nil
 	if expected.Spec.HistoricalDataRetrieval != nil {
+		if !assert.NotEmpty(t, actual.Spec.HistoricalDataRetrieval) {
+			actual.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{}
+		}
 		assert.NotEmpty(t, actual.Spec.HistoricalDataRetrieval.MinimumAgentVersion)
 		actual.Spec.HistoricalDataRetrieval.MinimumAgentVersion = ""
 	}
