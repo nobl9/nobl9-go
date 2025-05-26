@@ -190,7 +190,7 @@ func (o optionsConfig) IsNoConfigFile() bool {
 var (
 	errFmtConfigNoContextFoundInFile = `Context '%s' was not set in the '%s' configuration file.
 At least one context must be provided and set as default.`
-	// #nosec G101
+	// nolint: lll
 	credentialsNotFoundErrTpl = template.Must(template.New("").Parse(`Both client id and client secret must be provided.
 Either set them in {{ if .ConfigPath }}'{{ .ConfigPath }}' {{ end }}configuration file or provide them through env variables:
  - {{ .EnvPrefix }}CLIENT_ID
