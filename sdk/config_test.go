@@ -401,7 +401,7 @@ func TestReadConfig_Verify(t *testing.T) {
 		require.Error(t, err)
 		errMsg := fmt.Sprintf("Both client id and client secret must be provided.\n"+
 			"Either set them in '%s' configuration file or provide them through env variables:"+
-			"\n - NOBL9_SDK_CLIENT_ID\n - NOBL9_SDK_CLIENT_SECRET", configPath)
+			"\n - CLIENT_ID\n - CLIENT_SECRET", configPath)
 		assert.EqualError(t, err, errMsg)
 	})
 
@@ -415,7 +415,7 @@ func TestReadConfig_Verify(t *testing.T) {
 		require.Error(t, err)
 		assert.EqualError(t, err, "Both client id and client secret must be provided."+
 			"\nEither set them in configuration file or provide them through env variables:"+
-			"\n - NOBL9_SDK_CLIENT_ID\n - NOBL9_SDK_CLIENT_SECRET")
+			"\n - CLIENT_ID\n - CLIENT_SECRET")
 	})
 }
 
