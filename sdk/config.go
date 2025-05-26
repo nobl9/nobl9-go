@@ -229,7 +229,7 @@ func (c *Config) Verify() error {
 		EnvPrefix  string
 	}{
 		ConfigPath: path,
-		EnvPrefix:  EnvPrefix,
+		EnvPrefix:  c.options.envPrefix,
 	})
 	return errors.New(buf.String())
 }
