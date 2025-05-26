@@ -168,7 +168,7 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       "my-context",
-		fileConfig:           new(FileConfig),
+		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
 }
 
@@ -188,7 +188,7 @@ func TestReadConfig_Defaults(t *testing.T) {
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       defaultContext,
-		fileConfig:           &FileConfig{filePath: ""},
+		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
 }
 
@@ -208,9 +208,6 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 	conf, err := ReadConfig()
 	require.NoError(t, err)
 
-	// Check NO_CONFIG_FILE.
-	require.NoFileExists(t, conf.fileConfig.GetPath())
-
 	assertConfigsAreEqual(t, &Config{
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
@@ -221,7 +218,7 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       defaultContext,
-		fileConfig:           new(FileConfig),
+		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
 }
 
@@ -274,9 +271,12 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			require.NoError(t, err)
 
 			// Check NO_CONFIG_FILE.
-			require.NoFileExists(t, conf.fileConfig.GetPath())
+			require.Nil(t, conf.fileConfig)
 
-			assertConfigsAreEqual(t, &expected, conf)
+			expectedCopy := expected
+			expectedCopy.fileConfig = nil
+			expectedCopy.options = optionsConfig{NoConfigFile: ptr(true)}
+			assertConfigsAreEqual(t, &expectedCopy, conf)
 		})
 
 		// Assert environment variables take precedence over file config.
@@ -389,6 +389,23 @@ func TestReadConfig_Verify(t *testing.T) {
 	})
 
 	t.Run("no credentials", func(t *testing.T) {
+		configPath := filepath.Join(t.TempDir(), "config.toml")
+		err := os.WriteFile(configPath, []byte("[contexts]\n[contexts.default]"), 0o700)
+		require.NoError(t, err)
+
+		config, err := ReadConfig(
+			ConfigOptionFilePath(configPath),
+			ConfigOptionEnvPrefix(""))
+		require.NoError(t, err)
+		err = config.Verify()
+		require.Error(t, err)
+		errMsg := fmt.Sprintf("Both client id and client secret must be provided.\n"+
+			"Either set them in '%s' configuration file or provide them through env variables:"+
+			"\n - NOBL9_SDK_CLIENT_ID\n - NOBL9_SDK_CLIENT_SECRET", configPath)
+		assert.EqualError(t, err, errMsg)
+	})
+
+	t.Run("no credentials (no config file)", func(t *testing.T) {
 		config, err := ReadConfig(
 			ConfigOptionEnvPrefix(""),
 			ConfigOptionUseContext("non-existent"),
@@ -396,7 +413,9 @@ func TestReadConfig_Verify(t *testing.T) {
 		require.NoError(t, err)
 		err = config.Verify()
 		require.Error(t, err)
-		assert.EqualError(t, err, fmt.Sprintf(errFmtCredentialsNotFound, "", "CLIENT_ID", "CLIENT_SECRET"))
+		assert.EqualError(t, err, "Both client id and client secret must be provided."+
+			"\nEither set them in configuration file or provide them through env variables:"+
+			"\n - NOBL9_SDK_CLIENT_ID\n - NOBL9_SDK_CLIENT_SECRET")
 	})
 }
 
@@ -404,7 +423,10 @@ func assertConfigsAreEqual(t *testing.T, c1, c2 *Config) {
 	t.Helper()
 	assert.EqualExportedValues(t, *c1, *c2)
 	assert.Equal(t, c1.GetCurrentContext(), c2.GetCurrentContext())
-	assert.Equal(t, c1.fileConfig.GetPath(), c2.fileConfig.GetPath(), "file path differs")
+	require.Equal(t, c1.options.IsNoConfigFile(), c2.options.IsNoConfigFile(), "NO_CONFIG_FILE options differ")
+	if !c1.options.IsNoConfigFile() {
+		assert.Equal(t, c1.fileConfig.GetPath(), c2.fileConfig.GetPath(), "file path differs")
+	}
 }
 
 func setupConfigTestData(t *testing.T) (tempDir string) {

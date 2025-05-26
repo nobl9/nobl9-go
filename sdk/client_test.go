@@ -165,7 +165,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"iat": time.Now().Add(-time.Hour).Unix(),
 		"nbf": time.Now().Add(-time.Hour).Unix(),
-		"m2mProfile": map[string]interface{}{
+		"m2mProfile": map[string]any{
 			"environment":  authServerURL.Host, // We're using the same server to serve responses for all endpoints.
 			"organization": organization,
 			"user":         "test@nobl9.com",

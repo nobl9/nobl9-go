@@ -1,12 +1,15 @@
 package sdk
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/pkg/errors"
@@ -176,8 +179,8 @@ type optionsConfig struct {
 	clientSecret string
 }
 
-// IsNoFileConfig returns true if [ConfigOptionNoConfigFile] was provided.
-func (o optionsConfig) IsNoFileConfig() bool {
+// IsNoConfigFile returns true if [ConfigOptionNoConfigFile] was provided.
+func (o optionsConfig) IsNoConfigFile() bool {
 	if o.NoConfigFile == nil {
 		return false
 	}
@@ -188,10 +191,10 @@ var (
 	errFmtConfigNoContextFoundInFile = `Context '%s' was not set in the '%s' configuration file.
 At least one context must be provided and set as default.`
 	// #nosec G101
-	errFmtCredentialsNotFound = `Both client id and client secret must be provided.
-Either set them in '%s' configuration file or provide them through env variables:
- - %s
- - %s`
+	credentialsNotFoundErrTpl = template.Must(template.New("").Parse(`Both client id and client secret must be provided.
+Either set them in {{ if .ConfigPath }}'{{ .ConfigPath }}' {{ end }}configuration file or provide them through env variables:
+ - {{ .EnvPrefix }}CLIENT_ID
+ - {{ .EnvPrefix }}CLIENT_SECRET`))
 )
 
 // GetCurrentContext returns the current Nobl9 environment context.
@@ -200,23 +203,42 @@ func (c *Config) GetCurrentContext() string {
 }
 
 // GetFileConfig returns a copy of [FileConfig].
-func (c *Config) GetFileConfig() FileConfig {
-	return *c.fileConfig
+func (c *Config) GetFileConfig() *FileConfig {
+	if c.options.IsNoConfigFile() {
+		return nil
+	}
+	data, _ := json.Marshal(c)
+	var config FileConfig
+	_ = json.Unmarshal(data, &config)
+	return &config
 }
 
 // Verify checks if [Config] fulfills the minimum requirements.
 func (c *Config) Verify() error {
-	if c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta {
-		return errors.Errorf(errFmtCredentialsNotFound,
-			c.fileConfig.GetPath(), c.options.envPrefix+"CLIENT_ID", c.options.envPrefix+"CLIENT_SECRET")
+	noCredentials := c.ClientID == "" && c.ClientSecret == "" && c.AccessToken == "" && !c.DisableOkta
+	if !noCredentials {
+		return nil
 	}
-	return nil
+	path := ""
+	if !c.options.IsNoConfigFile() {
+		path = c.fileConfig.GetPath()
+	}
+	var buf bytes.Buffer
+	_ = credentialsNotFoundErrTpl.Execute(&buf, struct {
+		ConfigPath string
+		EnvPrefix  string
+	}{
+		ConfigPath: path,
+		EnvPrefix:  EnvPrefix,
+	})
+	return errors.New(buf.String())
 }
 
 func (c *Config) read() error {
 	// Load both file and env configs.
 	fileConfLoaded := false
-	if !c.options.IsNoFileConfig() {
+	if !c.options.IsNoConfigFile() {
+		c.fileConfig = new(FileConfig)
 		if err := c.fileConfig.Load(c.options.FilePath); err == nil {
 			fileConfLoaded = true
 			c.contextlessConfig = c.fileConfig.ContextlessConfig
@@ -248,7 +270,6 @@ func newConfig(options []ConfigOption) (*Config, error) {
 	}
 	// Default values.
 	conf := &Config{
-		fileConfig: new(FileConfig),
 		options: optionsConfig{
 			envPrefix: EnvPrefix,
 		},
@@ -330,7 +351,7 @@ func (c *Config) resolveContextConfig() error {
 }
 
 func (c *Config) saveAccessToken(token string) error {
-	if token == "" || c.options.IsNoFileConfig() {
+	if token == "" || c.options.IsNoConfigFile() {
 		return nil
 	}
 	context, ok := c.fileConfig.Contexts[c.currentContext]
@@ -344,7 +365,7 @@ func (c *Config) saveAccessToken(token string) error {
 
 // processEnvVariables takes a struct pointer and scans its fields tags looking for "env"
 // tag which should contain the environment variable name of the given struct field.
-func (c *Config) processEnvVariables(iv interface{}, overwrite bool) error {
+func (c *Config) processEnvVariables(iv any, overwrite bool) error {
 	v := reflect.ValueOf(iv)
 	if v.Kind() != reflect.Ptr {
 		return errors.New("input must be a pointer")
@@ -355,7 +376,7 @@ func (c *Config) processEnvVariables(iv interface{}, overwrite bool) error {
 	}
 	t := e.Type()
 
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		ef := e.Field(i)
 		tf := t.Field(i)
 		key := tf.Tag.Get("env")
