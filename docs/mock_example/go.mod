@@ -5,7 +5,7 @@ go 1.24
 toolchain go1.24.3
 
 require (
-	github.com/nobl9/nobl9-go v0.106.0
+	github.com/nobl9/nobl9-go v0.108.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.2
 )
