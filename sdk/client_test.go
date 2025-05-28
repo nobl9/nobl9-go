@@ -199,7 +199,7 @@ func TestClient_GetUserID(t *testing.T) {
 	emailFromToken, err := client.GetUserID(context.Background())
 	require.NoError(t, err)
 
-	assert.Equal(t, "0oaah4m0cbItMzf4I4x7", emailFromToken)
+	assert.Equal(t, "00u2y4e4atkzaYkXP4x8", emailFromToken)
 }
 
 func addOrganization(objects []manifest.Object, org string) []manifest.Object {
@@ -220,7 +220,7 @@ type endpointConfig struct {
 
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {
 	t.Helper()
-	return prepareTestClientWithClaimsUser(t, endpoint, "0oaah4m0cbItMzf4I4x7")
+	return prepareTestClientWithClaimsUser(t, endpoint, "00u2y4e4atkzaYkXP4x8")
 }
 
 func prepareTestClientWithClaimsUser(
