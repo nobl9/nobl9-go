@@ -196,10 +196,10 @@ func TestClient_GetUserID(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{})
 	defer srv.Close()
 
-	emailFromToken, err := client.GetUserID(context.Background())
+	userID, err := client.GetUserID(context.Background())
 	require.NoError(t, err)
 
-	assert.Equal(t, "00u2y4e4atkzaYkXP4x8", emailFromToken)
+	assert.Equal(t, "00u2y4e4atkzaYkXP4x8", userID)
 }
 
 func addOrganization(objects []manifest.Object, org string) []manifest.Object {
