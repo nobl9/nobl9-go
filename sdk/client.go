@@ -168,10 +168,6 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 }
 
 // GetUser returns the user email
-// Starting from 20 June 2025 for versions < v0.109.0, GetUser will no longer return the access key owner's email.
-// For versions > v0.109.0 it will call Nobl9 API to fetch the user data by the user identifier.
-// This change is due to a policy update that removes user data from token claims,
-// making the access key owner's email unavailable in the token.
 func (c *Client) GetUser(ctx context.Context) (string, error) {
 	userDataFromToken, err := c.credentials.GetUser(ctx)
 	if err != nil {
