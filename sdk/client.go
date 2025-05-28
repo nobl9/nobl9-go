@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 
@@ -166,9 +167,30 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
-// GetUser returns the user read from JWT token claims.
+// GetUser returns the user email
+// Starting from 20 June 2025 for versions < v0.109.0, GetUser will no longer return the access key owner's email.
+// For versions > v0.109.0 it will call Nobl9 API to fetch the user data by the user identifier.
+// This change is due to a policy update that removes user data from token claims,
+// making the access key owner's email unavailable in the token.
 func (c *Client) GetUser(ctx context.Context) (string, error) {
-	return c.credentials.GetUser(ctx)
+	userDataFromToken, err := c.credentials.GetUser(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get user data from token")
+	}
+	var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if emailRegex.MatchString(userDataFromToken) {
+		return userDataFromToken, nil
+	}
+
+	user, err := c.Users().V2().GetUser(ctx, userDataFromToken)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("could not find user data")
+	}
+
+	return user.Email, nil
 }
 
 // SetUserAgent will set [HeaderUserAgent] to the provided value.

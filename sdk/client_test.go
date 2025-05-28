@@ -24,6 +24,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/users/v2"
 )
 
 func TestClient_CreateRequest(t *testing.T) {
@@ -110,6 +111,104 @@ func TestDefaultUserAgent(t *testing.T) {
 	out, err := exec.Command(path).Output()
 	require.NoError(t, err, getStderrFromExec(err))
 	assert.Contains(t, string(out), "sdk/(devel)")
+}
+
+func TestDefaultGetUserEmail(t *testing.T) {
+	t.Run("get user email from token", func(t *testing.T) {
+		client, srv := prepareTestClient(t, endpointConfig{})
+		defer srv.Close()
+
+		emailFromToken, err := client.GetUser(context.Background())
+		require.NoError(t, err)
+
+		assert.Equal(t, "test@nobl9.com", emailFromToken)
+	})
+
+	t.Run("get user email from API when token does not contain email", func(t *testing.T) {
+		expectedEmail := "email@email.com"
+		userID := "userID"
+
+		responsePayload := struct {
+			Users []*v2.User
+		}{
+			Users: []*v2.User{
+				{
+					UserID:    userID,
+					FirstName: "user-firstname",
+					LastName:  "user-lastname",
+					Email:     expectedEmail,
+				},
+			},
+		}
+
+		client, srv := prepareTestClient(t, endpointConfig{
+			Path: "api/usrmgmt/v2/users",
+			ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+				require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
+			},
+		})
+		defer srv.Close()
+
+		ctx := context.Background()
+		_, err := client.credentials.refreshAccessToken(ctx)
+		require.NoError(t, err)
+
+		client.credentials.claims.M2MProfile.Value.User = userID
+
+		emailFromAPI, err := client.GetUser(context.Background())
+		require.NoError(t, err)
+
+		assert.Equal(t, expectedEmail, emailFromAPI)
+	})
+
+	t.Run(
+		"get user returns error when token does not contain email and the user is not found in API",
+		func(t *testing.T) {
+			responsePayload := struct {
+				Users []*v2.User `json:"users"`
+			}{
+				Users: []*v2.User{},
+			}
+			client, srv := prepareTestClient(t, endpointConfig{
+				Path: "api/usrmgmt/v2/users",
+				ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+					require.NoError(t, json.NewEncoder(w).Encode(responsePayload))
+				},
+			})
+			defer srv.Close()
+
+			ctx := context.Background()
+			_, err := client.credentials.refreshAccessToken(ctx)
+			require.NoError(t, err)
+
+			client.credentials.claims.M2MProfile.Value.User = "any-userID"
+
+			emailFromAPI, err := client.GetUser(context.Background())
+
+			assert.Empty(t, emailFromAPI)
+			assert.Error(t, err)
+		})
+
+	t.Run("get user returns error when token does not contain email and API returns error", func(t *testing.T) {
+		client, srv := prepareTestClient(t, endpointConfig{
+			Path: "api/usrmgmt/v2/users",
+			ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
+				w.WriteHeader(http.StatusBadGateway)
+			},
+		})
+		defer srv.Close()
+
+		ctx := context.Background()
+		_, err := client.credentials.refreshAccessToken(ctx)
+		require.NoError(t, err)
+
+		client.credentials.claims.M2MProfile.Value.User = "any-userID"
+
+		emailFromAPI, err := client.GetUser(context.Background())
+
+		assert.Empty(t, emailFromAPI)
+		assert.Error(t, err)
+	})
 }
 
 func addOrganization(objects []manifest.Object, org string) []manifest.Object {
