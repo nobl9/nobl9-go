@@ -114,7 +114,7 @@ func TestDefaultUserAgent(t *testing.T) {
 }
 
 func TestClient_GetUserEmail(t *testing.T) {
-	t.Run("get user  from token", func(t *testing.T) {
+	t.Run("get user from token", func(t *testing.T) {
 		client, srv := prepareTestClientWithClaimsUser(t, endpointConfig{}, "test@nobl9.com")
 		defer srv.Close()
 
