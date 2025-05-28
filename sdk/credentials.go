@@ -103,6 +103,9 @@ func (c *credentialsStore) GetOrganization(ctx context.Context) (string, error) 
 // GetUser first ensures a token has been parsed before returning the user,
 // as it is extracted from the token claims.
 // [credentialsStore.claims].<profile>.User should not be accessed directly, but rather through this method.
+//
+// Deprecated: Getting user email with this method will be not possible
+// due to changed policy of exposing data in token.
 func (c *credentialsStore) GetUser(ctx context.Context) (string, error) {
 	if _, err := c.refreshAccessToken(ctx); err != nil {
 		return "", errors.Wrap(err, "failed to get user")
@@ -116,6 +119,19 @@ func (c *credentialsStore) GetUser(ctx context.Context) (string, error) {
 		return c.claims.AgentProfile.Value.User, nil
 	}
 	return "", errors.New("unknown token type")
+}
+
+func (c *credentialsStore) GetUserID(ctx context.Context) (string, error) {
+	if _, err := c.refreshAccessToken(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to get user id")
+	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.tokenType == tokenTypeM2M {
+		return c.claims.M2MProfile.Value.User, nil
+	}
+
+	return "", errors.New("only tokens obtained from user type access keys can be used to get user id")
 }
 
 // It's important for this to be clean client, request middleware in Go is kinda clunky
