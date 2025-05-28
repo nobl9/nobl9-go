@@ -167,7 +167,7 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
-// GetUser returns the user email
+// GetUser returns the email of the user associated with the access token used by [Client].
 func (c *Client) GetUser(ctx context.Context) (string, error) {
 	userDataFromToken, err := c.credentials.GetUser(ctx)
 	if err != nil {
