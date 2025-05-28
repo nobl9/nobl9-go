@@ -134,8 +134,8 @@ func TestDefaultGetUserEmail(t *testing.T) {
 			Users: []*v2.User{
 				{
 					UserID:    userID,
-					FirstName: "user-firstname",
-					LastName:  "user-lastname",
+					FirstName: "user-first-name",
+					LastName:  "user-last-name",
 					Email:     expectedEmail,
 				},
 			},
