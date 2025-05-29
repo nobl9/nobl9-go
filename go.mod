@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/MicahParks/jwkset v0.9.6
-	github.com/MicahParks/keyfunc/v3 v3.3.11
+	github.com/MicahParks/keyfunc/v3 v3.4.0
 	github.com/aws/aws-sdk-go v1.55.7
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
