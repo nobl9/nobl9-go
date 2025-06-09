@@ -14,6 +14,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 const (
@@ -21,6 +22,7 @@ const (
 	apiDelete    = "delete"
 	apiGet       = "get"
 	apiGetGroups = "usrmgmt/groups"
+	apiMoveSLOs  = "objects/v1/slos/move"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
@@ -107,6 +109,30 @@ func (e endpoints) Get(
 	return e.readObjects(ctx, resp.Body)
 }
 
+func (e endpoints) MoveSLOs(ctx context.Context, payload models.MoveSLOs) error {
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(payload); err != nil {
+		return fmt.Errorf("cannot encode %T: %w", payload, err)
+	}
+	req, err := e.client.CreateRequest(
+		ctx,
+		http.MethodPost,
+		apiMoveSLOs,
+		nil,
+		nil,
+		buf,
+	)
+	if err != nil {
+		return err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return err
+	}
+	_ = resp.Body.Close()
+	return nil
+}
+
 func (e endpoints) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
@@ -119,7 +145,7 @@ func (e endpoints) applyOrDeleteObjects(
 	}
 	buf := new(bytes.Buffer)
 	if err = json.NewEncoder(buf).Encode(objects); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
+		return fmt.Errorf("cannot encode %T: %w", objects, err)
 	}
 
 	var method string
