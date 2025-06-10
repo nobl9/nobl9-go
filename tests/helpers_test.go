@@ -297,4 +297,22 @@ func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error
 	}
 }
 
+func uniqueObjects[T manifest.Object](t *testing.T, objects []T) []T {
+	t.Helper()
+
+	seen := make(map[string]struct{}, len(objects))
+	unique := make([]T, 0, len(objects))
+	for _, obj := range objects {
+		key := obj.GetKind().String() + ":" + obj.GetName()
+		if v, ok := any(obj).(manifest.ProjectScopedObject); ok {
+			key += ":" + v.GetProject()
+		}
+		if _, exists := seen[key]; !exists {
+			seen[key] = struct{}{}
+			unique = append(unique, obj)
+		}
+	}
+	return unique
+}
+
 func ptr[T any](v T) *T { return &v }
