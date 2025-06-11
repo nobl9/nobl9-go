@@ -60,13 +60,13 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				OldProject: oldProject.GetName(),
 				Service:    newService.GetName(),
 			}
-			updatedSLO := slo
-			updatedSLO.Metadata.Project = newProject.GetName()
-			updatedSLO.Spec.Service = newService.GetName()
+			movedSLO := slo
+			movedSLO.Metadata.Project = newProject.GetName()
+			movedSLO.Spec.Service = newService.GetName()
 			return v1MoveSLOsTestCase{
 				setupObjects:    []manifest.Object{oldProject, oldService, slo, newProject, newService},
 				payload:         payload,
-				expectedObjects: []manifest.Object{oldProject, oldService, updatedSLO, newProject, newService},
+				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
 			}
 		}(),
 		"move SLO to an existing Project and non-existing Service": func() v1MoveSLOsTestCase {
@@ -82,16 +82,16 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				OldProject: oldProject.GetName(),
 				Service:    newServiceName,
 			}
-			updatedSLO := slo
-			updatedSLO.Metadata.Project = newProject.GetName()
-			updatedSLO.Spec.Service = newServiceName
+			movedSLO := slo
+			movedSLO.Metadata.Project = newProject.GetName()
+			movedSLO.Spec.Service = newServiceName
 			// New service should be created automatically based on the existing Service.
 			newService := newV1alphaService(t, v1alphaService.Metadata{Name: newServiceName, Project: newProject.GetName()})
 
 			return v1MoveSLOsTestCase{
 				setupObjects:    []manifest.Object{oldProject, oldService, slo, newProject},
 				payload:         payload,
-				expectedObjects: []manifest.Object{oldProject, oldService, updatedSLO, newProject, newService},
+				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
 			}
 		}(),
 		"move SLO to a non-existing Project and Service": func() v1MoveSLOsTestCase {
@@ -107,9 +107,9 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				OldProject: oldProject.GetName(),
 				Service:    newServiceName,
 			}
-			updatedSLO := slo
-			updatedSLO.Metadata.Project = newProjectName
-			updatedSLO.Spec.Service = newServiceName
+			movedSLO := slo
+			movedSLO.Metadata.Project = newProjectName
+			movedSLO.Spec.Service = newServiceName
 			// Both project and service should be created automatically.
 			// Project should be bare-bones only with a description.
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: newProjectName})
@@ -122,7 +122,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			return v1MoveSLOsTestCase{
 				setupObjects:    []manifest.Object{oldProject, oldService, slo},
 				payload:         payload,
-				expectedObjects: []manifest.Object{oldProject, oldService, updatedSLO, newProject, newService},
+				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
 			}
 		}(),
 		"validation error": {
@@ -164,12 +164,14 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			// Set alert policies for SLO.
 			slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
 
+			errMsg := fmt.Sprintf("cannot move %s SLO while it has assigned Alert Policies,"+
+				" detach them manually or pass 'detachAlertPolicies' parameter in the request body", slo.GetName())
 			return v1MoveSLOsTestCase{
 				setupObjects: []manifest.Object{oldProject, oldService, alertPolicy, slo},
 				payload:      payload,
 				expectedError: &sdk.HTTPError{
 					APIErrors: sdk.APIErrors{Errors: []sdk.APIError{{
-						Title: `{"error":"cannot move SLO with assigned Alert Policies","message":"cannot move SLO with assigned Alert Policies","statusCode":400}`, //nolint:lll
+						Title: fmt.Sprintf(`{"error":"%[1]s","message":"%[1]s","statusCode":400}`, errMsg),
 					}}},
 					StatusCode: http.StatusBadRequest,
 					Method:     http.MethodPost,
@@ -197,17 +199,59 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				Service:    newService.GetName(),
 			}
 
+			errMsg := fmt.Sprintf("%s SLO already exists in %s Project", sloName, newProject.GetName())
 			return v1MoveSLOsTestCase{
 				setupObjects: []manifest.Object{oldProject, oldService, slo, newProject, newService, existingSLO},
 				payload:      payload,
 				expectedError: &sdk.HTTPError{
 					APIErrors: sdk.APIErrors{Errors: []sdk.APIError{{
-						Title: fmt.Sprintf(`{"error":"%[1]s SLO already exists in %[2]s Project","message":"%[1]s SLO already exists in %[2]s Project","statusCode":409}`, //nolint:lll
-							sloName, newProject.GetName()),
+						Title: fmt.Sprintf(`{"error":"%[1]s","message":"%[1]s","statusCode":409}`, errMsg),
 					}}},
 					StatusCode: http.StatusConflict,
 					Method:     http.MethodPost,
 				},
+			}
+		}(),
+		"detach alert policies from the SLO": func() v1MoveSLOsTestCase {
+			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: generateName(), Project: oldProject.GetName()})
+			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
+			newService := newV1alphaService(t, v1alphaService.Metadata{Name: generateName(), Project: newProject.GetName()})
+
+			alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+			alertPolicy1 := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
+				Name:    generateName(),
+				Project: oldProject.GetName(),
+			}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
+			alertPolicy1.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{}
+			alertPolicy2 := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
+				Name:    generateName(),
+				Project: oldProject.GetName(),
+			}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
+			alertPolicy2.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{}
+
+			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
+			slo.Spec.AlertPolicies = []string{alertPolicy1.GetName(), alertPolicy2.GetName()}
+
+			payload := models.MoveSLOs{
+				SLONames:            []string{slo.GetName()},
+				NewProject:          newProject.GetName(),
+				OldProject:          oldProject.GetName(),
+				Service:             newService.GetName(),
+				DetachAlertPolicies: true,
+			}
+			movedSLO := slo
+			movedSLO.Metadata.Project = newProject.GetName()
+			movedSLO.Spec.Service = newService.GetName()
+			movedSLO.Spec.AlertPolicies = nil // Alert policies should be detached.
+
+			dependencyObjects := []manifest.Object{
+				oldProject, oldService, alertPolicy1, alertPolicy2, newProject, newService,
+			}
+			return v1MoveSLOsTestCase{
+				setupObjects:    append(dependencyObjects, slo),
+				payload:         payload,
+				expectedObjects: append(dependencyObjects, movedSLO),
 			}
 		}(),
 	}
