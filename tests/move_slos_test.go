@@ -165,7 +165,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
 
 			errMsg := fmt.Sprintf("cannot move %s SLO while it has assigned Alert Policies,"+
-				" detach them manually or pass 'detachAlertPolicies' parameter in the request body", slo.GetName())
+				" detach them manually or pass 'detachAlertPolicies' parameter to 'true' in the request body", slo.GetName())
 			return v1MoveSLOsTestCase{
 				setupObjects: []manifest.Object{oldProject, oldService, alertPolicy, slo},
 				payload:      payload,
