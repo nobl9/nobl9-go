@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,10 @@ type v1MoveSLOsTestCase struct {
 }
 
 func Test_Objects_V1_MoveSLOs(t *testing.T) {
+	const moveSLOFeatureFlag = "MOVE_SLO_ENABLED"
+	if os.Getenv(moveSLOFeatureFlag) != "true" {
+		t.Skipf("the tests are only run if %s env variable is set to 'true'", moveSLOFeatureFlag)
+	}
 	t.Parallel()
 	ctx := context.Background()
 
