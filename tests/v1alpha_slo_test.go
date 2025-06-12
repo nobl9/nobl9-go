@@ -58,22 +58,23 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		v1alphaSLODependencyAgents(t),
 		v1alphaSLODependencyDirects(t)...)
 
-	sloExamples := examplesRegistry[manifest.KindSLO]
-
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
 	// allowing them to depend on the SLOs listed before them.
-	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
-		var intI, intJ int
-		iSlo := i.GetObject().(v1alphaSLO.SLO)
-		if iSlo.Spec.HasCompositeObjectives() {
-			intI = 1
-		}
-		jSlo := j.GetObject().(v1alphaSLO.SLO)
-		if jSlo.Spec.HasCompositeObjectives() {
-			intJ = 1
-		}
-		return intI - intJ
-	})
+	sloExamples := slices.SortedStableFunc(
+		slices.Values(examplesRegistry[manifest.KindSLO]),
+		func(i, j exampleWrapper) int {
+			var intI, intJ int
+			iSlo := i.GetObject().(v1alphaSLO.SLO)
+			if iSlo.Spec.HasCompositeObjectives() {
+				intI = 1
+			}
+			jSlo := j.GetObject().(v1alphaSLO.SLO)
+			if jSlo.Spec.HasCompositeObjectives() {
+				intJ = 1
+			}
+			return intI - intJ
+		},
+	)
 
 	slos := make([]manifest.Object, 0, len(sloExamples))
 	dependencies := []manifest.Object{
