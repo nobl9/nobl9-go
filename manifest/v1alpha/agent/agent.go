@@ -81,11 +81,13 @@ type Spec struct {
 
 // Status holds dynamic content which is not part of the static Agent definition.
 type Status struct {
-	AgentType                string `json:"agentType"`
-	AgentVersion             string `json:"agentVersion,omitempty"`
-	LastConnection           string `json:"lastConnection,omitempty"`
-	NewestStableAgentVersion string `json:"newestStableAgentVersion,omitempty"`
-	NewestBetaAgentVersion   string `json:"newestBetaAgentVersion,omitempty"`
+	AgentType                        string            `json:"agentType"`
+	AgentVersion                     string            `json:"agentVersion,omitempty"`
+	LastConnection                   string            `json:"lastConnection,omitempty"`
+	NewestStableAgentVersion         string            `json:"newestStableAgentVersion,omitempty"`
+	NewestBetaAgentVersion           string            `json:"newestBetaAgentVersion,omitempty"`
+	AgentEnvironmentOverrideJitter   *v1alpha.Jitter   `json:"agentEnvironmentOverrideJitter,omitempty"`
+	AgentEnvironmentOverrideInterval *v1alpha.Interval `json:"agentEnvironmentOverrideInterval,omitempty"`
 }
 
 func (s Spec) GetType() (v1alpha.DataSourceType, error) {
