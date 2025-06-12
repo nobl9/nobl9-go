@@ -63,6 +63,33 @@ type Duration struct {
 	Unit  DurationUnit `json:"unit" validate:"required"`
 }
 
+// NewDuration parses a time.Duration and translates it into a v1alpha.Duration struct with a given unit.
+func NewDuration(d time.Duration, unit DurationUnit) (Duration, error) {
+	if d < 0 {
+		return Duration{}, errors.Errorf("duration cannot be negative: %s", d)
+	}
+
+	var value int
+	switch unit {
+	case Millisecond:
+		value = int(d.Milliseconds())
+	case Second:
+		value = int(d.Seconds())
+	case Minute:
+		value = int(d.Minutes())
+	case Hour:
+		value = int(d.Hours())
+	default:
+		return Duration{}, errors.Errorf("invalid value unit '%s'", unit)
+	}
+	v1alphaDuration := Duration{
+		Value: ptr(value),
+		Unit:  unit,
+	}
+
+	return v1alphaDuration, nil
+}
+
 type DurationUnit string
 
 const (
