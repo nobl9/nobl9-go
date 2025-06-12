@@ -33,11 +33,11 @@ type v1MoveSLOsTestCase struct {
 }
 
 func Test_Objects_V1_MoveSLOs(t *testing.T) {
+	t.Parallel()
 	const moveSLOFeatureFlag = "MOVE_SLO_ENABLED"
 	if os.Getenv(moveSLOFeatureFlag) != "true" {
 		t.Skipf("the tests are only run if %s env variable is set to 'true'", moveSLOFeatureFlag)
 	}
-	t.Parallel()
 	ctx := context.Background()
 
 	directProject := newV1alphaProject(t, v1alphaProject.Metadata{
