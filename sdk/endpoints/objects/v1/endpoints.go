@@ -109,6 +109,10 @@ func (e endpoints) Get(
 	return e.readObjects(ctx, resp.Body)
 }
 
+// MoveSLOs allows moving SLOs between Projects.
+//
+// WARNING! This API is not yet available, using this function will result in an error
+// until platform support is released.
 func (e endpoints) MoveSLOs(ctx context.Context, payload models.MoveSLOs) error {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(payload); err != nil {
