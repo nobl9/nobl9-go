@@ -187,6 +187,35 @@ func TestSpec_Category(t *testing.T) {
 	})
 }
 
+func TestValidate_Metadata_Labels(t *testing.T) {
+	t.Run("passes with valid labels", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Metadata.Labels = map[string][]string{
+			"team":        {"backend"},
+			"environment": {"production", "staging"},
+		}
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+
+	t.Run("passes with empty labels", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Metadata.Labels = nil
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+
+	t.Run("fails with invalid label key", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Metadata.Labels = map[string][]string{
+			"INVALID_KEY": {"value"},
+		}
+		err := validate(annotation)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "metadata.labels")
+	})
+}
+
 func validAnnotation() Annotation {
 	return New(
 		Metadata{
