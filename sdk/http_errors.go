@@ -126,19 +126,33 @@ func processAPIErrors(resp *http.Response) (APIErrors, error) {
 	if resp.Body == nil {
 		return APIErrors{Errors: []APIError{{Title: "unknown error"}}}, nil
 	}
-	if typ := resp.Header.Get("Content-Type"); typ != "" && strings.HasPrefix(typ, "application/json") {
-		dec := json.NewDecoder(resp.Body)
-		var apiErrors APIErrors
-		if err := dec.Decode(&apiErrors); err != nil {
-			return APIErrors{}, errors.Wrap(err, "failed to decode JSON response body")
-		}
-		return apiErrors, nil
-	}
-	rawBody, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return APIErrors{}, errors.Wrap(err, "failed to read response body")
 	}
-	return APIErrors{Errors: []APIError{{Title: string(bytes.TrimSpace(rawBody))}}}, nil
+	contentType := resp.Header.Get("Content-Type")
+	switch {
+	case strings.HasPrefix(contentType, "application/json"):
+		dec := json.NewDecoder(bytes.NewReader(data))
+		dec.DisallowUnknownFields()
+		var apiErrors APIErrors
+		if err = dec.Decode(&apiErrors); err != nil {
+			switch {
+			// In case we've received a JSON response that is not of type [APIErrors].
+			case strings.HasPrefix(err.Error(), "json: unknown field"):
+				return newGenericAPIErrors(data)
+			default:
+				return APIErrors{}, errors.Wrap(err, "failed to decode JSON response body")
+			}
+		}
+		return apiErrors, nil
+	default:
+		return newGenericAPIErrors(data)
+	}
+}
+
+func newGenericAPIErrors(data []byte) (APIErrors, error) {
+	return APIErrors{Errors: []APIError{{Title: string(bytes.TrimSpace(data))}}}, nil
 }
 
 //go:embed http_error.tmpl

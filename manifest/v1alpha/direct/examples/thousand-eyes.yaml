@@ -11,9 +11,16 @@ metadata:
     team: sales
 spec:
   description: Example ThousandEyes Direct
-  releaseChannel: stable
+  releaseChannel: beta
   thousandEyes:
     oauthBearerToken: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 2
     unit: Minute

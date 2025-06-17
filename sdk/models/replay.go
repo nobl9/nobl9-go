@@ -43,23 +43,27 @@ type ReplayWithStatus struct {
 }
 
 type ReplayStatus struct {
-	Source      string `json:"source"`
-	Status      string `json:"status"`
-	TriggeredBy string `json:"triggeredBy"`
-	Unit        string `json:"unit"`
-	Value       int    `json:"value"`
-	StartTime   string `json:"startTime"`
-	EndTime     string `json:"endTime,omitempty"`
+	Source       string `json:"source"`
+	Status       string `json:"status"`
+	Cancellation string `json:"cancellation"`
+	CanceledBy   string `json:"canceledBy,omitempty"`
+	TriggeredBy  string `json:"triggeredBy"`
+	Unit         string `json:"unit"`
+	Value        int    `json:"value"`
+	StartTime    string `json:"startTime"`
+	EndTime      string `json:"endTime,omitempty"`
 }
 
 func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
 	return slo.ProcessStatus{
-		Status:      status.Status,
-		TriggeredBy: status.TriggeredBy,
-		Unit:        status.Unit,
-		Value:       status.Value,
-		StartTime:   status.StartTime,
-		EndTime:     status.EndTime,
+		Status:       status.Status,
+		Cancellation: status.Cancellation,
+		CanceledBy:   status.CanceledBy,
+		TriggeredBy:  status.TriggeredBy,
+		Unit:         status.Unit,
+		Value:        status.Value,
+		StartTime:    status.StartTime,
+		EndTime:      status.EndTime,
 	}
 }
 

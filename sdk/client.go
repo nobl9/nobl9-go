@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
 )
 
 // ProjectsWildcard is used in [HeaderProject] when requesting for all projects.
@@ -97,6 +99,11 @@ func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 	return slostatusapi.NewVersions(c)
 }
 
+// Users is used to access specific users management API version.
+func (c *Client) Users() users.Versions {
+	return users.NewVersions(c)
+}
+
 // CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.
 // It also adds all the mandatory headers to the request and encodes query parameters.
 func (c *Client) CreateRequest(
@@ -160,9 +167,26 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
-// GetUser returns the user read from JWT token claims.
+// GetUser returns the email of the user associated with the access token used by [Client].
 func (c *Client) GetUser(ctx context.Context) (string, error) {
-	return c.credentials.GetUser(ctx)
+	userDataFromToken, err := c.credentials.GetUser(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get user data from token")
+	}
+	var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	if emailRegex.MatchString(userDataFromToken) {
+		return userDataFromToken, nil
+	}
+
+	user, err := c.Users().V2().GetUser(ctx, userDataFromToken)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("could not find user data")
+	}
+
+	return user.Email, nil
 }
 
 // SetUserAgent will set [HeaderUserAgent] to the provided value.

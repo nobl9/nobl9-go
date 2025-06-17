@@ -25,6 +25,14 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			Cc:  []string{"test@example.com"},
 			Bcc: []string{"test@example.com"},
 		},
+		"passes with enabled sending as plain text": {
+			To:              []string{"test@example.com"},
+			SendAsPlainText: ptr(true),
+		},
+		"passes with disabled sending as plain text": {
+			To:              []string{"test@example.com"},
+			SendAsPlainText: ptr(false),
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			alertMethod := validAlertMethod()

@@ -228,7 +228,7 @@ func TestHTTPError(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewBufferString(`{"this:"that"}`)),
 		})
 		require.Error(t, err)
-		assert.Error(t, err, "failed to decode JSON response body")
+		assert.ErrorContains(t, err, "failed to decode JSON response body")
 	})
 	t.Run("content type with charset", func(t *testing.T) {
 		t.Parallel()
@@ -245,6 +245,22 @@ func TestHTTPError(t *testing.T) {
 		expectedError := &HTTPError{
 			StatusCode: 400,
 			APIErrors:  apiErrors,
+		}
+		assert.Equal(t, expectedError, err)
+	})
+	t.Run("failed to read JSON - unknown fields", func(t *testing.T) {
+		t.Parallel()
+		err := processHTTPResponse(&http.Response{
+			StatusCode: http.StatusBadRequest,
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(bytes.NewBufferString(`{"foo": "bar"}`)),
+		})
+		require.Error(t, err)
+		expectedError := &HTTPError{
+			StatusCode: 400,
+			APIErrors: APIErrors{
+				Errors: []APIError{{Title: `{"foo": "bar"}`}},
+			},
 		}
 		assert.Equal(t, expectedError, err)
 	})

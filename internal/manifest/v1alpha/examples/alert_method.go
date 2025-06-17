@@ -105,9 +105,10 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 	switch a.typ {
 	case v1alpha.AlertMethodTypeEmail:
 		am.Spec.Email = &v1alphaAlertMethod.EmailAlertMethod{
-			To:  []string{"alerts-tests@nobl9.com"},
-			Cc:  []string{"alerts-tests+cc@nobl9.com"},
-			Bcc: []string{"alerts-tests+bcc@nobl9.com"},
+			To:              []string{"alerts-tests@nobl9.com"},
+			Cc:              []string{"alerts-tests+cc@nobl9.com"},
+			Bcc:             []string{"alerts-tests+bcc@nobl9.com"},
+			SendAsPlainText: ptr(false),
 		}
 	case v1alpha.AlertMethodTypeDiscord:
 		am.Spec.Discord = &v1alphaAlertMethod.DiscordAlertMethod{
@@ -143,6 +144,9 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 			Username:     "user",
 			Password:     "super-strong-password",
 			InstanceName: "vm123",
+			SendResolution: &v1alphaAlertMethod.SendResolution{
+				Message: ptr("Alert is now resolved"),
+			},
 		}
 	case v1alpha.AlertMethodTypeSlack:
 		am.Spec.Slack = &v1alphaAlertMethod.SlackAlertMethod{

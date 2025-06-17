@@ -114,9 +114,10 @@ type OpsgenieAlertMethod struct {
 
 // ServiceNowAlertMethod represents a set of properties required to send message to ServiceNow.
 type ServiceNowAlertMethod struct {
-	Username     string `json:"username"`
-	Password     string `json:"password"` // Field required when AlertMethod is created.
-	InstanceName string `json:"instanceName"`
+	Username       string          `json:"username"`
+	Password       string          `json:"password"` // Field required when AlertMethod is created.
+	InstanceName   string          `json:"instanceName"`
+	SendResolution *SendResolution `json:"sendResolution,omitempty"`
 }
 
 // DiscordAlertMethod represents a set of properties required to send message to Discord.
@@ -139,7 +140,8 @@ type TeamsAlertMethod struct {
 
 // EmailAlertMethod represents a set of properties required to send an email.
 type EmailAlertMethod struct {
-	To  []string `json:"to,omitempty"`
-	Cc  []string `json:"cc,omitempty"`
-	Bcc []string `json:"bcc,omitempty"`
+	To              []string `json:"to,omitempty"`
+	Cc              []string `json:"cc,omitempty"`
+	Bcc             []string `json:"bcc,omitempty"`
+	SendAsPlainText *bool    `json:"sendAsPlainText,omitempty"`
 }
