@@ -41,7 +41,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 		Name:    generateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+	alertPolicyExample := getExample(t, manifest.KindAlertPolicy, nil).Example
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 		Name:    generateName(),
 		Project: project.GetName(),
@@ -66,7 +66,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	require.Len(t, directs, 1)
 	direct := directs[0].(v1alphaDirect.Direct)
 
-	slo := getExample[v1alphaSLO.SLO](t,
+	slo := getExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
 			dsGetter, ok := example.(dataSourceTypeGetter)
@@ -90,7 +90,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	defaultProjectSLO.Spec.AlertPolicies = []string{defaultProjectAlertPolicy.Metadata.Name}
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
-	examples := examplesRegistry[manifest.KindAlertSilence]
+	examples := getExamples(t, manifest.KindAlertSilence)
 	allObjects := make([]manifest.Object, 0, len(examples))
 	allObjects = append(
 		allObjects,
@@ -200,7 +200,7 @@ func newV1alphaAlertSilence(
 	subVariant string,
 ) v1alphaAlertSilence.AlertSilence {
 	t.Helper()
-	ap := getExample[v1alphaAlertSilence.AlertSilence](t,
+	ap := getExampleObject[v1alphaAlertSilence.AlertSilence](t,
 		manifest.KindAlertSilence,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant

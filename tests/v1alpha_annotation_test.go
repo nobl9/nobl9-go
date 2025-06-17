@@ -42,7 +42,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	require.Len(t, directs, 1)
 	direct := directs[0].(v1alphaDirect.Direct)
 
-	slo := getExample[v1alphaSLO.SLO](t,
+	slo := getExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
 			dsGetter, ok := example.(dataSourceTypeGetter)

@@ -93,7 +93,7 @@ func newV1alphaDirect(
 	metadata v1alphaDirect.Metadata,
 ) v1alphaDirect.Direct {
 	t.Helper()
-	variant := getExample[v1alphaDirect.Direct](t,
+	variant := getExampleObject[v1alphaDirect.Direct](t,
 		manifest.KindDirect,
 		func(example v1alphaExamples.Example) bool {
 			return example.(dataSourceTypeGetter).GetDataSourceType() == typ

@@ -93,7 +93,7 @@ func newV1alphaAlertMethod(
 	metadata v1alphaAlertMethod.Metadata,
 ) v1alphaAlertMethod.AlertMethod {
 	t.Helper()
-	variant := getExample[v1alphaAlertMethod.AlertMethod](t,
+	variant := getExampleObject[v1alphaAlertMethod.AlertMethod](t,
 		manifest.KindAlertMethod,
 		func(example v1alphaExamples.Example) bool {
 			return example.(interface {

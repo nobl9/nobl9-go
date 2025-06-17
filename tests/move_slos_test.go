@@ -153,7 +153,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
 			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: generateName(), Project: oldProject.GetName()})
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
-			alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+			alertPolicyExample := getExample(t, manifest.KindAlertPolicy, nil)
 			alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 				Name:    generateName(),
 				Project: oldProject.GetName(),
@@ -223,7 +223,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
 			newService := newV1alphaService(t, v1alphaService.Metadata{Name: generateName(), Project: newProject.GetName()})
 
-			alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+			alertPolicyExample := getExample(t, manifest.KindAlertPolicy, nil).Example
 			alertPolicy1 := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 				Name:    generateName(),
 				Project: oldProject.GetName(),
@@ -350,7 +350,7 @@ func newV1alphaSLOForMoveSLO(
 
 	directType, err := direct.Spec.GetType()
 	require.NoError(t, err)
-	variant := getExample[v1alphaSLO.SLO](t,
+	variant := getExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
 			dsGetter, ok := example.(dataSourceTypeGetter)
