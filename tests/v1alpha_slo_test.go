@@ -41,7 +41,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		Name:    generateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+	alertPolicyExample := getExample(t, manifest.KindAlertPolicy, nil).Example
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 		Name:    generateName(),
 		Project: project.GetName(),
@@ -58,8 +58,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		v1alphaSLODependencyAgents(t),
 		v1alphaSLODependencyDirects(t)...)
 
-	sloExamples := examplesRegistry[manifest.KindSLO]
-
+	sloExamples := getExamples(t, manifest.KindSLO)
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
 	// allowing them to depend on the SLOs listed before them.
 	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
@@ -333,7 +332,7 @@ func prepareObjectsForServiceNameFilteringTests(
 
 	// SLOs.
 	var sloTemplate v1alphaSLO.SLO
-	for _, example := range examplesRegistry[manifest.KindSLO] {
+	for _, example := range getExamples(t, manifest.KindSLO) {
 		slo := example.GetObject().(v1alphaSLO.SLO)
 		metricSpecs := slo.Spec.AllMetricSpecs()
 		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")

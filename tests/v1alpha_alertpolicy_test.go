@@ -28,7 +28,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		DisplayName: "Alert Method",
 		Project:     project.GetName(),
 	})
-	examples := examplesRegistry[manifest.KindAlertPolicy]
+	examples := getExamples(t, manifest.KindAlertPolicy)
 	allObjects := make([]manifest.Object, 0, len(examples)+2)
 	allObjects = append(allObjects, project)
 	allObjects = append(allObjects, alertMethod)
@@ -139,7 +139,7 @@ func newV1alphaAlertPolicy(
 	t.Helper()
 	metadata.Labels = annotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	ap := getExample[v1alphaAlertPolicy.AlertPolicy](t,
+	ap := getExampleObject[v1alphaAlertPolicy.AlertPolicy](t,
 		manifest.KindAlertPolicy,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
