@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 //go:generate go run ../../../internal/cmd/objectimpl Annotation
@@ -30,8 +31,9 @@ type Annotation struct {
 }
 
 type Metadata struct {
-	Name    string `json:"name"`
-	Project string `json:"project,omitempty"`
+	Name    string         `json:"name"`
+	Project string         `json:"project,omitempty"`
+	Labels  v1alpha.Labels `json:"labels,omitempty"`
 }
 
 type Spec struct {
