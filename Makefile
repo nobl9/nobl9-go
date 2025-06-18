@@ -4,7 +4,7 @@ MAKEFLAGS += --silent --no-print-directory
 BIN_DIR := ./bin
 
 # renovate datasource=github-releases depName=abice/go-enum
-GO_ENUM_VERSION := v0.6.1
+GO_ENUM_VERSION := v0.7.0
 # renovate datasource=github-releases depName=securego/gosec
 GOSEC_VERSION := v2.22.5
 # renovate datasource=github-releases depName=golangci/golangci-lint
