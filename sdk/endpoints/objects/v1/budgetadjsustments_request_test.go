@@ -21,7 +21,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			name: "valid input 2",
 			input: GetBudgetAdjustmentRequest{
 				Names:   []string{},
-				Slo:     "",
+				SLOName: "",
 				Project: "",
 			},
 			wantErr: nil,
@@ -30,7 +30,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			name: "valid input 3",
 			input: GetBudgetAdjustmentRequest{
 				Names:   []string{"foo", "bar"},
-				Slo:     "baz",
+				SLOName: "baz",
 				Project: "ban",
 			},
 			wantErr: nil,
@@ -38,7 +38,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 		{
 			name: "invalid, missing slo Project name",
 			input: GetBudgetAdjustmentRequest{
-				Slo: "foo",
+				SLOName: "foo",
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
@@ -63,7 +63,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			name: "invalid, non DNS label format",
 			input: GetBudgetAdjustmentRequest{
 				Names:   []string{"foo/b0", "bar/s1"},
-				Slo:     "baz/s",
+				SLOName: "baz/s",
 				Project: "ban/i",
 			},
 			wantErr: []govytest.ExpectedRuleError{
@@ -90,12 +90,12 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.input.Validate()
-			ErrorsEqual(t, err, tt.wantErr)
+			errorsEqual(t, err, tt.wantErr)
 		})
 	}
 }
 
-func ErrorsEqual(t *testing.T, err error, wantErr []govytest.ExpectedRuleError) {
+func errorsEqual(t *testing.T, err error, wantErr []govytest.ExpectedRuleError) {
 	if err == nil && wantErr == nil {
 		return
 	}

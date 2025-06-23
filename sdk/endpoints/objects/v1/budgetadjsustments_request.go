@@ -6,8 +6,8 @@ import (
 )
 
 type GetBudgetAdjustmentRequest struct {
-	Names        []string
-	Slo, Project string
+	Names            []string
+	SLOName, Project string
 }
 
 func (p GetBudgetAdjustmentRequest) Validate() error {
@@ -18,17 +18,17 @@ var validator = govy.New(
 	govy.For(func(p GetBudgetAdjustmentRequest) GetBudgetAdjustmentRequest { return p }).
 		Rules(
 			govy.NewRule(func(v GetBudgetAdjustmentRequest) error {
-				// Check if Slo is set when Project is set
-				if v.Project != "" && v.Slo == "" {
+				// Check if SLOName is set when Project is set
+				if v.Project != "" && v.SLOName == "" {
 					return govy.NewPropertyError(
 						QueryKeySLOName,
-						v.Slo,
+						v.SLOName,
 						govy.NewRuleError("SLO is required when Project is set", "required"),
 					)
 				}
 
-				// Check if Project is set when Slo is set
-				if v.Slo != "" && v.Project == "" {
+				// Check if Project is set when SLOName is set
+				if v.SLOName != "" && v.Project == "" {
 					return govy.NewPropertyError(
 						QueryKeySLOProjectName,
 						v.Project,
@@ -42,7 +42,7 @@ var validator = govy.New(
 		WithName(QueryKeySLOProjectName).
 		OmitEmpty().
 		Rules(rules.StringDNSLabel()),
-	govy.For(func(p GetBudgetAdjustmentRequest) string { return p.Slo }).
+	govy.For(func(p GetBudgetAdjustmentRequest) string { return p.SLOName }).
 		WithName(QueryKeySLOName).
 		OmitEmpty().
 		Rules(rules.StringDNSLabel()),
