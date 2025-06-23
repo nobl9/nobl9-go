@@ -11,10 +11,10 @@ type GetBudgetAdjustmentRequest struct {
 }
 
 func (p GetBudgetAdjustmentRequest) Validate() error {
-	return validadator.Validate(p)
+	return validator.Validate(p)
 }
 
-var validadator = govy.New(
+var validator = govy.New(
 	govy.For(func(p GetBudgetAdjustmentRequest) GetBudgetAdjustmentRequest { return p }).
 		Rules(
 			govy.NewRule(func(v GetBudgetAdjustmentRequest) error {
