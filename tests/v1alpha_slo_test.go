@@ -177,6 +177,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(
 		t,
+		sloExamples,
 		agentsAndDirects[0].(v1alphaAgent.Agent),
 	)
 	for _, slo := range serviceNameFilterSLOs {
@@ -295,6 +296,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 func prepareObjectsForServiceNameFilteringTests(
 	t *testing.T,
+	sloExamples []exampleWrapper,
 	agent v1alphaAgent.Agent,
 ) (
 	slos []v1alphaSLO.SLO,
@@ -332,11 +334,14 @@ func prepareObjectsForServiceNameFilteringTests(
 
 	// SLOs.
 	var sloTemplate v1alphaSLO.SLO
-	for _, example := range getExamples(t, manifest.KindSLO) {
+	for _, example := range sloExamples {
 		slo := example.GetObject().(v1alphaSLO.SLO)
 		metricSpecs := slo.Spec.AllMetricSpecs()
+		if slo.Spec.HasCompositeObjectives() {
+			continue
+		}
 		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-		if !slo.Spec.HasCompositeObjectives() && metricSpecs[0].DataSourceType() == agentType {
+		if metricSpecs[0].DataSourceType() == agentType {
 			sloTemplate = slo
 			break
 		}
