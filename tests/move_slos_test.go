@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -133,16 +134,17 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		"validation error": {
 			setupObjects: []manifest.Object{},
 			payload: models.MoveSLOs{
-				SLONames:   []string{"foo"},
+				SLONames:   []string{},
 				NewProject: "bar",
 				OldProject: "baz",
 			},
 			expectedError: &sdk.HTTPError{
 				APIErrors: sdk.APIErrors{Errors: []sdk.APIError{{
-					Title: "property is required but was empty",
-					Code:  "required",
+					Title: "length must be greater than or equal to 1",
+					Code:  string(rules.ErrorCodeSliceMinLength),
 					Source: &sdk.APIErrorSource{
-						PropertyName: "service",
+						PropertyName:  "sloNames",
+						PropertyValue: "[]",
 					},
 				}}},
 				StatusCode: http.StatusBadRequest,
@@ -170,7 +172,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
 
 			errMsg := fmt.Sprintf("cannot move %s SLO while it has assigned Alert Policies,"+
-				" detach them manually or pass 'detachAlertPolicies' parameter to 'true' in the request body", slo.GetName())
+				" detach them manually or set 'detachAlertPolicies' parameter to 'true' in the request body", slo.GetName())
 			return v1MoveSLOsTestCase{
 				setupObjects: []manifest.Object{oldProject, oldService, alertPolicy, slo},
 				payload:      payload,
