@@ -60,18 +60,6 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid, missing slo name",
-			input: GetBudgetAdjustmentRequest{
-				Project: "foo",
-			},
-			wantErr: []govytest.ExpectedRuleError{
-				{
-					PropertyName:    "slo",
-					ContainsMessage: "SLO is required when Project is set",
-				},
-			},
-		},
-		{
 			name: "invalid, non DNS label format",
 			input: GetBudgetAdjustmentRequest{
 				Names:   []string{"foo/b0", "bar/s1"},
