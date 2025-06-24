@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
+	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v1"

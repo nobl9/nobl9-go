@@ -9,14 +9,14 @@ import (
 
 	"github.com/goccy/go-yaml"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaExamples2 "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
 type examplesGeneratorConfig struct {
-	Examples []v1alphaExamples.Example
+	Examples []v1alphaExamples2.Example
 	Path     string
 	Comments yaml.CommentMap
 }
@@ -49,29 +49,29 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 	// Non-standard examples.
 	configs := []examplesGeneratorConfig{
 		{
-			Examples: v1alphaExamples.Labels(),
+			Examples: v1alphaExamples2.Labels(),
 			Path:     filepath.Join(basePath, "labels_examples.yaml"),
 		},
 		{
-			Examples: v1alphaExamples.MetadataAnnotations(),
+			Examples: v1alphaExamples2.MetadataAnnotations(),
 			Path:     filepath.Join(basePath, "metadata_annotations_examples.yaml"),
 		},
 	}
 	// Standard examples.
-	allExamples := [][]v1alphaExamples.Example{
-		v1alphaExamples.Project(),
-		v1alphaExamples.Service(),
-		v1alphaExamples.AlertMethod(),
-		v1alphaExamples.SLO(),
-		v1alphaExamples.Agent(),
-		v1alphaExamples.Direct(),
-		v1alphaExamples.AlertPolicy(),
-		v1alphaExamples.AlertSilence(),
-		v1alphaExamples.Annotation(),
-		v1alphaExamples.BudgetAdjustment(),
-		v1alphaExamples.DataExport(),
-		v1alphaExamples.RoleBinding(),
-		v1alphaExamples.Report(),
+	allExamples := [][]v1alphaExamples2.Example{
+		v1alphaExamples2.Project(),
+		v1alphaExamples2.Service(),
+		v1alphaExamples2.AlertMethod(),
+		v1alphaExamples2.SLO(),
+		v1alphaExamples2.Agent(),
+		v1alphaExamples2.Direct(),
+		v1alphaExamples2.AlertPolicy(),
+		v1alphaExamples2.AlertSilence(),
+		v1alphaExamples2.Annotation(),
+		v1alphaExamples2.BudgetAdjustment(),
+		v1alphaExamples2.DataExport(),
+		v1alphaExamples2.RoleBinding(),
+		v1alphaExamples2.Report(),
 	}
 	for _, examples := range allExamples {
 		object := examples[0].GetObject().(manifest.Object)
@@ -80,7 +80,7 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 			object.GetVersion().VersionString(),
 			object.GetKind().ToLower(),
 		)
-		grouped := groupBy(examples, func(e v1alphaExamples.Example) string { return e.GetVariant() })
+		grouped := groupBy(examples, func(e v1alphaExamples2.Example) string { return e.GetVariant() })
 		for variant, examples := range grouped {
 			var path string
 			if len(grouped) == 1 {

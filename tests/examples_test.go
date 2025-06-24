@@ -10,29 +10,29 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaExamples2 "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 )
 
 type exampleWrapper struct {
-	v1alphaExamples.Example
+	v1alphaExamples2.Example
 	rawObject []byte
 }
 
 var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
-	kindToExamples := map[manifest.Kind][]v1alphaExamples.Example{
-		manifest.KindProject:          v1alphaExamples.Project(),
-		manifest.KindService:          v1alphaExamples.Service(),
-		manifest.KindAlertMethod:      v1alphaExamples.AlertMethod(),
-		manifest.KindSLO:              v1alphaExamples.SLO(),
-		manifest.KindAgent:            v1alphaExamples.Agent(),
-		manifest.KindDirect:           v1alphaExamples.Direct(),
-		manifest.KindAlertPolicy:      v1alphaExamples.AlertPolicy(),
-		manifest.KindAlertSilence:     v1alphaExamples.AlertSilence(),
-		manifest.KindAnnotation:       v1alphaExamples.Annotation(),
-		manifest.KindBudgetAdjustment: v1alphaExamples.BudgetAdjustment(),
-		manifest.KindDataExport:       v1alphaExamples.DataExport(),
-		manifest.KindRoleBinding:      v1alphaExamples.RoleBinding(),
+	kindToExamples := map[manifest.Kind][]v1alphaExamples2.Example{
+		manifest.KindProject:          v1alphaExamples2.Project(),
+		manifest.KindService:          v1alphaExamples2.Service(),
+		manifest.KindAlertMethod:      v1alphaExamples2.AlertMethod(),
+		manifest.KindSLO:              v1alphaExamples2.SLO(),
+		manifest.KindAgent:            v1alphaExamples2.Agent(),
+		manifest.KindDirect:           v1alphaExamples2.Direct(),
+		manifest.KindAlertPolicy:      v1alphaExamples2.AlertPolicy(),
+		manifest.KindAlertSilence:     v1alphaExamples2.AlertSilence(),
+		manifest.KindAnnotation:       v1alphaExamples2.Annotation(),
+		manifest.KindBudgetAdjustment: v1alphaExamples2.BudgetAdjustment(),
+		manifest.KindDataExport:       v1alphaExamples2.DataExport(),
+		manifest.KindRoleBinding:      v1alphaExamples2.RoleBinding(),
 	}
 	wrapped := make(map[manifest.Kind][]exampleWrapper, len(kindToExamples))
 	for kind, examples := range kindToExamples {
@@ -56,7 +56,7 @@ var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
 	return wrapped
 }()
 
-type examplesFilter = func(example v1alphaExamples.Example) bool
+type examplesFilter = func(example v1alphaExamples2.Example) bool
 
 func getExample[T any](t *testing.T, kind manifest.Kind, filter examplesFilter) *T {
 	t.Helper()
