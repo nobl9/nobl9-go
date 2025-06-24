@@ -17,6 +17,7 @@ const (
 	QueryKeyFrom              = "from"
 	QueryKeyTo                = "to"
 	QueryKeySLOName           = "slo"
+	QueryKeySLOProjectName    = "slo_project"
 	QueryKeyLabels            = "labels"
 	QueryKeyServiceName       = "service_name"
 	QueryKeyDryRun            = "dry_run"
