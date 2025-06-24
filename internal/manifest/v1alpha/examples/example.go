@@ -1,5 +1,7 @@
 package v1alphaExamples
 
+import "github.com/nobl9/nobl9-go/manifest/v1alpha"
+
 type Example interface {
 	GetObject() any
 	GetVariant() string
@@ -38,4 +40,8 @@ func (s standardExample) GetYAMLComments() []string {
 		return nil
 	}
 	return []string{s.SubVariant}
+}
+
+type DataSourceTypeGetter interface {
+	GetDataSourceType() v1alpha.DataSourceType
 }

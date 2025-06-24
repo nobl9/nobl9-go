@@ -69,7 +69,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	slo := getExample[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(dataSourceTypeGetter)
+			dsGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
 			return ok && dsGetter.GetDataSourceType() == dataSourceType
 		},
 	)

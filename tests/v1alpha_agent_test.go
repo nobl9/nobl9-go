@@ -92,10 +92,6 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	}
 }
 
-type dataSourceTypeGetter interface {
-	GetDataSourceType() v1alpha.DataSourceType
-}
-
 func newV1alphaAgent(
 	t *testing.T,
 	typ v1alpha.DataSourceType,
@@ -105,7 +101,7 @@ func newV1alphaAgent(
 	variant := getExample[v1alphaAgent.Agent](t,
 		manifest.KindAgent,
 		func(example v1alphaExamples.Example) bool {
-			return example.(dataSourceTypeGetter).GetDataSourceType() == typ
+			return example.(v1alphaExamples.DataSourceTypeGetter).GetDataSourceType() == typ
 		},
 	)
 	variant.Spec.Description = objectDescription

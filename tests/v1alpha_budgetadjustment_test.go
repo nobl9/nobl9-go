@@ -250,7 +250,7 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	slo = getExample[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(dataSourceTypeGetter)
+			dsGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
 			return ok && dsGetter.GetDataSourceType() == dataSourceType
 		},
 	)
