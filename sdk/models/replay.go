@@ -173,11 +173,7 @@ var replaySourceSLOItemValidation = govy.New[ReplaySourceSLOItem](
 )
 
 func (r Replay) Validate() error {
-	// Explicitly return an error as the interface is initialized with the type otherwise.
-	if err := replayValidation.Validate(r); err != nil {
-		return err
-	}
-	return nil
+	return replayValidation.Validate(r)
 }
 
 const (
