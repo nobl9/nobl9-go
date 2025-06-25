@@ -16,7 +16,7 @@ import (
 )
 
 func TestExamples_EnsureAllKindsHaveExamples(t *testing.T) {
-	path := filepath.Join(pathutils.FindModuleRoot(), "internal", "manifest", "v1alpha", "examples")
+	path := filepath.Join(pathutils.FindModuleRoot(), "manifest", "v1alpha", "examples")
 	set := token.NewFileSet()
 	packs, err := parser.ParseDir(set, path, nil, 0)
 	require.NoError(t, err)

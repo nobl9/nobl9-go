@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 )
 
 type exampleWrapper struct {

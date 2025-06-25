@@ -4,7 +4,7 @@
 It merges:
 
 - Go doc comments
-- [Validation plan](../../validation/plan.go)
+- [Validation plan](https://pkg.go.dev/github.com/nobl9/govy@latest/pkg/govy#Plan)
 - Custom documentation and formatting
 - Generated examples
 

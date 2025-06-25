@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
+	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 )
@@ -96,7 +96,7 @@ func newV1alphaDirect(
 	variant := getExample[v1alphaDirect.Direct](t,
 		manifest.KindDirect,
 		func(example v1alphaExamples.Example) bool {
-			return example.(dataSourceTypeGetter).GetDataSourceType() == typ
+			return example.(v1alphaExamples.DataSourceTypeGetter).GetDataSourceType() == typ
 		},
 	)
 	variant.Spec.Description = objectDescription
