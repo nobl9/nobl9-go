@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
+	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
@@ -45,7 +45,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	slo := getExample[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(dataSourceTypeGetter)
+			dsGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
 			return ok && dsGetter.GetDataSourceType() == dataSourceType
 		},
 	)

@@ -11,8 +11,8 @@ require (
 	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
 	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 	github.com/golang-jwt/jwt/v5 v5.2.2
-	github.com/hashicorp/go-retryablehttp v0.7.7
-	github.com/nobl9/govy v0.18.0
+	github.com/hashicorp/go-retryablehttp v0.7.8
+	github.com/nobl9/govy v0.19.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
@@ -30,6 +30,6 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
+	golang.org/x/tools v0.34.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

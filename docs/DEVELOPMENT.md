@@ -88,7 +88,7 @@ By default, the tests are recorded inside `./bin` folder.
 
 ### End-to-end test
 
-Tests which are run against Nobl9 API are located under [tests](../tests/)
+Tests which are run against Nobl9 API are located under [tests](../tests)
 folder.
 They are standard Go tests, annotated with build tag `e2e_test`, they can
 be executed with `make test/e2e`.
