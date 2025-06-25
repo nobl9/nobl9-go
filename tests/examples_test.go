@@ -5,6 +5,7 @@ package tests
 import (
 	"encoding/json"
 	"log"
+	"slices"
 	"sort"
 	"testing"
 
@@ -19,6 +20,10 @@ type exampleWrapper struct {
 	rawObject []byte
 }
 
+// examplesRegistry should not be accessed directly, use one of the following functions to interact with it:
+//   - [getExample]
+//   - [getExamples]
+//   - [getExampleObject]
 var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
 	kindToExamples := map[manifest.Kind][]v1alphaExamples.Example{
 		manifest.KindProject:          v1alphaExamples.Project(),
@@ -58,27 +63,39 @@ var examplesRegistry = func() map[manifest.Kind][]exampleWrapper {
 
 type examplesFilter = func(example v1alphaExamples.Example) bool
 
-func getExample[T any](t *testing.T, kind manifest.Kind, filter examplesFilter) *T {
+func getExamples(t *testing.T, kind manifest.Kind) []exampleWrapper {
 	t.Helper()
 	examples, ok := examplesRegistry[kind]
 	if !ok {
 		require.True(t, ok, "%s kind not found in registry", kind)
 	}
-	decode := func(rawObject []byte) *T {
-		var object T
-		if err := json.Unmarshal(rawObject, &object); err != nil {
-			log.Panicf("failed to unmarshal example %T object: %v", object, err)
-		}
-		return &object
+	return slices.Clone(examples)
+}
+
+func getExample(t *testing.T, kind manifest.Kind, filter examplesFilter) exampleWrapper {
+	t.Helper()
+	examples, ok := examplesRegistry[kind]
+	if !ok {
+		require.True(t, ok, "%s kind not found in registry", kind)
 	}
 	if filter == nil {
-		return decode(examples[0].rawObject)
+		return examples[0]
 	}
 	for _, example := range examples {
 		if filter(example.Example) {
-			return decode(example.rawObject)
+			return example
 		}
 	}
 	t.Fatalf("example not found for kind %s", kind)
-	return nil
+	return exampleWrapper{}
+}
+
+func getExampleObject[T any](t *testing.T, kind manifest.Kind, filter examplesFilter) *T {
+	t.Helper()
+	example := getExample(t, kind, filter)
+	var object T
+	if err := json.Unmarshal(example.rawObject, &object); err != nil {
+		log.Panicf("failed to unmarshal example %T object: %v", object, err)
+	}
+	return &object
 }

@@ -98,7 +98,7 @@ func newV1alphaAgent(
 	metadata v1alphaAgent.Metadata,
 ) v1alphaAgent.Agent {
 	t.Helper()
-	variant := getExample[v1alphaAgent.Agent](t,
+	variant := getExampleObject[v1alphaAgent.Agent](t,
 		manifest.KindAgent,
 		func(example v1alphaExamples.Example) bool {
 			return example.(v1alphaExamples.DataSourceTypeGetter).GetDataSourceType() == typ

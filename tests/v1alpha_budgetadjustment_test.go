@@ -98,7 +98,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 				require.Len(t, actual, test.returnedObjects)
 			}
 
-			assertSubset(t, actual, test.expected, assertBudgetAdjustmentsAreEqual)
+			assertSubset(t, actual, test.expected, assertV1AlphaBudgetAdjustmentsAreEqual)
 		})
 	}
 }
@@ -247,7 +247,7 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	require.Len(t, directs, 1)
 	direct := directs[0].(v1alphaDirect.Direct)
 
-	slo = getExample[v1alphaSLO.SLO](t,
+	slo = getExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
 		func(example v1alphaExamples.Example) bool {
 			dsGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
@@ -287,7 +287,7 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	return slo
 }
 
-func assertBudgetAdjustmentsAreEqual(t *testing.T, expected, actual v1alphaBudgetAdjustment.BudgetAdjustment) {
+func assertV1AlphaBudgetAdjustmentsAreEqual(t *testing.T, expected, actual v1alphaBudgetAdjustment.BudgetAdjustment) {
 	t.Helper()
 	assert.Equal(t, expected, actual)
 }
