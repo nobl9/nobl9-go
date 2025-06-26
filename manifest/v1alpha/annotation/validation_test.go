@@ -11,6 +11,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 )
@@ -185,6 +186,16 @@ func TestSpec_Category(t *testing.T) {
 			Code: errorCodeCategoryUserDefined,
 		})
 	})
+}
+
+func TestValidate_Metadata_Labels(t *testing.T) {
+	for name, test := range v1alphatest.GetLabelsTestCases[Annotation](t, "metadata.labels") {
+		t.Run(name, func(t *testing.T) {
+			svc := validAnnotation()
+			svc.Metadata.Labels = test.Labels
+			test.Test(t, svc, validate)
+		})
+	}
 }
 
 func validAnnotation() Annotation {

@@ -114,6 +114,19 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				EndTime:     mustParseTime("2024-05-17T15:00:00Z").UTC(),
 			},
 		),
+		v1alphaAnnotation.New(
+			v1alphaAnnotation.Metadata{
+				Name:    generateName(),
+				Project: project.GetName(),
+				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"blue"}}),
+			},
+			v1alphaAnnotation.Spec{
+				Slo:         slo.Metadata.Name,
+				Description: objectDescription,
+				StartTime:   mustParseTime("2024-05-18T14:00:00Z").UTC(),
+				EndTime:     mustParseTime("2024-05-18T15:00:00Z").UTC(),
+			},
+		),
 	}
 	for _, annotation := range annotations {
 		allObjects = append(allObjects, annotation)
