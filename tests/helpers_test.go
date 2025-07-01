@@ -12,19 +12,6 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
-	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
-	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
-	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
-	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
-	v1alphaBudgetAdjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
-	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
-	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
-	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
-	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
-	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
-	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
-	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 var (
@@ -49,52 +36,6 @@ func assertSubset[T manifest.Object](t *testing.T, actual, expected []T, f objec
 		if !found {
 			t.Errorf("expected %T %s not found in the actual list", expected[i], expected[i].GetName())
 		}
-	}
-}
-
-func objectsAreEqual(t *testing.T, o1, o2 manifest.Object) {
-	switch v1 := o1.(type) {
-	case v1alphaAgent.Agent:
-		require.IsType(t, v1, o2)
-		assertV1alphaAgentsAreEqual(t, v1, o2.(v1alphaAgent.Agent))
-	case v1alphaAlertMethod.AlertMethod:
-		require.IsType(t, v1, o2)
-		assertV1alphaAlertMethodsAreEqual(t, v1, o2.(v1alphaAlertMethod.AlertMethod))
-	case v1alphaAlertPolicy.AlertPolicy:
-		require.IsType(t, v1, o2)
-		assertV1alphaAlertPoliciesAreEqual(t, v1, o2.(v1alphaAlertPolicy.AlertPolicy))
-	case v1alphaAlertSilence.AlertSilence:
-		require.IsType(t, v1, o2)
-		assertV1alphaAlertSilencesAreEqual(t, v1, o2.(v1alphaAlertSilence.AlertSilence))
-	case v1alphaAnnotation.Annotation:
-		require.IsType(t, v1, o2)
-		assertV1alphaAnnotationsAreEqual(t, v1, o2.(v1alphaAnnotation.Annotation))
-	case v1alphaBudgetAdjustment.BudgetAdjustment:
-		require.IsType(t, v1, o2)
-		assertV1alphaBudgetAdjustmentsAreEqual(t, v1, o2.(v1alphaBudgetAdjustment.BudgetAdjustment))
-	case v1alphaDataExport.DataExport:
-		require.IsType(t, v1, o2)
-		assertV1alphaDataExportsAreEqual(t, v1, o2.(v1alphaDataExport.DataExport))
-	case v1alphaDirect.Direct:
-		require.IsType(t, v1, o2)
-		assertV1alphaDirectsAreEqual(t, v1, o2.(v1alphaDirect.Direct))
-	case v1alphaProject.Project:
-		require.IsType(t, v1, o2)
-		assertV1alphaProjectsAreEqual(t, v1, o2.(v1alphaProject.Project))
-	case v1alphaReport.Report:
-		require.IsType(t, v1, o2)
-		assertV1alphaReportsAreEqual(t, v1, o2.(v1alphaReport.Report))
-	case v1alphaRoleBinding.RoleBinding:
-		require.IsType(t, v1, o2)
-		assertV1alphaRoleBindingsAreEqual(t, v1, o2.(v1alphaRoleBinding.RoleBinding))
-	case v1alphaService.Service:
-		require.IsType(t, v1, o2)
-		assertV1alphaServicesAreEqual(t, v1, o2.(v1alphaService.Service))
-	case v1alphaSLO.SLO:
-		require.IsType(t, v1, o2)
-		assertV1alphaSLOsAreEqual(t, v1, o2.(v1alphaSLO.SLO))
-	default:
-		require.Equal(t, o1, o2, "objectsAreEqual: unhandled type %T", o1)
 	}
 }
 
