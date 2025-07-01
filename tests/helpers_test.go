@@ -71,7 +71,7 @@ func objectsAreEqual(t *testing.T, o1, o2 manifest.Object) {
 		assertV1alphaAnnotationsAreEqual(t, v1, o2.(v1alphaAnnotation.Annotation))
 	case v1alphaBudgetAdjustment.BudgetAdjustment:
 		require.IsType(t, v1, o2)
-		assertV1AlphaBudgetAdjustmentsAreEqual(t, v1, o2.(v1alphaBudgetAdjustment.BudgetAdjustment))
+		assertV1alphaBudgetAdjustmentsAreEqual(t, v1, o2.(v1alphaBudgetAdjustment.BudgetAdjustment))
 	case v1alphaDataExport.DataExport:
 		require.IsType(t, v1, o2)
 		assertV1alphaDataExportsAreEqual(t, v1, o2.(v1alphaDataExport.DataExport))
