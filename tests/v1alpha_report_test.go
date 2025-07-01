@@ -14,6 +14,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/testutils"
 )
 
 func Test_Objects_V1_V1alpha_Report(t *testing.T) {
@@ -24,7 +25,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 	reports := []v1alphaReport.Report{
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: "Report 1",
 			},
 			v1alphaReport.Spec{
@@ -57,7 +58,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 			}),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: "Report 2",
 			},
 			v1alphaReport.Spec{
@@ -91,7 +92,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 			}),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: "Report 3",
 			},
 			v1alphaReport.Spec{
@@ -126,7 +127,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 			}),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: "Report 3",
 			},
 			v1alphaReport.Spec{
@@ -161,7 +162,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 			}),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: "Report 4",
 			},
 			v1alphaReport.Spec{
@@ -203,8 +204,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 		allObjects = append(allObjects, report)
 	}
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	testutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetReportsRequest
@@ -258,8 +259,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		allObjects,
 		project,
 	)
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	testutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
 
 	testCases := map[string]struct {
 		report v1alphaReport.Report
@@ -268,7 +269,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		"project doesn't exist": {
 			report: v1alphaReport.New(
 				v1alphaReport.Metadata{
-					Name:        generateName(),
+					Name:        testutils.GenerateName(),
 					DisplayName: "Report 1",
 				},
 				v1alphaReport.Spec{
@@ -304,7 +305,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		"service doesn't exist": {
 			report: v1alphaReport.New(
 				v1alphaReport.Metadata{
-					Name:        generateName(),
+					Name:        testutils.GenerateName(),
 					DisplayName: "Report 1",
 				},
 				v1alphaReport.Spec{
@@ -345,7 +346,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		"slo doesn't exist": {
 			report: v1alphaReport.New(
 				v1alphaReport.Metadata{
-					Name:        generateName(),
+					Name:        testutils.GenerateName(),
 					DisplayName: "Report 1",
 				},
 				v1alphaReport.Spec{
@@ -386,7 +387,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		"label doesn't exist": {
 			report: v1alphaReport.New(
 				v1alphaReport.Metadata{
-					Name:        generateName(),
+					Name:        testutils.GenerateName(),
 					DisplayName: "Report 1",
 				},
 				v1alphaReport.Spec{

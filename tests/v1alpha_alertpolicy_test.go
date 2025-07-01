@@ -17,6 +17,7 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/testutils"
 )
 
 func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
@@ -24,11 +25,11 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:        generateName(),
+		Name:        testutils.GenerateName(),
 		DisplayName: "Alert Method",
 		Project:     project.GetName(),
 	})
-	examples := examplesRegistry[manifest.KindAlertPolicy]
+	examples := testutils.GetAllExamples(t, manifest.KindAlertPolicy)
 	allObjects := make([]manifest.Object, 0, len(examples)+2)
 	allObjects = append(allObjects, project)
 	allObjects = append(allObjects, alertMethod)
@@ -36,7 +37,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	for i, example := range examples {
 		policy := newV1alphaAlertPolicy(t,
 			v1alphaAlertPolicy.Metadata{
-				Name:        generateName(),
+				Name:        testutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Alert Policy %d", i),
 				Project:     project.GetName(),
 			},
@@ -69,8 +70,8 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		allObjects = append(allObjects, policy)
 	}
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	testutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](allObjects)
 
 	filterTests := map[string]struct {
@@ -104,7 +105,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		"filter by label": {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
+				Labels:  testutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[1]},
 		},
@@ -112,7 +113,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
 				Names:   []string{inputs[3].Metadata.Name},
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:  testutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[3]},
 		},
@@ -137,15 +138,15 @@ func newV1alphaAlertPolicy(
 	subVariant string,
 ) v1alphaAlertPolicy.AlertPolicy {
 	t.Helper()
-	metadata.Labels = annotateLabels(t, metadata.Labels)
+	metadata.Labels = testutils.AnnotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	ap := getExample[v1alphaAlertPolicy.AlertPolicy](t,
+	ap := testutils.GetExampleObject[v1alphaAlertPolicy.AlertPolicy](t,
 		manifest.KindAlertPolicy,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
 		},
 	)
-	ap.Spec.Description = objectDescription
+	ap.Spec.Description = testutils.GetObjectDescription()
 	return v1alphaAlertPolicy.New(metadata, ap.Spec)
 }
 

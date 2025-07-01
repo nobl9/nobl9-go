@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -23,6 +22,7 @@ import (
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/testutils"
 )
 
 const slosPerService = 50
@@ -34,16 +34,16 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	// Prepare dependencies.
 	project := generateV1alphaProject(t)
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    testutils.GenerateName(),
 		Project: defaultProject,
 	})
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:    generateName(),
+		Name:    testutils.GenerateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+	alertPolicyExample := testutils.GetExample(t, manifest.KindAlertPolicy, nil).Example
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
-		Name:    generateName(),
+		Name:    testutils.GenerateName(),
 		Project: project.GetName(),
 	}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
 	alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{
@@ -55,14 +55,13 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		},
 	}
 	agentsAndDirects := append(
-		v1alphaSLODependencyAgents(t),
-		v1alphaSLODependencyDirects(t)...)
+		testutils.StaticAgents(t),
+		testutils.StaticDirects(t)...)
 
-	sloExamples := examplesRegistry[manifest.KindSLO]
-
+	sloExamples := testutils.GetAllExamples(t, manifest.KindSLO)
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
 	// allowing them to depend on the SLOs listed before them.
-	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
+	slices.SortStableFunc(sloExamples, func(i, j testutils.ExampleObject) int {
 		var intI, intJ int
 		iSlo := i.GetObject().(v1alphaSLO.SLO)
 		if iSlo.Spec.HasCompositeObjectives() {
@@ -87,16 +86,16 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	for i, example := range sloExamples {
 		slo := example.GetObject().(v1alphaSLO.SLO)
 		slo.Metadata = v1alphaSLO.Metadata{
-			Name:        generateName(),
+			Name:        testutils.GenerateName(),
 			DisplayName: fmt.Sprintf("SLO %d", i),
 			Project:     project.GetName(),
-			Labels:      annotateLabels(t, v1alpha.Labels{}),
+			Labels:      testutils.AnnotateLabels(t, v1alpha.Labels{}),
 			Annotations: commonAnnotations,
 		}
 		// Generate new service for every `slosPerService` SLOs to meet the quota.
 		if i%slosPerService == 0 {
 			service = newV1alphaService(t, v1alphaService.Metadata{
-				Name:    generateName(),
+				Name:    testutils.GenerateName(),
 				Project: project.GetName(),
 			})
 			dependencies = append(dependencies, service)
@@ -178,6 +177,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(
 		t,
+		sloExamples,
 		agentsAndDirects[0].(v1alphaAgent.Agent),
 	)
 	for _, slo := range serviceNameFilterSLOs {
@@ -187,11 +187,11 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	t.Cleanup(func() {
 		slices.Reverse(slos)
-		v1DeleteBatch(t, slos, 50)
-		v1Delete(t, dependencies)
+		testutils.V1DeleteBatch(t, slos, 50)
+		testutils.V1Delete(t, dependencies)
 	})
-	v1Apply(t, dependencies)
-	v1ApplyBatch(t, slos, 50)
+	testutils.V1Apply(t, dependencies)
+	testutils.V1ApplyBatch(t, slos, 50)
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
 
 	filterTests := map[string]struct {
@@ -225,7 +225,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		"filter by label": {
 			request: objectsV1.GetSLOsRequest{
 				Project: project.GetName(),
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
+				Labels:  testutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
 			},
 			expected: []v1alphaSLO.SLO{inputs[1]},
 		},
@@ -233,7 +233,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			request: objectsV1.GetSLOsRequest{
 				Project: project.GetName(),
 				Names:   []string{inputs[3].Metadata.Name},
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:  testutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaSLO.SLO{inputs[3]},
 		},
@@ -265,7 +265,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			request: objectsV1.GetSLOsRequest{
 				Project:  serviceNameFilterSLOs[1].GetProject(),
 				Services: []string{serviceNameFilterSLOs[0].Spec.Service},
-				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo", "bar"}}),
+				Labels:   testutils.AnnotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo", "bar"}}),
 			},
 			expected: serviceNameFilterSLOs[1:3],
 		},
@@ -273,7 +273,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			request: objectsV1.GetSLOsRequest{
 				Project:  serviceNameFilterSLOs[2].GetProject(),
 				Names:    []string{serviceNameFilterSLOs[2].GetName()},
-				Labels:   annotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo"}}),
+				Labels:   testutils.AnnotateLabels(t, v1alpha.Labels{"service-name-filter": []string{"foo"}}),
 				Services: []string{serviceNameFilterSLOs[2].Spec.Service},
 			},
 			expected: serviceNameFilterSLOs[2:3],
@@ -296,6 +296,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 func prepareObjectsForServiceNameFilteringTests(
 	t *testing.T,
+	sloExamples []testutils.ExampleObject,
 	agent v1alphaAgent.Agent,
 ) (
 	slos []v1alphaSLO.SLO,
@@ -310,11 +311,11 @@ func prepareObjectsForServiceNameFilteringTests(
 	project2 := generateV1alphaProject(t)
 	// Services.
 	service1Proj1 := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    testutils.GenerateName(),
 		Project: project1.GetName(),
 	})
 	service2Proj1 := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    testutils.GenerateName(),
 		Project: project1.GetName(),
 	})
 	service1Proj2 := newV1alphaService(t, v1alphaService.Metadata{
@@ -333,7 +334,7 @@ func prepareObjectsForServiceNameFilteringTests(
 
 	// SLOs.
 	var sloTemplate v1alphaSLO.SLO
-	for _, example := range examplesRegistry[manifest.KindSLO] {
+	for _, example := range sloExamples {
 		slo := example.GetObject().(v1alphaSLO.SLO)
 		metricSpecs := slo.Spec.AllMetricSpecs()
 		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
@@ -357,10 +358,10 @@ func prepareObjectsForServiceNameFilteringTests(
 	} {
 		slo := clone(t, sloTemplate)
 		slo.Metadata = v1alphaSLO.Metadata{
-			Name:        generateName(),
+			Name:        testutils.GenerateName(),
 			DisplayName: fmt.Sprintf("SLO filtered by service %d", i),
 			Project:     params.project,
-			Labels:      annotateLabels(t, params.labels),
+			Labels:      testutils.AnnotateLabels(t, params.labels),
 			Annotations: commonAnnotations,
 		}
 		slo.Spec.Service = params.service
@@ -374,44 +375,6 @@ func prepareObjectsForServiceNameFilteringTests(
 		slos = append(slos, slo)
 	}
 	return slos, dependencies
-}
-
-func v1alphaSLODependencyAgents(t *testing.T) []manifest.Object {
-	t.Helper()
-	agentTypes := v1alpha.DataSourceTypeValues()
-	agents := make([]manifest.Object, 0, len(agentTypes)+1)
-	for _, typ := range agentTypes {
-		agent := newV1alphaAgent(t,
-			typ,
-			v1alphaAgent.Metadata{
-				Name:    fmt.Sprintf("sdk-e2e-agent-%s", strings.ToLower(typ.String())),
-				Project: defaultProject,
-			},
-		)
-		agent.Spec.Description = objectPersistedDescription
-		agents = append(agents, agent)
-	}
-	v1ApplyBatch(t, agents, 1)
-	return agents
-}
-
-func v1alphaSLODependencyDirects(t *testing.T) []manifest.Object {
-	t.Helper()
-	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), v1alphaDirect.IsValidDirectType)
-	directs := make([]manifest.Object, 0, len(directTypes)+1)
-	for _, typ := range directTypes {
-		direct := newV1alphaDirect(t,
-			typ,
-			v1alphaDirect.Metadata{
-				Name:    fmt.Sprintf("sdk-e2e-direct-%s", strings.ToLower(typ.String())),
-				Project: defaultProject,
-			},
-		)
-		direct.Spec.Description = objectPersistedDescription
-		directs = append(directs, direct)
-	}
-	v1Apply(t, directs)
-	return directs
 }
 
 func assertV1alphaSLOsAreEqual(t *testing.T, expected, actual v1alphaSLO.SLO) {
