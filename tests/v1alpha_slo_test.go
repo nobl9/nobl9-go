@@ -14,10 +14,8 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
-	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
@@ -54,9 +52,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			},
 		},
 	}
-	agentsAndDirects := append(
-		e2etestutils.StaticAgents(t),
-		e2etestutils.StaticDirects(t)...)
 
 	sloExamples := e2etestutils.GetAllExamples(t, manifest.KindSLO)
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
@@ -122,24 +117,15 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 			metricSpecs := slo.Spec.AllMetricSpecs()
 			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
+
 			sourceType := metricSpecs[0].DataSourceType()
-			sources := filterSlice(agentsAndDirects, func(object manifest.Object) bool {
-				if object.GetKind() != slo.Spec.Indicator.MetricSource.Kind {
-					return false
-				}
-				var getType func() (v1alpha.DataSourceType, error)
-				if direct, ok := object.(v1alphaDirect.Direct); ok {
-					getType = direct.Spec.GetType
-				} else if agent, ok := object.(v1alphaAgent.Agent); ok {
-					getType = agent.Spec.GetType
-				}
-				require.NotNil(t, getType)
-				typ, err := getType()
-				require.NoError(t, err)
-				return typ == sourceType
-			})
-			require.Greater(t, len(sources), 0, "expected at least 1 source of type %s", sourceType)
-			source := sources[0]
+			var source manifest.Object
+			switch slo.Spec.Indicator.MetricSource.Kind {
+			case manifest.KindDirect:
+				source = e2etestutils.ProvisionStaticDirect(t, sourceType)
+			default:
+				source = e2etestutils.ProvisionStaticAgent(t, sourceType)
+			}
 			slo.Spec.Indicator.MetricSource.Name = source.GetName()
 			slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
 
@@ -175,11 +161,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		slos = append(slos, slo)
 	}
 
-	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(
-		t,
-		sloExamples,
-		agentsAndDirects[0].(v1alphaAgent.Agent),
-	)
+	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(t)
 	for _, slo := range serviceNameFilterSLOs {
 		slos = append(slos, slo)
 	}
@@ -294,17 +276,11 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	}
 }
 
-func prepareObjectsForServiceNameFilteringTests(
-	t *testing.T,
-	sloExamples []e2etestutils.ExampleObject,
-	agent v1alphaAgent.Agent,
-) (
-	slos []v1alphaSLO.SLO,
-	dependencies []manifest.Object,
-) {
+func prepareObjectsForServiceNameFilteringTests(t *testing.T) (slos []v1alphaSLO.SLO, dependencies []manifest.Object) {
 	t.Helper()
-	agentType, err := agent.Spec.GetType()
-	require.NoError(t, err)
+
+	agentType := v1alpha.Prometheus
+	agent := e2etestutils.ProvisionStaticAgent(t, v1alpha.Prometheus)
 
 	// Projects.
 	project1 := generateV1alphaProject(t)
@@ -333,17 +309,10 @@ func prepareObjectsForServiceNameFilteringTests(
 	)
 
 	// SLOs.
-	var sloTemplate v1alphaSLO.SLO
-	for _, example := range sloExamples {
-		slo := example.GetObject().(v1alphaSLO.SLO)
-		metricSpecs := slo.Spec.AllMetricSpecs()
-		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-		if !slo.Spec.HasCompositeObjectives() && metricSpecs[0].DataSourceType() == agentType {
-			sloTemplate = slo
-			break
-		}
-	}
-	require.NotNil(t, sloTemplate, "expected at least 1 SLO with metric source of type %s", agentType)
+	sloTemplate := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
+		manifest.KindSLO,
+		e2etestutils.FilterExamplesByDataSourceType(agentType),
+	)
 
 	for i, params := range []struct {
 		project string

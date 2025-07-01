@@ -225,7 +225,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 	}
 }
 
-func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
+func generateSLO(t *testing.T) (slo v1alphaSLO.SLO) {
 	t.Helper()
 	project := generateV1alphaProject(t)
 
@@ -239,7 +239,7 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	})
 
 	dataSourceType := v1alpha.Datadog
-	direct := e2etestutils.StaticDirect(t, dataSourceType)
+	direct := e2etestutils.ProvisionStaticDirect(t, dataSourceType)
 
 	slo = e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,

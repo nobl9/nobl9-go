@@ -59,7 +59,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	defaultProjectAlertPolicy.Metadata.Project = defaultProject
 
 	dataSourceType := v1alpha.Datadog
-	direct := e2etestutils.StaticDirect(t, dataSourceType)
+	direct := e2etestutils.ProvisionStaticDirect(t, dataSourceType)
 
 	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,

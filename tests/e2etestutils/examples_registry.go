@@ -53,14 +53,14 @@ func GetExample(t *testing.T, kind manifest.Kind, filter ExamplesFilter) Example
 
 // GetExampleObject returns a concrete [manifest.Object] implementation as specified by the T type constraint.
 // Under the hood [GetExample] is called, refer to its documentation for more details on how the filter is applied.
-func GetExampleObject[T any](t *testing.T, kind manifest.Kind, filter ExamplesFilter) *T {
+func GetExampleObject[T manifest.Object](t *testing.T, kind manifest.Kind, filter ExamplesFilter) T {
 	t.Helper()
 	example := GetExample(t, kind, filter)
 	var object T
 	if err := json.Unmarshal(example.rawObject, &object); err != nil {
 		log.Panicf("failed to unmarshal example %T object: %v", object, err)
 	}
-	return &object
+	return object
 }
 
 // FilterExamplesByDataSourceType is an [ExamplesFilter] which filters examples

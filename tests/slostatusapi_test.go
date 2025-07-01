@@ -42,7 +42,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
-	slo1 := slo.(*v1alphaSLO.SLO)
+	slo1 := slo.(v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
@@ -120,7 +120,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
-	slo1 := slo.(*v1alphaSLO.SLO)
+	slo1 := slo.(v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
@@ -184,7 +184,7 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	})
 
 	dataSourceType := v1alpha.Datadog
-	direct := e2etestutils.StaticDirect(t, dataSourceType)
+	direct := e2etestutils.ProvisionStaticDirect(t, dataSourceType)
 
 	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
