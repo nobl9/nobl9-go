@@ -73,7 +73,7 @@ func FilterExamplesByDataSourceType(dataSourceType v1alpha.DataSourceType) Examp
 
 var (
 	// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
-	examplesRegistry       map[manifest.Kind][]ExampleObject
+	examplesRegistry       = make(map[manifest.Kind][]ExampleObject, len(manifest.ApplicableKinds()))
 	examplesRegistryLocker sync.RWMutex
 )
 
@@ -83,6 +83,7 @@ func getExamples(kind manifest.Kind) []ExampleObject {
 		examplesRegistryLocker.RUnlock()
 		return v
 	}
+	examplesRegistryLocker.RUnlock()
 
 	examplesRegistryLocker.Lock()
 	defer examplesRegistryLocker.Unlock()
@@ -92,6 +93,7 @@ func getExamples(kind manifest.Kind) []ExampleObject {
 	if v, ok := examplesRegistry[kind]; ok {
 		return v
 	}
+
 	var examples []v1alphaExamples.Example
 	switch kind {
 	case manifest.KindProject:
