@@ -17,7 +17,7 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
@@ -25,11 +25,11 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:        e2etestutils2.GenerateName(),
+		Name:        e2etestutils.GenerateName(),
 		DisplayName: "Alert Method",
 		Project:     project.GetName(),
 	})
-	examples := e2etestutils2.GetAllExamples(t, manifest.KindAlertPolicy)
+	examples := e2etestutils.GetAllExamples(t, manifest.KindAlertPolicy)
 	allObjects := make([]manifest.Object, 0, len(examples)+2)
 	allObjects = append(allObjects, project)
 	allObjects = append(allObjects, alertMethod)
@@ -37,7 +37,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	for i, example := range examples {
 		policy := newV1alphaAlertPolicy(t,
 			v1alphaAlertPolicy.Metadata{
-				Name:        e2etestutils2.GenerateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Alert Policy %d", i),
 				Project:     project.GetName(),
 			},
@@ -70,8 +70,8 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		allObjects = append(allObjects, policy)
 	}
 
-	e2etestutils2.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](allObjects)
 
 	filterTests := map[string]struct {
@@ -105,7 +105,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		"filter by label": {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
-				Labels:  e2etestutils2.AnnotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[1]},
 		},
@@ -113,7 +113,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
 				Names:   []string{inputs[3].Metadata.Name},
-				Labels:  e2etestutils2.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[3]},
 		},
@@ -138,15 +138,15 @@ func newV1alphaAlertPolicy(
 	subVariant string,
 ) v1alphaAlertPolicy.AlertPolicy {
 	t.Helper()
-	metadata.Labels = e2etestutils2.AnnotateLabels(t, metadata.Labels)
+	metadata.Labels = e2etestutils.AnnotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	ap := e2etestutils2.GetExampleObject[v1alphaAlertPolicy.AlertPolicy](t,
+	ap := e2etestutils.GetExampleObject[v1alphaAlertPolicy.AlertPolicy](t,
 		manifest.KindAlertPolicy,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
 		},
 	)
-	ap.Spec.Description = e2etestutils2.GetObjectDescription()
+	ap.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAlertPolicy.New(metadata, ap.Spec)
 }
 

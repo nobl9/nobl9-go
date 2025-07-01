@@ -15,13 +15,12 @@ import (
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
-	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
@@ -30,21 +29,21 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    e2etestutils2.GenerateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    e2etestutils2.GenerateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: defaultProject,
 	})
 
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:    e2etestutils2.GenerateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := e2etestutils2.GetExample(t, manifest.KindAlertPolicy, nil).Example
+	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil).Example
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
-		Name:    e2etestutils2.GenerateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
 	alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{
@@ -56,23 +55,18 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 		},
 	}
 	defaultProjectAlertPolicy := deepCopyObject(t, alertPolicy)
-	defaultProjectAlertPolicy.Metadata.Name = e2etestutils2.GenerateName()
+	defaultProjectAlertPolicy.Metadata.Name = e2etestutils.GenerateName()
 	defaultProjectAlertPolicy.Metadata.Project = defaultProject
 
 	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(e2etestutils2.StaticDirects(t), func(o manifest.Object) bool {
-		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
-		return typ == dataSourceType
-	})
-	require.Len(t, directs, 1)
-	direct := directs[0].(v1alphaDirect.Direct)
+	direct := e2etestutils.StaticDirect(t, dataSourceType)
 
-	slo := e2etestutils2.GetExampleObject[v1alphaSLO.SLO](t,
+	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
-		e2etestutils2.FilterExamplesByDataSourceType(dataSourceType),
+		e2etestutils.FilterExamplesByDataSourceType(dataSourceType),
 	)
 	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = e2etestutils2.GenerateName()
+	slo.Metadata.Name = e2etestutils.GenerateName()
 	slo.Metadata.Project = project.GetName()
 	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 		Name:    direct.Metadata.Name,
@@ -83,12 +77,12 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	slo.Spec.Service = service.Metadata.Name
 
 	defaultProjectSLO := deepCopyObject(t, slo)
-	defaultProjectSLO.Metadata.Name = e2etestutils2.GenerateName()
+	defaultProjectSLO.Metadata.Name = e2etestutils.GenerateName()
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.AlertPolicies = []string{defaultProjectAlertPolicy.Metadata.Name}
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
-	examples := e2etestutils2.GetAllExamples(t, manifest.KindAlertSilence)
+	examples := e2etestutils.GetAllExamples(t, manifest.KindAlertSilence)
 	allObjects := make([]manifest.Object, 0, len(examples))
 	allObjects = append(
 		allObjects,
@@ -103,7 +97,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	for i, example := range examples {
 		silence := newV1alphaAlertSilence(t,
 			v1alphaAlertSilence.Metadata{
-				Name:    e2etestutils2.GenerateName(),
+				Name:    e2etestutils.GenerateName(),
 				Project: project.GetName(),
 			},
 			example.GetVariant(),
@@ -130,7 +124,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 		} else {
 			// Generate new AlertPolicy for every silence
 			// as there can only be a single silence per SLO and AlertPolicy.
-			alertPolicy.Metadata.Name = e2etestutils2.GenerateName()
+			alertPolicy.Metadata.Name = e2etestutils.GenerateName()
 			slo.Spec.AlertPolicies = append(slo.Spec.AlertPolicies, alertPolicy.Metadata.Name)
 			allObjects = append(allObjects, deepCopyObject(t, alertPolicy))
 
@@ -145,8 +139,8 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	// Add the SLO once all the AlertPolicies have been assigned to it.
 	allObjects = append(allObjects, slo)
 
-	e2etestutils2.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertSilence.AlertSilence](allObjects)
 
 	filterTests := map[string]struct {
@@ -198,13 +192,13 @@ func newV1alphaAlertSilence(
 	subVariant string,
 ) v1alphaAlertSilence.AlertSilence {
 	t.Helper()
-	ap := e2etestutils2.GetExampleObject[v1alphaAlertSilence.AlertSilence](t,
+	ap := e2etestutils.GetExampleObject[v1alphaAlertSilence.AlertSilence](t,
 		manifest.KindAlertSilence,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
 		},
 	)
-	ap.Spec.Description = e2etestutils2.GetObjectDescription()
+	ap.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAlertSilence.New(metadata, ap.Spec)
 }
 

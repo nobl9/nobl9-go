@@ -13,7 +13,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/sdk"
-	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 const defaultProject = "sdk-e2e-default"
@@ -59,11 +59,11 @@ func runTestMain(m *testing.M) int {
 		return 1
 	}
 
-	e2etestutils2.Setup(e2etestutils2.Config{
+	e2etestutils.Setup(e2etestutils.Config{
 		ToolName: "SDK",
 		Client:   client,
 	})
-	defer e2etestutils2.Cleanup()
+	defer e2etestutils.Cleanup()
 
 	return m.Run()
 }

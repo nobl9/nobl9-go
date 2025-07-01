@@ -16,7 +16,7 @@ import (
 	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 		agent := newV1alphaAgent(t,
 			typ,
 			v1alphaAgent.Metadata{
-				Name:        e2etestutils2.GenerateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Agent %d", i),
 				Project:     project.GetName(),
 			},
@@ -44,11 +44,11 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	// Register cleanup first as we're not applying in a batch.
 	t.Cleanup(func() {
 		slices.Reverse(agents)
-		e2etestutils2.V1DeleteBatch(t, agents, 1)
-		e2etestutils2.V1Delete(t, []manifest.Object{project})
+		e2etestutils.V1DeleteBatch(t, agents, 1)
+		e2etestutils.V1Delete(t, []manifest.Object{project})
 	})
-	e2etestutils2.V1Apply(t, []manifest.Object{project})
-	e2etestutils2.V1ApplyBatch(t, agents, 1)
+	e2etestutils.V1Apply(t, []manifest.Object{project})
+	e2etestutils.V1ApplyBatch(t, agents, 1)
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetAgentsRequest
@@ -98,11 +98,11 @@ func newV1alphaAgent(
 	metadata v1alphaAgent.Metadata,
 ) v1alphaAgent.Agent {
 	t.Helper()
-	variant := e2etestutils2.GetExampleObject[v1alphaAgent.Agent](t,
+	variant := e2etestutils.GetExampleObject[v1alphaAgent.Agent](t,
 		manifest.KindAgent,
-		e2etestutils2.FilterExamplesByDataSourceType(typ),
+		e2etestutils.FilterExamplesByDataSourceType(typ),
 	)
-	variant.Spec.Description = e2etestutils2.GetObjectDescription()
+	variant.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAgent.New(metadata, variant.Spec)
 }
 

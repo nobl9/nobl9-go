@@ -27,19 +27,21 @@ func StaticAgents(t *testing.T) []manifest.Object {
 	agentTypes := v1alpha.DataSourceTypeValues()
 	objects := make([]manifest.Object, 0, len(agentTypes)+1)
 	for _, typ := range agentTypes {
-		example := GetExample(t, manifest.KindAgent, FilterExamplesByDataSourceType(typ))
-		agent := example.GetObject().(v1alphaAgent.Agent)
-		agent.Metadata = v1alphaAgent.Metadata{
-			Name:    fmt.Sprintf("e2e-agent-%s", strings.ToLower(typ.String())),
-			Project: DataSourcesProject,
-		}
-		agent.Spec.Description = objectPersistedDescription
-		objects = append(objects, agent)
+		objects = append(objects, getStaticAgent(t, typ))
 	}
 
 	V1Apply(t, []manifest.Object{getDataSourcesProject()})
 	V1ApplyBatch(t, objects, 1)
 	return objects
+}
+
+// StaticAgent applies and returns [v1alphaAgent.Agent] of the given [v1alpha.DataSourceType].
+// The Agent is meant to be persisted across test runs.
+func StaticAgent(t *testing.T, typ v1alpha.DataSourceType) v1alphaAgent.Agent {
+	t.Helper()
+	agent := getStaticAgent(t, typ)
+	V1Apply(t, []manifest.Object{getDataSourcesProject(), agent})
+	return agent
 }
 
 // StaticDirects applies and returns every type of [v1alphaDirect.Direct].
@@ -53,19 +55,52 @@ func StaticDirects(t *testing.T) []manifest.Object {
 		if !v1alphaDirect.IsValidDirectType(typ) {
 			continue
 		}
-		example := GetExample(t, manifest.KindDirect, FilterExamplesByDataSourceType(typ))
-		direct := example.GetObject().(v1alphaDirect.Direct)
-		direct.Metadata = v1alphaDirect.Metadata{
-			Name:    fmt.Sprintf("e2e-direct-%s", strings.ToLower(typ.String())),
-			Project: DataSourcesProject,
-		}
-		direct.Spec.Description = objectPersistedDescription
-		objects = append(objects, direct)
+		objects = append(objects, getStaticDirect(t, typ))
 	}
 
 	V1Apply(t, []manifest.Object{getDataSourcesProject()})
 	V1Apply(t, objects)
 	return objects
+}
+
+// StaticDirect applies and returns [v1alphaDirect.Direct] of the given [v1alpha.DataSourceType].
+// The Direct is meant to be persisted across test runs.
+func StaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDirect.Direct {
+	t.Helper()
+	if !v1alphaDirect.IsValidDirectType(typ) {
+		t.Fatalf("Direct does not support %[1]s %[1]T", typ)
+	}
+	direct := getStaticDirect(t, typ)
+	V1Apply(t, []manifest.Object{getDataSourcesProject(), direct})
+	return direct
+}
+
+func getStaticAgent(t *testing.T, typ v1alpha.DataSourceType) v1alphaAgent.Agent {
+	t.Helper()
+
+	example := GetExample(t, manifest.KindAgent, FilterExamplesByDataSourceType(typ))
+	agent := example.GetObject().(v1alphaAgent.Agent)
+	agent.Metadata = v1alphaAgent.Metadata{
+		Name:    fmt.Sprintf("e2e-agent-%s", strings.ToLower(typ.String())),
+		Project: DataSourcesProject,
+	}
+	agent.Spec.Description = objectPersistedDescription
+
+	return agent
+}
+
+func getStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDirect.Direct {
+	t.Helper()
+
+	example := GetExample(t, manifest.KindDirect, FilterExamplesByDataSourceType(typ))
+	direct := example.GetObject().(v1alphaDirect.Direct)
+	direct.Metadata = v1alphaDirect.Metadata{
+		Name:    fmt.Sprintf("e2e-direct-%s", strings.ToLower(typ.String())),
+		Project: DataSourcesProject,
+	}
+	direct.Spec.Description = objectPersistedDescription
+
+	return direct
 }
 
 func getDataSourcesProject() v1alphaProject.Project {
