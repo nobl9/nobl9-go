@@ -24,7 +24,7 @@ type ExamplesFilter func(example v1alphaExamples.Example) bool
 // GetAllExamples returns all examples for the given [manifest.Kind].
 func GetAllExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
 	t.Helper()
-	examples := getExamples(kind)
+	examples := getExamples(t, kind)
 	if len(examples) == 0 {
 		t.Fatalf("%s kind not found in registry", kind)
 	}
@@ -35,7 +35,7 @@ func GetAllExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
 // If no example was found, the test will fail immediately .
 func GetExample(t *testing.T, kind manifest.Kind, filter ExamplesFilter) ExampleObject {
 	t.Helper()
-	examples := getExamples(kind)
+	examples := getExamples(t, kind)
 	if len(examples) == 0 {
 		t.Fatalf("%s kind not found in registry", kind)
 	}
@@ -67,7 +67,11 @@ func GetExampleObject[T any](t *testing.T, kind manifest.Kind, filter ExamplesFi
 // by the provided [v1alpha.DataSourceType].
 func FilterExamplesByDataSourceType(dataSourceType v1alpha.DataSourceType) ExamplesFilter {
 	return func(example v1alphaExamples.Example) bool {
-		return example.(v1alphaExamples.DataSourceTypeGetter).GetDataSourceType() == dataSourceType
+		dataSourceGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
+		if !ok {
+			return false
+		}
+		return dataSourceGetter.GetDataSourceType() == dataSourceType
 	}
 }
 
@@ -77,7 +81,9 @@ var (
 	examplesRegistryLocker sync.RWMutex
 )
 
-func getExamples(kind manifest.Kind) []ExampleObject {
+func getExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
+	t.Helper()
+
 	examplesRegistryLocker.RLock()
 	if v, ok := examplesRegistry[kind]; ok {
 		examplesRegistryLocker.RUnlock()
