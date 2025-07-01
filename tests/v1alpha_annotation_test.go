@@ -17,7 +17,7 @@ import (
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/testutils"
+	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
@@ -26,28 +26,28 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    testutils.GenerateName(),
+		Name:    e2etestutils2.GenerateName(),
 		Project: project.GetName(),
 	})
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    testutils.GenerateName(),
+		Name:    e2etestutils2.GenerateName(),
 		Project: defaultProject,
 	})
 
 	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(testutils.StaticDirects(t), func(o manifest.Object) bool {
+	directs := filterSlice(e2etestutils2.StaticDirects(t), func(o manifest.Object) bool {
 		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
 		return typ == dataSourceType
 	})
 	require.Len(t, directs, 1)
 	direct := directs[0].(v1alphaDirect.Direct)
 
-	slo := testutils.GetExampleObject[v1alphaSLO.SLO](t,
+	slo := e2etestutils2.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
-		testutils.FilterExamplesByDataSourceType(dataSourceType),
+		e2etestutils2.FilterExamplesByDataSourceType(dataSourceType),
 	)
 	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = testutils.GenerateName()
+	slo.Metadata.Name = e2etestutils2.GenerateName()
 	slo.Metadata.Project = project.GetName()
 	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 		Name:    direct.Metadata.Name,
@@ -59,7 +59,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	slo.Spec.Objectives[0].Name = "good"
 
 	defaultProjectSLO := deepCopyObject(t, slo)
-	defaultProjectSLO.Metadata.Name = testutils.GenerateName()
+	defaultProjectSLO.Metadata.Name = e2etestutils2.GenerateName()
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
@@ -76,37 +76,37 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	annotations := []v1alphaAnnotation.Annotation{
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    testutils.GenerateName(),
+				Name:    e2etestutils2.GenerateName(),
 				Project: defaultProject,
 			},
 			v1alphaAnnotation.Spec{
 				Slo:           defaultProjectSLO.Metadata.Name,
 				ObjectiveName: "good",
-				Description:   testutils.GetObjectDescription(),
+				Description:   e2etestutils2.GetObjectDescription(),
 				StartTime:     mustParseTime("2024-05-01T12:00:00Z").UTC(),
 				EndTime:       mustParseTime("2024-05-04T10:00:00Z").UTC(),
 			},
 		),
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    testutils.GenerateName(),
+				Name:    e2etestutils2.GenerateName(),
 				Project: project.GetName(),
 			},
 			v1alphaAnnotation.Spec{
 				Slo:         slo.Metadata.Name,
-				Description: testutils.GetObjectDescription(),
+				Description: e2etestutils2.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-16T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-16T15:00:00Z").UTC(),
 			},
 		),
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    testutils.GenerateName(),
+				Name:    e2etestutils2.GenerateName(),
 				Project: project.GetName(),
 			},
 			v1alphaAnnotation.Spec{
 				Slo:         slo.Metadata.Name,
-				Description: testutils.GetObjectDescription(),
+				Description: e2etestutils2.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-17T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-17T15:00:00Z").UTC(),
 			},
@@ -116,8 +116,8 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 		allObjects = append(allObjects, annotation)
 	}
 
-	testutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
+	e2etestutils2.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAnnotation.Annotation](allObjects)
 
 	filterTests := map[string]struct {

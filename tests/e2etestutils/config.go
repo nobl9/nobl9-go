@@ -1,4 +1,4 @@
-package testutils
+package e2etestutils
 
 import (
 	"strconv"

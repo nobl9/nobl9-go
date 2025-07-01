@@ -16,7 +16,7 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/testutils"
+	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
@@ -31,7 +31,7 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 		method := newV1alphaAlertMethod(t,
 			typ,
 			v1alphaAlertMethod.Metadata{
-				Name:        testutils.GenerateName(),
+				Name:        e2etestutils2.GenerateName(),
 				DisplayName: fmt.Sprintf("Alert Method %d", i),
 				Project:     project.GetName(),
 			},
@@ -42,8 +42,8 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 		allObjects = append(allObjects, method)
 	}
 
-	testutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
+	e2etestutils2.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertMethod.AlertMethod](allObjects)
 
 	filterTests := map[string]struct {
@@ -94,7 +94,7 @@ func newV1alphaAlertMethod(
 	metadata v1alphaAlertMethod.Metadata,
 ) v1alphaAlertMethod.AlertMethod {
 	t.Helper()
-	variant := testutils.GetExampleObject[v1alphaAlertMethod.AlertMethod](t,
+	variant := e2etestutils2.GetExampleObject[v1alphaAlertMethod.AlertMethod](t,
 		manifest.KindAlertMethod,
 		func(example v1alphaExamples.Example) bool {
 			return example.(interface {
@@ -102,7 +102,7 @@ func newV1alphaAlertMethod(
 			}).GetAlertMethodType() == typ
 		},
 	)
-	variant.Spec.Description = testutils.GetObjectDescription()
+	variant.Spec.Description = e2etestutils2.GetObjectDescription()
 	return v1alphaAlertMethod.New(metadata, variant.Spec)
 }
 

@@ -15,7 +15,7 @@ import (
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/testutils"
+	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 		direct := newV1alphaDirect(t,
 			typ,
 			v1alphaDirect.Metadata{
-				Name:        testutils.GenerateName(),
+				Name:        e2etestutils2.GenerateName(),
 				DisplayName: fmt.Sprintf("Direct %d", i),
 				Project:     project.GetName(),
 			},
@@ -41,8 +41,8 @@ func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 		allObjects = append(allObjects, direct)
 	}
 
-	testutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
+	e2etestutils2.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaDirect.Direct](allObjects)
 
 	filterTests := map[string]struct {
@@ -93,11 +93,11 @@ func newV1alphaDirect(
 	metadata v1alphaDirect.Metadata,
 ) v1alphaDirect.Direct {
 	t.Helper()
-	variant := testutils.GetExampleObject[v1alphaDirect.Direct](t,
+	variant := e2etestutils2.GetExampleObject[v1alphaDirect.Direct](t,
 		manifest.KindDirect,
-		testutils.FilterExamplesByDataSourceType(typ),
+		e2etestutils2.FilterExamplesByDataSourceType(typ),
 	)
-	variant.Spec.Description = testutils.GetObjectDescription()
+	variant.Spec.Description = e2etestutils2.GetObjectDescription()
 	return v1alphaDirect.New(metadata, variant.Spec)
 }
 

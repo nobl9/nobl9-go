@@ -17,7 +17,7 @@ import (
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/testutils"
+	e2etestutils2 "github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
@@ -32,7 +32,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 				DisplayName: "Adjustment 1",
 			},
 			v1alphaBudgetAdjustment.Spec{
-				Description:     testutils.GetObjectDescription(),
+				Description:     e2etestutils2.GetObjectDescription(),
 				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
 				Duration:        "1h",
 				Filters: v1alphaBudgetAdjustment.Filters{
@@ -50,7 +50,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 				DisplayName: "Adjustment 2",
 			},
 			v1alphaBudgetAdjustment.Spec{
-				Description:     testutils.GetObjectDescription(),
+				Description:     e2etestutils2.GetObjectDescription(),
 				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
 				Duration:        "5h",
 				Rrule:           "FREQ=DAILY;COUNT=5",
@@ -65,8 +65,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			}),
 	}
 
-	testutils.V1Apply(t, budgetAdjustments)
-	t.Cleanup(func() { testutils.V1Delete(t, budgetAdjustments) })
+	e2etestutils2.V1Apply(t, budgetAdjustments)
+	t.Cleanup(func() { e2etestutils2.V1Delete(t, budgetAdjustments) })
 
 	filterTest := map[string]struct {
 		request         objectsV1.GetBudgetAdjustmentRequest
@@ -231,28 +231,28 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    testutils.GenerateName(),
+		Name:    e2etestutils2.GenerateName(),
 		Project: project.GetName(),
 	})
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    testutils.GenerateName(),
+		Name:    e2etestutils2.GenerateName(),
 		Project: defaultProject,
 	})
 
 	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(testutils.StaticDirects(t), func(o manifest.Object) bool {
+	directs := filterSlice(e2etestutils2.StaticDirects(t), func(o manifest.Object) bool {
 		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
 		return typ == dataSourceType
 	})
 	require.Len(t, directs, 1)
 	direct := directs[0].(v1alphaDirect.Direct)
 
-	slo = testutils.GetExampleObject[v1alphaSLO.SLO](t,
+	slo = e2etestutils2.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
-		testutils.FilterExamplesByDataSourceType(dataSourceType),
+		e2etestutils2.FilterExamplesByDataSourceType(dataSourceType),
 	)
 	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = testutils.GenerateName()
+	slo.Metadata.Name = e2etestutils2.GenerateName()
 	slo.Metadata.Project = project.GetName()
 	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 		Name:    direct.Metadata.Name,
@@ -264,7 +264,7 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 	slo.Spec.Objectives[0].Name = "good"
 
 	defaultProjectSLO := deepCopyObject(t, slo)
-	defaultProjectSLO.Metadata.Name = testutils.GenerateName()
+	defaultProjectSLO.Metadata.Name = e2etestutils2.GenerateName()
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
@@ -278,8 +278,8 @@ func generateSLO(t *testing.T) (slo *v1alphaSLO.SLO) {
 		defaultProjectSLO,
 	)
 
-	testutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { testutils.V1Delete(t, allObjects) })
+	e2etestutils2.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils2.V1Delete(t, allObjects) })
 
 	return slo
 }

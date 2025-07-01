@@ -14,7 +14,7 @@ import (
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/testutils"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
@@ -22,7 +22,7 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	ctx := context.Background()
 
 	project := generateV1alphaProject(t)
-	testutils.V1Apply(t, []manifest.Object{project})
+	e2etestutils.V1Apply(t, []manifest.Object{project})
 	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(ctx,
 		objectsV1.GetRoleBindingsRequest{Project: project.GetName()})
 	require.NoError(t, err)
@@ -31,60 +31,60 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 
 	inputs := []v1alphaRoleBinding.RoleBinding{
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:    ptr(testutils.GenerateName()),
+				User:    ptr(e2etestutils.GenerateName()),
 				RoleRef: "organization-blank",
 			},
 		),
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				GroupRef: ptr(testutils.GenerateName()),
+				GroupRef: ptr(e2etestutils.GenerateName()),
 				RoleRef:  "organization-blank",
 			},
 		),
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:       ptr(testutils.GenerateName()),
+				User:       ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: project.GetName(),
 			},
 		),
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				GroupRef:   ptr(testutils.GenerateName()),
+				GroupRef:   ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: project.GetName(),
 			},
 		),
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:       ptr(testutils.GenerateName()),
+				User:       ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: defaultProject,
 			},
 		),
 		v1alphaRoleBinding.New(
-			v1alphaRoleBinding.Metadata{Name: testutils.GenerateName()},
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				GroupRef:   ptr(testutils.GenerateName()),
+				GroupRef:   ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: defaultProject,
 			},
 		),
 	}
 
-	testutils.V1Apply(t, inputs)
+	e2etestutils.V1Apply(t, inputs)
 	t.Cleanup(func() {
 		// Organization role bindings cannot be deleted.
 		filterOrganizationBindings := func(r v1alphaRoleBinding.RoleBinding) bool {
 			return !strings.HasPrefix(r.Spec.RoleRef, "organization-")
 		}
-		testutils.V1Delete(t, filterSlice(inputs, filterOrganizationBindings))
+		e2etestutils.V1Delete(t, filterSlice(inputs, filterOrganizationBindings))
 	})
 
 	filterTests := map[string]struct {
