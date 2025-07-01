@@ -18,11 +18,12 @@ func Setup(config Config) {
 	})
 }
 
-// Config is used to configure tis package's behavior.
+// Config is used to configure this package's behavior.
 type Config struct {
-	// ToolName
+	// ToolName is the name of the tested tool, e.g. 'SDK', 'Terraform', 'sloctl'.
 	ToolName string
-	Client   *sdk.Client
+	// Client is used to shared by all functions which interact with the Nobl9 API.
+	Client *sdk.Client
 }
 
 var (
