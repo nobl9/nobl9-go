@@ -107,13 +107,13 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 		),
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    generateName(),
+				Name:    e2etestutils.GenerateName(),
 				Project: project.GetName(),
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"blue"}}),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"blue"}}),
 			},
 			v1alphaAnnotation.Spec{
 				Slo:         slo.Metadata.Name,
-				Description: objectDescription,
+				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-18T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-18T15:00:00Z").UTC(),
 			},
