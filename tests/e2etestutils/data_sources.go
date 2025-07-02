@@ -127,7 +127,7 @@ var provisionDataSourcesProject = func() func(t *testing.T) v1alphaProject.Proje
 				v1alphaProject.Spec{
 					Description: "This Project contains a collection of all Agent and Direct types used for end-to-end tests." +
 						" This Project along with all its associated objects is meant to be persisted across test runs" +
-						" in order to speed up the execution of other tests, primarily targeting SLOs.",
+						" in order to speed up the execution of other tests, do not delete it.",
 				},
 			)
 			V1Apply(t, []manifest.Object{project})
