@@ -3,7 +3,6 @@ package e2etestutils
 import (
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -32,8 +31,6 @@ var (
 	objectsCounter         = atomic.Int64{}
 	uniqueTestIDLabelValue = strconv.Itoa(int(testStartTime.UnixNano()))
 	applyAndDeleteLock     = newApplyAndDeleteLocker()
-
-	setupOnce sync.Once
 )
 
 func getUniqueTestIDLabelKey() string {

@@ -116,7 +116,7 @@ var provisionDataSourcesProject = func() func(t *testing.T) v1alphaProject.Proje
 	return func(t *testing.T) v1alphaProject.Project {
 		t.Helper()
 		once.Do(func() {
-			project := v1alphaProject.New(
+			project = v1alphaProject.New(
 				v1alphaProject.Metadata{
 					Name:        DataSourcesProject,
 					DisplayName: "End-to-end Data Sources",
