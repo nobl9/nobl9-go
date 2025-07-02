@@ -41,7 +41,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil).Example
+	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),

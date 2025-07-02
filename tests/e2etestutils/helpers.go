@@ -34,7 +34,7 @@ func GetObjectDescription() string {
 // AnnotateLabels adds origin label to the provided labels,
 // so it's easier to locate the leftovers from these tests.
 // It also adds unique test identifier label to the provided labels
-// so that we can reliably retrieve objects created within a given test without.
+// so that we can reliably retrieve objects created within a given test.
 func AnnotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	t.Helper()
 	if labels == nil {

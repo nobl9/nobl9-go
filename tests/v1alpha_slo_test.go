@@ -16,6 +16,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
+	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
@@ -39,7 +40,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil).Example
+	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
@@ -56,7 +57,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	sloExamples := e2etestutils.GetAllExamples(t, manifest.KindSLO)
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
 	// allowing them to depend on the SLOs listed before them.
-	slices.SortStableFunc(sloExamples, func(i, j e2etestutils.ExampleObject) int {
+	slices.SortStableFunc(sloExamples, func(i, j v1alphaExamples.Example) int {
 		var intI, intJ int
 		iSlo := i.GetObject().(v1alphaSLO.SLO)
 		if iSlo.Spec.HasCompositeObjectives() {

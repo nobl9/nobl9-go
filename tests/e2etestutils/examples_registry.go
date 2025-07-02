@@ -13,16 +13,11 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 )
 
-type ExampleObject struct {
-	v1alphaExamples.Example
-	rawObject []byte
-}
-
-// ExamplesFilter defines a function shape used to filter
+// ExamplesFilter defines a function shape used to filter [v1alphaExamples.Example].
 type ExamplesFilter func(example v1alphaExamples.Example) bool
 
 // GetAllExamples returns all examples for the given [manifest.Kind].
-func GetAllExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
+func GetAllExamples(t *testing.T, kind manifest.Kind) []v1alphaExamples.Example {
 	t.Helper()
 	examples := getExamples(t, kind)
 	if len(examples) == 0 {
@@ -33,7 +28,7 @@ func GetAllExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
 
 // GetExample returns the first [ExampleObject] matching given [ExamplesFilter].
 // If no example was found, the test will fail immediately .
-func GetExample(t *testing.T, kind manifest.Kind, filter ExamplesFilter) ExampleObject {
+func GetExample(t *testing.T, kind manifest.Kind, filter ExamplesFilter) v1alphaExamples.Example {
 	t.Helper()
 	examples := getExamples(t, kind)
 	if len(examples) == 0 {
@@ -43,21 +38,25 @@ func GetExample(t *testing.T, kind manifest.Kind, filter ExamplesFilter) Example
 		return examples[0]
 	}
 	for _, example := range examples {
-		if filter(example.Example) {
+		if filter(example) {
 			return example
 		}
 	}
 	t.Fatalf("example not found for kind %s", kind)
-	return ExampleObject{}
+	return nil
 }
 
 // GetExampleObject returns a concrete [manifest.Object] implementation as specified by the T type constraint.
 // Under the hood [GetExample] is called, refer to its documentation for more details on how the filter is applied.
 func GetExampleObject[T manifest.Object](t *testing.T, kind manifest.Kind, filter ExamplesFilter) T {
 	t.Helper()
-	example := GetExample(t, kind, filter)
+	genericObject := GetExample(t, kind, filter).GetObject()
+	data, err := json.Marshal(genericObject)
+	if err != nil {
+		t.Fatalf("failed to marshal example %T object: %v", genericObject, err)
+	}
 	var object T
-	if err := json.Unmarshal(example.rawObject, &object); err != nil {
+	if err := json.Unmarshal(data, &object); err != nil {
 		log.Panicf("failed to unmarshal example %T object: %v", object, err)
 	}
 	return object
@@ -77,11 +76,11 @@ func FilterExamplesByDataSourceType(dataSourceType v1alpha.DataSourceType) Examp
 
 var (
 	// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
-	examplesRegistry       = make(map[manifest.Kind][]ExampleObject, len(manifest.ApplicableKinds()))
+	examplesRegistry       = make(map[manifest.Kind][]v1alphaExamples.Example, len(manifest.ApplicableKinds()))
 	examplesRegistryLocker sync.RWMutex
 )
 
-func getExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
+func getExamples(t *testing.T, kind manifest.Kind) []v1alphaExamples.Example {
 	t.Helper()
 
 	examplesRegistryLocker.RLock()
@@ -134,18 +133,6 @@ func getExamples(t *testing.T, kind manifest.Kind) []ExampleObject {
 		return examples[i].GetVariant() < examples[j].GetVariant() &&
 			examples[i].GetSubVariant() < examples[j].GetSubVariant()
 	})
-	wrapped := make([]ExampleObject, 0, len(examples))
-	for _, example := range examples {
-		object := example.GetObject()
-		rawObject, err := json.Marshal(object)
-		if err != nil {
-			log.Panicf("failed to marshal example %T object: %v", object, err)
-		}
-		wrapped = append(wrapped, ExampleObject{
-			Example:   example,
-			rawObject: rawObject,
-		})
-	}
-	examplesRegistry[kind] = wrapped
-	return wrapped
+	examplesRegistry[kind] = examples
+	return examples
 }
