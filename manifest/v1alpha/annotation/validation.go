@@ -31,6 +31,7 @@ var metadataValidation = govy.New[Metadata](
 		WithName("metadata.project").
 		OmitEmpty().
 		Rules(rules.StringDNSLabel()),
+	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
 var specValidation = govy.New[Spec](
