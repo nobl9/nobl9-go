@@ -49,7 +49,7 @@ func ProvisionStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDire
 		t.Fatalf("Direct does not support %[1]s %[1]T", typ)
 	}
 
-	cacheKey := staticDataSourcesKey(manifest.KindAgent, typ)
+	cacheKey := staticDataSourcesKey(manifest.KindDirect, typ)
 	if direct, ok := staticDirectsCache.Load(cacheKey); ok {
 		return direct
 	}
