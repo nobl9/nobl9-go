@@ -59,10 +59,8 @@ func runTestMain(m *testing.M) int {
 		return 1
 	}
 
-	e2etestutils.Setup(e2etestutils.Config{
-		ToolName: "SDK",
-		Client:   client,
-	})
+	e2etestutils.SetClient(client)
+	e2etestutils.SetToolName("SDK")
 	defer e2etestutils.Cleanup()
 
 	return m.Run()

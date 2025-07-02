@@ -102,9 +102,9 @@ func v1ApplyOrDeleteBatch(
 			defer applyAndDeleteLock.Unlock()
 			switch operation {
 			case apiOperationApply:
-				return client.Objects().V1().Apply(ctx, batch)
+				return sdkClient.Objects().V1().Apply(ctx, batch)
 			case apiOperationDelete:
-				return client.Objects().V1().Delete(ctx, batch)
+				return sdkClient.Objects().V1().Delete(ctx, batch)
 			default:
 				return errors.New("invalid API operation")
 			}

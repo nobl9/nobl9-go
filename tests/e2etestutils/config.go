@@ -10,26 +10,23 @@ import (
 	"github.com/nobl9/nobl9-go/sdk"
 )
 
-// Setup initializes the internal utilities used by this package, like [sdk.Client].
-// It can be called any number of times, but only the first invocation has an effect.
-func Setup(config Config) {
-	setupOnce.Do(func() {
-		client = config.Client
-		toolName = config.ToolName
-	})
+// SetClient setups [sdk.Client] for all the tests.
+// Client is used to shared by all functions which interact with the Nobl9 API.
+// It is not concurrently safe and should be called within guarded scope.
+func SetClient(client *sdk.Client) {
+	sdkClient = client
 }
 
-// Config is used to configure this package's behavior.
-type Config struct {
-	// ToolName is the name of the tested tool, e.g. 'SDK', 'Terraform', 'sloctl'.
-	ToolName string
-	// Client is used to shared by all functions which interact with the Nobl9 API.
-	Client *sdk.Client
+// SetToolName setups tool name for all the tests.
+// Examples: 'SDK', 'Terraform', 'sloctl'.
+// It is not concurrently safe and should be called within guarded scope.
+func SetToolName(name string) {
+	toolName = name
 }
 
 var (
-	client   *sdk.Client
-	toolName string
+	sdkClient *sdk.Client
+	toolName  string
 
 	testStartTime          = time.Now()
 	objectsCounter         = atomic.Int64{}

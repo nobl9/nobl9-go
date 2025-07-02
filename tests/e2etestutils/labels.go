@@ -23,7 +23,7 @@ func removeLabelByKey(labelKey string) {
 		printErrorf("failed to encode cleanup labels payload: %v", err)
 		return
 	}
-	req, err := client.CreateRequest(
+	req, err := sdkClient.CreateRequest(
 		context.Background(),
 		http.MethodPost,
 		"labels/delete",
@@ -35,7 +35,7 @@ func removeLabelByKey(labelKey string) {
 		printErrorf("failed to create cleanup labels request: %v", err)
 		return
 	}
-	resp, err := client.Do(req)
+	resp, err := sdkClient.Do(req)
 	if err != nil {
 		printErrorf("failed to send cleanup labels request: %v", err)
 		return
@@ -49,7 +49,7 @@ func removeLabelByKey(labelKey string) {
 }
 
 func getLabelIDByKey(key string) (string, error) {
-	req, err := client.CreateRequest(
+	req, err := sdkClient.CreateRequest(
 		context.Background(),
 		http.MethodGet,
 		"labels",
@@ -60,7 +60,7 @@ func getLabelIDByKey(key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	resp, err := client.Do(req)
+	resp, err := sdkClient.Do(req)
 	if err != nil {
 		return "", err
 	}
