@@ -2,6 +2,7 @@ package e2etestutils
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,5 +40,5 @@ var (
 )
 
 func getUniqueTestIDLabelKey() string {
-	return toolName + "-e2e-test-id"
+	return strings.ToLower(toolName) + "-e2e-test-id"
 }
