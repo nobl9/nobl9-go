@@ -42,7 +42,7 @@ func AnnotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	}
 	labels["origin"] = []string{"e2e-test"}
 	labels["tool"] = []string{toolName}
-	labels[uniqueTestIdentifierLabel.Key] = []string{uniqueTestIdentifierLabel.Value}
+	labels[getUniqueTestIDLabelKey()] = []string{uniqueTestIDLabelValue}
 	labels["test-name"] = []string{t.Name()}
 	return labels
 }

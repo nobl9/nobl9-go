@@ -30,16 +30,14 @@ var (
 	client   *sdk.Client
 	toolName string
 
-	testStartTime             = time.Now()
-	objectsCounter            = atomic.Int64{}
-	uniqueTestIdentifierLabel = struct {
-		Key   string
-		Value string
-	}{
-		Key:   "sdk-e2e-test-id",
-		Value: strconv.Itoa(int(testStartTime.UnixNano())),
-	}
-	applyAndDeleteLock = newApplyAndDeleteLocker()
+	testStartTime          = time.Now()
+	objectsCounter         = atomic.Int64{}
+	uniqueTestIDLabelValue = strconv.Itoa(int(testStartTime.UnixNano()))
+	applyAndDeleteLock     = newApplyAndDeleteLocker()
 
 	setupOnce sync.Once
 )
+
+func getUniqueTestIDLabelKey() string {
+	return toolName + "-e2e-test-id"
+}
