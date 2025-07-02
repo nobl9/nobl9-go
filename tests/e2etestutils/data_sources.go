@@ -36,7 +36,9 @@ func ProvisionStaticAgent(t *testing.T, typ v1alpha.DataSourceType) v1alphaAgent
 		return cached
 	}
 	agent := getStaticAgent(t, typ)
-	V1Apply(t, []manifest.Object{getDataSourcesProject(), agent})
+	project := provisionDataSourcesProject(t)
+	agent.Metadata.Project = project.GetName()
+	V1Apply(t, []manifest.Object{agent})
 	staticAgentsCache.StoreUnsafe(cacheKey, agent)
 	return agent
 }
@@ -60,7 +62,9 @@ func ProvisionStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDire
 		return cached
 	}
 	direct := getStaticDirect(t, typ)
-	V1Apply(t, []manifest.Object{getDataSourcesProject(), direct})
+	project := provisionDataSourcesProject(t)
+	direct.Metadata.Project = project.GetName()
+	V1Apply(t, []manifest.Object{direct})
 	staticDirectsCache.StoreUnsafe(cacheKey, direct)
 	return direct
 }
@@ -104,22 +108,33 @@ func getStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDirect.Dir
 	return direct
 }
 
-func getDataSourcesProject() v1alphaProject.Project {
-	return v1alphaProject.New(
-		v1alphaProject.Metadata{
-			Name:        DataSourcesProject,
-			DisplayName: "End-to-end Data Sources",
-			Labels: v1alpha.Labels{
-				"origin": []string{"e2e-test"},
-			},
-		},
-		v1alphaProject.Spec{
-			Description: "This Project contains a collection of all Agent and Direct types used for end-to-end tests." +
-				" This Project along with all its associated objects is meant to be persisted across test runs" +
-				" in order to speed up the execution of other tests, primarily targeting SLOs.",
-		},
+var provisionDataSourcesProject = func() func(t *testing.T) v1alphaProject.Project {
+	var (
+		project v1alphaProject.Project
+		once    sync.Once
 	)
-}
+	return func(t *testing.T) v1alphaProject.Project {
+		t.Helper()
+		once.Do(func() {
+			project := v1alphaProject.New(
+				v1alphaProject.Metadata{
+					Name:        DataSourcesProject,
+					DisplayName: "End-to-end Data Sources",
+					Labels: v1alpha.Labels{
+						"origin": []string{"e2e-test"},
+					},
+				},
+				v1alphaProject.Spec{
+					Description: "This Project contains a collection of all Agent and Direct types used for end-to-end tests." +
+						" This Project along with all its associated objects is meant to be persisted across test runs" +
+						" in order to speed up the execution of other tests, primarily targeting SLOs.",
+				},
+			)
+			V1Apply(t, []manifest.Object{project})
+		})
+		return project
+	}
+}()
 
 func newMapCache[K comparable, T any]() *mapCache[K, T] {
 	return &mapCache[K, T]{storage: make(map[K]T)}
