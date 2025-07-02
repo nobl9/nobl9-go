@@ -5,7 +5,6 @@ import (
 	"log"
 	"slices"
 	"sort"
-	"sync"
 	"testing"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -76,26 +75,22 @@ func FilterExamplesByDataSourceType(dataSourceType v1alpha.DataSourceType) Examp
 
 var (
 	// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
-	examplesRegistry       = make(map[manifest.Kind][]v1alphaExamples.Example, len(manifest.ApplicableKinds()))
-	examplesRegistryLocker sync.RWMutex
+	examplesRegistry = newMapCache[manifest.Kind, []v1alphaExamples.Example]()
 )
 
 func getExamples(t *testing.T, kind manifest.Kind) []v1alphaExamples.Example {
 	t.Helper()
 
-	examplesRegistryLocker.RLock()
-	if v, ok := examplesRegistry[kind]; ok {
-		examplesRegistryLocker.RUnlock()
+	if v, ok := examplesRegistry.Load(kind); ok {
 		return v
 	}
-	examplesRegistryLocker.RUnlock()
 
-	examplesRegistryLocker.Lock()
-	defer examplesRegistryLocker.Unlock()
+	examplesRegistry.Lock()
+	defer examplesRegistry.Unlock()
 
 	// In case multiple goroutines were waiting on the locker,
 	// so we don't do the work multiple times.
-	if v, ok := examplesRegistry[kind]; ok {
+	if v, ok := examplesRegistry.LoadUnsafe(kind); ok {
 		return v
 	}
 
@@ -130,9 +125,11 @@ func getExamples(t *testing.T, kind manifest.Kind) []v1alphaExamples.Example {
 	}
 
 	sort.Slice(examples, func(i, j int) bool {
-		return examples[i].GetVariant() < examples[j].GetVariant() &&
-			examples[i].GetSubVariant() < examples[j].GetSubVariant()
+		if examples[i].GetVariant() != examples[j].GetVariant() {
+			return examples[i].GetVariant() < examples[j].GetVariant()
+		}
+		return examples[i].GetSubVariant() < examples[j].GetSubVariant()
 	})
-	examplesRegistry[kind] = examples
+	examplesRegistry.StoreUnsafe(kind, examples)
 	return examples
 }
