@@ -2,7 +2,6 @@ package e2etestutils
 
 import (
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -27,12 +26,12 @@ var (
 	sdkClient *sdk.Client
 	toolName  string
 
-	testStartTime          = time.Now()
-	objectsCounter         = atomic.Int64{}
-	uniqueTestIDLabelValue = strconv.Itoa(int(testStartTime.UnixNano()))
-	applyAndDeleteLock     = newApplyAndDeleteLocker()
+	testStartTime      = time.Now()
+	objectsCounter     = atomic.Int64{}
+	uniqueTestID       = strconv.Itoa(int(testStartTime.UnixNano()))
+	applyAndDeleteLock = newApplyAndDeleteLocker()
 )
 
 func getUniqueTestIDLabelKey() string {
-	return strings.ToLower(toolName) + "-e2e-test-id"
+	return "e2e-test-id-" + uniqueTestID
 }

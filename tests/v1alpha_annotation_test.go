@@ -167,7 +167,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Project: project.GetName(),
 				From:    mustParseTime("2024-05-17T10:00:00Z"),
 			},
-			expected: []v1alphaAnnotation.Annotation{inputs[2]},
+			expected: []v1alphaAnnotation.Annotation{inputs[2], inputs[3]},
 		},
 		"filter by to": {
 			request: objectsV1.GetAnnotationsRequest{
