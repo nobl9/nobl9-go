@@ -97,7 +97,7 @@ func Alert() []Example {
 							},
 						},
 					},
-					Silenced: &alert.Silenced{
+					SilenceInfo: &alert.SilenceInfo{
 						From: "2024-01-15T14:00:00Z",
 						To:   "2024-01-15T16:00:00Z",
 					},

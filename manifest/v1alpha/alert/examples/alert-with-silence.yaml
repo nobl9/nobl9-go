@@ -33,6 +33,6 @@ spec:
     op: gt
     status:
       firstMetMetricTime: "2024-01-15T13:58:00Z"
-  silenced:
+  silenceInfo:
     from: "2024-01-15T14:00:00Z"
     to: "2024-01-15T16:00:00Z"
