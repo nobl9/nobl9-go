@@ -73,6 +73,18 @@ func FilterExamplesByDataSourceType(dataSourceType v1alpha.DataSourceType) Examp
 	}
 }
 
+// FilterExamplesByAlertMethodType is an [ExamplesFilter] which filters examples
+// by the provided [v1alpha.AlertMethodType].
+func FilterExamplesByAlertMethodType(typ v1alpha.AlertMethodType) ExamplesFilter {
+	return func(example v1alphaExamples.Example) bool {
+		alertMethodGetter, ok := example.(v1alphaExamples.AlertMethodTypeGetter)
+		if !ok {
+			return false
+		}
+		return alertMethodGetter.GetAlertMethodType() == typ
+	}
+}
+
 var (
 	// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
 	examplesRegistry = newMapCache[manifest.Kind, []v1alphaExamples.Example]()
