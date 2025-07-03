@@ -76,6 +76,7 @@
     "doublestar",
     "dtstart",
     "dynatrace",
+    "e2etestutils",
     "endef",
     "enduml",
     "errgroup",
