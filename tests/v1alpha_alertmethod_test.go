@@ -13,7 +13,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
-	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
@@ -96,11 +95,7 @@ func newV1alphaAlertMethod(
 	t.Helper()
 	variant := e2etestutils.GetExampleObject[v1alphaAlertMethod.AlertMethod](t,
 		manifest.KindAlertMethod,
-		func(example v1alphaExamples.Example) bool {
-			return example.(interface {
-				GetAlertMethodType() v1alpha.AlertMethodType
-			}).GetAlertMethodType() == typ
-		},
+		e2etestutils.FilterExamplesByAlertMethodType(typ),
 	)
 	variant.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAlertMethod.New(metadata, variant.Spec)

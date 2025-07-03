@@ -45,3 +45,7 @@ func (s standardExample) GetYAMLComments() []string {
 type DataSourceTypeGetter interface {
 	GetDataSourceType() v1alpha.DataSourceType
 }
+
+type AlertMethodTypeGetter interface {
+	GetAlertMethodType() v1alpha.AlertMethodType
+}
