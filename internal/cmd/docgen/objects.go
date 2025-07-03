@@ -118,13 +118,14 @@ func objectPlansToDocs(plan *govy.ValidatorPlan) []PropertyDoc {
 	docs := make([]PropertyDoc, 0, len(plan.Properties))
 	for _, plan := range plan.Properties {
 		docs = append(docs, PropertyDoc{
-			Doc:        "TODO",
-			Path:       plan.Path,
-			Type:       plan.TypeInfo.Name,
-			Package:    plan.TypeInfo.Package,
-			Examples:   plan.Examples,
-			Rules:      plan.Rules,
-			IsOptional: plan.IsOptional,
+			Doc:      "TODO",
+			Path:     plan.Path,
+			Type:     plan.TypeInfo.Name,
+			Package:  plan.TypeInfo.Package,
+			Examples: plan.Examples,
+			Rules:    plan.Rules,
+			// FIXME: extract optional from rules!
+			// IsOptional: plan.IsOptional,
 			// We're assuming hidden values are secrets.
 			IsSecret: plan.IsHidden,
 		})

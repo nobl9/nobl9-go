@@ -24,7 +24,7 @@ More information can be found
 
 Try to be as descriptive as you can in your PR title.
 Note that the title must adhere to the rules defined in
-[this workflow](./.github/workflows/pr-title.yml).
+[this workflow](../.github/workflows/pr-title.yml).
 
 ## License
 
