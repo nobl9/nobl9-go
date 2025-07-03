@@ -21,7 +21,7 @@ func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 	project := generateV1alphaProject(t)
-	examples := examplesRegistry[manifest.KindDataExport]
+	examples := getExamples(t, manifest.KindDataExport)
 	allObjects := make([]manifest.Object, 0, len(examples))
 	allObjects = append(allObjects, project)
 
@@ -94,7 +94,7 @@ func newV1alphaDataExport(
 	subVariant string,
 ) v1alphaDataExport.DataExport {
 	t.Helper()
-	ap := getExample[v1alphaDataExport.DataExport](t,
+	ap := getExampleObject[v1alphaDataExport.DataExport](t,
 		manifest.KindDataExport,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant

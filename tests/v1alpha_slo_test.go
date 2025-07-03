@@ -41,7 +41,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		Name:    generateName(),
 		Project: project.GetName(),
 	})
-	alertPolicyExample := examplesRegistry[manifest.KindAlertPolicy][0].Example
+	alertPolicyExample := getExample(t, manifest.KindAlertPolicy, nil).Example
 	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
 		Name:    generateName(),
 		Project: project.GetName(),
@@ -58,8 +58,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		v1alphaSLODependencyAgents(t),
 		v1alphaSLODependencyDirects(t)...)
 
-	sloExamples := examplesRegistry[manifest.KindSLO]
-
+	sloExamples := getExamples(t, manifest.KindSLO)
 	// Composite SLOs depend on other SLOs. Example SLOs are being sorted so that Composite SLOs are placed at the end,
 	// allowing them to depend on the SLOs listed before them.
 	slices.SortStableFunc(sloExamples, func(i, j exampleWrapper) int {
@@ -178,6 +177,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	serviceNameFilterSLOs, serviceNameFilterDependencies := prepareObjectsForServiceNameFilteringTests(
 		t,
+		sloExamples,
 		agentsAndDirects[0].(v1alphaAgent.Agent),
 	)
 	for _, slo := range serviceNameFilterSLOs {
@@ -296,6 +296,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 func prepareObjectsForServiceNameFilteringTests(
 	t *testing.T,
+	sloExamples []exampleWrapper,
 	agent v1alphaAgent.Agent,
 ) (
 	slos []v1alphaSLO.SLO,
@@ -333,11 +334,14 @@ func prepareObjectsForServiceNameFilteringTests(
 
 	// SLOs.
 	var sloTemplate v1alphaSLO.SLO
-	for _, example := range examplesRegistry[manifest.KindSLO] {
+	for _, example := range sloExamples {
 		slo := example.GetObject().(v1alphaSLO.SLO)
 		metricSpecs := slo.Spec.AllMetricSpecs()
+		if slo.Spec.HasCompositeObjectives() {
+			continue
+		}
 		require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-		if !slo.Spec.HasCompositeObjectives() && metricSpecs[0].DataSourceType() == agentType {
+		if metricSpecs[0].DataSourceType() == agentType {
 			sloTemplate = slo
 			break
 		}
