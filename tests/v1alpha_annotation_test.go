@@ -9,15 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
-	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
@@ -26,31 +25,23 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: defaultProject,
 	})
 
 	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(v1alphaSLODependencyDirects(t), func(o manifest.Object) bool {
-		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
-		return typ == dataSourceType
-	})
-	require.Len(t, directs, 1)
-	direct := directs[0].(v1alphaDirect.Direct)
+	direct := e2etestutils.ProvisionStaticDirect(t, dataSourceType)
 
-	slo := getExample[v1alphaSLO.SLO](t,
+	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
-		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(dataSourceTypeGetter)
-			return ok && dsGetter.GetDataSourceType() == dataSourceType
-		},
+		e2etestutils.FilterExamplesByDataSourceType(dataSourceType),
 	)
 	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = generateName()
+	slo.Metadata.Name = e2etestutils.GenerateName()
 	slo.Metadata.Project = project.GetName()
 	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 		Name:    direct.Metadata.Name,
@@ -62,7 +53,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	slo.Spec.Objectives[0].Name = "good"
 
 	defaultProjectSLO := deepCopyObject(t, slo)
-	defaultProjectSLO.Metadata.Name = generateName()
+	defaultProjectSLO.Metadata.Name = e2etestutils.GenerateName()
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
@@ -79,39 +70,52 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	annotations := []v1alphaAnnotation.Annotation{
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    generateName(),
+				Name:    e2etestutils.GenerateName(),
 				Project: defaultProject,
 			},
 			v1alphaAnnotation.Spec{
 				Slo:           defaultProjectSLO.Metadata.Name,
 				ObjectiveName: "good",
-				Description:   objectDescription,
+				Description:   e2etestutils.GetObjectDescription(),
 				StartTime:     mustParseTime("2024-05-01T12:00:00Z").UTC(),
 				EndTime:       mustParseTime("2024-05-04T10:00:00Z").UTC(),
 			},
 		),
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    generateName(),
+				Name:    e2etestutils.GenerateName(),
 				Project: project.GetName(),
 			},
 			v1alphaAnnotation.Spec{
 				Slo:         slo.Metadata.Name,
-				Description: objectDescription,
+				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-16T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-16T15:00:00Z").UTC(),
 			},
 		),
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
-				Name:    generateName(),
+				Name:    e2etestutils.GenerateName(),
 				Project: project.GetName(),
 			},
 			v1alphaAnnotation.Spec{
 				Slo:         slo.Metadata.Name,
-				Description: objectDescription,
+				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-17T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-17T15:00:00Z").UTC(),
+			},
+		),
+		v1alphaAnnotation.New(
+			v1alphaAnnotation.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: project.GetName(),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"blue"}}),
+			},
+			v1alphaAnnotation.Spec{
+				Slo:         slo.Metadata.Name,
+				Description: e2etestutils.GetObjectDescription(),
+				StartTime:   mustParseTime("2024-05-18T14:00:00Z").UTC(),
+				EndTime:     mustParseTime("2024-05-18T15:00:00Z").UTC(),
 			},
 		),
 	}
@@ -119,8 +123,8 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 		allObjects = append(allObjects, annotation)
 	}
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAnnotation.Annotation](allObjects)
 
 	filterTests := map[string]struct {
@@ -163,7 +167,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Project: project.GetName(),
 				From:    mustParseTime("2024-05-17T10:00:00Z"),
 			},
-			expected: []v1alphaAnnotation.Annotation{inputs[2]},
+			expected: []v1alphaAnnotation.Annotation{inputs[2], inputs[3]},
 		},
 		"filter by to": {
 			request: objectsV1.GetAnnotationsRequest{

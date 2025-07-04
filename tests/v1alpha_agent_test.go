@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	v1alphaExamples "github.com/nobl9/nobl9-go/internal/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
@@ -30,7 +30,7 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 		agent := newV1alphaAgent(t,
 			typ,
 			v1alphaAgent.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Agent %d", i),
 				Project:     project.GetName(),
 			},
@@ -44,11 +44,11 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	// Register cleanup first as we're not applying in a batch.
 	t.Cleanup(func() {
 		slices.Reverse(agents)
-		v1DeleteBatch(t, agents, 1)
-		v1Delete(t, []manifest.Object{project})
+		e2etestutils.V1DeleteBatch(t, agents, 1)
+		e2etestutils.V1Delete(t, []manifest.Object{project})
 	})
-	v1Apply(t, []manifest.Object{project})
-	v1ApplyBatch(t, agents, 1)
+	e2etestutils.V1Apply(t, []manifest.Object{project})
+	e2etestutils.V1ApplyBatch(t, agents, 1)
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetAgentsRequest
@@ -92,23 +92,17 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	}
 }
 
-type dataSourceTypeGetter interface {
-	GetDataSourceType() v1alpha.DataSourceType
-}
-
 func newV1alphaAgent(
 	t *testing.T,
 	typ v1alpha.DataSourceType,
 	metadata v1alphaAgent.Metadata,
 ) v1alphaAgent.Agent {
 	t.Helper()
-	variant := getExample[v1alphaAgent.Agent](t,
+	variant := e2etestutils.GetExampleObject[v1alphaAgent.Agent](t,
 		manifest.KindAgent,
-		func(example v1alphaExamples.Example) bool {
-			return example.(dataSourceTypeGetter).GetDataSourceType() == typ
-		},
+		e2etestutils.FilterExamplesByDataSourceType(typ),
 	)
-	variant.Spec.Description = objectDescription
+	variant.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAgent.New(metadata, variant.Spec)
 }
 
