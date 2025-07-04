@@ -37,7 +37,7 @@ func GetOfflineEchoClient() *sdk.Client {
 
 // GetStaticClient creates an offline (local mock server) [sdk.Client] without auth (DisableOkta option).
 // It is used exclusively for running code examples without internet connection or valid Nobl9 credentials.
-// The response provided when initialising the client is returned by the server as JSON.
+// The response provided when initializing the client is returned by the server as JSON.
 func GetStaticClient(response any) *sdk.Client {
 	// Offline server:
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
