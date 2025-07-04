@@ -12,12 +12,11 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
-	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v1"
 	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi/v2"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
@@ -26,8 +25,8 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v1.SLODetails, error) {
 		return client.SLOStatusAPI().V1().GetSLO(ctx, project.GetName(), slo.GetName())
@@ -43,24 +42,24 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
-	slo1 := slo.(*v1alphaSLO.SLO)
+	slo1 := slo.(v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
-	slo2.Metadata.Name = generateName()
+	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
-	v1Apply(t, initialObjects)
+	e2etestutils.V1Apply(t, initialObjects)
 
 	slo3 := deepCopyObject(t, slo1)
-	slo3.Metadata.Name = generateName()
+	slo3.Metadata.Name = e2etestutils.GenerateName()
 	slo4 := deepCopyObject(t, slo1)
-	slo4.Metadata.Name = generateName()
-	v1Apply(t, []manifest.Object{slo3, slo4})
+	slo4.Metadata.Name = e2etestutils.GenerateName()
+	e2etestutils.V1Apply(t, []manifest.Object{slo3, slo4})
 
 	slo5 := deepCopyObject(t, slo1)
-	slo5.Metadata.Name = generateName()
-	v1Apply(t, []manifest.Object{slo5})
+	slo5.Metadata.Name = e2etestutils.GenerateName()
+	e2etestutils.V1Apply(t, []manifest.Object{slo5})
 
-	t.Cleanup(func() { v1Delete(t, initialObjects) })
-	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, initialObjects) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
@@ -104,8 +103,8 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v2.SLODetails, error) {
 		return client.SLOStatusAPI().V2().GetSLO(ctx, project.GetName(), slo.GetName())
@@ -121,24 +120,24 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
-	slo1 := slo.(*v1alphaSLO.SLO)
+	slo1 := slo.(v1alphaSLO.SLO)
 	slo2 := deepCopyObject(t, slo1)
-	slo2.Metadata.Name = generateName()
+	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
-	v1Apply(t, initialObjects)
+	e2etestutils.V1Apply(t, initialObjects)
 
 	slo3 := deepCopyObject(t, slo1)
-	slo3.Metadata.Name = generateName()
+	slo3.Metadata.Name = e2etestutils.GenerateName()
 	slo4 := deepCopyObject(t, slo1)
-	slo4.Metadata.Name = generateName()
-	v1Apply(t, []manifest.Object{slo3, slo4})
+	slo4.Metadata.Name = e2etestutils.GenerateName()
+	e2etestutils.V1Apply(t, []manifest.Object{slo3, slo4})
 
 	slo5 := deepCopyObject(t, slo1)
-	slo5.Metadata.Name = generateName()
-	v1Apply(t, []manifest.Object{slo5})
+	slo5.Metadata.Name = e2etestutils.GenerateName()
+	e2etestutils.V1Apply(t, []manifest.Object{slo5})
 
-	t.Cleanup(func() { v1Delete(t, initialObjects) })
-	t.Cleanup(func() { v1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, initialObjects) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {
@@ -180,27 +179,19 @@ func setupSLOListTest(t *testing.T) []manifest.Object {
 	t.Helper()
 	project := generateV1alphaProject(t)
 	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    generateName(),
+		Name:    e2etestutils.GenerateName(),
 		Project: project.GetName(),
 	})
 
 	dataSourceType := v1alpha.Datadog
-	directs := filterSlice(v1alphaSLODependencyDirects(t), func(o manifest.Object) bool {
-		typ, _ := o.(v1alphaDirect.Direct).Spec.GetType()
-		return typ == dataSourceType
-	})
-	require.Len(t, directs, 1)
-	direct := directs[0].(v1alphaDirect.Direct)
+	direct := e2etestutils.ProvisionStaticDirect(t, dataSourceType)
 
-	slo := getExample[v1alphaSLO.SLO](t,
+	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t,
 		manifest.KindSLO,
-		func(example v1alphaExamples.Example) bool {
-			dsGetter, ok := example.(v1alphaExamples.DataSourceTypeGetter)
-			return ok && dsGetter.GetDataSourceType() == dataSourceType
-		},
+		e2etestutils.FilterExamplesByDataSourceType(dataSourceType),
 	)
 	slo.Spec.AnomalyConfig = nil
-	slo.Metadata.Name = generateName()
+	slo.Metadata.Name = e2etestutils.GenerateName()
 	slo.Metadata.Project = project.GetName()
 	slo.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
 		Name:    direct.Metadata.Name,
