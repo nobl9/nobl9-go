@@ -1,27 +1,25 @@
-package models
+package v1
 
 import (
 	"encoding/json"
 	"io"
+	"slices"
 	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
-
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 // maximumAllowedReplayDuration currently is 30 days.
 const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
-// Replay Struct used for posting replay entity.
-type Replay struct {
+type ReplayRequest struct {
 	Project   string           `json:"project"`
 	Slo       string           `json:"slo"`
 	Duration  ReplayDuration   `json:"duration"`
-	TimeRange ReplayTimeRange  `json:"timeRange,omitempty"`
+	TimeRange ReplayTimeRange  `json:"timeRange,omitzero"`
 	SourceSLO *ReplaySourceSLO `json:"sourceSlo,omitempty"`
 }
 
@@ -31,40 +29,8 @@ type ReplayDuration struct {
 }
 
 type ReplayTimeRange struct {
-	StartDate time.Time `json:"startDate,omitempty"`
-	EndDate   time.Time `json:"endDate,omitempty"` // not supported yet
-}
-
-// ReplayWithStatus used for returning [Replay] data with status.
-type ReplayWithStatus struct {
-	Project string       `json:"project"`
-	Slo     string       `json:"slo"`
-	Status  ReplayStatus `json:"status"`
-}
-
-type ReplayStatus struct {
-	Source       string `json:"source"`
-	Status       string `json:"status"`
-	Cancellation string `json:"cancellation"`
-	CanceledBy   string `json:"canceledBy,omitempty"`
-	TriggeredBy  string `json:"triggeredBy"`
-	Unit         string `json:"unit"`
-	Value        int    `json:"value"`
-	StartTime    string `json:"startTime"`
-	EndTime      string `json:"endTime,omitempty"`
-}
-
-func ToProcessStatus(status ReplayStatus) slo.ProcessStatus {
-	return slo.ProcessStatus{
-		Status:       status.Status,
-		Cancellation: status.Cancellation,
-		CanceledBy:   status.CanceledBy,
-		TriggeredBy:  status.TriggeredBy,
-		Unit:         status.Unit,
-		Value:        status.Value,
-		StartTime:    status.StartTime,
-		EndTime:      status.EndTime,
-	}
+	StartDate time.Time `json:"startDate,omitzero"`
+	EndDate   time.Time `json:"endDate,omitzero"` // not supported yet
 }
 
 type ReplaySourceSLO struct {
@@ -78,60 +44,37 @@ type ReplaySourceSLOItem struct {
 	Target string `json:"target"`
 }
 
-// Variants of [ReplayStatus.Status].
-const (
-	ReplayStatusFailed    = "failed"
-	ReplayStatusCompleted = "completed"
-)
-
-type ReplayAvailability struct {
-	Available bool   `json:"available"`
-	Reason    string `json:"reason,omitempty"`
-}
-
-// Variants of [ReplayAvailability.Reason].
-const (
-	ReplayDataSourceTypeInvalid              = "datasource_type_invalid"
-	ReplayProjectDoesNotExist                = "project_does_not_exist"
-	ReplayDataSourceDoesNotExist             = "data_source_does_not_exist"
-	ReplayIntegrationDoesNotSupportReplay    = "integration_does_not_support_replay"
-	ReplayAgentVersionDoesNotSupportReplay   = "agent_version_does_not_support_replay"
-	ReplayMaxHistoricalDataRetrievalTooLow   = "max_historical_data_retrieval_too_low"
-	ReplayConcurrentReplayRunsLimitExhausted = "concurrent_replay_runs_limit_exhausted"
-	ReplayUnknownAgentVersion                = "unknown_agent_version"
-)
-
-var replayValidation = govy.New[Replay](
-	govy.For(func(r Replay) string { return r.Project }).
+var replayValidation = govy.New[ReplayRequest](
+	govy.For(func(r ReplayRequest) string { return r.Project }).
 		WithName("project").
 		Required(),
-	govy.For(func(r Replay) string { return r.Slo }).
+	govy.For(func(r ReplayRequest) string { return r.Slo }).
 		WithName("slo").
 		Required(),
-	govy.For(func(r Replay) ReplayDuration { return r.Duration }).
+	govy.For(func(r ReplayRequest) ReplayDuration { return r.Duration }).
 		WithName("duration").
 		When(
-			func(r Replay) bool {
+			func(r ReplayRequest) bool {
 				return !isEmpty(r.Duration) || (r.TimeRange.StartDate.IsZero() && isEmpty(r.Duration))
 			},
 		).
 		Cascade(govy.CascadeModeStop).
 		Include(replayDurationValidation).
 		Rules(replayDurationValidationRule()),
-	govy.ForPointer(func(r Replay) *ReplaySourceSLO { return r.SourceSLO }).
+	govy.ForPointer(func(r ReplayRequest) *ReplaySourceSLO { return r.SourceSLO }).
 		WithName("sourceSLO").
 		Include(replaySourceSLOValidation),
-	govy.For(func(r Replay) time.Time { return r.TimeRange.StartDate }).
+	govy.For(func(r ReplayRequest) time.Time { return r.TimeRange.StartDate }).
 		WithName("startDate").
 		When(
-			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
+			func(r ReplayRequest) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
 		Rules(
 			replayStartTimeValidationRule(),
 			replayStartTimeNotInFutureValidationRule(),
 		),
-	govy.For(func(r Replay) Replay { return r }).
-		Rules(govy.NewRule(func(r Replay) error {
+	govy.For(func(r ReplayRequest) ReplayRequest { return r }).
+		Rules(govy.NewRule(func(r ReplayRequest) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
 				return errors.New("only one of duration or startDate can be set")
 			}
@@ -172,7 +115,7 @@ var replaySourceSLOItemValidation = govy.New[ReplaySourceSLOItem](
 		Required(),
 )
 
-func (r Replay) Validate() error {
+func (r ReplayRequest) Validate() error {
 	return replayValidation.Validate(r)
 }
 
@@ -219,13 +162,13 @@ func replayStartTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 }
 
 // ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.
-func ParseJSONToReplayStruct(data io.Reader) (Replay, error) {
-	replay := Replay{}
+func ParseJSONToReplayStruct(data io.Reader) (ReplayRequest, error) {
+	replay := ReplayRequest{}
 	if err := json.NewDecoder(data).Decode(&replay); err != nil {
-		return Replay{}, err
+		return ReplayRequest{}, err
 	}
 	if err := replay.Validate(); err != nil {
-		return Replay{}, err
+		return ReplayRequest{}, err
 	}
 	return replay, nil
 }
@@ -263,10 +206,8 @@ func (d ReplayDuration) Duration() (time.Duration, error) {
 
 // ValidateReplayDurationUnit check if given string is allowed period unit.
 func ValidateReplayDurationUnit(unit string) error {
-	for _, u := range allowedDurationUnit {
-		if u == unit {
-			return nil
-		}
+	if slices.Contains(allowedDurationUnit, unit) {
+		return nil
 	}
 	return ErrInvalidReplayDurationUnit
 }

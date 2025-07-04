@@ -1,4 +1,4 @@
-package models
+package v1
 
 import (
 	"strings"
@@ -17,13 +17,13 @@ func TestReplayStructDatesValidation(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		replay    Replay
+		replay    ReplayRequest
 		isValid   bool
 		ErrorCode govy.ErrorCode
 	}{
 		{
 			name: "correct struct",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -35,7 +35,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing slo",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "",
 				Duration: ReplayDuration{
@@ -48,7 +48,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing project",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -61,7 +61,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing duration unit",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -73,7 +73,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing duration value",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -85,7 +85,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "invalid duration unit",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -98,7 +98,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "invalid duration value",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -111,7 +111,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "maximum duration exceeded",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -124,7 +124,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing duration",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 			},
@@ -133,7 +133,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "correct struct start date",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				TimeRange: ReplayTimeRange{
@@ -144,7 +144,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "only one of duration or start date can be set",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -160,7 +160,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "start date cannot be in the future",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				TimeRange: ReplayTimeRange{
@@ -172,7 +172,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "use start date without duration",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -187,7 +187,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "only one of duration",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -202,7 +202,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "source slo is required",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -219,7 +219,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "source project is required",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -236,7 +236,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "missing objectives map when replaying source slo",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -253,7 +253,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "empty objectives map when replaying source slo",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -271,7 +271,7 @@ func TestReplayStructDatesValidation(t *testing.T) {
 		},
 		{
 			name: "not empty objectives map when replaying source slo",
-			replay: Replay{
+			replay: ReplayRequest{
 				Project: "project",
 				Slo:     "slo",
 				Duration: ReplayDuration{
@@ -316,13 +316,13 @@ func TestParseJSONToReplayStruct(t *testing.T) {
 	tests := []struct {
 		name      string
 		inputJSON string
-		want      Replay
+		want      ReplayRequest
 		wantErr   bool
 	}{
 		{
 			name:      "pass valid json",
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Day", "value": 20}}`,
-			want: Replay{
+			want: ReplayRequest{
 				Project: "default",
 				Slo:     "annotation-test",
 				Duration: ReplayDuration{
@@ -335,19 +335,19 @@ func TestParseJSONToReplayStruct(t *testing.T) {
 		{
 			name:      "pass invalid json",
 			inputJSON: `}`,
-			want:      Replay{},
+			want:      ReplayRequest{},
 			wantErr:   true,
 		},
 		{
 			name:      "pass invalid values",
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Days", "value": 20}}`,
-			want:      Replay{},
+			want:      ReplayRequest{},
 			wantErr:   true,
 		},
 		{
 			name:      "pass empty object",
 			inputJSON: `{}`,
-			want:      Replay{},
+			want:      ReplayRequest{},
 			wantErr:   true,
 		},
 	}
