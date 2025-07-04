@@ -75,6 +75,10 @@ func validAlert() Alert {
 					Operator:         "lt",
 				},
 			},
+			SilenceInfo: &SilenceInfo{
+				From: "2024-01-11T16:00:00Z",
+				To:   "2024-01-11T17:00:00Z",
+			},
 		},
 	}
 }

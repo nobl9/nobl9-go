@@ -49,6 +49,7 @@ type Spec struct {
 	Conditions                  []Condition    `json:"conditions"`
 	CoolDownStartedAtMetricTime *string        `json:"coolDownStartedAtMetricTime,omitempty"`
 	ResolutionReason            *string        `json:"resolutionReason,omitempty"`
+	SilenceInfo                 *SilenceInfo   `json:"silenceInfo,omitempty"`
 }
 
 type Objective struct {
@@ -77,4 +78,9 @@ type ConditionStatus struct {
 	FirstMetMetricTime   string  `json:"firstMetMetricTime,omitempty"`
 	LastMetMetricTime    *string `json:"lastMetMetricTime,omitempty"`
 	LastForMetMetricTime *string `json:"lastsForMetMetricTime,omitempty"`
+}
+
+type SilenceInfo struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }

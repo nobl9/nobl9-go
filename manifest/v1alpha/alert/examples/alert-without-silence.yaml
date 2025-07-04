@@ -1,0 +1,35 @@
+apiVersion: n9/v1alpha
+kind: Alert
+metadata:
+  name: alert-example
+  project: default
+spec:
+  alertPolicy:
+    name: my-alert-policy
+    displayName: My Alert Policy
+    project: default
+  slo:
+    name: my-slo
+    displayName: My SLO
+    project: default
+  service:
+    name: my-service
+    displayName: My Service
+    project: default
+  objective:
+    value: 0.95
+    name: latency-objective
+    displayName: Latency Objective
+  severity: High
+  status: Triggered
+  triggeredMetricTime: "2024-01-15T10:30:00Z"
+  triggeredClockTime: "2024-01-15T10:31:00Z"
+  coolDown: 5m0s
+  conditions:
+  - measurement: timeToBurnBudget
+    value: 2h30m
+    alertingWindow: 1h
+    lastsFor: 5m
+    op: lt
+    status:
+      firstMetMetricTime: "2024-01-15T10:25:00Z"
