@@ -38,13 +38,24 @@ type objectsEqualityAssertFunc[T manifest.Object] func(t *testing.T, expected, a
 func assertSubset[T manifest.Object](t *testing.T, actual, expected []T, f objectsEqualityAssertFunc[T]) {
 	t.Helper()
 	for i := range expected {
+		projectScoped, isProjectScoped := any(expected[i]).(manifest.ProjectScopedObject)
 		found := false
 		for j := range actual {
-			if actual[j].GetName() == expected[i].GetName() {
-				f(t, expected[i], actual[j])
-				found = true
-				break
+			if actual[j].GetName() != expected[i].GetName() {
+				continue
 			}
+			if isProjectScoped {
+				v, ok := any(actual[j]).(manifest.ProjectScopedObject)
+				if isProjectScoped && !ok {
+					continue
+				}
+				if projectScoped.GetProject() != v.GetProject() {
+					continue
+				}
+			}
+			f(t, expected[i], actual[j])
+			found = true
+			break
 		}
 		if !found {
 			t.Errorf("expected %T %s not found in the actual list", expected[i], expected[i].GetName())

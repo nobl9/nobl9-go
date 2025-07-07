@@ -102,8 +102,43 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			movedSLO.Metadata.Project = newProject.GetName()
 			movedSLO.Spec.Service = newServiceName
 			// New service should be created automatically based on the existing Service.
+			newService := v1alphaService.New(
+				v1alphaService.Metadata{
+					Name:    newServiceName,
+					Project: newProject.GetName(),
+				},
+				v1alphaService.Spec{
+					Description: fmt.Sprintf(
+						"Service created by moving '%s' SLO from '%s' Project",
+						slo.GetName(), oldProject.GetName()),
+				},
+			)
+
+			return v1MoveSLOsTestCase{
+				setupObjects:    []manifest.Object{oldProject, oldService, slo, newProject},
+				payload:         payload,
+				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
+			}
+		}(),
+		"move SLO to an existing Project and non-existing Service (no service name)": func() v1MoveSLOsTestCase {
+			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
+			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
+			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
+
+			payload := models.MoveSLOs{
+				SLONames:   []string{slo.GetName()},
+				NewProject: newProject.GetName(),
+				OldProject: oldProject.GetName(),
+			}
+			movedSLO := slo
+			movedSLO.Metadata.Project = newProject.GetName()
+			// New service should be created automatically based on the existing Service.
 			newService := newV1alphaService(t, v1alphaService.Metadata{
-				Name:    newServiceName,
+				Name:    oldService.GetName(),
 				Project: newProject.GetName(),
 			})
 
@@ -139,7 +174,17 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			newProject.Metadata.Annotations = nil
 			newProject.Spec.Description = fmt.Sprintf("Project created by moving '%s' SLO from '%s' Project",
 				slo.GetName(), oldProject.GetName())
-			newService := newV1alphaService(t, v1alphaService.Metadata{Name: newServiceName, Project: newProjectName})
+			newService := v1alphaService.New(
+				v1alphaService.Metadata{
+					Name:    newServiceName,
+					Project: newProjectName,
+				},
+				v1alphaService.Spec{
+					Description: fmt.Sprintf(
+						"Service created by moving '%s' SLO from '%s' Project",
+						slo.GetName(), oldProject.GetName()),
+				},
+			)
 
 			return v1MoveSLOsTestCase{
 				setupObjects:    []manifest.Object{oldProject, oldService, slo},
