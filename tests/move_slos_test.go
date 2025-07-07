@@ -56,10 +56,16 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 	tests := map[string]v1MoveSLOsTestCase{
 		"move SLO to an existing Project and Service": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			newService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: newProject.GetName()})
+			newService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: newProject.GetName(),
+			})
 
 			payload := models.MoveSLOs{
 				SLONames:   []string{slo.GetName()},
@@ -78,7 +84,10 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		}(),
 		"move SLO to an existing Project and non-existing Service": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 			newServiceName := e2etestutils.GenerateName()
@@ -93,7 +102,10 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			movedSLO.Metadata.Project = newProject.GetName()
 			movedSLO.Spec.Service = newServiceName
 			// New service should be created automatically based on the existing Service.
-			newService := newV1alphaService(t, v1alphaService.Metadata{Name: newServiceName, Project: newProject.GetName()})
+			newService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    newServiceName,
+				Project: newProject.GetName(),
+			})
 
 			return v1MoveSLOsTestCase{
 				setupObjects:    []manifest.Object{oldProject, oldService, slo, newProject},
@@ -103,7 +115,10 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		}(),
 		"move SLO to a non-existing Project and Service": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			newProjectName := e2etestutils.GenerateName()
 			newServiceName := e2etestutils.GenerateName()
@@ -154,7 +169,10 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		},
 		"return error for an SLO with attached Alert Policies": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
 			alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
@@ -173,7 +191,8 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			slo.Spec.AlertPolicies = []string{alertPolicy.GetName()}
 
 			errMsg := fmt.Sprintf("cannot move %s SLO while it has assigned Alert Policies,"+
-				" detach them manually or set 'detachAlertPolicies' parameter to 'true' in the request body", slo.GetName())
+				" detach them manually or set 'detachAlertPolicies' parameter to 'true' in the request body",
+				slo.GetName())
 			return v1MoveSLOsTestCase{
 				setupObjects: []manifest.Object{oldProject, oldService, alertPolicy, slo},
 				payload:      payload,
@@ -188,13 +207,19 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		}(),
 		"conflict when an SLO already exists in the new Project": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			sloName := e2etestutils.GenerateName()
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			slo.Metadata.Name = sloName
 
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			newService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: newProject.GetName()})
+			newService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: newProject.GetName(),
+			})
 
 			// Create an SLO with the same name in the new project
 			existingSLO := newV1alphaSLOForMoveSLO(t, newProject.GetName(), newService.GetName(), direct)
@@ -222,9 +247,15 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		}(),
 		"detach alert policies from the SLO": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			oldService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: oldProject.GetName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: oldProject.GetName(),
+			})
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
-			newService := newV1alphaService(t, v1alphaService.Metadata{Name: e2etestutils.GenerateName(), Project: newProject.GetName()})
+			newService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: newProject.GetName(),
+			})
 
 			alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
 			alertPolicy1 := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
@@ -269,7 +300,9 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			t.Parallel()
 
 			e2etestutils.V1Apply(t, test.setupObjects)
-			t.Cleanup(func() { e2etestutils.V1Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...))) })
+			t.Cleanup(func() {
+				e2etestutils.V1Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...)))
+			})
 
 			err := client.Objects().V1().MoveSLOs(ctx, test.payload)
 			if test.expectedError != nil {
