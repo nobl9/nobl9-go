@@ -17,8 +17,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	golang.org/x/sync v0.15.0
-	golang.org/x/text v0.26.0
+	golang.org/x/sync v0.16.0
+	golang.org/x/text v0.27.0
 	golang.org/x/time v0.12.0
 )
 
