@@ -23,13 +23,12 @@ import (
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-	"github.com/nobl9/nobl9-go/sdk/models"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 type v1MoveSLOsTestCase struct {
 	setupObjects    []manifest.Object
-	payload         models.MoveSLOs
+	payload         v1.MoveSLOsRequest
 	expectedObjects []manifest.Object
 	expectedError   error
 }
@@ -67,7 +66,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				Project: newProject.GetName(),
 			})
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: newProject.GetName(),
 				OldProject: oldProject.GetName(),
@@ -92,7 +91,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 			newServiceName := e2etestutils.GenerateName()
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: newProject.GetName(),
 				OldProject: oldProject.GetName(),
@@ -129,7 +128,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			newProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: newProject.GetName(),
 				OldProject: oldProject.GetName(),
@@ -158,7 +157,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			newProjectName := e2etestutils.GenerateName()
 			newServiceName := e2etestutils.GenerateName()
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: newProjectName,
 				OldProject: oldProject.GetName(),
@@ -194,7 +193,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		}(),
 		"validation error": {
 			setupObjects: []manifest.Object{},
-			payload: models.MoveSLOs{
+			payload: v1.MoveSLOsRequest{
 				SLONames:   []string{},
 				NewProject: "bar",
 				OldProject: "baz",
@@ -226,7 +225,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
 			alertPolicy.Spec.AlertMethods = nil
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: e2etestutils.GenerateName(),
 				OldProject: oldProject.GetName(),
@@ -270,7 +269,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			existingSLO := newV1alphaSLOForMoveSLO(t, newProject.GetName(), newService.GetName(), direct)
 			existingSLO.Metadata.Name = sloName
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:   []string{slo.GetName()},
 				NewProject: newProject.GetName(),
 				OldProject: oldProject.GetName(),
@@ -317,7 +316,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			slo := newV1alphaSLOForMoveSLO(t, oldProject.GetName(), oldService.GetName(), direct)
 			slo.Spec.AlertPolicies = []string{alertPolicy1.GetName(), alertPolicy2.GetName()}
 
-			payload := models.MoveSLOs{
+			payload := v1.MoveSLOsRequest{
 				SLONames:            []string{slo.GetName()},
 				NewProject:          newProject.GetName(),
 				OldProject:          oldProject.GetName(),

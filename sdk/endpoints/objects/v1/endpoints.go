@@ -14,7 +14,6 @@ import (
 	"github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	"github.com/nobl9/nobl9-go/sdk/models"
 )
 
 const (
@@ -110,13 +109,10 @@ func (e endpoints) Get(
 }
 
 // MoveSLOs allows moving SLOs between Projects.
-//
-// WARNING! This API is not yet available, using this function will result in an error
-// until platform support is released.
-func (e endpoints) MoveSLOs(ctx context.Context, payload models.MoveSLOs) error {
+func (e endpoints) MoveSLOs(ctx context.Context, params MoveSLOsRequest) error {
 	buf := new(bytes.Buffer)
-	if err := json.NewEncoder(buf).Encode(payload); err != nil {
-		return fmt.Errorf("cannot encode %T: %w", payload, err)
+	if err := json.NewEncoder(buf).Encode(params); err != nil {
+		return fmt.Errorf("cannot encode %T: %w", params, err)
 	}
 	req, err := e.client.CreateRequest(
 		ctx,
