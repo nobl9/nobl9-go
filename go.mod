@@ -7,7 +7,7 @@ require (
 	github.com/MicahParks/jwkset v0.9.6
 	github.com/MicahParks/keyfunc/v3 v3.4.0
 	github.com/aws/aws-sdk-go v1.55.7
-	github.com/bmatcuk/doublestar/v4 v4.8.1
+	github.com/bmatcuk/doublestar/v4 v4.9.0
 	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
 	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 	github.com/golang-jwt/jwt/v5 v5.2.2
@@ -17,8 +17,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
-	golang.org/x/sync v0.15.0
-	golang.org/x/text v0.26.0
+	golang.org/x/sync v0.16.0
+	golang.org/x/text v0.27.0
 	golang.org/x/time v0.12.0
 )
 
