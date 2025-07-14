@@ -46,7 +46,7 @@ func assertSubset[T manifest.Object](t *testing.T, actual, expected []T, f objec
 			}
 			if isProjectScoped {
 				v, ok := any(actual[j]).(manifest.ProjectScopedObject)
-				if isProjectScoped && !ok {
+				if !ok {
 					continue
 				}
 				if projectScoped.GetProject() != v.GetProject() {

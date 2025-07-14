@@ -10,11 +10,11 @@ type MoveSLOsRequest struct {
 	SLONames []string `json:"sloNames"`
 	// OldProject is the current project name of the moved SLOs.
 	OldProject string `json:"oldProject"`
-	// NewProject is the project name to which the SLOs is moved.
+	// NewProject is the project name to which the SLOs are moved.
 	NewProject string `json:"newProject"`
-	// Service is the target service name to which the moved SLOs is assigned.
+	// Service is the target service name to which the moved SLOs are assigned.
 	Service string `json:"service"`
-	// DetachAlertPolicies defines If the moved SLOs should have their alert policies automatically detached.
+	// DetachAlertPolicies defines if the moved SLOs should have their alert policies automatically detached.
 	// It defaults to false.
 	DetachAlertPolicies bool `json:"detachAlertPolicies"`
 }
