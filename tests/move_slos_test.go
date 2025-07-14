@@ -9,7 +9,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -191,26 +190,6 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
 			}
 		}(),
-		"validation error": {
-			setupObjects: []manifest.Object{},
-			payload: v1.MoveSLOsRequest{
-				SLONames:   []string{},
-				NewProject: "bar",
-				OldProject: "baz",
-			},
-			expectedError: &sdk.HTTPError{
-				APIErrors: sdk.APIErrors{Errors: []sdk.APIError{{
-					Title: "length must be greater than or equal to 1",
-					Code:  string(rules.ErrorCodeSliceMinLength),
-					Source: &sdk.APIErrorSource{
-						PropertyName:  "sloNames",
-						PropertyValue: "[]",
-					},
-				}}},
-				StatusCode: http.StatusBadRequest,
-				Method:     http.MethodPost,
-			},
-		},
 		"return error for an SLO with attached Alert Policies": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 			oldService := newV1alphaService(t, v1alphaService.Metadata{

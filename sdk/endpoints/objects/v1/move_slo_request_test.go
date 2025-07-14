@@ -33,8 +33,9 @@ func TestMoveSLOsRequest_Validate(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName: "sloNames",
-					Code:         rules.ErrorCodeSliceMinLength,
+					PropertyName:  "sloNames",
+					Code:          rules.ErrorCodeSliceMinLength,
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},

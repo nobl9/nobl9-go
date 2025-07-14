@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/govytest"
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -193,4 +195,19 @@ func TestClient_Objects_V1_DeleteByName(t *testing.T) {
 	)
 	// Verify response handling.
 	require.NoError(t, err)
+}
+
+func TestClient_Objects_V1_MoveSLOs(t *testing.T) {
+	client := Client{}
+
+	err := client.Objects().V1().MoveSLOs(context.Background(), objectsV1.MoveSLOsRequest{
+		SLONames:   []string{},
+		NewProject: "bar",
+		OldProject: "baz",
+	})
+	require.Error(t, err)
+	govytest.AssertError(t, err, govytest.ExpectedRuleError{
+		PropertyName: "sloNames",
+		Code:         rules.ErrorCodeSliceMinLength,
+	})
 }

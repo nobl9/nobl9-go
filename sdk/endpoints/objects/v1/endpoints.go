@@ -110,6 +110,9 @@ func (e endpoints) Get(
 
 // MoveSLOs allows moving SLOs between Projects.
 func (e endpoints) MoveSLOs(ctx context.Context, params MoveSLOsRequest) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(params); err != nil {
 		return fmt.Errorf("cannot encode %T: %w", params, err)
