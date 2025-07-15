@@ -46,4 +46,4 @@ var moveSLOsRequestValidation = govy.New[MoveSLOsRequest](
 		OmitEmpty().
 		Rules(rules.StringDNSLabel()),
 ).
-	WithName("Move SLOs Request")
+	WithName("Move SLOs request")
