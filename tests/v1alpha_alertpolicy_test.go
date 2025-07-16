@@ -52,11 +52,6 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 				},
 			},
 		}
-		for i := range policy.Spec.Conditions {
-			if policy.Spec.Conditions[i].AlertingWindow == "" && policy.Spec.Conditions[i].LastsForDuration == "" {
-				policy.Spec.Conditions[i].LastsForDuration = "0m"
-			}
-		}
 		switch i {
 		case 0:
 			policy.Metadata.Project = defaultProject
@@ -152,5 +147,10 @@ func newV1alphaAlertPolicy(
 
 func assertV1alphaAlertPoliciesAreEqual(t *testing.T, expected, actual v1alphaAlertPolicy.AlertPolicy) {
 	t.Helper()
+	for i := range expected.Spec.Conditions {
+		if expected.Spec.Conditions[i].AlertingWindow == "" && expected.Spec.Conditions[i].LastsForDuration == "" {
+			expected.Spec.Conditions[i].LastsForDuration = "0m"
+		}
+	}
 	assert.Equal(t, expected, actual)
 }
