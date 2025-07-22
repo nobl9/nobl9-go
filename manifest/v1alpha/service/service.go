@@ -44,10 +44,27 @@ type Metadata struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	SloCount int `json:"sloCount"`
+	SloCount    int                `json:"sloCount"`
+	ReviewCycle *ReviewCycleStatus `json:"reviewCycle,omitempty"`
+}
+
+// ReviewCycleStatus represents the dynamic status of a review cycle.
+type ReviewCycleStatus struct {
+	// Next is the next scheduled review date in RFC3339 format.
+	Next string `json:"next,omitempty"`
 }
 
 // Spec holds detailed information specific to Service.
 type Spec struct {
-	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
+	Description string       `json:"description" validate:"description" example:"Bleeding edge web app"`
+	ReviewCycle *ReviewCycle `json:"reviewCycle,omitempty"`
+}
+
+// ReviewCycle defines the schedule for regular service reviews.
+type ReviewCycle struct {
+	// StartDate is the initial date for the review cycle in RFC3339 format.
+	StartDate string `json:"startDate" example:"2025-01-01T00:00:00Z"`
+	// RRule is a simplified recurrence rule following the RFC5545 standard for defining recurring events.
+	// The minimum frequency is daily.
+	RRule string `json:"rrule" example:"FREQ=MONTHLY;INTERVAL=1"`
 }

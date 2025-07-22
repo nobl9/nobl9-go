@@ -6,24 +6,23 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
 func ExampleService() {
-	// Create the object:
+	// Create a new service:
 	myService := service.New(
 		service.Metadata{
 			Name:        "my-service",
 			DisplayName: "My Service",
 			Project:     "default",
-			Labels: v1alpha.Labels{
-				"team":   []string{"green", "orange"},
-				"region": []string{"eu-central-1"},
-			},
 		},
 		service.Spec{
 			Description: "Example service",
+			ReviewCycle: &service.ReviewCycle{
+				StartDate: "2025-01-01T00:00:00Z",
+				RRule:     "FREQ=MONTHLY;INTERVAL=1",
+			},
 		},
 	)
 	// Verify the object:
@@ -39,15 +38,12 @@ func ExampleService() {
 	// apiVersion: n9/v1alpha
 	// kind: Service
 	// metadata:
-	//   name: my-service
-	//   displayName: My Service
+	//   name: my-service-with-review
+	//   displayName: My Service with Review Cycle
 	//   project: default
-	//   labels:
-	//     region:
-	//     - eu-central-1
-	//     team:
-	//     - green
-	//     - orange
 	// spec:
-	//   description: Example service
+	//   description: Example service with review cycle
+	//   reviewCycle:
+	//     startDate: "2025-01-01T00:00:00Z"
+	//     rrule: "FREQ=MONTHLY;INTERVAL=1"
 }
