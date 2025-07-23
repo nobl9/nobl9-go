@@ -6,6 +6,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
 
@@ -16,6 +17,10 @@ func ExampleService() {
 			Name:        "my-service",
 			DisplayName: "My Service",
 			Project:     "default",
+			Labels: v1alpha.Labels{
+				"team":   []string{"green", "orange"},
+				"region": []string{"eu-central-1"},
+			},
 		},
 		service.Spec{
 			Description: "Example service",
@@ -42,6 +47,12 @@ func ExampleService() {
 	//   name: my-service
 	//   displayName: My Service
 	//   project: default
+	//   labels:
+	//     region:
+	//     - eu-central-1
+	//     team:
+	//     - green
+	//     - orange
 	// spec:
 	//   description: Example service
 	//   reviewCycle:
