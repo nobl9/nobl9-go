@@ -27,9 +27,9 @@ var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	}
 
 	// Only allow daily, weekly, monthly, and yearly frequencies
-	allowedFreqs := []rrule.Frequency{rrule.DAILY, rrule.WEEKLY, rrule.MONTHLY, rrule.YEARLY}
+	allowedFrequencies := []rrule.Frequency{rrule.DAILY, rrule.WEEKLY, rrule.MONTHLY, rrule.YEARLY}
 	isAllowed := false
-	for _, freq := range allowedFreqs {
+	for _, freq := range allowedFrequencies {
 		if rule.Options.Freq == freq {
 			isAllowed = true
 			break
