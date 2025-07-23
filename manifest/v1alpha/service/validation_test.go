@@ -104,56 +104,75 @@ func TestValidate_ReviewCycle(t *testing.T) {
 	t.Run("valid reviewCycle", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
 			RRule:     "FREQ=MONTHLY;INTERVAL=1",
 		}
 		err := validate(svc)
 		testutils.AssertNoError(t, svc, err)
 	})
 
-	t.Run("invalid startDate - not RFC3339", func(t *testing.T) {
+	t.Run("invalid startTime - wrong format", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01",
+			StartTime: "2023-01-01",
+			TimeZone:  "UTC",
 			RRule:     "FREQ=MONTHLY;INTERVAL=1",
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: "spec.reviewCycle.startDate",
-			Code: "invalid_rfc3339",
+			Prop: "spec.reviewCycle.startTime",
+			Code: "string_date_time",
 		})
 	})
 
-	t.Run("empty startDate", func(t *testing.T) {
+	t.Run("empty startTime", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "",
+			StartTime: "",
+			TimeZone:  "UTC",
 			RRule:     "FREQ=MONTHLY;INTERVAL=1",
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: "spec.reviewCycle.startDate",
+			Prop: "spec.reviewCycle.startTime",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
 
-	t.Run("invalid rrule - missing FREQ", func(t *testing.T) {
+	t.Run("empty timeZone", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "INTERVAL=1",
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: "spec.reviewCycle.rrule",
-			Code: "transform",
+			Prop: "spec.reviewCycle.timeZone",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("invalid timeZone", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "Invalid/Timezone",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.timeZone",
+			Code: "string_time_zone",
 		})
 	})
 
 	t.Run("empty rrule", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
 			RRule:     "",
 		}
 		err := validate(svc)
@@ -163,80 +182,78 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		})
 	})
 
-	t.Run("invalid rrule - hourly frequency not allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=HOURLY;INTERVAL=1",
+	t.Run("rrule frequency validation", func(t *testing.T) {
+		tests := []struct {
+			name        string
+			rrule       string
+			expectError bool
+			expectedMsg string
+		}{
+			{
+				name:        "missing FREQ",
+				rrule:       "INTERVAL=1",
+				expectError: true,
+				expectedMsg: "missing FREQ in rrule",
+			},
+			{
+				name:        "hourly frequency not allowed",
+				rrule:       "FREQ=HOURLY;INTERVAL=1",
+				expectError: true,
+				expectedMsg: "frequency must be DAILY, WEEKLY, MONTHLY, or YEARLY",
+			},
+			{
+				name:        "minutely frequency not allowed",
+				rrule:       "FREQ=MINUTELY;INTERVAL=60",
+				expectError: true,
+				expectedMsg: "frequency must be DAILY, WEEKLY, MONTHLY, or YEARLY",
+			},
+			{
+				name:        "daily frequency allowed",
+				rrule:       "FREQ=DAILY;INTERVAL=1",
+				expectError: false,
+			},
+			{
+				name:        "weekly frequency allowed",
+				rrule:       "FREQ=WEEKLY;INTERVAL=1",
+				expectError: false,
+			},
+			{
+				name:        "monthly frequency allowed",
+				rrule:       "FREQ=MONTHLY;INTERVAL=1",
+				expectError: false,
+			},
+			{
+				name:        "yearly frequency allowed",
+				rrule:       "FREQ=YEARLY;INTERVAL=1",
+				expectError: false,
+			},
+			{
+				name:        "single occurrence with any frequency allowed",
+				rrule:       "FREQ=HOURLY;COUNT=1",
+				expectError: false,
+			},
 		}
-		err := validate(svc)
-		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    "spec.reviewCycle.rrule",
-			Message: "frequency must be daily, weekly, monthly, or yearly",
-		})
-	})
 
-	t.Run("invalid rrule - minutely frequency not allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=MINUTELY;INTERVAL=60",
-		}
-		err := validate(svc)
-		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    "spec.reviewCycle.rrule",
-			Message: "frequency must be daily, weekly, monthly, or yearly",
-		})
-	})
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				svc := validService()
+				svc.Spec.ReviewCycle = &ReviewCycle{
+					StartTime: "2023-01-01T00:00:00",
+					TimeZone:  "UTC",
+					RRule:     tt.rrule,
+				}
+				err := validate(svc)
 
-	t.Run("valid rrule - daily frequency allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=DAILY;INTERVAL=1",
+				if tt.expectError {
+					testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+						Prop:    "spec.reviewCycle.rrule",
+						Message: tt.expectedMsg,
+					})
+				} else {
+					testutils.AssertNoError(t, svc, err)
+				}
+			})
 		}
-		err := validate(svc)
-		testutils.AssertNoError(t, svc, err)
-	})
-
-	t.Run("valid rrule - weekly frequency allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=WEEKLY;INTERVAL=1",
-		}
-		err := validate(svc)
-		testutils.AssertNoError(t, svc, err)
-	})
-
-	t.Run("valid rrule - monthly frequency allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=MONTHLY;INTERVAL=1",
-		}
-		err := validate(svc)
-		testutils.AssertNoError(t, svc, err)
-	})
-
-	t.Run("valid rrule - yearly frequency allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=YEARLY;INTERVAL=1",
-		}
-		err := validate(svc)
-		testutils.AssertNoError(t, svc, err)
-	})
-
-	t.Run("valid rrule - single occurrence with any frequency allowed", func(t *testing.T) {
-		svc := validService()
-		svc.Spec.ReviewCycle = &ReviewCycle{
-			StartDate: "2023-01-01T00:00:00Z",
-			RRule:     "FREQ=HOURLY;COUNT=1",
-		}
-		err := validate(svc)
-		testutils.AssertNoError(t, svc, err)
 	})
 
 	t.Run("nil reviewCycle should be valid", func(t *testing.T) {

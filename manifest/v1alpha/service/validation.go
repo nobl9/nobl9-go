@@ -1,8 +1,6 @@
 package service
 
 import (
-	"time"
-
 	"github.com/pkg/errors"
 	"github.com/teambition/rrule-go"
 
@@ -18,13 +16,7 @@ func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindService)
 }
 
-// validateRFC3339 validates that a string is in RFC3339 format
-func validateRFC3339(value string) error {
-	_, err := time.Parse(time.RFC3339, value)
-	return err
-}
-
-// atLeastDailyFreq validates that RRULE frequency is daily or higher (weekly, monthly, yearly)
+// atLeastDailyFreq validates that RRULE frequency is DAILY or higher (WEEKLY, MONTHLY, YEARLY)
 var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	if rule == nil {
 		return nil
@@ -45,18 +37,23 @@ var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	}
 
 	if !isAllowed {
-		return errors.New("frequency must be daily, weekly, monthly, or yearly")
+		return errors.New("frequency must be DAILY, WEEKLY, MONTHLY, or YEARLY")
 	}
 
 	return nil
 })
 
 var reviewCycleValidation = govy.New[ReviewCycle](
-	govy.For(func(rc ReviewCycle) string { return rc.StartDate }).
-		WithName("startDate").
+	govy.For(func(rc ReviewCycle) string { return rc.StartTime }).
+		WithName("startTime").
 		Required().
 		Rules(rules.StringNotEmpty()).
-		Rules(govy.NewRule(validateRFC3339).WithErrorCode("invalid_rfc3339")),
+		Rules(rules.StringDateTime("2006-01-02T15:04:05")),
+	govy.For(func(rc ReviewCycle) string { return rc.TimeZone }).
+		WithName("timeZone").
+		Required().
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringTimeZone()),
 	govy.Transform(func(rc ReviewCycle) string { return rc.RRule }, rrule.StrToRRule).
 		WithName("rrule").
 		Required().

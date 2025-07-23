@@ -10,7 +10,7 @@ import (
 )
 
 func ExampleService() {
-	// Create a new service:
+	// Create the object:
 	myService := service.New(
 		service.Metadata{
 			Name:        "my-service",
@@ -20,7 +20,8 @@ func ExampleService() {
 		service.Spec{
 			Description: "Example service",
 			ReviewCycle: &service.ReviewCycle{
-				StartDate: "2025-01-01T00:00:00Z",
+				StartTime: "2025-01-01T10:00:00",
+				TimeZone:  "America/New_York",
 				RRule:     "FREQ=MONTHLY;INTERVAL=1",
 			},
 		},
@@ -38,12 +39,13 @@ func ExampleService() {
 	// apiVersion: n9/v1alpha
 	// kind: Service
 	// metadata:
-	//   name: my-service-with-review
-	//   displayName: My Service with Review Cycle
+	//   name: my-service
+	//   displayName: My Service
 	//   project: default
 	// spec:
-	//   description: Example service with review cycle
+	//   description: Example service
 	//   reviewCycle:
-	//     startDate: "2025-01-01T00:00:00Z"
-	//     rrule: "FREQ=MONTHLY;INTERVAL=1"
+	//     startTime: 2025-01-01T10:00:00
+	//     timeZone: America/New_York
+	//     rrule: FREQ=MONTHLY;INTERVAL=1
 }
