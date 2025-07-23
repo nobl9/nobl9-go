@@ -193,7 +193,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 				name:        "missing FREQ",
 				rrule:       "INTERVAL=1",
 				expectError: true,
-				expectedMsg: "missing FREQ in rrule",
+				expectedMsg: "RRULE property FREQ is required",
 			},
 			{
 				name:        "hourly frequency not allowed",
