@@ -52,6 +52,8 @@ type Status struct {
 type ReviewCycleStatus struct {
 	// Next is the next scheduled review date in RFC3339 format.
 	Next string `json:"next,omitempty"`
+	// Previous is the last scheduled review date in RFC3339 format.
+	Previous string `json:"previous,omitempty"`
 }
 
 // Spec holds detailed information specific to Service.
