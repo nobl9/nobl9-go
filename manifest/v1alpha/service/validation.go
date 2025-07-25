@@ -16,14 +16,19 @@ func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindService)
 }
 
-// atLeastDailyFreq validates that RRULE frequency is DAILY or higher (WEEKLY, MONTHLY, YEARLY)
-var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
+// atLeastDailyContinuousFreq validates that RRULE frequency is DAILY or higher (WEEKLY, MONTHLY, YEARLY) and
+// that it has continuous occurrences.
+var atLeastDailyContinuousFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	if rule == nil {
 		return nil
 	}
 
-	if rule.Options.Count == 1 {
-		return nil
+	if rule.Options.Count > 0 || !rule.Options.Until.IsZero() {
+		return errors.New("rrule must have continuous occurrences")
+	}
+
+	if rule.Options.Interval < 1 {
+		return errors.New("interval must be at least 1")
 	}
 
 	// Only allow daily, weekly, monthly, and yearly frequencies
@@ -57,7 +62,7 @@ var reviewCycleValidation = govy.New[ReviewCycle](
 	govy.Transform(func(rc ReviewCycle) string { return rc.RRule }, rrule.StrToRRule).
 		WithName("rrule").
 		Required().
-		Rules(atLeastDailyFreq),
+		Rules(atLeastDailyContinuousFreq),
 )
 
 var validator = govy.New[Service](
