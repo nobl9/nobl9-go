@@ -16,33 +16,27 @@ func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindService)
 }
 
-// atLeastDailyContinuousFreq validates that RRULE frequency is DAILY or higher (WEEKLY, MONTHLY, YEARLY) and
-// that it has continuous occurrences.
-var atLeastDailyContinuousFreq = govy.NewRule(func(rule *rrule.RRule) error {
+var (
+	ErrRRuleIntervalMustBeAtLeastOne    = errors.New("rrule interval must be at least 1")
+	ErrRRuleFrequencyMustBeAtLeastDaily = errors.New("rrule frequency must be at least DAILY")
+)
+
+// atLeastDailyFreq validates that RRULE frequency is daily or higher (weekly, monthly, yearly)
+var atLeastDailyFreq = govy.NewRule(func(rule *rrule.RRule) error {
 	if rule == nil {
 		return nil
 	}
 
-	if rule.Options.Count > 0 || !rule.Options.Until.IsZero() {
-		return errors.New("rrule must have continuous occurrences")
+	if rule.Options.Count == 1 {
+		return nil
 	}
 
 	if rule.Options.Interval < 1 {
-		return errors.New("interval must be at least 1")
+		return ErrRRuleIntervalMustBeAtLeastOne
 	}
 
-	// Only allow daily, weekly, monthly, and yearly frequencies
-	allowedFrequencies := []rrule.Frequency{rrule.DAILY, rrule.WEEKLY, rrule.MONTHLY, rrule.YEARLY}
-	isAllowed := false
-	for _, freq := range allowedFrequencies {
-		if rule.Options.Freq == freq {
-			isAllowed = true
-			break
-		}
-	}
-
-	if !isAllowed {
-		return errors.New("frequency must be DAILY, WEEKLY, MONTHLY, or YEARLY")
+	if rule.Options.Freq > rrule.DAILY {
+		return ErrRRuleFrequencyMustBeAtLeastDaily
 	}
 
 	return nil
@@ -62,7 +56,7 @@ var reviewCycleValidation = govy.New[ReviewCycle](
 	govy.Transform(func(rc ReviewCycle) string { return rc.RRule }, rrule.StrToRRule).
 		WithName("rrule").
 		Required().
-		Rules(atLeastDailyContinuousFreq),
+		Rules(atLeastDailyFreq),
 )
 
 var validator = govy.New[Service](
