@@ -140,6 +140,26 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		})
 	})
 
+	t.Run("blank chars startTime", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "    ",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.startTime",
+				Code: rules.ErrorCodeStringNotEmpty,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.startTime",
+				Code: "string_date_time",
+			},
+		)
+	})
+
 	t.Run("empty timeZone", func(t *testing.T) {
 		svc := validService()
 		svc.Spec.ReviewCycle = &ReviewCycle{
@@ -152,6 +172,26 @@ func TestValidate_ReviewCycle(t *testing.T) {
 			Prop: "spec.reviewCycle.timeZone",
 			Code: rules.ErrorCodeRequired,
 		})
+	})
+
+	t.Run("blank chars timeZone", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "    ",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.timeZone",
+				Code: rules.ErrorCodeStringNotEmpty,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.timeZone",
+				Code: rules.ErrorCodeStringTimeZone,
+			},
+		)
 	})
 
 	t.Run("invalid timeZone", func(t *testing.T) {
@@ -193,6 +233,21 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
 			Prop: "spec.reviewCycle.rrule",
 			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("blank chars rrule", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "   ",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reviewCycle.rrule",
+			Message: "wrong format",
+			Code:    "transform",
 		})
 	})
 
