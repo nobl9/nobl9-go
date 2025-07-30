@@ -183,6 +183,7 @@ type Status struct {
 	ObjectiveIndicatorValidation []*ObjectiveIndicatorValidationStatus `json:"objectiveIndicatorValidation,omitempty"`
 	// Deprecated: use Status.Replay instead.
 	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+	ReviewStatus *ReviewStatus `json:"review,omitempty"`
 }
 
 type ObjectiveIndicatorValidationStatus struct {
@@ -241,4 +242,12 @@ type ReplayStatus struct {
 	Unit        string `json:"unit"`
 	Value       int    `json:"value"`
 	StartTime   string `json:"startTime"`
+}
+
+type ReviewStatus struct {
+	Status        string    `json:"status"`
+	ReviewDueDate time.Time `json:"reviewDueDate"`
+	ReviewedBy    *string   `json:"reviewedBy,omitempty"`
+	ReviewedAt    *string   `json:"reviewedAt,omitempty"`
+	AnnotationsID *string   `json:"annotationsID,omitempty"`
 }
