@@ -10,7 +10,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
 	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
-	github.com/golang-jwt/jwt/v5 v5.2.3
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/nobl9/govy v0.20.0
 	github.com/pkg/errors v0.9.1
