@@ -24,6 +24,11 @@ func ExampleService() {
 		},
 		service.Spec{
 			Description: "Example service",
+			ReviewCycle: &service.ReviewCycle{
+				StartTime: "2025-01-01T10:00:00",
+				TimeZone:  "America/New_York",
+				RRule:     "FREQ=MONTHLY;INTERVAL=1",
+			},
 		},
 	)
 	// Verify the object:
@@ -50,4 +55,8 @@ func ExampleService() {
 	//     - orange
 	// spec:
 	//   description: Example service
+	//   reviewCycle:
+	//     startTime: 2025-01-01T10:00:00
+	//     timeZone: America/New_York
+	//     rrule: FREQ=MONTHLY;INTERVAL=1
 }
