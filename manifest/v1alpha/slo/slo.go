@@ -245,9 +245,9 @@ type ReplayStatus struct {
 }
 
 type ReviewStatus struct {
-	Status        string    `json:"status"`
-	ReviewDueDate time.Time `json:"reviewDueDate"`
-	ReviewedBy    *string   `json:"reviewedBy,omitempty"`
-	ReviewedAt    *string   `json:"reviewedAt,omitempty"`
-	AnnotationsID *string   `json:"annotationsID,omitempty"`
+	Status        string     `json:"status"`
+	ReviewDueDate time.Time  `json:"reviewDueDate"`
+	ReviewedBy    *string    `json:"reviewedBy,omitempty"`
+	ReviewedAt    *time.Time `json:"reviewedAt,omitempty"`
+	AnnotationID  *string    `json:"annotationID,omitempty"`
 }
