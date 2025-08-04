@@ -82,18 +82,46 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - raw objective type mixed with composite", func(t *testing.T) {
+	t.Run("fails - raw objective type mixed with composite in a single objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "when defining composite objective, this property is forbidden",
+			},
+		)
+	})
+	t.Run("fails - count metric objective type mixed with composite in a single objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(false),
+			TotalMetric: validMetricSpec(v1alpha.Prometheus),
+			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+		}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "when defining composite objective, this property is forbidden",
+			},
+		)
+	})
+	t.Run("fails - raw objective type mixed with composite accross two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
 				Value:       ptr(80.0),
 				Name:        "good",
 			},
-			BudgetTarget:    ptr(0.9),
-			CountMetrics:    nil,
-			RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
-			TimeSliceTarget: nil,
-			Operator:        ptr(v1alpha.GreaterThan.String()),
+			BudgetTarget: ptr(0.9),
+			RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+			Operator:     ptr(v1alpha.GreaterThan.String()),
 		}
 
 		slo := validCompositeSLO()
@@ -108,7 +136,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - count metric objective type mixed with composite", func(t *testing.T) {
+	t.Run("fails - count metric objective type mixed with composite accross two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
@@ -121,8 +149,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 				TotalMetric: validMetricSpec(v1alpha.Prometheus),
 				GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 			},
-			TimeSliceTarget: nil,
-			Operator:        ptr(v1alpha.GreaterThan.String()),
+			Operator: ptr(v1alpha.GreaterThan.String()),
 		}
 
 		slo := validCompositeSLO()
