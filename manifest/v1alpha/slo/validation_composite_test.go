@@ -112,7 +112,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - raw objective type mixed with composite accross two objectives", func(t *testing.T) {
+	t.Run("fails - raw objective type mixed with composite across two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
@@ -136,7 +136,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - count metric objective type mixed with composite accross two objectives", func(t *testing.T) {
+	t.Run("fails - count metric objective type mixed with composite across two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
