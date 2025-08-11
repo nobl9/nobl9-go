@@ -16,6 +16,13 @@ spec:
     accessID: wzeulXAULylic8
     accessKey: "[secret]"
     url: https://service.sumologic.com
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 5
     unit: Minute
