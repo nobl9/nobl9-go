@@ -16,7 +16,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/stringutils"
 )
 
-func TestHTTPError(t *testing.T) {
+func TestHTTPError_Error(t *testing.T) {
 	t.Parallel()
 	t.Run("status code smaller than 300, no error", func(t *testing.T) {
 		t.Parallel()
@@ -298,6 +298,54 @@ func TestAPIErrors_Error(t *testing.T) {
 - error3 (source: '$.data')
 - error4 (source: '$.data[1].name', value: 'value')`
 	assert.Equal(t, stringutils.RemoveCR(apiErrors.Error()), expectedMessage)
+}
+
+func TestAPIError_Error(t *testing.T) {
+	tests := map[string]struct {
+		err      APIError
+		expected string
+	}{
+		"no code, no source": {
+			err: APIError{
+				Title: "error1",
+			},
+			expected: "error1",
+		},
+		"no source": {
+			err: APIError{
+				Title: "error1",
+				Code:  "some_code",
+			},
+			expected: "error1",
+		},
+		"only property name": {
+			err: APIError{
+				Title: "error1",
+				Code:  "some_code",
+				Source: &APIErrorSource{
+					PropertyName: "$.data",
+				},
+			},
+			expected: "error1 (source: '$.data')",
+		},
+		"full source": {
+			err: APIError{
+				Title: "error1",
+				Code:  "yet_another_code",
+				Source: &APIErrorSource{
+					PropertyName:  "$.data[1].name",
+					PropertyValue: "value",
+				},
+			},
+			expected: "error1 (source: '$.data[1].name', value: 'value')",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, test.expected, test.err.Error())
+		})
+	}
 }
 
 type mockReadCloser struct{ err error }

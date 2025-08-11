@@ -841,3 +841,41 @@ func (c *MockObjectsV1EndpointsGetV1alphaUserGroupsCall) DoAndReturn(f func(cont
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// MoveSLOs mocks base method.
+func (m *MockObjectsV1Endpoints) MoveSLOs(ctx context.Context, params v1.MoveSLOsRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MoveSLOs", ctx, params)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MoveSLOs indicates an expected call of MoveSLOs.
+func (mr *MockObjectsV1EndpointsMockRecorder) MoveSLOs(ctx, params any) *MockObjectsV1EndpointsMoveSLOsCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MoveSLOs", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).MoveSLOs), ctx, params)
+	return &MockObjectsV1EndpointsMoveSLOsCall{Call: call}
+}
+
+// MockObjectsV1EndpointsMoveSLOsCall wrap *gomock.Call
+type MockObjectsV1EndpointsMoveSLOsCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockObjectsV1EndpointsMoveSLOsCall) Return(arg0 error) *MockObjectsV1EndpointsMoveSLOsCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockObjectsV1EndpointsMoveSLOsCall) Do(f func(context.Context, v1.MoveSLOsRequest) error) *MockObjectsV1EndpointsMoveSLOsCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockObjectsV1EndpointsMoveSLOsCall) DoAndReturn(f func(context.Context, v1.MoveSLOsRequest) error) *MockObjectsV1EndpointsMoveSLOsCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
