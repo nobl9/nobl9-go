@@ -21,6 +21,7 @@ const (
 	apiDelete    = "delete"
 	apiGet       = "get"
 	apiGetGroups = "usrmgmt/groups"
+	apiMoveSLOs  = "objects/v1/slos/move"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
@@ -107,6 +108,34 @@ func (e endpoints) Get(
 	return e.readObjects(ctx, resp.Body)
 }
 
+// MoveSLOs allows moving SLOs between Projects.
+//
+// [MoveSLOsRequest] is not validated by this method,
+// in order to verify the request parameters, use [MoveSLOsRequest.Validate].
+func (e endpoints) MoveSLOs(ctx context.Context, params MoveSLOsRequest) error {
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(params); err != nil {
+		return fmt.Errorf("cannot encode %T: %w", params, err)
+	}
+	req, err := e.client.CreateRequest(
+		ctx,
+		http.MethodPost,
+		apiMoveSLOs,
+		nil,
+		nil,
+		buf,
+	)
+	if err != nil {
+		return err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return err
+	}
+	_ = resp.Body.Close()
+	return nil
+}
+
 func (e endpoints) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
@@ -119,7 +148,7 @@ func (e endpoints) applyOrDeleteObjects(
 	}
 	buf := new(bytes.Buffer)
 	if err = json.NewEncoder(buf).Encode(objects); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
+		return fmt.Errorf("cannot encode %T: %w", objects, err)
 	}
 
 	var method string
