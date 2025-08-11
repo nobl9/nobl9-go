@@ -4,7 +4,7 @@ import v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 
 type ReplayWithStatus struct {
 	Project string       `json:"project"`
-	Slo     string       `json:"slo"`
+	SLO     string       `json:"slo"`
 	Status  ReplayStatus `json:"status"`
 }
 
@@ -55,3 +55,13 @@ const (
 	ReplayConcurrentReplayRunsLimitExhausted = "concurrent_replay_runs_limit_exhausted"
 	ReplayUnknownAgentVersion                = "unknown_agent_version"
 )
+
+type ReplayListItem struct {
+	SLO            string `json:"slo,omitempty"`
+	Project        string `json:"project"`
+	ElapsedTime    string `json:"elapsedTime,omitempty"`
+	RetrievedScope string `json:"retrievedScope,omitempty"`
+	RetrievedFrom  string `json:"retrievedFrom,omitempty"`
+	Status         string `json:"status"`
+	Cancellation   string `json:"cancellation,omitempty"`
+}

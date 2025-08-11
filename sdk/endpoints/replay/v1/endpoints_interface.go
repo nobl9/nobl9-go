@@ -7,5 +7,5 @@ import (
 )
 
 type Endpoints interface {
-	Replay(ctx context.Context, params ReplayRequest) (err error)
+	Replay(ctx context.Context, params RunRequest) (err error)
 }
