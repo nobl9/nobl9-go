@@ -32,12 +32,46 @@ type HTTPError struct {
 	TraceID string `json:"traceId,omitempty"`
 }
 
+// IsRetryable returns true if the underlying API error can be retried.
+func (e HTTPError) IsRetryable() bool {
+	return e.StatusCode >= 500
+}
+
+// Error returns a string representation of the error.
+func (e HTTPError) Error() string {
+	buf := bytes.Buffer{}
+	buf.Grow(len(httpErrorTemplateData))
+	if err := httpErrorTemplate.ExecuteTemplate(&buf, "http_error", httpErrorTemplateFields{
+		Errors:   e.Errors,
+		Method:   e.Method,
+		URL:      e.URL,
+		TraceID:  e.TraceID,
+		CodeText: http.StatusText(e.StatusCode),
+		Code:     e.StatusCode,
+	}); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", e, err)
+	}
+	return buf.String()
+}
+
 // APIErrors is an object returned directly by the API which conveys specific API error(s) details.
 type APIErrors struct {
 	// Errors is a list of errors returned by the API.
 	// At least one error is always guaranteed to be set.
 	// At the very minimum it will contain just the [APIError.Title].
 	Errors []APIError `json:"errors"`
+}
+
+// Error returns a string representation of the error.
+func (e APIErrors) Error() string {
+	buf := bytes.Buffer{}
+	buf.Grow(len(httpErrorTemplateData))
+	if err := httpErrorTemplate.ExecuteTemplate(&buf, "api_errors", httpErrorTemplateFields{
+		Errors: e.Errors,
+	}); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", e, err)
+	}
+	return buf.String()
 }
 
 // APIError defines a standardized format for error responses across all Nobl9 public services.
@@ -53,13 +87,11 @@ type APIError struct {
 }
 
 // Error returns a string representation of the error.
-func (r APIErrors) Error() string {
+func (e APIError) Error() string {
 	buf := bytes.Buffer{}
 	buf.Grow(len(httpErrorTemplateData))
-	if err := httpErrorTemplate.ExecuteTemplate(&buf, "api_errors", httpErrorTemplateFields{
-		Errors: r.Errors,
-	}); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", r, err)
+	if err := httpErrorTemplate.ExecuteTemplate(&buf, "api_error", e); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", e, err)
 	}
 	return buf.String()
 }
@@ -71,28 +103,6 @@ type APIErrorSource struct {
 	PropertyName string `json:"propertyName,omitempty"`
 	// PropertyValue is an optional value of the property that caused the error.
 	PropertyValue string `json:"propertyValue,omitempty"`
-}
-
-// IsRetryable returns true if the underlying API error can be retried.
-func (r HTTPError) IsRetryable() bool {
-	return r.StatusCode >= 500
-}
-
-// Error returns a string representation of the error.
-func (r HTTPError) Error() string {
-	buf := bytes.Buffer{}
-	buf.Grow(len(httpErrorTemplateData))
-	if err := httpErrorTemplate.ExecuteTemplate(&buf, "http_error", httpErrorTemplateFields{
-		Errors:   r.Errors,
-		Method:   r.Method,
-		URL:      r.URL,
-		TraceID:  r.TraceID,
-		CodeText: http.StatusText(r.StatusCode),
-		Code:     r.StatusCode,
-	}); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to execute %T template: %v\n", r, err)
-	}
-	return buf.String()
 }
 
 // processHTTPResponse processes an HTTP response and returns an error if the response is erroneous.

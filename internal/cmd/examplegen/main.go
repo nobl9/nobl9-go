@@ -67,6 +67,7 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		v1alphaExamples.Direct(),
 		v1alphaExamples.AlertPolicy(),
 		v1alphaExamples.AlertSilence(),
+		v1alphaExamples.Alert(),
 		v1alphaExamples.Annotation(),
 		v1alphaExamples.BudgetAdjustment(),
 		v1alphaExamples.DataExport(),

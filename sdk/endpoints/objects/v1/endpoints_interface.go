@@ -29,6 +29,8 @@ type Endpoints interface {
 	Delete(ctx context.Context, objects []manifest.Object) error
 	DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error
 	Get(ctx context.Context, kind manifest.Kind, header http.Header, query url.Values) ([]manifest.Object, error)
+	// MoveSLOs allows moving SLOs between Projects.
+	MoveSLOs(ctx context.Context, params MoveSLOsRequest) error
 	GetV1alphaProjects(ctx context.Context, params GetProjectsRequest) ([]v1alphaProject.Project, error)
 	GetV1alphaServices(ctx context.Context, params GetServicesRequest) ([]v1alphaService.Service, error)
 	GetV1alphaSLOs(ctx context.Context, params GetSLOsRequest) ([]v1alphaSLO.SLO, error)

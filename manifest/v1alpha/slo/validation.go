@@ -415,8 +415,21 @@ var specValidationComposite = govy.New[Spec](
 		IncludeForEach(govy.New[Objective](
 			govy.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
 				Include(objectiveBaseValidation),
+			govy.For(func(o Objective) *RawMetricSpec { return o.RawMetric }).
+				WithName("rawMetric").
+				Rules(rules.
+					Forbidden[*RawMetricSpec]().
+					WithMessage("when defining composite objective, this property is forbidden"),
+				),
+			govy.For(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
+				WithName("countMetrics").
+				Rules(rules.
+					Forbidden[*CountMetricsSpec]().
+					WithMessage("when defining composite objective, this property is forbidden"),
+				),
 			govy.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
+				Cascade(govy.CascadeModeContinue).
 				Include(govy.New[CompositeSpec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
@@ -436,7 +449,9 @@ var specValidationComposite = govy.New[Spec](
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),
-).When(
-	func(s Spec) bool { return s.HasCompositeObjectives() },
-	govy.WhenDescription("at least one composite objective is defined"),
-)
+).
+	When(
+		func(s Spec) bool { return s.HasCompositeObjectives() },
+		govy.WhenDescription("at least one composite objective is defined"),
+	).
+	Cascade(govy.CascadeModeStop)
