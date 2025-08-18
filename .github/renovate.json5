@@ -28,9 +28,7 @@
     ],
     "executionMode": "branch",
   },
-  {
-    "allowedCommands": ["^make generate$"]
-  },
+  "allowedCommands": ["^make generate$"]
   // Groups:
   "packageRules": [
     {
