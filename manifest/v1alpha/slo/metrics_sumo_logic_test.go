@@ -13,13 +13,13 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 	t.Run("quantization must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.SumoLogic = &SumoLogicMetric{
-			Type:         ptr(sumoLogicTypeMetric),
+			Type:         ptr(SumoLogicTypeMetric),
 			Query:        ptr("kube_node_status_condition | min"),
 			Quantization: ptr("20s"),
 			Rollup:       ptr("None"),
 		}
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.SumoLogic = &SumoLogicMetric{
-			Type:         ptr(sumoLogicTypeMetric),
+			Type:         ptr(SumoLogicTypeMetric),
 			Query:        ptr("kube_node_status_condition | min"),
 			Quantization: ptr("25s"),
 			Rollup:       ptr("None"),
@@ -33,7 +33,7 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 	t.Run("query timeslice duration must be the same for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric.SumoLogic = &SumoLogicMetric{
-			Type: ptr(sumoLogicTypeLogs),
+			Type: ptr(SumoLogicTypeLogs),
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
@@ -44,7 +44,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sort by n9_time asc`),
 		}
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.SumoLogic = &SumoLogicMetric{
-			Type: ptr(sumoLogicTypeLogs),
+			Type: ptr(SumoLogicTypeLogs),
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
@@ -150,7 +150,7 @@ func TestSumoLogic_LogsType(t *testing.T) {
 	t.Run("forbidden values", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.SumoLogic)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
-			Type: ptr(sumoLogicTypeLogs),
+			Type: ptr(SumoLogicTypeLogs),
 			Query: ptr(`
 _collector="n9-dev-tooling-cluster" _source="logs"
   | json "log"
@@ -336,7 +336,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		t.Run(name, func(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.SumoLogic)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
-				Type:  ptr(sumoLogicTypeLogs),
+				Type:  ptr(SumoLogicTypeLogs),
 				Query: ptr(test.Query),
 			}
 			err := validate(slo)
@@ -382,7 +382,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		t.Run(name, func(t *testing.T) {
 			slo := validRawMetricSLO(v1alpha.SumoLogic)
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
-				Type:  ptr(sumoLogicTypeLogs),
+				Type:  ptr(SumoLogicTypeLogs),
 				Query: ptr(test.Query),
 			}
 			err := validate(slo)
