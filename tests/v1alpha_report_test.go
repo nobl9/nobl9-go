@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -20,7 +19,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	timeZone := "Europe/Warsaw"
 	reports := []v1alphaReport.Report{
@@ -228,7 +226,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetReports(ctx, test.request)
+			actual, err := client.Objects().V1().GetReports(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Equal(t, len(actual), len(test.expected))
@@ -251,7 +249,6 @@ func assertV1alphaReportsAreEqual(t *testing.T, expected, actual v1alphaReport.R
 
 func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	timeZone := "Europe/Warsaw"
 
 	project := generateV1alphaProject(t)
@@ -429,7 +426,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 	for name, test := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := client.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: []manifest.Object{test.report}})
+			err := client.Objects().V2().Apply(t.Context(), objectsV2.ApplyRequest{Objects: []manifest.Object{test.report}})
 			assert.ErrorContains(t, err, test.error)
 		})
 	}

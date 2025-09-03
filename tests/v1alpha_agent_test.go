@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"slices"
 	"testing"
@@ -21,7 +20,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	agentTypes := v1alpha.DataSourceTypeValues()
 	agents := make([]v1alphaAgent.Agent, 0, len(agentTypes))
@@ -82,7 +80,7 @@ func Test_Objects_V1_V1alpha_Agent(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaAgents(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaAgents(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

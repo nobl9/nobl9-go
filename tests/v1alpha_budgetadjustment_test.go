@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -22,7 +21,6 @@ import (
 
 func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	slo := generateSLO(t)
 
 	budgetAdjustments := []v1alphaBudgetAdjustment.BudgetAdjustment{
@@ -92,7 +90,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 	for name, test := range filterTest {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetBudgetAdjustments(ctx, test.request)
+			actual, err := client.Objects().V1().GetBudgetAdjustments(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnAll {
 				require.Len(t, actual, test.returnedObjects)
@@ -105,7 +103,6 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 
 func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	slo := generateSLO(t)
 	ts := time.Now().Truncate(time.Second).UTC()
 
@@ -216,7 +213,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := client.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: []manifest.Object{test.request}})
+			err := client.Objects().V2().Apply(t.Context(), objectsV2.ApplyRequest{Objects: []manifest.Object{test.request}})
 			if test.error != "" {
 				assert.ErrorContains(t, err, test.error)
 			} else {
