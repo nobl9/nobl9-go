@@ -17,7 +17,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	inputs := []v1alphaProject.Project{
 		newV1alphaProject(t,
 			v1alphaProject.Metadata{

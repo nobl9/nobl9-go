@@ -258,7 +258,7 @@ func assertObjectsExistsOrNot(t *testing.T, objects []manifest.Object, exists bo
 				"expected no objects in response, got %d (%s)", len(objects), key)
 		}
 	}
-	return false
+	return true
 }
 
 func ptr[T any](v T) *T { return &v }
