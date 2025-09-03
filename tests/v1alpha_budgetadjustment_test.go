@@ -65,8 +65,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			}),
 	}
 
-	e2etestutils.V2Apply(t, budgetAdjustments)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, budgetAdjustments) })
+	e2etestutils.V1Apply(t, budgetAdjustments)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, budgetAdjustments) })
 
 	filterTest := map[string]struct {
 		request         objectsV1.GetBudgetAdjustmentRequest
@@ -273,8 +273,8 @@ func generateSLO(t *testing.T) (slo v1alphaSLO.SLO) {
 		defaultProjectSLO,
 	)
 
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	return slo
 }

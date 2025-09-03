@@ -139,8 +139,8 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	// Add the SLO once all the AlertPolicies have been assigned to it.
 	allObjects = append(allObjects, slo)
 
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertSilence.AlertSilence](allObjects)
 
 	filterTests := map[string]struct {

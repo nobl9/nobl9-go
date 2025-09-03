@@ -25,8 +25,8 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v1.SLODetails, error) {
 		return client.SLOStatusAPI().V1().GetSLO(ctx, project.GetName(), slo.GetName())
@@ -46,20 +46,20 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
-	e2etestutils.V2Apply(t, initialObjects)
+	e2etestutils.V1Apply(t, initialObjects)
 
 	slo3 := deepCopyObject(t, slo1)
 	slo3.Metadata.Name = e2etestutils.GenerateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = e2etestutils.GenerateName()
-	e2etestutils.V2Apply(t, []manifest.Object{slo3, slo4})
+	e2etestutils.V1Apply(t, []manifest.Object{slo3, slo4})
 
 	slo5 := deepCopyObject(t, slo1)
 	slo5.Metadata.Name = e2etestutils.GenerateName()
-	e2etestutils.V2Apply(t, []manifest.Object{slo5})
+	e2etestutils.V1Apply(t, []manifest.Object{slo5})
 
-	t.Cleanup(func() { e2etestutils.V2Delete(t, initialObjects) })
-	t.Cleanup(func() { e2etestutils.V2Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, initialObjects) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
@@ -103,8 +103,8 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v2.SLODetails, error) {
 		return client.SLOStatusAPI().V2().GetSLO(ctx, project.GetName(), slo.GetName())
@@ -124,20 +124,20 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	slo2 := deepCopyObject(t, slo1)
 	slo2.Metadata.Name = e2etestutils.GenerateName()
 	initialObjects = append(initialObjects, slo2)
-	e2etestutils.V2Apply(t, initialObjects)
+	e2etestutils.V1Apply(t, initialObjects)
 
 	slo3 := deepCopyObject(t, slo1)
 	slo3.Metadata.Name = e2etestutils.GenerateName()
 	slo4 := deepCopyObject(t, slo1)
 	slo4.Metadata.Name = e2etestutils.GenerateName()
-	e2etestutils.V2Apply(t, []manifest.Object{slo3, slo4})
+	e2etestutils.V1Apply(t, []manifest.Object{slo3, slo4})
 
 	slo5 := deepCopyObject(t, slo1)
 	slo5.Metadata.Name = e2etestutils.GenerateName()
-	e2etestutils.V2Apply(t, []manifest.Object{slo5})
+	e2etestutils.V1Apply(t, []manifest.Object{slo5})
 
-	t.Cleanup(func() { e2etestutils.V2Delete(t, initialObjects) })
-	t.Cleanup(func() { e2etestutils.V2Delete(t, []manifest.Object{slo3, slo4, slo5}) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, initialObjects) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{slo3, slo4, slo5}) })
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {

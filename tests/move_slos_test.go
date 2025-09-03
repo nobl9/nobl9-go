@@ -44,8 +44,8 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		Project: directProject.GetName(),
 	})
 	globalDependencyObjects := []manifest.Object{directProject, direct}
-	e2etestutils.V2Apply(t, globalDependencyObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, globalDependencyObjects) })
+	e2etestutils.V1Apply(t, globalDependencyObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, globalDependencyObjects) })
 
 	tests := map[string]v1MoveSLOsTestCase{
 		"move SLO to an existing Project and Service": func() v1MoveSLOsTestCase {
@@ -338,9 +338,9 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			e2etestutils.V2Apply(t, test.setupObjects)
+			e2etestutils.V1Apply(t, test.setupObjects)
 			t.Cleanup(func() {
-				e2etestutils.V2Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...)))
+				e2etestutils.V1Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...)))
 			})
 
 			err := client.Objects().V1().MoveSLOs(ctx, test.payload)

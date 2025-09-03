@@ -48,26 +48,26 @@ func AnnotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	return labels
 }
 
-// V2Apply applies all the provided [manifest.Object].
-func V2Apply[T manifest.Object](t *testing.T, objects []T) {
+// V1Apply applies all the provided [manifest.Object].
+func V1Apply[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
 	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, len(objects)+1)
 }
 
-// V2Delete deletes all the provided [manifest.Object].
-func V2Delete[T manifest.Object](t *testing.T, objects []T) {
+// V1Delete deletes all the provided [manifest.Object].
+func V1Delete[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
 	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, len(objects)+1)
 }
 
-// V2ApplyBatch applies all the provided [manifest.Object] in batches of the provided size.
-func V2ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
+// V1ApplyBatch applies all the provided [manifest.Object] in batches of the provided size.
+func V1ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
 	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, batchSize)
 }
 
-// V2DeleteBatch deletes all the provided [manifest.Object] in batches of the provided size.
-func V2DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
+// V1DeleteBatch deletes all the provided [manifest.Object] in batches of the provided size.
+func V1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
 	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, batchSize)
 }

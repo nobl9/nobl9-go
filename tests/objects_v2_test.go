@@ -28,7 +28,7 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 		Project: project.GetName(),
 	})
 	objects := []manifest.Object{project, service}
-	t.Cleanup(func() { e2etestutils.V2Delete(t, objects) })
+	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
 
 	t.Run("dry-run apply objects", func(t *testing.T) {
 		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects}.WithDryRun(true))

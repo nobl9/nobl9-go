@@ -205,8 +205,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 		allObjects = append(allObjects, report)
 	}
 
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetReportsRequest
@@ -260,8 +260,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		allObjects,
 		project,
 	)
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	testCases := map[string]struct {
 		report v1alphaReport.Report

@@ -41,8 +41,8 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 		allObjects = append(allObjects, method)
 	}
 
-	e2etestutils.V2Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertMethod.AlertMethod](allObjects)
 
 	filterTests := map[string]struct {
