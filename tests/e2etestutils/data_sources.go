@@ -38,7 +38,7 @@ func ProvisionStaticAgent(t *testing.T, typ v1alpha.DataSourceType) v1alphaAgent
 	agent := getStaticAgent(t, typ)
 	project := provisionDataSourcesProject(t)
 	agent.Metadata.Project = project.GetName()
-	V1Apply(t, []manifest.Object{agent})
+	V2Apply(t, []manifest.Object{agent})
 	staticAgentsCache.StoreUnsafe(cacheKey, agent)
 	return agent
 }
@@ -64,7 +64,7 @@ func ProvisionStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDire
 	direct := getStaticDirect(t, typ)
 	project := provisionDataSourcesProject(t)
 	direct.Metadata.Project = project.GetName()
-	V1Apply(t, []manifest.Object{direct})
+	V2Apply(t, []manifest.Object{direct})
 	staticDirectsCache.StoreUnsafe(cacheKey, direct)
 	return direct
 }
@@ -130,7 +130,7 @@ var provisionDataSourcesProject = func() func(t *testing.T) v1alphaProject.Proje
 						" in order to speed up the execution of other tests, do not delete it.",
 				},
 			)
-			V1Apply(t, []manifest.Object{project})
+			V2Apply(t, []manifest.Object{project})
 		})
 		return project
 	}

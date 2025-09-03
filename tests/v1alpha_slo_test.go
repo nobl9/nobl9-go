@@ -170,11 +170,11 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 	t.Cleanup(func() {
 		slices.Reverse(slos)
-		e2etestutils.V1DeleteBatch(t, slos, 50)
-		e2etestutils.V1Delete(t, dependencies)
+		e2etestutils.V2DeleteBatch(t, slos, 50)
+		e2etestutils.V2Delete(t, dependencies)
 	})
-	e2etestutils.V1Apply(t, dependencies)
-	e2etestutils.V1ApplyBatch(t, slos, 50)
+	e2etestutils.V2Apply(t, dependencies)
+	e2etestutils.V2ApplyBatch(t, slos, 50)
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
 
 	filterTests := map[string]struct {

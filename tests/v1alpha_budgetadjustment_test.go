@@ -16,6 +16,7 @@ import (
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
@@ -64,8 +65,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			}),
 	}
 
-	e2etestutils.V1Apply(t, budgetAdjustments)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, budgetAdjustments) })
+	e2etestutils.V2Apply(t, budgetAdjustments)
+	t.Cleanup(func() { e2etestutils.V2Delete(t, budgetAdjustments) })
 
 	filterTest := map[string]struct {
 		request         objectsV1.GetBudgetAdjustmentRequest
@@ -215,7 +216,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			err := client.Objects().V1().Apply(ctx, []manifest.Object{test.request})
+			err := client.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: []manifest.Object{test.request}})
 			if test.error != "" {
 				assert.ErrorContains(t, err, test.error)
 			} else {
@@ -272,8 +273,8 @@ func generateSLO(t *testing.T) (slo v1alphaSLO.SLO) {
 		defaultProjectSLO,
 	)
 
-	e2etestutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
+	e2etestutils.V2Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
 
 	return slo
 }

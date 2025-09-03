@@ -42,8 +42,8 @@ func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 		allObjects = append(allObjects, export)
 	}
 
-	e2etestutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
+	e2etestutils.V2Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaDataExport.DataExport](allObjects)
 
 	filterTests := map[string]struct {

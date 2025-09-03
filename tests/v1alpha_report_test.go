@@ -14,6 +14,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
@@ -204,8 +205,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 		allObjects = append(allObjects, report)
 	}
 
-	e2etestutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
+	e2etestutils.V2Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetReportsRequest
@@ -259,8 +260,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 		allObjects,
 		project,
 	)
-	e2etestutils.V1Apply(t, allObjects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
+	e2etestutils.V2Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V2Delete(t, allObjects) })
 
 	testCases := map[string]struct {
 		report v1alphaReport.Report
@@ -428,7 +429,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 	for name, test := range testCases {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			err := client.Objects().V1().Apply(ctx, []manifest.Object{test.report})
+			err := client.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: []manifest.Object{test.report}})
 			assert.ErrorContains(t, err, test.error)
 		})
 	}

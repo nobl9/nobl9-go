@@ -70,7 +70,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	"github.com/nobl9/nobl9-go/sdk"
-	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func main() {
@@ -112,7 +112,7 @@ func main() {
 	}
 
 	// Apply the objects.
-	if err = client.Objects().V1().Apply(ctx, objects); err != nil {
+	if err = client.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: objects}); err != nil {
 		log.Fatalf("failed to apply objects, err: %v", err)
 	}
 
@@ -148,7 +148,7 @@ func main() {
 	fmt.Println(string(data))
 
 	// Delete resources.
-	if err = client.Objects().V1().Delete(ctx, objects); err != nil {
+	if err = client.Objects().V2().Delete(ctx, objectsV2.DeleteRequest{Objects: objects}); err != nil {
 		log.Fatalf("failed to delete objects, err: %v", err)
 	}
 }

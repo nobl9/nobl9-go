@@ -19,6 +19,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/sdk"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 // GenerateName generates a unique name for the test object.
@@ -47,28 +48,28 @@ func AnnotateLabels(t *testing.T, labels v1alpha.Labels) v1alpha.Labels {
 	return labels
 }
 
-// V1Apply applies all the provided [manifest.Object].
-func V1Apply[T manifest.Object](t *testing.T, objects []T) {
+// V2Apply applies all the provided [manifest.Object].
+func V2Apply[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, len(objects)+1)
+	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, len(objects)+1)
 }
 
-// V1Delete deletes all the provided [manifest.Object].
-func V1Delete[T manifest.Object](t *testing.T, objects []T) {
+// V2Delete deletes all the provided [manifest.Object].
+func V2Delete[T manifest.Object](t *testing.T, objects []T) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, len(objects)+1)
+	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, len(objects)+1)
 }
 
-// V1ApplyBatch applies all the provided [manifest.Object] in batches of the provided size.
-func V1ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
+// V2ApplyBatch applies all the provided [manifest.Object] in batches of the provided size.
+func V2ApplyBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, batchSize)
+	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationApply, batchSize)
 }
 
-// V1DeleteBatch deletes all the provided [manifest.Object] in batches of the provided size.
-func V1DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
+// V2DeleteBatch deletes all the provided [manifest.Object] in batches of the provided size.
+func V2DeleteBatch[T manifest.Object](t *testing.T, objects []T, batchSize int) {
 	t.Helper()
-	v1ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, batchSize)
+	v2ApplyOrDeleteBatch(t, generifyObjects(objects), apiOperationDelete, batchSize)
 }
 
 type apiOperation int
@@ -78,10 +79,10 @@ const (
 	apiOperationDelete
 )
 
-// v1ApplyOrDeleteBatch applies or deletes objects in batches.
+// v2ApplyOrDeleteBatch applies or deletes objects in batches.
 // The batch size is determined by the batchSize parameter.
 // The operations on each batch are executed concurrently.
-func v1ApplyOrDeleteBatch(
+func v2ApplyOrDeleteBatch(
 	t *testing.T,
 	objects []manifest.Object,
 	operation apiOperation,
@@ -102,9 +103,9 @@ func v1ApplyOrDeleteBatch(
 			defer applyAndDeleteLock.Unlock()
 			switch operation {
 			case apiOperationApply:
-				return sdkClient.Objects().V1().Apply(ctx, batch)
+				return sdkClient.Objects().V2().Apply(ctx, objectsV2.ApplyRequest{Objects: batch})
 			case apiOperationDelete:
-				return sdkClient.Objects().V1().Delete(ctx, batch)
+				return sdkClient.Objects().V2().Delete(ctx, objectsV2.DeleteRequest{Objects: batch})
 			default:
 				return errors.New("invalid API operation")
 			}
@@ -121,7 +122,7 @@ func v1ApplyOrDeleteBatch(
 		t.Logf("timeout encountered, the apply/delete operation will be retried in %s; test: %s; error: %v",
 			waitFor, t.Name(), err)
 		time.Sleep(waitFor)
-		v1ApplyOrDeleteBatch(t, objects, apiOperationDelete, batchSize)
+		v2ApplyOrDeleteBatch(t, objects, apiOperationDelete, batchSize)
 	} else {
 		require.NoError(t, err)
 	}
