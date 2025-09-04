@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	directTypes := filterSlice(v1alpha.DataSourceTypeValues(), v1alphaDirect.IsValidDirectType)
 	allObjects := make([]manifest.Object, 0, len(directTypes)+1)
@@ -77,7 +75,7 @@ func Test_Objects_V1_V1alpha_Direct(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaDirects(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaDirects(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

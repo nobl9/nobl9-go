@@ -9,7 +9,7 @@ import (
 )
 
 // SetClient setups [sdk.Client] for all the tests.
-// Client is used to shared by all functions which interact with the Nobl9 API.
+// The client is shared by all functions that interact with the Nobl9 API.
 // It is not concurrently safe and should be called within guarded scope.
 func SetClient(client *sdk.Client) {
 	sdkClient = client

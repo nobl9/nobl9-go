@@ -22,8 +22,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/users/v2"
 )
 
@@ -209,16 +207,6 @@ func TestDefaultGetUserEmail(t *testing.T) {
 		assert.Empty(t, emailFromAPI)
 		assert.Error(t, err)
 	})
-}
-
-func addOrganization(objects []manifest.Object, org string) []manifest.Object {
-	result := make([]manifest.Object, 0, len(objects))
-	for _, obj := range objects {
-		if objCtx, ok := obj.(v1alpha.ObjectContext); ok {
-			result = append(result, objCtx.SetOrganization(org))
-		}
-	}
-	return result
 }
 
 type endpointConfig struct {

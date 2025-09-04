@@ -15,6 +15,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 // MockObjectsVersions is a mock of Versions interface.
@@ -75,6 +76,44 @@ func (c *MockObjectsVersionsV1Call) Do(f func() v1.Endpoints) *MockObjectsVersio
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockObjectsVersionsV1Call) DoAndReturn(f func() v1.Endpoints) *MockObjectsVersionsV1Call {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// V2 mocks base method.
+func (m *MockObjectsVersions) V2() v2.Endpoints {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "V2")
+	ret0, _ := ret[0].(v2.Endpoints)
+	return ret0
+}
+
+// V2 indicates an expected call of V2.
+func (mr *MockObjectsVersionsMockRecorder) V2() *MockObjectsVersionsV2Call {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "V2", reflect.TypeOf((*MockObjectsVersions)(nil).V2))
+	return &MockObjectsVersionsV2Call{Call: call}
+}
+
+// MockObjectsVersionsV2Call wrap *gomock.Call
+type MockObjectsVersionsV2Call struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockObjectsVersionsV2Call) Return(arg0 v2.Endpoints) *MockObjectsVersionsV2Call {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockObjectsVersionsV2Call) Do(f func() v2.Endpoints) *MockObjectsVersionsV2Call {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockObjectsVersionsV2Call) DoAndReturn(f func() v2.Endpoints) *MockObjectsVersionsV2Call {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

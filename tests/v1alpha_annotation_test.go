@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +20,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
@@ -182,7 +180,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 			t.Parallel()
 			test.request.UserAnnotations = ptr(true)
 			test.request.SystemAnnotations = ptr(false)
-			actual, err := client.Objects().V1().GetV1alphaAnnotations(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaAnnotations(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

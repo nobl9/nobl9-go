@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -25,7 +24,6 @@ import (
 
 func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 
 	service := newV1alphaService(t, v1alphaService.Metadata{
@@ -175,7 +173,7 @@ func Test_Objects_V1_V1alpha_AlertSilence(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaAlertSilences(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaAlertSilences(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))
@@ -205,7 +203,7 @@ func newV1alphaAlertSilence(
 func assertV1alphaAlertSilencesAreEqual(t *testing.T, expected, actual v1alphaAlertSilence.AlertSilence) {
 	t.Helper()
 	expected = deepCopyObject(t, expected)
-	org, err := client.GetOrganization(context.Background())
+	org, err := client.GetOrganization(t.Context())
 	require.NoError(t, err)
 	expected.Organization = org
 	assert.NotNil(t, actual.Status)
