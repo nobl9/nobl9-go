@@ -1,6 +1,7 @@
 package e2etestutils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/url"
@@ -87,7 +88,7 @@ func v1ApplyOrDeleteBatch(
 	batchSize int,
 ) {
 	t.Helper()
-	group, ctx := errgroup.WithContext(t.Context())
+	group, ctx := errgroup.WithContext(context.Background())
 	group.SetLimit(runtime.NumCPU())
 	for i, j := 0, 0; i < len(objects); i += batchSize {
 		j += batchSize
