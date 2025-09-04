@@ -19,7 +19,7 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 		t.Errorf("failed to create %T: %v", client, err)
 		t.FailNow()
 	}
-	// We're making sure that per-request settings for dry-run are overriding the client settings.
+	// We're making sure that the client settings have no effect over v2 API.
 	client.WithDryRun()
 
 	project := generateV1alphaProject(t)
@@ -31,31 +31,31 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
 
 	t.Run("dry-run apply objects", func(t *testing.T) {
-		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects}.WithDryRun(true))
+		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects, DryRun: true})
 		require.NoError(t, err)
 		requireObjectsNotExists(t, objects...)
 	})
 
 	t.Run("apply objects", func(t *testing.T) {
-		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects}.WithDryRun(false))
+		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects})
 		require.NoError(t, err)
 		requireObjectsExists(t, objects...)
 	})
 
 	t.Run("dry-run delete objects", func(t *testing.T) {
-		err := client.Objects().V2().Delete(t.Context(), v2.DeleteRequest{Objects: objects}.WithDryRun(true))
+		err := client.Objects().V2().Delete(t.Context(), v2.DeleteRequest{Objects: objects, DryRun: true})
 		require.NoError(t, err)
 		requireObjectsExists(t, objects...)
 	})
 
 	t.Run("delete objects", func(t *testing.T) {
-		err := client.Objects().V2().Delete(t.Context(), v2.DeleteRequest{Objects: objects}.WithDryRun(false))
+		err := client.Objects().V2().Delete(t.Context(), v2.DeleteRequest{Objects: objects})
 		require.NoError(t, err)
 		requireObjectsNotExists(t, objects...)
 	})
 
 	t.Run("re-apply objects", func(t *testing.T) {
-		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects}.WithDryRun(false))
+		err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: objects})
 		require.NoError(t, err)
 		requireObjectsExists(t, objects...)
 	})
@@ -65,16 +65,17 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 			Kind:    manifest.KindService,
 			Names:   []string{service.GetName()},
 			Project: project.GetName(),
-		}.WithDryRun(false))
+		})
 		require.NoError(t, err)
 		requireObjectsNotExists(t, service)
 	})
 
 	t.Run("dry-run delete project by name", func(t *testing.T) {
 		err := client.Objects().V2().DeleteByName(t.Context(), v2.DeleteByNameRequest{
-			Kind:  manifest.KindProject,
-			Names: []string{project.GetName()},
-		}.WithDryRun(true))
+			Kind:   manifest.KindProject,
+			Names:  []string{project.GetName()},
+			DryRun: true,
+		})
 		require.NoError(t, err)
 		requireObjectsExists(t, project)
 	})
@@ -83,7 +84,7 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 		err := client.Objects().V2().DeleteByName(t.Context(), v2.DeleteByNameRequest{
 			Kind:  manifest.KindProject,
 			Names: []string{project.GetName()},
-		}.WithDryRun(false))
+		})
 		require.NoError(t, err)
 		requireObjectsNotExists(t, project)
 	})

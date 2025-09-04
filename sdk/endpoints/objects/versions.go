@@ -34,5 +34,5 @@ func (v versions) V1() v1.Endpoints {
 }
 
 func (v versions) V2() v2.Endpoints {
-	return v2.NewEndpoints(v.client, v.orgGetter, v.readObjects, v.dryRun)
+	return v2.NewEndpoints(v.client, v.orgGetter, v.readObjects)
 }

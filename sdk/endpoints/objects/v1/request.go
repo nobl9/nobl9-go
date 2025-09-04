@@ -3,41 +3,8 @@ package v1
 import (
 	"time"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
-
-type ApplyRequest struct {
-	Objects []manifest.Object
-	DryRun  *bool
-}
-
-func (r ApplyRequest) SetDryRun(dryRun bool) ApplyRequest {
-	r.DryRun = ptr(dryRun)
-	return r
-}
-
-type DeleteRequest struct {
-	Objects []manifest.Object
-	DryRun  *bool
-}
-
-func (r DeleteRequest) SetDryRun(dryRun bool) DeleteRequest {
-	r.DryRun = ptr(dryRun)
-	return r
-}
-
-type DeleteByNameRequest struct {
-	Kind    manifest.Kind
-	Project string
-	Names   []string
-	DryRun  *bool
-}
-
-func (r DeleteByNameRequest) SetDryRun(dryRun bool) DeleteByNameRequest {
-	r.DryRun = ptr(dryRun)
-	return r
-}
 
 type GetProjectsRequest struct {
 	Names  []string

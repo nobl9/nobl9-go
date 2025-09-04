@@ -6,34 +6,17 @@ import (
 
 type ApplyRequest struct {
 	Objects []manifest.Object
-	DryRun  *bool
-}
-
-func (r ApplyRequest) WithDryRun(dryRun bool) ApplyRequest {
-	r.DryRun = ptr(dryRun)
-	return r
+	DryRun  bool
 }
 
 type DeleteRequest struct {
 	Objects []manifest.Object
-	DryRun  *bool
-}
-
-func (r DeleteRequest) WithDryRun(dryRun bool) DeleteRequest {
-	r.DryRun = ptr(dryRun)
-	return r
+	DryRun  bool
 }
 
 type DeleteByNameRequest struct {
 	Kind    manifest.Kind
 	Project string
 	Names   []string
-	DryRun  *bool
+	DryRun  bool
 }
-
-func (r DeleteByNameRequest) WithDryRun(dryRun bool) DeleteByNameRequest {
-	r.DryRun = ptr(dryRun)
-	return r
-}
-
-func ptr[T any](v T) *T { return &v }

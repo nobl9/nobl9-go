@@ -30,7 +30,7 @@ import (
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
-	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
+	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 )
 
 var (
@@ -244,7 +244,7 @@ func assertObjectsExistsOrNot(t *testing.T, objects []manifest.Object, exists bo
 		if key.Project != "" {
 			headers.Set(sdk.HeaderProject, key.Project)
 		}
-		params := url.Values{v2.QueryKeyName: names}
+		params := url.Values{objectsV1.QueryKeyName: names}
 		objects, err := client.Objects().V1().Get(t.Context(), key.Kind, headers, params)
 		if !assert.NoError(t, err) {
 			return false

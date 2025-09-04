@@ -157,9 +157,13 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 }
 
 // WithDryRun configures the [Client] to run all supported state changing operations in dry-run mode.
+// This setting applies only to [v1 objects API].
 //
 // Deprecated: Use per-request parameters instead.
-// See v2 objects API [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2].
+// See [v2 objects API].
+//
+// [v1 objects API]: https://pkg.go.dev/github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1
+// [v2 objects API]: https://pkg.go.dev/github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2
 func (c *Client) WithDryRun() *Client {
 	c.dryRun = true
 	return c

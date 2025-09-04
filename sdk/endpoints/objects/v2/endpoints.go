@@ -29,13 +29,11 @@ func NewEndpoints(
 	client endpointsHelpers.Client,
 	orgGetter endpointsHelpers.OrganizationGetter,
 	readObjects endpointsHelpers.ReadObjectsFunc,
-	dryRun bool,
 ) Endpoints {
 	return endpoints{
 		client:      client,
 		orgGetter:   orgGetter,
 		readObjects: readObjects,
-		dryRun:      dryRun,
 	}
 }
 
@@ -43,7 +41,6 @@ type endpoints struct {
 	client      endpointsHelpers.Client
 	orgGetter   endpointsHelpers.OrganizationGetter
 	readObjects endpointsHelpers.ReadObjectsFunc
-	dryRun      bool
 }
 
 func (e endpoints) Apply(ctx context.Context, params ApplyRequest) error {
@@ -80,7 +77,7 @@ func (e endpoints) applyOrDeleteObjects(
 	ctx context.Context,
 	objects []manifest.Object,
 	apiMode string,
-	dryRun *bool,
+	dryRun bool,
 ) error {
 	var err error
 	objects, err = e.setOrganizationForObjects(ctx, objects)
@@ -136,11 +133,7 @@ func (e endpoints) setOrganizationForObjects(
 	return objects, nil
 }
 
-func (e endpoints) setDryRunParam(u url.Values, override *bool) url.Values {
-	dryRun := e.dryRun
-	if override != nil {
-		dryRun = *override
-	}
+func (e endpoints) setDryRunParam(u url.Values, dryRun bool) url.Values {
 	if u == nil {
 		u = url.Values{}
 	}
