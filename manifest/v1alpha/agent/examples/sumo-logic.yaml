@@ -14,13 +14,6 @@ spec:
   releaseChannel: stable
   sumoLogic:
     url: https://service.sumologic.com
-  historicalDataRetrieval:
-    maxDuration:
-      value: 30
-      unit: Day
-    defaultDuration:
-      value: 15
-      unit: Day
   queryDelay:
     value: 5
     unit: Minute
