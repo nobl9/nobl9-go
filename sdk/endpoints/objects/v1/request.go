@@ -92,5 +92,3 @@ type GetUserGroupsRequest struct {
 type GetReportsRequest struct {
 	Names []string
 }
-
-func ptr[T any](v T) *T { return &v }
