@@ -55,7 +55,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, svc, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -63,7 +63,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
