@@ -34,5 +34,5 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.ProjectRef }).
 		WithName("projectRef").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
