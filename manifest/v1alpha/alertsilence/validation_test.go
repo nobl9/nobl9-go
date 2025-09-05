@@ -55,11 +55,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -99,7 +99,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -149,7 +149,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 2, testutils.ExpectedError{
 			Prop: "spec.alertPolicy.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails, inconsistent project", func(t *testing.T) {

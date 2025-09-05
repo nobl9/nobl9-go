@@ -10,6 +10,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 )
@@ -48,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, group, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }

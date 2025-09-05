@@ -69,11 +69,11 @@ var sloValidationRule = govy.New[SLORef](
 	govy.For(func(s SLORef) string { return s.Project }).
 		WithName("project").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s SLORef) string { return s.Name }).
 		WithName("name").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
 var atLeastHourlyFreq = govy.NewRule(func(rule *rrule.RRule) error {

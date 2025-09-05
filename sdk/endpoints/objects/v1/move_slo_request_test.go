@@ -5,6 +5,8 @@ import (
 
 	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
 func TestMoveSLOsRequest_Validate(t *testing.T) {
@@ -50,7 +52,7 @@ func TestMoveSLOsRequest_Validate(t *testing.T) {
 			errChecks: []govytest.ExpectedRuleError{
 				{
 					PropertyName: "oldProject",
-					Code:         rules.ErrorCodeStringDNSLabel,
+					Code:         validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},
@@ -80,7 +82,7 @@ func TestMoveSLOsRequest_Validate(t *testing.T) {
 			errChecks: []govytest.ExpectedRuleError{
 				{
 					PropertyName: "newProject",
-					Code:         rules.ErrorCodeStringDNSLabel,
+					Code:         validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},
@@ -110,7 +112,7 @@ func TestMoveSLOsRequest_Validate(t *testing.T) {
 			errChecks: []govytest.ExpectedRuleError{
 				{
 					PropertyName: "service",
-					Code:         rules.ErrorCodeStringDNSLabel,
+					Code:         validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},
@@ -135,7 +137,7 @@ func TestMoveSLOsRequest_Validate(t *testing.T) {
 			errChecks: []govytest.ExpectedRuleError{
 				{
 					PropertyName: "sloNames[1]",
-					Code:         rules.ErrorCodeStringDNSLabel,
+					Code:         validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},

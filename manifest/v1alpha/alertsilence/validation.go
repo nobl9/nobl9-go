@@ -37,7 +37,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.SLO }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validationV1Alpha.StringDescription()),
@@ -74,7 +74,7 @@ var alertPolicySourceValidation = govy.New[AlertPolicySource](
 	govy.For(func(s AlertPolicySource) string { return s.Project }).
 		WithName("project").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
 const errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"

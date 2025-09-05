@@ -144,10 +144,10 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
-		RulesForEach(rules.StringDNSLabel()),
+		RulesForEach(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Cascade(govy.CascadeModeStop).
@@ -242,15 +242,15 @@ var compositeObjectiveRule = govy.New[CompositeObjective](
 	govy.For(func(c CompositeObjective) string { return c.Project }).
 		WithName("project").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.SLO }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.Objective }).
 		WithName("objective").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) float64 { return c.Weight }).
 		WithName("weight").
 		Rules(rules.GT(0.0)),
@@ -277,10 +277,10 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
 						Required().
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Project }).
 						WithName("project").
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 				)),
 			govy.ForPointer(func(a AnomalyConfigNoData) *string { return a.AlertAfter }).
 				WithName("alertAfter").
@@ -300,11 +300,11 @@ var indicatorValidation = govy.New[Indicator](
 			govy.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
 				Required().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) string { return m.Project }).
 				WithName("project").
 				OmitEmpty().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
 				WithName("kind").
 				OmitEmpty().
@@ -353,7 +353,7 @@ var objectiveBaseValidation = govy.New[ObjectiveBase](
 	govy.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
 		OmitEmpty().
