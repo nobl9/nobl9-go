@@ -53,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
 		Name:        strings.Repeat("MY SLO", 20),
-		DisplayName: strings.Repeat("my-slo", 20),
+		DisplayName: strings.Repeat("my-slo", 43),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	slo.ManifestSource = "/home/me/slo.yaml"
@@ -201,7 +201,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = []Attachment{
 			{URL: "https://this.com"},
 			{URL: ".com"},
-			{URL: "", DisplayName: ptr(strings.Repeat("l", 64))},
+			{URL: "", DisplayName: ptr(strings.Repeat("l", 254))},
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
@@ -912,7 +912,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{
 					{
 						ObjectiveBase: ObjectiveBase{
-							DisplayName: strings.Repeat("l", 64),
+							DisplayName: strings.Repeat("l", 254),
 							Value:       ptr(2.),
 							Name:        "MY NAME",
 						},

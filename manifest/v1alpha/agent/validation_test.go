@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	agent := validAgent(v1alpha.Prometheus)
 	agent.Metadata = Metadata{
 		Name:        strings.Repeat("MY AGENT", 20),
-		DisplayName: strings.Repeat("my-agent", 10),
+		DisplayName: strings.Repeat("my-agent", 33),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	agent.ManifestSource = "/home/me/agent.yaml"

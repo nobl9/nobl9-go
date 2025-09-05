@@ -19,5 +19,5 @@ var validator = govy.New[UserGroup](
 	validationV1Alpha.FieldRuleMetadataName(func(u UserGroup) string { return u.Metadata.Name }),
 	govy.For(func(u UserGroup) string { return u.Spec.DisplayName }).
 		WithName("spec.displayName").
-		Rules(rules.StringLength(0, 63)),
+		Rules(rules.StringLength(0, 253)),
 )

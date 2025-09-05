@@ -29,7 +29,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 254)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{

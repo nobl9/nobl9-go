@@ -48,7 +48,7 @@ func TestValidate_Metadata(t *testing.T) {
 	direct := validDirect(v1alpha.Datadog)
 	direct.Metadata = Metadata{
 		Name:        strings.Repeat("MY DIRECT", 20),
-		DisplayName: strings.Repeat("my-direct", 20),
+		DisplayName: strings.Repeat("my-direct", 29),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	direct.ManifestSource = "/home/me/direct.yaml"

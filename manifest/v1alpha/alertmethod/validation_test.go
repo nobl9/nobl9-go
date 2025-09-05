@@ -44,7 +44,7 @@ func TestValidate_Metadata(t *testing.T) {
 	alertMethod := validAlertMethod()
 	alertMethod.Metadata = Metadata{
 		Name:        strings.Repeat("MY ALERTMETHOD", 20),
-		DisplayName: strings.Repeat("my-alertmethod", 10),
+		DisplayName: strings.Repeat("my-alertmethod", 19),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	alertMethod.ManifestSource = "/home/me/alertmethod.yaml"
