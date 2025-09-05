@@ -51,7 +51,7 @@ func FieldRuleMetadataDisplayName[S any](getter func(S) string) govy.PropertyRul
 	return govy.For(getter).
 		WithName("metadata.displayName").
 		OmitEmpty().
-		Rules(rules.StringLength(0, 63))
+		Rules(rules.StringLength(0, 253))
 }
 
 func FieldRuleMetadataProject[S any](getter func(S) string) govy.PropertyRules[string, S] {

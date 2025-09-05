@@ -794,7 +794,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{
-						DisplayName: "it is a very long display name, longer than sixty three characters",
+						DisplayName: strings.Repeat("a very long display name that exceeds the limit ", 6),
 						Labels:      properLabel,
 					},
 				},

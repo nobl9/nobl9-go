@@ -56,7 +56,7 @@ func TestValidate_Metadata(t *testing.T) {
 func TestValidate_Spec(t *testing.T) {
 	t.Run("displayName too long", func(t *testing.T) {
 		group := validUserGroup()
-		group.Spec.DisplayName = strings.Repeat("MY GROUP", 20)
+		group.Spec.DisplayName = strings.Repeat("MY GROUP", 32)
 		err := validate(group)
 		testutils.AssertContainsErrors(t, group, err, 1, testutils.ExpectedError{
 			Prop: "spec.displayName",
