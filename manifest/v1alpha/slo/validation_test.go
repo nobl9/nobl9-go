@@ -863,7 +863,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       ptr(9.2),
-					DisplayName: strings.Repeat("l", 63),
+					DisplayName: strings.Repeat("l", 253),
 				},
 				BudgetTarget: ptr(0.9),
 				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
@@ -873,7 +873,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       nil,
-					DisplayName: strings.Repeat("l", 63),
+					DisplayName: strings.Repeat("l", 253),
 				},
 				BudgetTarget: ptr(0.9),
 				CountMetrics: &CountMetricsSpec{
