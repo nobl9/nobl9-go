@@ -9,6 +9,7 @@ const (
 	ReviewStatusPending = "pending"
 	ReviewStatusReviewd = "reviewed"
 	ReviewStatusSkipped = "skipped"
+	ReviewStatusOverdue = "overdue"
 )
 
 type SubmitReviewPayload struct {
@@ -23,7 +24,12 @@ func (p SubmitReviewPayload) Validate() error {
 var validator = govy.New(
 	govy.For(func(r SubmitReviewPayload) string { return r.Status }).
 		Required().
-		Rules(rules.OneOf(ReviewStatusSkipped, ReviewStatusPending, ReviewStatusReviewd)),
+		Rules(rules.OneOf(
+			ReviewStatusSkipped,
+			ReviewStatusPending,
+			ReviewStatusReviewd,
+			ReviewStatusOverdue,
+		)),
 	govy.For(func(r SubmitReviewPayload) string { return r.Note }).
 		OmitEmpty().
 		Rules(rules.StringMaxLength(500)),
