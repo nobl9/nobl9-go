@@ -140,7 +140,7 @@ var specValidation = govy.New[Spec](
 		})),
 	govy.ForPointer(func(s Spec) *string { return s.Tier }).
 		WithName("tier").
-		Rules(rules.StringLength(0, 253)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
@@ -190,7 +190,7 @@ var attachmentValidation = govy.New[Attachment](
 		Rules(rules.StringURL()),
 	govy.ForPointer(func(a Attachment) *string { return a.DisplayName }).
 		WithName("displayName").
-		Rules(rules.StringLength(0, 253)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 )
 
 var compositeValidation = govy.New[Composite](
@@ -357,7 +357,7 @@ var objectiveBaseValidation = govy.New[ObjectiveBase](
 	govy.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
 		OmitEmpty().
-		Rules(rules.StringMaxLength(253)),
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 )
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {

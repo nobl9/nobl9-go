@@ -201,7 +201,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = []Attachment{
 			{URL: "https://this.com"},
 			{URL: ".com"},
-			{URL: "", DisplayName: ptr(strings.Repeat("l", 254))},
+			{URL: "", DisplayName: ptr(strings.Repeat("l", validationV1Alpha.NameMaximumLength+1))},
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
@@ -863,7 +863,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       ptr(9.2),
-					DisplayName: strings.Repeat("l", 253),
+					DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength),
 				},
 				BudgetTarget: ptr(0.9),
 				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
@@ -873,7 +873,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       nil,
-					DisplayName: strings.Repeat("l", 253),
+					DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength),
 				},
 				BudgetTarget: ptr(0.9),
 				CountMetrics: &CountMetricsSpec{
@@ -912,7 +912,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{
 					{
 						ObjectiveBase: ObjectiveBase{
-							DisplayName: strings.Repeat("l", 254),
+							DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
 							Value:       ptr(2.),
 							Name:        "MY NAME",
 						},

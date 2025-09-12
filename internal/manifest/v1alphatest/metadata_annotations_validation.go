@@ -6,10 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -64,7 +65,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 		},
 		"valid: key length limit": {
 			Annotations: v1alpha.MetadataAnnotations{
-				strings.Repeat("l", 253) + "/" + strings.Repeat("l", 63): "x",
+				strings.Repeat("l", validationV1Alpha.NameMaximumLength) + "/" + strings.Repeat("l", 63): "x",
 			},
 			isValid: true,
 		},
@@ -82,10 +83,11 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 		},
 		"invalid: key is too long": {
 			Annotations: v1alpha.MetadataAnnotations{
-				strings.Repeat("l", 254) + "/" + strings.Repeat("l", 64): "x",
+				strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + strings.Repeat("l", 254) + "/" + strings.Repeat("l", 64),
+				Prop: propertyPath + "." + strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" +
+					strings.Repeat("l", 64),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
