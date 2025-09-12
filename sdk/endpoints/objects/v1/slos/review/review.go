@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	ReviewStatusPending = "pending"
-	ReviewStatusReviewd = "reviewed"
-	ReviewStatusSkipped = "skipped"
-	ReviewStatusOverdue = "overdue"
+	StatusPending  = "pending"
+	StatusReviewed = "reviewed"
+	StatusSkipped  = "skipped"
+	StatusOverdue  = "overdue"
 )
 
 type SubmitReviewPayload struct {
 	Status string `json:"status"`
 	Note   string `json:"note,omitempty"`
+}
+
+type SubmitReviewResponse struct {
+	AnnotationID string `json:"annotationId"`
 }
 
 func (p SubmitReviewPayload) Validate() error {
@@ -25,10 +29,10 @@ var validator = govy.New(
 	govy.For(func(r SubmitReviewPayload) string { return r.Status }).
 		Required().
 		Rules(rules.OneOf(
-			ReviewStatusSkipped,
-			ReviewStatusPending,
-			ReviewStatusReviewd,
-			ReviewStatusOverdue,
+			StatusSkipped,
+			StatusPending,
+			StatusReviewed,
+			StatusOverdue,
 		)),
 	govy.For(func(r SubmitReviewPayload) string { return r.Note }).
 		OmitEmpty().
