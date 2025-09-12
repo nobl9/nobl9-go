@@ -69,19 +69,19 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			wantErr: []govytest.ExpectedRuleError{
 				{
 					PropertyName:    "slo_project",
-					ContainsMessage: "RFC-1123 compliant label",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
 					PropertyName:    "slo",
-					ContainsMessage: "RFC-1123 compliant label",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
 					PropertyName:    "name[0]",
-					ContainsMessage: "RFC-1123 compliant label",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
 					PropertyName:    "name[1]",
-					ContainsMessage: "RFC-1123 compliant label",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 			},
 		},

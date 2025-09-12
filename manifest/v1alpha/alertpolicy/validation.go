@@ -113,7 +113,7 @@ var alertMethodRefValidation = govy.New[AlertMethodRef](
 	govy.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
 		WithName("metadata.project").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
 const (

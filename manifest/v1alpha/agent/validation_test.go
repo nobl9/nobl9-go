@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	agent := validAgent(v1alpha.Prometheus)
 	agent.Metadata = Metadata{
 		Name:        strings.Repeat("MY AGENT", 20),
-		DisplayName: strings.Repeat("my-agent", 10),
+		DisplayName: strings.Repeat("my-agent", 33),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	agent.ManifestSource = "/home/me/agent.yaml"
@@ -58,7 +58,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, agent, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -66,7 +66,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }

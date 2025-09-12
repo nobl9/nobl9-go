@@ -9,6 +9,7 @@ import (
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -36,7 +37,7 @@ var columnValidation = govy.New[ColumnSpec](
 	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
 		Required().
-		Rules(rules.StringMaxLength(63)),
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 	govy.ForMap(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
 		WithName("labels").
 		Rules(rules.MapMinLength[v1alpha.Labels](1)),
