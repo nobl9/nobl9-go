@@ -49,6 +49,8 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.GoogleCloudMonitoring,
 	v1alpha.AzurePrometheus,
 	v1alpha.ThousandEyes,
+	// Support for Replay only in beta.
+	v1alpha.SumoLogic,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {

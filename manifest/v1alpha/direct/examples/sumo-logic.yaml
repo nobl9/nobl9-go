@@ -11,7 +11,7 @@ metadata:
     team: sales
 spec:
   description: Example Sumo Logic Direct
-  releaseChannel: stable
+  releaseChannel: beta
   sumoLogic:
     accessID: wzeulXAULylic8
     accessKey: "[secret]"

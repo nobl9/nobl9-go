@@ -128,6 +128,7 @@
     "nriq",
     "nrql",
     "objectimpl",
+    "omitzero",
     "opentsdb",
     "opsgenie",
     "pagerduty",
