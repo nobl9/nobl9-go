@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -29,7 +28,6 @@ const slosPerService = 50
 // nolint: gocognit
 func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	// Prepare dependencies.
 	project := generateV1alphaProject(t)
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
@@ -266,7 +264,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Equal(t, len(test.expected), len(actual),

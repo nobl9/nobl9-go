@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -21,7 +20,6 @@ import (
 
 func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
@@ -29,7 +27,7 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v1.SLODetails, error) {
-		return client.SLOStatusAPI().V1().GetSLO(ctx, project.GetName(), slo.GetName())
+		return client.SLOStatusAPI().V1().GetSLO(t.Context(), project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, responseSLO)
@@ -38,7 +36,6 @@ func Test_SLOStatusAPI_V1_GetSLO(t *testing.T) {
 
 func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
@@ -63,7 +60,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
-		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit})
+		response, err := client.SLOStatusAPI().V1().GetSLOs(t.Context(), v1.GetSLOsRequest{Limit: limit})
 		if err != nil {
 			return response, err
 		}
@@ -80,7 +77,7 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 	require.NotEmpty(t, firstCursor)
 
 	secondResponse, err := tryExecuteRequest(t, func() (v1.SLOListResponse, error) {
-		response, err := client.SLOStatusAPI().V1().GetSLOs(ctx, v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
+		response, err := client.SLOStatusAPI().V1().GetSLOs(t.Context(), v1.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 		if err != nil {
 			return response, err
 		}
@@ -99,7 +96,6 @@ func Test_SLOStatusAPI_V1_GetSLOs(t *testing.T) {
 
 func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	allObjects := setupSLOListTest(t)
 	project, _, slo := allObjects[0], allObjects[1], allObjects[2]
@@ -107,7 +103,7 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 
 	responseSLO, err := tryExecuteRequest(t, func() (v2.SLODetails, error) {
-		return client.SLOStatusAPI().V2().GetSLO(ctx, project.GetName(), slo.GetName())
+		return client.SLOStatusAPI().V2().GetSLO(t.Context(), project.GetName(), slo.GetName())
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, responseSLO)
@@ -116,7 +112,6 @@ func Test_SLOStatusAPI_V2_GetSLO(t *testing.T) {
 
 func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	initialObjects := setupSLOListTest(t)
 	_, _, slo := initialObjects[0], initialObjects[1], initialObjects[2]
@@ -141,7 +136,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 
 	limit := 2
 	firstResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {
-		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit})
+		response, err := client.SLOStatusAPI().V2().GetSLOs(t.Context(), v2.GetSLOsRequest{Limit: limit})
 		if err != nil {
 			return response, err
 		}
@@ -158,7 +153,7 @@ func Test_SLOStatusAPI_V2_GetSLOs(t *testing.T) {
 	require.NotEmpty(t, firstCursor)
 
 	secondResponse, err := tryExecuteRequest(t, func() (v2.SLOListResponse, error) {
-		response, err := client.SLOStatusAPI().V2().GetSLOs(ctx, v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
+		response, err := client.SLOStatusAPI().V2().GetSLOs(t.Context(), v2.GetSLOsRequest{Limit: limit, Cursor: firstCursor})
 		if err != nil {
 			return response, err
 		}
