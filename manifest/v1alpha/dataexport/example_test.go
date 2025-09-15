@@ -7,6 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleDataExport() {
@@ -31,7 +32,10 @@ func ExampleDataExport() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{dataExport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{dataExport}},
+	); err != nil {
 		log.Fatal("failed to apply data export err: %w", err)
 	}
 	// Output:

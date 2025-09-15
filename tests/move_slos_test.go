@@ -34,7 +34,6 @@ type v1MoveSLOsTestCase struct {
 
 func Test_Objects_V1_MoveSLOs(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	directProject := newV1alphaProject(t, v1alphaProject.Metadata{
 		Name: e2etestutils.GenerateName(),
@@ -343,7 +342,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				e2etestutils.V1Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...)))
 			})
 
-			err := client.Objects().V1().MoveSLOs(ctx, test.payload)
+			err := client.Objects().V1().MoveSLOs(t.Context(), test.payload)
 			if test.expectedError != nil {
 				require.Error(t, err)
 				var httpErr *sdk.HTTPError
@@ -359,7 +358,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			require.NoError(t, err)
 
 			projects := getProjectNamesFromObjects(t, test.expectedObjects)
-			actualObjects := getObjectsInProjects(t, ctx, projects)
+			actualObjects := getObjectsInProjects(t, t.Context(), projects)
 			require.Lenf(
 				t,
 				actualObjects,

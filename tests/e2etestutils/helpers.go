@@ -88,8 +88,7 @@ func v1ApplyOrDeleteBatch(
 	batchSize int,
 ) {
 	t.Helper()
-	ctx := context.Background()
-	group, ctx := errgroup.WithContext(ctx)
+	group, ctx := errgroup.WithContext(context.Background())
 	group.SetLimit(runtime.NumCPU())
 	for i, j := 0, 0; i < len(objects); i += batchSize {
 		j += batchSize

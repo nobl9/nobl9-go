@@ -47,14 +47,17 @@ type endpoints struct {
 	dryRun      bool
 }
 
+// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Apply] instead.
 func (e endpoints) Apply(ctx context.Context, objects []manifest.Object) error {
 	return e.applyOrDeleteObjects(ctx, objects, apiApply)
 }
 
+// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Delete] instead.
 func (e endpoints) Delete(ctx context.Context, objects []manifest.Object) error {
 	return e.applyOrDeleteObjects(ctx, objects, apiDelete)
 }
 
+// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.DeleteByName] instead.
 func (e endpoints) DeleteByName(
 	ctx context.Context,
 	kind manifest.Kind,
