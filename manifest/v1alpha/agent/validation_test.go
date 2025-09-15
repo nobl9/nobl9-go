@@ -1056,6 +1056,7 @@ func setURLValue(t *testing.T, obj interface{}, fieldName, value string) {
 		SetString(value)
 }
 
+// setStepValue is a help function which sets the value of 'Step' field of the given Agent config.
 func setStepValue(t *testing.T, obj interface{}, fieldName string, value int64) {
 	t.Helper()
 	v := reflect.ValueOf(obj)
