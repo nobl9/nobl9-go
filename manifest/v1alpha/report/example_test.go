@@ -8,6 +8,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/report"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleReport_systemHealthReview() {
@@ -93,7 +94,10 @@ func ExampleReport_systemHealthReview() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:
@@ -200,7 +204,10 @@ func ExampleReport_sloHistory() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:
@@ -279,7 +286,10 @@ func ExampleReport_errorBudgetStatus() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:

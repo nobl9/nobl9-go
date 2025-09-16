@@ -8,6 +8,7 @@ import (
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleProject() {
@@ -31,7 +32,10 @@ func ExampleProject() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myProject}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myProject}},
+	); err != nil {
 		log.Fatalf("failed to apply project, err: %v", err)
 	}
 	// Output:
