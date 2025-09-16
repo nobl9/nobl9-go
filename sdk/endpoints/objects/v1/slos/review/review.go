@@ -18,7 +18,7 @@ type SubmitReviewPayload struct {
 }
 
 type SubmitReviewResponse struct {
-	AnnotationID string `json:"annotationId"`
+	AnnotationName string `json:"annotationName"`
 }
 
 func (p SubmitReviewPayload) Validate() error {
