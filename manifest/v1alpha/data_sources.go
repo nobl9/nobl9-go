@@ -370,7 +370,7 @@ func (d HistoricalRetrievalDuration) Duration() time.Duration {
 
 var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
 	Datadog:               {Value: ptr(30), Unit: HRDDay},
-	Prometheus:            {Value: ptr(30), Unit: HRDDay},
+	Prometheus:            {Value: ptr(120), Unit: HRDDay},
 	AmazonPrometheus:      {Value: ptr(30), Unit: HRDDay},
 	NewRelic:              {Value: ptr(30), Unit: HRDDay},
 	Splunk:                {Value: ptr(30), Unit: HRDDay},
