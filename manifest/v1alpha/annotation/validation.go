@@ -30,7 +30,7 @@ var metadataValidation = govy.New[Metadata](
 	govy.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
@@ -38,11 +38,11 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Slo }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.ObjectiveName }).
 		WithName("objectiveName").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Required().

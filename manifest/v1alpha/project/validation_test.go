@@ -46,7 +46,7 @@ func TestValidate_Metadata(t *testing.T) {
 	project := validProject()
 	project.Metadata = Metadata{
 		Name:        strings.Repeat("MY PROJECT", 20),
-		DisplayName: strings.Repeat("my-project", 20),
+		DisplayName: strings.Repeat("my-project", 26),
 	}
 	project.ManifestSource = "/home/me/project.yaml"
 	err := validate(project)
@@ -54,7 +54,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, project, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
