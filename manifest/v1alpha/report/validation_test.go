@@ -11,6 +11,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -50,7 +51,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -183,7 +184,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.projects[0]",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -211,7 +212,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -244,7 +245,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -277,7 +278,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -310,7 +311,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -794,7 +795,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				RowGroupBy: RowGroupByProject,
 				Columns: []ColumnSpec{
 					{
-						DisplayName: "it is a very long display name, longer than sixty three characters",
+						DisplayName: strings.Repeat("a very long display name that exceeds the limit ", 6),
 						Labels:      properLabel,
 					},
 				},

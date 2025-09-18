@@ -46,7 +46,7 @@ func TestValidate_Metadata(t *testing.T) {
 	svc := validService()
 	svc.Metadata = Metadata{
 		Name:        strings.Repeat("MY SERVICE", 20),
-		DisplayName: strings.Repeat("my-service", 20),
+		DisplayName: strings.Repeat("my-service", 26),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	svc.ManifestSource = "/home/me/service.yaml"
@@ -55,7 +55,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, svc, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -63,7 +63,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }

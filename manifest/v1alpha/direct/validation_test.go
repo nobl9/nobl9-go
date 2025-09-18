@@ -48,7 +48,7 @@ func TestValidate_Metadata(t *testing.T) {
 	direct := validDirect(v1alpha.Datadog)
 	direct.Metadata = Metadata{
 		Name:        strings.Repeat("MY DIRECT", 20),
-		DisplayName: strings.Repeat("my-direct", 20),
+		DisplayName: strings.Repeat("my-direct", 29),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	direct.ManifestSource = "/home/me/direct.yaml"
@@ -57,7 +57,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, direct, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -65,7 +65,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }

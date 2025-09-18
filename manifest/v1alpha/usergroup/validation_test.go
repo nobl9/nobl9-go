@@ -10,6 +10,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 )
@@ -48,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, group, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -56,7 +57,7 @@ func TestValidate_Metadata(t *testing.T) {
 func TestValidate_Spec(t *testing.T) {
 	t.Run("displayName too long", func(t *testing.T) {
 		group := validUserGroup()
-		group.Spec.DisplayName = strings.Repeat("MY GROUP", 20)
+		group.Spec.DisplayName = strings.Repeat("MY GROUP", 32)
 		err := validate(group)
 		testutils.AssertContainsErrors(t, group, err, 1, testutils.ExpectedError{
 			Prop: "spec.displayName",

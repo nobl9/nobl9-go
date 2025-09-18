@@ -3,6 +3,8 @@ package v1
 import (
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
 type MoveSLOsRequest struct {
@@ -32,18 +34,18 @@ var moveSLOsRequestValidation = govy.New[MoveSLOsRequest](
 	govy.ForSlice(func(p MoveSLOsRequest) []string { return p.SLONames }).
 		WithName("sloNames").
 		Rules(rules.SliceMinLength[[]string](1)).
-		RulesForEach(rules.StringDNSLabel()),
+		RulesForEach(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.OldProject }).
 		WithName("oldProject").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.NewProject }).
 		WithName("newProject").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.Service }).
 		WithName("service").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 ).
 	WithName("Move SLOs request")

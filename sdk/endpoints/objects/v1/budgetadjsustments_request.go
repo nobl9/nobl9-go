@@ -2,7 +2,8 @@ package v1
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
 type GetBudgetAdjustmentRequest struct {
@@ -41,12 +42,12 @@ var validator = govy.New(
 	govy.For(func(p GetBudgetAdjustmentRequest) string { return p.Project }).
 		WithName(QueryKeySLOProjectName).
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p GetBudgetAdjustmentRequest) string { return p.SLOName }).
 		WithName(QueryKeySLOName).
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.ForSlice(func(p GetBudgetAdjustmentRequest) []string { return p.Names }).
 		WithName(QueryKeyName).
-		RulesForEach(rules.StringDNSLabel()),
+		RulesForEach(validationV1Alpha.StringName()),
 )

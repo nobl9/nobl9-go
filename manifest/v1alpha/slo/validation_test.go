@@ -53,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	slo := validSLO()
 	slo.Metadata = Metadata{
 		Name:        strings.Repeat("MY SLO", 20),
-		DisplayName: strings.Repeat("my-slo", 20),
+		DisplayName: strings.Repeat("my-slo", 43),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	slo.ManifestSource = "/home/me/slo.yaml"
@@ -62,7 +62,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, slo, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -70,7 +70,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -147,7 +147,7 @@ func TestValidate_Spec_Service(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.service",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 }
@@ -165,7 +165,7 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.alertPolicies[1]",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 }
@@ -201,7 +201,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = []Attachment{
 			{URL: "https://this.com"},
 			{URL: ".com"},
-			{URL: "", DisplayName: ptr(strings.Repeat("l", 64))},
+			{URL: "", DisplayName: ptr(strings.Repeat("l", validationV1Alpha.NameMaximumLength+1))},
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
@@ -414,15 +414,15 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[1].name",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[1].project",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
 						Prop: "spec.anomalyConfig.noData.alertMethods[2].name",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 				},
 				ExpectedErrorsCount: 4,
@@ -832,11 +832,11 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				ExpectedErrors: []testutils.ExpectedError{
 					{
 						Prop: "spec.indicator.metricSource.name",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
 						Prop: "spec.indicator.metricSource.project",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
 						Prop: "spec.indicator.metricSource.kind",
@@ -863,7 +863,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       ptr(9.2),
-					DisplayName: strings.Repeat("l", 63),
+					DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength),
 				},
 				BudgetTarget: ptr(0.9),
 				RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
@@ -873,7 +873,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				ObjectiveBase: ObjectiveBase{
 					Name:        "name",
 					Value:       nil,
-					DisplayName: strings.Repeat("l", 63),
+					DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength),
 				},
 				BudgetTarget: ptr(0.9),
 				CountMetrics: &CountMetricsSpec{
@@ -912,7 +912,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{
 					{
 						ObjectiveBase: ObjectiveBase{
-							DisplayName: strings.Repeat("l", 64),
+							DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
 							Value:       ptr(2.),
 							Name:        "MY NAME",
 						},
@@ -939,7 +939,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 					},
 					{
 						Prop: "spec.objectives[0].name",
-						Code: rules.ErrorCodeStringDNSLabel,
+						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
 						Prop: "spec.objectives[0].target",

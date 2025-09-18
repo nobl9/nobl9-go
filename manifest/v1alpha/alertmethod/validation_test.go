@@ -10,6 +10,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -44,7 +45,7 @@ func TestValidate_Metadata(t *testing.T) {
 	alertMethod := validAlertMethod()
 	alertMethod.Metadata = Metadata{
 		Name:        strings.Repeat("MY ALERTMETHOD", 20),
-		DisplayName: strings.Repeat("my-alertmethod", 10),
+		DisplayName: strings.Repeat("my-alertmethod", 19),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	alertMethod.ManifestSource = "/home/me/alertmethod.yaml"
@@ -53,7 +54,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, alertMethod, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -61,7 +62,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 	)
 }
