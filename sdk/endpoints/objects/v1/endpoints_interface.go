@@ -25,11 +25,8 @@ import (
 )
 
 type Endpoints interface {
-	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Apply] instead.
 	Apply(ctx context.Context, objects []manifest.Object) error
-	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Delete] instead.
 	Delete(ctx context.Context, objects []manifest.Object) error
-	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.DeleteByName] instead.
 	DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error
 	Get(ctx context.Context, kind manifest.Kind, header http.Header, query url.Values) ([]manifest.Object, error)
 	// MoveSLOs allows moving SLOs between Projects.
