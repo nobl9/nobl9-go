@@ -240,7 +240,7 @@ type InfluxDBConfig struct {
 // GCMConfig represents content of GCM configuration typical for Direct Object.
 type GCMConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey"`
-	Step              int    `json:"step,omitempty"`
+	Step              string `json:"step,omitempty"`
 }
 
 type LightstepConfig struct {
@@ -281,5 +281,5 @@ type AzurePrometheusConfig struct {
 	TenantID     string `json:"tenantId"`
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
-	Step         int    `json:"step,omitempty"`
+	Step         string `json:"step,omitempty"`
 }

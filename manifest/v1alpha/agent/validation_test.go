@@ -519,11 +519,24 @@ func TestValidateSpec_PrometheusLikeAgents(t *testing.T) {
 				if typ == v1alpha.GCM {
 					field = "GCM"
 				}
-				setStepValue(t, &agent.Spec, field, 9)
+				setStepStringValue(t, &agent.Spec, field, "9s")
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: fmt.Sprintf("spec.%s.step", propName),
-					Code: rules.ErrorCodeGreaterThanOrEqualTo,
+					Prop:    fmt.Sprintf("spec.%s.step", propName),
+					Message: fmt.Sprintf("must be at least %ds", StepMinSeconds),
+				})
+			})
+			t.Run("invalid format", func(t *testing.T) {
+				agent := validAgent(typ)
+				field := typ.String()
+				if typ == v1alpha.GCM {
+					field = "GCM"
+				}
+				setStepStringValue(t, &agent.Spec, field, "15")
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop:    fmt.Sprintf("spec.%s.step", propName),
+					Message: "must be in format 'XXs' where XX is a positive integer",
 				})
 			})
 		})
@@ -912,7 +925,8 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 	specs := map[v1alpha.DataSourceType]Spec{
 		v1alpha.Prometheus: {
 			Prometheus: &PrometheusConfig{
-				URL: "https://prometheus-service.monitoring:8080",
+				URL:  "https://prometheus-service.monitoring:8080",
+				Step: "15s",
 			},
 		},
 		v1alpha.Datadog: {
@@ -988,6 +1002,7 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			AmazonPrometheus: &AmazonPrometheusConfig{
 				URL:    "https://prometheus-service.monitoring:8080",
 				Region: "us-east-1",
+				Step:   "15s",
 			},
 		},
 		v1alpha.Redshift: {
@@ -1010,7 +1025,7 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.GCM: {
 			GCM: &GCMConfig{
-				Step: 15,
+				Step: "15s",
 			},
 		},
 		v1alpha.AzureMonitor: {
@@ -1033,11 +1048,13 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			AzurePrometheus: &AzurePrometheusConfig{
 				URL:      "https://prometheus-service.monitoring:8080",
 				TenantID: "e190c630-8873-11ee-b9d1-0242ac120002",
+				Step:     "15s",
 			},
 		},
 		v1alpha.Coralogix: {
 			Coralogix: &CoralogixConfig{
 				Domain: "coralogix.com",
+				Step:   "15s",
 			},
 		},
 	}
@@ -1056,15 +1073,15 @@ func setURLValue(t *testing.T, obj interface{}, fieldName, value string) {
 		SetString(value)
 }
 
-// setStepValue is a help function which sets the value of 'Step' field of the given Agent config.
-func setStepValue(t *testing.T, obj interface{}, fieldName string, value int64) {
+// setStepStringValue is a help function which sets the value of 'Step' field of the given Agent config.
+func setStepStringValue(t *testing.T, obj interface{}, fieldName, value string) {
 	t.Helper()
 	v := reflect.ValueOf(obj)
 	v.Elem().
 		FieldByName(fieldName).
 		Elem().
 		FieldByName("Step").
-		SetInt(value)
+		SetString(value)
 }
 
 func ptr[T any](v T) *T { return &v }

@@ -1,8 +1,11 @@
 package agent
 
 import (
+	"fmt"
 	"net/url"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -199,10 +202,10 @@ var (
 			WithName("region").
 			Required().
 			Rules(rules.StringMaxLength(255)),
-		govy.For(func(a AmazonPrometheusConfig) int { return a.Step }).
+		govy.For(func(a AmazonPrometheusConfig) string { return a.Step }).
 			WithName("step").
 			OmitEmpty().
-			Rules(rules.GTE(15)),
+			Rules(stepValidationRule),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -225,36 +228,36 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
-		govy.For(func(a AzurePrometheusConfig) int { return a.Step }).
+		govy.For(func(a AzurePrometheusConfig) string { return a.Step }).
 			WithName("step").
 			OmitEmpty().
-			Rules(rules.GTE(15)),
+			Rules(stepValidationRule),
 	)
 	coralogixValidation = govy.New[CoralogixConfig](
 		govy.For(func(c CoralogixConfig) string { return c.Domain }).
 			WithName("domain").
 			Required().
 			Rules(rules.StringFQDN()),
-		govy.For(func(c CoralogixConfig) int { return c.Step }).
+		govy.For(func(c CoralogixConfig) string { return c.Step }).
 			WithName("step").
 			OmitEmpty().
-			Rules(rules.GTE(15)),
+			Rules(stepValidationRule),
 	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
 			Required().
 			Rules(rules.StringURL()),
-		govy.For(func(p PrometheusConfig) int { return p.Step }).
+		govy.For(func(p PrometheusConfig) string { return p.Step }).
 			WithName("step").
 			OmitEmpty().
-			Rules(rules.GTE(15)),
+			Rules(stepValidationRule),
 	)
 	gcmValidation = govy.New[GCMConfig](
-		govy.For(func(g GCMConfig) int { return g.Step }).
+		govy.For(func(g GCMConfig) string { return g.Step }).
 			WithName("step").
 			OmitEmpty().
-			Rules(rules.GTE(15)),
+			Rules(stepValidationRule),
 	)
 	// URL only.
 	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
@@ -279,6 +282,7 @@ var (
 const (
 	errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds    = "query_delay_out_of_bounds"
+	errCodeStepValueInvalid         = "step_value_invalid"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -491,6 +495,33 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayOutOfBounds)
+
+var (
+	StepFormatRegex = regexp.MustCompile(`^[1-9]\d*s$`)
+	StepMinSeconds  = 15
+)
+
+var stepValidationRule = govy.NewRule(func(step string) error {
+	if step == "" {
+		return nil
+	}
+
+	if !StepFormatRegex.MatchString(step) {
+		return errors.New("must be in format 'XXs' where XX is a positive integer")
+	}
+
+	numStr := step[:len(step)-1]
+	seconds, err := strconv.Atoi(numStr)
+	if err != nil {
+		return errors.New("invalid number format")
+	}
+
+	if seconds < StepMinSeconds {
+		return fmt.Errorf("must be at least %ds", StepMinSeconds)
+	}
+
+	return nil
+}).WithErrorCode(errCodeStepValueInvalid)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
 func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {

@@ -14,7 +14,7 @@ spec:
   releaseChannel: stable
   prometheus:
     url: http://prometheus.prometheus:9090
-    step: 15
+    step: 15s
   historicalDataRetrieval:
     maxDuration:
       value: 30

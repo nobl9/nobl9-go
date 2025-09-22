@@ -96,6 +96,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.AmazonPrometheus = &v1alphaAgent.AmazonPrometheusConfig{
 			URL:    "https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-f49ecf99-6dfa-4b00-9f94-a50b10a3010b",
 			Region: "us-east-1",
+			Step:   "15s",
 		}
 	case v1alpha.AppDynamics:
 		agent.Spec.AppDynamics = &v1alphaAgent.AppDynamicsConfig{
@@ -107,8 +108,9 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.AzurePrometheus:
 		agent.Spec.AzurePrometheus = &v1alphaAgent.AzurePrometheusConfig{
-			URL:      "https://defaultazuremonitorworkspace-westus2-szxw.westus2.prometheus.monitor.azure.com",
-			TenantID: "41372654-f4b6-4bd1-a3fe-75629c024df1",
+			URL:      "https://prometheus-service.monitoring:8080",
+			TenantID: "e190c630-8873-11ee-b9d1-0242ac120002",
+			Step:     "15s",
 		}
 	case v1alpha.BigQuery:
 		agent.Spec.BigQuery = &v1alphaAgent.BigQueryConfig{}
@@ -128,7 +130,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.GCM:
 		agent.Spec.GCM = &v1alphaAgent.GCMConfig{
-			Step: 15,
+			Step: "15s",
 		}
 	case v1alpha.Generic:
 		agent.Spec.Generic = &v1alphaAgent.GenericConfig{}
@@ -173,7 +175,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 	case v1alpha.Prometheus:
 		agent.Spec.Prometheus = &v1alphaAgent.PrometheusConfig{
 			URL:  "http://prometheus.prometheus:9090",
-			Step: 15,
+			Step: "15s",
 		}
 	case v1alpha.Redshift:
 		agent.Spec.Redshift = &v1alphaAgent.RedshiftConfig{}
@@ -194,6 +196,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 	case v1alpha.Coralogix:
 		agent.Spec.Coralogix = &v1alphaAgent.CoralogixConfig{
 			Domain: "coralogix.com",
+			Step:   "15s",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))

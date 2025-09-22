@@ -13,7 +13,7 @@ spec:
   description: Example Google Cloud Monitoring Agent
   releaseChannel: beta
   gcm:
-    step: 15
+    step: 15s
   historicalDataRetrieval:
     maxDuration:
       value: 30
