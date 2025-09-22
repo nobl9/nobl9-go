@@ -58,11 +58,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, policy, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -885,7 +885,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.name",
-				Code: rules.ErrorCodeStringDNSLabel,
+				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)
 	})
@@ -903,7 +903,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.alertMethods[0].metadata.project",
-				Code: rules.ErrorCodeStringDNSLabel,
+				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)
 	})

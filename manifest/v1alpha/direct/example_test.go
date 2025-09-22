@@ -7,6 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleDirect() {
@@ -32,7 +33,10 @@ func ExampleDirect() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myDirect}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myDirect}},
+	); err != nil {
 		log.Fatalf("failed to apply direct, err: %v", err)
 	}
 	// Output:

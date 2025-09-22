@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"strings"
 	"testing"
 
@@ -19,11 +18,10 @@ import (
 
 func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	project := generateV1alphaProject(t)
 	e2etestutils.V1Apply(t, []manifest.Object{project})
-	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(ctx,
+	implicitBindings, err := client.Objects().V1().GetV1alphaRoleBindings(t.Context(),
 		objectsV1.GetRoleBindingsRequest{Project: project.GetName()})
 	require.NoError(t, err)
 	require.Len(t, implicitBindings, 1)
@@ -119,7 +117,7 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaRoleBindings(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaRoleBindings(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

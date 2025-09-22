@@ -11,6 +11,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -53,11 +54,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, annotation, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -105,7 +106,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -132,7 +133,7 @@ func TestValidate_Spec_Objective(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectiveName",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
 }

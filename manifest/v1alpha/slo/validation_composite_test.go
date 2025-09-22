@@ -6,6 +6,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -19,17 +20,17 @@ func TestValidate_CompositeSLO(t *testing.T) {
 	})
 	t.Run("fails - invalid objective name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Name = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].Name = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
@@ -268,7 +269,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -278,7 +279,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -288,7 +289,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {

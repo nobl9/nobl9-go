@@ -7,6 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleRoleBinding() {
@@ -27,7 +28,10 @@ func ExampleRoleBinding() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myBinding}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myBinding}},
+	); err != nil {
 		log.Fatal("failed to apply role binding, err: %w", err)
 	}
 	// Output:

@@ -7,6 +7,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
+	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleAgent() {
@@ -30,7 +31,10 @@ func ExampleAgent() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myAgent}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		v2.ApplyRequest{Objects: []manifest.Object{myAgent}},
+	); err != nil {
 		log.Fatalf("failed to apply agent, err: %v", err)
 	}
 	// Output:
