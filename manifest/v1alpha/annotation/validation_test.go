@@ -178,15 +178,23 @@ func TestSpec_Category(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	t.Run("fails, invalid category", func(t *testing.T) {
+	t.Run("passes, valid category", func(t *testing.T) {
 		annotation := validAnnotation()
-		annotation.Spec.Category = "Invalid"
+		annotation.Spec.Category = CategoryComment
 		err := validate(annotation)
-		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: "spec",
-			Code: errorCodeCategoryUserDefined,
-		})
+		testutils.AssertNoError(t, annotation, err)
 	})
+	for _, category := range []string{"Alert", "Adjustment", "NoDataAnomaly", "Invalid"} {
+		t.Run("fails, invalid category: "+category, func(t *testing.T) {
+			annotation := validAnnotation()
+			annotation.Spec.Category = category
+			err := validate(annotation)
+			testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+				Prop: "spec.category",
+				Code: rules.ErrorCodeOneOf,
+			})
+		})
+	}
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {

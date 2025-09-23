@@ -112,10 +112,6 @@ func v1ApplyOrDeleteBatch(
 	err := group.Wait()
 	var urlErr *url.Error
 	if errors.As(err, &urlErr) && urlErr.Timeout() {
-		// Unlock the lock to allow other tests to proceed,
-		// including the retry, which otherwise would cause a deadlock.
-		applyAndDeleteLock.Unlock()
-
 		waitFor := 30 * time.Second
 		t.Logf("timeout encountered, the apply/delete operation will be retried in %s; test: %s; error: %v",
 			waitFor, t.Name(), err)
