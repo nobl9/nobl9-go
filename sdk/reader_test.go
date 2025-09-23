@@ -182,7 +182,6 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, err := readTestFile(t, "annotations.yaml").WriteTo(w)
 			require.NoError(t, err)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
 		require.Regexp(t, "^http://", srv.URL)
@@ -196,7 +195,6 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, err := readTestFile(t, "annotations.yaml").WriteTo(w)
 			require.NoError(t, err)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
