@@ -127,7 +127,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 						},
 					},
 				}),
-			error: "RFC-1123 compliant label name must consist of lower case alphanumeric characters",
+			error: "string must match regular expression: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
 		},
 		"missing duration": {
 			request: v1alphaBudgetAdjustment.New(
