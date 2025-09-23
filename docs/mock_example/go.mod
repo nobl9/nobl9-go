@@ -2,8 +2,6 @@ module mock_example
 
 go 1.24.0
 
-toolchain go1.25.1
-
 require (
 	github.com/nobl9/nobl9-go v0.115.2
 	github.com/stretchr/testify v1.11.1
