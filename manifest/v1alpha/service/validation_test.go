@@ -100,6 +100,52 @@ func TestValidate_Spec(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_Responsibles(t *testing.T) {
+	t.Run("too many responsibles", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.Responsibles = make([]string, maxResponsibles+1)
+		for i := range svc.Spec.Responsibles {
+			svc.Spec.Responsibles[i] = "user-id"
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.responsibles",
+			Code: rules.ErrorCodeSliceMaxLength,
+		})
+	})
+
+	t.Run("empty responsible user ID", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.Responsibles = []string{"user-id", ""}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop:    "spec.responsibles",
+			Message: "responsible user ID cannot be empty",
+		})
+	})
+
+	t.Run("valid responsibles", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.Responsibles = []string{"user-id-1", "user-id-2"}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("nil responsibles", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.Responsibles = nil
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("empty responsibles", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.Responsibles = []string{}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+}
+
 func TestValidate_ReviewCycle(t *testing.T) {
 	t.Run("valid reviewCycle", func(t *testing.T) {
 		svc := validService()

@@ -12,6 +12,10 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+const (
+	maxResponsibles = 15
+)
+
 func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindService)
 }
@@ -70,6 +74,20 @@ var validator = govy.New[Service](
 		return s.Metadata.Annotations
 	}),
 	validationV1Alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
+	govy.For(func(s Service) []string { return s.Spec.Responsibles }).
+		WithName("spec.responsibles").
+		OmitEmpty().
+		Rules(rules.SliceMaxLength[[]string](maxResponsibles)).
+		Rules(
+			govy.NewRule(func(r []string) error {
+				for _, userID := range r {
+					if userID == "" {
+						return errors.New("responsible user ID cannot be empty")
+					}
+				}
+				return nil
+			}),
+		),
 	govy.ForPointer(func(s Service) *ReviewCycle { return s.Spec.ReviewCycle }).
 		WithName("spec.reviewCycle").
 		Include(reviewCycleValidation),
