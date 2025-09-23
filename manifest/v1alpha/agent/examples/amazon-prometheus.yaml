@@ -15,7 +15,6 @@ spec:
   amazonPrometheus:
     url: https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-f49ecf99-6dfa-4b00-9f94-a50b10a3010b
     region: us-east-1
-    step: 15s
   historicalDataRetrieval:
     maxDuration:
       value: 30

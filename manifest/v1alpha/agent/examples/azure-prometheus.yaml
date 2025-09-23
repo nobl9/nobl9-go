@@ -13,9 +13,8 @@ spec:
   description: Example Azure Prometheus Agent
   releaseChannel: beta
   azurePrometheus:
-    url: https://prometheus-service.monitoring:8080
-    tenantId: e190c630-8873-11ee-b9d1-0242ac120002
-    step: 15s
+    url: https://defaultazuremonitorworkspace-westus2-szxw.westus2.prometheus.monitor.azure.com
+    tenantId: 41372654-f4b6-4bd1-a3fe-75629c024df1
   historicalDataRetrieval:
     maxDuration:
       value: 30
