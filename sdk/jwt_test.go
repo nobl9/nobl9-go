@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/MicahParks/jwkset"
-	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,8 +68,7 @@ func TestJWTParser_Parse(t *testing.T) {
 		_, err := parser.Parse(token, "123")
 		require.Error(t, err)
 		require.True(t, serverCalled)
-		assert.ErrorIs(t, err, keyfunc.ErrKeyfunc)
-		assert.ErrorContains(t, err, "could not find kid in JWT header")
+		assert.ErrorIs(t, err, jwt.ErrTokenUnverifiable)
 	})
 
 	t.Run("JWK server responds with error, return error", func(t *testing.T) {
@@ -209,14 +207,14 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		"wrong issuer": {
 			ErrorMessage: "issuer claim 'not the one we expect!' is not equal to " +
 				"'https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191'",
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        "not the one we expect!",
 				"m2mprofile": validM2MProfile,
 			},
 		},
 		"client id does not match claims 'cid'": {
 			ErrorMessage: "token has invalid claims: claim id '333' does not match '123' client id",
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        testIssuer,
 				"exp":        time.Now().Add(time.Hour).Unix(),
 				"cid":        "333",
@@ -225,7 +223,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"expiry required": {
 			ErrorIs: jwt.ErrTokenRequiredClaimMissing,
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
 				"m2mprofile": validM2MProfile,
@@ -233,7 +231,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"expiry": {
 			ErrorIs: jwt.ErrTokenExpired,
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        testIssuer,
 				"exp":        time.Now().Add(-2 * time.Minute).Unix(),
 				"cid":        "123",
@@ -242,7 +240,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"issued at": {
 			ErrorIs: jwt.ErrTokenUsedBeforeIssued,
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
 				"exp":        time.Now().Add(time.Hour).Unix(),
@@ -252,7 +250,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"not before": {
 			ErrorIs: jwt.ErrTokenNotValidYet,
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
 				"exp":        time.Now().Add(time.Hour).Unix(),
@@ -263,7 +261,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"no profile": {
 			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but none were found",
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss": testIssuer,
 				"cid": "123",
 				"exp": time.Now().Add(time.Hour).Unix(),
@@ -273,7 +271,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 		},
 		"both profiles set": {
 			ErrorMessage: "expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found",
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
@@ -284,7 +282,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			},
 		},
 		"agent profile empty string": {
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
@@ -295,7 +293,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			},
 		},
 		"m2m profile empty string": {
-			Claims: map[string]interface{}{
+			Claims: map[string]any{
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
