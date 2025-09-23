@@ -77,6 +77,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Description:   e2etestutils.GetObjectDescription(),
 				StartTime:     mustParseTime("2024-05-01T12:00:00Z").UTC(),
 				EndTime:       mustParseTime("2024-05-04T10:00:00Z").UTC(),
+				Category:      v1alphaAnnotation.CategoryComment,
 			},
 		),
 		v1alphaAnnotation.New(
@@ -89,6 +90,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-16T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-16T15:00:00Z").UTC(),
+				Category:    v1alphaAnnotation.CategoryComment,
 			},
 		),
 		v1alphaAnnotation.New(
@@ -101,6 +103,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-17T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-17T15:00:00Z").UTC(),
+				Category:    v1alphaAnnotation.CategoryComment,
 			},
 		),
 		v1alphaAnnotation.New(
@@ -114,6 +117,7 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 				Description: e2etestutils.GetObjectDescription(),
 				StartTime:   mustParseTime("2024-05-18T14:00:00Z").UTC(),
 				EndTime:     mustParseTime("2024-05-18T15:00:00Z").UTC(),
+				Category:    v1alphaAnnotation.CategoryComment,
 			},
 		),
 	}

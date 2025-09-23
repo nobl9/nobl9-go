@@ -44,7 +44,11 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 	})
 	globalDependencyObjects := []manifest.Object{directProject, direct}
 	e2etestutils.V1Apply(t, globalDependencyObjects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, globalDependencyObjects) })
+	assertObjectsExists(t, direct)
+	t.Cleanup(func() {
+		fmt.Println("Called cleanup!")
+		e2etestutils.V1Delete(t, globalDependencyObjects)
+	})
 
 	tests := map[string]v1MoveSLOsTestCase{
 		"move SLO to an existing Project and Service": func() v1MoveSLOsTestCase {

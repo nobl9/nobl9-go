@@ -42,9 +42,15 @@ type Spec struct {
 	Description   string    `json:"description"`
 	StartTime     time.Time `json:"startTime"`
 	EndTime       time.Time `json:"endTime"`
-	Category      string    `json:"category,omitempty"`
+	Category      Category  `json:"category,omitempty"`
 	CreatedBy     string    `json:"createdBy,omitempty"`
 }
+
+type Category = string
+
+const (
+	CategoryComment Category = "Comment"
+)
 
 // Status represents content of Status optional for Annotation Object
 type Status struct {
