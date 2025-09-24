@@ -57,7 +57,7 @@ type ReviewCycleStatus struct {
 // Spec holds detailed information specific to Service.
 type Spec struct {
 	// Description is a human-readable description of the service.
-	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
+	Description string `json:"description"`
 	// ResponsibleUsers is a list of user IDs of people responsible for the service.
 	ResponsibleUsers []ResponsibleUser `json:"responsibleUsers,omitempty"`
 	// ReviewCycle defines the schedule for regular service reviews.
