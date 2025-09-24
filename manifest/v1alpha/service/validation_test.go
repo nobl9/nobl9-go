@@ -100,7 +100,7 @@ func TestValidate_Spec(t *testing.T) {
 	})
 }
 
-func TestValidate_Spec_Responsibles(t *testing.T) {
+func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
 	tests := []struct {
 		name               string
 		responsibleUsers   []ResponsibleUser
@@ -109,7 +109,7 @@ func TestValidate_Spec_Responsibles(t *testing.T) {
 		expectedErrors     []testutils.ExpectedError
 	}{
 		{
-			name: "too many responsibles",
+			name: "too many responsible users",
 			responsibleUsers: func() []ResponsibleUser {
 				users := make([]ResponsibleUser, maxResponsibleUsers+1)
 				for i := range users {
@@ -139,17 +139,17 @@ func TestValidate_Spec_Responsibles(t *testing.T) {
 			},
 		},
 		{
-			name:             "valid responsibles",
+			name:             "valid responsible users",
 			responsibleUsers: []ResponsibleUser{{ID: "user-id-1"}, {ID: "user-id-2"}},
 			shouldHaveError:  false,
 		},
 		{
-			name:             "nil responsibles",
+			name:             "nil responsible users",
 			responsibleUsers: nil,
 			shouldHaveError:  false,
 		},
 		{
-			name:             "empty responsibles",
+			name:             "empty responsible users",
 			responsibleUsers: []ResponsibleUser{},
 			shouldHaveError:  false,
 		},
