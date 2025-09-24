@@ -10,7 +10,7 @@ const (
 	StatusReviewed   = "reviewed"
 	StatusSkipped    = "skipped"
 	StatusOverdue    = "overdue"
-	StatusNotStarted = "not_started"
+	StatusNotStarted = "notStarted"
 )
 
 type SubmitReviewPayload struct {
