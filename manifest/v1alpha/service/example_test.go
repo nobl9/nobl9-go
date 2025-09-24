@@ -25,9 +25,9 @@ func ExampleService() {
 		},
 		service.Spec{
 			Description: "Example service",
-			Responsibles: []string{
-				"userID1",
-				"userID2",
+			ResponsibleUsers: []service.ResponsibleUser{
+				{ID: "userID1"},
+				{ID: "userID2"},
 			},
 			ReviewCycle: &service.ReviewCycle{
 				StartTime: "2025-01-01T10:00:00",
@@ -63,9 +63,9 @@ func ExampleService() {
 	//     - orange
 	// spec:
 	//   description: Example service
-	//   responsibles:
-	//   - userID1
-	//   - userID2
+	//   responsibleUsers:
+	//   - id: userID1
+	//   - id: userID2
 	//   reviewCycle:
 	//     startTime: 2025-01-01T10:00:00
 	//     timeZone: America/New_York

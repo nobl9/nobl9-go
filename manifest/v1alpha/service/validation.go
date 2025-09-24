@@ -74,14 +74,14 @@ var validator = govy.New[Service](
 		return s.Metadata.Annotations
 	}),
 	validationV1Alpha.FieldRuleSpecDescription(func(s Service) string { return s.Spec.Description }),
-	govy.For(func(s Service) []string { return s.Spec.Responsibles }).
-		WithName("spec.responsibles").
+	govy.For(func(s Service) []ResponsibleUser { return s.Spec.ResponsibleUsers }).
+		WithName("spec.responsibleUsers").
 		OmitEmpty().
-		Rules(rules.SliceMaxLength[[]string](maxResponsibles)).
+		Rules(rules.SliceMaxLength[[]ResponsibleUser](maxResponsibles)).
 		Rules(
-			govy.NewRule(func(r []string) error {
-				for _, userID := range r {
-					if userID == "" {
+			govy.NewRule(func(rs []ResponsibleUser) error {
+				for _, r := range rs {
+					if r.ID == "" {
 						return errors.New("responsible user ID cannot be empty")
 					}
 				}
