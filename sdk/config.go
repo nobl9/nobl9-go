@@ -108,24 +108,24 @@ type Config struct {
 
 // ContextlessConfig stores config not tied to any specific context.
 type ContextlessConfig struct {
-	DefaultContext string `toml:"defaultContext" env:"DEFAULT_CONTEXT"`
+	DefaultContext string `toml:"defaultContext" json:"defaultContext" env:"DEFAULT_CONTEXT"`
 	// Sloctl exclusive.
-	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
-	FilesPromptThreshold *int  `toml:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
+	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" json:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
+	FilesPromptThreshold *int  `toml:"filesPromptThreshold" json:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
 }
 
 // ContextConfig stores context specific config.
 type ContextConfig struct {
-	ClientID       string         `toml:"clientId" env:"CLIENT_ID"`
-	ClientSecret   string         `toml:"clientSecret" env:"CLIENT_SECRET"`
-	AccessToken    string         `toml:"accessToken,omitempty" env:"ACCESS_TOKEN"`
-	Project        string         `toml:"project,omitempty" env:"PROJECT"`
-	URL            string         `toml:"url,omitempty" env:"URL"`
-	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
-	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
-	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
-	Organization   string         `toml:"organization,omitempty" env:"ORGANIZATION"`
-	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
+	ClientID       string         `toml:"clientId" json:"clientId" env:"CLIENT_ID"`
+	ClientSecret   string         `toml:"clientSecret" json:"clientSecret" env:"CLIENT_SECRET"`
+	AccessToken    string         `toml:"accessToken,omitempty" json:"accessToken,omitempty" env:"ACCESS_TOKEN"`
+	Project        string         `toml:"project,omitempty" json:"project,omitempty" env:"PROJECT"`
+	URL            string         `toml:"url,omitempty" json:"url,omitempty" env:"URL"`
+	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" json:"oktaOrgUrl,omitempty" env:"OKTA_ORG_URL"`
+	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" json:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
+	DisableOkta    *bool          `toml:"disableOkta,omitempty" json:"disableOkta,omitempty" env:"DISABLE_OKTA"`
+	Organization   string         `toml:"organization,omitempty" json:"organization,omitempty" env:"ORGANIZATION"`
+	Timeout        *time.Duration `toml:"timeout,omitempty" json:"timeout,omitempty" env:"TIMEOUT"`
 }
 
 // ConfigOption conveys extra configuration details for [ReadConfig] function.
