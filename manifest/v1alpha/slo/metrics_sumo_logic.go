@@ -114,6 +114,15 @@ var (
 	sumoLogicSingleQueryLogsTypeValidation = getSumoLogicLogsTypeValidation(true)
 )
 
+var sumoLogicSingleQueryMetricsTypeValidation = govy.New[SumoLogicMetric](
+	govy.For(govy.GetSelf[SumoLogicMetric]()).
+		Rules(rules.Forbidden[SumoLogicMetric]()),
+).
+	When(
+		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
+		govy.WhenDescription("type is '%s'", SumoLogicTypeMetric),
+	)
+
 func getSumoLogicLogsTypeValidation(isSingleQuery bool) govy.Validator[SumoLogicMetric] {
 	var valueRule govy.Rule[string]
 	switch isSingleQuery {

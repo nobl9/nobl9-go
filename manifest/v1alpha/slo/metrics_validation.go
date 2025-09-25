@@ -152,7 +152,10 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 		Include(honeycombSingleQueryValidation),
 	govy.ForPointer(func(m MetricSpec) *SumoLogicMetric { return m.SumoLogic }).
 		WithName("sumoLogic").
-		Include(sumoLogicSingleQueryLogsTypeValidation),
+		Include(
+			sumoLogicSingleQueryLogsTypeValidation,
+			sumoLogicSingleQueryMetricsTypeValidation,
+		),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](

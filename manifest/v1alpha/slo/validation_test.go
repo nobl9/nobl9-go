@@ -2024,7 +2024,7 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
 		Type: ptr(SumoLogicTypeLogs),
 		Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
-		| json "log" 
+		| json "log"
 		| timeslice 15s as n9_time
 		| parse "level=* *" as (log_level, tail)
 		| if (log_level = "info", 1, 0) as good

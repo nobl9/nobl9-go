@@ -642,3 +642,18 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		})
 	}
 }
+
+func TestSumoLogic_MetricsType_SingleQuery(t *testing.T) {
+	t.Run("unsupported single query", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.SumoLogic.Type = ptr(SumoLogicTypeMetric)
+
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic",
+				Code: rules.ErrorCodeForbidden,
+			},
+		)
+	})
+}
