@@ -186,7 +186,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 	t.Run("fails, too many attachments", func(t *testing.T) {
 		slo := validSLO()
 		var attachments []Attachment
-		for i := 0; i < 21; i++ {
+		for range 21 {
 			attachments = append(attachments, Attachment{})
 		}
 		slo.Spec.Attachments = attachments
@@ -2020,6 +2020,16 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 	}},
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
 		Attribute: "dc.sli.some-service-availability",
+	}},
+	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
+		Type: ptr(SumoLogicTypeLogs),
+		Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
+		| json "log" 
+		| timeslice 15s as n9_time
+		| parse "level=* *" as (log_level, tail)
+		| if (log_level = "info", 1, 0) as good
+		| 1 as total
+		| sum(good) as n9_good, sum(total) as n9_total by n9_time`),
 	}},
 }
 

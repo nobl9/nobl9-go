@@ -390,3 +390,255 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		})
 	}
 }
+
+func TestSumoLogic_LogsType_SingleQuery(t *testing.T) {
+	t.Run("forbidden values", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.SumoLogic.Quantization = ptr("20s")
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.SumoLogic.Rollup = ptr("None")
+
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic.quantization",
+				Code: rules.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic.rollup",
+				Code: rules.ErrorCodeForbidden,
+			},
+		)
+	})
+	invalidCases := map[string]struct {
+		Query string
+		Error testutils.ExpectedError
+	}{
+		"no timeslice segment": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+	| parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "query must contain a 'timeslice' operator",
+			},
+		},
+		"two timeslice segments": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 30s as n9_time
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "exactly one 'timeslice' usage is required in the query",
+			},
+		},
+		"leading zeros in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 015s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "timeslice value must be 15, 30, or 60 seconds, got: [015s]",
+			},
+		},
+		"+ sign in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice +15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
+			},
+		},
+		"- sign in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice -15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
+			},
+		},
+		"milliseconds in timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15000ms as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: "timeslice value must be 15, 30, or 60 seconds, got: [15000ms]",
+			},
+		},
+		"invalid timeslice segment": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 20x as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: `error parsing timeslice duration: time: unknown unit "x" in duration "20x"`,
+			},
+		},
+		"unsupported timeslice value": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 14s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Message: `timeslice value must be 15, 30, or 60 seconds, got: [14s]`,
+			},
+		},
+		"missing n9_good": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_bad, sum(total) as n9_total by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Code:    rules.ErrorCodeStringContains,
+				Message: "string must contain the following substrings: 'n9_good', 'n9_total'",
+			},
+		},
+		"missing n9_total": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_all by n9_time`,
+			Error: testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Code:    rules.ErrorCodeStringContains,
+				Message: "string must contain the following substrings: 'n9_good', 'n9_total'",
+			},
+		},
+		"missing n9_time alias": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 30s
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by time`,
+			Error: testutils.ExpectedError{
+				Prop:            "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				ContainsMessage: "timeslice operator requires an n9_time alias",
+			},
+		},
+		"missing aggregation function": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total`,
+			Error: testutils.ExpectedError{
+				Prop:            "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				ContainsMessage: "aggregation function is required",
+			},
+		},
+	}
+	for name, test := range invalidCases {
+		t.Run(name, func(t *testing.T) {
+			slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.SumoLogic)
+			slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.SumoLogic = &SumoLogicMetric{
+				Type:  ptr(SumoLogicTypeLogs),
+				Query: ptr(test.Query),
+			}
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, test.Error)
+		})
+	}
+	validCases := map[string]struct {
+		Query string
+		Error testutils.ExpectedError
+	}{
+		"valid timeslice [15s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 15s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+		},
+		"valid timeslice [30s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 30s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+		},
+		"valid timeslice [60s]": {
+			Query: `
+_collector="n9-dev-tooling-cluster" _source="logs"
+  | json "log"
+  | timeslice 60s as n9_time
+  | parse "level=* *" as (log_level, tail)
+	| if (log_level = "info", 1, 0) as good
+	| 1 as total
+	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
+		},
+	}
+	for name, test := range validCases {
+		t.Run(name, func(t *testing.T) {
+			slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.SumoLogic)
+			slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.SumoLogic = &SumoLogicMetric{
+				Type:  ptr(SumoLogicTypeLogs),
+				Query: ptr(test.Query),
+			}
+			err := validate(slo)
+			testutils.AssertNoError(t, slo, err)
+		})
+	}
+}
