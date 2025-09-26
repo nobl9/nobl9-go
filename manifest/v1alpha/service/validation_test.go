@@ -100,6 +100,76 @@ func TestValidate_Spec(t *testing.T) {
 	})
 }
 
+func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
+	tests := []struct {
+		name               string
+		responsibleUsers   []ResponsibleUser
+		shouldHaveError    bool
+		expectedErrorCount int
+		expectedErrors     []testutils.ExpectedError
+	}{
+		{
+			name: "too many responsible users",
+			responsibleUsers: func() []ResponsibleUser {
+				users := make([]ResponsibleUser, maxResponsibleUsers+1)
+				for i := range users {
+					users[i] = ResponsibleUser{ID: "user-id"}
+				}
+				return users
+			}(),
+			shouldHaveError:    true,
+			expectedErrorCount: 1,
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.responsibleUsers",
+					Code: rules.ErrorCodeSliceMaxLength,
+				},
+			},
+		},
+		{
+			name:               "empty responsible user ID",
+			responsibleUsers:   []ResponsibleUser{{ID: "user-id-1"}, {ID: ""}},
+			shouldHaveError:    true,
+			expectedErrorCount: 1,
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.responsibleUsers[1].id",
+					Code: rules.ErrorCodeStringNotEmpty,
+				},
+			},
+		},
+		{
+			name:             "valid responsible users",
+			responsibleUsers: []ResponsibleUser{{ID: "user-id-1"}, {ID: "user-id-2"}},
+			shouldHaveError:  false,
+		},
+		{
+			name:             "nil responsible users",
+			responsibleUsers: nil,
+			shouldHaveError:  false,
+		},
+		{
+			name:             "empty responsible users",
+			responsibleUsers: []ResponsibleUser{},
+			shouldHaveError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := validService()
+			svc.Spec.ResponsibleUsers = tt.responsibleUsers
+			err := validate(svc)
+
+			if tt.shouldHaveError {
+				testutils.AssertContainsErrors(t, svc, err, tt.expectedErrorCount, tt.expectedErrors...)
+			} else {
+				testutils.AssertNoError(t, svc, err)
+			}
+		})
+	}
+}
+
 func TestValidate_ReviewCycle(t *testing.T) {
 	t.Run("valid reviewCycle", func(t *testing.T) {
 		svc := validService()
