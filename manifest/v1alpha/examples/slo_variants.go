@@ -696,26 +696,26 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant + s.MetricSubVariant {
 		case metricVariantThreshold + metricSubVariantSumoLogicMetrics:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=CPU_Usage`),
 			}))
 		case metricVariantGoodRatio + metricSubVariantSumoLogicMetrics:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=Mem_Used`),
 			}), newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=Mem_Total`),
 			}))
 		case metricVariantThreshold + metricSubVariantSumoLogicLogs:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_sourceCategory=uploads/nginx
 | timeslice 1m as n9_time
 | parse "HTTP/1.1" * * " as (status_code, size, tail)
@@ -725,7 +725,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 		case metricVariantGoodRatio + metricSubVariantSumoLogicLogs:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_collector="app-cluster" _source="logs"
 | json "log"
 | timeslice 15s as n9_time
@@ -734,12 +734,24 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | sum(log_level_not_error) as n9_value by n9_time
 | sort by n9_time asc`),
 			}), newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_collector="app-cluster" _source="logs"
 | json "log"
 | timeslice 15s as n9_time
 | parse "level=* *" as (log_level, tail)
 | count(*) as n9_value by n9_time
+| sort by n9_time asc`),
+			}))
+		case metricVariantSingleQueryGoodRatio + metricSubVariantSumoLogicLogs:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
+				Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
+| json "log"
+| timeslice 15s as n9_time
+| parse "level=* *" as (log_level, tail)
+| if (log_level = "info", 1, 0) as good
+| 1 as total
+| sum(good) as n9_good, sum(total) as n9_total by n9_time
 | sort by n9_time asc`),
 			}))
 		}
