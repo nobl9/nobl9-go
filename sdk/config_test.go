@@ -172,6 +172,52 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 	}, conf)
 }
 
+func TestConfigOptionPlatformInstance(t *testing.T) {
+	t.Run("default instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceDefault),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "auseg9kiegWKEtJZC416", conf.OktaAuthServer)
+	})
+
+	t.Run("US1 instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceUS1),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts-us1.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "ausaew9480S3Sn89f5d7", conf.OktaAuthServer)
+	})
+
+	t.Run("custom instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceCustom),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		// Custom instance should use the default values or empty values
+		assert.Nil(t, conf.OktaOrgURL)
+		assert.Empty(t, conf.OktaAuthServer)
+	})
+
+	t.Run("invalid instance", func(t *testing.T) {
+		invalidInstance := PlatformInstance("invalid.instance.com")
+		_, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(invalidInstance),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, `"invalid.instance.com" platform instance is not supported`)
+	})
+}
+
 func TestReadConfig_Defaults(t *testing.T) {
 	conf, err := ReadConfig(
 		ConfigOptionWithCredentials("clientId", "clientSecret"),
