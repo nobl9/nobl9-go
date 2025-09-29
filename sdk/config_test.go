@@ -201,7 +201,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 			ConfigOptionPlatformInstance(PlatformInstanceCustom),
 			ConfigOptionNoConfigFile())
 		require.Error(t, err)
-		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, provide auth server URL and ID directly in the sdk.ContextlessConfig`)
+		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, `+
+			`provide auth server URL and ID directly in the sdk.ContextlessConfig`)
 	})
 
 	t.Run("invalid instance", func(t *testing.T) {
