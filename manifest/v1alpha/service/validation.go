@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	maxResponsibleUsers = 100
+	maxResponsibleUsers = 20
 )
 
 func validate(s Service) *v1alpha.ObjectError {
