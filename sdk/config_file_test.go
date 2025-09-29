@@ -11,6 +11,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/goccy/go-yaml"
+	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -203,7 +204,7 @@ func TestFileConfig_Encoding(t *testing.T) {
 			data, err := test.Marshal(testConfig)
 			require.NoError(t, err)
 
-			assert.Equal(t, string(test.Expected), string(data))
+			assert.Equal(t, string(test.Expected), stringutils.RemoveCR(string(data)))
 
 			var decodedConfig FileConfig
 			err = test.Unmarshal(data, &decodedConfig)
