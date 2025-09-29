@@ -22,11 +22,6 @@ var configTestData embed.FS
 
 const configTestDataPath = "test_data/config"
 
-var (
-	defaultOktaOrgURL     = platformInstanceAuthConfigs[PlatformInstanceDefault].URL
-	defaultOktaAuthServer = platformInstanceAuthConfigs[PlatformInstanceDefault].AuthServer
-)
-
 func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 	tempDir := setupConfigTestData(t)
 	expected := &Config{

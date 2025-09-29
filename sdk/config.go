@@ -29,6 +29,11 @@ const (
 	defaultFilesPromptThreshold = 23
 )
 
+var (
+	defaultOktaOrgURL     = platformInstanceAuthConfigs[PlatformInstanceDefault].URL
+	defaultOktaAuthServer = platformInstanceAuthConfigs[PlatformInstanceDefault].AuthServer
+)
+
 // GetDefaultConfigPath returns the default path to Nobl9 configuration file (config.toml).
 func GetDefaultConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
@@ -282,6 +287,8 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
 			"DEFAULT_CONTEXT":        defaultContext,
 			"PROJECT":                DefaultProject,
+			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
+			"OKTA_AUTH_SERVER":       defaultOktaAuthServer,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
 			"ORGANIZATION":           defaultOrganization,
 			"TIMEOUT":                defaultTimeout.String(),
@@ -349,15 +356,14 @@ func (c *Config) resolveContextConfig() error {
 	c.Timeout = *c.contextConfig.Timeout
 	c.DisableOkta = *c.contextConfig.DisableOkta
 	c.Organization = c.contextConfig.Organization
-	if c.options.platformInstance == "" {
-		c.options.platformInstance = PlatformInstanceDefault
+	if c.options.platformInstance != "" {
+		authConfig, err := GetPlatformInstanceAuthConfig(c.options.platformInstance)
+		if err != nil {
+			return err
+		}
+		c.OktaOrgURL = authConfig.URL
+		c.OktaAuthServer = authConfig.AuthServer
 	}
-	authConfig, err := GetPlatformInstanceAuthConfig(c.options.platformInstance)
-	if err != nil {
-		return err
-	}
-	c.OktaOrgURL = authConfig.URL
-	c.OktaAuthServer = authConfig.AuthServer
 	return nil
 }
 
