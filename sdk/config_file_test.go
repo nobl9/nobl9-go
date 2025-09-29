@@ -205,7 +205,7 @@ func TestFileConfig_Encoding(t *testing.T) {
 			data, err := test.Marshal(testConfig)
 			require.NoError(t, err)
 
-			assert.Equal(t, string(test.Expected), stringutils.RemoveCR(string(data)))
+			assert.Equal(t, stringutils.RemoveCR(string(test.Expected)), string(data))
 
 			var decodedConfig FileConfig
 			err = test.Unmarshal(data, &decodedConfig)
