@@ -21,7 +21,6 @@ const (
 
 	defaultContext              = "default"
 	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
-	defaultOktaAuthServerID     = "auseg9kiegWKEtJZC416"
 	defaultDisableOkta          = false
 	defaultOrganization         = ""
 	defaultNoConfigFile         = false
@@ -29,8 +28,6 @@ const (
 	defaultFilesPromptEnabled   = true
 	defaultFilesPromptThreshold = 23
 )
-
-var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
 
 // GetDefaultConfigPath returns the default path to Nobl9 configuration file (config.toml).
 func GetDefaultConfigPath() (string, error) {
@@ -164,6 +161,12 @@ func ConfigOptionEnvPrefix(prefix string) ConfigOption {
 	return func(conf *Config) { conf.options.envPrefix = prefix }
 }
 
+// ConfigOptionPlatformInstance instructs [Config] to use a specific [PlatformInstance].
+// By default [PlatformInstanceDefault] is used.
+func ConfigOptionPlatformInstance(instance PlatformInstance) ConfigOption {
+	return func(conf *Config) { conf.options.platformInstance = instance }
+}
+
 // optionsConfig contains options provided through [ConfigOption].
 // Some of these options may also be provided though environment variables.
 type optionsConfig struct {
@@ -174,9 +177,10 @@ type optionsConfig struct {
 	// context is the name of context loaded into [Config.contextConfig].
 	context string
 	// envPrefix defines the prefix for all environment variables.
-	envPrefix    string
-	clientID     string
-	clientSecret string
+	envPrefix        string
+	clientID         string
+	clientSecret     string
+	platformInstance PlatformInstance
 }
 
 // IsNoConfigFile returns true if [ConfigOptionNoConfigFile] was provided.
@@ -278,8 +282,6 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"NO_CONFIG_FILE":         strconv.FormatBool(defaultNoConfigFile),
 			"DEFAULT_CONTEXT":        defaultContext,
 			"PROJECT":                DefaultProject,
-			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
-			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
 			"ORGANIZATION":           defaultOrganization,
 			"TIMEOUT":                defaultTimeout.String(),
@@ -347,6 +349,15 @@ func (c *Config) resolveContextConfig() error {
 	c.Timeout = *c.contextConfig.Timeout
 	c.DisableOkta = *c.contextConfig.DisableOkta
 	c.Organization = c.contextConfig.Organization
+	if c.options.platformInstance == "" {
+		c.options.platformInstance = PlatformInstanceDefault
+	}
+	authConfig, err := GetPlatformInstanceAuthConfig(c.options.platformInstance)
+	if err != nil {
+		return err
+	}
+	c.OktaOrgURL = authConfig.URL
+	c.OktaAuthServer = authConfig.AuthServer
 	return nil
 }
 
@@ -367,7 +378,7 @@ func (c *Config) saveAccessToken(token string) error {
 // tag which should contain the environment variable name of the given struct field.
 func (c *Config) processEnvVariables(iv any, overwrite bool) error {
 	v := reflect.ValueOf(iv)
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return errors.New("input must be a pointer")
 	}
 	e := v.Elem()
@@ -426,7 +437,7 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 	}
 
 	// Handle pointers and uninitialized pointers.
-	for ef.Type().Kind() == reflect.Ptr {
+	for ef.Type().Kind() == reflect.Pointer {
 		if ef.IsNil() {
 			ef.Set(reflect.New(ef.Type().Elem()))
 		}

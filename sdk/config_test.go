@@ -22,14 +22,19 @@ var configTestData embed.FS
 
 const configTestDataPath = "test_data/config"
 
+var (
+	defaultOktaOrgURL     = platformInstanceAuthConfigs[PlatformInstanceDefault].URL
+	defaultOktaAuthServer = platformInstanceAuthConfigs[PlatformInstanceDefault].AuthServer
+)
+
 func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 	tempDir := setupConfigTestData(t)
 	expected := &Config{
 		ClientID:             "someId",
 		ClientSecret:         "someSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -92,8 +97,8 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Second,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -162,8 +167,8 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Minute,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -182,8 +187,8 @@ func TestReadConfig_Defaults(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -212,8 +217,8 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,

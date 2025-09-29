@@ -3,6 +3,8 @@ package sdk
 import (
 	"maps"
 	"net/url"
+
+	"github.com/pkg/errors"
 )
 
 // PlatformInstanceAuthConfig is the auth server configuration used to retrieve Nobl9 access token.
@@ -35,6 +37,16 @@ var platformInstanceAuthConfigs = map[PlatformInstance]PlatformInstanceAuthConfi
 // GetPlatformInstanceAuthConfigs returns a mapping of platform instance hosts to their auth configs.
 func GetPlatformInstanceAuthConfigs() map[PlatformInstance]PlatformInstanceAuthConfig {
 	return maps.Clone(platformInstanceAuthConfigs)
+}
+
+// GetPlatformInstanceAuthConfig returns a [PlatformInstanceAuthConfig] for provided platform instance.
+// If the instance name is not valid, it returns an error.
+func GetPlatformInstanceAuthConfig(instance PlatformInstance) (*PlatformInstanceAuthConfig, error) {
+	conf, ok := platformInstanceAuthConfigs[instance]
+	if !ok {
+		return nil, errors.Errorf("%q platform instance is not supported", instance)
+	}
+	return &conf, nil
 }
 
 // GetPlatformInstances returns a list of all available Nobl9 platform instances.
