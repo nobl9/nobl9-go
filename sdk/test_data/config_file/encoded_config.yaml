@@ -1,0 +1,22 @@
+contextlessconfig:
+  defaultContext: production
+  filesPromptEnabled: true
+  filesPromptThreshold: 25
+contexts:
+  production:
+    clientId: prod-client-id
+    clientSecret: prod-client-secret
+    accessToken: prod-access-token
+    project: prod-project
+    url: https://api.nobl9.com
+    oktaOrgUrl: https://accounts.nobl9.com
+    oktaAuthServer: auseg9kiegWKEtJZC416
+    disableOkta: false
+    organization: my-org
+    timeout: 30s
+  staging:
+    clientId: staging-id
+    clientSecret: staging-secret
+    project: staging-project
+    disableOkta: true
+    timeout: 15s

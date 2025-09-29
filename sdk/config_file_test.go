@@ -2,6 +2,7 @@ package sdk
 
 import (
 	_ "embed"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -9,12 +10,22 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 //go:embed test_data/config_file/minimal_config.toml
 var configFileTestConfig []byte
+
+//go:embed test_data/config_file/encoded_config.json
+var encodedConfigJSON []byte
+
+//go:embed test_data/config_file/encoded_config.toml
+var encodedConfigTOML []byte
+
+//go:embed test_data/config_file/encoded_config.yaml
+var encodedConfigYAML []byte
 
 func TestFileConfig_Load(t *testing.T) {
 	tempDir := t.TempDir()
@@ -133,4 +144,71 @@ func TestFileConfig_Save(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualExportedValues(t, *config, savedConfig)
 	})
+}
+
+func TestFileConfig_Encoding(t *testing.T) {
+	testConfig := FileConfig{
+		ContextlessConfig: ContextlessConfig{
+			DefaultContext:       "production",
+			FilesPromptEnabled:   ptr(true),
+			FilesPromptThreshold: ptr(25),
+		},
+		Contexts: map[string]ContextConfig{
+			"production": {
+				ClientID:       "prod-client-id",
+				ClientSecret:   "prod-client-secret",
+				AccessToken:    "prod-access-token",
+				Project:        "prod-project",
+				URL:            "https://api.nobl9.com",
+				OktaOrgURL:     "https://accounts.nobl9.com",
+				OktaAuthServer: "auseg9kiegWKEtJZC416",
+				DisableOkta:    ptr(false),
+				Organization:   "my-org",
+				Timeout:        ptr(30 * time.Second),
+			},
+			"staging": {
+				ClientID:     "staging-id",
+				ClientSecret: "staging-secret",
+				Project:      "staging-project",
+				DisableOkta:  ptr(true),
+				Timeout:      ptr(15 * time.Second),
+			},
+		},
+	}
+
+	tests := map[string]struct {
+		Expected  []byte
+		Marshal   func(any) ([]byte, error)
+		Unmarshal func([]byte, any) error
+	}{
+		"JSON": {
+			Expected:  encodedConfigJSON,
+			Marshal:   func(v any) ([]byte, error) { return json.MarshalIndent(v, "", "  ") },
+			Unmarshal: json.Unmarshal,
+		},
+		"YAML": {
+			Expected:  encodedConfigYAML,
+			Marshal:   yaml.Marshal,
+			Unmarshal: yaml.Unmarshal,
+		},
+		"TOML": {
+			Expected:  encodedConfigTOML,
+			Marshal:   toml.Marshal,
+			Unmarshal: toml.Unmarshal,
+		},
+	}
+
+	for enc, test := range tests {
+		t.Run(enc+" encoding", func(t *testing.T) {
+			data, err := test.Marshal(testConfig)
+			require.NoError(t, err)
+
+			assert.Equal(t, string(test.Expected), string(data))
+
+			var decodedConfig FileConfig
+			err = test.Unmarshal(data, &decodedConfig)
+			require.NoError(t, err)
+			assert.Equal(t, testConfig, decodedConfig)
+		})
+	}
 }

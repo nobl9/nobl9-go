@@ -5,7 +5,7 @@ import (
 	"net/url"
 )
 
-// PlatformInstanceAuthConfig is
+// PlatformInstanceAuthConfig is the auth server configuration used to retrieve Nobl9 access token.
 type PlatformInstanceAuthConfig struct {
 	URL        *url.URL
 	AuthServer string
@@ -32,10 +32,12 @@ var platformInstanceAuthConfigs = map[PlatformInstance]PlatformInstanceAuthConfi
 	PlatformInstanceCustom: {},
 }
 
+// GetPlatformInstanceAuthConfigs returns a mapping of platform instance hosts to their auth configs.
 func GetPlatformInstanceAuthConfigs() map[PlatformInstance]PlatformInstanceAuthConfig {
 	return maps.Clone(platformInstanceAuthConfigs)
 }
 
+// GetPlatformInstances returns a list of all available Nobl9 platform instances.
 func GetPlatformInstances() []PlatformInstance {
 	return []PlatformInstance{
 		PlatformInstanceDefault,
