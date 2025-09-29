@@ -11,9 +11,10 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/goccy/go-yaml"
-	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/internal/stringutils"
 )
 
 //go:embed test_data/config_file/minimal_config.toml

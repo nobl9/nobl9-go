@@ -357,6 +357,10 @@ func (c *Config) resolveContextConfig() error {
 	c.DisableOkta = *c.contextConfig.DisableOkta
 	c.Organization = c.contextConfig.Organization
 	if c.options.platformInstance != "" {
+		if c.options.platformInstance == PlatformInstanceCustom {
+			return errors.Errorf("%q platform instance is not supported as a config option, "+
+				"provide auth server URL and ID directly in the %T", c.options.platformInstance, c.contextlessConfig)
+		}
 		authConfig, err := GetPlatformInstanceAuthConfig(c.options.platformInstance)
 		if err != nil {
 			return err

@@ -196,22 +196,18 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 	})
 
 	t.Run("custom instance", func(t *testing.T) {
-		conf, err := ReadConfig(
+		_, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionPlatformInstance(PlatformInstanceCustom),
 			ConfigOptionNoConfigFile())
-		require.NoError(t, err)
-
-		// Custom instance should use the default values or empty values
-		assert.Nil(t, conf.OktaOrgURL)
-		assert.Empty(t, conf.OktaAuthServer)
+		require.Error(t, err)
+		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, provide auth server URL and ID directly in the sdk.ContextlessConfig`)
 	})
 
 	t.Run("invalid instance", func(t *testing.T) {
-		invalidInstance := PlatformInstance("invalid.instance.com")
 		_, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
-			ConfigOptionPlatformInstance(invalidInstance),
+			ConfigOptionPlatformInstance(PlatformInstance("invalid.instance.com")),
 			ConfigOptionNoConfigFile())
 		require.Error(t, err)
 		assert.EqualError(t, err, `"invalid.instance.com" platform instance is not supported`)
