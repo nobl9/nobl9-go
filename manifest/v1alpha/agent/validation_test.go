@@ -444,7 +444,6 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 
 func TestValidateSpec_URLOnlyAgents(t *testing.T) {
 	for propName, typ := range map[string]v1alpha.DataSourceType{
-		"prometheus":  v1alpha.Prometheus,
 		"appDynamics": v1alpha.AppDynamics,
 		"splunk":      v1alpha.Splunk,
 		"graphite":    v1alpha.Graphite,
@@ -489,7 +488,6 @@ func TestValidateSpec_EmptyConfigs(t *testing.T) {
 		v1alpha.CloudWatch,
 		v1alpha.Pingdom,
 		v1alpha.Redshift,
-		v1alpha.GCM,
 		v1alpha.Generic,
 		v1alpha.Honeycomb,
 	} {
@@ -497,6 +495,37 @@ func TestValidateSpec_EmptyConfigs(t *testing.T) {
 			agent := validAgent(typ)
 			err := validate(agent)
 			testutils.AssertNoError(t, agent, err)
+		})
+	}
+}
+
+func TestValidateSpec_PrometheusLikeAgents(t *testing.T) {
+	for propName, typ := range map[string]v1alpha.DataSourceType{
+		"prometheus":       v1alpha.Prometheus,
+		"gcm":              v1alpha.GCM,
+		"azurePrometheus":  v1alpha.AzurePrometheus,
+		"amazonPrometheus": v1alpha.AmazonPrometheus,
+		"coralogix":        v1alpha.Coralogix,
+	} {
+		t.Run(typ.String(), func(t *testing.T) {
+			t.Run("passes", func(t *testing.T) {
+				agent := validAgent(typ)
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
+			t.Run("value less than 15s", func(t *testing.T) {
+				agent := validAgent(typ)
+				field := typ.String()
+				if typ == v1alpha.GCM {
+					field = "GCM"
+				}
+				setStepValue(t, &agent.Spec, field, 9)
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: fmt.Sprintf("spec.%s.step", propName),
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				})
+			})
 		})
 	}
 }
@@ -980,7 +1009,9 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			},
 		},
 		v1alpha.GCM: {
-			GCM: &GCMConfig{},
+			GCM: &GCMConfig{
+				Step: 15,
+			},
 		},
 		v1alpha.AzureMonitor: {
 			AzureMonitor: &AzureMonitorConfig{
@@ -1023,6 +1054,17 @@ func setURLValue(t *testing.T, obj interface{}, fieldName, value string) {
 		Elem().
 		FieldByName("URL").
 		SetString(value)
+}
+
+// setStepValue is a help function which sets the value of 'Step' field of the given Agent config.
+func setStepValue(t *testing.T, obj interface{}, fieldName string, value int64) {
+	t.Helper()
+	v := reflect.ValueOf(obj)
+	v.Elem().
+		FieldByName(fieldName).
+		Elem().
+		FieldByName("Step").
+		SetInt(value)
 }
 
 func ptr[T any](v T) *T { return &v }
