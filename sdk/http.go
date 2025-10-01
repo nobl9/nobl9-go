@@ -56,7 +56,7 @@ func httpCheckRetry(ctx context.Context, resp *http.Response, err error) (bool, 
 
 func httpShouldRetryPolicy(resp *http.Response, retryErr error) (shouldRetry bool) {
 	if retryErr != nil {
-		if v, isUrlError := retryErr.(*url.Error); isUrlError {
+		if v, isURLError := retryErr.(*url.Error); isURLError {
 			// Don't retry if the error was due to too many redirects.
 			if redirectsErrorRe.MatchString(v.Error()) {
 				return false
@@ -94,4 +94,4 @@ type httpNoopLogger struct{}
 // Printf is empty, because we only want to fulfill [retryablehttp.Logger] interface.
 // [retryablehttp.Client.Logger] makes extensive use of the logger yielding way too much info.
 // We silence the logger and print the info where needed.
-func (l httpNoopLogger) Printf(string, ...interface{}) {}
+func (l httpNoopLogger) Printf(string, ...any) {}

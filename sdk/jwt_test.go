@@ -15,10 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	testIssuer      = "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191"
-	testJWKFetchURL = "https://accounts.nobl9.com/abc"
-)
+const testIssuer = "https://accounts.nobl9.com/oauth2/ausdh151kj9OOWv5x191"
 
 func TestJWTParser_Parse(t *testing.T) {
 	t.Run("return error if either token or clientID are empty", func(t *testing.T) {
