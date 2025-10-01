@@ -159,7 +159,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 
 // PrometheusConfig represents content of Prometheus Configuration typical for Agent Object.
 type PrometheusConfig struct {
-	URL string `json:"url"`
+	URL  string `json:"url"`
+	Step int    `json:"step,omitempty"`
 }
 
 // DatadogConfig represents content of Datadog Configuration typical for Agent Object.
@@ -235,6 +236,7 @@ type PingdomConfig struct{}
 type AmazonPrometheusConfig struct {
 	URL    string `json:"url"`
 	Region string `json:"region"`
+	Step   int    `json:"step,omitempty"`
 }
 
 // RedshiftConfig represents content of Redshift configuration typical for Agent Object
@@ -256,7 +258,9 @@ type InfluxDBConfig struct {
 }
 
 // GCMConfig represents content of GCM configuration.
-type GCMConfig struct{}
+type GCMConfig struct {
+	Step int `json:"step,omitempty"`
+}
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorConfig struct {
@@ -277,6 +281,7 @@ type LogicMonitorConfig struct {
 type AzurePrometheusConfig struct {
 	URL      string `json:"url"`
 	TenantID string `json:"tenantId"`
+	Step     int    `json:"step,omitempty"`
 }
 
 type CoralogixConfig struct {
@@ -284,4 +289,5 @@ type CoralogixConfig struct {
 	//
 	// [here]: https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/#domains
 	Domain string `json:"domain"`
+	Step   int    `json:"step,omitempty"`
 }
