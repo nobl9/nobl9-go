@@ -161,7 +161,7 @@ func TestFileConfig_Encoding(t *testing.T) {
 				ClientSecret:   "prod-client-secret",
 				AccessToken:    "prod-access-token",
 				Project:        "prod-project",
-				URL:            "https://api.nobl9.com",
+				URL:            "https://test-api.example.com",
 				OktaOrgURL:     "https://accounts.nobl9.com",
 				OktaAuthServer: "auseg9kiegWKEtJZC416",
 				DisableOkta:    ptr(false),

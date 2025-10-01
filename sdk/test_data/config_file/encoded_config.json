@@ -8,7 +8,7 @@
       "clientSecret": "prod-client-secret",
       "accessToken": "prod-access-token",
       "project": "prod-project",
-      "url": "https://api.nobl9.com",
+      "url": "https://test-api.example.com",
       "oktaOrgUrl": "https://accounts.nobl9.com",
       "oktaAuthServer": "auseg9kiegWKEtJZC416",
       "disableOkta": false,
