@@ -48,7 +48,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Required().
-		Rules(rules.StringLength(0, 1000)),
+		Rules(rules.StringLength(0, 2000)),
 	govy.For(func(s Spec) string { return s.Category }).
 		WithName("category").
 		OmitEmpty().
