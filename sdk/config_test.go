@@ -516,7 +516,7 @@ func TestGetFileConfig(t *testing.T) {
 				DefaultContext: "default",
 			},
 			Contexts: map[string]ContextConfig{
-				"default": ContextConfig{
+				"default": {
 					ClientID:     "client-id",
 					ClientSecret: "client-secret",
 				},
