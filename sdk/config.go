@@ -216,7 +216,7 @@ func (c *Config) GetFileConfig() *FileConfig {
 	if c.options.IsNoConfigFile() {
 		return nil
 	}
-	data, _ := json.Marshal(c)
+	data, _ := json.Marshal(c.fileConfig)
 	var config FileConfig
 	_ = json.Unmarshal(data, &config)
 	return &config

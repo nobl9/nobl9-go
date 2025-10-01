@@ -499,6 +499,45 @@ func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
 	require.NoError(t, err)
 }
 
+func TestGetFileConfig(t *testing.T) {
+	t.Run("returns nil when NoConfigFile option is set", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		result := conf.GetFileConfig()
+		assert.Nil(t, result)
+	})
+
+	t.Run("returns a copy of file config", func(t *testing.T) {
+		fileConfig := FileConfig{
+			ContextlessConfig: ContextlessConfig{
+				DefaultContext: "default",
+			},
+			Contexts: map[string]ContextConfig{
+				"default": ContextConfig{
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			},
+		}
+		conf := Config{
+			fileConfig: &fileConfig,
+		}
+
+		fileConfigCopy := conf.GetFileConfig()
+		require.NotNil(t, fileConfigCopy)
+		assert.Equal(t, fileConfig, *fileConfigCopy)
+
+		// Verify it's a copy, not the original.
+		assert.NotSame(t, conf.fileConfig, fileConfigCopy)
+		// Modifying the copy doesn't affect the original
+		fileConfigCopy.DefaultContext = "modified"
+		assert.NotEqual(t, conf.fileConfig.DefaultContext, fileConfigCopy.DefaultContext)
+	})
+}
+
 func setHomeEnv(t *testing.T, homePath string) {
 	envKey := "HOME"
 	if runtime.GOOS == "windows" {
