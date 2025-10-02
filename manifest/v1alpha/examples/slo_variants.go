@@ -232,8 +232,9 @@ const (
 	metricSubVariantPingdomUptime      metricVariant = "uptime"
 	metricSubVariantPingdomTransaction metricVariant = "transaction"
 	// SumoLogic.
-	metricSubVariantSumoLogicMetrics metricVariant = "metrics"
-	metricSubVariantSumoLogicLogs    metricVariant = "logs"
+	metricSubVariantSumoLogicMetrics      metricVariant = "metrics"
+	metricSubVariantSumoLogicLogs         metricVariant = "logs"
+	metricSubVariantSumoLogicLogsAllTotal metricVariant = "logs all total"
 	// Instana.
 	metricSubVariantInstanaInfrastructureQuery      metricVariant = "infrastructure query"
 	metricSubVariantInstanaInfrastructureSnapshotID metricVariant = "infrastructure snapshot id"
@@ -743,6 +744,17 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | sort by n9_time asc`),
 			}))
 		case metricVariantSingleQueryGoodRatio + metricSubVariantSumoLogicLogs:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
+				Query: ptr(`_sourcecategory="kubernetes/applications/frontend/cache"
+| parse "cache_status=* response_time=*" as cache_status, response_time
+| timeslice 15s as n9_time
+| if(cache_status="HIT", 1, 0) as good
+| if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
+| sum(good) as n9_good, sum(total) as n9_total by n9_time
+| sort by n9_time asc`),
+			}))
+		case metricVariantSingleQueryGoodRatio + metricSubVariantSumoLogicLogsAllTotal:
 			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
 				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
