@@ -24,13 +24,13 @@ type Alert struct {
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
-	Name    string `json:"name" validate:"required,objectName"`
-	Project string `json:"project,omitempty" validate:"objectName"`
+	Name    string `json:"name"`
+	Project string `json:"project,omitempty"`
 }
 
 // Spec represents content of Alert's Spec
