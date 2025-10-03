@@ -5,9 +5,10 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 //go:embed test_data/sanitize/slo-with-computed-fields.json
