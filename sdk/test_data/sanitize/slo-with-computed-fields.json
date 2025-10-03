@@ -1,0 +1,139 @@
+{
+  "apiVersion": "n9/v1alpha",
+  "kind": "SLO",
+  "manifestSrc": "/Users/adam.szymanski/repos/n9/slo.yaml",
+  "metadata": {
+    "displayName": "test object",
+    "name": "object-storage-at-risk",
+    "project": "special-characters"
+  },
+  "organization": "nobl9-dev",
+  "spec": {
+    "alertPolicies": [
+      "budget-almost-exhausted",
+      "fast-burn",
+      "slow-burn"
+    ],
+    "anomalyConfig": {
+      "noData": {
+        "alertAfter": "15m",
+        "alertMethods": [
+          {
+            "name": "email-to-klagor",
+            "project": "default"
+          }
+        ]
+      }
+    },
+    "budgetingMethod": "Occurrences",
+    "createdAt": "2024-08-23T11:44:47Z",
+    "createdBy": "00u5jmj3yg8Frmu5E4x7",
+    "description": "With some description",
+    "indicator": {
+      "metricSource": {
+        "kind": "Agent",
+        "name": "prometheus",
+        "project": "prometheus"
+      }
+    },
+    "objectives": [
+      {
+        "displayName": "",
+        "name": "2",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "1"
+            }
+          }
+        },
+        "target": 0.55,
+        "value": 55
+      },
+      {
+        "displayName": "new-objective",
+        "name": "new-objective",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.99,
+        "value": 100
+      },
+      {
+        "displayName": "ok",
+        "name": "ok",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.5,
+        "value": 50
+      },
+      {
+        "displayName": "replaced-objecti",
+        "name": "replaced-objecti",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.25,
+        "value": 150
+      }
+    ],
+    "service": "special-characters-service",
+    "timeWindows": [
+      {
+        "count": 5,
+        "isRolling": true,
+        "period": {
+          "begin": "2025-10-02T19:56:46Z",
+          "end": "2025-10-02T20:01:46Z"
+        },
+        "unit": "Minute"
+      }
+    ]
+  },
+  "status": {
+    "errorBudgetAdjustment": {
+      "cancellation": "blocked",
+      "endTime": "2025-07-31T14:46:50Z",
+      "startTime": "2025-07-31T14:40:00Z",
+      "status": "completed",
+      "triggeredBy": "00u5jkvzfi346Z42G4x7",
+      "unit": "Minute",
+      "value": 6
+    },
+    "replay": {
+      "cancellation": "blocked",
+      "endTime": "2025-06-27T07:45:07Z",
+      "startTime": "2025-06-27T06:44:52Z",
+      "status": "completed",
+      "triggeredBy": "00u2tb9sqxjUBRX8B4x7",
+      "unit": "Hour",
+      "value": 1
+    },
+    "review": {
+      "dueDate": "2025-09-23T10:00:00Z",
+      "status": "overdue"
+    },
+    "updatedAt": "2025-10-02T20:00:50Z"
+  }
+}
