@@ -59,7 +59,7 @@ type Spec struct {
 	// Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
-	Tier          *string        `json:"tier,omitempty"`
+	Tier          *string        `json:"tier,omitempty" nobl9:"computed"`
 }
 
 // Attachment represents user defined URL attached to SLO.
