@@ -2021,8 +2021,6 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 	v1alpha.Honeycomb: {Honeycomb: &HoneycombMetric{
 		Attribute: "dc.sli.some-service-availability",
 	}},
-	// SumoLogic single query example uses cache monitoring query as the canonical example.
-	// This demonstrates realistic good/total conditions without the "1 as total" pattern.
 	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
 		Type: ptr(SumoLogicTypeLogs),
 		Query: ptr(`_sourcecategory="kubernetes/applications/frontend/cache"
