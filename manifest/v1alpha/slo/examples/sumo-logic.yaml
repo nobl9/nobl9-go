@@ -628,33 +628,179 @@
         alertAfter: 1h
 # Metric type: single query good over total
 # Metric variant: logs
-# Budgeting method: Timeslices
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Sumo Logic SLO
+    indicator:
+      metricSource:
+        name: sumo-logic
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        goodTotal:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourcecategory="kubernetes/applications/frontend/cache"
+              | parse "cache_status=* response_time=*" as cache_status, response_time
+              | timeslice 15s as n9_time
+              | if(cache_status="HIT", 1, 0) as good
+              | if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
+              | sum(good) as n9_good, sum(total) as n9_total by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: "2022-12-01 00:00:00"
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: single query good over total
+# Metric variant: logs
+# Budgeting method: Occurrences
 # Time window type: Rolling
 - apiVersion: n9/v1alpha
   kind: SLO
   metadata:
-    name: frontend-cache-performance-slo
-    displayName: Frontend Cache Performance SLO
+    name: api-server-slo
+    displayName: API Server SLO
     project: default
     labels:
       area:
-      - performance
-      - frontend
+      - latency
+      - slow-check
       env:
       - prod
-      - canary
+      - dev
       region:
-      - global
+      - us
+      - eu
       team:
-      - frontend
-      - product
+      - green
+      - sales
     annotations:
-      area: performance
+      area: latency
       env: prod
-      region: global
-      team: frontend
+      region: us
+      team: sales
   spec:
-    description: Monitor frontend cache hit rate using single query SumoLogic logs
+    description: Example Sumo Logic SLO
+    indicator:
+      metricSource:
+        name: sumo-logic
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        goodTotal:
+          sumoLogic:
+            type: logs
+            query: |-
+              _sourcecategory="kubernetes/applications/frontend/cache"
+              | parse "cache_status=* response_time=*" as cache_status, response_time
+              | timeslice 15s as n9_time
+              | if(cache_status="HIT", 1, 0) as good
+              | if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
+              | sum(good) as n9_good, sum(total) as n9_total by n9_time
+              | sort by n9_time asc
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: single query good over total
+# Metric variant: logs
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Sumo Logic SLO
     indicator:
       metricSource:
         name: sumo-logic
@@ -662,9 +808,9 @@
         kind: Agent
     budgetingMethod: Timeslices
     objectives:
-    - displayName: Cache Hit Rate
+    - displayName: Good response (200)
       value: 1.0
-      name: cache-performance
+      name: ok
       target: 0.95
       timeSliceTarget: 0.9
       countMetrics:
@@ -678,228 +824,6 @@
               | timeslice 15s as n9_time
               | if(cache_status="HIT", 1, 0) as good
               | if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
-              | sum(good) as n9_good,
-                sum(total) as n9_total
-                by n9_time
-              | sort by n9_time asc
-      primary: true
-    service: frontend-cache
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-# Metric type: single query good over total
-# Metric variant: logs
-# Budgeting method: Occurrences
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Sumo Logic SLO
-    indicator:
-      metricSource:
-        name: sumo-logic
-        project: default
-        kind: Agent
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 1.0
-      name: ok
-      target: 0.95
-      countMetrics:
-        incremental: true
-        goodTotal:
-          sumoLogic:
-            type: logs
-            query: |-
-              _collector="n9-dev-tooling-cluster" _source="logs"
-              | json "log"
-              | timeslice 15s as n9_time
-              | parse "level=* *" as (log_level, tail)
-              | if (log_level = "info", 1, 0) as good
-              | 1 as total
-              | sum(good) as n9_good, sum(total) as n9_total by n9_time
-              | sort by n9_time asc
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: "2022-12-01 00:00:00"
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-# Metric type: single query good over total
-# Metric variant: logs
-# Budgeting method: Occurrences
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Sumo Logic SLO
-    indicator:
-      metricSource:
-        name: sumo-logic
-        project: default
-        kind: Agent
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Good response (200)
-      value: 1.0
-      name: ok
-      target: 0.95
-      countMetrics:
-        incremental: true
-        goodTotal:
-          sumoLogic:
-            type: logs
-            query: |-
-              _collector="n9-dev-tooling-cluster" _source="logs"
-              | json "log"
-              | timeslice 15s as n9_time
-              | parse "level=* *" as (log_level, tail)
-              | if (log_level = "info", 1, 0) as good
-              | 1 as total
-              | sum(good) as n9_good, sum(total) as n9_total by n9_time
-              | sort by n9_time asc
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-# Metric type: single query good over total
-# Metric variant: logs
-# Budgeting method: Timeslices
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Sumo Logic SLO
-    indicator:
-      metricSource:
-        name: sumo-logic
-        project: default
-        kind: Agent
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Good response (200)
-      value: 1.0
-      name: ok
-      target: 0.95
-      timeSliceTarget: 0.9
-      countMetrics:
-        incremental: true
-        goodTotal:
-          sumoLogic:
-            type: logs
-            query: |-
-              _collector="n9-dev-tooling-cluster" _source="logs"
-              | json "log"
-              | timeslice 15s as n9_time
-              | parse "level=* *" as (log_level, tail)
-              | if (log_level = "info", 1, 0) as good
-              | 1 as total
               | sum(good) as n9_good, sum(total) as n9_total by n9_time
               | sort by n9_time asc
       primary: true
@@ -970,12 +894,11 @@
           sumoLogic:
             type: logs
             query: |-
-              _collector="n9-dev-tooling-cluster" _source="logs"
-              | json "log"
+              _sourcecategory="kubernetes/applications/frontend/cache"
+              | parse "cache_status=* response_time=*" as cache_status, response_time
               | timeslice 15s as n9_time
-              | parse "level=* *" as (log_level, tail)
-              | if (log_level = "info", 1, 0) as good
-              | 1 as total
+              | if(cache_status="HIT", 1, 0) as good
+              | if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
               | sum(good) as n9_good, sum(total) as n9_total by n9_time
               | sort by n9_time asc
       primary: true
