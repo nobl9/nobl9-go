@@ -43,7 +43,7 @@ type Spec struct {
 	StartTime     time.Time `json:"startTime"`
 	EndTime       time.Time `json:"endTime"`
 	Category      Category  `json:"category,omitempty"`
-	CreatedBy     string    `json:"createdBy,omitempty"`
+	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
 }
 
 type Category = string
