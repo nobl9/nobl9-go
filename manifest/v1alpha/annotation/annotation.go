@@ -24,10 +24,10 @@ type Annotation struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -43,7 +43,7 @@ type Spec struct {
 	StartTime     time.Time `json:"startTime"`
 	EndTime       time.Time `json:"endTime"`
 	Category      Category  `json:"category,omitempty"`
-	CreatedBy     string    `json:"createdBy,omitempty"`
+	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
 }
 
 type Category = string

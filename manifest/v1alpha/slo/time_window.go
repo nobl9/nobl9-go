@@ -19,7 +19,7 @@ type TimeWindow struct {
 	Calendar  *Calendar `json:"calendar,omitempty"`
 
 	// Period is only returned in `/get/slo` requests it is ignored for `/apply`
-	Period *Period `json:"period,omitempty"`
+	Period *Period `json:"period,omitempty" nobl9:"computed"`
 }
 
 // GetType returns value of twindow.TimeWindowTypeEnum for given time window>
