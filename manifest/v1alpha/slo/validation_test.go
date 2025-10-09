@@ -2023,13 +2023,13 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 	}},
 	v1alpha.SumoLogic: {SumoLogic: &SumoLogicMetric{
 		Type: ptr(SumoLogicTypeLogs),
-		Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
-		| json "log"
-		| timeslice 15s as n9_time
-		| parse "level=* *" as (log_level, tail)
-		| if (log_level = "info", 1, 0) as good
-		| 1 as total
-		| sum(good) as n9_good, sum(total) as n9_total by n9_time`),
+		Query: ptr(`_sourcecategory="kubernetes/applications/frontend/cache"
+| parse "cache_status=* response_time=*" as cache_status, response_time
+| timeslice 15s as n9_time
+| if(cache_status="HIT", 1, 0) as good
+| if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
+| sum(good) as n9_good, sum(total) as n9_total by n9_time
+| sort by n9_time asc`),
 	}},
 }
 
