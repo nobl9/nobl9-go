@@ -62,6 +62,9 @@ func Report() []Example {
 				},
 				report.Spec{
 					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+					},
 					SystemHealthReview: &report.SystemHealthReviewConfig{
 						TimeFrame: report.SystemHealthReviewTimeFrame{
 							Snapshot: report.SnapshotTimeFrame{
@@ -84,7 +87,8 @@ func Report() []Example {
 						},
 						LabelRows: []report.LabelRowSpec{
 							{
-								Labels: v1alpha.Labels{"environment": nil},
+								DisplayName: "Environment",
+								Labels:      v1alpha.Labels{"env": nil},
 							},
 						},
 						Thresholds: report.Thresholds{

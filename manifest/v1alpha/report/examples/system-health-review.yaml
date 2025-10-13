@@ -6,6 +6,10 @@
     displayName: System Health Review
   spec:
     shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
     systemHealthReview:
       timeFrame:
         snapshot:
@@ -24,8 +28,9 @@
           region:
           - us-west
       labelRows:
-      - labels:
-          environment: []
+      - displayName: Environment
+        labels:
+          env: []
       thresholds:
         redLte: 0.8
         greenGt: 0.95

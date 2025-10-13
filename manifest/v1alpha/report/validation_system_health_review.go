@@ -59,6 +59,9 @@ var columnValidation = govy.New[ColumnSpec](
 )
 
 var labelRowsValidation = govy.New[LabelRowSpec](
+	govy.For(func(l LabelRowSpec) string { return l.DisplayName }).
+		WithName("displayName").
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 	govy.For(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
 		Rules(rules.MapLength[v1alpha.Labels](1, 1)).

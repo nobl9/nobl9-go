@@ -826,6 +826,19 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 		testutils.AssertNoError(t, report, err)
 	})
 
+	t.Run("passes with valid labelRows with displayName when rowGroupBy is label", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := getValidSystemHealthReviewConfig()
+		conf.RowGroupBy = RowGroupByLabel
+		conf.LabelRows = []LabelRowSpec{
+			{DisplayName: "Production", Labels: v1alpha.Labels{"environment": nil}},
+			{DisplayName: "Staging", Labels: v1alpha.Labels{"environment": nil}},
+		}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
 	for name, test := range map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
@@ -919,6 +932,21 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails with too long displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
+				conf.LabelRows = []LabelRowSpec{{
+					DisplayName: strings.Repeat("l", 254),
+					Labels:      v1alpha.Labels{"key1": nil},
+				}}
 				return conf
 			},
 		},
