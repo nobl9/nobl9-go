@@ -1,23 +1,14 @@
 package sdk
 
 import (
-	"context"
 	"encoding/json"
-	"log/slog"
-	"sync"
 	"time"
 
-	"github.com/MicahParks/jwkset"
-	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
-	"golang.org/x/time/rate"
 )
 
-const (
-	jwtLeeway          = 120 * time.Second
-	jwksRequestTimeout = 10 * time.Second
-)
+const jwtLeeway = 120 * time.Second
 
 var jwtSigningAlgorithm = jwt.SigningMethodRS256
 
@@ -29,8 +20,8 @@ var _ jwt.ClaimsValidator = (*jwtClaims)(nil)
 type jwtClaims struct {
 	jwt.RegisteredClaims
 	ClaimID      string                               `json:"cid"`
-	M2MProfile   stringOrObject[jwtClaimM2MProfile]   `json:"m2mProfile,omitempty"`
-	AgentProfile stringOrObject[jwtClaimAgentProfile] `json:"agentProfile,omitempty"`
+	M2MProfile   stringOrObject[jwtClaimM2MProfile]   `json:"m2mProfile,omitzero"`
+	AgentProfile stringOrObject[jwtClaimAgentProfile] `json:"agentProfile,omitzero"`
 
 	expectedClientID string
 	expectedIssuer   string
@@ -117,14 +108,11 @@ func (j jwtClaims) getTokenType() tokenType {
 }
 
 type jwtParser struct {
-	parser      *jwt.Parser
-	keyfunc     jwt.Keyfunc
-	once        sync.Once
-	issuer      string
-	jwkFetchURL string
+	parser *jwt.Parser
+	issuer string
 }
 
-func newJWTParser(issuer, jwkFetchURL string) *jwtParser {
+func newJWTParser(issuer string) *jwtParser {
 	return &jwtParser{
 		parser: jwt.NewParser(
 			jwt.WithValidMethods([]string{jwtSigningAlgorithm.Alg()}),
@@ -134,8 +122,7 @@ func newJWTParser(issuer, jwkFetchURL string) *jwtParser {
 			// "exp" and "nbf" claims are always verified, "iat" is optional as per JWT RFC.
 			jwt.WithIssuedAt(),
 		),
-		issuer:      issuer,
-		jwkFetchURL: jwkFetchURL,
+		issuer: issuer,
 	}
 }
 
@@ -144,61 +131,12 @@ func (j *jwtParser) Parse(tokenString, clientID string) (*jwtClaims, error) {
 	if tokenString == "" || clientID == "" {
 		return nil, errTokenParseMissingArguments
 	}
-	var err error
-	j.once.Do(func() { err = j.initKeyfunc() })
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize JWT parser keyfunc.Keyfunc")
-	}
 	claims := jwtClaims{
 		expectedClientID: clientID,
 		expectedIssuer:   j.issuer,
 	}
-	if _, err := j.parser.ParseWithClaims(tokenString, &claims, j.keyfunc); err != nil {
+	if _, _, err := j.parser.ParseUnverified(tokenString, &claims); err != nil {
 		return nil, err
 	}
 	return &claims, nil
-}
-
-// initKeyfunc should be called as late as possible, that's why it's placed in [jwtParser.Parse] method.
-// The reason is keyfunc library immediately attempts to fetch keys from the server, otherwise,
-// it might be counter-intuitive that such a resource-intensive operation is executed within constructor.
-func (j *jwtParser) initKeyfunc() error {
-	jwkStorage, err := newJWKStorage(j.jwkFetchURL)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create a jwkset.Storage with the server's URL: %s", j.jwkFetchURL)
-	}
-	keyFunc, err := keyfunc.New(keyfunc.Options{Storage: jwkStorage})
-	if err != nil {
-		return errors.Wrap(err, "failed to create a keyfunc.Keyfunc")
-	}
-	j.keyfunc = keyFunc.Keyfunc
-	return nil
-}
-
-// newJWKStorage is almost a direct copy of the [jwkset.NewDefaultHTTPClientCtx].
-// One notable change is that we're setting [jwkset.HTTPClientStorageOptions.NoErrorReturnFirstHTTPReq] to false,
-// this ensures that if an error occurs when fetching keys inside the constructor,
-// it is returned immediately.
-// We also modify the timeout value.
-func newJWKStorage(jwkFetchURL string) (jwkset.Storage, error) {
-	refreshErrorHandler := func(ctx context.Context, err error) {
-		slog.Default().ErrorContext(ctx, "Failed to refresh HTTP JWK Set from remote HTTP resource.",
-			"error", err,
-			"url", jwkFetchURL,
-		)
-	}
-	options := jwkset.HTTPClientStorageOptions{
-		NoErrorReturnFirstHTTPReq: false,
-		RefreshErrorHandler:       refreshErrorHandler,
-		RefreshInterval:           time.Hour,
-		HTTPTimeout:               jwksRequestTimeout,
-	}
-	storage, err := jwkset.NewStorageFromHTTP(jwkFetchURL, options)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to create HTTP client storage for %q", jwkFetchURL)
-	}
-	return jwkset.NewHTTPClient(jwkset.HTTPClientOptions{
-		HTTPURLs:          map[string]jwkset.Storage{jwkFetchURL: storage},
-		RefreshUnknownKID: rate.NewLimiter(rate.Every(5*time.Minute), 1),
-	})
 }
