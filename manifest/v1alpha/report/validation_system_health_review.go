@@ -24,6 +24,10 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		IncludeForEach(columnValidation),
 	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
 		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByLabel },
+			govy.WhenDescription("rowGroupBy is 'label'"),
+		).
 		Rules(rules.SliceMaxLength[[]LabelRowSpec](10000)).
 		IncludeForEach(labelRowsValidation),
 	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
@@ -48,11 +52,11 @@ var columnValidation = govy.New[ColumnSpec](
 )
 
 var labelRowsValidation = govy.New[LabelRowSpec](
-	govy.For(func(c LabelRowSpec) v1alpha.Labels { return c.Labels }).
+	govy.For(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
-		Rules(rules.MapMinLength[v1alpha.Labels](1)).
+		Rules(rules.MapLength[v1alpha.Labels](1, 1)).
 		Include(v1alpha.LabelsValidationRules()),
-	govy.ForMap(func(c LabelRowSpec) v1alpha.Labels { return c.Labels }).
+	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
 		RulesForValues(rules.SliceMaxLength[[]string](0).WithMessage("label values must be empty")),
 ).

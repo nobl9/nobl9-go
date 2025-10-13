@@ -780,12 +780,27 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 }
 
 func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
-	t.Run("passes with valid labelRows", func(t *testing.T) {
+	t.Run("passes with valid labelRows when rowGroupBy is label", func(t *testing.T) {
 		report := validReport()
 		conf := getValidSystemHealthReviewConfig()
+		conf.RowGroupBy = RowGroupByLabel
 		conf.LabelRows = []LabelRowSpec{
-			{Labels: v1alpha.Labels{"key1": nil, "key2": []string{}}},
+			{Labels: v1alpha.Labels{"key1": nil}},
+			{Labels: v1alpha.Labels{"key2": []string{}}},
 			{Labels: v1alpha.Labels{"key3": nil}},
+		}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with labelRows when rowGroupBy is not label", func(t *testing.T) {
+		report := validReport()
+		conf := getValidSystemHealthReviewConfig()
+		conf.RowGroupBy = RowGroupByProject
+		// Even with invalid labelRows, validation should pass since rowGroupBy is not label
+		conf.LabelRows = []LabelRowSpec{
+			{Labels: v1alpha.Labels{"key1": {"value1"}}}, // Has values - would normally fail
 		}
 		report.Spec.SystemHealthReview = &conf
 		err := validate(report)
@@ -804,6 +819,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeSliceMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
 				limit := 10001
 				result := make([]LabelRowSpec, limit)
 				for i := range limit {
@@ -817,10 +833,23 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "spec.systemHealthReview.labelRows[0].labels",
-				Code: rules.ErrorCodeMapMinLength,
+				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{}}}
+				return conf
+			},
+		},
+		"fails with too many labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": nil, "key2": nil}}}
 				return conf
 			},
 		},
@@ -832,6 +861,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"k ey": nil}}}
 				return conf
 			},
@@ -844,6 +874,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code:    rules.ErrorCodeSliceMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
 				return conf
 			},
