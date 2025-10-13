@@ -10,6 +10,8 @@ import (
 func Report() []Example {
 	examples := []standardExample{
 		{
+			Variant:    "System Health Review",
+			SubVariant: "group by project",
 			Object: report.New(
 				report.Metadata{
 					Name:        "shr-report",
@@ -51,6 +53,50 @@ func Report() []Example {
 			),
 		},
 		{
+			Variant:    "System Health Review",
+			SubVariant: "group by label",
+			Object: report.New(
+				report.Metadata{
+					Name:        "shr-report",
+					DisplayName: "System Health Review",
+				},
+				report.Spec{
+					Shared: true,
+					SystemHealthReview: &report.SystemHealthReviewConfig{
+						TimeFrame: report.SystemHealthReviewTimeFrame{
+							Snapshot: report.SnapshotTimeFrame{
+								Point:    report.SnapshotPointPast,
+								DateTime: ptr(time.Date(2024, 7, 1, 10, 0, 0, 0, time.UTC)),
+								Rrule:    "FREQ=WEEKLY",
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+						RowGroupBy: report.RowGroupByLabel,
+						Columns: []report.ColumnSpec{
+							{
+								DisplayName: "US East",
+								Labels:      v1alpha.Labels{"region": {"us-east"}},
+							},
+							{
+								DisplayName: "US West",
+								Labels:      v1alpha.Labels{"region": {"us-west"}},
+							},
+						},
+						LabelRows: []report.LabelRowSpec{
+							{
+								Labels: v1alpha.Labels{"environment": nil},
+							},
+						},
+						Thresholds: report.Thresholds{
+							RedLessThanOrEqual: ptr(0.8),
+							GreenGreaterThan:   ptr(0.95),
+						},
+					},
+				},
+			),
+		},
+		{
+			Variant: "SLO History",
 			Object: report.New(
 				report.Metadata{
 					Name:        "slo-history-report",
@@ -99,6 +145,7 @@ func Report() []Example {
 			),
 		},
 		{
+			Variant: "Error Budget Status",
 			Object: report.New(
 				report.Metadata{
 					Name:        "ebs-report",

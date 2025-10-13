@@ -1,0 +1,64 @@
+# group by label
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: shr-report
+    displayName: System Health Review
+  spec:
+    shared: true
+    systemHealthReview:
+      timeFrame:
+        snapshot:
+          point: past
+          dateTime: 2024-07-01T10:00:00Z
+          rrule: FREQ=WEEKLY
+        timeZone: Europe/Warsaw
+      rowGroupBy: label
+      columns:
+      - displayName: US East
+        labels:
+          region:
+          - us-east
+      - displayName: US West
+        labels:
+          region:
+          - us-west
+      labelRows:
+      - labels:
+          environment: []
+      thresholds:
+        redLte: 0.8
+        greenGt: 0.95
+        showNoData: false
+# group by project
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: shr-report
+    displayName: System Health Review
+  spec:
+    shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
+    systemHealthReview:
+      timeFrame:
+        snapshot:
+          point: past
+          dateTime: 2024-07-01T10:00:00Z
+          rrule: FREQ=WEEKLY
+        timeZone: Europe/Warsaw
+      rowGroupBy: project
+      columns:
+      - displayName: Column 1
+        labels:
+          key1:
+          - value1
+          key2:
+          - value2
+          - value3
+      thresholds:
+        redLte: 0.8
+        greenGt: 0.95
+        showNoData: false
