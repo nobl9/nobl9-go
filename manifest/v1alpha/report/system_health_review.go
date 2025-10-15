@@ -29,8 +29,7 @@ type ColumnSpec struct {
 }
 
 type LabelRowSpec struct {
-	DisplayName string         `json:"displayName,omitempty"`
-	Labels      v1alpha.Labels `json:"labels"`
+	Labels v1alpha.Labels `json:"labels"`
 }
 
 type SnapshotTimeFrame struct {

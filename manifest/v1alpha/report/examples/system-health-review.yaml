@@ -28,8 +28,7 @@
           region:
           - us-west
       labelRows:
-      - displayName: Environment
-        labels:
+      - labels:
           env: []
       thresholds:
         redLte: 0.8

@@ -87,8 +87,7 @@ func Report() []Example {
 						},
 						LabelRows: []report.LabelRowSpec{
 							{
-								DisplayName: "Environment",
-								Labels:      v1alpha.Labels{"env": nil},
+								Labels: v1alpha.Labels{"env": nil},
 							},
 						},
 						Thresholds: report.Thresholds{
