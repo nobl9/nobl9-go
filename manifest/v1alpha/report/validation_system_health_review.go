@@ -28,7 +28,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByLabel },
 			govy.WhenDescription("rowGroupBy is 'label'"),
 		).
-		Rules(rules.SliceLength[[]LabelRowSpec](1, 10000)).
+		Rules(rules.SliceLength[[]LabelRowSpec](1, 1)).
 		IncludeForEach(labelRowsValidation),
 	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
 		WithName("labelRows").

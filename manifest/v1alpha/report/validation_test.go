@@ -817,9 +817,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 		conf := getValidSystemHealthReviewConfig()
 		conf.RowGroupBy = RowGroupByLabel
 		conf.LabelRows = []LabelRowSpec{
-			{Labels: v1alpha.Labels{"key1": nil}},
-			{Labels: v1alpha.Labels{"key2": []string{}}},
-			{Labels: v1alpha.Labels{"key3": nil}},
+			{Labels: v1alpha.Labels{"env": nil}},
 		}
 		report.Spec.SystemHealthReview = &conf
 		err := validate(report)
@@ -863,7 +861,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.RowGroupBy = RowGroupByLabel
-				limit := 10001
+				limit := 2
 				result := make([]LabelRowSpec, limit)
 				for i := range limit {
 					result[i] = LabelRowSpec{Labels: v1alpha.Labels{"key" + strconv.Itoa(i): nil}}
