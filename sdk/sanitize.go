@@ -23,7 +23,8 @@ func RemoveComputedFieldsFromObjects(objects []manifest.Object) ([]manifest.Obje
 
 		if (v.Kind() == reflect.Pointer && v.Elem().Kind() != reflect.Struct) ||
 			(v.Kind() != reflect.Pointer && v.Kind() != reflect.Struct) {
-			return nil, errors.Errorf("unsupported object kind %s at index %d, expected a struct", objects[i], i)
+			typ := reflect.TypeOf(objects[i])
+			return nil, errors.Errorf("unsupported object kind %s at index %d, expected a struct", typ, i)
 		}
 
 		if v.Kind() != reflect.Pointer {

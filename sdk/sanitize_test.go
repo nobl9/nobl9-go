@@ -41,19 +41,19 @@ func TestRemoveComputedFieldsFromObjects_errorWhenNotStruct(t *testing.T) {
 	}{
 		{
 			objects:     []manifest.Object{v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind map[] at index 0, expected a struct",
+			exepctedErr: "unsupported object kind v1alpha.GenericObject at index 0, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{&v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind &map[] at index 0, expected a struct",
+			exepctedErr: "unsupported object kind *v1alpha.GenericObject at index 0, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{v1alphaSLO.SLO{}, &v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind &map[] at index 1, expected a struct",
+			exepctedErr: "unsupported object kind *v1alpha.GenericObject at index 1, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{&v1alphaSLO.SLO{}, v1alphaSLO.SLO{}, v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind map[] at index 2, expected a struct",
+			exepctedErr: "unsupported object kind v1alpha.GenericObject at index 2, expected a struct",
 		},
 	}
 
