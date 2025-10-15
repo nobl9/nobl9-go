@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/pkg/errors"
 )
 
 // RemoveComputedFieldsFromObjects removes computed fields from each provided [manifest.Object].
@@ -13,10 +14,17 @@ import (
 //
 // The original slice is modified to save computing, If you wish to prevent that,
 // copy it first before passing it to this function.
-func RemoveComputedFieldsFromObjects(objects []manifest.Object) []manifest.Object {
+//
+// The function CANNOT handle [github.com/nobl9/nobl9-go/v1alpha.GenericObject]
+func RemoveComputedFieldsFromObjects(objects []manifest.Object) ([]manifest.Object, error) {
 	for i := range objects {
 		object := objects[i]
 		v := reflect.ValueOf(object)
+
+		if (v.Kind() == reflect.Pointer && v.Elem().Kind() != reflect.Struct) ||
+			(v.Kind() != reflect.Pointer && v.Kind() != reflect.Struct) {
+			return nil, errors.Errorf("unsupported object kind %s at index %d, expected a struct", objects[i], i)
+		}
 
 		if v.Kind() != reflect.Pointer {
 			ptrValue := reflect.New(v.Type())
@@ -29,7 +37,7 @@ func RemoveComputedFieldsFromObjects(objects []manifest.Object) []manifest.Objec
 			removeComputedFields(v.Elem())
 		}
 	}
-	return objects
+	return objects, nil
 }
 
 // removeComputedFields recursively removes fields tagged with nobl9:"computed".
