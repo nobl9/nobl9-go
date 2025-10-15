@@ -37,13 +37,13 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Slo           string    `json:"slo"`
-	ObjectiveName string    `json:"objectiveName,omitempty"`
-	Description   string    `json:"description"`
-	StartTime     time.Time `json:"startTime"`
-	EndTime       time.Time `json:"endTime"`
-	Category      Category  `json:"category,omitempty"`
-	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
+	Slo           string     `json:"slo"`
+	ObjectiveName string     `json:"objectiveName,omitempty"`
+	Description   string     `json:"description"`
+	StartTime     time.Time  `json:"startTime"`
+	EndTime       *time.Time `json:"endTime,omitempty"`
+	Category      Category   `json:"category,omitempty"`
+	CreatedBy     string     `json:"createdBy,omitempty" nobl9:"computed"`
 }
 
 type Category = string

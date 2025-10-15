@@ -142,11 +142,15 @@ func TestSpec_Time(t *testing.T) {
 	tests := map[string]Spec{
 		"passes, end time after start time": {
 			StartTime: time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-			EndTime:   time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC),
+			EndTime:   ptr(time.Date(2023, 5, 14, 17, 10, 5, 0, time.UTC)),
 		},
 		"passes, end time equals start time": {
 			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
-			EndTime:   time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:   ptr(time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)),
+		},
+		"passes, no end time": {
+			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:   nil,
 		},
 	}
 	for name, spec := range tests {
@@ -162,7 +166,7 @@ func TestSpec_Time(t *testing.T) {
 	t.Run("fails, end time is before start time", func(t *testing.T) {
 		annotation := validAnnotation()
 		annotation.Spec.StartTime = time.Date(2023, 5, 5, 17, 10, 5, 0, time.UTC)
-		annotation.Spec.EndTime = time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
+		annotation.Spec.EndTime = ptr(time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC))
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec",
@@ -218,7 +222,9 @@ func validAnnotation() Annotation {
 			ObjectiveName: "existing-slo-objective-1",
 			Description:   "Example annotation",
 			StartTime:     time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC),
-			EndTime:       time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:       ptr(time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)),
 		},
 	)
 }
+
+func ptr[T any](v T) *T { return &v }
