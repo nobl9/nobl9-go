@@ -58,7 +58,7 @@ var specValidation = govy.New[Spec](
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
 
 var endTimeNotBeforeStartTime = govy.NewRule(func(s Spec) error {
-	if s.EndTime != nil && s.EndTime.Before(s.StartTime) {
+	if !s.EndTime.IsZero() && s.EndTime.Before(s.StartTime) {
 		return &govy.RuleError{
 			Message: fmt.Sprintf(`endTime '%s' must be equal or after startTime '%s'`, s.EndTime, s.StartTime),
 			Code:    errorCodeEndTimeNotBeforeStartTime,
