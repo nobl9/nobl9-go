@@ -2,17 +2,22 @@ package sdk
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 )
 
-const jwtLeeway = 120 * time.Second
+const jwtLeeway = 2 * time.Minute
 
 var jwtSigningAlgorithm = jwt.SigningMethodRS256
 
-var errTokenParseMissingArguments = errors.New("token and/or client id missing in jwtParser.Parse call")
+var (
+	errTokenParseMissingArguments = errors.New("token and/or client id missing in jwtParser.Parse call")
+	errTokenMissingExpiryClaim    = errors.New("token is missing 'exp' claim")
+	errTokenExpired               = errors.New("token is expired")
+)
 
 // Ensure we implement [jwt.ClaimsValidator] at compile time so we know our custom [jwtClaims.Validate] method is used.
 var _ jwt.ClaimsValidator = (*jwtClaims)(nil)
@@ -86,6 +91,14 @@ func (j jwtClaims) Validate() error {
 	if j.M2MProfile.Value != nil && j.AgentProfile.Value != nil {
 		return errors.New("expected either 'm2mProfile' or 'agentProfile' to be set in JWT claims, but both were found")
 	}
+	if j.ExpiresAt == nil || j.ExpiresAt.IsZero() {
+		return errTokenMissingExpiryClaim
+	}
+	fmt.Println(j.ExpiresAt.String())
+	fmt.Println(time.Now().String())
+	if time.Now().After((j.ExpiresAt).Add(jwtLeeway)) {
+		return errTokenExpired
+	}
 	return nil
 }
 
@@ -137,6 +150,9 @@ func (j *jwtParser) Parse(tokenString, clientID string) (*jwtClaims, error) {
 	}
 	if _, _, err := j.parser.ParseUnverified(tokenString, &claims); err != nil {
 		return nil, err
+	}
+	if err := claims.Validate(); err != nil {
+		return nil, errors.Wrap(err, "token has invalid claims")
 	}
 	return &claims, nil
 }

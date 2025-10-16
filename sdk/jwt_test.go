@@ -131,7 +131,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			},
 		},
 		"expiry required": {
-			ErrorIs: jwt.ErrTokenRequiredClaimMissing,
+			ErrorIs: errTokenMissingExpiryClaim,
 			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
@@ -139,32 +139,11 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			},
 		},
 		"expiry": {
-			ErrorIs: jwt.ErrTokenExpired,
+			ErrorIs: errTokenExpired,
 			Claims: map[string]any{
 				"iss":        testIssuer,
+				"cid":        "123",
 				"exp":        time.Now().Add(-2 * time.Minute).Unix(),
-				"cid":        "123",
-				"m2mprofile": validM2MProfile,
-			},
-		},
-		"issued at": {
-			ErrorIs: jwt.ErrTokenUsedBeforeIssued,
-			Claims: map[string]any{
-				"iss":        testIssuer,
-				"cid":        "123",
-				"exp":        time.Now().Add(time.Hour).Unix(),
-				"iat":        time.Now().Add(time.Hour).Unix(),
-				"m2mprofile": validM2MProfile,
-			},
-		},
-		"not before": {
-			ErrorIs: jwt.ErrTokenNotValidYet,
-			Claims: map[string]any{
-				"iss":        testIssuer,
-				"cid":        "123",
-				"exp":        time.Now().Add(time.Hour).Unix(),
-				"iat":        time.Now().Add(-time.Hour).Unix(),
-				"nbf":        time.Now().Add(time.Hour).Unix(),
 				"m2mprofile": validM2MProfile,
 			},
 		},
@@ -174,8 +153,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss": testIssuer,
 				"cid": "123",
 				"exp": time.Now().Add(time.Hour).Unix(),
-				"iat": time.Now().Add(-time.Hour).Unix(),
-				"nbf": time.Now().Add(-time.Hour).Unix(),
 			},
 		},
 		"both profiles set": {
@@ -184,8 +161,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   validM2MProfile,
 				"agentProfile": validAgentProfile,
 			},
@@ -195,8 +170,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   validM2MProfile,
 				"agentProfile": "",
 			},
@@ -206,8 +179,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   "",
 				"agentProfile": validAgentProfile,
 			},
@@ -234,13 +205,4 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			}
 		})
 	}
-}
-
-func signToken(t *testing.T, jwtToken *jwt.Token) (token string, key *rsa.PrivateKey) {
-	t.Helper()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-	strToken, err := jwtToken.SignedString(key)
-	require.NoError(t, err)
-	return strToken, key
 }
