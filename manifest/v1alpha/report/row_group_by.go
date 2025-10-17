@@ -7,7 +7,7 @@ import (
 
 //go:generate ../../../bin/go-enum  --nocase --names --lower --values
 
-// RowGroupBy /* ENUM(project = 1, service)*/
+// RowGroupBy /* ENUM(project = 1, service, label)*/
 type RowGroupBy int
 
 func (r RowGroupBy) MarshalText() ([]byte, error) {
@@ -23,6 +23,6 @@ func (x *RowGroupBy) UnmarshalText(text []byte) error {
 	return nil
 }
 
-func RowGroupByValidation() govy.Rule[RowGroupBy] {
-	return rules.OneOf(RowGroupByProject, RowGroupByService)
+func rowGroupByValidation() govy.Rule[RowGroupBy] {
+	return rules.OneOf(RowGroupByValues()...)
 }
