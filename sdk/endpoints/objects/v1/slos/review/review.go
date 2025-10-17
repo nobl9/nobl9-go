@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	StatusPending    = "pending"
+	StatusPending    = "toReview"
 	StatusReviewed   = "reviewed"
 	StatusSkipped    = "skipped"
 	StatusOverdue    = "overdue"
