@@ -59,12 +59,10 @@ var columnValidation = govy.New[ColumnSpec](
 )
 
 var labelRowsValidation = govy.New[LabelRowSpec](
-	govy.For(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
-		WithName("labels").
-		Rules(rules.MapLength[v1alpha.Labels](1, 1)).
-		Include(v1alpha.LabelsValidationRules()),
 	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
+		Rules(rules.MapLength[v1alpha.Labels](1, 1)).
+		Include(v1alpha.LabelsValidationRules()).
 		RulesForValues(rules.SliceMaxLength[[]string](0).WithMessage("label values must be empty")),
 ).
 	Cascade(govy.CascadeModeStop)
