@@ -10,7 +10,7 @@ require (
 	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
-	github.com/nobl9/govy v0.20.0
+	github.com/nobl9/govy v0.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2

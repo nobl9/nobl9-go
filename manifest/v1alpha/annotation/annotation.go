@@ -41,7 +41,7 @@ type Spec struct {
 	ObjectiveName string    `json:"objectiveName,omitempty"`
 	Description   string    `json:"description"`
 	StartTime     time.Time `json:"startTime"`
-	EndTime       time.Time `json:"endTime"`
+	EndTime       time.Time `json:"endTime,omitzero"`
 	Category      Category  `json:"category,omitempty"`
 	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
 }

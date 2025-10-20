@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	StatusPending    = "pending"
+	StatusToReview   = "toReview"
 	StatusReviewed   = "reviewed"
 	StatusSkipped    = "skipped"
 	StatusOverdue    = "overdue"
@@ -31,7 +31,7 @@ var validator = govy.New(
 		Required().
 		Rules(rules.OneOf(
 			StatusSkipped,
-			StatusPending,
+			StatusToReview,
 			StatusReviewed,
 			StatusOverdue,
 			StatusNotStarted,

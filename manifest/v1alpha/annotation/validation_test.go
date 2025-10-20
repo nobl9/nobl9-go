@@ -148,6 +148,10 @@ func TestSpec_Time(t *testing.T) {
 			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 			EndTime:   time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 		},
+		"passes, no end time": {
+			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:   time.Time{},
+		},
 	}
 	for name, spec := range tests {
 		t.Run(name, func(t *testing.T) {

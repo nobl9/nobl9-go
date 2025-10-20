@@ -30,7 +30,8 @@
     "CODEOWNERS",
     "bin/**",
     "**/test_data/**",
-    "docs/mock_example/mocks/*"
+    "docs/mock_example/mocks/*",
+    "**/*_enum.go"
   ],
   "words": [
     "00u2y4e4atkzaYkXP4x8",
