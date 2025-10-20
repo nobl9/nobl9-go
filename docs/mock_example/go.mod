@@ -3,7 +3,7 @@ module mock_example
 go 1.24.0
 
 require (
-	github.com/nobl9/nobl9-go v0.117.0
+	github.com/nobl9/nobl9-go v0.118.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
 )
