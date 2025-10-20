@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -94,9 +93,8 @@ func (j jwtClaims) Validate() error {
 	if j.ExpiresAt == nil || j.ExpiresAt.IsZero() {
 		return errTokenMissingExpiryClaim
 	}
-	fmt.Println(j.ExpiresAt.String())
-	fmt.Println(time.Now().String())
-	if time.Now().After((j.ExpiresAt).Add(jwtLeeway)) {
+	// if 15:00 is after 15:00+00:02=15:02 then it is expired
+	if time.Now().After((j.ExpiresAt).Add(-jwtLeeway)) {
 		return errTokenExpired
 	}
 	return nil
