@@ -138,7 +138,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"m2mprofile": validM2MProfile,
 			},
 		},
-		"barely expired, but not quiet": {
+		"barely expired, but not quite": {
 			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
