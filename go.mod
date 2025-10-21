@@ -4,8 +4,6 @@ go 1.24.7
 
 require (
 	github.com/BurntSushi/toml v1.5.0
-	github.com/MicahParks/jwkset v0.11.0
-	github.com/MicahParks/keyfunc/v3 v3.7.0
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/bmatcuk/doublestar/v4 v4.9.1
 	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
@@ -19,7 +17,6 @@ require (
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/sync v0.17.0
 	golang.org/x/text v0.30.0
-	golang.org/x/time v0.14.0
 )
 
 require (
