@@ -1448,6 +1448,7 @@ func validSystemHealthReviewConfig(rowGroupBy RowGroupBy) SystemHealthReviewConf
 			GreenGreaterThan:   ptr(0.2),
 		},
 	}
+	// nolint: exhaustive
 	switch rowGroupBy {
 	case RowGroupByLabel:
 		config.LabelRows = []LabelRowSpec{{
