@@ -55,6 +55,10 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("thresholds").
 		Required().
 		Include(reportThresholdsValidation),
+	govy.For(func(s SystemHealthReviewConfig) string { return s.TableHeader }).
+		WithName("tableHeader").
+		OmitEmpty().
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 )
 
 var columnValidation = govy.New[ColumnSpec](

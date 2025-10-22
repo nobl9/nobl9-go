@@ -7,11 +7,12 @@ import (
 )
 
 type SystemHealthReviewConfig struct {
-	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame"`
-	RowGroupBy RowGroupBy                  `json:"rowGroupBy"`
-	Columns    []ColumnSpec                `json:"columns"`
-	LabelRows  []LabelRowSpec              `json:"labelRows,omitempty"`
-	Thresholds Thresholds                  `json:"thresholds"`
+	TimeFrame   SystemHealthReviewTimeFrame `json:"timeFrame"`
+	RowGroupBy  RowGroupBy                  `json:"rowGroupBy"`
+	Columns     []ColumnSpec                `json:"columns"`
+	LabelRows   []LabelRowSpec              `json:"labelRows,omitempty"`
+	Thresholds  Thresholds                  `json:"thresholds"`
+	TableHeader string                      `json:"tableHeader,omitempty"`
 }
 
 type Thresholds struct {

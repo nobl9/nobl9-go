@@ -632,7 +632,16 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		}
 	})
 
-	for name, test := range map[string]struct {
+	t.Run("valid tableHeader", func(t *testing.T) {
+		report := validSystemHealthReport()
+		config := validSystemHealthReviewConfig(RowGroupByService)
+		config.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength)
+		report.Spec.SystemHealthReview = &config
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
 		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
@@ -711,7 +720,20 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				return conf
 			},
 		},
-	} {
+		"fails with too long tableHeader": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.tableHeader",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength+1)
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			report := validSystemHealthReport()
 			conf := validSystemHealthReviewConfig(RowGroupByService)
