@@ -94,6 +94,58 @@ func Report() []Example {
 							RedLessThanOrEqual: ptr(0.8),
 							GreenGreaterThan:   ptr(0.95),
 						},
+						HideUngrouped: ptr(true),
+					},
+				},
+			),
+		},
+		{
+			Variant:    "System Health Review",
+			SubVariant: "group by custom",
+			Object: report.New(
+				report.Metadata{
+					Name:        "shr-report",
+					DisplayName: "System Health Review",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+					},
+					SystemHealthReview: &report.SystemHealthReviewConfig{
+						TimeFrame: report.SystemHealthReviewTimeFrame{
+							Snapshot: report.SnapshotTimeFrame{
+								Point:    report.SnapshotPointPast,
+								DateTime: ptr(time.Date(2024, 7, 1, 10, 0, 0, 0, time.UTC)),
+								Rrule:    "FREQ=WEEKLY",
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+						RowGroupBy: report.RowGroupByLabel,
+						Columns: []report.ColumnSpec{
+							{
+								DisplayName: "Team Orange",
+								Labels:      v1alpha.Labels{"team": {"orange"}},
+							},
+							{
+								DisplayName: "On-calls",
+								Labels:      v1alpha.Labels{"team": {"on-call-1", "on-call-2"}},
+							},
+						},
+						LabelRows: []report.LabelRowSpec{
+							{
+								DisplayName: "Production and Development on us-east",
+								Labels:      v1alpha.Labels{"env": {"prod", "dev"}, "region": {"us-east"}},
+							},
+							{
+								DisplayName: "Staging (all regions)",
+								Labels:      v1alpha.Labels{"env": {"staging"}},
+							},
+						},
+						Thresholds: report.Thresholds{
+							RedLessThanOrEqual: ptr(0.8),
+							GreenGreaterThan:   ptr(0.95),
+						},
 					},
 				},
 			),
