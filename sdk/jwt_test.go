@@ -3,13 +3,9 @@ package sdk
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,66 +21,11 @@ func TestJWTParser_Parse(t *testing.T) {
 	})
 
 	t.Run("invalid token, return error", func(t *testing.T) {
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
-		}))
-		defer srv.Close()
-
-		parser := newJWTParser(testIssuer, srv.URL)
+		parser := newJWTParser(testIssuer)
 
 		_, err := parser.Parse("fake-token", "123")
 		require.Error(t, err)
 		assert.ErrorIs(t, err, jwt.ErrTokenMalformed)
-	})
-
-	t.Run("invalid algorithm, return error", func(t *testing.T) {
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
-		}))
-		defer srv.Close()
-
-		parser := newJWTParser(testIssuer, srv.URL)
-		token, _ := signToken(t, jwt.New(jwt.SigningMethodRS512))
-
-		_, err := parser.Parse(token, "123")
-		require.Error(t, err)
-		assert.ErrorIs(t, err, jwt.ErrTokenSignatureInvalid)
-	})
-
-	t.Run("kid not set in token, return error", func(t *testing.T) {
-		serverCalled := false
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			serverCalled = true
-			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{}}))
-		}))
-		defer srv.Close()
-
-		parser := newJWTParser(testIssuer, srv.URL)
-		token, _ := signToken(t, jwt.New(jwtSigningAlgorithm))
-
-		_, err := parser.Parse(token, "123")
-		require.Error(t, err)
-		require.True(t, serverCalled)
-		assert.ErrorIs(t, err, jwt.ErrTokenUnverifiable)
-	})
-
-	t.Run("JWK server responds with error, return error", func(t *testing.T) {
-		serverCalled := false
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			serverCalled = true
-			http.Error(w, "some error reason", http.StatusForbidden)
-		}))
-		defer srv.Close()
-
-		parser := newJWTParser(testIssuer, srv.URL)
-		jwtToken := jwt.New(jwtSigningAlgorithm)
-		jwtToken.Header["kid"] = "123"
-		token, _ := signToken(t, jwtToken)
-
-		_, err := parser.Parse(token, "123")
-		require.Error(t, err)
-		require.True(t, serverCalled)
-		assert.ErrorContains(t, err, "invalid HTTP status code: 403")
 	})
 
 	t.Run("golden path", func(t *testing.T) {
@@ -93,21 +34,6 @@ func TestJWTParser_Parse(t *testing.T) {
 		require.NoError(t, err)
 
 		const kid = "my-kid"
-		jwk, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
-			Metadata: jwkset.JWKMetadataOptions{
-				KID: kid,
-			},
-		})
-		require.NoError(t, err)
-
-		serverCalled := false
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			serverCalled = true
-			require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{
-				Keys: []jwkset.JWKMarshal{jwk.Marshal()},
-			}))
-		}))
-		defer srv.Close()
 
 		for profile, claims := range map[string]jwtClaims{
 			"m2mProfile": {
@@ -152,11 +78,10 @@ func TestJWTParser_Parse(t *testing.T) {
 				token, err := jwtToken.SignedString(rsaKey)
 				require.NoError(t, err)
 
-				parser := newJWTParser(testIssuer, srv.URL)
+				parser := newJWTParser(testIssuer)
 
 				result, err := parser.Parse(token, "123")
 				require.NoError(t, err)
-				assert.True(t, serverCalled)
 				assert.Equal(t, claims, *result)
 			})
 		}
@@ -169,19 +94,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 	require.NoError(t, err)
 
 	const kid = "my-kid"
-	jwk, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
-		Metadata: jwkset.JWKMetadataOptions{
-			KID: kid,
-		},
-	})
-	require.NoError(t, err)
-
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		require.NoError(t, json.NewEncoder(w).Encode(jwkset.JWKSMarshal{
-			Keys: []jwkset.JWKMarshal{jwk.Marshal()},
-		}))
-	}))
-	defer srv.Close()
 
 	validAgentProfile := jwtClaimAgentProfile{
 		User:         "John Wick",
@@ -219,40 +131,27 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			},
 		},
 		"expiry required": {
-			ErrorIs: jwt.ErrTokenRequiredClaimMissing,
+			ErrorIs: errTokenMissingExpiryClaim,
 			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
+				"m2mprofile": validM2MProfile,
+			},
+		},
+		"barely expired, but not quite": {
+			Claims: map[string]any{
+				"iss":        testIssuer,
+				"cid":        "123",
+				"exp":        time.Now().Add((2 * time.Minute) + (15 * time.Second)).Unix(),
 				"m2mprofile": validM2MProfile,
 			},
 		},
 		"expiry": {
-			ErrorIs: jwt.ErrTokenExpired,
-			Claims: map[string]any{
-				"iss":        testIssuer,
-				"exp":        time.Now().Add(-2 * time.Minute).Unix(),
-				"cid":        "123",
-				"m2mprofile": validM2MProfile,
-			},
-		},
-		"issued at": {
-			ErrorIs: jwt.ErrTokenUsedBeforeIssued,
+			ErrorIs: errTokenExpired,
 			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
-				"exp":        time.Now().Add(time.Hour).Unix(),
-				"iat":        time.Now().Add(time.Hour).Unix(),
-				"m2mprofile": validM2MProfile,
-			},
-		},
-		"not before": {
-			ErrorIs: jwt.ErrTokenNotValidYet,
-			Claims: map[string]any{
-				"iss":        testIssuer,
-				"cid":        "123",
-				"exp":        time.Now().Add(time.Hour).Unix(),
-				"iat":        time.Now().Add(-time.Hour).Unix(),
-				"nbf":        time.Now().Add(time.Hour).Unix(),
+				"exp":        time.Now().Add((2 * time.Minute) - (1 * time.Second)).Unix(),
 				"m2mprofile": validM2MProfile,
 			},
 		},
@@ -262,8 +161,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss": testIssuer,
 				"cid": "123",
 				"exp": time.Now().Add(time.Hour).Unix(),
-				"iat": time.Now().Add(-time.Hour).Unix(),
-				"nbf": time.Now().Add(-time.Hour).Unix(),
 			},
 		},
 		"both profiles set": {
@@ -272,8 +169,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   validM2MProfile,
 				"agentProfile": validAgentProfile,
 			},
@@ -283,8 +178,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   validM2MProfile,
 				"agentProfile": "",
 			},
@@ -294,8 +187,6 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 				"iss":          testIssuer,
 				"cid":          "123",
 				"exp":          time.Now().Add(time.Hour).Unix(),
-				"iat":          time.Now().Add(-time.Hour).Unix(),
-				"nbf":          time.Now().Add(-time.Hour).Unix(),
 				"m2mprofile":   "",
 				"agentProfile": validAgentProfile,
 			},
@@ -307,7 +198,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			jwtToken.Header["kid"] = kid
 			token, err := jwtToken.SignedString(rsaKey)
 			require.NoError(t, err)
-			parser := newJWTParser(testIssuer, srv.URL)
+			parser := newJWTParser(testIssuer)
 
 			_, err = parser.Parse(token, "123")
 			switch {
@@ -322,13 +213,4 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			}
 		})
 	}
-}
-
-func signToken(t *testing.T, jwtToken *jwt.Token) (token string, key *rsa.PrivateKey) {
-	t.Helper()
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-	strToken, err := jwtToken.SignedString(key)
-	require.NoError(t, err)
-	return strToken, key
 }

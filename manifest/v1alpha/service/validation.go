@@ -12,10 +12,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-const (
-	maxResponsibleUsers = 20
-)
-
 func validate(s Service) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, s, manifest.KindService)
 }
@@ -82,7 +78,6 @@ var validator = govy.New[Service](
 var specValidator = govy.New[Spec](
 	govy.ForSlice(func(s Spec) []ResponsibleUser { return s.ResponsibleUsers }).
 		WithName("responsibleUsers").
-		Rules(rules.SliceMaxLength[[]ResponsibleUser](maxResponsibleUsers)).
 		IncludeForEach(
 			govy.New[ResponsibleUser](
 				govy.For(func(u ResponsibleUser) string { return u.ID }).

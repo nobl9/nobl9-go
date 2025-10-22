@@ -10,6 +10,7 @@ type SystemHealthReviewConfig struct {
 	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame"`
 	RowGroupBy RowGroupBy                  `json:"rowGroupBy"`
 	Columns    []ColumnSpec                `json:"columns"`
+	LabelRows  []LabelRowSpec              `json:"labelRows,omitempty"`
 	Thresholds Thresholds                  `json:"thresholds"`
 }
 
@@ -25,6 +26,10 @@ type Thresholds struct {
 type ColumnSpec struct {
 	DisplayName string         `json:"displayName"`
 	Labels      v1alpha.Labels `json:"labels"`
+}
+
+type LabelRowSpec struct {
+	Labels v1alpha.Labels `json:"labels"`
 }
 
 type SnapshotTimeFrame struct {

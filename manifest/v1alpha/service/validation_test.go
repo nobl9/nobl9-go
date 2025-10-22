@@ -109,24 +109,6 @@ func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
 		expectedErrors     []testutils.ExpectedError
 	}{
 		{
-			name: "too many responsible users",
-			responsibleUsers: func() []ResponsibleUser {
-				users := make([]ResponsibleUser, maxResponsibleUsers+1)
-				for i := range users {
-					users[i] = ResponsibleUser{ID: "user-id"}
-				}
-				return users
-			}(),
-			shouldHaveError:    true,
-			expectedErrorCount: 1,
-			expectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.responsibleUsers",
-					Code: rules.ErrorCodeSliceMaxLength,
-				},
-			},
-		},
-		{
 			name:               "empty responsible user ID",
 			responsibleUsers:   []ResponsibleUser{{ID: "user-id-1"}, {ID: ""}},
 			shouldHaveError:    true,

@@ -16,7 +16,6 @@ import (
 
 const (
 	oktaTokenEndpointPath = "v1/token"
-	oktaKeysEndpointPath  = "v1/keys"
 	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
@@ -28,10 +27,6 @@ func oktaAuthServerURL(oktaOrgURL *url.URL, oktaAuthServer string) *url.URL {
 
 func oktaTokenEndpoint(authServerURL *url.URL) *url.URL {
 	return authServerURL.JoinPath(oktaTokenEndpointPath)
-}
-
-func oktaKeysEndpoint(authServerURL *url.URL) *url.URL {
-	return authServerURL.JoinPath(oktaKeysEndpointPath)
 }
 
 type getTokenEndpointFunc = func() string
@@ -97,6 +92,5 @@ func (okta *oktaClient) RequestAccessToken(
 }
 
 func (okta *oktaClient) authHeader(clientID, clientSecret string) string {
-	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(
-		[]byte(fmt.Sprintf("%s:%s", clientID, clientSecret))))
+	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", clientID, clientSecret)))
 }
