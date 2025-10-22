@@ -37,23 +37,23 @@ func TestRemoveComputedFieldsFromObjects(t *testing.T) {
 func TestRemoveComputedFieldsFromObjects_errorWhenNotStruct(t *testing.T) {
 	tests := []struct {
 		objects     []manifest.Object
-		exepctedErr string
+		expectedErr string
 	}{
 		{
 			objects:     []manifest.Object{v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind v1alpha.GenericObject at index 0, expected a struct",
+			expectedErr: "unsupported object kind v1alpha.GenericObject at index 0, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{&v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind *v1alpha.GenericObject at index 0, expected a struct",
+			expectedErr: "unsupported object kind *v1alpha.GenericObject at index 0, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{v1alphaSLO.SLO{}, &v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind *v1alpha.GenericObject at index 1, expected a struct",
+			expectedErr: "unsupported object kind *v1alpha.GenericObject at index 1, expected a struct",
 		},
 		{
 			objects:     []manifest.Object{&v1alphaSLO.SLO{}, v1alphaSLO.SLO{}, v1alpha.GenericObject{}},
-			exepctedErr: "unsupported object kind v1alpha.GenericObject at index 2, expected a struct",
+			expectedErr: "unsupported object kind v1alpha.GenericObject at index 2, expected a struct",
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestRemoveComputedFieldsFromObjects_errorWhenNotStruct(t *testing.T) {
 		t.Run(fmt.Sprintf("%T", test.objects), func(t *testing.T) {
 			_, err := RemoveComputedFieldsFromObjects(test.objects)
 			require.Error(t, err)
-			assert.EqualError(t, err, test.exepctedErr)
+			assert.EqualError(t, err, test.expectedErr)
 		})
 	}
 }

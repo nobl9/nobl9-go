@@ -3,8 +3,9 @@ package sdk
 import (
 	"reflect"
 
-	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/pkg/errors"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 // RemoveComputedFieldsFromObjects removes computed fields from each provided [manifest.Object].
