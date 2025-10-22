@@ -121,7 +121,7 @@ func Report() []Example {
 							},
 							TimeZone: "Europe/Warsaw",
 						},
-						RowGroupBy: report.RowGroupByLabel,
+						RowGroupBy: report.RowGroupByCustom,
 						Columns: []report.ColumnSpec{
 							{
 								DisplayName: "Team Orange",

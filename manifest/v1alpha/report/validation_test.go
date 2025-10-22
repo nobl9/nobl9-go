@@ -1082,6 +1082,25 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
+
+	t.Run("fails if hideUngrouped is set for anything but 'custom'", func(t *testing.T) {
+		for _, rowGroupBy := range RowGroupByValues() {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(rowGroupBy)
+			conf.HideUngrouped = ptr(true)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			switch rowGroupBy {
+			case RowGroupByCustom:
+				testutils.AssertNoError(t, report, err)
+			default:
+				testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+					Prop: "spec.systemHealthReview.hideUngrouped",
+					Code: rules.ErrorCodeForbidden,
+				})
+			}
+		}
+	})
 }
 
 func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {

@@ -59,6 +59,13 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("tableHeader").
 		OmitEmpty().
 		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
+	govy.For(func(s SystemHealthReviewConfig) *bool { return s.HideUngrouped }).
+		WithName("hideUngrouped").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByCustom },
+			govy.WhenDescription("rowGroupBy is not '%s'", RowGroupByCustom),
+		).
+		Rules(rules.Forbidden[*bool]()),
 )
 
 var columnValidation = govy.New[ColumnSpec](
