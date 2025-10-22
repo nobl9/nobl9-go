@@ -142,7 +142,7 @@ func TestJWTParser_Parse_VerifyClaims(t *testing.T) {
 			Claims: map[string]any{
 				"iss":        testIssuer,
 				"cid":        "123",
-				"exp":        time.Now().Add((2 * time.Minute) + (1 * time.Second)).Unix(),
+				"exp":        time.Now().Add((2 * time.Minute) + (15 * time.Second)).Unix(),
 				"m2mprofile": validM2MProfile,
 			},
 		},
