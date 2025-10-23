@@ -17,7 +17,7 @@
           dateTime: 2024-07-01T10:00:00Z
           rrule: FREQ=WEEKLY
         timeZone: Europe/Warsaw
-      rowGroupBy: label
+      rowGroupBy: custom
       columns:
       - displayName: Team Orange
         labels:

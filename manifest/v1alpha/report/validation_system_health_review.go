@@ -62,8 +62,8 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 	govy.For(func(s SystemHealthReviewConfig) *bool { return s.HideUngrouped }).
 		WithName("hideUngrouped").
 		When(
-			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByCustom },
-			govy.WhenDescription("rowGroupBy is not '%s'", RowGroupByCustom),
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByLabel },
+			govy.WhenDescription("rowGroupBy is not '%s'", RowGroupByLabel),
 		).
 		Rules(rules.Forbidden[*bool]()),
 )

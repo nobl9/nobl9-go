@@ -1083,7 +1083,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		})
 	}
 
-	t.Run("fails if hideUngrouped is set for anything but 'custom'", func(t *testing.T) {
+	t.Run("fails if hideUngrouped is set for anything but 'label'", func(t *testing.T) {
 		for _, rowGroupBy := range RowGroupByValues() {
 			report := validSystemHealthReport()
 			conf := validSystemHealthReviewConfig(rowGroupBy)
@@ -1091,7 +1091,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
 			switch rowGroupBy {
-			case RowGroupByCustom:
+			case RowGroupByLabel:
 				testutils.AssertNoError(t, report, err)
 			default:
 				testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
