@@ -18,16 +18,19 @@ const (
 	RowGroupByService
 	// RowGroupByLabel is a RowGroupBy of type Label.
 	RowGroupByLabel
+	// RowGroupByCustom is a RowGroupBy of type Custom.
+	RowGroupByCustom
 )
 
 var ErrInvalidRowGroupBy = fmt.Errorf("not a valid RowGroupBy, try [%s]", strings.Join(_RowGroupByNames, ", "))
 
-const _RowGroupByName = "projectservicelabel"
+const _RowGroupByName = "projectservicelabelcustom"
 
 var _RowGroupByNames = []string{
 	_RowGroupByName[0:7],
 	_RowGroupByName[7:14],
 	_RowGroupByName[14:19],
+	_RowGroupByName[19:25],
 }
 
 // RowGroupByNames returns a list of possible string values of RowGroupBy.
@@ -43,6 +46,7 @@ func RowGroupByValues() []RowGroupBy {
 		RowGroupByProject,
 		RowGroupByService,
 		RowGroupByLabel,
+		RowGroupByCustom,
 	}
 }
 
@@ -50,6 +54,7 @@ var _RowGroupByMap = map[RowGroupBy]string{
 	RowGroupByProject: _RowGroupByName[0:7],
 	RowGroupByService: _RowGroupByName[7:14],
 	RowGroupByLabel:   _RowGroupByName[14:19],
+	RowGroupByCustom:  _RowGroupByName[19:25],
 }
 
 // String implements the Stringer interface.
@@ -74,6 +79,8 @@ var _RowGroupByValue = map[string]RowGroupBy{
 	strings.ToLower(_RowGroupByName[7:14]):  RowGroupByService,
 	_RowGroupByName[14:19]:                  RowGroupByLabel,
 	strings.ToLower(_RowGroupByName[14:19]): RowGroupByLabel,
+	_RowGroupByName[19:25]:                  RowGroupByCustom,
+	strings.ToLower(_RowGroupByName[19:25]): RowGroupByCustom,
 }
 
 // ParseRowGroupBy attempts to convert a string to a RowGroupBy.
