@@ -7,9 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/nobl9/govy/pkg/rules"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
@@ -178,12 +177,14 @@ func TestSpec_Category(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	t.Run("passes, valid category", func(t *testing.T) {
-		annotation := validAnnotation()
-		annotation.Spec.Category = CategoryComment
-		err := validate(annotation)
-		testutils.AssertNoError(t, annotation, err)
-	})
+	for _, category := range []string{CategoryComment, CategoryReviewNote} {
+		t.Run("passes, valid category: "+category, func(t *testing.T) {
+			annotation := validAnnotation()
+			annotation.Spec.Category = category
+			err := validate(annotation)
+			testutils.AssertNoError(t, annotation, err)
+		})
+	}
 	for _, category := range []string{"Alert", "Adjustment", "NoDataAnomaly", "Invalid"} {
 		t.Run("fails, invalid category: "+category, func(t *testing.T) {
 			annotation := validAnnotation()

@@ -49,7 +49,8 @@ type Spec struct {
 type Category = string
 
 const (
-	CategoryComment Category = "Comment"
+	CategoryComment    Category = "Comment"
+	CategoryReviewNote Category = "ReviewNote"
 )
 
 // Status represents content of Status optional for Annotation Object
