@@ -25,10 +25,10 @@ type SLO struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 // Metadata provides identity information for SLO.
@@ -52,14 +52,14 @@ type Spec struct {
 	Attachments     []Attachment `json:"attachments,omitempty"`
 	// CreatedAt is the date of the [SLO] creation in RFC3339 format.
 	// Read-only field.
-	CreatedAt string `json:"createdAt,omitempty"`
+	CreatedAt string `json:"createdAt,omitempty" nobl9:"computed"`
 	// CreatedBy is the id of the user who first created the SLO.
 	// Read-only field.
-	CreatedBy string `json:"createdBy,omitempty"`
+	CreatedBy string `json:"createdBy,omitempty" nobl9:"computed"`
 	// Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 	Composite     *Composite     `json:"composite,omitempty"`
 	AnomalyConfig *AnomalyConfig `json:"anomalyConfig,omitempty"`
-	Tier          *string        `json:"tier,omitempty"`
+	Tier          *string        `json:"tier,omitempty" nobl9:"computed"`
 }
 
 // Attachment represents user defined URL attached to SLO.
@@ -245,9 +245,9 @@ type ReplayStatus struct {
 }
 
 type ReviewStatus struct {
-	Status         string    `json:"status"`
-	DueDate        time.Time `json:"dueDate"`
-	ReviewedBy     string    `json:"reviewedBy,omitempty,omitzero"`
-	ReviewedAt     time.Time `json:"reviewedAt,omitzero"`
-	AnnotationName string    `json:"annotationName,omitempty,omitzero"`
+	Status         string `json:"status"`
+	DueDate        string `json:"dueDate,omitzero"`
+	ReviewedBy     string `json:"reviewedBy,omitzero"`
+	ReviewedAt     string `json:"reviewedAt,omitzero"`
+	AnnotationName string `json:"annotationName,omitzero"`
 }

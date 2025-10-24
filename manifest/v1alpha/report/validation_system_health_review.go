@@ -17,12 +17,26 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 	govy.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
 		WithName("rowGroupBy").
 		Required().
-		Rules(RowGroupByValidation()),
+		Rules(rowGroupByValidation()),
 	govy.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
 		WithName("columns").
-		Rules(rules.SliceMinLength[[]ColumnSpec](1)).
-		Rules(rules.SliceMaxLength[[]ColumnSpec](30)).
+		Rules(rules.SliceLength[[]ColumnSpec](1, 30)).
 		IncludeForEach(columnValidation),
+	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
+		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByLabel },
+			govy.WhenDescription("rowGroupBy is 'label'"),
+		).
+		Rules(rules.SliceLength[[]LabelRowSpec](1, 1)).
+		IncludeForEach(labelRowsValidation),
+	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
+		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByLabel },
+			govy.WhenDescription("rowGroupBy is not 'label'"),
+		).
+		Rules(rules.Forbidden[[]LabelRowSpec]()),
 	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
 		Required().
@@ -38,10 +52,20 @@ var columnValidation = govy.New[ColumnSpec](
 		WithName("displayName").
 		Required().
 		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
-	govy.ForMap(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
+	govy.For(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
 		WithName("labels").
+		Include(v1alpha.LabelsValidationRules()).
 		Rules(rules.MapMinLength[v1alpha.Labels](1)),
 )
+
+var labelRowsValidation = govy.New[LabelRowSpec](
+	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
+		WithName("labels").
+		Rules(rules.MapLength[v1alpha.Labels](1, 1)).
+		Include(v1alpha.LabelsValidationRules()).
+		RulesForValues(rules.SliceMaxLength[[]string](0).WithMessage("label values must be empty")),
+).
+	Cascade(govy.CascadeModeStop)
 
 var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
 	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).

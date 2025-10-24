@@ -11,9 +11,23 @@ import (
 // FileConfig contains fully parsed config file.
 type FileConfig struct {
 	ContextlessConfig `toml:",inline"`
-	Contexts          map[string]ContextConfig `toml:"contexts"`
+	Contexts          map[string]ContextConfig `toml:"contexts" json:"contexts"`
 
 	filePath string
+}
+
+// GetCurrentContextConfig retrieves the [ContextConfig] for the current default context.
+func (f *FileConfig) GetCurrentContextConfig() (ContextConfig, error) {
+	return f.GetContextConfig(f.DefaultContext)
+}
+
+// GetContextConfig retrieves the [ContextConfig] associated with the provided context name.
+func (f *FileConfig) GetContextConfig(contextName string) (ContextConfig, error) {
+	config, ok := f.Contexts[contextName]
+	if !ok {
+		return config, errors.Errorf("no config defined for %q context", contextName)
+	}
+	return config, nil
 }
 
 // GetPath retrieves the file path [FileConfig] was loaded from.

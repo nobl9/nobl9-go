@@ -199,6 +199,10 @@ var (
 			WithName("region").
 			Required().
 			Rules(rules.StringMaxLength(255)),
+		govy.For(func(a AmazonPrometheusConfig) int { return a.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -221,15 +225,38 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
+		govy.For(func(a AzurePrometheusConfig) int { return a.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	coralogixValidation = govy.New[CoralogixConfig](
-		govy.For(func(a CoralogixConfig) string { return a.Domain }).
+		govy.For(func(c CoralogixConfig) string { return c.Domain }).
 			WithName("domain").
 			Required().
 			Rules(rules.StringFQDN()),
+		govy.For(func(c CoralogixConfig) int { return c.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
+	prometheusValidation = govy.New[PrometheusConfig](
+		govy.For(func(p PrometheusConfig) string { return p.URL }).
+			WithName("url").
+			Required().
+			Rules(rules.StringURL()),
+		govy.For(func(p PrometheusConfig) int { return p.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
+	gcmValidation = govy.New[GCMConfig](
+		govy.For(func(g GCMConfig) int { return g.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	// URL only.
-	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
 	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
 	splunkValidation        = newURLValidator(func(s SplunkConfig) string { return s.URL })
 	elasticsearchValidation = newURLValidator(func(e ElasticsearchConfig) string { return e.URL })
@@ -245,7 +272,6 @@ var (
 	cloudWatchValidation   = govy.New[CloudWatchConfig]()
 	pingdomValidation      = govy.New[PingdomConfig]()
 	redshiftValidation     = govy.New[RedshiftConfig]()
-	gcmValidation          = govy.New[GCMConfig]()
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )

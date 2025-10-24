@@ -1,0 +1,106 @@
+{
+  "apiVersion": "n9/v1alpha",
+  "kind": "SLO",
+  "metadata": {
+    "displayName": "test object",
+    "name": "object-storage-at-risk",
+    "project": "special-characters"
+  },
+  "spec": {
+    "alertPolicies": [
+      "budget-almost-exhausted",
+      "fast-burn",
+      "slow-burn"
+    ],
+    "anomalyConfig": {
+      "noData": {
+        "alertAfter": "15m",
+        "alertMethods": [
+          {
+            "name": "email-to-klagor",
+            "project": "default"
+          }
+        ]
+      }
+    },
+    "budgetingMethod": "Occurrences",
+    "description": "With some description",
+    "indicator": {
+      "metricSource": {
+        "kind": "Agent",
+        "name": "prometheus",
+        "project": "prometheus"
+      }
+    },
+    "objectives": [
+      {
+        "displayName": "",
+        "name": "2",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "1"
+            }
+          }
+        },
+        "target": 0.55,
+        "value": 55
+      },
+      {
+        "displayName": "new-objective",
+        "name": "new-objective",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.99,
+        "value": 100
+      },
+      {
+        "displayName": "ok",
+        "name": "ok",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.5,
+        "value": 50
+      },
+      {
+        "displayName": "replaced-objecti",
+        "name": "replaced-objecti",
+        "op": "lt",
+        "primary": false,
+        "rawMetric": {
+          "query": {
+            "prometheus": {
+              "promql": "n9_fake_gauge"
+            }
+          }
+        },
+        "target": 0.25,
+        "value": 150
+      }
+    ],
+    "service": "special-characters-service",
+    "timeWindows": [
+      {
+        "count": 5,
+        "isRolling": true,
+        "unit": "Minute"
+      }
+    ]
+  }
+}

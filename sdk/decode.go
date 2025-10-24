@@ -76,7 +76,7 @@ func annotateWithManifestSource(object manifest.Object, source string) manifest.
 
 func decodeJSON(data []byte) ([]manifest.Object, error) {
 	var res []genericObject
-	switch getJsonIdent(data) {
+	switch getJSONIdent(data) {
 	case identArray:
 		if err := json.Unmarshal(data, &res); err != nil {
 			return nil, err
@@ -111,7 +111,7 @@ func decodeYAML(data []byte) ([]manifest.Object, error) {
 		if len(bytes.TrimSpace(doc)) == 0 {
 			continue
 		}
-		switch getYamlIdent(doc) {
+		switch getYAMLIdent(doc) {
 		case identArray:
 			var a []genericObject
 			if err := yaml.Unmarshal(doc, &a); err != nil {
@@ -159,10 +159,10 @@ func (o *genericObject) UnmarshalYAML(data []byte) error {
 // Decoding is then delegated to the parser for specific manifest.Version.
 func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectFormat) error {
 	var object struct {
-		ApiVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
+		APIVersion manifest.Version `json:"apiVersion" yaml:"apiVersion"`
 		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
 	}
-	var unmarshal func(data []byte, v interface{}) error
+	var unmarshal func(data []byte, v any) error
 	//exhaustive: enforce
 	switch format {
 	case manifest.ObjectFormatJSON:
@@ -173,7 +173,7 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 	if err := unmarshal(data, &object); err != nil {
 		return err
 	}
-	switch object.ApiVersion {
+	switch object.APIVersion {
 	case manifest.VersionV1alpha:
 		parsed, err := v1alphaParser.ParseObject(data, object.Kind, format)
 		if err != nil {
@@ -204,7 +204,7 @@ const (
 
 var jsonArrayIdentRegex = regexp.MustCompile(`^\s*\[`)
 
-func getJsonIdent(data []byte) ident {
+func getJSONIdent(data []byte) ident {
 	if jsonArrayIdentRegex.Match(data) {
 		return identArray
 	}
@@ -212,7 +212,7 @@ func getJsonIdent(data []byte) ident {
 }
 
 // For a valid array, the first non-whitespace, non-comment character must be a dash or a bracket.
-func getYamlIdent(data []byte) ident {
+func getYAMLIdent(data []byte) ident {
 	scanner := bufio.NewScanner(bytes.NewBuffer(data))
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())

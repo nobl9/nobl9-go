@@ -1,0 +1,12 @@
+apiVersion: n9/v1alpha
+kind: Report
+metadata:
+  name: ebs-report
+  displayName: Error Budget Status
+spec:
+  shared: true
+  filters:
+    projects:
+    - project-1
+    - project-2
+  errorBudgetStatus: {}

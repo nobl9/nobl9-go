@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	StatusPending  = "pending"
-	StatusReviewed = "reviewed"
-	StatusSkipped  = "skipped"
-	StatusOverdue  = "overdue"
+	StatusToReview   = "toReview"
+	StatusReviewed   = "reviewed"
+	StatusSkipped    = "skipped"
+	StatusOverdue    = "overdue"
+	StatusNotStarted = "notStarted"
 )
 
 type SubmitReviewPayload struct {
@@ -30,9 +31,10 @@ var validator = govy.New(
 		Required().
 		Rules(rules.OneOf(
 			StatusSkipped,
-			StatusPending,
+			StatusToReview,
 			StatusReviewed,
 			StatusOverdue,
+			StatusNotStarted,
 		)),
 	govy.For(func(r SubmitReviewPayload) string { return r.Note }).
 		OmitEmpty().

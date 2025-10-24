@@ -93,6 +93,10 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 			metricSubVariantSumoLogicMetrics,
 			metricSubVariantSumoLogicLogs,
 		},
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{
+			metricSubVariantSumoLogicLogs,
+			metricSubVariantSumoLogicLogsAllTotal,
+		},
 	},
 	v1alpha.Instana: {
 		metricVariantThreshold: []metricSubVariant{
