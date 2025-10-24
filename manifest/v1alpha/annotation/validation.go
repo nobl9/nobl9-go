@@ -52,7 +52,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Category }).
 		WithName("category").
 		OmitEmpty().
-		Rules(rules.OneOf(CategoryComment)),
+		Rules(rules.OneOf(CategoryComment, CategoryReviewNote)),
 )
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
