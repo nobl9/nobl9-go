@@ -6,6 +6,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -19,17 +20,17 @@ func TestValidate_CompositeSLO(t *testing.T) {
 	})
 	t.Run("fails - invalid objective name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Name = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].Name = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
@@ -82,18 +83,46 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - raw objective type mixed with composite", func(t *testing.T) {
+	t.Run("fails - raw objective type mixed with composite in a single objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].rawMetric",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "when defining composite objective, this property is forbidden",
+			},
+		)
+	})
+	t.Run("fails - count metric objective type mixed with composite in a single objective", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].CountMetrics = &CountMetricsSpec{
+			Incremental: ptr(false),
+			TotalMetric: validMetricSpec(v1alpha.Prometheus),
+			GoodMetric:  validMetricSpec(v1alpha.Prometheus),
+		}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.objectives[0].countMetrics",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "when defining composite objective, this property is forbidden",
+			},
+		)
+	})
+	t.Run("fails - raw objective type mixed with composite across two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
 				Value:       ptr(80.0),
 				Name:        "good",
 			},
-			BudgetTarget:    ptr(0.9),
-			CountMetrics:    nil,
-			RawMetric:       &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
-			TimeSliceTarget: nil,
-			Operator:        ptr(v1alpha.GreaterThan.String()),
+			BudgetTarget: ptr(0.9),
+			RawMetric:    &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)},
+			Operator:     ptr(v1alpha.GreaterThan.String()),
 		}
 
 		slo := validCompositeSLO()
@@ -108,7 +137,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
-	t.Run("fails - count metric objective type mixed with composite", func(t *testing.T) {
+	t.Run("fails - count metric objective type mixed with composite across two objectives", func(t *testing.T) {
 		obj := Objective{
 			ObjectiveBase: ObjectiveBase{
 				DisplayName: "Good",
@@ -121,8 +150,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 				TotalMetric: validMetricSpec(v1alpha.Prometheus),
 				GoodMetric:  validMetricSpec(v1alpha.Prometheus),
 			},
-			TimeSliceTarget: nil,
-			Operator:        ptr(v1alpha.GreaterThan.String()),
+			Operator: ptr(v1alpha.GreaterThan.String()),
 		}
 
 		slo := validCompositeSLO()
@@ -241,7 +269,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -251,7 +279,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -261,7 +289,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {

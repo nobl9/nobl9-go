@@ -46,7 +46,7 @@ func TestValidate_Metadata(t *testing.T) {
 	svc := validService()
 	svc.Metadata = Metadata{
 		Name:        strings.Repeat("MY SERVICE", 20),
-		DisplayName: strings.Repeat("my-service", 20),
+		DisplayName: strings.Repeat("my-service", 26),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	svc.ManifestSource = "/home/me/service.yaml"
@@ -55,7 +55,7 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, svc, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
@@ -63,7 +63,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -97,6 +97,300 @@ func TestValidate_Spec(t *testing.T) {
 			Prop: "spec.description",
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
+	})
+}
+
+func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
+	tests := []struct {
+		name               string
+		responsibleUsers   []ResponsibleUser
+		shouldHaveError    bool
+		expectedErrorCount int
+		expectedErrors     []testutils.ExpectedError
+	}{
+		{
+			name:               "empty responsible user ID",
+			responsibleUsers:   []ResponsibleUser{{ID: "user-id-1"}, {ID: ""}},
+			shouldHaveError:    true,
+			expectedErrorCount: 1,
+			expectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.responsibleUsers[1].id",
+					Code: rules.ErrorCodeStringNotEmpty,
+				},
+			},
+		},
+		{
+			name:             "valid responsible users",
+			responsibleUsers: []ResponsibleUser{{ID: "user-id-1"}, {ID: "user-id-2"}},
+			shouldHaveError:  false,
+		},
+		{
+			name:             "nil responsible users",
+			responsibleUsers: nil,
+			shouldHaveError:  false,
+		},
+		{
+			name:             "empty responsible users",
+			responsibleUsers: []ResponsibleUser{},
+			shouldHaveError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			svc := validService()
+			svc.Spec.ResponsibleUsers = tt.responsibleUsers
+			err := validate(svc)
+
+			if tt.shouldHaveError {
+				testutils.AssertContainsErrors(t, svc, err, tt.expectedErrorCount, tt.expectedErrors...)
+			} else {
+				testutils.AssertNoError(t, svc, err)
+			}
+		})
+	}
+}
+
+func TestValidate_ReviewCycle(t *testing.T) {
+	t.Run("valid reviewCycle", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("invalid startTime - wrong format", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.startTime",
+			Code: "string_date_time",
+		})
+	})
+
+	t.Run("empty startTime", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.startTime",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("blank chars startTime", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "    ",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.startTime",
+				Code: rules.ErrorCodeStringNotEmpty,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.startTime",
+				Code: "string_date_time",
+			},
+		)
+	})
+
+	t.Run("empty timeZone", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.timeZone",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("blank chars timeZone", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "    ",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.timeZone",
+				Code: rules.ErrorCodeStringNotEmpty,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reviewCycle.timeZone",
+				Code: rules.ErrorCodeStringTimeZone,
+			},
+		)
+	})
+
+	t.Run("invalid timeZone", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "Invalid/Timezone",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.timeZone",
+			Code: "string_time_zone",
+		})
+	})
+
+	t.Run("invalid rrule - missing FREQ", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.rrule",
+			Code: "transform",
+		})
+	})
+
+	t.Run("empty rrule", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop: "spec.reviewCycle.rrule",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("blank chars rrule", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "   ",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reviewCycle.rrule",
+			Message: "wrong format",
+			Code:    "transform",
+		})
+	})
+
+	t.Run("invalid rrule - hourly frequency not allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=HOURLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reviewCycle.rrule",
+			Message: "rrule frequency must be at least DAILY",
+		})
+	})
+
+	t.Run("invalid rrule - minutely frequency not allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MINUTELY;INTERVAL=60",
+		}
+		err := validate(svc)
+		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reviewCycle.rrule",
+			Message: "rrule frequency must be at least DAILY",
+		})
+	})
+
+	t.Run("valid rrule - daily frequency allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=DAILY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("valid rrule - weekly frequency allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=WEEKLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("valid rrule - monthly frequency allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=MONTHLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("valid rrule - yearly frequency allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=YEARLY;INTERVAL=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("valid rrule - single occurrence with any frequency allowed", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = &ReviewCycle{
+			StartTime: "2023-01-01T00:00:00",
+			TimeZone:  "UTC",
+			RRule:     "FREQ=HOURLY;COUNT=1",
+		}
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
+	})
+
+	t.Run("nil reviewCycle should be valid", func(t *testing.T) {
+		svc := validService()
+		svc.Spec.ReviewCycle = nil
+		err := validate(svc)
+		testutils.AssertNoError(t, svc, err)
 	})
 }
 

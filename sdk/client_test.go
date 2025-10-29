@@ -17,13 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MicahParks/jwkset"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/nobl9/nobl9-go/manifest"
-	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v2 "github.com/nobl9/nobl9-go/sdk/endpoints/users/v2"
 )
 
@@ -248,15 +245,6 @@ func prepareTestClientWithClaimsUser(
 	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
 
-	// Create a JSON Web Key with a key id matching the tokens' kid.
-	jwk, err := jwkset.NewJWKFromKey(rsaKey, jwkset.JWKOptions{
-		Metadata: jwkset.JWKMetadataOptions{
-			KID: kid,
-		},
-	})
-	require.NoError(t, err)
-	jwks := jwkset.JWKSMarshal{Keys: []jwkset.JWKMarshal{jwk.Marshal()}}
-
 	// Prepare the token.
 	claims := jwt.MapClaims{
 		"iss": authServerURL.String(),
@@ -284,8 +272,6 @@ func prepareTestClientWithClaimsUser(
 				"Basic "+base64.StdEncoding.EncodeToString([]byte(clientID+":"+clientSecret)),
 				r.Header.Get(HeaderAuthorization))
 			require.NoError(t, json.NewEncoder(w).Encode(oktaTokenResponse{AccessToken: token}))
-		case oktaKeysEndpoint(authServerURL).Path:
-			require.NoError(t, json.NewEncoder(w).Encode(jwks))
 		case endpoint.Path:
 			// Headers we always require.
 			assert.Equal(t, organization, r.Header.Get(HeaderOrganization))

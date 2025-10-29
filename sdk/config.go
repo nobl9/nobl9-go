@@ -21,7 +21,6 @@ const (
 
 	defaultContext              = "default"
 	defaultRelativeConfigPath   = ".config/nobl9/config.toml"
-	defaultOktaAuthServerID     = "auseg9kiegWKEtJZC416"
 	defaultDisableOkta          = false
 	defaultOrganization         = ""
 	defaultNoConfigFile         = false
@@ -30,7 +29,10 @@ const (
 	defaultFilesPromptThreshold = 23
 )
 
-var defaultOktaOrgURL = url.URL{Scheme: "https", Host: "accounts.nobl9.com"}
+var (
+	defaultOktaOrgURL     = platformInstanceAuthConfigs[PlatformInstanceDefault].URL
+	defaultOktaAuthServer = platformInstanceAuthConfigs[PlatformInstanceDefault].AuthServer
+)
 
 // GetDefaultConfigPath returns the default path to Nobl9 configuration file (config.toml).
 func GetDefaultConfigPath() (string, error) {
@@ -108,24 +110,24 @@ type Config struct {
 
 // ContextlessConfig stores config not tied to any specific context.
 type ContextlessConfig struct {
-	DefaultContext string `toml:"defaultContext" env:"DEFAULT_CONTEXT"`
+	DefaultContext string `toml:"defaultContext" json:"defaultContext" env:"DEFAULT_CONTEXT"`
 	// Sloctl exclusive.
-	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
-	FilesPromptThreshold *int  `toml:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
+	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" json:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
+	FilesPromptThreshold *int  `toml:"filesPromptThreshold" json:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
 }
 
 // ContextConfig stores context specific config.
 type ContextConfig struct {
-	ClientID       string         `toml:"clientId" env:"CLIENT_ID"`
-	ClientSecret   string         `toml:"clientSecret" env:"CLIENT_SECRET"`
-	AccessToken    string         `toml:"accessToken,omitempty" env:"ACCESS_TOKEN"`
-	Project        string         `toml:"project,omitempty" env:"PROJECT"`
-	URL            string         `toml:"url,omitempty" env:"URL"`
-	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" env:"OKTA_ORG_URL"`
-	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
-	DisableOkta    *bool          `toml:"disableOkta,omitempty" env:"DISABLE_OKTA"`
-	Organization   string         `toml:"organization,omitempty" env:"ORGANIZATION"`
-	Timeout        *time.Duration `toml:"timeout,omitempty" env:"TIMEOUT"`
+	ClientID       string         `toml:"clientId" json:"clientId" env:"CLIENT_ID"`
+	ClientSecret   string         `toml:"clientSecret" json:"clientSecret" env:"CLIENT_SECRET"`
+	AccessToken    string         `toml:"accessToken,omitempty" json:"accessToken,omitempty" env:"ACCESS_TOKEN"`
+	Project        string         `toml:"project,omitempty" json:"project,omitempty" env:"PROJECT"`
+	URL            string         `toml:"url,omitempty" json:"url,omitempty" env:"URL"`
+	OktaOrgURL     string         `toml:"oktaOrgURL,omitempty" json:"oktaOrgUrl,omitempty" env:"OKTA_ORG_URL"`
+	OktaAuthServer string         `toml:"oktaAuthServer,omitempty" json:"oktaAuthServer,omitempty" env:"OKTA_AUTH_SERVER"`
+	DisableOkta    *bool          `toml:"disableOkta,omitempty" json:"disableOkta,omitempty" env:"DISABLE_OKTA"`
+	Organization   string         `toml:"organization,omitempty" json:"organization,omitempty" env:"ORGANIZATION"`
+	Timeout        *time.Duration `toml:"timeout,omitempty" json:"timeout,omitempty" env:"TIMEOUT"`
 }
 
 // ConfigOption conveys extra configuration details for [ReadConfig] function.
@@ -164,6 +166,12 @@ func ConfigOptionEnvPrefix(prefix string) ConfigOption {
 	return func(conf *Config) { conf.options.envPrefix = prefix }
 }
 
+// ConfigOptionPlatformInstance instructs [Config] to use a specific [PlatformInstance].
+// By default [PlatformInstanceDefault] is used.
+func ConfigOptionPlatformInstance(instance PlatformInstance) ConfigOption {
+	return func(conf *Config) { conf.options.platformInstance = instance }
+}
+
 // optionsConfig contains options provided through [ConfigOption].
 // Some of these options may also be provided though environment variables.
 type optionsConfig struct {
@@ -174,9 +182,10 @@ type optionsConfig struct {
 	// context is the name of context loaded into [Config.contextConfig].
 	context string
 	// envPrefix defines the prefix for all environment variables.
-	envPrefix    string
-	clientID     string
-	clientSecret string
+	envPrefix        string
+	clientID         string
+	clientSecret     string
+	platformInstance PlatformInstance
 }
 
 // IsNoConfigFile returns true if [ConfigOptionNoConfigFile] was provided.
@@ -207,7 +216,7 @@ func (c *Config) GetFileConfig() *FileConfig {
 	if c.options.IsNoConfigFile() {
 		return nil
 	}
-	data, _ := json.Marshal(c)
+	data, _ := json.Marshal(c.fileConfig)
 	var config FileConfig
 	_ = json.Unmarshal(data, &config)
 	return &config
@@ -279,7 +288,7 @@ func newConfig(options []ConfigOption) (*Config, error) {
 			"DEFAULT_CONTEXT":        defaultContext,
 			"PROJECT":                DefaultProject,
 			"OKTA_ORG_URL":           defaultOktaOrgURL.String(),
-			"OKTA_AUTH_SERVER":       defaultOktaAuthServerID,
+			"OKTA_AUTH_SERVER":       defaultOktaAuthServer,
 			"DISABLE_OKTA":           strconv.FormatBool(defaultDisableOkta),
 			"ORGANIZATION":           defaultOrganization,
 			"TIMEOUT":                defaultTimeout.String(),
@@ -347,6 +356,18 @@ func (c *Config) resolveContextConfig() error {
 	c.Timeout = *c.contextConfig.Timeout
 	c.DisableOkta = *c.contextConfig.DisableOkta
 	c.Organization = c.contextConfig.Organization
+	if c.options.platformInstance != "" {
+		if c.options.platformInstance == PlatformInstanceCustom {
+			return errors.Errorf("%q platform instance is not supported as a config option, "+
+				"provide auth server URL and ID directly in the %T", c.options.platformInstance, c.contextlessConfig)
+		}
+		authConfig, err := GetPlatformInstanceAuthConfig(c.options.platformInstance)
+		if err != nil {
+			return err
+		}
+		c.OktaOrgURL = authConfig.URL
+		c.OktaAuthServer = authConfig.AuthServer
+	}
 	return nil
 }
 
@@ -367,7 +388,7 @@ func (c *Config) saveAccessToken(token string) error {
 // tag which should contain the environment variable name of the given struct field.
 func (c *Config) processEnvVariables(iv any, overwrite bool) error {
 	v := reflect.ValueOf(iv)
-	if v.Kind() != reflect.Ptr {
+	if v.Kind() != reflect.Pointer {
 		return errors.New("input must be a pointer")
 	}
 	e := v.Elem()
@@ -426,7 +447,7 @@ func (c *Config) setConfigFieldValue(v string, ef reflect.Value) error {
 	}
 
 	// Handle pointers and uninitialized pointers.
-	for ef.Type().Kind() == reflect.Ptr {
+	for ef.Type().Kind() == reflect.Pointer {
 		if ef.IsNil() {
 			ef.Set(reflect.New(ef.Type().Elem()))
 		}

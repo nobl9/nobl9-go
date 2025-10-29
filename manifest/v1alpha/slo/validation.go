@@ -140,14 +140,14 @@ var specValidation = govy.New[Spec](
 		})),
 	govy.ForPointer(func(s Spec) *string { return s.Tier }).
 		WithName("tier").
-		Rules(rules.StringLength(0, 63)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
-		RulesForEach(rules.StringDNSLabel()),
+		RulesForEach(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Cascade(govy.CascadeModeStop).
@@ -190,7 +190,7 @@ var attachmentValidation = govy.New[Attachment](
 		Rules(rules.StringURL()),
 	govy.ForPointer(func(a Attachment) *string { return a.DisplayName }).
 		WithName("displayName").
-		Rules(rules.StringLength(0, 63)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 )
 
 var compositeValidation = govy.New[Composite](
@@ -242,15 +242,15 @@ var compositeObjectiveRule = govy.New[CompositeObjective](
 	govy.For(func(c CompositeObjective) string { return c.Project }).
 		WithName("project").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.SLO }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.Objective }).
 		WithName("objective").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) float64 { return c.Weight }).
 		WithName("weight").
 		Rules(rules.GT(0.0)),
@@ -277,10 +277,10 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
 						Required().
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Project }).
 						WithName("project").
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 				)),
 			govy.ForPointer(func(a AnomalyConfigNoData) *string { return a.AlertAfter }).
 				WithName("alertAfter").
@@ -300,11 +300,11 @@ var indicatorValidation = govy.New[Indicator](
 			govy.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
 				Required().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) string { return m.Project }).
 				WithName("project").
 				OmitEmpty().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
 				WithName("kind").
 				OmitEmpty().
@@ -353,11 +353,11 @@ var objectiveBaseValidation = govy.New[ObjectiveBase](
 	govy.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
 		OmitEmpty().
-		Rules(rules.StringMaxLength(63)),
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 )
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
@@ -415,8 +415,21 @@ var specValidationComposite = govy.New[Spec](
 		IncludeForEach(govy.New[Objective](
 			govy.For(func(o Objective) ObjectiveBase { return o.ObjectiveBase }).
 				Include(objectiveBaseValidation),
+			govy.For(func(o Objective) *RawMetricSpec { return o.RawMetric }).
+				WithName("rawMetric").
+				Rules(rules.
+					Forbidden[*RawMetricSpec]().
+					WithMessage("when defining composite objective, this property is forbidden"),
+				),
+			govy.For(func(o Objective) *CountMetricsSpec { return o.CountMetrics }).
+				WithName("countMetrics").
+				Rules(rules.
+					Forbidden[*CountMetricsSpec]().
+					WithMessage("when defining composite objective, this property is forbidden"),
+				),
 			govy.ForPointer(func(o Objective) *CompositeSpec { return o.Composite }).
 				WithName("composite").
+				Cascade(govy.CascadeModeContinue).
 				Include(govy.New[CompositeSpec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
@@ -436,7 +449,9 @@ var specValidationComposite = govy.New[Spec](
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),
-).When(
-	func(s Spec) bool { return s.HasCompositeObjectives() },
-	govy.WhenDescription("at least one composite objective is defined"),
-)
+).
+	When(
+		func(s Spec) bool { return s.HasCompositeObjectives() },
+		govy.WhenDescription("at least one composite objective is defined"),
+	).
+	Cascade(govy.CascadeModeStop)

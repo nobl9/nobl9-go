@@ -30,47 +30,38 @@ var metadataValidation = govy.New[Metadata](
 	govy.For(func(m Metadata) string { return m.Project }).
 		WithName("metadata.project").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
 var specValidation = govy.New[Spec](
+	govy.For(govy.GetSelf[Spec]()).
+		Rules(endTimeNotBeforeStartTime),
 	govy.For(func(s Spec) string { return s.Slo }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.ObjectiveName }).
 		WithName("objectiveName").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Required().
 		Rules(rules.StringLength(0, 1000)),
-	govy.For(govy.GetSelf[Spec]()).
-		Rules(endTimeNotBeforeStartTime).
-		Rules(categoryUserDefined),
+	govy.For(func(s Spec) string { return s.Category }).
+		WithName("category").
+		OmitEmpty().
+		Rules(rules.OneOf(CategoryComment, CategoryReviewNote)),
 )
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
 
 var endTimeNotBeforeStartTime = govy.NewRule(func(s Spec) error {
-	if s.EndTime.Before(s.StartTime) {
+	if !s.EndTime.IsZero() && s.EndTime.Before(s.StartTime) {
 		return &govy.RuleError{
 			Message: fmt.Sprintf(`endTime '%s' must be equal or after startTime '%s'`, s.EndTime, s.StartTime),
 			Code:    errorCodeEndTimeNotBeforeStartTime,
-		}
-	}
-	return nil
-})
-
-const errorCodeCategoryUserDefined govy.ErrorCode = "category_user_defined"
-
-var categoryUserDefined = govy.NewRule(func(s Spec) error {
-	if s.Category != "" {
-		return &govy.RuleError{
-			Message: fmt.Sprintf("category can't be defined by user %s", s.Category),
-			Code:    errorCodeCategoryUserDefined,
 		}
 	}
 	return nil

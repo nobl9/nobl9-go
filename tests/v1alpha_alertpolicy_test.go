@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -17,18 +16,18 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:        generateName(),
+		Name:        e2etestutils.GenerateName(),
 		DisplayName: "Alert Method",
 		Project:     project.GetName(),
 	})
-	examples := examplesRegistry[manifest.KindAlertPolicy]
+	examples := e2etestutils.GetAllExamples(t, manifest.KindAlertPolicy)
 	allObjects := make([]manifest.Object, 0, len(examples)+2)
 	allObjects = append(allObjects, project)
 	allObjects = append(allObjects, alertMethod)
@@ -36,7 +35,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	for i, example := range examples {
 		policy := newV1alphaAlertPolicy(t,
 			v1alphaAlertPolicy.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Alert Policy %d", i),
 				Project:     project.GetName(),
 			},
@@ -51,11 +50,6 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 				},
 			},
 		}
-		for i := range policy.Spec.Conditions {
-			if policy.Spec.Conditions[i].AlertingWindow == "" && policy.Spec.Conditions[i].LastsForDuration == "" {
-				policy.Spec.Conditions[i].LastsForDuration = "0m"
-			}
-		}
 		switch i {
 		case 0:
 			policy.Metadata.Project = defaultProject
@@ -69,8 +63,8 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		allObjects = append(allObjects, policy)
 	}
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaAlertPolicy.AlertPolicy](allObjects)
 
 	filterTests := map[string]struct {
@@ -104,7 +98,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 		"filter by label": {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"green"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[1]},
 		},
@@ -112,7 +106,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 			request: objectsV1.GetAlertPolicyRequest{
 				Project: project.GetName(),
 				Names:   []string{inputs[3].Metadata.Name},
-				Labels:  annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels:  e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaAlertPolicy.AlertPolicy{inputs[3]},
 		},
@@ -120,7 +114,7 @@ func Test_Objects_V1_V1alpha_AlertPolicy(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaAlertPolicies(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaAlertPolicies(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))
@@ -137,19 +131,24 @@ func newV1alphaAlertPolicy(
 	subVariant string,
 ) v1alphaAlertPolicy.AlertPolicy {
 	t.Helper()
-	metadata.Labels = annotateLabels(t, metadata.Labels)
+	metadata.Labels = e2etestutils.AnnotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	ap := getExample[v1alphaAlertPolicy.AlertPolicy](t,
+	ap := e2etestutils.GetExampleObject[v1alphaAlertPolicy.AlertPolicy](t,
 		manifest.KindAlertPolicy,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant
 		},
 	)
-	ap.Spec.Description = objectDescription
+	ap.Spec.Description = e2etestutils.GetObjectDescription()
 	return v1alphaAlertPolicy.New(metadata, ap.Spec)
 }
 
 func assertV1alphaAlertPoliciesAreEqual(t *testing.T, expected, actual v1alphaAlertPolicy.AlertPolicy) {
 	t.Helper()
+	for i := range expected.Spec.Conditions {
+		if expected.Spec.Conditions[i].AlertingWindow == "" && expected.Spec.Conditions[i].LastsForDuration == "" {
+			expected.Spec.Conditions[i].LastsForDuration = "0m"
+		}
+	}
 	assert.Equal(t, expected, actual)
 }

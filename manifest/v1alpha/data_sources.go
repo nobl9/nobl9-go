@@ -59,8 +59,8 @@ type DataSourceType int
 const GCM = GoogleCloudMonitoring
 
 type Duration struct {
-	Value *int         `json:"value" validate:"required,min=0,max=86400"`
-	Unit  DurationUnit `json:"unit" validate:"required"`
+	Value *int         `json:"value"`
+	Unit  DurationUnit `json:"unit"`
 }
 
 type DurationUnit string
@@ -237,9 +237,9 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {
-	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
-	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
-	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
+	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty" nobl9:"computed"`
+	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration"`
+	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
@@ -292,8 +292,8 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 // we have time travel duration unit related enum, that's specifically named for data retrieval purposes. Thus,
 // it was easier to split those Durations into separate structures.
 type HistoricalRetrievalDuration struct {
-	Value *int                            `json:"value" validate:"required,min=0,max=43200"`
-	Unit  HistoricalRetrievalDurationUnit `json:"unit" validate:"required"`
+	Value *int                            `json:"value"`
+	Unit  HistoricalRetrievalDurationUnit `json:"unit"`
 }
 
 type HistoricalRetrievalDurationUnit string
@@ -387,6 +387,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
 	Coralogix:             {Value: ptr(30), Unit: HRDDay},
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
+	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
@@ -403,6 +404,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	AzurePrometheus:       {Value: ptr(30), Unit: HRDDay},
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
+	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {

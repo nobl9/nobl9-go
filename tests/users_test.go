@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +11,6 @@ import (
 
 func Test_Users_V2_GetUser(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	userID, err := client.GetUserID(ctx)
 	require.NoError(t, err)

@@ -49,6 +49,8 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.GoogleCloudMonitoring,
 	v1alpha.AzurePrometheus,
 	v1alpha.ThousandEyes,
+	// Support for Replay only in beta.
+	v1alpha.SumoLogic,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -133,6 +135,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 	case v1alpha.GCM:
 		direct.Spec.GCM = &v1alphaDirect.GCMConfig{
 			ServiceAccountKey: gcloudServiceAccountKey,
+			Step:              15,
 		}
 	case v1alpha.Honeycomb:
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
@@ -203,6 +206,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			TenantID:     "5cdecca3-c2c5-4072-89dd-5555faf05202",
 			ClientID:     "70747025-9367-41a5-98f1-59b18b5793c3",
 			ClientSecret: "[secret]",
+			Step:         60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

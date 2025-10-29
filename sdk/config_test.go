@@ -28,8 +28,8 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 		ClientID:             "someId",
 		ClientSecret:         "someSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -92,8 +92,8 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Second,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -162,14 +162,57 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Minute,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       "my-context",
 		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
+}
+
+func TestConfigOptionPlatformInstance(t *testing.T) {
+	t.Run("default instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceDefault),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "auseg9kiegWKEtJZC416", conf.OktaAuthServer)
+	})
+
+	t.Run("US1 instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceUS1),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts-us1.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "ausaew9480S3Sn89f5d7", conf.OktaAuthServer)
+	})
+
+	t.Run("custom instance", func(t *testing.T) {
+		_, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceCustom),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, `+
+			`provide auth server URL and ID directly in the sdk.ContextlessConfig`)
+	})
+
+	t.Run("invalid instance", func(t *testing.T) {
+		_, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstance("invalid.instance.com")),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, `"invalid.instance.com" platform instance is not supported`)
+	})
 }
 
 func TestReadConfig_Defaults(t *testing.T) {
@@ -182,8 +225,8 @@ func TestReadConfig_Defaults(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -212,8 +255,8 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -454,6 +497,45 @@ func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
 
 	_, err = io.Copy(tmpFile, embeddedFile)
 	require.NoError(t, err)
+}
+
+func TestGetFileConfig(t *testing.T) {
+	t.Run("returns nil when NoConfigFile option is set", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		result := conf.GetFileConfig()
+		assert.Nil(t, result)
+	})
+
+	t.Run("returns a copy of file config", func(t *testing.T) {
+		fileConfig := FileConfig{
+			ContextlessConfig: ContextlessConfig{
+				DefaultContext: "default",
+			},
+			Contexts: map[string]ContextConfig{
+				"default": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			},
+		}
+		conf := Config{
+			fileConfig: &fileConfig,
+		}
+
+		fileConfigCopy := conf.GetFileConfig()
+		require.NotNil(t, fileConfigCopy)
+		assert.Equal(t, fileConfig, *fileConfigCopy)
+
+		// Verify it's a copy, not the original.
+		assert.NotSame(t, conf.fileConfig, fileConfigCopy)
+		// Modifying the copy doesn't affect the original
+		fileConfigCopy.DefaultContext = "modified"
+		assert.NotEqual(t, conf.fileConfig.DefaultContext, fileConfigCopy.DefaultContext)
+	})
 }
 
 func setHomeEnv(t *testing.T, homePath string) {

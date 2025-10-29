@@ -46,8 +46,9 @@ func TestOktaClient_RequestAccessToken(t *testing.T) {
 		requestHeaders = r.Header
 		if respondWithPayload != nil {
 			_, _ = w.Write(respondWithPayload)
+		} else {
+			w.WriteHeader(respondWithStatusCode)
 		}
-		w.WriteHeader(respondWithStatusCode)
 	}))
 	defer srv.Close()
 	u, err := url.Parse(srv.URL)

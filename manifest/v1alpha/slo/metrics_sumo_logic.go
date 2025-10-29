@@ -23,8 +23,8 @@ type SumoLogicMetric struct {
 }
 
 const (
-	sumoLogicTypeMetric = "metrics"
-	sumoLogicTypeLogs   = "logs"
+	SumoLogicTypeMetric = "metrics"
+	SumoLogicTypeLogs   = "logs"
 )
 
 var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
@@ -44,7 +44,7 @@ var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 			govy.NewRule(func(c CountMetricsSpec) error {
 				good := c.GoodMetric.SumoLogic
 				total := c.TotalMetric.SumoLogic
-				if *good.Type != "logs" || *total.Type != "logs" {
+				if *good.Type != SumoLogicTypeLogs || *total.Type != SumoLogicTypeLogs {
 					return nil
 				}
 				goodTimeSlice, err := getTimeSliceFromSumoLogicQuery(*good.Query)
@@ -75,7 +75,7 @@ var sumoLogicValidation = govy.New[SumoLogicMetric](
 	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Type }).
 		WithName("type").
 		Required().
-		Rules(rules.OneOf(sumoLogicTypeLogs, sumoLogicTypeMetric)),
+		Rules(rules.OneOf(SumoLogicTypeLogs, SumoLogicTypeMetric)),
 )
 
 var sumoLogicValidRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
@@ -105,32 +105,55 @@ var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
 		Rules(rules.OneOf(sumoLogicValidRollups...)),
 ).
 	When(
-		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeMetric },
-		govy.WhenDescription("type is '%s'", sumoLogicTypeMetric),
+		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
+		govy.WhenDescription("type is '%s'", SumoLogicTypeMetric),
 	)
 
-var sumoLogicLogsTypeValidation = govy.New[SumoLogicMetric](
-	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
-		WithName("query").
-		Required().
-		Rules(
-			govy.NewRule(validateSumoLogicTimeslice),
-			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
-				WithDetails("n9_value is required"),
-			rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
-				WithDetails("aggregation function is required"),
-		),
-	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
-		WithName("quantization").
-		Rules(rules.Forbidden[string]()),
-	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
-		WithName("rollup").
-		Rules(rules.Forbidden[string]()),
+var (
+	sumoLogicLogsTypeValidation            = getSumoLogicLogsTypeValidation(false)
+	sumoLogicSingleQueryLogsTypeValidation = getSumoLogicLogsTypeValidation(true)
+)
+
+var sumoLogicSingleQueryMetricsTypeValidation = govy.New[SumoLogicMetric](
+	govy.For(govy.GetSelf[SumoLogicMetric]()).
+		Rules(rules.Forbidden[SumoLogicMetric]()),
 ).
 	When(
-		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == sumoLogicTypeLogs },
-		govy.WhenDescription("type is '%s'", sumoLogicTypeLogs),
+		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
+		govy.WhenDescription("type is '%s'", SumoLogicTypeMetric),
 	)
+
+func getSumoLogicLogsTypeValidation(isSingleQuery bool) govy.Validator[SumoLogicMetric] {
+	var valueRule govy.Rule[string]
+	switch isSingleQuery {
+	case true:
+		valueRule = rules.StringContains("n9_good", "n9_total")
+	default:
+		valueRule = rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bn9_value\b`)).
+			WithDetails("n9_value is required")
+	}
+	return govy.New[SumoLogicMetric](
+		govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
+			WithName("query").
+			Required().
+			Rules(
+				govy.NewRule(validateSumoLogicTimeslice),
+				valueRule,
+				rules.StringMatchRegexp(regexp.MustCompile(`(?m)\bby\b`)).
+					WithDetails("aggregation function is required"),
+			),
+		govy.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
+			WithName("quantization").
+			Rules(rules.Forbidden[string]()),
+		govy.ForPointer(func(p SumoLogicMetric) *string { return p.Rollup }).
+			WithName("rollup").
+			Rules(rules.Forbidden[string]()),
+	).
+		When(
+			func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeLogs },
+			govy.WhenDescription("type is '%s'", SumoLogicTypeLogs),
+		)
+}
 
 func validateSumoLogicTimeslice(query string) error {
 	timeSlice, err := getTimeSliceFromSumoLogicQuery(query)

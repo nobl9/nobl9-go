@@ -24,13 +24,13 @@ type Alert struct {
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
-	Name    string `json:"name" validate:"required,objectName"`
-	Project string `json:"project,omitempty" validate:"objectName"`
+	Name    string `json:"name"`
+	Project string `json:"project,omitempty"`
 }
 
 // Spec represents content of Alert's Spec
@@ -49,6 +49,7 @@ type Spec struct {
 	Conditions                  []Condition    `json:"conditions"`
 	CoolDownStartedAtMetricTime *string        `json:"coolDownStartedAtMetricTime,omitempty"`
 	ResolutionReason            *string        `json:"resolutionReason,omitempty"`
+	SilenceInfo                 *SilenceInfo   `json:"silenceInfo,omitempty"`
 }
 
 type Objective struct {
@@ -77,4 +78,9 @@ type ConditionStatus struct {
 	FirstMetMetricTime   string  `json:"firstMetMetricTime,omitempty"`
 	LastMetMetricTime    *string `json:"lastMetMetricTime,omitempty"`
 	LastForMetMetricTime *string `json:"lastsForMetMetricTime,omitempty"`
+}
+
+type SilenceInfo struct {
+	From string `json:"from"`
+	To   string `json:"to"`
 }

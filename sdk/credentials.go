@@ -30,10 +30,8 @@ func newCredentials(config *Config) *credentialsStore {
 	}
 	authServerURL := oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)
 	return &credentialsStore{
-		config: config,
-		tokenParser: newJWTParser(
-			authServerURL.String(),
-			oktaKeysEndpoint(authServerURL).String()),
+		config:      config,
+		tokenParser: newJWTParser(authServerURL.String()),
 		tokenProvider: newOktaClient(func() string {
 			return oktaTokenEndpoint(authServerURL).String()
 		}),

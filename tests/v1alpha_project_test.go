@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,37 +11,37 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	inputs := []v1alphaProject.Project{
 		newV1alphaProject(t,
 			v1alphaProject.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: "Project 1",
 				Labels:      v1alpha.Labels{"team": []string{"green"}},
 			},
 		),
 		newV1alphaProject(t,
 			v1alphaProject.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: "Project 2",
 				Labels:      v1alpha.Labels{"team": []string{"orange"}},
 			},
 		),
 		newV1alphaProject(t,
 			v1alphaProject.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: "Project 3",
 				Labels:      v1alpha.Labels{"team": []string{"orange"}},
 			},
 		),
 	}
 
-	v1Apply(t, inputs)
-	t.Cleanup(func() { v1Delete(t, inputs) })
+	e2etestutils.V1Apply(t, inputs)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, inputs) })
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetProjectsRequest
@@ -62,14 +61,14 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 		},
 		"filter by label": {
 			request: objectsV1.GetProjectsRequest{
-				Labels: annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels: e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaProject.Project{inputs[1], inputs[2]},
 		},
 		"filter by label and name": {
 			request: objectsV1.GetProjectsRequest{
 				Names:  []string{inputs[2].Metadata.Name},
-				Labels: annotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
+				Labels: e2etestutils.AnnotateLabels(t, v1alpha.Labels{"team": []string{"orange"}}),
 			},
 			expected: []v1alphaProject.Project{inputs[2]},
 		},
@@ -77,7 +76,7 @@ func Test_Objects_V1_V1alpha_Project(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaProjects(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaProjects(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))
@@ -92,14 +91,14 @@ func newV1alphaProject(
 	metadata v1alphaProject.Metadata,
 ) v1alphaProject.Project {
 	t.Helper()
-	metadata.Labels = annotateLabels(t, metadata.Labels)
+	metadata.Labels = e2etestutils.AnnotateLabels(t, metadata.Labels)
 	metadata.Annotations = commonAnnotations
-	return v1alphaProject.New(metadata, v1alphaProject.Spec{Description: objectDescription})
+	return v1alphaProject.New(metadata, v1alphaProject.Spec{Description: e2etestutils.GetObjectDescription()})
 }
 
 func generateV1alphaProject(t *testing.T) v1alphaProject.Project {
 	t.Helper()
-	return newV1alphaProject(t, v1alphaProject.Metadata{Name: generateName()})
+	return newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 }
 
 func assertV1alphaProjectsAreEqual(t *testing.T, expected, actual v1alphaProject.Project) {

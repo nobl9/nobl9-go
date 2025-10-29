@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -15,20 +14,20 @@ import (
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
 	"github.com/nobl9/nobl9-go/sdk"
 	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
+	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
-	examples := examplesRegistry[manifest.KindDataExport]
+	examples := e2etestutils.GetAllExamples(t, manifest.KindDataExport)
 	allObjects := make([]manifest.Object, 0, len(examples))
 	allObjects = append(allObjects, project)
 
 	for i, example := range examples {
 		export := newV1alphaDataExport(t,
 			v1alphaDataExport.Metadata{
-				Name:        generateName(),
+				Name:        e2etestutils.GenerateName(),
 				DisplayName: fmt.Sprintf("Data Export %d", i),
 				Project:     project.GetName(),
 			},
@@ -41,8 +40,8 @@ func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 		allObjects = append(allObjects, export)
 	}
 
-	v1Apply(t, allObjects)
-	t.Cleanup(func() { v1Delete(t, allObjects) })
+	e2etestutils.V1Apply(t, allObjects)
+	t.Cleanup(func() { e2etestutils.V1Delete(t, allObjects) })
 	inputs := manifest.FilterByKind[v1alphaDataExport.DataExport](allObjects)
 
 	filterTests := map[string]struct {
@@ -77,7 +76,7 @@ func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaDataExports(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaDataExports(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))
@@ -94,7 +93,7 @@ func newV1alphaDataExport(
 	subVariant string,
 ) v1alphaDataExport.DataExport {
 	t.Helper()
-	ap := getExample[v1alphaDataExport.DataExport](t,
+	ap := e2etestutils.GetExampleObject[v1alphaDataExport.DataExport](t,
 		manifest.KindDataExport,
 		func(example v1alphaExamples.Example) bool {
 			return example.GetVariant() == variant && example.GetSubVariant() == subVariant

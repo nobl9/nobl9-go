@@ -24,10 +24,10 @@ type Direct struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -65,9 +65,9 @@ type Spec struct {
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
-	Interval *v1alpha.Interval `json:"interval,omitempty"`
-	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty"`
-	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty"`
+	Interval *v1alpha.Interval `json:"interval,omitempty" nobl9:"computed"`
+	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty" nobl9:"computed"`
+	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty" nobl9:"computed"`
 }
 
 // Status represents content of Status optional for Direct Object
@@ -240,6 +240,7 @@ type InfluxDBConfig struct {
 // GCMConfig represents content of GCM configuration typical for Direct Object.
 type GCMConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey"`
+	Step              int    `json:"step,omitempty"`
 }
 
 type LightstepConfig struct {
@@ -280,4 +281,5 @@ type AzurePrometheusConfig struct {
 	TenantID     string `json:"tenantId"`
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
+	Step         int    `json:"step,omitempty"`
 }

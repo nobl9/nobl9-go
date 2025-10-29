@@ -26,10 +26,10 @@ type Service struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 // Metadata provides identity information for Service.
@@ -44,10 +44,38 @@ type Metadata struct {
 // Status holds dynamic fields returned when the Service is fetched from Nobl9 platform.
 // Status is not part of the static object definition.
 type Status struct {
-	SloCount int `json:"sloCount"`
+	SloCount    int                `json:"sloCount"`
+	ReviewCycle *ReviewCycleStatus `json:"reviewCycle,omitempty"`
+}
+
+// ReviewCycleStatus represents the dynamic status of a review cycle.
+type ReviewCycleStatus struct {
+	// Next is the next scheduled review date in RFC3339 format.
+	Next string `json:"next,omitempty"`
 }
 
 // Spec holds detailed information specific to Service.
 type Spec struct {
-	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
+	// Description is a human-readable description of the service.
+	Description string `json:"description"`
+	// ResponsibleUsers is a list of user IDs of people responsible for the service.
+	ResponsibleUsers []ResponsibleUser `json:"responsibleUsers,omitempty"`
+	// ReviewCycle defines the schedule for regular service reviews.
+	ReviewCycle *ReviewCycle `json:"reviewCycle,omitempty"`
+}
+
+type ResponsibleUser struct {
+	// ID is the user ID of a person responsible for the service.
+	ID string `json:"id"`
+}
+
+// ReviewCycle defines the schedule for regular service reviews.
+type ReviewCycle struct {
+	// StartTime is the initial date and time for the review cycle in RFC3339 format without timezone.
+	StartTime string `json:"startTime"`
+	// TimeZone is the IANA Time Zone Database name for the review cycle.
+	TimeZone string `json:"timeZone"`
+	// RRule is a simplified recurrence rule following the RFC5545 standard for defining recurring events.
+	// The minimum frequency is daily.
+	RRule string `json:"rrule"`
 }

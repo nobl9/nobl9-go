@@ -11,6 +11,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 		panic(err)
 	}
 	client.HTTP = &http.Client{Transport: rt}
-	if err = client.Objects().V1().Apply(context.Background(), []manifest.Object{}); err != nil {
+	if err = client.Objects().V2().Apply(context.Background(), objectsV2.ApplyRequest{Objects: []manifest.Object{}}); err != nil {
 		panic(err)
 	}
 	fmt.Print(rt.UserAgent)

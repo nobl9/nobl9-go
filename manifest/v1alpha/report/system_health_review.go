@@ -7,33 +7,38 @@ import (
 )
 
 type SystemHealthReviewConfig struct {
-	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame" validate:"required"`
-	RowGroupBy RowGroupBy                  `json:"rowGroupBy" validate:"required" example:"project"`
-	Columns    []ColumnSpec                `json:"columns" validate:"min=1,max=30"`
-	Thresholds Thresholds                  `json:"thresholds" validate:"required"`
+	TimeFrame  SystemHealthReviewTimeFrame `json:"timeFrame"`
+	RowGroupBy RowGroupBy                  `json:"rowGroupBy"`
+	Columns    []ColumnSpec                `json:"columns"`
+	LabelRows  []LabelRowSpec              `json:"labelRows,omitempty"`
+	Thresholds Thresholds                  `json:"thresholds"`
 }
 
 type Thresholds struct {
-	RedLessThanOrEqual *float64 `json:"redLte" validate:"required" example:"0.8"`
+	RedLessThanOrEqual *float64 `json:"redLte"`
 	// Yellow is calculated as the difference between Red and Green
 	// thresholds. If Red and Green are the same, Yellow is not used on the report.
-	GreenGreaterThan *float64 `json:"greenGt" validate:"required" example:"0.95"`
+	GreenGreaterThan *float64 `json:"greenGt"`
 	// ShowNoData customizes the report to either show or hide rows with no data.
 	ShowNoData bool `json:"showNoData"`
 }
 
 type ColumnSpec struct {
-	DisplayName string         `json:"displayName" validate:"required"`
-	Labels      v1alpha.Labels `json:"labels" validate:"required"`
+	DisplayName string         `json:"displayName"`
+	Labels      v1alpha.Labels `json:"labels"`
+}
+
+type LabelRowSpec struct {
+	Labels v1alpha.Labels `json:"labels"`
 }
 
 type SnapshotTimeFrame struct {
-	Point    SnapshotPoint `json:"point" validate:"required" example:"latest"`
+	Point    SnapshotPoint `json:"point"`
 	DateTime *time.Time    `json:"dateTime,omitempty"`
 	Rrule    string        `json:"rrule,omitempty"`
 }
 
 type SystemHealthReviewTimeFrame struct {
-	Snapshot SnapshotTimeFrame `json:"snapshot" validate:"required"`
-	TimeZone string            `json:"timeZone" validate:"required,timeZone" example:"America/New_York"`
+	Snapshot SnapshotTimeFrame `json:"snapshot"`
+	TimeZone string            `json:"timeZone"`
 }

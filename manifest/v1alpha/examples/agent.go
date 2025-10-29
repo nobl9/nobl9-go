@@ -46,6 +46,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.Elasticsearch,
 	v1alpha.ThousandEyes,
+	// Support for Replay only in beta.
+	v1alpha.SumoLogic,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -125,7 +127,9 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 			URL: "http://elasticsearch-main.elasticsearch:9200",
 		}
 	case v1alpha.GCM:
-		agent.Spec.GCM = &v1alphaAgent.GCMConfig{}
+		agent.Spec.GCM = &v1alphaAgent.GCMConfig{
+			Step: 15,
+		}
 	case v1alpha.Generic:
 		agent.Spec.Generic = &v1alphaAgent.GenericConfig{}
 	case v1alpha.GrafanaLoki:
@@ -168,7 +172,8 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.Pingdom = &v1alphaAgent.PingdomConfig{}
 	case v1alpha.Prometheus:
 		agent.Spec.Prometheus = &v1alphaAgent.PrometheusConfig{
-			URL: "http://prometheus.prometheus:9090",
+			URL:  "http://prometheus.prometheus:9090",
+			Step: 15,
 		}
 	case v1alpha.Redshift:
 		agent.Spec.Redshift = &v1alphaAgent.RedshiftConfig{}

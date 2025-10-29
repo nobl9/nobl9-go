@@ -70,7 +70,10 @@ var filtersValidation = govy.New[Filters](
 		})),
 	govy.ForSlice(func(f Filters) []string { return f.Projects }).
 		WithName("projects").
-		IncludeForEach(requiredNameValidation),
+		RulesForEach(
+			rules.StringNotEmpty(),
+			validationV1Alpha.StringName(),
+		),
 	govy.ForSlice(func(f Filters) []Service { return f.Services }).
 		WithName("services").
 		IncludeForEach(serviceValidation),
@@ -82,7 +85,7 @@ var filtersValidation = govy.New[Filters](
 var requiredNameValidation = govy.New[string](
 	govy.For(govy.GetSelf[string]()).
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
 var serviceValidation = govy.New[Service](
