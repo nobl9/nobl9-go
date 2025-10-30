@@ -74,7 +74,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 func TestValidate_Spec_Description(t *testing.T) {
 	t.Run("too long", func(t *testing.T) {
 		annotation := validAnnotation()
-		annotation.Spec.Description = strings.Repeat("A", 2000)
+		annotation.Spec.Description = strings.Repeat("A", 20000)
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
