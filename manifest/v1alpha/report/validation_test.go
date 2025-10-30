@@ -965,8 +965,8 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 	t.Run("passes with valid labelRows when rowGroupBy is custom", func(t *testing.T) {
 		report := validSystemHealthReport()
-		conf := validSystemHealthReviewConfig(RowGroupByCustom)
-		conf.RowGroupBy = RowGroupByCustom
+		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+		conf.RowGroupBy = RowGroupByCustomRows
 		conf.LabelRows = []LabelRowSpec{{
 			DisplayName: "Environment",
 			Labels:      v1alpha.Labels{"env": []string{"prod"}},
@@ -1075,7 +1075,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			report := validSystemHealthReport()
-			conf := validSystemHealthReviewConfig(RowGroupByCustom)
+			conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
 			conf = test.ConfigFunc(conf)
 			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
@@ -1495,7 +1495,7 @@ func validSystemHealthReviewConfig(rowGroupBy RowGroupBy) SystemHealthReviewConf
 		config.LabelRows = []LabelRowSpec{{
 			Labels: v1alpha.Labels{"environment": nil},
 		}}
-	case RowGroupByCustom:
+	case RowGroupByCustomRows:
 		config.LabelRows = []LabelRowSpec{
 			{
 				DisplayName: "Production databases",
