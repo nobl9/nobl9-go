@@ -52,11 +52,11 @@ func (spec Spec) GetAlertMethods() []AlertMethodRef {
 
 // AlertCondition represents a condition to meet to trigger an alert.
 type AlertCondition struct {
-	Measurement      string      `json:"measurement"`
-	Value            interface{} `json:"value"`
-	AlertingWindow   string      `json:"alertingWindow,omitempty"`
-	LastsForDuration string      `json:"lastsFor,omitempty"`
-	Operator         string      `json:"op,omitempty"`
+	Measurement      string `json:"measurement"`
+	Value            any    `json:"value"`
+	AlertingWindow   string `json:"alertingWindow,omitempty"`
+	LastsForDuration string `json:"lastsFor,omitempty"`
+	Operator         string `json:"op,omitempty"`
 }
 
 type AlertMethodRef struct {
@@ -64,7 +64,7 @@ type AlertMethodRef struct {
 
 	// Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
 	// These object and their details will be dropped.
-	legacyAlertMethodRef interface{}
+	legacyAlertMethodRef any
 }
 
 type AlertMethodRefMetadata struct {
@@ -73,9 +73,10 @@ type AlertMethodRefMetadata struct {
 }
 
 // EmbedAlertMethodRef sets AlertMethodRef to an arbitrary value.
+//
 // Deprecated: Temporary solution to keep backward compatibility to return AlertMethod details.
 // These objects and their details will be dropped.
-func (a *AlertMethodRef) EmbedAlertMethodRef(ref interface{}) {
+func (a *AlertMethodRef) EmbedAlertMethodRef(ref any) {
 	a.legacyAlertMethodRef = ref
 }
 

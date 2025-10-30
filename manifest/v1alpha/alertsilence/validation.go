@@ -77,8 +77,10 @@ var alertPolicySourceValidation = govy.New[AlertPolicySource](
 		Rules(validationV1Alpha.StringName()),
 )
 
-const errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
-const errorCodeInconsistentProject = "alert_policy_project_inconsistent"
+const (
+	errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
+	errorCodeInconsistentProject                 = "alert_policy_project_inconsistent"
+)
 
 var endTimeNotBeforeStartTimeRule = govy.NewRule(func(p Period) error {
 	if p.EndTime != nil && p.StartTime != nil && !p.EndTime.After(*p.StartTime) {

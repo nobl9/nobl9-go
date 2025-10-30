@@ -134,6 +134,7 @@ type MetricSourceSpec struct {
 }
 
 // Composite represents configuration for Composite SLO.
+//
 // Deprecated: this implementation of Composite will be removed and replaced with SLO.Spec.Objectives.Composite.
 type Composite struct {
 	BudgetTarget      *float64                    `json:"target"`

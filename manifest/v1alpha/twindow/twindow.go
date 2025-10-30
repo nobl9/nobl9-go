@@ -434,7 +434,7 @@ func GetTimeUnitEnum(typ TimeWindowTypeEnum, timeUnit string) (timeUnitEnum Time
 	case Calendar:
 		timeUnitEnum = calendarWindowTimeUnits[timeUnit]
 	}
-	return
+	return timeUnitEnum
 }
 
 func IsTimeUnit(timeUnit string) bool {
