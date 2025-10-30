@@ -51,7 +51,7 @@ type Category = string
 const (
 	CategoryComment    Category = "Comment"
 	CategoryReviewNote Category = "ReviewNote"
-	CategorySLOEdit    Category = "SloEdit"
+	CategorySloEdit    Category = "SloEdit"
 )
 
 // Status represents content of Status optional for Annotation Object

@@ -34,6 +34,8 @@ var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),
 )
 
+const specDescriptionMaxLength = 10000
+
 var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Rules(endTimeNotBeforeStartTime),
@@ -48,11 +50,11 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Required().
-		Rules(rules.StringLength(0, 10000)),
+		Rules(rules.StringLength(0, specDescriptionMaxLength)),
 	govy.For(func(s Spec) string { return s.Category }).
 		WithName("category").
 		OmitEmpty().
-		Rules(rules.OneOf(CategoryComment, CategoryReviewNote, CategorySLOEdit)),
+		Rules(rules.OneOf(CategoryComment, CategoryReviewNote, CategorySloEdit)),
 )
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
