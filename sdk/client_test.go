@@ -201,16 +201,6 @@ func TestClient_GetUserID(t *testing.T) {
 	assert.Equal(t, "00u2y4e4atkzaYkXP4x8", userID)
 }
 
-func addOrganization(objects []manifest.Object, org string) []manifest.Object {
-	result := make([]manifest.Object, 0, len(objects))
-	for _, obj := range objects {
-		if objCtx, ok := obj.(v1alpha.ObjectContext); ok {
-			result = append(result, objCtx.SetOrganization(org))
-		}
-	}
-	return result
-}
-
 type endpointConfig struct {
 	Path            string
 	ResponseFunc    func(t *testing.T, w http.ResponseWriter)
