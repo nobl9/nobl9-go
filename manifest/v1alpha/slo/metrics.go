@@ -208,7 +208,7 @@ func (s *Spec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
 			total = append(total, objective.CountMetrics.TotalMetric)
 		}
 	}
-	return
+	return good, total
 }
 
 // AllMetricSpecs returns slice of all metrics defined in SLO regardless of their type.
