@@ -15,6 +15,8 @@ GOVULNCHECK_VERSION := v1.1.4
 GOIMPORTS_VERSION := v0.38.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.3.0
+# renovate datasource=go depName=mvdan.cc/gofumpt
+GOFUMPT_VERSION := v0.9.2
 
 # Check if the program is present in $PATH and install otherwise.
 # ${1} - oneOf{binary,yarn}
@@ -134,8 +136,9 @@ format: format/go format/cspell
 ## Format Go files.
 format/go:
 	echo "Formatting Go files..."
+	$(call _ensure_installed,binary,gofumpt)
 	$(call _ensure_installed,binary,goimports)
-	gofmt -w -l -s .
+	gofumpt -w -l .
 	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
 
 ## Format cspell config file.
@@ -144,9 +147,9 @@ format/cspell:
 	$(call _ensure_installed,yarn,yaml)
 	yarn --silent format-cspell-config
 
-.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
+.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker install/gofumpt
 ## Install all dev dependencies.
-install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
+install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker install/gofumpt
 
 ## Install JS dependencies with yarn.
 install/yarn:
@@ -185,6 +188,11 @@ install/goimports:
 install/ifacemaker:
 	echo "Installing ifacemaker..."
 	$(call _install_go_binary,github.com/vburenin/ifacemaker@$(IFACEMAKER_VERSION))
+
+## Install gofumpt (https://github.com/mvdan/gofumpt).
+install/gofumpt:
+	echo "Installing gofumpt..."
+	$(call _install_go_binary,mvdan.cc/gofumpt@$(GOFUMPT_VERSION))
 
 .PHONY: help
 ## Print this help message.

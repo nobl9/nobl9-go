@@ -875,7 +875,8 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | align delta(1m)
 | every 1m
 | group_by [resource.service],
-    [value_request_latencies_mean: mean(value.request_latencies)]`}))
+    [value_request_latencies_mean: mean(value.request_latencies)]`,
+			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.GCMMetric{
 				ProjectID: "my-project-id",
@@ -897,7 +898,8 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | align rate(1m)
 | every 1m
 | group_by [resource.service],
-    [value_request_count_aggregate: aggregate(value.request_count)]`}))
+    [value_request_count_aggregate: aggregate(value.request_count)]`,
+			}))
 		}
 	case v1alpha.AzureMonitor:
 		switch s.MetricVariant + s.MetricSubVariant {

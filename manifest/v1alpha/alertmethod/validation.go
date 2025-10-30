@@ -22,8 +22,10 @@ const (
 	maxEmailRecipients               = 10
 )
 
-var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
-var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
+var (
+	headerNameRegex     = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
+	templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
+)
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, a, manifest.KindAlertMethod)
