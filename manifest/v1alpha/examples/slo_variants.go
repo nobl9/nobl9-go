@@ -1,3 +1,4 @@
+// nolint: lll
 package v1alphaExamples
 
 import (
@@ -61,7 +62,7 @@ func (s sloExample) GetDataSourceType() v1alpha.DataSourceType {
 func (s sloExample) String() string {
 	subVariantStr := s.MetricSubVariant
 	if subVariantStr != "" {
-		subVariantStr = subVariantStr + " "
+		subVariantStr += " "
 	}
 	return fmt.Sprintf(
 		"%s %s %sSLO using %s budgeting method and %s time window",
@@ -248,6 +249,7 @@ const (
 // The standard variants are: raw, good/total, and bad/total (only supported sources).
 // If a metric source has non-standard variants (e.g. Lightstep), it can extend metricVariant with it's own types.
 // It is up to the caller to nil-out the unwanted fields.
+// nolint: gocognit,gocyclo
 func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 	switch s.DataSourceType {
 	case v1alpha.Prometheus:
@@ -1127,7 +1129,7 @@ func setSingleQueryGoodOverTotalMetric(slo v1alphaSLO.SLO, goodTotal *v1alphaSLO
 
 func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 	v := reflect.ValueOf(metric)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		metric = v.Elem().Interface()
 	}
 	spec := &v1alphaSLO.MetricSpec{}

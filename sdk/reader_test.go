@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -517,7 +516,7 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 // readTestFile attempts to read the designated file from test_data folder.
 func readTestFile(t *testing.T, filename string) *bytes.Buffer {
 	t.Helper()
-	data, err := readerTestData.ReadFile(path.Join("test_data", "reader", "inputs", filename))
+	data, err := readerTestData.ReadFile(filepath.Join("test_data", "reader", "inputs", filename))
 	require.NoError(t, err)
 	return bytes.NewBuffer(data)
 }

@@ -66,6 +66,7 @@ func (s *Spec) containsIndicatorRawMetric() bool {
 }
 
 // IsComposite returns true if SLOSpec contains composite type.
+//
 // Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
 // use HasCompositeObjectives instead for new implementation
 func (s *Spec) IsComposite() bool {

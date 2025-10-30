@@ -64,10 +64,10 @@ linters:
         text: exported (function|method|type|const|var) .*? should have comment
       - linters:
           - revive
-        text: '^var-naming: .*'
+        text: "^var-naming: .*"
       - linters:
           - revive
-        text: 'error-strings: error strings should not be capitalized or end with punctuation or a newline'
+        text: "error-strings: error strings should not be capitalized or end with punctuation or a newline"
       - linters:
           - staticcheck
         text: (WithDryRun is deprecated)|(Objects\(\).V1\(\).\w+ is deprecated)|(aws-sdk-go is deprecated.)
