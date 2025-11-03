@@ -976,6 +976,23 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		testutils.AssertNoError(t, report, err)
 	})
 
+	t.Run("passes with many labels", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+		conf.RowGroupBy = RowGroupByCustomRows
+		labels := make(v1alpha.Labels)
+		for i := range 50 {
+			labels["key"+strconv.Itoa(i)] = []string{"value"}
+		}
+		conf.LabelRows = []LabelRowSpec{{
+			DisplayName: "Environment",
+			Labels:      labels,
+		}}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
 	tests := map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
@@ -1007,10 +1024,25 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "spec.systemHealthReview.labelRows[0].labels",
-				Code: rules.ErrorCodeMapMinLength,
+				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.LabelRows[0].Labels = v1alpha.Labels{}
+				return conf
+			},
+		},
+		"fails with too many labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				labels := make(v1alpha.Labels)
+				for i := range 51 {
+					labels["key"+strconv.Itoa(i)] = []string{"value"}
+				}
+				conf.LabelRows[0].Labels = labels
 				return conf
 			},
 		},
