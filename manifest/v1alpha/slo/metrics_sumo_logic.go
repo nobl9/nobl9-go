@@ -106,7 +106,7 @@ var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
 ).
 	When(
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
-		govy.WhenDescription("type is '%s'", SumoLogicTypeMetric),
+		govy.WhenDescriptionf("type is '%s'", SumoLogicTypeMetric),
 	)
 
 var (
@@ -120,7 +120,7 @@ var sumoLogicSingleQueryMetricsTypeValidation = govy.New[SumoLogicMetric](
 ).
 	When(
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
-		govy.WhenDescription("type is '%s'", SumoLogicTypeMetric),
+		govy.WhenDescriptionf("type is '%s'", SumoLogicTypeMetric),
 	)
 
 func getSumoLogicLogsTypeValidation(isSingleQuery bool) govy.Validator[SumoLogicMetric] {
@@ -151,7 +151,7 @@ func getSumoLogicLogsTypeValidation(isSingleQuery bool) govy.Validator[SumoLogic
 	).
 		When(
 			func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeLogs },
-			govy.WhenDescription("type is '%s'", SumoLogicTypeLogs),
+			govy.WhenDescriptionf("type is '%s'", SumoLogicTypeLogs),
 		)
 }
 
