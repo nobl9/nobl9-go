@@ -26,7 +26,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("labelRows").
 		When(
 			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByLabel },
-			govy.WhenDescription("rowGroupBy is '%s'", RowGroupByLabel),
+			govy.WhenDescriptionf("rowGroupBy is '%s'", RowGroupByLabel),
 		).
 		Rules(rules.SliceLength[[]LabelRowSpec](1, 1)).
 		IncludeForEach(labelRowsGroupByLabelValidation),
@@ -34,7 +34,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("labelRows").
 		When(
 			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByCustomRows },
-			govy.WhenDescription("rowGroupBy is '%s'", RowGroupByCustomRows),
+			govy.WhenDescriptionf("rowGroupBy is '%s'", RowGroupByCustomRows),
 		).
 		Rules(rules.SliceMinLength[[]LabelRowSpec](1)).
 		IncludeForEach(labelRowsGroupByCustomValidation),
@@ -44,7 +44,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 			func(s SystemHealthReviewConfig) bool {
 				return s.RowGroupBy == RowGroupByProject || s.RowGroupBy == RowGroupByService
 			},
-			govy.WhenDescription("rowGroupBy is '%s' or '%s'", RowGroupByProject, RowGroupByService),
+			govy.WhenDescriptionf("rowGroupBy is '%s' or '%s'", RowGroupByProject, RowGroupByService),
 		).
 		Rules(rules.Forbidden[[]LabelRowSpec]()),
 	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
@@ -63,7 +63,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("hideUngrouped").
 		When(
 			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByLabel },
-			govy.WhenDescription("rowGroupBy is not '%s'", RowGroupByLabel),
+			govy.WhenDescriptionf("rowGroupBy is not '%s'", RowGroupByLabel),
 		).
 		Rules(rules.Forbidden[*bool]()),
 )
