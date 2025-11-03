@@ -130,7 +130,7 @@ var (
 			HideValue().
 			When(
 				func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringStartsWith("NRIQ-")),
 	)
@@ -155,7 +155,7 @@ var (
 			HideValue().
 			When(
 				func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringJSON()),
 	)
@@ -184,7 +184,7 @@ var (
 			HideValue().
 			When(
 				func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringJSON()),
 	)

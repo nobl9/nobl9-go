@@ -60,7 +60,7 @@ var s3SpecValidation = govy.New[Spec](
 ).
 	When(
 		func(s Spec) bool { return s.ExportType == DataExportTypeS3 || s.ExportType == DataExportTypeSnowflake },
-		govy.WhenDescription("exportType is either '%s' or '%s'",
+		govy.WhenDescriptionf("exportType is either '%s' or '%s'",
 			DataExportTypeS3, DataExportTypeSnowflake),
 	)
 
@@ -94,7 +94,7 @@ var gcsSpecValidation = govy.New[Spec](
 ).
 	When(
 		func(s Spec) bool { return s.ExportType == DataExportTypeGCS },
-		govy.WhenDescription("exportType is '%s'", DataExportTypeGCS),
+		govy.WhenDescriptionf("exportType is '%s'", DataExportTypeGCS),
 	)
 
 // gcsValidation checks if name matches restrictions specified
@@ -115,7 +115,7 @@ var bucketNonDNSNameValidation = govy.New[string](
 ).
 	When(
 		func(n string) bool { return len(n) <= GCSNonDomainNameBucketMaxLength },
-		govy.WhenDescription("bucketName length is less than or equal to %d",
+		govy.WhenDescriptionf("bucketName length is less than or equal to %d",
 			GCSNonDomainNameBucketMaxLength),
 	)
 
@@ -126,5 +126,5 @@ var bucketDNSNameValidation = govy.New[string](
 ).
 	When(
 		func(n string) bool { return len(n) > GCSNonDomainNameBucketMaxLength },
-		govy.WhenDescription("bucketName length is greater than %d", GCSNonDomainNameBucketMaxLength),
+		govy.WhenDescriptionf("bucketName length is greater than %d", GCSNonDomainNameBucketMaxLength),
 	)

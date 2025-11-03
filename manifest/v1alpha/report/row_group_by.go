@@ -7,7 +7,7 @@ import (
 
 //go:generate ../../../bin/go-enum  --nocase --names --lower --values
 
-// RowGroupBy /* ENUM(project = 1, service, label)*/
+// RowGroupBy /* ENUM(project = 1, service, label, customRows)*/
 type RowGroupBy int
 
 func (r RowGroupBy) MarshalText() ([]byte, error) {

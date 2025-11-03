@@ -625,36 +625,23 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 	t.Run("valid rowGroupBy values", func(t *testing.T) {
 		for _, rowGroupBy := range RowGroupByValues() {
 			report := validSystemHealthReport()
-			report.Spec.SystemHealthReview = &SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					TimeZone: "Europe/Warsaw",
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-				},
-				RowGroupBy: rowGroupBy,
-				Columns: []ColumnSpec{{
-					DisplayName: "Column 1",
-					Labels: v1alpha.Labels{
-						"key1": {"value1"},
-					},
-				}},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.8),
-					GreenGreaterThan:   ptr(0.95),
-				},
-			}
-			if rowGroupBy == RowGroupByLabel {
-				report.Spec.SystemHealthReview.LabelRows = []LabelRowSpec{{
-					Labels: v1alpha.Labels{"environment": nil},
-				}}
-			}
+			config := validSystemHealthReviewConfig(rowGroupBy)
+			report.Spec.SystemHealthReview = &config
 			err := validate(report)
 			testutils.AssertNoError(t, report, err)
 		}
 	})
 
-	for name, test := range map[string]struct {
+	t.Run("valid tableHeader", func(t *testing.T) {
+		report := validSystemHealthReport()
+		config := validSystemHealthReviewConfig(RowGroupByService)
+		config.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength)
+		report.Spec.SystemHealthReview = &config
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
 		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
@@ -709,10 +696,47 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				return conf
 			},
 		},
-	} {
+		"fails when rowGroupBy is 'project'": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeForbidden,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByProject
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails when rowGroupBy is 'service'": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeForbidden,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByService
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails with too long tableHeader": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.tableHeader",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength+1)
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			report := validSystemHealthReport()
-			conf := getValidSystemHealthReviewConfig()
+			conf := validSystemHealthReviewConfig(RowGroupByService)
 			conf = test.ConfigFunc(conf)
 			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
@@ -802,7 +826,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			report := validSystemHealthReport()
-			conf := getValidSystemHealthReviewConfig()
+			conf := validSystemHealthReviewConfig(RowGroupByProject)
 			conf = test.ConfigFunc(conf)
 			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
@@ -811,10 +835,10 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 	}
 }
 
-func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
+func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 	t.Run("passes with valid labelRows when rowGroupBy is label", func(t *testing.T) {
 		report := validSystemHealthReport()
-		conf := getValidSystemHealthReviewConfig()
+		conf := validSystemHealthReviewConfig(RowGroupByLabel)
 		conf.RowGroupBy = RowGroupByLabel
 		conf.LabelRows = []LabelRowSpec{
 			{Labels: v1alpha.Labels{"env": nil}},
@@ -824,7 +848,7 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 		testutils.AssertNoError(t, report, err)
 	})
 
-	for name, test := range map[string]struct {
+	tests := map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
 		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
@@ -836,7 +860,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = nil
 				return conf
 			},
@@ -848,7 +871,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{}
 				return conf
 			},
@@ -860,7 +882,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				limit := 2
 				result := make([]LabelRowSpec, limit)
 				for i := range limit {
@@ -877,7 +898,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{}}}
 				return conf
 			},
@@ -889,7 +909,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": nil, "key2": nil}}}
 				return conf
 			},
@@ -902,7 +921,6 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"k ey": nil}}}
 				return conf
 			},
@@ -915,33 +933,174 @@ func TestValidate_Spec_SystemHealthReview_LabelRows(t *testing.T) {
 				Code:    rules.ErrorCodeSliceMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByLabel
 				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
 				return conf
 			},
 		},
-		"fails when rowGroupBy is not 'label'": {
+		"fails with displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
 				Code: rules.ErrorCodeForbidden,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				conf.RowGroupBy = RowGroupByProject
-				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				conf.LabelRows[0].DisplayName = "foo"
 				return conf
 			},
 		},
-	} {
+	}
+
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			report := validSystemHealthReport()
-			conf := getValidSystemHealthReviewConfig()
+			conf := validSystemHealthReviewConfig(RowGroupByLabel)
 			conf = test.ConfigFunc(conf)
 			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
+}
+
+func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
+	t.Run("passes with valid labelRows when rowGroupBy is custom", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+		conf.RowGroupBy = RowGroupByCustomRows
+		conf.LabelRows = []LabelRowSpec{{
+			DisplayName: "Environment",
+			Labels:      v1alpha.Labels{"env": []string{"prod"}},
+		}}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
+		ExpectedErrorsCount int
+		ExpectedErrors      []testutils.ExpectedError
+		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
+	}{
+		"fails with nil labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = nil
+				return conf
+			},
+		},
+		"fails with empty labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{}
+				return conf
+			},
+		},
+		"fails with empty labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{}
+				return conf
+			},
+		},
+		"fails with invalid label key": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:       "spec.systemHealthReview.labelRows[0].labels.['k ey']",
+				IsKeyError: true,
+				Code:       rules.ErrorCodeStringMatchRegexp,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"k ey": nil}
+				return conf
+			},
+		},
+		"fails with empty label values": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"key1": []string{}}
+				return conf
+			},
+		},
+		"fails with nil label values": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"key1": nil}
+				return conf
+			},
+		},
+		"fails with empty displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeRequired,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].DisplayName = ""
+				return conf
+			},
+		},
+		"fails with too long displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].DisplayName = strings.Repeat("l", validationV1Alpha.NameMaximumLength+1)
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+			conf = test.ConfigFunc(conf)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
+
+	t.Run("fails if hideUngrouped is set for anything but 'label'", func(t *testing.T) {
+		for _, rowGroupBy := range RowGroupByValues() {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(rowGroupBy)
+			conf.HideUngrouped = ptr(true)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			switch rowGroupBy {
+			case RowGroupByLabel:
+				testutils.AssertNoError(t, report, err)
+			default:
+				testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+					Prop: "spec.systemHealthReview.hideUngrouped",
+					Code: rules.ErrorCodeForbidden,
+				})
+			}
+		}
+	})
 }
 
 func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
@@ -1313,15 +1472,15 @@ func validSystemHealthReport() Report {
 	}
 }
 
-func getValidSystemHealthReviewConfig() SystemHealthReviewConfig {
-	return SystemHealthReviewConfig{
+func validSystemHealthReviewConfig(rowGroupBy RowGroupBy) SystemHealthReviewConfig {
+	config := SystemHealthReviewConfig{
 		TimeFrame: SystemHealthReviewTimeFrame{
 			Snapshot: SnapshotTimeFrame{
 				Point: SnapshotPointLatest,
 			},
 			TimeZone: "Europe/Warsaw",
 		},
-		RowGroupBy: RowGroupByProject,
+		RowGroupBy: rowGroupBy,
 		Columns: []ColumnSpec{
 			{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
 		},
@@ -1330,4 +1489,27 @@ func getValidSystemHealthReviewConfig() SystemHealthReviewConfig {
 			GreenGreaterThan:   ptr(0.2),
 		},
 	}
+	// nolint: exhaustive
+	switch rowGroupBy {
+	case RowGroupByLabel:
+		config.LabelRows = []LabelRowSpec{{
+			Labels: v1alpha.Labels{"environment": nil},
+		}}
+	case RowGroupByCustomRows:
+		config.LabelRows = []LabelRowSpec{
+			{
+				DisplayName: "Production databases",
+				Labels:      v1alpha.Labels{"environment": []string{"prod"}, "type": []string{"database"}},
+			},
+			{
+				DisplayName: "R&D",
+				Labels:      v1alpha.Labels{"team": []string{"green", "gray"}},
+			},
+			{
+				DisplayName: "Critical",
+				Labels:      v1alpha.Labels{"level": []string{"critical"}},
+			},
+		}
+	}
+	return config
 }
