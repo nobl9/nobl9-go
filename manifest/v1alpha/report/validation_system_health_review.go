@@ -98,7 +98,7 @@ var labelRowsGroupByCustomValidation = govy.New[LabelRowSpec](
 		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
-		Rules(rules.MapMinLength[v1alpha.Labels](1)).
+		Rules(rules.MapLength[v1alpha.Labels](1, 50)).
 		Include(v1alpha.LabelsValidationRules()).
 		RulesForValues(rules.SliceMinLength[[]string](1)),
 ).
