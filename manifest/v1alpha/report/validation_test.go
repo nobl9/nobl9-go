@@ -976,18 +976,19 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		testutils.AssertNoError(t, report, err)
 	})
 
-	t.Run("passes with many labels", func(t *testing.T) {
+	t.Run("passes with many rows", func(t *testing.T) {
 		report := validSystemHealthReport()
 		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
 		conf.RowGroupBy = RowGroupByCustomRows
-		labels := make(v1alpha.Labels)
-		for i := range 50 {
-			labels["key"+strconv.Itoa(i)] = []string{"value"}
+		limit := 50
+		rows := make([]LabelRowSpec, 0, limit)
+		for i := range limit {
+			rows = append(rows, LabelRowSpec{
+				DisplayName: strconv.Itoa(i),
+				Labels:      v1alpha.Labels{"env": []string{"prod"}},
+			})
 		}
-		conf.LabelRows = []LabelRowSpec{{
-			DisplayName: "Environment",
-			Labels:      labels,
-		}}
+		conf.LabelRows = rows
 		report.Spec.SystemHealthReview = &conf
 		err := validate(report)
 		testutils.AssertNoError(t, report, err)
@@ -998,11 +999,30 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		ExpectedErrors      []testutils.ExpectedError
 		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
 	}{
+		"fails with too many rows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				limit := 51
+				rows := make([]LabelRowSpec, 0, limit)
+				for i := range limit {
+					rows = append(rows, LabelRowSpec{
+						DisplayName: strconv.Itoa(i),
+						Labels:      v1alpha.Labels{"env": []string{"prod"}},
+					})
+				}
+				conf.LabelRows = rows
+				return conf
+			},
+		},
 		"fails with nil labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "spec.systemHealthReview.labelRows",
-				Code: rules.ErrorCodeSliceMinLength,
+				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.LabelRows = nil
@@ -1013,7 +1033,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "spec.systemHealthReview.labelRows",
-				Code: rules.ErrorCodeSliceMinLength,
+				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.LabelRows = []LabelRowSpec{}
@@ -1024,25 +1044,10 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
 				Prop: "spec.systemHealthReview.labelRows[0].labels",
-				Code: rules.ErrorCodeMapLength,
+				Code: rules.ErrorCodeMapMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
 				conf.LabelRows[0].Labels = v1alpha.Labels{}
-				return conf
-			},
-		},
-		"fails with too many labels": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels",
-				Code: rules.ErrorCodeMapLength,
-			}},
-			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
-				labels := make(v1alpha.Labels)
-				for i := range 51 {
-					labels["key"+strconv.Itoa(i)] = []string{"value"}
-				}
-				conf.LabelRows[0].Labels = labels
 				return conf
 			},
 		},
