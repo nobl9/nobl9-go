@@ -36,7 +36,7 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByCustomRows },
 			govy.WhenDescriptionf("rowGroupBy is '%s'", RowGroupByCustomRows),
 		).
-		Rules(rules.SliceMinLength[[]LabelRowSpec](1)).
+		Rules(rules.SliceLength[[]LabelRowSpec](1, 50)).
 		IncludeForEach(labelRowsGroupByCustomValidation),
 	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
 		WithName("labelRows").
@@ -98,7 +98,7 @@ var labelRowsGroupByCustomValidation = govy.New[LabelRowSpec](
 		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
 		WithName("labels").
-		Rules(rules.MapLength[v1alpha.Labels](1, 50)).
+		Rules(rules.MapMinLength[v1alpha.Labels](1)).
 		Include(v1alpha.LabelsValidationRules()).
 		RulesForValues(rules.SliceMinLength[[]string](1)),
 ).
