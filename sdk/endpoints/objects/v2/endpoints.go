@@ -17,10 +17,9 @@ import (
 )
 
 const (
-	apiApply       = "apply"
-	apiDelete      = "delete"
-	QueryKeyName   = "name"
-	QueryKeyDryRun = "dry_run"
+	apiApply          = "apply"
+	apiDelete         = "delete"
+	apiGetAnnotations = "/annotations"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"

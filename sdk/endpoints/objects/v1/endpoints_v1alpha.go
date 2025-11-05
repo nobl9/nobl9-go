@@ -205,10 +205,8 @@ func (e endpoints) GetV1alphaAnnotations(
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
 		Bool(QueryKeySystemAnnotations, params.SystemAnnotations).
-		Bool(QueryKeyUserAnnotations, params.UserAnnotations)
-	if params.SLOName != "" {
-		f.Strings(QueryKeySLOName, []string{params.SLOName})
-	}
+		Bool(QueryKeyUserAnnotations, params.UserAnnotations).
+		String(QueryKeySLOName, params.SLOName)
 	objects, err := e.Get(ctx, manifest.KindAnnotation, f.header, f.query)
 	if err != nil {
 		return nil, err
@@ -231,7 +229,9 @@ func (e endpoints) GetV1alphaUserGroups(
 }
 
 // GetAlerts is exported for internal usage, use methods returning
-// concrete manifest.Version instead, like GetV1alphaAlerts
+// concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
+//
+// Deprecated: use [endpoints.GetV1alphaAlerts] instead.
 func (e endpoints) GetAlerts(
 	ctx context.Context,
 	header http.Header,

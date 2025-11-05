@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"time"
+
 	"github.com/nobl9/nobl9-go/manifest"
 )
 
@@ -19,4 +21,13 @@ type DeleteByNameRequest struct {
 	Project string
 	Names   []string
 	DryRun  bool
+}
+
+type GetAnnotationsRequest struct {
+	Project  string
+	Names    []string
+	SLOName  string
+	From     time.Time
+	To       time.Time
+	Category string
 }
