@@ -82,7 +82,7 @@ var pingdomCountMetricsValidation = createPingdomMetricSpecValidation(govy.New[P
 		WithName("status").
 		When(
 			func(p PingdomMetric) bool { return p.CheckType != nil && *p.CheckType == PingdomTypeUptime },
-			govy.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+			govy.WhenDescriptionf("checkType is equal to '%s'", PingdomTypeUptime),
 		).
 		Rules(rules.Required[*string]()),
 ))
@@ -118,7 +118,7 @@ var pingdomUptimeCheckTypeValidation = govy.New[PingdomMetric](
 ).
 	When(
 		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeUptime },
-		govy.WhenDescription("checkType is equal to '%s'", PingdomTypeUptime),
+		govy.WhenDescriptionf("checkType is equal to '%s'", PingdomTypeUptime),
 	)
 
 var pingdomTransactionCheckTypeValidation = govy.New[PingdomMetric](
@@ -128,5 +128,5 @@ var pingdomTransactionCheckTypeValidation = govy.New[PingdomMetric](
 ).
 	When(
 		func(m PingdomMetric) bool { return m.CheckType != nil && *m.CheckType == PingdomTypeTransaction },
-		govy.WhenDescription("checkType is equal to '%s'", PingdomTypeTransaction),
+		govy.WhenDescriptionf("checkType is equal to '%s'", PingdomTypeTransaction),
 	)

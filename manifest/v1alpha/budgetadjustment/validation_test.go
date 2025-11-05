@@ -59,7 +59,7 @@ func TestValidate_Metadata(t *testing.T) {
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: rules.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringMaxLength,
 		},
 	)
 }
