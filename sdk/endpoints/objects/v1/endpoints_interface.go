@@ -48,6 +48,7 @@ type Endpoints interface {
 	GetV1alphaDirects(ctx context.Context, params GetDirectsRequest) ([]v1alphaDirect.Direct, error)
 	GetV1alphaDataExports(ctx context.Context, params GetDataExportsRequest) ([]v1alphaDataExport.DataExport, error)
 	GetV1alphaRoleBindings(ctx context.Context, params GetRoleBindingsRequest) ([]v1alphaRoleBinding.RoleBinding, error)
+	// Deprecated: use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.GetV1alphaAnnotations] instead.
 	GetV1alphaAnnotations(ctx context.Context, params GetAnnotationsRequest) ([]v1alphaAnnotation.Annotation, error)
 	GetV1alphaUserGroups(ctx context.Context, params GetAnnotationsRequest) ([]v1alphaUserGroup.UserGroup, error)
 	// GetAlerts is exported for internal usage, use methods returning

@@ -195,6 +195,7 @@ func (e endpoints) GetV1alphaRoleBindings(
 	return manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](objects), err
 }
 
+// Deprecated: use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.GetV1alphaAnnotations] instead.
 func (e endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
