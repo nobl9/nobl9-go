@@ -185,7 +185,7 @@ func (c *Client) GetUserEmail(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user data from token")
 	}
-	var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	if emailRegex.MatchString(userDataFromToken) {
 		return userDataFromToken, nil
 	}

@@ -4,10 +4,9 @@ import (
 	_ "embed"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
-
-	"slices"
 
 	"github.com/stretchr/testify/assert"
 
@@ -919,7 +918,8 @@ func validAlertPolicy() AlertPolicy {
 			Description:      "Example alertPolicy",
 			Severity:         SeverityHigh.String(),
 			CoolDownDuration: "5m",
-			Conditions:       []AlertCondition{validAlertCondition()}},
+			Conditions:       []AlertCondition{validAlertCondition()},
+		},
 	)
 }
 

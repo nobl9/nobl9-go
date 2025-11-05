@@ -163,7 +163,7 @@ func (o *genericObject) unmarshalGeneric(data []byte, format manifest.ObjectForm
 		Kind       manifest.Kind    `json:"kind" yaml:"kind"`
 	}
 	var unmarshal func(data []byte, v any) error
-	//exhaustive: enforce
+	// exhaustive: enforce
 	switch format {
 	case manifest.ObjectFormatJSON:
 		unmarshal = json.Unmarshal

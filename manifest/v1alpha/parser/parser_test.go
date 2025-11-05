@@ -178,6 +178,7 @@ func validAlertPolicy() alertpolicy.AlertPolicy {
 	}
 }
 
+// nolint: staticcheck
 func withLegacyAlertMethodEmbedded() alertpolicy.AlertPolicy {
 	alertPolicy := validAlertPolicy()
 	alertPolicy.Spec.AlertMethods[0].EmbedAlertMethodRef(alertmethod.AlertMethod{

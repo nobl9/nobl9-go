@@ -69,16 +69,20 @@ type Filters struct {
 	Labels   v1alpha.Labels `json:"labels,omitempty"`
 }
 
-type Services []Service
-type Service struct {
-	Name    string `json:"name"`
-	Project string `json:"project"`
-}
+type (
+	Services []Service
+	Service  struct {
+		Name    string `json:"name"`
+		Project string `json:"project"`
+	}
+)
 
-type SLOs []SLO
-type SLO struct {
-	Name    string `json:"name"`
-	Project string `json:"project"`
-}
+type (
+	SLOs []SLO
+	SLO  struct {
+		Name    string `json:"name"`
+		Project string `json:"project"`
+	}
+)
 
 type ErrorBudgetStatusConfig struct{}

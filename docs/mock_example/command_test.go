@@ -2,13 +2,12 @@ package mock_example
 
 import (
 	"context"
+	"mock_example/mocks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
-
-	"mock_example/mocks"
 
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"

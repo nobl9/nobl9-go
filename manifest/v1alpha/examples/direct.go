@@ -86,11 +86,12 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	if slices.Contains(alphaChannelDirects, typ) {
+	switch {
+	case slices.Contains(alphaChannelDirects, typ):
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
-	} else if slices.Contains(betaChannelDirects, typ) {
+	case slices.Contains(betaChannelDirects, typ):
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	} else {
+	default:
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	}
 	return direct

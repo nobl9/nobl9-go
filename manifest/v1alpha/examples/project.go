@@ -15,6 +15,7 @@ func Project() []Example {
 			v1alphaProject.Spec{
 				Description: "Example Project",
 			},
-		)},
+		),
+	},
 	)
 }

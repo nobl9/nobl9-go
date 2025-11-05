@@ -21,7 +21,7 @@ func GetOfflineEchoClient() *sdk.Client {
 		if err != nil {
 			panic(err)
 		}
-		if err = sdk.PrintObject(objects[0], os.Stdout, manifest.ObjectFormatYAML); err != nil {
+		if err = sdk.EncodeObject(objects[0], os.Stdout, manifest.ObjectFormatYAML); err != nil {
 			panic(err)
 		}
 	}))
