@@ -72,9 +72,15 @@ func TestValidate_Metadata_Project(t *testing.T) {
 }
 
 func TestValidate_Spec_Description(t *testing.T) {
+	t.Run("max length", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength)
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
 	t.Run("too long", func(t *testing.T) {
 		annotation := validAnnotation()
-		annotation.Spec.Description = strings.Repeat("A", 2000)
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
@@ -181,7 +187,7 @@ func TestSpec_Category(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	for _, category := range []Category{CategoryComment, CategoryReviewNote} {
+	for _, category := range []Category{CategoryComment, CategoryReviewNote, CategorySloEdit} {
 		t.Run("passes, valid category: "+category.String(), func(t *testing.T) {
 			annotation := validAnnotation()
 			annotation.Spec.Category = category

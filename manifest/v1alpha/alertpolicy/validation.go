@@ -132,7 +132,7 @@ var timeDurationBasedMeasurementsValueValidation = govy.New[AlertCondition](
 			return c.Measurement == MeasurementTimeToBurnBudget.String() ||
 				c.Measurement == MeasurementTimeToBurnEntireBudget.String()
 		},
-		govy.WhenDescription("measurement is is either '%s' or '%s'",
+		govy.WhenDescriptionf("measurement is is either '%s' or '%s'",
 			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
 	)
 
@@ -147,7 +147,7 @@ var floatBasedMeasurementsValueValidation = govy.New[AlertCondition](
 				c.Measurement == MeasurementAverageBurnRate.String() ||
 				c.Measurement == MeasurementBudgetDrop.String()
 		},
-		govy.WhenDescription("measurement is is either '%s', '%s' or '%s'",
+		govy.WhenDescriptionf("measurement is is either '%s', '%s' or '%s'",
 			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBudgetDrop),
 	)
 
