@@ -2,7 +2,7 @@ package annotation
 
 import "slices"
 
-//go:generate ../../../bin/go-enum  --nocase --lower --names
+//go:generate ../../../bin/go-enum --values --nocomments --marshal
 
 // Category classifies [Annotation] based on its origin (how was it generated).
 /* ENUM(

@@ -7,50 +7,37 @@
 package annotation
 
 import (
+	"errors"
 	"fmt"
-	"strings"
 )
 
 const (
-	// CategoryComment is a Category of type Comment.
-	CategoryComment Category = "Comment"
-	// CategoryReviewNote is a Category of type ReviewNote.
-	CategoryReviewNote Category = "ReviewNote"
-	// CategorySloEdit is a Category of type SloEdit.
-	CategorySloEdit Category = "SloEdit"
-	// CategoryAlert is a Category of type Alert.
-	CategoryAlert Category = "Alert"
-	// CategoryAdjustment is a Category of type Adjustment.
-	CategoryAdjustment Category = "Adjustment"
-	// CategoryNoDataAnomaly is a Category of type NoDataAnomaly.
-	CategoryNoDataAnomaly Category = "NoDataAnomaly"
-	// CategoryIncrementalMismatchAnomaly is a Category of type IncrementalMismatchAnomaly.
+	CategoryComment                    Category = "Comment"
+	CategoryReviewNote                 Category = "ReviewNote"
+	CategorySloEdit                    Category = "SloEdit"
+	CategoryAlert                      Category = "Alert"
+	CategoryAdjustment                 Category = "Adjustment"
+	CategoryNoDataAnomaly              Category = "NoDataAnomaly"
 	CategoryIncrementalMismatchAnomaly Category = "IncrementalMismatchAnomaly"
-	// CategoryNoBurnAnomaly is a Category of type NoBurnAnomaly.
-	CategoryNoBurnAnomaly Category = "NoBurnAnomaly"
-	// CategoryConstantBurnAnomaly is a Category of type ConstantBurnAnomaly.
-	CategoryConstantBurnAnomaly Category = "ConstantBurnAnomaly"
+	CategoryNoBurnAnomaly              Category = "NoBurnAnomaly"
+	CategoryConstantBurnAnomaly        Category = "ConstantBurnAnomaly"
 )
 
-var ErrInvalidCategory = fmt.Errorf("not a valid Category, try [%s]", strings.Join(_CategoryNames, ", "))
+var ErrInvalidCategory = errors.New("not a valid Category")
 
-var _CategoryNames = []string{
-	string(CategoryComment),
-	string(CategoryReviewNote),
-	string(CategorySloEdit),
-	string(CategoryAlert),
-	string(CategoryAdjustment),
-	string(CategoryNoDataAnomaly),
-	string(CategoryIncrementalMismatchAnomaly),
-	string(CategoryNoBurnAnomaly),
-	string(CategoryConstantBurnAnomaly),
-}
-
-// CategoryNames returns a list of possible string values of Category.
-func CategoryNames() []string {
-	tmp := make([]string, len(_CategoryNames))
-	copy(tmp, _CategoryNames)
-	return tmp
+// CategoryValues returns a list of the values for Category
+func CategoryValues() []Category {
+	return []Category{
+		CategoryComment,
+		CategoryReviewNote,
+		CategorySloEdit,
+		CategoryAlert,
+		CategoryAdjustment,
+		CategoryNoDataAnomaly,
+		CategoryIncrementalMismatchAnomaly,
+		CategoryNoBurnAnomaly,
+		CategoryConstantBurnAnomaly,
+	}
 }
 
 // String implements the Stringer interface.
@@ -67,23 +54,14 @@ func (x Category) IsValid() bool {
 
 var _CategoryValue = map[string]Category{
 	"Comment":                    CategoryComment,
-	"comment":                    CategoryComment,
 	"ReviewNote":                 CategoryReviewNote,
-	"reviewnote":                 CategoryReviewNote,
 	"SloEdit":                    CategorySloEdit,
-	"sloedit":                    CategorySloEdit,
 	"Alert":                      CategoryAlert,
-	"alert":                      CategoryAlert,
 	"Adjustment":                 CategoryAdjustment,
-	"adjustment":                 CategoryAdjustment,
 	"NoDataAnomaly":              CategoryNoDataAnomaly,
-	"nodataanomaly":              CategoryNoDataAnomaly,
 	"IncrementalMismatchAnomaly": CategoryIncrementalMismatchAnomaly,
-	"incrementalmismatchanomaly": CategoryIncrementalMismatchAnomaly,
 	"NoBurnAnomaly":              CategoryNoBurnAnomaly,
-	"noburnanomaly":              CategoryNoBurnAnomaly,
 	"ConstantBurnAnomaly":        CategoryConstantBurnAnomaly,
-	"constantburnanomaly":        CategoryConstantBurnAnomaly,
 }
 
 // ParseCategory attempts to convert a string to a Category.
@@ -91,9 +69,28 @@ func ParseCategory(name string) (Category, error) {
 	if x, ok := _CategoryValue[name]; ok {
 		return x, nil
 	}
-	// Case insensitive parse, do a separate lookup to prevent unnecessary cost of lowercasing a string if we don't need to.
-	if x, ok := _CategoryValue[strings.ToLower(name)]; ok {
-		return x, nil
-	}
 	return Category(""), fmt.Errorf("%s is %w", name, ErrInvalidCategory)
+}
+
+// MarshalText implements the text marshaller method.
+func (x Category) MarshalText() ([]byte, error) {
+	return []byte(string(x)), nil
+}
+
+// UnmarshalText implements the text unmarshaller method.
+func (x *Category) UnmarshalText(text []byte) error {
+	tmp, err := ParseCategory(string(text))
+	if err != nil {
+		return err
+	}
+	*x = tmp
+	return nil
+}
+
+// AppendText appends the textual representation of itself to the end of b
+// (allocating a larger slice if necessary) and returns the updated slice.
+//
+// Implementations must not retain b, nor mutate any bytes within b[:len(b)].
+func (x *Category) AppendText(b []byte) ([]byte, error) {
+	return append(b, x.String()...), nil
 }
