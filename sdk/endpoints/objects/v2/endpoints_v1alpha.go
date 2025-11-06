@@ -17,7 +17,7 @@ func (e endpoints) GetV1alphaAnnotations(
 		Strings(QueryKeyName, params.Names).
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
-		String(QueryKeyCategory, params.Category).
+		String(QueryKeyCategory, params.Category.String()).
 		String(QueryKeySLOName, params.SLOName)
 	req, err := e.client.CreateRequest(
 		ctx,

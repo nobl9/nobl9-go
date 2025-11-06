@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 )
 
 type ApplyRequest struct {
@@ -29,5 +30,5 @@ type GetAnnotationsRequest struct {
 	SLOName  string
 	From     time.Time
 	To       time.Time
-	Category string
+	Category v1alphaAnnotation.Category
 }

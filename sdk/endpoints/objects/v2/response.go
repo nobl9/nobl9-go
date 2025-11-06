@@ -8,17 +8,17 @@ import (
 )
 
 type getAnnotationModel struct {
-	Name           string                   `json:"name"`
-	Project        string                   `json:"project"`
-	SloName        string                   `json:"slo"`
-	ObjectiveName  string                   `json:"objectiveName"`
-	Description    string                   `json:"description"`
-	StartTime      time.Time                `json:"startTime"`
-	EndTime        *time.Time               `json:"endTime"`
-	Status         getAnnotationModelStatus `json:"status"`
-	Category       string                   `json:"category"`
-	Labels         v1alpha.Labels           `json:"labels"`
-	ExternalUserID string                   `json:"author"`
+	Name           string                     `json:"name"`
+	Project        string                     `json:"project"`
+	SloName        string                     `json:"slo"`
+	ObjectiveName  string                     `json:"objectiveName"`
+	Description    string                     `json:"description"`
+	StartTime      time.Time                  `json:"startTime"`
+	EndTime        *time.Time                 `json:"endTime"`
+	Status         getAnnotationModelStatus   `json:"status"`
+	Category       v1alphaAnnotation.Category `json:"category"`
+	Labels         v1alpha.Labels             `json:"labels"`
+	ExternalUserID string                     `json:"author"`
 }
 
 type getAnnotationModelStatus struct {

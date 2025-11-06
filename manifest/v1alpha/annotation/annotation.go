@@ -46,13 +46,6 @@ type Spec struct {
 	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
 }
 
-type Category = string
-
-const (
-	CategoryComment    Category = "Comment"
-	CategoryReviewNote Category = "ReviewNote"
-)
-
 // Status represents content of Status optional for Annotation Object
 type Status struct {
 	UpdatedAt string `json:"updatedAt"`
