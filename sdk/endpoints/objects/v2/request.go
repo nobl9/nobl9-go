@@ -25,10 +25,10 @@ type DeleteByNameRequest struct {
 }
 
 type GetAnnotationsRequest struct {
-	Project  string
-	Names    []string
-	SLOName  string
-	From     time.Time
-	To       time.Time
-	Category v1alphaAnnotation.Category
+	Project    string
+	Names      []string
+	SLOName    string
+	From       time.Time
+	To         time.Time
+	Categories []v1alphaAnnotation.Category
 }

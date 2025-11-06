@@ -12,12 +12,19 @@ func (e endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
 ) ([]v1alphaAnnotation.Annotation, error) {
+	var categories []string
+	if len(params.Categories) > 0 {
+		categories = make([]string, 0, len(params.Categories))
+		for _, category := range params.Categories {
+			categories = append(categories, category.String())
+		}
+	}
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names).
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
-		String(QueryKeyCategory, params.Category.String()).
+		Strings(QueryKeyCategory, categories).
 		String(QueryKeySLOName, params.SLOName)
 	req, err := e.client.CreateRequest(
 		ctx,

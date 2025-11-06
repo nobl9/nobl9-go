@@ -385,17 +385,24 @@ func Test_Objects_V2_V1alpha_Annotation(t *testing.T) {
 		},
 		"filter by category (comment)": {
 			request: objectsV2.GetAnnotationsRequest{
-				Project:  project.GetName(),
-				Category: v1alphaAnnotation.CategoryComment,
+				Project:    project.GetName(),
+				Categories: []v1alphaAnnotation.Category{v1alphaAnnotation.CategoryComment},
 			},
 			expected: inputs[1:4],
 		},
 		"filter by category (review note)": {
 			request: objectsV2.GetAnnotationsRequest{
-				Project:  project.GetName(),
-				Category: v1alphaAnnotation.CategoryReviewNote,
+				Project:    project.GetName(),
+				Categories: []v1alphaAnnotation.Category{v1alphaAnnotation.CategoryComment},
 			},
 			expected: []v1alphaAnnotation.Annotation{inputs[4]},
+		},
+		"filter by category (comment and review note)": {
+			request: objectsV2.GetAnnotationsRequest{
+				Project:    project.GetName(),
+				Categories: []v1alphaAnnotation.Category{v1alphaAnnotation.CategoryComment, v1alphaAnnotation.CategoryReviewNote},
+			},
+			expected: inputs[1:5],
 		},
 	}
 	for name, test := range filterTests {
