@@ -83,6 +83,27 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			},
 		)
 	})
+	t.Run("fails - spec.anomalyConfig provided", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.AnomalyConfig = &AnomalyConfig{
+			NoData: &AnomalyConfigNoData{
+				AlertMethods: []AnomalyConfigAlertMethod{
+					{
+						Name: "my-name",
+					},
+				},
+			},
+		}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.anomalyConfig",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "property is forbidden; anomalyConfig section is forbidden when spec.objectives[0].composite is provided",
+			},
+		)
+	})
 	t.Run("fails - raw objective type mixed with composite in a single objective", func(t *testing.T) {
 		slo := validCompositeSLO()
 		slo.Spec.Objectives[0].RawMetric = &RawMetricSpec{MetricQuery: validMetricSpec(v1alpha.Prometheus)}
