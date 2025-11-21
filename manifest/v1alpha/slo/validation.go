@@ -408,6 +408,13 @@ var specValidationComposite = govy.New[Spec](
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
 		),
+	govy.ForPointer(func(s Spec) *AnomalyConfig { return s.AnomalyConfig }).
+		WithName("anomalyConfig").
+		Rules(
+			rules.Forbidden[AnomalyConfig]().WithDetails(
+				"anomalyConfig section is forbidden when spec.objectives[0].composite is provided",
+			),
+		),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(rules.SliceLength[[]Objective](1, 1).
