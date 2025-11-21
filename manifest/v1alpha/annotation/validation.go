@@ -11,19 +11,27 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
-func validate(p Annotation) *v1alpha.ObjectError {
-	return v1alpha.ValidateObject[Annotation](validator, p, manifest.KindAnnotation)
+// GetValidatorWithoutCategoryRules returns [govy.Validator] for [Annotation]
+// without the `spec.category` field validation.
+func GetValidatorWithoutCategoryRules() govy.Validator[Annotation] {
+	return getValidator(false)
 }
 
-var validator = govy.New[Annotation](
-	validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
-	validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
-	govy.For(func(p Annotation) Metadata { return p.Metadata }).
-		Include(metadataValidation),
-	govy.For(func(p Annotation) Spec { return p.Spec }).
-		WithName("spec").
-		Include(specValidation),
-)
+func validate(p Annotation) *v1alpha.ObjectError {
+	return v1alpha.ValidateObject[Annotation](getValidator(true), p, manifest.KindAnnotation)
+}
+
+func getValidator(includeCategoryRules bool) govy.Validator[Annotation] {
+	return govy.New[Annotation](
+		validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
+		validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
+		govy.For(func(p Annotation) Metadata { return p.Metadata }).
+			Include(metadataValidation),
+		govy.For(func(p Annotation) Spec { return p.Spec }).
+			WithName("spec").
+			Include(getSpecValidation(includeCategoryRules)),
+	)
+}
 
 var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
@@ -36,26 +44,34 @@ var metadataValidation = govy.New[Metadata](
 
 const specDescriptionMaxLength = 10000
 
-var specValidation = govy.New[Spec](
-	govy.For(govy.GetSelf[Spec]()).
-		Rules(endTimeNotBeforeStartTime),
-	govy.For(func(s Spec) string { return s.Slo }).
-		WithName("slo").
-		Required().
-		Rules(validationV1Alpha.StringName()),
-	govy.For(func(s Spec) string { return s.ObjectiveName }).
-		WithName("objectiveName").
-		OmitEmpty().
-		Rules(validationV1Alpha.StringName()),
-	govy.For(func(s Spec) string { return s.Description }).
-		WithName("description").
-		Required().
-		Rules(rules.StringLength(0, specDescriptionMaxLength)),
-	govy.For(func(s Spec) Category { return s.Category }).
-		WithName("category").
-		OmitEmpty().
-		Rules(rules.OneOf(CategoryComment, CategoryReviewNote, CategorySloEdit)),
-)
+func getSpecValidation(includeCategoryRules bool) govy.Validator[Spec] {
+	properties := []govy.PropertyRulesInterface[Spec]{
+		govy.For(govy.GetSelf[Spec]()).
+			Rules(endTimeNotBeforeStartTime),
+		govy.For(func(s Spec) string { return s.Slo }).
+			WithName("slo").
+			Required().
+			Rules(validationV1Alpha.StringName()),
+		govy.For(func(s Spec) string { return s.ObjectiveName }).
+			WithName("objectiveName").
+			OmitEmpty().
+			Rules(validationV1Alpha.StringName()),
+		govy.For(func(s Spec) string { return s.Description }).
+			WithName("description").
+			Required().
+			Rules(rules.StringLength(0, specDescriptionMaxLength)),
+	}
+	if includeCategoryRules {
+		properties = append(
+			properties,
+			govy.For(func(s Spec) Category { return s.Category }).
+				WithName("category").
+				OmitEmpty().
+				Rules(rules.OneOf(userCategories...)),
+		)
+	}
+	return govy.New[Spec](properties...)
+}
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
 
