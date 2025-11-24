@@ -21,7 +21,9 @@ func validate(p Annotation) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject[Annotation](getValidator(true), p, manifest.KindAnnotation)
 }
 
-func getValidator(includeCategoryRules bool) govy.Validator[Annotation] {
+var validator = getValidator(true)
+
+func getValidator(includeUserCategoryRules bool) govy.Validator[Annotation] {
 	return govy.New[Annotation](
 		validationV1Alpha.FieldRuleAPIVersion(func(a Annotation) manifest.Version { return a.APIVersion }),
 		validationV1Alpha.FieldRuleKind(func(a Annotation) manifest.Kind { return a.Kind }, manifest.KindAnnotation),
@@ -29,7 +31,7 @@ func getValidator(includeCategoryRules bool) govy.Validator[Annotation] {
 			Include(metadataValidation),
 		govy.For(func(p Annotation) Spec { return p.Spec }).
 			WithName("spec").
-			Include(getSpecValidation(includeCategoryRules)),
+			Include(getSpecValidation(includeUserCategoryRules)),
 	)
 }
 
@@ -44,7 +46,7 @@ var metadataValidation = govy.New[Metadata](
 
 const specDescriptionMaxLength = 10000
 
-func getSpecValidation(includeCategoryRules bool) govy.Validator[Spec] {
+func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 	properties := []govy.PropertyRulesInterface[Spec]{
 		govy.For(govy.GetSelf[Spec]()).
 			Rules(endTimeNotBeforeStartTime),
@@ -61,7 +63,7 @@ func getSpecValidation(includeCategoryRules bool) govy.Validator[Spec] {
 			Required().
 			Rules(rules.StringLength(0, specDescriptionMaxLength)),
 	}
-	if includeCategoryRules {
+	if includeUserCategoryRules {
 		properties = append(
 			properties,
 			govy.For(func(s Spec) Category { return s.Category }).
