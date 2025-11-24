@@ -28,6 +28,7 @@ const (
 	QueryKeyTriggered         = "triggered"
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
+	QueryKeyCategory          = "category"
 )
 
 type filters struct {
@@ -95,5 +96,13 @@ func (f *filters) Floats(k string, values []float64) *filters {
 	for _, v := range values {
 		f.query.Add(k, strconv.FormatFloat(v, 'f', -1, 64))
 	}
+	return f
+}
+
+func (f *filters) String(k, value string) *filters {
+	if value == "" {
+		return f
+	}
+	f.query.Set(k, value)
 	return f
 }

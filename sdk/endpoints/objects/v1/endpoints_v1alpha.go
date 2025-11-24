@@ -195,6 +195,7 @@ func (e endpoints) GetV1alphaRoleBindings(
 	return manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](objects), err
 }
 
+// Deprecated: use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.GetV1alphaAnnotations] instead.
 func (e endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
@@ -205,10 +206,8 @@ func (e endpoints) GetV1alphaAnnotations(
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
 		Bool(QueryKeySystemAnnotations, params.SystemAnnotations).
-		Bool(QueryKeyUserAnnotations, params.UserAnnotations)
-	if params.SLOName != "" {
-		f.Strings(QueryKeySLOName, []string{params.SLOName})
-	}
+		Bool(QueryKeyUserAnnotations, params.UserAnnotations).
+		String(QueryKeySLOName, params.SLOName)
 	objects, err := e.Get(ctx, manifest.KindAnnotation, f.header, f.query)
 	if err != nil {
 		return nil, err
@@ -231,7 +230,9 @@ func (e endpoints) GetV1alphaUserGroups(
 }
 
 // GetAlerts is exported for internal usage, use methods returning
-// concrete manifest.Version instead, like GetV1alphaAlerts
+// concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
+//
+// Deprecated: use [endpoints.GetV1alphaAlerts] instead.
 func (e endpoints) GetAlerts(
 	ctx context.Context,
 	header http.Header,
