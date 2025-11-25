@@ -110,19 +110,6 @@ func TestReplayStructDatesValidation(t *testing.T) {
 			ErrorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
-			name: "maximum duration exceeded",
-			replay: Replay{
-				Project: "project",
-				Slo:     "slo",
-				Duration: ReplayDuration{
-					Unit:  "Day",
-					Value: 31,
-				},
-			},
-			isValid:   false,
-			ErrorCode: replayDurationValidationErrorCode,
-		},
-		{
 			name: "missing duration",
 			replay: Replay{
 				Project: "project",

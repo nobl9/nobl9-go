@@ -13,9 +13,6 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
-// maximumAllowedReplayDuration currently is 30 days.
-const maximumAllowedReplayDuration = time.Hour * 24 * 30
-
 // Replay Struct used for posting replay entity.
 type Replay struct {
 	Project   string           `json:"project"`
@@ -116,8 +113,7 @@ var replayValidation = govy.New[Replay](
 			},
 		).
 		Cascade(govy.CascadeModeStop).
-		Include(replayDurationValidation).
-		Rules(replayDurationValidationRule()),
+		Include(replayDurationValidation),
 	govy.ForPointer(func(r Replay) *ReplaySourceSLO { return r.SourceSLO }).
 		WithName("sourceSLO").
 		Include(replaySourceSLOValidation),
@@ -126,10 +122,7 @@ var replayValidation = govy.New[Replay](
 		When(
 			func(r Replay) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
-		Rules(
-			replayStartTimeValidationRule(),
-			replayStartTimeNotInFutureValidationRule(),
-		),
+		Rules(replayStartTimeNotInFutureValidationRule()),
 	govy.For(func(r Replay) Replay { return r }).
 		Rules(govy.NewRule(func(r Replay) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
@@ -177,36 +170,10 @@ func (r Replay) Validate() error {
 }
 
 const (
-	replayDurationValidationErrorCode         = "replay_duration"
 	replayDurationUnitValidationErrorCode     = "replay_duration_unit"
 	replayDurationAndStartDateValidationError = "replay_duration_or_start_date"
 	replayStartDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
-
-func replayDurationValidationRule() govy.Rule[ReplayDuration] {
-	return govy.NewRule(func(v ReplayDuration) error {
-		duration, err := v.Duration()
-		if err != nil {
-			return err
-		}
-		if duration > maximumAllowedReplayDuration {
-			return errors.Errorf("%s duration must not be greater than %s",
-				duration, maximumAllowedReplayDuration)
-		}
-		return nil
-	}).WithErrorCode(replayDurationValidationErrorCode)
-}
-
-func replayStartTimeValidationRule() govy.Rule[time.Time] {
-	return govy.NewRule(func(v time.Time) error {
-		duration := time.Since(v)
-		if duration > maximumAllowedReplayDuration {
-			return errors.Errorf("%s duration must not be greater than %s",
-				duration, maximumAllowedReplayDuration)
-		}
-		return nil
-	}).WithErrorCode(replayDurationValidationErrorCode)
-}
 
 func replayStartTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 	return govy.NewRule(func(v time.Time) error {
