@@ -174,8 +174,13 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
-// GetUser returns the email of the user associated with the access token used by [Client].
-func (c *Client) GetUser(ctx context.Context) (string, error) {
+// GetUserID returns the user ID associated with the access token used by [Client].
+func (c *Client) GetUserID(ctx context.Context) (string, error) {
+	return c.credentials.GetUser(ctx)
+}
+
+// GetUserEmail returns the email of the user associated with the access token used by [Client].
+func (c *Client) GetUserEmail(ctx context.Context) (string, error) {
 	userDataFromToken, err := c.credentials.GetUser(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user data from token")
@@ -194,6 +199,13 @@ func (c *Client) GetUser(ctx context.Context) (string, error) {
 	}
 
 	return user.Email, nil
+}
+
+// GetUser returns the email of the user associated with the access token used by [Client].
+//
+// Deprecated: Use [GetUserEmail] instead.
+func (c *Client) GetUser(ctx context.Context) (string, error) {
+	return c.GetUserEmail(ctx)
 }
 
 // SetUserAgent will set [HeaderUserAgent] to the provided value.

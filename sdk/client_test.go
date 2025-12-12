@@ -110,12 +110,12 @@ func TestDefaultUserAgent(t *testing.T) {
 	assert.Contains(t, string(out), "sdk/(devel)")
 }
 
-func TestDefaultGetUserEmail(t *testing.T) {
-	t.Run("get user email from token", func(t *testing.T) {
-		client, srv := prepareTestClient(t, endpointConfig{})
+func TestClient_GetUserEmail(t *testing.T) {
+	t.Run("get user from token", func(t *testing.T) {
+		client, srv := prepareTestClientWithClaimsUser(t, endpointConfig{}, "test@nobl9.com")
 		defer srv.Close()
 
-		emailFromToken, err := client.GetUser(context.Background())
+		emailFromToken, err := client.GetUserEmail(context.Background())
 		require.NoError(t, err)
 
 		assert.Equal(t, "test@nobl9.com", emailFromToken)
@@ -123,14 +123,13 @@ func TestDefaultGetUserEmail(t *testing.T) {
 
 	t.Run("get user email from API when token does not contain email", func(t *testing.T) {
 		expectedEmail := "email@email.com"
-		userID := "userID"
 
 		responsePayload := struct {
 			Users []*v2.User
 		}{
 			Users: []*v2.User{
 				{
-					UserID:    userID,
+					UserID:    "userID",
 					FirstName: "user-first-name",
 					LastName:  "user-last-name",
 					Email:     expectedEmail,
@@ -146,13 +145,7 @@ func TestDefaultGetUserEmail(t *testing.T) {
 		})
 		defer srv.Close()
 
-		ctx := context.Background()
-		_, err := client.credentials.refreshAccessToken(ctx)
-		require.NoError(t, err)
-
-		client.credentials.claims.M2MProfile.Value.User = userID
-
-		emailFromAPI, err := client.GetUser(context.Background())
+		emailFromAPI, err := client.GetUserEmail(context.Background())
 		require.NoError(t, err)
 
 		assert.Equal(t, expectedEmail, emailFromAPI)
@@ -174,13 +167,7 @@ func TestDefaultGetUserEmail(t *testing.T) {
 			})
 			defer srv.Close()
 
-			ctx := context.Background()
-			_, err := client.credentials.refreshAccessToken(ctx)
-			require.NoError(t, err)
-
-			client.credentials.claims.M2MProfile.Value.User = "any-userID"
-
-			emailFromAPI, err := client.GetUser(context.Background())
+			emailFromAPI, err := client.GetUserEmail(context.Background())
 
 			assert.Empty(t, emailFromAPI)
 			assert.Error(t, err)
@@ -195,17 +182,21 @@ func TestDefaultGetUserEmail(t *testing.T) {
 		})
 		defer srv.Close()
 
-		ctx := context.Background()
-		_, err := client.credentials.refreshAccessToken(ctx)
-		require.NoError(t, err)
-
-		client.credentials.claims.M2MProfile.Value.User = "any-userID"
-
-		emailFromAPI, err := client.GetUser(context.Background())
+		emailFromAPI, err := client.GetUserEmail(context.Background())
 
 		assert.Empty(t, emailFromAPI)
 		assert.Error(t, err)
 	})
+}
+
+func TestClient_GetUserID(t *testing.T) {
+	client, srv := prepareTestClient(t, endpointConfig{})
+	defer srv.Close()
+
+	userID, err := client.GetUserID(context.Background())
+	require.NoError(t, err)
+
+	assert.Equal(t, "00u2y4e4atkzaYkXP4x8", userID)
 }
 
 type endpointConfig struct {
@@ -215,6 +206,15 @@ type endpointConfig struct {
 }
 
 func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, srv *httptest.Server) {
+	t.Helper()
+	return prepareTestClientWithClaimsUser(t, endpoint, "00u2y4e4atkzaYkXP4x8")
+}
+
+func prepareTestClientWithClaimsUser(
+	t *testing.T,
+	endpoint endpointConfig,
+	claimsUser string,
+) (client *Client, srv *httptest.Server) {
 	t.Helper()
 	urlScheme = "http"
 	const (
@@ -245,7 +245,7 @@ func prepareTestClient(t *testing.T, endpoint endpointConfig) (client *Client, s
 		"m2mProfile": map[string]any{
 			"environment":  authServerURL.Host, // We're using the same server to serve responses for all endpoints.
 			"organization": organization,
-			"user":         "test@nobl9.com",
+			"user":         claimsUser,
 		},
 	}
 	jwtToken := jwt.NewWithClaims(jwtSigningAlgorithm, claims)

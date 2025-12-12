@@ -25,93 +25,100 @@ var objectsRegistry = []*ObjectDoc{
 	{
 		Kind:                 manifest.KindProject,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaProject.Project{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaProject.Project{}.GetValidator())),
 		object:               v1alphaProject.Project{},
 	},
 	{
 		Kind:                 manifest.KindService,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaService.Service{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaService.Service{}.GetValidator())),
 		object:               v1alphaService.Service{},
 	},
 	{
 		Kind:                 manifest.KindSLO,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaSLO.SLO{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaSLO.SLO{}.GetValidator())),
 		object:               v1alphaSLO.SLO{},
 	},
 	{
 		Kind:                 manifest.KindDirect,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaDirect.Direct{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaDirect.Direct{}.GetValidator())),
 		object:               v1alphaDirect.Direct{},
 	},
 	{
 		Kind:                 manifest.KindAgent,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAgent.Agent{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAgent.Agent{}.GetValidator())),
 		object:               v1alphaAgent.Agent{},
 	},
 	{
 		Kind:                 manifest.KindAlertMethod,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAlertMethod.AlertMethod{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAlertMethod.AlertMethod{}.GetValidator())),
 		object:               v1alphaAlertMethod.AlertMethod{},
 	},
 	{
 		Kind:                 manifest.KindAlertPolicy,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAlertPolicy.AlertPolicy{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAlertPolicy.AlertPolicy{}.GetValidator())),
 		object:               v1alphaAlertPolicy.AlertPolicy{},
 	},
 	{
 		Kind:                 manifest.KindAlertSilence,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAlertSilence.AlertSilence{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAlertSilence.AlertSilence{}.GetValidator())),
 		object:               v1alphaAlertSilence.AlertSilence{},
 	},
 	{
 		Kind:                 manifest.KindAlert,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAlert.Alert{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAlert.Alert{}.GetValidator())),
 		object:               v1alphaAlert.Alert{},
 	},
 	{
 		Kind:                 manifest.KindAnnotation,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaAnnotation.Annotation{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaAnnotation.Annotation{}.GetValidator())),
 		object:               v1alphaAnnotation.Annotation{},
 	},
 	{
 		Kind:                 manifest.KindBudgetAdjustment,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaBudgetAdjustment.BudgetAdjustment{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaBudgetAdjustment.BudgetAdjustment{}.GetValidator())),
 		object:               v1alphaBudgetAdjustment.BudgetAdjustment{},
 	},
 	{
 		Kind:                 manifest.KindDataExport,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaDataExport.DataExport{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaDataExport.DataExport{}.GetValidator())),
 		object:               v1alphaDataExport.DataExport{},
 	},
 	{
 		Kind:                 manifest.KindUserGroup,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaUserGroup.UserGroup{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaUserGroup.UserGroup{}.GetValidator())),
 		object:               v1alphaUserGroup.UserGroup{},
 	},
 	{
 		Kind:                 manifest.KindRoleBinding,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaRoleBinding.RoleBinding{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaRoleBinding.RoleBinding{}.GetValidator())),
 		object:               v1alphaRoleBinding.RoleBinding{},
 	},
 	{
 		Kind:                 manifest.KindReport,
 		Version:              manifest.VersionV1alpha,
-		validationProperties: objectPlansToDocs(govy.Plan(v1alphaReport.Report{}.GetValidator())),
+		validationProperties: mustObjectPlansToDocs(govy.Plan(v1alphaReport.Report{}.GetValidator())),
 		object:               v1alphaReport.Report{},
 	},
+}
+
+func mustObjectPlansToDocs(plan *govy.ValidatorPlan, err error) []PropertyDoc {
+	if err != nil {
+		panic(err)
+	}
+	return objectPlansToDocs(plan)
 }
 
 func objectPlansToDocs(plan *govy.ValidatorPlan) []PropertyDoc {
