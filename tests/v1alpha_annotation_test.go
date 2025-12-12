@@ -393,7 +393,7 @@ func Test_Objects_V2_V1alpha_Annotation(t *testing.T) {
 		"filter by category (review note)": {
 			request: objectsV2.GetAnnotationsRequest{
 				Project:    project.GetName(),
-				Categories: []v1alphaAnnotation.Category{v1alphaAnnotation.CategoryComment},
+				Categories: []v1alphaAnnotation.Category{v1alphaAnnotation.CategoryReviewNote},
 			},
 			expected: []v1alphaAnnotation.Annotation{inputs[4]},
 		},
@@ -416,6 +416,33 @@ func Test_Objects_V2_V1alpha_Annotation(t *testing.T) {
 			assertSubset(t, actual, test.expected, assertV1alphaAnnotationsAreEqual)
 		})
 	}
+
+	t.Run("system categories cannot be applied", func(t *testing.T) {
+		t.Parallel()
+		for _, category := range v1alphaAnnotation.GetSystemCategories() {
+			t.Run(string(category), func(t *testing.T) {
+				t.Parallel()
+				annotation := v1alphaAnnotation.New(
+					v1alphaAnnotation.Metadata{
+						Name:    e2etestutils.GenerateName(),
+						Project: project.GetName(),
+					},
+					v1alphaAnnotation.Spec{
+						Slo:         slo.Metadata.Name,
+						Description: e2etestutils.GetObjectDescription(),
+						StartTime:   mustParseTime("2024-05-20T14:00:00Z").UTC(),
+						EndTime:     mustParseTime("2024-05-20T15:00:00Z").UTC(),
+						Category:    category,
+					},
+				)
+				err := client.Objects().V2().Apply(
+					t.Context(),
+					objectsV2.ApplyRequest{Objects: []manifest.Object{annotation}},
+				)
+				assert.ErrorContains(t, err, "must be one of")
+			})
+		}
+	})
 }
 
 func assertV1alphaAnnotationsAreEqual(t *testing.T, expected, actual v1alphaAnnotation.Annotation) {
