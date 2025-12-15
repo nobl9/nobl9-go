@@ -447,13 +447,15 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrorsCount: 1,
 			},
 			"alert after is too short": {
-				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
-					AlertMethods: []AnomalyConfigAlertMethod{
-						{
-							Name: "my-name",
-						}},
-					AlertAfter: ptr("0"),
-				},
+				Config: &AnomalyConfig{
+					NoData: &AnomalyConfigNoData{
+						AlertMethods: []AnomalyConfigAlertMethod{
+							{
+								Name: "my-name",
+							},
+						},
+						AlertAfter: ptr("0"),
+					},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
@@ -465,13 +467,15 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrorsCount: 1,
 			},
 			"alert after is too long": {
-				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
-					AlertMethods: []AnomalyConfigAlertMethod{
-						{
-							Name: "my-name",
-						}},
-					AlertAfter: ptr("8760h"), // 1 year
-				},
+				Config: &AnomalyConfig{
+					NoData: &AnomalyConfigNoData{
+						AlertMethods: []AnomalyConfigAlertMethod{
+							{
+								Name: "my-name",
+							},
+						},
+						AlertAfter: ptr("8760h"), // 1 year
+					},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
@@ -482,13 +486,15 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				ExpectedErrorsCount: 1,
 			},
 			"not minute precision": {
-				Config: &AnomalyConfig{NoData: &AnomalyConfigNoData{
-					AlertMethods: []AnomalyConfigAlertMethod{
-						{
-							Name: "my-name",
-						}},
-					AlertAfter: ptr("1h30m30s"),
-				},
+				Config: &AnomalyConfig{
+					NoData: &AnomalyConfigNoData{
+						AlertMethods: []AnomalyConfigAlertMethod{
+							{
+								Name: "my-name",
+							},
+						},
+						AlertAfter: ptr("1h30m30s"),
+					},
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
