@@ -11,6 +11,7 @@ import (
 // Labels are key-value pairs that can be attached to certain objects.
 // Labels are used to select and filter these objects.
 type Labels map[labelKey][]labelValue
+
 type (
 	labelKey   = string
 	labelValue = string

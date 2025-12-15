@@ -275,8 +275,7 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 			ResourceGroup:  "rg1",
 			WorkspaceID:    "00000000-0000-0000-0000-000000000001",
 		}
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.KQLQuery =
-			"logs | project TimeGenerated as n9_time, 1 as n9_value"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.KQLQuery = "logs | project TimeGenerated as n9_time, 1 as n9_value" // nolint: lll
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
@@ -335,8 +334,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 	t.Run("forbidden fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.AzureMonitor)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.ResourceID =
-			"/subscriptions/1/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.ResourceID = "/subscriptions/1/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app" // nolint: lll
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.MetricName = "HttpResponseTime"
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Aggregation = "Avg"
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.MetricNamespace = "Microsoft.Web/sites"
@@ -643,7 +641,8 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 }
 
 func validAzureMonitorMetricsDataType() *AzureMonitorMetric {
-	return &AzureMonitorMetric{DataType: AzureMonitorDataTypeMetrics,
+	return &AzureMonitorMetric{
+		DataType:    AzureMonitorDataTypeMetrics,
 		ResourceID:  "/subscriptions/123/resourceGroups/azure-monitor-test-sources/providers/Microsoft.Web/sites/app",
 		MetricName:  "HttpResponseTime",
 		Aggregation: "Avg",

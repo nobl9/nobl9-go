@@ -430,8 +430,8 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 
 func TestReadRawDefinitionsFromSources(t *testing.T) {
 	tmp := t.TempDir()
-	path := filepath.Join(tmp, "test.yaml")
-	f, err := os.Create(path)
+	testFilePath := filepath.Join(tmp, "test.yaml")
+	f, err := os.Create(testFilePath)
 	require.NoError(t, err)
 	defer func() { _ = f.Close() }()
 
@@ -444,7 +444,7 @@ func TestReadRawDefinitionsFromSources(t *testing.T) {
 	}{
 		"single file": {
 			typ: ObjectSourceTypeFile,
-			src: path,
+			src: testFilePath,
 		},
 		"directory": {
 			typ: ObjectSourceTypeDirectory,
@@ -466,7 +466,7 @@ func TestReadRawDefinitionsFromSources(t *testing.T) {
 			require.Len(t, definitions, 1)
 			expected := RawDefinition{
 				SourceType:     tc.typ,
-				ResolvedSource: path,
+				ResolvedSource: testFilePath,
 				Definition:     []byte(`apiVersion: foo`),
 			}
 			assert.Equal(t, expected, *definitions[0])
@@ -517,6 +517,8 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 // readTestFile attempts to read the designated file from test_data folder.
 func readTestFile(t *testing.T, filename string) *bytes.Buffer {
 	t.Helper()
+	// Use path.Join instead of filepath.Join because embed.FS always uses forward slashes
+	// as path separators, regardless of the host operating system.
 	data, err := readerTestData.ReadFile(path.Join("test_data", "reader", "inputs", filename))
 	require.NoError(t, err)
 	return bytes.NewBuffer(data)

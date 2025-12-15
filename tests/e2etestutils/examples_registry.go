@@ -85,10 +85,8 @@ func FilterExamplesByAlertMethodType(typ v1alpha.AlertMethodType) ExamplesFilter
 	}
 }
 
-var (
-	// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
-	examplesRegistry = newMapCache[manifest.Kind, []v1alphaExamples.Example]()
-)
+// examplesRegistry MUST NOT be accessed directly, use [getExamples] instead.
+var examplesRegistry = newMapCache[manifest.Kind, []v1alphaExamples.Example]()
 
 func getExamples(t *testing.T, kind manifest.Kind) []v1alphaExamples.Example {
 	t.Helper()

@@ -11,6 +11,7 @@ import (
 // SLOs, services, projects, and alert policies.
 // Metadata annotations are used for descriptive purposes only.
 type MetadataAnnotations map[annotationKey]annotationValue
+
 type (
 	annotationKey   = string
 	annotationValue = string

@@ -85,30 +85,54 @@ func TestValidate(t *testing.T) {
 			customObject{kind: KindProject, name: "sun"},
 			customObject{kind: KindProject, name: "moon"},
 			customObject{kind: KindRoleBinding, name: "sun"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "sun"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "sun"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "sun"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "jupiter"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "jupiter"},
-				project: "non-default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "moon"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindSLO, name: "moon"},
-				project: "default"},
-			customProjectScopedObject{customObject: customObject{
-				kind: KindService, name: "jupiter"},
-				project: "default"},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "sun",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "sun",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "sun",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "jupiter",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "jupiter",
+				},
+				project: "non-default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "moon",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindSLO, name: "moon",
+				},
+				project: "default",
+			},
+			customProjectScopedObject{
+				customObject: customObject{
+					kind: KindService, name: "jupiter",
+				},
+				project: "default",
+			},
 		})
 		assert.Len(t, errs, 1)
 		assert.EqualError(
