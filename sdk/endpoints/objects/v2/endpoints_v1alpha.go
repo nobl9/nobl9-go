@@ -30,8 +30,8 @@ func (e endpoints) GetV1alphaAnnotations(
 		ctx,
 		http.MethodGet,
 		apiGetAnnotations,
-		f.header,
-		f.query,
+		f.Header,
+		f.Query,
 		nil,
 	)
 	if err != nil {

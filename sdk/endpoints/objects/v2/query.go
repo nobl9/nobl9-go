@@ -1,11 +1,9 @@
 package v2
 
 import (
-	"net/http"
-	"net/url"
 	"time"
 
-	"github.com/nobl9/nobl9-go/internal/sdk"
+	internalendpoints "github.com/nobl9/nobl9-go/internal/endpoints"
 )
 
 const (
@@ -18,44 +16,29 @@ const (
 )
 
 type filters struct {
-	header http.Header
-	query  url.Values
+	*internalendpoints.Filters
 }
 
 func filterBy() *filters {
-	return &filters{
-		header: make(http.Header),
-		query:  make(url.Values),
-	}
+	return &filters{Filters: internalendpoints.NewFilters()}
 }
 
 func (f *filters) Project(project string) *filters {
-	if project == "" {
-		return f
-	}
-	f.header.Set(sdk.HeaderProject, project)
+	f.Filters.Project(project)
 	return f
 }
 
 func (f *filters) Time(key string, t time.Time) *filters {
-	if t.IsZero() {
-		return f
-	}
-	f.query.Add(key, t.Format(time.RFC3339))
+	f.Filters.Time(key, t)
 	return f
 }
 
 func (f *filters) Strings(k string, values []string) *filters {
-	for _, v := range values {
-		f.query.Add(k, v)
-	}
+	f.Filters.Strings(k, values)
 	return f
 }
 
 func (f *filters) String(k, value string) *filters {
-	if value == "" {
-		return f
-	}
-	f.query.Set(k, value)
+	f.Filters.String(k, value)
 	return f
 }

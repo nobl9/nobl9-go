@@ -2,13 +2,10 @@ package v1
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
-	"github.com/nobl9/nobl9-go/internal/sdk"
+	internalendpoints "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -32,22 +29,15 @@ const (
 )
 
 type filters struct {
-	header http.Header
-	query  url.Values
+	*internalendpoints.Filters
 }
 
 func filterBy() *filters {
-	return &filters{
-		header: make(http.Header),
-		query:  make(url.Values),
-	}
+	return &filters{Filters: internalendpoints.NewFilters()}
 }
 
 func (f *filters) Project(project string) *filters {
-	if project == "" {
-		return f
-	}
-	f.header.Set(sdk.HeaderProject, project)
+	f.Filters.Project(project)
 	return f
 }
 
@@ -65,44 +55,31 @@ func (f *filters) Labels(labels v1alpha.Labels) *filters {
 			strLabels = append(strLabels, key)
 		}
 	}
-	f.query.Add(QueryKeyLabels, strings.Join(strLabels, ","))
+	f.Query.Add(QueryKeyLabels, strings.Join(strLabels, ","))
 	return f
 }
 
 func (f *filters) Time(key string, t time.Time) *filters {
-	if t.IsZero() {
-		return f
-	}
-	f.query.Add(key, t.Format(time.RFC3339))
+	f.Filters.Time(key, t)
 	return f
 }
 
 func (f *filters) Bool(k string, b *bool) *filters {
-	if b == nil {
-		return f
-	}
-	f.query.Set(k, strconv.FormatBool(*b))
+	f.Filters.Bool(k, b)
 	return f
 }
 
 func (f *filters) Strings(k string, values []string) *filters {
-	for _, v := range values {
-		f.query.Add(k, v)
-	}
+	f.Filters.Strings(k, values)
 	return f
 }
 
 func (f *filters) Floats(k string, values []float64) *filters {
-	for _, v := range values {
-		f.query.Add(k, strconv.FormatFloat(v, 'f', -1, 64))
-	}
+	f.Filters.Floats(k, values)
 	return f
 }
 
 func (f *filters) String(k, value string) *filters {
-	if value == "" {
-		return f
-	}
-	f.query.Set(k, value)
+	f.Filters.String(k, value)
 	return f
 }
