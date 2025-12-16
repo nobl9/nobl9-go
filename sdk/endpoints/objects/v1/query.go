@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	internalendpoints "github.com/nobl9/nobl9-go/internal/endpoints"
+	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -29,11 +29,11 @@ const (
 )
 
 type filters struct {
-	*internalendpoints.Filters
+	*endpointsHelpers.Filters
 }
 
 func filterBy() *filters {
-	return &filters{Filters: internalendpoints.NewFilters()}
+	return &filters{Filters: endpointsHelpers.NewFilters()}
 }
 
 func (f *filters) Project(project string) *filters {
