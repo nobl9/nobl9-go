@@ -6,13 +6,11 @@ BIN_DIR := ./bin
 # renovate datasource=github-releases depName=abice/go-enum
 GO_ENUM_VERSION := v0.9.2
 # renovate datasource=github-releases depName=securego/gosec
-GOSEC_VERSION := v2.22.10
+GOSEC_VERSION := v2.22.11
 # renovate datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION := v1.64.8
+GOLANGCI_LINT_VERSION := v2.6.2
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
 GOVULNCHECK_VERSION := v1.1.4
-# renovate datasource=go depName=golang.org/x/tools/cmd/goimports
-GOIMPORTS_VERSION := v0.39.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.3.0
 
@@ -134,9 +132,8 @@ format: format/go format/cspell
 ## Format Go files.
 format/go:
 	echo "Formatting Go files..."
-	$(call _ensure_installed,binary,goimports)
-	gofmt -w -l -s .
-	$(BIN_DIR)/goimports -local=github.com/nobl9/nobl9-go -w .
+	$(call _ensure_installed,binary,golangci-lint)
+	$(BIN_DIR)/golangci-lint fmt
 
 ## Format cspell config file.
 format/cspell:
@@ -144,9 +141,9 @@ format/cspell:
 	$(call _ensure_installed,yarn,yaml)
 	yarn --silent format-cspell-config
 
-.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
+.PHONY: install install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/ifacemaker
 ## Install all dev dependencies.
-install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/goimports install/ifacemaker
+install: install/yarn install/go-enum install/golangci-lint install/gosec install/govulncheck install/ifacemaker
 
 ## Install JS dependencies with yarn.
 install/yarn:
@@ -175,11 +172,6 @@ install/gosec:
 install/govulncheck:
 	echo "Installing govulncheck..."
 	$(call _install_go_binary,golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION))
-
-## Install goimports (https://pkg.go.dev/golang.org/x/tools/cmd/goimports).
-install/goimports:
-	echo "Installing goimports..."
-	$(call _install_go_binary,golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION))
 
 ## Install ifacemaker (https://github.com/vburenin/ifacemaker).
 install/ifacemaker:

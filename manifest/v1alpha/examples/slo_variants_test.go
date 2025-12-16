@@ -50,9 +50,19 @@ func TestSLOVariants(t *testing.T) {
 			assert.False(t, example.CountMetricsBad, "bad over total is disabled for %s, correct the examples", dataSourceType)
 		}
 		if slices.Contains(internal.SingleQueryGoodOverTotalEnabledSources, dataSourceType) {
-			assert.True(t, example.CountMetricsGoodTotal, "single query goodTotal is enabled for %s, missing examples", dataSourceType)
+			assert.True(
+				t,
+				example.CountMetricsGoodTotal,
+				"single query goodTotal is enabled for %s, missing examples",
+				dataSourceType,
+			)
 		} else {
-			assert.False(t, example.CountMetricsGoodTotal, "single query goodTotal is disabled for %s, correct the examples", dataSourceType)
+			assert.False(
+				t,
+				example.CountMetricsGoodTotal,
+				"single query goodTotal is disabled for %s, correct the examples",
+				dataSourceType,
+			)
 		}
 	}
 }
