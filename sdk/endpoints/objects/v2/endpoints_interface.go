@@ -4,10 +4,13 @@ package v2
 
 import (
 	"context"
+
+	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 )
 
 type Endpoints interface {
 	Apply(ctx context.Context, params ApplyRequest) error
 	Delete(ctx context.Context, params DeleteRequest) error
 	DeleteByName(ctx context.Context, params DeleteByNameRequest) error
+	GetV1alphaAnnotations(ctx context.Context, params GetAnnotationsRequest) ([]v1alphaAnnotation.Annotation, error)
 }

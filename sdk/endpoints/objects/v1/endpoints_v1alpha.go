@@ -33,7 +33,7 @@ func (e endpoints) GetV1alphaProjects(
 	f := filterBy().
 		Labels(params.Labels).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindProject, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindProject, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (e endpoints) GetV1alphaServices(
 		Project(params.Project).
 		Labels(params.Labels).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindService, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindService, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (e endpoints) GetV1alphaSLOs(
 	if len(params.Services) > 0 {
 		f = f.Strings(QueryKeyServiceName, params.Services)
 	}
-	objects, err := e.Get(ctx, manifest.KindSLO, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindSLO, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (e endpoints) GetV1alphaAgents(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindAgent, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindAgent, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (e endpoints) GetV1alphaAlertPolicies(
 		Project(params.Project).
 		Labels(params.Labels).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindAlertPolicy, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindAlertPolicy, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (e endpoints) GetV1alphaAlertSilences(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindAlertSilence, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindAlertSilence, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (e endpoints) GetV1alphaAlertMethods(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindAlertMethod, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindAlertMethod, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (e endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest
 		Bool(QueryKeyTriggered, params.Triggered).
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To)
-	objects, truncatedMax, err := e.GetAlerts(ctx, f.header, f.query)
+	objects, truncatedMax, err := e.GetAlerts(ctx, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (e endpoints) GetV1alphaDirects(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindDirect, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindDirect, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (e endpoints) GetV1alphaDataExports(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindDataExport, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindDataExport, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -188,13 +188,14 @@ func (e endpoints) GetV1alphaRoleBindings(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindRoleBinding, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindRoleBinding, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
 	return manifest.FilterByKind[v1alphaRoleBinding.RoleBinding](objects), err
 }
 
+// Deprecated: use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.GetV1alphaAnnotations] instead.
 func (e endpoints) GetV1alphaAnnotations(
 	ctx context.Context,
 	params GetAnnotationsRequest,
@@ -205,11 +206,9 @@ func (e endpoints) GetV1alphaAnnotations(
 		Time(QueryKeyFrom, params.From).
 		Time(QueryKeyTo, params.To).
 		Bool(QueryKeySystemAnnotations, params.SystemAnnotations).
-		Bool(QueryKeyUserAnnotations, params.UserAnnotations)
-	if params.SLOName != "" {
-		f.Strings(QueryKeySLOName, []string{params.SLOName})
-	}
-	objects, err := e.Get(ctx, manifest.KindAnnotation, f.header, f.query)
+		Bool(QueryKeyUserAnnotations, params.UserAnnotations).
+		String(QueryKeySLOName, params.SLOName)
+	objects, err := e.Get(ctx, manifest.KindAnnotation, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +222,7 @@ func (e endpoints) GetV1alphaUserGroups(
 	f := filterBy().
 		Project(params.Project).
 		Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindUserGroup, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindUserGroup, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +230,9 @@ func (e endpoints) GetV1alphaUserGroups(
 }
 
 // GetAlerts is exported for internal usage, use methods returning
-// concrete manifest.Version instead, like GetV1alphaAlerts
+// concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
+//
+// Deprecated: use [endpoints.GetV1alphaAlerts] instead.
 func (e endpoints) GetAlerts(
 	ctx context.Context,
 	header http.Header,
@@ -279,7 +280,7 @@ func (e endpoints) GetBudgetAdjustments(
 	params GetBudgetAdjustmentRequest,
 ) ([]v1alphaBudgetAdjustment.BudgetAdjustment, error) {
 	f := filterBy().Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindBudgetAdjustment, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindBudgetAdjustment, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +292,7 @@ func (e endpoints) GetReports(
 	params GetReportsRequest,
 ) ([]v1alphaReport.Report, error) {
 	f := filterBy().Strings(QueryKeyName, params.Names)
-	objects, err := e.Get(ctx, manifest.KindReport, f.header, f.query)
+	objects, err := e.Get(ctx, manifest.KindReport, f.Header, f.Query)
 	if err != nil {
 		return nil, err
 	}

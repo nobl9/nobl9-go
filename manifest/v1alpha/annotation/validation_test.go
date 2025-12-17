@@ -187,16 +187,16 @@ func TestSpec_Category(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	for _, category := range []string{CategoryComment, CategoryReviewNote, CategorySloEdit} {
-		t.Run("passes, valid category: "+category, func(t *testing.T) {
+	for _, category := range GetUserCategories() {
+		t.Run("passes, valid category: "+category.String(), func(t *testing.T) {
 			annotation := validAnnotation()
 			annotation.Spec.Category = category
 			err := validate(annotation)
 			testutils.AssertNoError(t, annotation, err)
 		})
 	}
-	for _, category := range []string{"Alert", "Adjustment", "NoDataAnomaly", "Invalid"} {
-		t.Run("fails, invalid category: "+category, func(t *testing.T) {
+	for _, category := range append(GetSystemCategories(), "Invalid") {
+		t.Run("fails, invalid category: "+category.String(), func(t *testing.T) {
 			annotation := validAnnotation()
 			annotation.Spec.Category = category
 			err := validate(annotation)

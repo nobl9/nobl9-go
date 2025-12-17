@@ -4,7 +4,6 @@ package slo
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
