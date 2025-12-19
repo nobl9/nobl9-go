@@ -4,7 +4,7 @@
   metadata:
     name: organization-binding-john-admin
   spec:
-    user: 00u2y4e4atkzaYkXP4x8
+    accountId: 00u2y4e4atkzaYkXP4x8
     roleRef: organization-admin
 # organization group binding
 - apiVersion: n9/v1alpha
@@ -20,7 +20,7 @@
   metadata:
     name: default-project-binding
   spec:
-    user: 00u2y4e4atkzaYkXP4x8
+    accountId: 00u2y4e4atkzaYkXP4x8
     roleRef: project-viewer
     projectRef: default
 # project group binding
