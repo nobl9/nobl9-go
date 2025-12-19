@@ -31,7 +31,9 @@ type Metadata struct {
 }
 
 type Spec struct {
+	// Deprecated: Use AccountID instead.
 	User       *string `json:"user,omitempty"`
+	AccountID  *string `json:"accountId,omitempty"`
 	GroupRef   *string `json:"groupRef,omitempty"`
 	RoleRef    string  `json:"roleRef"`
 	ProjectRef string  `json:"projectRef,omitempty"`
