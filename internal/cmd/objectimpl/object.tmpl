@@ -21,11 +21,11 @@ var _ v1alpha.ObjectContext = {{ .Name }}{}
 {{- if .GenerateObject }}
 
 func ({{ .Receiver }} {{ .Name }}) GetVersion() manifest.Version {
-  return {{ .Receiver }}.APIVersion
+  return manifest.VersionV1alpha
 }
 
 func ({{ .Receiver }} {{ .Name }}) GetKind() manifest.Kind {
-  return {{ .Receiver }}.Kind
+  return manifest.Kind{{ .Name }}
 }
 
 func ({{ .Receiver }} {{ .Name }}) GetName() string {

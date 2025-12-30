@@ -13,11 +13,11 @@ var _ manifest.Object = UserGroup{}
 var _ v1alpha.ObjectContext = UserGroup{}
 
 func (u UserGroup) GetVersion() manifest.Version {
-	return u.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (u UserGroup) GetKind() manifest.Kind {
-	return u.Kind
+	return manifest.KindUserGroup
 }
 
 func (u UserGroup) GetName() string {

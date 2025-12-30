@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = Agent{}
 var _ v1alpha.ObjectContext = Agent{}
 
 func (a Agent) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a Agent) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAgent
 }
 
 func (a Agent) GetName() string {

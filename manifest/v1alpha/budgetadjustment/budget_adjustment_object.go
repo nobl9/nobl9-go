@@ -13,11 +13,11 @@ var _ manifest.Object = BudgetAdjustment{}
 var _ v1alpha.ObjectContext = BudgetAdjustment{}
 
 func (b BudgetAdjustment) GetVersion() manifest.Version {
-	return b.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (b BudgetAdjustment) GetKind() manifest.Kind {
-	return b.Kind
+	return manifest.KindBudgetAdjustment
 }
 
 func (b BudgetAdjustment) GetName() string {
