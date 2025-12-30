@@ -118,6 +118,9 @@ generate/code:
 	$(call _ensure_installed,binary,go-enum)
 	$(call _ensure_installed,binary,ifacemaker)
 	go generate -tags=e2e_test ./... ./docs/mock_example
+	# We need to manually run kindgen to ensure that new implementations
+	# of ProjectScopedObject are picked up (deterministic order of execution).
+	cd manifest && go run ../internal/cmd/kindgen
 	${MAKE} format/go
 
 ## Generate examples from code.
