@@ -87,6 +87,7 @@
     "errorutils",
     "examplegen",
     "fatalf",
+    "fset",
     "generify",
     "gobin",
     "gofile",
