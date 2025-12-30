@@ -101,8 +101,8 @@ func findProjectScopedKinds(v1alphaDir string) ([]string, error) {
 }
 
 func checkProjectScopedObject(filePath string) (typeName string, isProjectScoped bool, err error) {
-	fileset := token.NewFileSet()
-	f, err := parser.ParseFile(fileset, filePath, nil, 0)
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, filePath, nil, 0)
 	if err != nil {
 		return "", false, err
 	}
