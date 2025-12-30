@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = Annotation{}
 var _ v1alpha.ObjectContext = Annotation{}
 
 func (a Annotation) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a Annotation) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAnnotation
 }
 
 func (a Annotation) GetName() string {

@@ -13,11 +13,11 @@ var _ manifest.Object = Report{}
 var _ v1alpha.ObjectContext = Report{}
 
 func (r Report) GetVersion() manifest.Version {
-	return r.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (r Report) GetKind() manifest.Kind {
-	return r.Kind
+	return manifest.KindReport
 }
 
 func (r Report) GetName() string {

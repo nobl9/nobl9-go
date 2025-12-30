@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = DataExport{}
 var _ v1alpha.ObjectContext = DataExport{}
 
 func (d DataExport) GetVersion() manifest.Version {
-	return d.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (d DataExport) GetKind() manifest.Kind {
-	return d.Kind
+	return manifest.KindDataExport
 }
 
 func (d DataExport) GetName() string {

@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = Service{}
 var _ v1alpha.ObjectContext = Service{}
 
 func (s Service) GetVersion() manifest.Version {
-	return s.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (s Service) GetKind() manifest.Kind {
-	return s.Kind
+	return manifest.KindService
 }
 
 func (s Service) GetName() string {

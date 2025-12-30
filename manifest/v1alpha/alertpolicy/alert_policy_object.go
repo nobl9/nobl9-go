@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = AlertPolicy{}
 var _ v1alpha.ObjectContext = AlertPolicy{}
 
 func (a AlertPolicy) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a AlertPolicy) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAlertPolicy
 }
 
 func (a AlertPolicy) GetName() string {
