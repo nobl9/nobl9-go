@@ -37,7 +37,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "sloNames",
 					Code:          rules.ErrorCodeSliceMinLength,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -53,7 +53,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "oldProject",
 					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -69,7 +69,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "oldProject",
 					Code:          rules.ErrorCodeRequired,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -85,7 +85,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "newProject",
 					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -101,7 +101,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "service",
 					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -116,6 +116,31 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			errChecks: nil,
 		},
 		{
+			name: "valid with empty newProject",
+			payload: MoveSLOsRequest{
+				SLONames:   []string{"valid-slo"},
+				OldProject: "valid-old-project",
+				NewProject: "",
+				Service:    "valid-service",
+			},
+			errChecks: nil,
+		},
+		{
+			name: "invalid with empty newProject and service",
+			payload: MoveSLOsRequest{
+				SLONames:   []string{"valid-slo"},
+				OldProject: "valid-old-project",
+				NewProject: "",
+				Service:    "",
+			},
+			errChecks: []govytest.ExpectedRuleError{
+				{
+					Code:          rules.ErrorCodeOneOfProperties,
+					ValidatorName: "Move SLOs request",
+				},
+			},
+		},
+		{
 			name: "invalid sloNames (not DNS label)",
 			payload: MoveSLOsRequest{
 				SLONames:   []string{"valid-slo", "Invalid SLO!"},
@@ -127,7 +152,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 				{
 					PropertyName:  "sloNames[1]",
 					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to project request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},
@@ -141,81 +166,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			errChecks: []govytest.ExpectedRuleError{
 				{
 					Code:          rules.ErrorCodeUniqueProperties,
-					ValidatorName: "Move SLOs to project request",
-				},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.payload.Validate()
-			if len(tt.errChecks) > 0 {
-				govytest.AssertError(t, err, tt.errChecks...)
-			} else {
-				govytest.AssertNoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMoveSLOsRequest_Validate_MoveToService(t *testing.T) {
-	tests := []struct {
-		name      string
-		payload   MoveSLOsRequest
-		errChecks []govytest.ExpectedRuleError
-	}{
-		{
-			name: "valid payload",
-			payload: MoveSLOsRequest{
-				SLONames:   []string{"valid-slo"},
-				OldProject: "valid-project",
-				Service:    "valid-service",
-			},
-			errChecks: nil,
-		},
-		{
-			name: "missing service falls back to project validation",
-			payload: MoveSLOsRequest{
-				SLONames:   []string{"valid-slo"},
-				OldProject: "valid-project",
-				Service:    "",
-			},
-			errChecks: []govytest.ExpectedRuleError{
-				{
-					PropertyName:  "newProject",
-					Code:          rules.ErrorCodeRequired,
-					ValidatorName: "Move SLOs to project request",
-				},
-			},
-		},
-		{
-			name: "invalid service (not DNS label)",
-			payload: MoveSLOsRequest{
-				SLONames:   []string{"valid-slo"},
-				OldProject: "valid-project",
-				Service:    "Invalid Service!",
-			},
-			errChecks: []govytest.ExpectedRuleError{
-				{
-					PropertyName:  "service",
-					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to service request",
-				},
-			},
-		},
-		{
-			name: "invalid sloNames (not DNS label)",
-			payload: MoveSLOsRequest{
-				SLONames:   []string{"valid-slo", "Invalid SLO!"},
-				OldProject: "valid-project",
-				Service:    "valid-service",
-			},
-			errChecks: []govytest.ExpectedRuleError{
-				{
-					PropertyName:  "sloNames[1]",
-					Code:          validationV1Alpha.ErrorCodeStringName,
-					ValidatorName: "Move SLOs to service request",
+					ValidatorName: "Move SLOs request",
 				},
 			},
 		},

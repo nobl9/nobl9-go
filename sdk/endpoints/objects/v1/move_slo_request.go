@@ -22,30 +22,21 @@ type MoveSLOsRequest struct {
 }
 
 func (r MoveSLOsRequest) Validate() error {
-	switch {
-	case r.IsMoveToService():
-		return moveSLOsToServiceRequestValidation.Validate(r)
-	default:
-		return moveSLOsToProjectRequestValidation.Validate(r)
-	}
+	return moveSLOsRequestValidation.Validate(r)
 }
 
-// IsMoveToProject returns true if the request is for moving SLOs to another project.
-func (r MoveSLOsRequest) IsMoveToProject() bool {
-	return moveSLOsToProjectRequestValidation.Validate(r) == nil
-}
-
-// IsMoveToService returns true if the request is for moving SLOs to another service within the same project.
-func (r MoveSLOsRequest) IsMoveToService() bool {
-	return moveSLOsToServiceRequestValidation.Validate(r) == nil
-}
-
-var moveSLOsToProjectRequestValidation = govy.New[MoveSLOsRequest](
+var moveSLOsRequestValidation = govy.New[MoveSLOsRequest](
 	govy.For(govy.GetSelf[MoveSLOsRequest]()).
-		Rules(rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(p MoveSLOsRequest) string{
-			"oldProject": func(p MoveSLOsRequest) string { return p.OldProject },
-			"newProject": func(p MoveSLOsRequest) string { return p.NewProject },
-		})),
+		Rules(
+			rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(p MoveSLOsRequest) string{
+				"oldProject": func(p MoveSLOsRequest) string { return p.OldProject },
+				"newProject": func(p MoveSLOsRequest) string { return p.NewProject },
+			}),
+			rules.OneOfProperties(map[string]func(MoveSLOsRequest) any{
+				"index": func(s MoveSLOsRequest) any { return s.NewProject },
+				"name":  func(s MoveSLOsRequest) any { return s.Service },
+			}),
+		),
 	govy.ForSlice(func(p MoveSLOsRequest) []string { return p.SLONames }).
 		WithName("sloNames").
 		Rules(rules.SliceMinLength[[]string](1)).
@@ -56,30 +47,10 @@ var moveSLOsToProjectRequestValidation = govy.New[MoveSLOsRequest](
 		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.NewProject }).
 		WithName("newProject").
-		Required().
+		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.Service }).
 		WithName("service").
 		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
-).
-	WithName("Move SLOs to project request")
-
-var moveSLOsToServiceRequestValidation = govy.New[MoveSLOsRequest](
-	govy.ForSlice(func(p MoveSLOsRequest) []string { return p.SLONames }).
-		WithName("sloNames").
-		Rules(rules.SliceMinLength[[]string](1)).
-		RulesForEach(validationV1Alpha.StringName()),
-	govy.For(func(p MoveSLOsRequest) string { return p.OldProject }).
-		WithName("oldProject").
-		Required().
-		Rules(validationV1Alpha.StringName()),
-	govy.For(func(p MoveSLOsRequest) string { return p.NewProject }).
-		WithName("newProject").
-		Rules(rules.Forbidden[string]()),
-	govy.For(func(p MoveSLOsRequest) string { return p.Service }).
-		WithName("service").
-		Required().
-		Rules(validationV1Alpha.StringName()),
-).
-	WithName("Move SLOs to service request")
+).WithName("Move SLOs request")
