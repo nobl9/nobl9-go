@@ -13,11 +13,11 @@ var _ manifest.Object = RoleBinding{}
 var _ v1alpha.ObjectContext = RoleBinding{}
 
 func (r RoleBinding) GetVersion() manifest.Version {
-	return r.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (r RoleBinding) GetKind() manifest.Kind {
-	return r.Kind
+	return manifest.KindRoleBinding
 }
 
 func (r RoleBinding) GetName() string {

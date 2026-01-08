@@ -1,15 +1,15 @@
 module mock_example
 
-go 1.24.9
+go 1.24.11
 
 require (
-	github.com/nobl9/nobl9-go v0.119.0
+	github.com/nobl9/nobl9-go v0.121.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/mock v0.6.0
 )
 
 require (
-	github.com/BurntSushi/toml v1.5.0 // indirect
+	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/bmatcuk/doublestar/v4 v4.9.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -18,7 +18,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/nobl9/govy v0.22.0 // indirect
+	github.com/nobl9/govy v0.23.0-rc2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/teambition/rrule-go v1.8.2 // indirect
