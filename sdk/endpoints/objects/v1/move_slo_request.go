@@ -27,10 +27,16 @@ func (r MoveSLOsRequest) Validate() error {
 
 var moveSLOsRequestValidation = govy.New[MoveSLOsRequest](
 	govy.For(govy.GetSelf[MoveSLOsRequest]()).
-		Rules(rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(p MoveSLOsRequest) string{
-			"oldProject": func(p MoveSLOsRequest) string { return p.OldProject },
-			"newProject": func(p MoveSLOsRequest) string { return p.NewProject },
-		})),
+		Rules(
+			rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(p MoveSLOsRequest) string{
+				"oldProject": func(p MoveSLOsRequest) string { return p.OldProject },
+				"newProject": func(p MoveSLOsRequest) string { return p.NewProject },
+			}),
+			rules.OneOfProperties(map[string]func(MoveSLOsRequest) any{
+				"index": func(s MoveSLOsRequest) any { return s.NewProject },
+				"name":  func(s MoveSLOsRequest) any { return s.Service },
+			}),
+		),
 	govy.ForSlice(func(p MoveSLOsRequest) []string { return p.SLONames }).
 		WithName("sloNames").
 		Rules(rules.SliceMinLength[[]string](1)).
@@ -41,11 +47,10 @@ var moveSLOsRequestValidation = govy.New[MoveSLOsRequest](
 		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.NewProject }).
 		WithName("newProject").
-		Required().
+		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
 	govy.For(func(p MoveSLOsRequest) string { return p.Service }).
 		WithName("service").
 		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
-).
-	WithName("Move SLOs request")
+).WithName("Move SLOs request")
