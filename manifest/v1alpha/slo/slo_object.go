@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = SLO{}
 var _ v1alpha.ObjectContext = SLO{}
 
 func (s SLO) GetVersion() manifest.Version {
-	return s.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (s SLO) GetKind() manifest.Kind {
-	return s.Kind
+	return manifest.KindSLO
 }
 
 func (s SLO) GetName() string {

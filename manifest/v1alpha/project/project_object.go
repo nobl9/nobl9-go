@@ -13,11 +13,11 @@ var _ manifest.Object = Project{}
 var _ v1alpha.ObjectContext = Project{}
 
 func (p Project) GetVersion() manifest.Version {
-	return p.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (p Project) GetKind() manifest.Kind {
-	return p.Kind
+	return manifest.KindProject
 }
 
 func (p Project) GetName() string {

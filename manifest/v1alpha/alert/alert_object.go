@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = Alert{}
 var _ v1alpha.ObjectContext = Alert{}
 
 func (a Alert) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a Alert) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAlert
 }
 
 func (a Alert) GetName() string {

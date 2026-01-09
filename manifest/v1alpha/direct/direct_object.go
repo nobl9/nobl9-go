@@ -14,11 +14,11 @@ var _ manifest.ProjectScopedObject = Direct{}
 var _ v1alpha.ObjectContext = Direct{}
 
 func (d Direct) GetVersion() manifest.Version {
-	return d.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (d Direct) GetKind() manifest.Kind {
-	return d.Kind
+	return manifest.KindDirect
 }
 
 func (d Direct) GetName() string {
