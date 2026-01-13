@@ -25,8 +25,9 @@ var validator = govy.New[RoleBinding](
 var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
 		Rules(rules.MutuallyExclusive(true, map[string]func(s Spec) any{
-			"user":     func(s Spec) any { return s.User },
-			"groupRef": func(s Spec) any { return s.GroupRef },
+			"user":      func(s Spec) any { return s.User },
+			"accountId": func(s Spec) any { return s.AccountID },
+			"groupRef":  func(s Spec) any { return s.GroupRef },
 		})),
 	govy.For(func(s Spec) string { return s.RoleRef }).
 		WithName("roleRef").
