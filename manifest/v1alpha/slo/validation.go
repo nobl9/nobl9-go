@@ -22,6 +22,13 @@ func validate(s SLO) *v1alpha.ObjectError {
 			}
 		}
 	}
+	// Set default AggregationMethod for composite objectives if not specified.
+	// This ensures backward compatibility when the field is omitted.
+	for i := range s.Spec.Objectives {
+		if s.Spec.Objectives[i].Composite != nil && s.Spec.Objectives[i].Composite.AggregationMethod == "" {
+			s.Spec.Objectives[i].Composite.AggregationMethod = ComponentAggregationMethodDefault
+		}
+	}
 	return v1alpha.ValidateObject[SLO](validator, s, manifest.KindSLO)
 }
 
@@ -441,6 +448,9 @@ var specValidationComposite = govy.New[Spec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
 						Required(),
+					govy.For(func(c CompositeSpec) ComponentAggregationMethod { return c.AggregationMethod }).
+						WithName("aggregationMethod").
+						Rules(rules.OneOf(ComponentAggregationMethodValues()...)),
 					govy.Transform(func(c CompositeSpec) string { return c.MaxDelay }, time.ParseDuration).
 						WithName("maxDelay").
 						When(func(c CompositeSpec) bool { return len(c.MaxDelay) > 0 }).
