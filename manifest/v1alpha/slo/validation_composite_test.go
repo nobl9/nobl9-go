@@ -377,38 +377,38 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes - valid aggregationMethod ErrorBudgetState", func(t *testing.T) {
+	t.Run("passes - valid aggregation ErrorBudgetState", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.AggregationMethod = ComponentAggregationMethodErrorBudgetState
+		slo.Spec.Objectives[0].Composite.Aggregation = ComponentAggregationMethodErrorBudgetState
 
 		err := validate(slo)
 
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes - valid aggregationMethod Reliability", func(t *testing.T) {
+	t.Run("passes - valid aggregation Reliability", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.AggregationMethod = ComponentAggregationMethodReliability
+		slo.Spec.Objectives[0].Composite.Aggregation = ComponentAggregationMethodReliability
 
 		err := validate(slo)
 
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes - empty aggregationMethod defaults to Reliability", func(t *testing.T) {
+	t.Run("passes - empty aggregation defaults to Reliability", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.AggregationMethod = ""
+		slo.Spec.Objectives[0].Composite.Aggregation = ""
 
 		err := validate(slo)
 
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("fails - invalid aggregationMethod", func(t *testing.T) {
+	t.Run("fails - invalid aggregation", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Composite.AggregationMethod = "InvalidMethod"
+		slo.Spec.Objectives[0].Composite.Aggregation = "InvalidMethod"
 
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].composite.aggregationMethod",
+			Prop: "spec.objectives[0].composite.aggregation",
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
