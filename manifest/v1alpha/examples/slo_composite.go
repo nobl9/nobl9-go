@@ -80,7 +80,8 @@ func (s sloCompositeExample) SLO() v1alphaSLO.SLO {
 					Primary:         ptr(true),
 					TimeSliceTarget: exampleTimeSliceTarget(s.BudgetingMethod),
 					Composite: &v1alphaSLO.CompositeSpec{
-						MaxDelay: (45 * time.Minute).String(),
+						MaxDelay:    (45 * time.Minute).String(),
+						Aggregation: "Reliability",
 						Components: v1alphaSLO.Components{
 							Objectives: []v1alphaSLO.CompositeObjective{
 								{
