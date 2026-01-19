@@ -2005,6 +2005,11 @@ fetch consumed_api
 	v1alpha.Coralogix: {Coralogix: &CoralogixMetric{
 		PromQL: `sum(rate(prometheus_http_req`,
 	}},
+	v1alpha.Atlas: {Atlas: &AtlasMetric{
+		PromQL:               "sum(rate(http_requests_total[5m]))",
+		SeriesLabel:          "status",
+		DataReplayParameters: map[string]string{"env": "prod"},
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
@@ -2036,6 +2041,12 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 | if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
 | sum(good) as n9_good, sum(total) as n9_total by n9_time
 | sort by n9_time asc`),
+	}},
+	v1alpha.Atlas: {Atlas: &AtlasMetric{
+		PromQL:               "sum(rate(http_requests_total[5m]))",
+		GoodSeriesLabel:      "good",
+		TotalSeriesLabel:     "total",
+		DataReplayParameters: map[string]string{"env": "prod"},
 	}},
 }
 
