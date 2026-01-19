@@ -16,7 +16,7 @@
         "target": 0.99,
         "composite": {
           "maxDelay": "45m",
-          "aggregation": "",
+          "aggregation": "Reliability",
           "components": {
             "objectives": [
               {
