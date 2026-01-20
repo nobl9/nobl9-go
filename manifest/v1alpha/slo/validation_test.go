@@ -2006,9 +2006,10 @@ fetch consumed_api
 		PromQL: `sum(rate(prometheus_http_req`,
 	}},
 	v1alpha.Atlas: {Atlas: &AtlasMetric{
-		PromQL:               "sum(rate(http_requests_total[5m]))",
-		SeriesLabel:          "status",
-		DataReplayParameters: map[string]string{"env": "prod"},
+		PromQL: "sum(rate(http_requests_total[5m]))",
+		DataReplay: &AtlasDataReplay{
+			Parameters: map[string]string{"env": "prod"},
+		},
 	}},
 }
 
@@ -2043,10 +2044,12 @@ var validSingleQueryMetricSpecs = map[v1alpha.DataSourceType]MetricSpec{
 | sort by n9_time asc`),
 	}},
 	v1alpha.Atlas: {Atlas: &AtlasMetric{
-		PromQL:               "sum(rate(http_requests_total[5m]))",
-		GoodSeriesLabel:      "good",
-		TotalSeriesLabel:     "total",
-		DataReplayParameters: map[string]string{"env": "prod"},
+		PromQL: "sum(rate(http_requests_total[5m]))",
+		DataReplay: &AtlasDataReplay{
+			GoodSeriesLabel:  "good",
+			TotalSeriesLabel: "total",
+			Parameters:       map[string]string{"env": "prod"},
+		},
 	}},
 }
 

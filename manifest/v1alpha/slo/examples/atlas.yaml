@@ -42,11 +42,20 @@
         incremental: true
         goodTotal:
           atlas:
-            promql: sum(rate(http_requests_total[5m]))
-            goodSeriesLabel: good
-            totalSeriesLabel: total
-            dataReplayParameters:
-              env: prod
+            promql: |-
+              label_replace(
+                label_replace(
+                  sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+                  "n9metric", "n9total", "burnRateLabel", "total_count"
+                ),
+                "n9metric", "n9good", "burnRateLabel", "good_count"
+              )
+            dataReplay:
+              goodSeriesLabel: good_count
+              totalSeriesLabel: total_count
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       primary: true
     service: api-server
     timeWindows:
@@ -111,11 +120,20 @@
         incremental: true
         goodTotal:
           atlas:
-            promql: sum(rate(http_requests_total[5m]))
-            goodSeriesLabel: good
-            totalSeriesLabel: total
-            dataReplayParameters:
-              env: prod
+            promql: |-
+              label_replace(
+                label_replace(
+                  sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+                  "n9metric", "n9total", "burnRateLabel", "total_count"
+                ),
+                "n9metric", "n9good", "burnRateLabel", "good_count"
+              )
+            dataReplay:
+              goodSeriesLabel: good_count
+              totalSeriesLabel: total_count
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       primary: true
     service: api-server
     timeWindows:
@@ -178,11 +196,20 @@
         incremental: true
         goodTotal:
           atlas:
-            promql: sum(rate(http_requests_total[5m]))
-            goodSeriesLabel: good
-            totalSeriesLabel: total
-            dataReplayParameters:
-              env: prod
+            promql: |-
+              label_replace(
+                label_replace(
+                  sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+                  "n9metric", "n9total", "burnRateLabel", "total_count"
+                ),
+                "n9metric", "n9good", "burnRateLabel", "good_count"
+              )
+            dataReplay:
+              goodSeriesLabel: good_count
+              totalSeriesLabel: total_count
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       primary: true
     service: api-server
     timeWindows:
@@ -248,11 +275,20 @@
         incremental: true
         goodTotal:
           atlas:
-            promql: sum(rate(http_requests_total[5m]))
-            goodSeriesLabel: good
-            totalSeriesLabel: total
-            dataReplayParameters:
-              env: prod
+            promql: |-
+              label_replace(
+                label_replace(
+                  sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+                  "n9metric", "n9total", "burnRateLabel", "total_count"
+                ),
+                "n9metric", "n9good", "burnRateLabel", "good_count"
+              )
+            dataReplay:
+              goodSeriesLabel: good_count
+              totalSeriesLabel: total_count
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       primary: true
     service: api-server
     timeWindows:
@@ -313,10 +349,11 @@
       rawMetric:
         query:
           atlas:
-            promql: api_server_requestMsec{host="*",job="nginx"}
-            seriesLabel: status
-            dataReplayParameters:
-              env: prod
+            promql: sum(the_alertgroup__the_alert) or on() vector(0)
+            dataReplay:
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       op: lte
       primary: true
     service: api-server
@@ -381,10 +418,11 @@
       rawMetric:
         query:
           atlas:
-            promql: api_server_requestMsec{host="*",job="nginx"}
-            seriesLabel: status
-            dataReplayParameters:
-              env: prod
+            promql: sum(the_alertgroup__the_alert) or on() vector(0)
+            dataReplay:
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       op: lte
       primary: true
     service: api-server
@@ -447,10 +485,11 @@
       rawMetric:
         query:
           atlas:
-            promql: api_server_requestMsec{host="*",job="nginx"}
-            seriesLabel: status
-            dataReplayParameters:
-              env: prod
+            promql: sum(the_alertgroup__the_alert) or on() vector(0)
+            dataReplay:
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       op: lte
       primary: true
     service: api-server
@@ -516,10 +555,11 @@
       rawMetric:
         query:
           atlas:
-            promql: api_server_requestMsec{host="*",job="nginx"}
-            seriesLabel: status
-            dataReplayParameters:
-              env: prod
+            promql: sum(the_alertgroup__the_alert) or on() vector(0)
+            dataReplay:
+              parameters:
+                alert: the_alert
+                alertGroup: the_alertgroup
       op: lte
       primary: true
     service: api-server

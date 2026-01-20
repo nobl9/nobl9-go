@@ -24,18 +24,36 @@ func TestAtlas_rawMetric(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("required seriesLabel for raw metrics", func(t *testing.T) {
+	t.Run("required dataReplay", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Atlas)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.SeriesLabel = ""
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.DataReplay = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.atlas.seriesLabel",
+			Prop: "spec.objectives[0].rawMetric.query.atlas.dataReplay",
 			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("required dataReplay.parameters", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Atlas)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.DataReplay.Parameters = nil
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.atlas.dataReplay.parameters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("dataReplay.parameters must have at least one element", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Atlas)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.DataReplay.Parameters = map[string]string{}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.atlas.dataReplay.parameters",
+			Code: rules.ErrorCodeMapMinLength,
 		})
 	})
 	t.Run("goodSeriesLabel forbidden for raw metrics", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Atlas)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.GoodSeriesLabel = "good"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.DataReplay.GoodSeriesLabel = "good"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.atlas",
@@ -44,7 +62,7 @@ func TestAtlas_rawMetric(t *testing.T) {
 	})
 	t.Run("totalSeriesLabel forbidden for raw metrics", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Atlas)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.TotalSeriesLabel = "total"
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Atlas.DataReplay.TotalSeriesLabel = "total"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].rawMetric.query.atlas",
@@ -68,22 +86,49 @@ func TestAtlas_singleQueryGoodOverTotal(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("required goodSeriesLabel", func(t *testing.T) {
+	t.Run("required dataReplay", func(t *testing.T) {
 		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Atlas)
-		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.GoodSeriesLabel = ""
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.DataReplay = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.goodSeriesLabel",
+			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.dataReplay",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("required totalSeriesLabel", func(t *testing.T) {
+	t.Run("required dataReplay.goodSeriesLabel", func(t *testing.T) {
 		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Atlas)
-		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.TotalSeriesLabel = ""
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.DataReplay.GoodSeriesLabel = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.totalSeriesLabel",
+			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.dataReplay.goodSeriesLabel",
 			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("required dataReplay.totalSeriesLabel", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Atlas)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.DataReplay.TotalSeriesLabel = ""
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.dataReplay.totalSeriesLabel",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("required dataReplay.parameters", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Atlas)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.DataReplay.Parameters = nil
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.dataReplay.parameters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("dataReplay.parameters must have at least one element", func(t *testing.T) {
+		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.Atlas)
+		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Atlas.DataReplay.Parameters = map[string]string{}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics.goodTotal.atlas.dataReplay.parameters",
+			Code: rules.ErrorCodeMapMinLength,
 		})
 	})
 }

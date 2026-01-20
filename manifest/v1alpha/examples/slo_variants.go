@@ -1094,16 +1094,31 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant {
 		case metricVariantThreshold:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
-				PromQL:               `api_server_requestMsec{host="*",job="nginx"}`,
-				SeriesLabel:          "status",
-				DataReplayParameters: map[string]string{"env": "prod"},
+				PromQL: `sum(the_alertgroup__the_alert) or on() vector(0)`,
+				DataReplay: &v1alphaSLO.AtlasDataReplay{
+					Parameters: map[string]string{
+						"alertGroup": "the_alertgroup",
+						"alert":      "the_alert",
+					},
+				},
 			}))
 		case metricVariantSingleQueryGoodRatio:
 			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
-				PromQL:               `sum(rate(http_requests_total[5m]))`,
-				GoodSeriesLabel:      "good",
-				TotalSeriesLabel:     "total",
-				DataReplayParameters: map[string]string{"env": "prod"},
+				PromQL: `label_replace(
+  label_replace(
+    sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+    "n9metric", "n9total", "burnRateLabel", "total_count"
+  ),
+  "n9metric", "n9good", "burnRateLabel", "good_count"
+)`,
+				DataReplay: &v1alphaSLO.AtlasDataReplay{
+					GoodSeriesLabel:  "good_count",
+					TotalSeriesLabel: "total_count",
+					Parameters: map[string]string{
+						"alertGroup": "the_alertgroup",
+						"alert":      "the_alert",
+					},
+				},
 			}))
 		}
 	default:

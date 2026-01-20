@@ -11,12 +11,40 @@ import (
 
 // AtlasMetric represents metric from Atlas.
 type AtlasMetric struct {
-	PromQL               string            `json:"promql"`
-	SeriesLabel          string            `json:"seriesLabel,omitempty"`
-	GoodSeriesLabel      string            `json:"goodSeriesLabel,omitempty"`
-	TotalSeriesLabel     string            `json:"totalSeriesLabel,omitempty"`
-	DataReplayParameters map[string]string `json:"dataReplayParameters"`
+	PromQL     string           `json:"promql"`
+	DataReplay *AtlasDataReplay `json:"dataReplay"`
 }
+
+// AtlasDataReplay contains data replay configuration for Atlas metrics.
+type AtlasDataReplay struct {
+	GoodSeriesLabel  string            `json:"goodSeriesLabel,omitempty"`
+	TotalSeriesLabel string            `json:"totalSeriesLabel,omitempty"`
+	Parameters       map[string]string `json:"parameters"`
+}
+
+// atlasDataReplayValidation validates AtlasDataReplay for raw metrics.
+var atlasDataReplayValidation = govy.New[AtlasDataReplay](
+	govy.For(func(d AtlasDataReplay) map[string]string { return d.Parameters }).
+		WithName("parameters").
+		Required().
+		Rules(rules.MapMinLength[map[string]string](1)),
+)
+
+// atlasDataReplaySingleQueryValidation validates AtlasDataReplay for goodTotal count metrics.
+var atlasDataReplaySingleQueryValidation = govy.New[AtlasDataReplay](
+	govy.For(func(d AtlasDataReplay) string { return d.GoodSeriesLabel }).
+		WithName("goodSeriesLabel").
+		Required().
+		Rules(rules.StringNotEmpty()),
+	govy.For(func(d AtlasDataReplay) string { return d.TotalSeriesLabel }).
+		WithName("totalSeriesLabel").
+		Required().
+		Rules(rules.StringNotEmpty()),
+	govy.For(func(d AtlasDataReplay) map[string]string { return d.Parameters }).
+		WithName("parameters").
+		Required().
+		Rules(rules.MapMinLength[map[string]string](1)),
+)
 
 // atlasValidation validates AtlasMetric for raw metrics.
 var atlasValidation = govy.New[AtlasMetric](
@@ -24,10 +52,10 @@ var atlasValidation = govy.New[AtlasMetric](
 		WithName("promql").
 		Required().
 		Rules(rules.StringNotEmpty()),
-	govy.For(func(a AtlasMetric) string { return a.SeriesLabel }).
-		WithName("seriesLabel").
+	govy.ForPointer(func(a AtlasMetric) *AtlasDataReplay { return a.DataReplay }).
+		WithName("dataReplay").
 		Required().
-		Rules(rules.StringNotEmpty()),
+		Include(atlasDataReplayValidation),
 )
 
 // atlasSingleQueryValidation validates AtlasMetric for goodTotal count metrics.
@@ -36,23 +64,19 @@ var atlasSingleQueryValidation = govy.New[AtlasMetric](
 		WithName("promql").
 		Required().
 		Rules(rules.StringNotEmpty()),
-	govy.For(func(a AtlasMetric) string { return a.GoodSeriesLabel }).
-		WithName("goodSeriesLabel").
+	govy.ForPointer(func(a AtlasMetric) *AtlasDataReplay { return a.DataReplay }).
+		WithName("dataReplay").
 		Required().
-		Rules(rules.StringNotEmpty()),
-	govy.For(func(a AtlasMetric) string { return a.TotalSeriesLabel }).
-		WithName("totalSeriesLabel").
-		Required().
-		Rules(rules.StringNotEmpty()),
+		Include(atlasDataReplaySingleQueryValidation),
 )
 
 // atlasRawMetricValidation forbids goodTotal fields in raw metrics.
 var atlasRawMetricValidation = govy.New[MetricSpec](
 	govy.For(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
 		WithName("atlas").
-		When(func(m MetricSpec) bool { return m.Atlas != nil }).
+		When(func(m MetricSpec) bool { return m.Atlas != nil && m.Atlas.DataReplay != nil }).
 		Rules(govy.NewRule(func(a *AtlasMetric) error {
-			if a.GoodSeriesLabel != "" || a.TotalSeriesLabel != "" {
+			if a.DataReplay.GoodSeriesLabel != "" || a.DataReplay.TotalSeriesLabel != "" {
 				return errors.New("goodSeriesLabel and totalSeriesLabel are forbidden for raw metrics")
 			}
 			return nil
