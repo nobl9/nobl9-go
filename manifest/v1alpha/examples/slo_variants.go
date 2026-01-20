@@ -1,4 +1,4 @@
-// nolint: lll
+// nolint: lll,gocyclo
 package v1alphaExamples
 
 import (
