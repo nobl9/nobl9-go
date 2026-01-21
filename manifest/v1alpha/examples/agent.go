@@ -195,6 +195,12 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.Coralogix = &v1alphaAgent.CoralogixConfig{
 			Domain: "coralogix.com",
 		}
+	case v1alpha.Atlas:
+		agent.Spec.Atlas = &v1alphaAgent.AtlasConfig{
+			SlicURL:       "https://slic.slic",
+			SlicStep:      60,
+			DataReplayURL: "https://replay.atlas.atlas",
+		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))
 	}

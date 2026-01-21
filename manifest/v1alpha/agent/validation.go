@@ -3,6 +3,7 @@ package agent
 import (
 	"net/url"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -135,6 +136,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *CoralogixConfig { return s.Coralogix }).
 		WithName("coralogix").
 		Include(coralogixValidation),
+	govy.ForPointer(func(s Spec) *AtlasConfig { return s.Atlas }).
+		WithName("atlas").
+		Include(atlasValidation),
 )
 
 var (
@@ -240,6 +244,20 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	atlasValidation = govy.New[AtlasConfig](
+		govy.Transform(func(a AtlasConfig) string { return a.SlicURL }, url.Parse).
+			WithName("slicUrl").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+		govy.For(func(a AtlasConfig) int { return a.SlicStep }).
+			WithName("slicStep").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+		govy.Transform(func(a AtlasConfig) string { return a.DataReplayURL }, url.Parse).
+			WithName("dataReplayUrl").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -277,8 +295,9 @@ var (
 )
 
 const (
-	errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
-	errCodeQueryDelayOutOfBounds    = "query_delay_out_of_bounds"
+	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
+	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
+	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -434,6 +453,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Atlas != nil {
+		if err := typesMatch(v1alpha.Atlas); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -500,4 +524,15 @@ func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validato
 			Required().
 			Rules(rules.StringURL()),
 	)
+}
+
+func newHTTPSchemeRule() govy.Rule[*url.URL] {
+	httpSchemes := []string{"http", "https"}
+	return govy.NewRule(func(v *url.URL) error {
+		if !slices.Contains(httpSchemes, v.Scheme) {
+			return govy.NewRuleError("valid URL must have a http or https scheme", errCodeHTTPOrHTTPSSchemeRequired)
+		}
+
+		return nil
+	})
 }
