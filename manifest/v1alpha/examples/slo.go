@@ -131,6 +131,10 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 		metricVariantGoodRatio:            []metricSubVariant{},
 		metricVariantThreshold:            []metricSubVariant{},
 	},
+	v1alpha.Atlas: {
+		metricVariantThreshold:            []metricSubVariant{},
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
+	},
 }
 
 var goodOverTotalVariants = []string{
