@@ -897,6 +897,91 @@ func TestValidateSpec_Coralogix(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_Atlas(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required slic", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid slic url", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: rules.ErrorCodeURL,
+			},
+		)
+	})
+	t.Run("invalid slic url scheme", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = "ftp://slic.atlas.example.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+	t.Run("slicStep minimum value", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicStep = 14
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicStep",
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+			},
+		)
+	})
+	t.Run("required dataReplayUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid dataReplayUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: rules.ErrorCodeURL,
+			},
+		)
+	})
+	t.Run("invalid dataReplayUrl scheme", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = "ftp://replay.atlas.example.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
@@ -1038,6 +1123,13 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		v1alpha.Coralogix: {
 			Coralogix: &CoralogixConfig{
 				Domain: "coralogix.com",
+			},
+		},
+		v1alpha.Atlas: {
+			Atlas: &AtlasConfig{
+				SlicURL:       "http://slic.atlas.example.com",
+				SlicStep:      60,
+				DataReplayURL: "https://replay.atlas.example.com",
 			},
 		},
 	}

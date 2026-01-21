@@ -1,0 +1,28 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: atlas
+  displayName: Atlas Agent
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Atlas Agent
+  releaseChannel: stable
+  atlas:
+    slicUrl: https://slic.slic
+    slicStep: 60
+    dataReplayUrl: https://replay.atlas.atlas
+  historicalDataRetrieval:
+    maxDuration:
+      value: 730
+      unit: Day
+    defaultDuration:
+      value: 365
+      unit: Day
+  queryDelay:
+    value: 11
+    unit: Minute
