@@ -26,8 +26,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 	budgetAdjustments := []v1alphaBudgetAdjustment.BudgetAdjustment{
 		v1alphaBudgetAdjustment.New(
 			v1alphaBudgetAdjustment.Metadata{
-				Name:        "adjustment1",
-				DisplayName: "Adjustment 1",
+				Name: e2etestutils.GenerateName(),
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     e2etestutils.GetObjectDescription(),
@@ -44,8 +43,7 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 			}),
 		v1alphaBudgetAdjustment.New(
 			v1alphaBudgetAdjustment.Metadata{
-				Name:        "adjustment2",
-				DisplayName: "Adjustment 2",
+				Name: e2etestutils.GenerateName(),
 			},
 			v1alphaBudgetAdjustment.Spec{
 				Description:     e2etestutils.GetObjectDescription(),
