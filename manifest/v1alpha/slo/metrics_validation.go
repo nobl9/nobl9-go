@@ -63,7 +63,6 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			gcmCountMetricsLevelValidation,
 			logicMonitorCountMetricsQueryTypeValidation,
 			honeycombCountMetricsValidation,
-			atlasCountMetricsValidation,
 		).
 		Include(
 			goodAndBadOverTotalMetricsValidation,
@@ -133,7 +132,6 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			thousandEyesRawMetricValidation,
 			instanaRawMetricValidation,
 			honeycombRawMetricValidation,
-			atlasRawMetricValidation,
 		),
 )
 
@@ -158,9 +156,6 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 			sumoLogicSingleQueryLogsTypeValidation,
 			sumoLogicSingleQueryMetricsTypeValidation,
 		),
-	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
-		WithName("atlas").
-		Include(atlasSingleQueryValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -246,9 +241,6 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *CoralogixMetric { return m.Coralogix }).
 		WithName("coralogix").
 		Include(coralogixValidation),
-	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
-		WithName("atlas").
-		Include(atlasValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -429,11 +421,6 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Coralogix != nil {
 			if err := typesMatch(v1alpha.Coralogix); err != nil {
-				return err
-			}
-		}
-		if metric.Atlas != nil {
-			if err := typesMatch(v1alpha.Atlas); err != nil {
 				return err
 			}
 		}

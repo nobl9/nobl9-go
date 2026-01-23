@@ -14,5 +14,4 @@ var SingleQueryGoodOverTotalEnabledSources = []v1alpha.DataSourceType{
 	v1alpha.Splunk,
 	v1alpha.Honeycomb,
 	v1alpha.SumoLogic,
-	v1alpha.Atlas,
 }

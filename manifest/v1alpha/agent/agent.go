@@ -71,7 +71,6 @@ type Spec struct {
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
-	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -154,8 +153,6 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzurePrometheus, nil
 	case s.Coralogix != nil:
 		return v1alpha.Coralogix, nil
-	case s.Atlas != nil:
-		return v1alpha.Atlas, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -293,11 +290,4 @@ type CoralogixConfig struct {
 	// [here]: https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/#domains
 	Domain string `json:"domain"`
 	Step   int    `json:"step,omitempty"`
-}
-
-// AtlasConfig represents content of Atlas Configuration typical for Agent Object.
-type AtlasConfig struct {
-	SlicURL       string `json:"slicUrl"`
-	SlicStep      int    `json:"slicStep,omitempty"`
-	DataReplayURL string `json:"dataReplayUrl"`
 }

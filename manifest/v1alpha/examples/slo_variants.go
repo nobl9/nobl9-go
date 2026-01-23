@@ -1,4 +1,4 @@
-// nolint: lll,gocyclo
+// nolint: lll
 package v1alphaExamples
 
 import (
@@ -1090,37 +1090,6 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				PromQL: `sum(http_request_duration_seconds_count{handler="/api/v1/slos"})`,
 			}))
 		}
-	case v1alpha.Atlas:
-		switch s.MetricVariant {
-		case metricVariantThreshold:
-			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
-				PromQL: `sum(the_alertgroup__the_alert) or on() vector(0)`,
-				DataReplay: &v1alphaSLO.AtlasDataReplay{
-					Parameters: map[string]string{
-						"alertGroup": "the_alertgroup",
-						"alert":      "the_alert",
-					},
-				},
-			}))
-		case metricVariantSingleQueryGoodRatio:
-			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
-				PromQL: `label_replace(
-  label_replace(
-    sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
-    "n9metric", "n9total", "burnRateLabel", "total_count"
-  ),
-  "n9metric", "n9good", "burnRateLabel", "good_count"
-)`,
-				DataReplay: &v1alphaSLO.AtlasDataReplay{
-					GoodSeriesLabel:  "good_count",
-					TotalSeriesLabel: "total_count",
-					Parameters: map[string]string{
-						"alertGroup": "the_alertgroup",
-						"alert":      "the_alert",
-					},
-				},
-			}))
-		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1221,8 +1190,6 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.AzurePrometheus = &v
 	case v1alphaSLO.CoralogixMetric:
 		spec.Coralogix = &v
-	case v1alphaSLO.AtlasMetric:
-		spec.Atlas = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}
