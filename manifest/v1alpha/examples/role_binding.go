@@ -14,7 +14,7 @@ func RoleBinding() []Example {
 					Name: "default-project-binding",
 				},
 				rolebinding.Spec{
-					User:       ptr("00u2y4e4atkzaYkXP4x8"),
+					AccountID:  ptr("00u2y4e4atkzaYkXP4x8"),
 					RoleRef:    "project-viewer",
 					ProjectRef: sdk.DefaultProject,
 				},
@@ -27,8 +27,8 @@ func RoleBinding() []Example {
 					Name: "organization-binding-john-admin",
 				},
 				rolebinding.Spec{
-					User:    ptr("00u2y4e4atkzaYkXP4x8"),
-					RoleRef: "organization-admin",
+					AccountID: ptr("00u2y4e4atkzaYkXP4x8"),
+					RoleRef:   "organization-admin",
 				},
 			),
 		},
