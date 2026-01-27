@@ -441,6 +441,10 @@ var specValidationComposite = govy.New[Spec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
 						Required(),
+					govy.For(func(c CompositeSpec) ComponentAggregationMethod { return c.Aggregation }).
+						WithName("aggregation").
+						OmitEmpty().
+						Rules(rules.OneOf(ComponentAggregationMethodValues()...)),
 					govy.Transform(func(c CompositeSpec) string { return c.MaxDelay }, time.ParseDuration).
 						WithName("maxDelay").
 						When(func(c CompositeSpec) bool { return len(c.MaxDelay) > 0 }).

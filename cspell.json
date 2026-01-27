@@ -86,6 +86,7 @@
     "endef",
     "enduml",
     "errgroup",
+    "errorbudgetstate",
     "errorutils",
     "examplegen",
     "fatalf",
