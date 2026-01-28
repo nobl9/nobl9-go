@@ -16,13 +16,6 @@ spec:
     slicUrl: https://slic.slic
     slicStep: 60
     dataReplayUrl: https://replay.atlas.atlas
-  historicalDataRetrieval:
-    maxDuration:
-      value: 730
-      unit: Day
-    defaultDuration:
-      value: 365
-      unit: Day
   queryDelay:
     value: 11
     unit: Minute
