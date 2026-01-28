@@ -31,8 +31,8 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:    ptr(e2etestutils.GenerateName()),
-				RoleRef: "organization-blank",
+				AccountID: ptr(e2etestutils.GenerateName()),
+				RoleRef:   "organization-blank",
 			},
 		),
 		v1alphaRoleBinding.New(
@@ -45,7 +45,7 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:       ptr(e2etestutils.GenerateName()),
+				AccountID:  ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: project.GetName(),
 			},
@@ -61,7 +61,7 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 		v1alphaRoleBinding.New(
 			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
 			v1alphaRoleBinding.Spec{
-				User:       ptr(e2etestutils.GenerateName()),
+				AccountID:  ptr(e2etestutils.GenerateName()),
 				RoleRef:    "project-viewer",
 				ProjectRef: defaultProject,
 			},
@@ -75,7 +75,6 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 			},
 		),
 	}
-
 	e2etestutils.V1Apply(t, inputs)
 	t.Cleanup(func() {
 		// Organization role bindings cannot be deleted.
@@ -92,26 +91,30 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 	}{
 		"all": {
 			request:    objectsV1.GetRoleBindingsRequest{Project: sdk.ProjectsWildcard},
-			expected:   inputs,
+			expected:   userFieldsBackwardCompatible(inputs),
 			returnsAll: true,
 		},
 		"default project": {
 			request:    objectsV1.GetRoleBindingsRequest{},
-			expected:   []v1alphaRoleBinding.RoleBinding{inputs[4], inputs[5]},
+			expected:   userFieldsBackwardCompatible([]v1alphaRoleBinding.RoleBinding{inputs[4], inputs[5]}),
 			returnsAll: true,
 		},
 		"filter by project": {
 			request: objectsV1.GetRoleBindingsRequest{
 				Project: project.GetName(),
 			},
-			expected: []v1alphaRoleBinding.RoleBinding{implicitProjectBinding, inputs[2], inputs[3]},
+			expected: userFieldsBackwardCompatible(
+				[]v1alphaRoleBinding.RoleBinding{implicitProjectBinding, inputs[2], inputs[3]},
+			),
 		},
 		"filter by name": {
 			request: objectsV1.GetRoleBindingsRequest{
 				Project: project.GetName(),
 				Names:   []string{inputs[2].Metadata.Name},
 			},
-			expected: []v1alphaRoleBinding.RoleBinding{inputs[2]},
+			expected: userFieldsBackwardCompatible(
+				[]v1alphaRoleBinding.RoleBinding{inputs[2]},
+			),
 		},
 	}
 	for name, test := range filterTests {
@@ -130,4 +133,14 @@ func Test_Objects_V1_V1alpha_RoleBinding(t *testing.T) {
 func assertV1alphaRoleBindingsAreEqual(t *testing.T, expected, actual v1alphaRoleBinding.RoleBinding) {
 	t.Helper()
 	assert.Equal(t, expected, actual)
+}
+
+func userFieldsBackwardCompatible(bindings []v1alphaRoleBinding.RoleBinding) []v1alphaRoleBinding.RoleBinding {
+	userFieldsBackwardCompatibleBindings := make([]v1alphaRoleBinding.RoleBinding, 0, len(bindings))
+	for _, binding := range bindings {
+		binding.Spec.User = binding.Spec.AccountID
+		userFieldsBackwardCompatibleBindings = append(userFieldsBackwardCompatibleBindings, binding)
+	}
+
+	return userFieldsBackwardCompatibleBindings
 }
