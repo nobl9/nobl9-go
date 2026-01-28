@@ -138,6 +138,7 @@ func assertV1alphaRoleBindingsAreEqual(t *testing.T, expected, actual v1alphaRol
 func userFieldsBackwardCompatible(bindings []v1alphaRoleBinding.RoleBinding) []v1alphaRoleBinding.RoleBinding {
 	userFieldsBackwardCompatibleBindings := make([]v1alphaRoleBinding.RoleBinding, 0, len(bindings))
 	for _, binding := range bindings {
+		// nolint: staticcheck
 		binding.Spec.User = binding.Spec.AccountID
 		userFieldsBackwardCompatibleBindings = append(userFieldsBackwardCompatibleBindings, binding)
 	}
