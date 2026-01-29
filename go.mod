@@ -1,6 +1,6 @@
 module github.com/nobl9/nobl9-go
 
-go 1.24.11
+go 1.24.12
 
 require (
 	github.com/BurntSushi/toml v1.6.0
