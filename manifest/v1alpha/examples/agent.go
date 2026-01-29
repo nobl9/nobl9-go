@@ -48,6 +48,7 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.ThousandEyes,
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
+	v1alpha.Atlas,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
