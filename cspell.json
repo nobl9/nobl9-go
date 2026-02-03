@@ -122,6 +122,7 @@
     "logfmt",
     "logql",
     "mapstructure",
+    "mcpserver",
     "memstats",
     "mktemp",
     "mockgen",
