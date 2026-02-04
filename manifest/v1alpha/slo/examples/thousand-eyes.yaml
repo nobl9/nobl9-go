@@ -44,6 +44,7 @@
           thousandEyes:
             testID: 2280492
             testType: api-transaction-time
+            accountGroupID: 2114119
       op: lte
       primary: true
     service: api-server
