@@ -447,8 +447,9 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesAPITransactionTime:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
-				TestID:   ptr[int64](2280492),
-				TestType: ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
+				TestID:         ptr[int64](2280492),
+				TestType:       ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
+				AccountGroupID: ptr[int64](2114119),
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesServerAvailability:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
