@@ -1,8 +1,8 @@
-package mcpserver
+package mcp
 
 import (
 	"github.com/nobl9/nobl9-go/internal/endpoints"
-	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/mcpserver/v1"
+	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/mcp/v1"
 )
 
 //go:generate ../../../bin/ifacemaker -y " " -f ./*.go -s versions -i Versions -o versions_interface.go -p "$GOPACKAGE"

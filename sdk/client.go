@@ -16,7 +16,7 @@ import (
 	internal "github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/mcpserver"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/mcp"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
@@ -105,9 +105,9 @@ func (c *Client) Users() users.Versions {
 	return users.NewVersions(c)
 }
 
-// MCPServer is used to access specific MCP server proxy API version.
-func (c *Client) MCPServer() mcpserver.Versions {
-	return mcpserver.NewVersions(c)
+// MCP is used to access specific MCP server proxy API version.
+func (c *Client) MCP() mcp.Versions {
+	return mcp.NewVersions(c)
 }
 
 // CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.
