@@ -1,6 +1,6 @@
 module github.com/nobl9/nobl9-go
 
-go 1.24.12
+go 1.25.7
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -19,6 +19,8 @@ require (
 	golang.org/x/text v0.33.0
 )
 
+require github.com/modelcontextprotocol/go-sdk v1.2.0
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -26,7 +28,6 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/modelcontextprotocol/go-sdk v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	golang.org/x/mod v0.31.0 // indirect
