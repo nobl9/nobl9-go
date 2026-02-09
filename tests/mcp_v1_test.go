@@ -202,6 +202,24 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		items := searchResult["items"].([]any)
 		t.Logf("Search returned %d SLO(s)", len(items))
 	})
+
+	t.Run("getSLO returns error for non-existent SLO", func(t *testing.T) {
+		params := map[string]any{
+			"name":    "non-existent-slo-12345",
+			"project": slo.Metadata.Project,
+			"format":  "json",
+		}
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getSLO",
+			Arguments: params,
+		})
+		require.NoError(t, err)
+		require.Len(t, result.Content, 1)
+
+		textContent, ok := result.Content[0].(*mcp.TextContent)
+		require.True(t, ok, "Expected TextContent")
+		assert.Contains(t, textContent.Text, "not found")
+	})
 }
 
 func setupMCPProxySession(t *testing.T) (session *mcp.ClientSession, teardown func()) {
