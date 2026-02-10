@@ -49,19 +49,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	slo.Spec.AlertPolicies = nil // Simplify for testing
 	slo.Spec.AnomalyConfig = nil
 
-	// Provision data source if needed
-	if len(slo.Spec.AllMetricSpecs()) > 0 {
-		sourceType := slo.Spec.AllMetricSpecs()[0].DataSourceType()
-		var source manifest.Object
-		switch slo.Spec.Indicator.MetricSource.Kind {
-		case manifest.KindDirect:
-			source = e2etestutils.ProvisionStaticDirect(t, sourceType)
-		default:
-			source = e2etestutils.ProvisionStaticAgent(t, sourceType)
-		}
-		slo.Spec.Indicator.MetricSource.Name = source.GetName()
-		slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
-	}
+	e2etestutils.ProvisionDataSourceForSLO(t, &slo)
 
 	// Apply all objects
 	objects := []manifest.Object{project, service, slo}
