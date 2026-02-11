@@ -120,7 +120,7 @@ func (s *sessionHandler) HandleMessage(ctx context.Context, output io.Writer, ms
 	return nil
 }
 
-func (s sessionHandler) runRequest(ctx context.Context, sessionID, msg string) (*http.Response, error) {
+func (s *sessionHandler) runRequest(ctx context.Context, sessionID, msg string) (*http.Response, error) {
 	req, err := s.client.CreateRequest(
 		ctx,
 		http.MethodPost,
@@ -181,12 +181,12 @@ func (s *sessionHandler) handleSSEResponse(ctx context.Context, resp *http.Respo
 			data := msg[len(sseDataPrefix):]
 			eventData.WriteString(data)
 		case msg == "" && eventData.Len() > 0:
-			msg := eventData.String()
-			slog.DebugContext(ctx, "Processed SSE event", slog.String("event", msg))
-			n, err := fmt.Fprintf(output, "%s\n", msg)
+			event := eventData.String()
+			slog.DebugContext(ctx, "Processed SSE event", slog.String("event", event))
+			n, err := fmt.Fprintf(output, "%s\n", event)
 			if err != nil {
 				return fmt.Errorf("failed to write SSE event (%d bytes attempted, %d written): %w",
-					len(msg)+1, n, err)
+					len(event)+1, n, err)
 			}
 			eventData.Reset()
 		}
