@@ -104,11 +104,11 @@ func (s *sessionHandler) HandleMessage(ctx context.Context, output io.Writer, ms
 	contentType := resp.Header.Get(headerContentType)
 	switch {
 	case strings.HasPrefix(contentType, contentTypeJSON):
-		if err := s.handleJSONResponse(ctx, resp, output); err != nil {
+		if err = s.handleJSONResponse(ctx, resp, output); err != nil {
 			return err
 		}
 	case strings.HasPrefix(contentType, contentTypeSSE):
-		if err := s.handleSSEResponse(ctx, resp, output); err != nil {
+		if err = s.handleSSEResponse(ctx, resp, output); err != nil {
 			return err
 		}
 	case resp.StatusCode == http.StatusAccepted:
