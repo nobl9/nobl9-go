@@ -84,6 +84,9 @@ var specValidation = govy.New[Spec](
 			if s.Email != nil {
 				alertMethodCounter++
 			}
+			if s.SlackApp != nil {
+				alertMethodCounter++
+			}
 			if alertMethodCounter != expectedNumberOfAlertMethodTypes {
 				return errors.New("exactly one alert method configuration is required")
 			}
@@ -116,6 +119,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *EmailAlertMethod { return s.Email }).
 		WithName("email").
 		Include(emailValidation),
+	govy.ForPointer(func(s Spec) *SlackAppAlertMethod { return s.SlackApp }).
+		WithName("slackApp").
+		Include(slackAppValidation),
 )
 
 var webhookValidation = govy.New[WebhookAlertMethod](
@@ -293,6 +299,17 @@ var emailValidation = govy.New[EmailAlertMethod](
 	govy.For(func(s EmailAlertMethod) []string { return s.Bcc }).
 		WithName("bcc").
 		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
+)
+
+var slackAppValidation = govy.New[SlackAppAlertMethod](
+	govy.For(func(s SlackAppAlertMethod) string { return s.WorkspaceID }).
+		WithName("workspaceId").
+		Required().
+		Rules(rules.StringNotEmpty()),
+	govy.For(func(s SlackAppAlertMethod) string { return s.ChannelID }).
+		WithName("channelId").
+		Required().
+		Rules(rules.StringNotEmpty()),
 )
 
 func optionalUrlWithPrefixValidation(prefixes ...string) govy.Validator[string] {

@@ -51,6 +51,7 @@ type Spec struct {
 	Jira        *JiraAlertMethod       `json:"jira,omitempty"`
 	Teams       *TeamsAlertMethod      `json:"msteams,omitempty"`
 	Email       *EmailAlertMethod      `json:"email,omitempty"`
+	SlackApp    *SlackAppAlertMethod   `json:"slackApp,omitempty"`
 }
 
 func (s Spec) GetType() (v1alpha.AlertMethodType, error) {
@@ -73,6 +74,8 @@ func (s Spec) GetType() (v1alpha.AlertMethodType, error) {
 		return v1alpha.AlertMethodTypeTeams, nil
 	case s.Email != nil:
 		return v1alpha.AlertMethodTypeEmail, nil
+	case s.SlackApp != nil:
+		return v1alpha.AlertMethodTypeSlackApp, nil
 	}
 	return 0, errors.New("unknown alert method type")
 }
@@ -144,4 +147,12 @@ type EmailAlertMethod struct {
 	Cc              []string `json:"cc,omitempty"`
 	Bcc             []string `json:"bcc,omitempty"`
 	SendAsPlainText *bool    `json:"sendAsPlainText,omitempty"`
+}
+
+// SlackAppAlertMethod represents a set of properties required to send alerts via the Nobl9 Slack App.
+type SlackAppAlertMethod struct {
+	WorkspaceID   string `json:"workspaceId"`
+	ChannelID     string `json:"channelId"`
+	ChannelName   string `json:"channelName,omitempty"`
+	WebhookSecret string `json:"webhookSecret,omitempty"`
 }
