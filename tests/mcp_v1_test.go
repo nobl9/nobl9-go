@@ -35,28 +35,39 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		Project: project.GetName(),
 	})
 
-	// Create a simple SLO for testing
 	sloExample := e2etestutils.GetExample(t, manifest.KindSLO, nil)
-	slo := sloExample.GetObject().(v1alphaSLO.SLO)
-	slo.Metadata = v1alphaSLO.Metadata{
+	slo1 := sloExample.GetObject().(v1alphaSLO.SLO)
+	slo1.Metadata = v1alphaSLO.Metadata{
 		Name:        e2etestutils.GenerateName(),
-		DisplayName: "Test MCP SLO",
+		DisplayName: "Test MCP SLO 1",
 		Project:     project.GetName(),
 		Labels:      e2etestutils.AnnotateLabels(t, v1alpha.Labels{"test": []string{"mcp"}}),
 		Annotations: commonAnnotations,
 	}
-	slo.Spec.Service = service.GetName()
-	slo.Spec.AlertPolicies = nil // Simplify for testing
-	slo.Spec.AnomalyConfig = nil
+	slo1.Spec.Service = service.GetName()
+	slo1.Spec.AlertPolicies = nil
+	slo1.Spec.AnomalyConfig = nil
 
-	e2etestutils.ProvisionDataSourceForSLO(t, &slo)
+	e2etestutils.ProvisionDataSourceForSLO(t, &slo1)
+
+	slo2 := sloExample.GetObject().(v1alphaSLO.SLO)
+	slo2.Metadata = v1alphaSLO.Metadata{
+		Name:        e2etestutils.GenerateName(),
+		DisplayName: "Test MCP SLO 2",
+		Project:     project.GetName(),
+		Labels:      e2etestutils.AnnotateLabels(t, v1alpha.Labels{"test": []string{"mcp"}}),
+		Annotations: commonAnnotations,
+	}
+	slo2.Spec.Service = service.GetName()
+	slo2.Spec.AlertPolicies = nil
+	slo2.Spec.AnomalyConfig = nil
+
+	e2etestutils.ProvisionDataSourceForSLO(t, &slo2)
 
 	// Apply all objects
-	objects := []manifest.Object{project, service, slo}
+	objects := []manifest.Object{project, service, slo1, slo2}
 	e2etestutils.V1Apply(t, objects)
 	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
-
-	// Wait for objects to be ready
 	requireObjectsExists(t, objects...)
 
 	session, teardown := setupMCPProxySession(t)
@@ -71,8 +82,8 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 
 	t.Run("getSLO", func(t *testing.T) {
 		params := map[string]any{
-			"name":    slo.Metadata.Name,
-			"project": slo.Metadata.Project,
+			"name":    slo1.Metadata.Name,
+			"project": slo1.Metadata.Project,
 			"format":  "json",
 		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
@@ -88,15 +99,15 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		var fetchedSLO v1alphaSLO.SLO
 		err = json.Unmarshal([]byte(textContent.Text), &fetchedSLO)
 		require.NoError(t, err)
-		assert.Equal(t, slo.Metadata.Name, fetchedSLO.Metadata.Name)
-		assert.Equal(t, slo.Metadata.Project, fetchedSLO.Metadata.Project)
+		assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
+		assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
 		t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
 	})
 
 	t.Run("getSLOStatus", func(t *testing.T) {
 		params := map[string]any{
-			"name":    slo.Metadata.Name,
-			"project": slo.Metadata.Project,
+			"name":    slo1.Metadata.Name,
+			"project": slo1.Metadata.Project,
 		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
 			Name:      "getSLOStatus",
@@ -111,12 +122,12 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		var status map[string]any
 		err = json.Unmarshal([]byte(textContent.Text), &status)
 		require.NoError(t, err)
-		assert.Equal(t, slo.Metadata.Name, status["name"])
-		assert.Equal(t, slo.Metadata.DisplayName, status["displayName"])
+		assert.Equal(t, slo1.Metadata.Name, status["name"])
+		assert.Equal(t, slo1.Metadata.DisplayName, status["displayName"])
 		t.Logf("Successfully fetched SLO status for: %s", status["name"])
 	})
 
-	t.Run("getSLOsStatuses", func(t *testing.T) {
+	t.Run("getSLOsStatuses without limit (default limit)", func(t *testing.T) {
 		params := map[string]any{}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
 			Name:      "getSLOsStatuses",
@@ -133,14 +144,19 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		require.NoError(t, err)
 		assert.Contains(t, statuses, "slos")
 		slos := statuses["slos"].([]any)
-		assert.Greater(t, len(slos), 0, "Expected at least one SLO in statuses")
+		assert.GreaterOrEqual(t, len(slos), 2, "Expected at least two SLOs in statuses")
 		t.Logf("Successfully fetched statuses for %d SLOs", len(slos))
 	})
 
-	t.Run("getUserOrganizations", func(t *testing.T) {
-		params := map[string]any{}
+	t.Run("getSLOsStatuses with pagination", func(t *testing.T) {
+		// First request with limit=1
+		params := map[string]any{
+			"pagination": map[string]any{
+				"limit": 1,
+			},
+		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getUserOrganizations",
+			Name:      "getSLOsStatuses",
 			Arguments: params,
 		})
 		require.NoError(t, err)
@@ -149,19 +165,42 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		textContent, ok := result.Content[0].(*mcp.TextContent)
 		require.True(t, ok, "Expected TextContent")
 
-		var orgs map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &orgs)
+		var firstPage map[string]any
+		err = json.Unmarshal([]byte(textContent.Text), &firstPage)
 		require.NoError(t, err)
-		assert.Contains(t, orgs, "defaultOrganizationId")
-		assert.Contains(t, orgs, "organizations")
+		assert.Contains(t, firstPage, "slos")
 
-		// Handle nil or empty organizations
-		if orgs["organizations"] != nil {
-			organizations := orgs["organizations"].([]any)
-			t.Logf("User belongs to %d organization(s)", len(organizations))
-		} else {
-			t.Logf("User has no organizations (nil)")
+		slos := firstPage["slos"].([]any)
+		require.Greater(t, len(slos), 0, "Expected at least one SLO in first page")
+
+		// Extract nextCursor from top level
+		require.Contains(t, firstPage, "nextCursor", "Expected nextCursor in paginated response")
+		nextCursor, ok := firstPage["nextCursor"].(string)
+		require.True(t, ok && nextCursor != "", "Expected non-empty nextCursor string")
+
+		// Second request using nextCursor
+		params = map[string]any{
+			"pagination": map[string]any{
+				"cursor": nextCursor,
+			},
 		}
+		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getSLOsStatuses",
+			Arguments: params,
+		})
+		require.NoError(t, err)
+		require.Len(t, result.Content, 1)
+
+		textContent, ok = result.Content[0].(*mcp.TextContent)
+		require.True(t, ok, "Expected TextContent")
+
+		var secondPage map[string]any
+		err = json.Unmarshal([]byte(textContent.Text), &secondPage)
+		require.NoError(t, err)
+		assert.Contains(t, secondPage, "slos")
+
+		slosPage2 := secondPage["slos"].([]any)
+		require.Greater(t, len(slosPage2), 0, "Expected at least one SLO in second page")
 	})
 
 	t.Run("searchSLOs", func(t *testing.T) {
@@ -170,7 +209,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 				"limit":  10,
 				"offset": 0,
 			},
-			"searchPhrase": slo.Metadata.Name[:5], // Search by first 5 chars of name
+			"searchPhrase": slo1.Metadata.Name[:5], // Search by first 5 chars of name
 		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
 			Name:      "searchSLOs",
@@ -191,10 +230,64 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		t.Logf("Search returned %d SLO(s)", len(items))
 	})
 
+	t.Run("searchSLOs with limit 1", func(t *testing.T) {
+		params := map[string]any{
+			"pagination": map[string]any{
+				"limit":  1,
+				"offset": 0,
+			},
+			"projects": []string{slo1.Metadata.Project},
+		}
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "searchSLOs",
+			Arguments: params,
+		})
+		require.NoError(t, err)
+		require.Len(t, result.Content, 1)
+
+		textContent, ok := result.Content[0].(*mcp.TextContent)
+		require.True(t, ok, "Expected TextContent")
+
+		var searchResult map[string]any
+		err = json.Unmarshal([]byte(textContent.Text), &searchResult)
+		require.NoError(t, err)
+		assert.Contains(t, searchResult, "items")
+
+		items := searchResult["items"].([]any)
+		assert.Len(t, items, 1, "Expected exactly 1 SLO with limit=1")
+	})
+
+	t.Run("searchSLOs with limit 10 and offset 1", func(t *testing.T) {
+		params := map[string]any{
+			"pagination": map[string]any{
+				"limit":  10,
+				"offset": 1,
+			},
+			"projects": []string{slo1.Metadata.Project},
+		}
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "searchSLOs",
+			Arguments: params,
+		})
+		require.NoError(t, err)
+		require.Len(t, result.Content, 1)
+
+		textContent, ok := result.Content[0].(*mcp.TextContent)
+		require.True(t, ok, "Expected TextContent")
+
+		var searchResult map[string]any
+		err = json.Unmarshal([]byte(textContent.Text), &searchResult)
+		require.NoError(t, err)
+		assert.Contains(t, searchResult, "items")
+
+		items := searchResult["items"].([]any)
+		assert.Len(t, items, 1, "Expected exactly 1 SLO with offset=1 (skips first of 2 total)")
+	})
+
 	t.Run("getSLO returns error for non-existent SLO", func(t *testing.T) {
 		params := map[string]any{
 			"name":    "non-existent-slo-12345",
-			"project": slo.Metadata.Project,
+			"project": slo1.Metadata.Project,
 			"format":  "json",
 		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
@@ -207,6 +300,71 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		textContent, ok := result.Content[0].(*mcp.TextContent)
 		require.True(t, ok, "Expected TextContent")
 		assert.Contains(t, textContent.Text, "not found")
+	})
+
+	t.Run("getService", func(t *testing.T) {
+		params := map[string]any{
+			"name":    service.Metadata.Name,
+			"project": service.Metadata.Project,
+			"format":  "json",
+		}
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getService",
+			Arguments: params,
+		})
+		require.NoError(t, err)
+		require.Len(t, result.Content, 1)
+
+		textContent, ok := result.Content[0].(*mcp.TextContent)
+		require.True(t, ok, "Expected TextContent")
+
+		var fetchedService v1alphaService.Service
+		err = json.Unmarshal([]byte(textContent.Text), &fetchedService)
+		require.NoError(t, err)
+		assert.Equal(t, service.Metadata.Name, fetchedService.Metadata.Name)
+		assert.Equal(t, service.Metadata.Project, fetchedService.Metadata.Project)
+	})
+
+	t.Run("getService returns error when name is empty", func(t *testing.T) {
+		params := map[string]any{
+			"name":    "",
+			"project": service.Metadata.Project,
+			"format":  "json",
+		}
+		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getService",
+			Arguments: params,
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "minLength")
+	})
+
+	t.Run("getService returns error when project is empty", func(t *testing.T) {
+		params := map[string]any{
+			"name":    service.Metadata.Name,
+			"project": "",
+			"format":  "json",
+		}
+		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getService",
+			Arguments: params,
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "minLength")
+	})
+
+	t.Run("getService returns error when project is wildcard", func(t *testing.T) {
+		params := map[string]any{
+			"name":    service.Metadata.Name,
+			"project": "*",
+			"format":  "json",
+		}
+		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name:      "getService",
+			Arguments: params,
+		})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "not:")
 	})
 }
 
