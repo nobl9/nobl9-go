@@ -12,19 +12,19 @@ import (
 )
 
 const (
-	// TypeProject is a Type of type Project.
-	TypeProject Type = iota + 1
 	// TypeOrganization is a Type of type Organization.
-	TypeOrganization
+	TypeOrganization Type = iota + 1
+	// TypeProject is a Type of type Project.
+	TypeProject
 )
 
 var ErrInvalidType = fmt.Errorf("not a valid Type, try [%s]", strings.Join(_TypeNames, ", "))
 
-const _TypeName = "ProjectOrganization"
+const _TypeName = "OrganizationProject"
 
 var _TypeNames = []string{
-	_TypeName[0:7],
-	_TypeName[7:19],
+	_TypeName[0:12],
+	_TypeName[12:19],
 }
 
 // TypeNames returns a list of possible string values of Type.
@@ -35,8 +35,8 @@ func TypeNames() []string {
 }
 
 var _TypeMap = map[Type]string{
-	TypeProject:      _TypeName[0:7],
-	TypeOrganization: _TypeName[7:19],
+	TypeOrganization: _TypeName[0:12],
+	TypeProject:      _TypeName[12:19],
 }
 
 // String implements the Stringer interface.
@@ -55,10 +55,10 @@ func (x Type) IsValid() bool {
 }
 
 var _TypeValue = map[string]Type{
-	_TypeName[0:7]:                   TypeProject,
-	strings.ToLower(_TypeName[0:7]):  TypeProject,
-	_TypeName[7:19]:                  TypeOrganization,
-	strings.ToLower(_TypeName[7:19]): TypeOrganization,
+	_TypeName[0:12]:                   TypeOrganization,
+	strings.ToLower(_TypeName[0:12]):  TypeOrganization,
+	_TypeName[12:19]:                  TypeProject,
+	strings.ToLower(_TypeName[12:19]): TypeProject,
 }
 
 // ParseType attempts to convert a string to a Type.
