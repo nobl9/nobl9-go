@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
-	"os"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -22,8 +21,8 @@ import (
 )
 
 func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
-	// Enable debug logging to see MCP messages
-	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+	// Enable debug logging to see MCP messages (only shown on test failure or with -v flag)
+	handler := slog.NewTextHandler(&testLogWriter{t: t}, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
 	slog.SetDefault(slog.New(handler))
@@ -392,8 +391,8 @@ func setupMCPProxySession(t *testing.T) (session *mcp.ClientSession, teardown fu
 	// Start ProxyStream BEFORE connecting the MCP client
 	// so that initialization messages can be forwarded
 	go func() {
-		err = client.MCP().V1().ProxyStream(t.Context(), clientToProxyReader, proxyToClientWriter)
-		proxyStreamDone <- err
+		proxyErr := client.MCP().V1().ProxyStream(t.Context(), clientToProxyReader, proxyToClientWriter)
+		proxyStreamDone <- proxyErr
 	}()
 
 	session, err = mcpClient.Connect(t.Context(), &mcp.IOTransport{
@@ -404,12 +403,23 @@ func setupMCPProxySession(t *testing.T) (session *mcp.ClientSession, teardown fu
 
 	return session, func() {
 		// Close the session to terminate ProxyStream
-		err = session.Close()
-		assert.NoError(t, err)
-		err = clientToProxyWriter.Close()
-		assert.NoError(t, err)
+		closeErr := session.Close()
+		assert.NoError(t, closeErr)
+		closeErr = clientToProxyWriter.Close()
+		assert.NoError(t, closeErr)
 
-		err = <-proxyStreamDone
-		require.NoError(t, err)
+		proxyErr := <-proxyStreamDone
+		require.NoError(t, proxyErr)
 	}
+}
+
+// testLogWriter is an io.Writer that writes to testing.TB.Log.
+// This ensures debug logs only appear when tests fail or when running with -v flag.
+type testLogWriter struct {
+	t testing.TB
+}
+
+func (w *testLogWriter) Write(p []byte) (n int, err error) {
+	w.t.Log(string(p))
+	return len(p), nil
 }
