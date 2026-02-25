@@ -255,13 +255,13 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		require.NoError(t, os.WriteFile(
 			tmpDir(path),
 			readTestFile(t, filepath.Base(path)).Bytes(),
-			0o666))
+			0o600))
 	}
 	// - Create temporary directory.
 	createDir := func(path string) {
 		require.NoError(t, os.Mkdir(
 			tmpDir(path),
-			0o777))
+			0o750))
 	}
 	// - Create symlink.
 	createSymlink := func(oldName, newName string) { require.NoError(t, os.Symlink(oldName, newName)) }
