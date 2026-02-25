@@ -18,6 +18,7 @@ linters:
     - gocyclo
     - goheader
     - goprintffuncname
+    - gosec
     - govet
     - importas
     - ineffassign
@@ -43,6 +44,13 @@ linters:
       default-signifies-exhaustive: true
     gocognit:
       min-complexity: 30
+    gosec:
+      excludes:
+        - G101 # Potential hardcoded credentials
+        - G117 # Exported field matches secret pattern
+        - G703 # Path traversal via taint analysis
+        - G704 # SSRF via taint analysis
+        - G705 # XSS via taint analysis
     gocritic:
       disabled-checks:
         - singleCaseSwitch
@@ -71,6 +79,20 @@ linters:
       - linters:
           - staticcheck
         text: (WithDryRun is deprecated)|(Objects\(\).V1\(\).\w+ is deprecated)|(aws-sdk-go is deprecated.)
+      # Exclude gosec rules that are noisy or not applicable in test code:
+      # - G101: Hardcoded credentials (test data/examples)
+      # - G115: Integer overflow conversions (test assertions)
+      # - G117: Exported fields matching secret patterns (JSON field names)
+      # - G204: Subprocess launched with variable (test utilities)
+      # - G112: ReadHeaderTimeout not configured (test HTTP servers)
+      # - G301/G306: File/directory permissions (test file operations)
+      # - G304: File inclusion via variable (test file reading)
+      # - G703: Path traversal (code generation tools)
+      # - G704: SSRF (intentional HTTP client usage in SDK)
+      # - G705: XSS via taint analysis (false positives on fmt.Fprintf)
+      - linters:
+          - gosec
+        text: "G(101|115|117|204|112|301|304|306|703|704|705):"
 issues:
   # Value 0 means show all.
   max-issues-per-linter: 0
