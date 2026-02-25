@@ -56,16 +56,6 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
-	allObjects := make([]manifest.Object, 0)
-	allObjects = append(
-		allObjects,
-		project,
-		service,
-		defaultProjectService,
-		slo,
-		defaultProjectSLO,
-	)
-
 	annotations := []v1alphaAnnotation.Annotation{
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
@@ -136,6 +126,15 @@ func Test_Objects_V1_V1alpha_Annotation(t *testing.T) {
 			},
 		),
 	}
+	allObjects := make([]manifest.Object, 0, 5+len(annotations))
+	allObjects = append(
+		allObjects,
+		project,
+		service,
+		defaultProjectService,
+		slo,
+		defaultProjectSLO,
+	)
 	for _, annotation := range annotations {
 		allObjects = append(allObjects, annotation)
 	}
@@ -246,16 +245,6 @@ func Test_Objects_V2_V1alpha_Annotation(t *testing.T) {
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
-	allObjects := make([]manifest.Object, 0)
-	allObjects = append(
-		allObjects,
-		project,
-		service,
-		defaultProjectService,
-		slo,
-		defaultProjectSLO,
-	)
-
 	annotations := []v1alphaAnnotation.Annotation{
 		v1alphaAnnotation.New(
 			v1alphaAnnotation.Metadata{
@@ -326,6 +315,15 @@ func Test_Objects_V2_V1alpha_Annotation(t *testing.T) {
 			},
 		),
 	}
+	allObjects := make([]manifest.Object, 0, 5+len(annotations))
+	allObjects = append(
+		allObjects,
+		project,
+		service,
+		defaultProjectService,
+		slo,
+		defaultProjectSLO,
+	)
 	for _, annotation := range annotations {
 		allObjects = append(allObjects, annotation)
 	}

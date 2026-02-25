@@ -277,7 +277,7 @@ func prepareTestClientWithClaimsUser(
 			t.Logf("unsupported path: %s", r.URL.Path)
 			t.FailNow()
 		}
-	})}
+	}), ReadHeaderTimeout: 5 * time.Second}
 
 	// Start test server.
 	srv.Start()

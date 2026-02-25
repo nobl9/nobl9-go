@@ -276,7 +276,7 @@ func buildCloudWatchStatRegexp() *regexp.Regexp {
 		fmt.Sprintf("%s:", floatingPoint),
 		fmt.Sprintf(":%s", floatingPoint),
 	}
-	var allArgumentAlternatives []string
+	allArgumentAlternatives := make([]string, 0, len(percentArgumentAlternatives)+len(floatArgumentAlternatives))
 	allArgumentAlternatives = append(allArgumentAlternatives, percentArgumentAlternatives...)
 	allArgumentAlternatives = append(allArgumentAlternatives, floatArgumentAlternatives...)
 
@@ -295,7 +295,7 @@ func buildCloudWatchStatRegexp() *regexp.Regexp {
 	valueOnlyFunctions := wrapInParenthesis(concatRegexAlternatives(valueOnlyFunctionNames)) +
 		fmt.Sprintf(`\(%s\)`, concatRegexAlternatives(floatArgumentAlternatives))
 
-	var allFunctions []string
+	allFunctions := make([]string, 0, len(simpleFunctions)+1+1+1)
 	allFunctions = append(allFunctions, simpleFunctions...)
 	allFunctions = append(allFunctions, shortFunctions)
 	allFunctions = append(allFunctions, valueOrPercentFunctions)

@@ -426,7 +426,7 @@ func getObjectsInProject(t *testing.T, ctx context.Context, project string) []ma
 		manifest.KindService,
 		manifest.KindAlertPolicy,
 	}
-	var allObjects []manifest.Object
+	allObjects := make([]manifest.Object, 0, 10)
 	for _, kind := range kinds {
 		objects, err := client.Objects().V1().Get(
 			ctx,

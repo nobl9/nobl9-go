@@ -194,7 +194,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 			}),
 	}
 
-	allObjects := make([]manifest.Object, 0)
+	allObjects := make([]manifest.Object, 0, 1+len(reports))
 	allObjects = append(
 		allObjects,
 		project,
@@ -252,7 +252,7 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 	timeZone := "Europe/Warsaw"
 
 	project := generateV1alphaProject(t)
-	allObjects := make([]manifest.Object, 0)
+	allObjects := make([]manifest.Object, 0, 1)
 	allObjects = append(
 		allObjects,
 		project,

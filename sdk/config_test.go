@@ -433,7 +433,7 @@ func TestReadConfig_Verify(t *testing.T) {
 
 	t.Run("no credentials", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.toml")
-		err := os.WriteFile(configPath, []byte("[contexts]\n[contexts.default]"), 0o700)
+		err := os.WriteFile(configPath, []byte("[contexts]\n[contexts.default]"), 0o600)
 		require.NoError(t, err)
 
 		config, err := ReadConfig(
