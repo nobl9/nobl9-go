@@ -150,9 +150,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	t.Run("getSLOsStatuses with pagination", func(t *testing.T) {
 		// First request with limit=1
 		params := map[string]any{
-			"pagination": map[string]any{
-				"limit": 1,
-			},
+			"limit": 1,
 		}
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
 			Name:      "getSLOsStatuses",
@@ -179,9 +177,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 
 		// Second request using nextCursor
 		params = map[string]any{
-			"pagination": map[string]any{
-				"cursor": nextCursor,
-			},
+			"cursor": nextCursor,
 		}
 		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
 			Name:      "getSLOsStatuses",
