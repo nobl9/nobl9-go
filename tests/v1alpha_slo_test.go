@@ -116,17 +116,9 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 			metricSpecs := slo.Spec.AllMetricSpecs()
 			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-
 			sourceType := metricSpecs[0].DataSourceType()
-			var source manifest.Object
-			switch slo.Spec.Indicator.MetricSource.Kind {
-			case manifest.KindDirect:
-				source = e2etestutils.ProvisionStaticDirect(t, sourceType)
-			default:
-				source = e2etestutils.ProvisionStaticAgent(t, sourceType)
-			}
-			slo.Spec.Indicator.MetricSource.Name = source.GetName()
-			slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
+
+			e2etestutils.ProvisionDataSourceForSLO(t, &slo)
 
 			switch i {
 			case 0:

@@ -2,14 +2,13 @@ package v1alphaExamples
 
 import (
 	"go/ast"
-	"go/parser"
-	"go/token"
 	"path/filepath"
 	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -17,17 +16,21 @@ import (
 
 func TestExamples_EnsureAllKindsHaveExamples(t *testing.T) {
 	path := filepath.Join(pathutils.FindModuleRoot(), "manifest", "v1alpha", "examples")
-	set := token.NewFileSet()
-	packs, err := parser.ParseDir(set, path, nil, 0)
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
+		Dir:  path,
+	}
+	pkgs, err := packages.Load(cfg, ".")
 	require.NoError(t, err)
+	require.Len(t, pkgs, 1, "expected exactly one package")
+	pkg := pkgs[0]
+	require.Empty(t, pkg.Errors, "package should not have errors")
 
 	funcs := []*ast.FuncDecl{}
-	for _, pack := range packs {
-		for _, f := range pack.Files {
-			for _, d := range f.Decls {
-				if fn, isFn := d.(*ast.FuncDecl); isFn {
-					funcs = append(funcs, fn)
-				}
+	for _, f := range pkg.Syntax {
+		for _, d := range f.Decls {
+			if fn, isFn := d.(*ast.FuncDecl); isFn {
+				funcs = append(funcs, fn)
 			}
 		}
 	}
