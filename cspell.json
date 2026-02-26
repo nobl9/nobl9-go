@@ -145,6 +145,7 @@
     "pagerduty",
     "pastlatest",
     "pathutils",
+    "pkgs",
     "plantuml",
     "preconfigured",
     "projectservice",
