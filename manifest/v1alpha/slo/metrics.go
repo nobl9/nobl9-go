@@ -215,7 +215,7 @@ func (s *Spec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
 
 // AllMetricSpecs returns slice of all metrics defined in SLO regardless of their type.
 func (s *Spec) AllMetricSpecs() []*MetricSpec {
-	var metrics []*MetricSpec
+	metrics := make([]*MetricSpec, 0, s.ObjectivesRawMetricsCount()+s.CountMetricsCount())
 	metrics = append(metrics, s.RawMetrics()...)
 	metrics = append(metrics, s.CountMetrics()...)
 	return metrics
@@ -417,13 +417,13 @@ func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
 
 		switch jsonObj := jsonObjAny.(type) {
 		case string:
-			sb.WriteString(fmt.Sprintf("%s\n", jsonObj))
+			fmt.Fprintf(&sb, "%s\n", jsonObj)
 		case float64:
 			number := jsonObj
 			if math.Floor(number) == number {
-				sb.WriteString(fmt.Sprintf("%d\n", int64(number)))
+				fmt.Fprintf(&sb, "%d\n", int64(number))
 			} else {
-				sb.WriteString(fmt.Sprintf("%f\n", number))
+				fmt.Fprintf(&sb, "%f\n", number)
 			}
 		case map[string]any:
 			keys := make([]string, 0, len(jsonObj))
@@ -432,17 +432,13 @@ func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
 			}
 			sort.Strings(keys)
 			for _, k := range keys {
-				sb.WriteString(
-					fmt.Sprintf("%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix)),
-				)
+				fmt.Fprintf(&sb, "%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix))
 			}
 		case []any:
 			sb.WriteString("\n")
 			prefix += " "
 			for i, val := range jsonObj {
-				sb.WriteString(
-					fmt.Sprintf("%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" ")),
-				)
+				fmt.Fprintf(&sb, "%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" "))
 			}
 		default:
 			sb.WriteString("")

@@ -185,7 +185,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 	})
 	t.Run("fails, too many attachments", func(t *testing.T) {
 		slo := validSLO()
-		var attachments []Attachment
+		attachments := make([]Attachment, 0, 21)
 		for range 21 {
 			attachments = append(attachments, Attachment{})
 		}

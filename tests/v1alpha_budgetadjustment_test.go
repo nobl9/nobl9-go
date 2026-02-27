@@ -258,7 +258,7 @@ func generateSLO(t *testing.T) (slo v1alphaSLO.SLO) {
 	defaultProjectSLO.Metadata.Project = defaultProject
 	defaultProjectSLO.Spec.Service = defaultProjectService.Metadata.Name
 
-	allObjects := make([]manifest.Object, 0)
+	allObjects := make([]manifest.Object, 0, 5)
 	allObjects = append(
 		allObjects,
 		project,

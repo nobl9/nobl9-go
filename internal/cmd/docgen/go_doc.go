@@ -4,8 +4,6 @@ import (
 	"go/ast"
 	"go/doc"
 	"go/doc/comment"
-	"go/parser"
-	"go/token"
 	"io/fs"
 	"log"
 	"path/filepath"
@@ -13,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"golang.org/x/exp/maps"
+	"golang.org/x/tools/go/packages"
 
 	"github.com/nobl9/nobl9-go/internal/pathutils"
 )
@@ -41,18 +39,43 @@ func parseGoDocs() map[string]goTypeDoc {
 
 	typeDocs := make(map[string]goTypeDoc, 500)
 	for _, dir := range directories {
-		packages, err := parser.ParseDir(token.NewFileSet(), dir, parserFilter, parser.ParseComments)
-		if err != nil {
-			log.Panicf("Error parsing directory %s: %v", dir, err)
+		cfg := &packages.Config{
+			Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax,
+			Dir:  dir,
 		}
-		if len(packages) == 0 {
+		pkgs, err := packages.Load(cfg, ".")
+		if err != nil {
+			log.Panicf("Error loading package in directory %s: %v", dir, err)
+		}
+		if len(pkgs) == 0 {
 			continue
 		}
-		if len(packages) > 1 {
-			log.Panicf("Expected exactly one package in %s, got %d", dir, len(packages))
+		if len(pkgs) > 1 {
+			log.Panicf("Expected exactly one package in %s, got %d", dir, len(pkgs))
 		}
-		pkg := maps.Values(packages)[0]
-		pkgParser := newPackageParser(pkg, strings.TrimPrefix(dir, root+"/"))
+		pkg := pkgs[0]
+		// Skip directories without Go files or with loading errors
+		if len(pkg.Errors) > 0 || len(pkg.Syntax) == 0 {
+			continue
+		}
+
+		// Convert packages.Package to ast.Package
+		// nolint: staticcheck
+		astPkg := &ast.Package{
+			Name:  pkg.Name,
+			Files: make(map[string]*ast.File),
+		}
+		for i, file := range pkg.Syntax {
+			if i < len(pkg.GoFiles) && parserFilter(pkg.GoFiles[i]) {
+				astPkg.Files[pkg.GoFiles[i]] = file
+			}
+		}
+
+		if len(astPkg.Files) == 0 {
+			continue
+		}
+
+		pkgParser := newPackageParser(astPkg, strings.TrimPrefix(dir, root+"/"))
 		docs := pkgParser.Parse()
 		for k, v := range docs {
 			typeDocs[k] = v
@@ -165,6 +188,7 @@ func listDirectories(root string) ([]string, error) {
 	return directories, nil
 }
 
-func parserFilter(info fs.FileInfo) bool {
-	return !strings.HasSuffix(info.Name(), "_test.go")
+func parserFilter(filename string) bool {
+	name := filepath.Base(filename)
+	return !strings.HasSuffix(name, "_test.go")
 }

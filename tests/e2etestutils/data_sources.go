@@ -11,6 +11,7 @@ import (
 	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	v1alphaDirect "github.com/nobl9/nobl9-go/manifest/v1alpha/direct"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
+	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 // DataSourcesProject is the Project which contains all the static Data Sources
@@ -67,6 +68,28 @@ func ProvisionStaticDirect(t *testing.T, typ v1alpha.DataSourceType) v1alphaDire
 	V1Apply(t, []manifest.Object{direct})
 	staticDirectsCache.StoreUnsafe(cacheKey, direct)
 	return direct
+}
+
+// ProvisionDataSourceForSLO provisions a data source for the given SLO and updates its MetricSource fields.
+// If the SLO has metric specs, it provisions either a Direct or Agent data source based on the MetricSource.Kind
+// and updates the SLO's MetricSource.Name and MetricSource.Project fields.
+func ProvisionDataSourceForSLO(t *testing.T, slo *v1alphaSLO.SLO) {
+	t.Helper()
+	if len(slo.Spec.AllMetricSpecs()) == 0 {
+		return
+	}
+
+	sourceType := slo.Spec.AllMetricSpecs()[0].DataSourceType()
+	var source manifest.Object
+	switch slo.Spec.Indicator.MetricSource.Kind {
+	case manifest.KindDirect:
+		source = ProvisionStaticDirect(t, sourceType)
+	default:
+		source = ProvisionStaticAgent(t, sourceType)
+	}
+
+	slo.Spec.Indicator.MetricSource.Name = source.GetName()
+	slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
 }
 
 // staticAgentsCache is used to store already applied static data sources.

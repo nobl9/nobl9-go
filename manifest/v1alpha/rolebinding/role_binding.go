@@ -38,3 +38,10 @@ type Spec struct {
 	RoleRef    string  `json:"roleRef"`
 	ProjectRef string  `json:"projectRef,omitempty"`
 }
+
+func (r RoleBinding) GetType() Type {
+	if r.Spec.ProjectRef != "" {
+		return TypeProject
+	}
+	return TypeOrganization
+}
