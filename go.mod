@@ -19,7 +19,7 @@ require (
 )
 
 require (
-	github.com/modelcontextprotocol/go-sdk v1.3.1
+	github.com/modelcontextprotocol/go-sdk v1.4.0
 	golang.org/x/tools v0.42.0
 )
 
@@ -35,7 +35,7 @@ require (
 	github.com/segmentio/encoding v0.5.3 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
