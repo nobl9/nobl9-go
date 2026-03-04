@@ -16,10 +16,30 @@ import (
 
 // SumoLogicMetric represents metric from Sumo Logic.
 type SumoLogicMetric struct {
-	Type         *string `json:"type"`
-	Query        *string `json:"query"`
-	Quantization *string `json:"quantization,omitempty"`
-	Rollup       *string `json:"rollup,omitempty"`
+	Type *string `json:"type"`
+	// Deprecated: Use Queries instead.
+	Query        *string            `json:"query,omitempty"`
+	Queries      []SumoLogicQuery   `json:"queries,omitempty"`
+	Quantization *string            `json:"quantization,omitempty"`
+	Rollup       *string            `json:"rollup,omitempty"`
+}
+
+// SumoLogicQuery represents a single query row in a Sumo Logic multi-query (ABC pattern).
+type SumoLogicQuery struct {
+	RowID string `json:"rowId"`
+	Query string `json:"query"`
+}
+
+// GetQueries returns the list of queries, normalizing the legacy single-query field
+// into a single-element slice when Queries is not set.
+func (m SumoLogicMetric) GetQueries() []SumoLogicQuery {
+	if len(m.Queries) > 0 {
+		return m.Queries
+	}
+	if m.Query != nil {
+		return []SumoLogicQuery{{RowID: "A", Query: *m.Query}}
+	}
+	return nil
 }
 
 const (
@@ -68,22 +88,76 @@ var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 	govy.WhenDescription("countMetrics is sumoLogic"),
 )
 
+const sumoLogicMaxQueries = 6
+
+var sumoLogicValidRowIDs = []string{"A", "B", "C", "D", "E", "F"}
+
 var sumoLogicValidation = govy.New[SumoLogicMetric](
 	govy.For(govy.GetSelf[SumoLogicMetric]()).
+		Rules(govy.NewRule(func(m SumoLogicMetric) error {
+			if m.Query != nil && len(m.Queries) > 0 {
+				return errors.New("'query' and 'queries' are mutually exclusive")
+			}
+			return nil
+		}).WithErrorCode(rules.ErrorCodeMutuallyExclusive)).
 		Include(sumoLogicMetricTypeValidation).
-		Include(sumoLogicLogsTypeValidation),
+		Include(sumoLogicLogsTypeValidation).
+		Include(sumoLogicQueriesValidation).
+		Include(sumoLogicQueriesForbiddenForLogsValidation),
 	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Type }).
 		WithName("type").
 		Required().
 		Rules(rules.OneOf(SumoLogicTypeLogs, SumoLogicTypeMetric)),
 )
 
+var sumoLogicQueriesValidation = govy.New[SumoLogicMetric](
+	govy.ForSlice(func(m SumoLogicMetric) []SumoLogicQuery { return m.Queries }).
+		WithName("queries").
+		Cascade(govy.CascadeModeStop).
+		Rules(rules.SliceLength[[]SumoLogicQuery](1, sumoLogicMaxQueries)).
+		Rules(rules.SliceUnique(func(q SumoLogicQuery) string { return q.RowID }).
+			WithDetails("rowId must be unique across all queries")).
+		RulesForEach(
+			govy.NewRule(func(q SumoLogicQuery) error {
+				if q.RowID == "" {
+					return errors.New("'rowId' is required")
+				}
+				if len(q.RowID) != 1 || q.RowID[0] < 'A' || q.RowID[0] > 'F' {
+					return errors.Errorf("'rowId' must be a single uppercase letter A-F, got '%s'", q.RowID)
+				}
+				return nil
+			}),
+			govy.NewRule(func(q SumoLogicQuery) error {
+				if q.Query == "" {
+					return errors.New("'query' must not be empty")
+				}
+				return nil
+			}),
+		),
+).When(
+	func(m SumoLogicMetric) bool { return len(m.Queries) > 0 },
+	govy.WhenDescription("queries is not empty"),
+)
+
+var sumoLogicQueriesForbiddenForLogsValidation = govy.New[SumoLogicMetric](
+	govy.ForSlice(func(m SumoLogicMetric) []SumoLogicQuery { return m.Queries }).
+		WithName("queries").
+		Rules(rules.Forbidden[[]SumoLogicQuery]()),
+).When(
+	func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeLogs },
+	govy.WhenDescriptionf("type is '%s'", SumoLogicTypeLogs),
+)
+
 var sumoLogicValidRollups = []string{"Avg", "Sum", "Min", "Max", "Count", "None"}
 
 var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
-	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Query }).
-		WithName("query").
-		Required(),
+	govy.For(govy.GetSelf[SumoLogicMetric]()).
+		Rules(govy.NewRule(func(m SumoLogicMetric) error {
+			if m.Query == nil && len(m.Queries) == 0 {
+				return errors.New("one of 'query' or 'queries' is required")
+			}
+			return nil
+		}).WithErrorCode(rules.ErrorCodeRequired)),
 	govy.ForPointer(func(p SumoLogicMetric) *string { return p.Quantization }).
 		WithName("quantization").
 		Required().
@@ -108,6 +182,7 @@ var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
 		govy.WhenDescriptionf("type is '%s'", SumoLogicTypeMetric),
 	)
+
 
 var (
 	sumoLogicLogsTypeValidation            = getSumoLogicLogsTypeValidation(false)

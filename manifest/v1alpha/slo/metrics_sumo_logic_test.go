@@ -86,8 +86,9 @@ func TestSumoLogic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Query = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.query",
-			Code: rules.ErrorCodeRequired,
+			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic",
+			Code:    rules.ErrorCodeRequired,
+			Message: "one of 'query' or 'queries' is required",
 		})
 	})
 }
@@ -641,6 +642,189 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 			testutils.AssertNoError(t, slo, err)
 		})
 	}
+}
+
+func TestSumoLogic_MultiQuery(t *testing.T) {
+	t.Run("valid multi-query with 3 rows", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=CPU_total"},
+				{RowID: "B", Query: "metric=CPU_idle"},
+				{RowID: "C", Query: "#A - #B"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("valid single-element queries array", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=CPU_total"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("mutual exclusivity - both query and queries set", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Query:        ptr("metric=CPU_total"),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=CPU_total"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.sumoLogic",
+			Code: rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+	t.Run("max 6 queries exceeded", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "q1"},
+				{RowID: "B", Query: "q2"},
+				{RowID: "C", Query: "q3"},
+				{RowID: "D", Query: "q4"},
+				{RowID: "E", Query: "q5"},
+				{RowID: "F", Query: "q6"},
+				{RowID: "G", Query: "q7"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+		})
+	})
+	t.Run("duplicate row IDs", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "q1"},
+				{RowID: "A", Query: "q2"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+		})
+	})
+	t.Run("valid non-sequential row IDs", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "q1"},
+				{RowID: "C", Query: "q2"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("invalid row ID - lowercase", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "a", Query: "q1"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
+		})
+	})
+	t.Run("invalid row ID - G", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "G", Query: "q1"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
+		})
+	})
+	t.Run("invalid row ID - numeric", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "1", Query: "q1"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
+		})
+	})
+	t.Run("empty query in array", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: ""},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			ContainsMessage: "'query' must not be empty",
+		})
+	})
+	t.Run("queries forbidden for logs type", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic = &SumoLogicMetric{
+			Type: ptr(SumoLogicTypeLogs),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "some log query"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+				Code: rules.ErrorCodeForbidden,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
 }
 
 func TestSumoLogic_MetricsType_SingleQuery(t *testing.T) {
