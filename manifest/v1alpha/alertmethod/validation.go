@@ -223,15 +223,29 @@ var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 )
 
 var serviceNowValidation = govy.New[ServiceNowAlertMethod](
-	govy.For(func(s ServiceNowAlertMethod) string { return s.Username }).
-		WithName("username").
-		Required(),
 	govy.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
 		WithName("instanceName").
 		Required(),
 	govy.ForPointer(func(s ServiceNowAlertMethod) *SendResolution { return s.SendResolution }).
 		WithName("sendResolution").
 		Include(sendResolutionValidation),
+	govy.For(govy.GetSelf[ServiceNowAlertMethod]()).
+		Rules(govy.NewRule(func(s ServiceNowAlertMethod) error {
+			hasBasicAuth := s.Username != "" || s.Password != ""
+			hasTokenAuth := s.ApiToken != ""
+			if hasBasicAuth && hasTokenAuth {
+				return errors.New(
+					"either basic auth (username/password) or token auth (apiToken) must be provided, not both")
+			}
+			if !hasBasicAuth && !hasTokenAuth {
+				return errors.New(
+					"either basic auth (username/password) or token auth (apiToken) must be provided")
+			}
+			if hasBasicAuth && s.Username == "" {
+				return errors.New("username is required when using basic auth")
+			}
+			return nil
+		})),
 )
 
 var jiraValidation = govy.New[JiraAlertMethod](

@@ -10,8 +10,12 @@ import (
 
 func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 	for name, spec := range map[string]ServiceNowAlertMethod{
-		"passes with valid user name and instance name": {
+		"passes with valid username and instance name (basic auth)": {
 			Username:     "user",
+			InstanceName: "instance",
+		},
+		"passes with valid api token and instance name (token auth)": {
+			ApiToken:     "my-api-token",
 			InstanceName: "instance",
 		},
 	} {
@@ -30,18 +34,6 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 		ExpectedErrorsCount int
 		AlertMethod         ServiceNowAlertMethod
 	}{
-		"fails with required username": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.servicenow.username",
-					Code: rules.ErrorCodeRequired,
-				},
-			},
-			AlertMethod: ServiceNowAlertMethod{
-				InstanceName: "instance",
-			},
-		},
 		"fails with required instance name": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
@@ -52,6 +44,43 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			},
 			AlertMethod: ServiceNowAlertMethod{
 				Username: "user",
+			},
+		},
+		"fails with no auth provided": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				InstanceName: "instance",
+			},
+		},
+		"fails with both auth types provided": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				Username:     "user",
+				Password:     "pass",
+				ApiToken:     "token",
+				InstanceName: "instance",
+			},
+		},
+		"fails with basic auth missing username": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				Password:     "pass",
+				InstanceName: "instance",
 			},
 		},
 	} {
