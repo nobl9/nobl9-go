@@ -270,6 +270,9 @@ var teamsValidation = govy.New[TeamsAlertMethod](
 				return nil
 			}),
 		),
+	govy.ForPointer(func(s TeamsAlertMethod) *SendResolution { return s.SendResolution }).
+		WithName("sendResolution").
+		Include(sendResolutionValidation),
 ).When(
 	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
 	govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
