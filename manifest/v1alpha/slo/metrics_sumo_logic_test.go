@@ -827,6 +827,100 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 	})
 }
 
+func TestSumoLogicMetric_GetQueries(t *testing.T) {
+	t.Run("returns queries when set", func(t *testing.T) {
+		m := SumoLogicMetric{
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "q1"},
+				{RowID: "B", Query: "q2"},
+			},
+		}
+		got := m.GetQueries()
+		if len(got) != 2 || got[0].RowID != "A" || got[1].RowID != "B" {
+			t.Fatalf("expected 2 queries with row IDs A and B, got %+v", got)
+		}
+	})
+	t.Run("normalizes legacy query into single-element slice", func(t *testing.T) {
+		m := SumoLogicMetric{
+			Query: ptr("metric=CPU_total"),
+		}
+		got := m.GetQueries()
+		if len(got) != 1 || got[0].RowID != "A" || got[0].Query != "metric=CPU_total" {
+			t.Fatalf("expected single query with row ID A, got %+v", got)
+		}
+	})
+	t.Run("returns nil when neither query nor queries set", func(t *testing.T) {
+		m := SumoLogicMetric{}
+		got := m.GetQueries()
+		if got != nil {
+			t.Fatalf("expected nil, got %+v", got)
+		}
+	})
+	t.Run("queries field takes precedence over query", func(t *testing.T) {
+		m := SumoLogicMetric{
+			Query: ptr("legacy"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "q1"},
+			},
+		}
+		got := m.GetQueries()
+		if len(got) != 1 || got[0].Query != "q1" {
+			t.Fatalf("expected queries field to take precedence, got %+v", got)
+		}
+	})
+}
+
+func TestSumoLogic_MultiQuery_CountMetrics(t *testing.T) {
+	t.Run("valid multi-query count metrics", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.SumoLogic)
+		multiQueryMetric := &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=CPU_total"},
+				{RowID: "B", Query: "metric=CPU_idle"},
+				{RowID: "C", Query: "#A - #B"},
+			},
+		}
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.SumoLogic = multiQueryMetric
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=requests_total"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("quantization must match for multi-query count metrics", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.SumoLogic)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("1m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=CPU_total"},
+			},
+		}
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.SumoLogic = &SumoLogicMetric{
+			Type:         ptr(SumoLogicTypeMetric),
+			Quantization: ptr("2m"),
+			Rollup:       ptr("Avg"),
+			Queries: []SumoLogicQuery{
+				{RowID: "A", Query: "metric=requests_total"},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: rules.ErrorCodeEqualTo,
+		})
+	})
+}
+
 func TestSumoLogic_MetricsType_SingleQuery(t *testing.T) {
 	t.Run("unsupported single query", func(t *testing.T) {
 		slo := validSingleQueryGoodOverTotalCountMetricSLO(v1alpha.SumoLogic)

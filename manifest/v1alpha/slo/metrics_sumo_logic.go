@@ -67,6 +67,9 @@ var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 				if *good.Type != SumoLogicTypeLogs || *total.Type != SumoLogicTypeLogs {
 					return nil
 				}
+				if good.Query == nil || total.Query == nil {
+					return nil
+				}
 				goodTimeSlice, err := getTimeSliceFromSumoLogicQuery(*good.Query)
 				if err != nil {
 					return nil
@@ -89,8 +92,6 @@ var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 )
 
 const sumoLogicMaxQueries = 6
-
-var sumoLogicValidRowIDs = []string{"A", "B", "C", "D", "E", "F"}
 
 var sumoLogicValidation = govy.New[SumoLogicMetric](
 	govy.For(govy.GetSelf[SumoLogicMetric]()).
