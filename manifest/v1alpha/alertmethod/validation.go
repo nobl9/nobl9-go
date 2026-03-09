@@ -237,10 +237,6 @@ var serviceNowValidation = govy.New[ServiceNowAlertMethod](
 				return errors.New(
 					"either basic auth (username/password) or token auth (apiToken) must be provided, not both")
 			}
-			if !hasBasicAuth && !hasTokenAuth {
-				return errors.New(
-					"either basic auth (username/password) or token auth (apiToken) must be provided")
-			}
 			if hasBasicAuth && s.Username == "" {
 				return errors.New("username is required when using basic auth")
 			}
