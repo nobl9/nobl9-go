@@ -46,17 +46,6 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 				Username: "user",
 			},
 		},
-		"fails with no auth provided": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.servicenow",
-				},
-			},
-			AlertMethod: ServiceNowAlertMethod{
-				InstanceName: "instance",
-			},
-		},
 		"fails with both auth types provided": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{

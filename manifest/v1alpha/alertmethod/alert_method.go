@@ -117,7 +117,7 @@ type OpsgenieAlertMethod struct {
 // - Basic auth: Username + Password
 // - Token auth: ApiToken (uses x-sn-apikey header)
 type ServiceNowAlertMethod struct {
-	Username       string          `json:"username"`
+	Username       string          `json:"username,omitempty"`
 	Password       string          `json:"password,omitempty"`
 	InstanceName   string          `json:"instanceName"`
 	ApiToken       string          `json:"apiToken,omitempty"`
