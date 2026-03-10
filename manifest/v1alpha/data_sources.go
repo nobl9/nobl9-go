@@ -393,6 +393,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
 	Atlas:                 {Value: ptr(730), Unit: HRDDay},
+	Dash0:                 {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{

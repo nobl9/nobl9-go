@@ -440,6 +440,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 				return err
 			}
 		}
+		if metric.Dash0 != nil {
+			if err := typesMatch(v1alpha.Dash0); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
