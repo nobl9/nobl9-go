@@ -10,8 +10,9 @@ import (
 
 func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 	for name, spec := range map[string]ServiceNowAlertMethod{
-		"passes with valid username and instance name (basic auth)": {
+		"passes with valid username, password and instance name (basic auth)": {
 			Username:     "user",
+			Password:     "pass",
 			InstanceName: "instance",
 		},
 		"passes with valid api token and instance name (token auth)": {
@@ -44,13 +45,55 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			},
 			AlertMethod: ServiceNowAlertMethod{
 				Username: "user",
+				Password: "pass",
 			},
 		},
-		"fails with both auth types provided": {
+		"fails with no auth provided": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				InstanceName: "instance",
+			},
+		},
+		"fails with username and apiToken (mutually exclusive)": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				Username:     "user",
+				ApiToken:     "token",
+				InstanceName: "instance",
+			},
+		},
+		"fails with password and apiToken (mutually exclusive)": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				Password:     "pass",
+				ApiToken:     "token",
+				InstanceName: "instance",
+			},
+		},
+		"fails with username, password and apiToken (mutually exclusive)": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
 			AlertMethod: ServiceNowAlertMethod{
@@ -60,11 +103,25 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 				InstanceName: "instance",
 			},
 		},
-		"fails with basic auth missing username": {
+		"fails with username only (missing password)": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
+				},
+			},
+			AlertMethod: ServiceNowAlertMethod{
+				Username:     "user",
+				InstanceName: "instance",
+			},
+		},
+		"fails with password only (missing username)": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.servicenow",
+					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
 			AlertMethod: ServiceNowAlertMethod{
