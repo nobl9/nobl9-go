@@ -18,10 +18,10 @@ import (
 type SumoLogicMetric struct {
 	Type *string `json:"type"`
 	// Deprecated: Use Queries instead.
-	Query        *string            `json:"query,omitempty"`
-	Queries      []SumoLogicQuery   `json:"queries,omitempty"`
-	Quantization *string            `json:"quantization,omitempty"`
-	Rollup       *string            `json:"rollup,omitempty"`
+	Query        *string          `json:"query"`
+	Queries      []SumoLogicQuery `json:"queries,omitempty"`
+	Quantization *string          `json:"quantization,omitempty"`
+	Rollup       *string          `json:"rollup,omitempty"`
 }
 
 // SumoLogicQuery represents a single query row in a Sumo Logic multi-query (ABC pattern).
@@ -183,7 +183,6 @@ var sumoLogicMetricTypeValidation = govy.New[SumoLogicMetric](
 		func(m SumoLogicMetric) bool { return m.Type != nil && *m.Type == SumoLogicTypeMetric },
 		govy.WhenDescriptionf("type is '%s'", SumoLogicTypeMetric),
 	)
-
 
 var (
 	sumoLogicLogsTypeValidation            = getSumoLogicLogsTypeValidation(false)
