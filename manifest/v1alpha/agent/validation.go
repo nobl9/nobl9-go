@@ -139,6 +139,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AtlasConfig { return s.Atlas }).
 		WithName("atlas").
 		Include(atlasValidation),
+	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 var (
@@ -257,6 +260,16 @@ var (
 			WithName("dataReplayUrl").
 			Required().
 			Rules(rules.URL(), newHTTPSchemeRule()),
+	)
+	dash0Validation = govy.New[Dash0Config](
+		govy.Transform(func(d Dash0Config) string { return d.URL }, url.Parse).
+			WithName("url").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+		govy.For(func(d Dash0Config) int { return d.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
@@ -455,6 +468,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Atlas != nil {
 		if err := typesMatch(v1alpha.Atlas); err != nil {
+			return err
+		}
+	}
+	if spec.Dash0 != nil {
+		if err := typesMatch(v1alpha.Dash0); err != nil {
 			return err
 		}
 	}

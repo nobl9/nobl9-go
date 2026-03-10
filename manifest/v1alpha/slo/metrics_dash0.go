@@ -7,7 +7,7 @@ import (
 
 // Dash0Metric represents metric from Dash0.
 type Dash0Metric struct {
-	PromQL *string `json:"promql"`
+	PromQL *string `json:"promql,omitempty"`
 }
 
 var dash0Validation = govy.New[Dash0Metric](
