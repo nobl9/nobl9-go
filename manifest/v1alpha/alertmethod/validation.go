@@ -260,6 +260,10 @@ var teamsValidation = govy.New[TeamsAlertMethod](
 	govy.Transform(func(t TeamsAlertMethod) string { return t.URL }, url.Parse).
 		WithName("url").
 		HideValue().
+		When(
+			func(t TeamsAlertMethod) bool { return !isHiddenValue(t.URL) },
+			govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
+		).
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.URL()).
 		Rules(
@@ -273,9 +277,6 @@ var teamsValidation = govy.New[TeamsAlertMethod](
 	govy.ForPointer(func(s TeamsAlertMethod) *SendResolution { return s.SendResolution }).
 		WithName("sendResolution").
 		Include(sendResolutionValidation),
-).When(
-	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
-	govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 )
 
 var emailValidation = govy.New[EmailAlertMethod](
