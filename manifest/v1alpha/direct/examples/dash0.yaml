@@ -1,0 +1,28 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: dash0
+  displayName: Dash0 Direct
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Dash0 Direct
+  releaseChannel: stable
+  dash0:
+    url: https://api.eu-west-1.aws.dash0.com/api/prometheus
+    accessToken: "[secret]"
+    step: 60
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 1
+    unit: Second
