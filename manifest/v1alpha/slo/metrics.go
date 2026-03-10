@@ -60,6 +60,7 @@ type MetricSpec struct {
 	AzurePrometheus     *AzurePrometheusMetric     `json:"azurePrometheus,omitempty"`
 	Coralogix           *CoralogixMetric           `json:"coralogix,omitempty"`
 	Atlas               *AtlasMetric               `json:"atlas,omitempty"`
+	Dash0               *Dash0Metric               `json:"dash0,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -282,6 +283,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.Coralogix
 	case m.Atlas != nil:
 		return v1alpha.Atlas
+	case m.Dash0 != nil:
+		return v1alpha.Dash0
 	default:
 		return 0
 	}
@@ -373,6 +376,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.Coralogix
 	case v1alpha.Atlas:
 		return m.Atlas
+	case v1alpha.Dash0:
+		return m.Dash0
 	default:
 		return nil
 	}

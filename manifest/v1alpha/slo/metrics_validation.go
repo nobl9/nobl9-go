@@ -249,6 +249,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
 		WithName("atlas").
 		Include(atlasValidation),
+	govy.ForPointer(func(m MetricSpec) *Dash0Metric { return m.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 // Support for bad/total metrics will be enabled gradually.

@@ -52,6 +52,7 @@ LogicMonitor
 AzurePrometheus
 Coralogix
 Atlas
+Dash0
 )*/
 type DataSourceType int
 
@@ -233,6 +234,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzurePrometheus:     {Value: ptr(0), Unit: Second},
 		Coralogix:           {Value: ptr(0), Unit: Second},
 		Atlas:               {Value: ptr(10), Unit: Minute},
+		Dash0:               {Value: ptr(0), Unit: Second},
 	}
 }
 
@@ -408,6 +410,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
+	Dash0:                 {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
