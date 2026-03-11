@@ -223,6 +223,7 @@ func (s *Spec) AllMetricSpecs() []*MetricSpec {
 }
 
 // DataSourceType returns a type of data source.
+//nolint:gocyclo
 func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 	switch {
 	case m.Prometheus != nil:

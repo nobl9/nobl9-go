@@ -97,6 +97,7 @@ type Environment struct {
 	IntervalOverride *v1alpha.Interval `json:"intervalOverride,omitempty"`
 }
 
+//nolint:gocyclo
 func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 	switch {
 	case s.Prometheus != nil:

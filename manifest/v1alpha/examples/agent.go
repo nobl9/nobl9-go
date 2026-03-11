@@ -91,6 +91,7 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 	return agent
 }
 
+//nolint:gocyclo
 func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Agent {
 	switch a.typ {
 	case v1alpha.AmazonPrometheus:
