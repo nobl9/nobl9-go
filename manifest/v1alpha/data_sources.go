@@ -234,7 +234,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		AzurePrometheus:     {Value: ptr(0), Unit: Second},
 		Coralogix:           {Value: ptr(0), Unit: Second},
 		Atlas:               {Value: ptr(10), Unit: Minute},
-		Dash0:               {Value: ptr(0), Unit: Second},
+		Dash0:               {Value: ptr(1), Unit: Minute},
 	}
 }
 
