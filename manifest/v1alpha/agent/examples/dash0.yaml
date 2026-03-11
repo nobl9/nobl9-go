@@ -23,5 +23,5 @@ spec:
       value: 15
       unit: Day
   queryDelay:
-    value: 1
-    unit: Second
+    value: 2
+    unit: Minute
