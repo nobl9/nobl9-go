@@ -40,9 +40,11 @@ type Metadata struct {
 // Spec represents content of AlertSilence's Spec.
 type Spec struct {
 	Description string            `json:"description"`
-	SLO         string            `json:"slo"`
-	AlertPolicy AlertPolicySource `json:"alertPolicy"`
+	SLO         string            `json:"slo,omitempty"`
+	AlertPolicy AlertPolicySource `json:"alertPolicy,omitempty"`
 	Period      Period            `json:"period"`
+	Service     string            `json:"service,omitempty"`
+	Integration string            `json:"integration,omitempty"`
 }
 
 // AlertPolicySource represents AlertPolicy attached to the SLO.
@@ -51,12 +53,22 @@ type AlertPolicySource struct {
 	Project string `json:"project,omitempty"`
 }
 
+// SilenceScope defines the scope of an AlertSilence.
+type SilenceScope string
+
+const (
+	SilenceScopeSLO         SilenceScope = "slo"
+	SilenceScopeService     SilenceScope = "service"
+	SilenceScopeIntegration SilenceScope = "integration"
+)
+
 // Status represents content of Status optional for AlertSilence object.
 type Status struct {
-	From      string `json:"from"`
-	To        string `json:"to"`
-	CreatedAt string `json:"createdAt"`
-	UpdatedAt string `json:"updatedAt"`
+	From      string       `json:"from"`
+	To        string       `json:"to"`
+	CreatedAt string       `json:"createdAt"`
+	UpdatedAt string       `json:"updatedAt"`
+	Scope     SilenceScope `json:"scope,omitempty"`
 }
 
 // Period represents time range configuration for AlertSilence.
