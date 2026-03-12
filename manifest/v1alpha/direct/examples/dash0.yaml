@@ -11,7 +11,7 @@ metadata:
     team: sales
 spec:
   description: Example Dash0 Direct
-  releaseChannel: stable
+  releaseChannel: beta
   dash0:
     url: https://api.eu-west-1.aws.dash0.com/api/prometheus
     accessToken: "[secret]"

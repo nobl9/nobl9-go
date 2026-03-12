@@ -49,6 +49,7 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
+	v1alpha.Dash0,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
