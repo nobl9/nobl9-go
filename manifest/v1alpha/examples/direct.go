@@ -212,9 +212,9 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		}
 	case v1alpha.Dash0:
 		direct.Spec.Dash0 = &v1alphaDirect.Dash0Config{
-			URL:         "https://api.eu-west-1.aws.dash0.com/api/prometheus",
-			AccessToken: "[secret]",
-			Step:        60,
+			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+			AuthToken: "[secret]",
+			Step:      60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

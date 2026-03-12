@@ -290,7 +290,7 @@ type AzurePrometheusConfig struct {
 
 // Dash0Config represents content of Dash0 Configuration typical for Direct Object.
 type Dash0Config struct {
-	URL         string `json:"url"`
-	AccessToken string `json:"accessToken"`
-	Step        int    `json:"step,omitempty"`
+	URL       string `json:"url"`
+	AuthToken string `json:"authToken"`
+	Step      int    `json:"step,omitempty"`
 }

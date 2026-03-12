@@ -1183,8 +1183,8 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.Dash0: {
 			Dash0: &Dash0Config{
-				URL:         "https://api.eu-west-1.aws.dash0.com/api/prometheus",
-				AccessToken: "secret",
+				URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+				AuthToken: "secret",
 			},
 		},
 	}

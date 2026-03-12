@@ -14,7 +14,7 @@ spec:
   releaseChannel: beta
   dash0:
     url: https://api.eu-west-1.aws.dash0.com/api/prometheus
-    accessToken: "[secret]"
+    authToken: "[secret]"
     step: 60
   historicalDataRetrieval:
     maxDuration:
