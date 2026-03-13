@@ -51,6 +51,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.ThousandEyes,
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
+	v1alpha.Dash0,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -208,6 +209,12 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			ClientID:     "70747025-9367-41a5-98f1-59b18b5793c3",
 			ClientSecret: "[secret]",
 			Step:         60,
+		}
+	case v1alpha.Dash0:
+		direct.Spec.Dash0 = &v1alphaDirect.Dash0Config{
+			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+			AuthToken: "[secret]",
+			Step:      60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

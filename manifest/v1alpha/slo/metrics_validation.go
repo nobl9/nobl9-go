@@ -249,6 +249,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
 		WithName("atlas").
 		Include(atlasValidation),
+	govy.ForPointer(func(m MetricSpec) *Dash0Metric { return m.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -434,6 +437,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Atlas != nil {
 			if err := typesMatch(v1alpha.Atlas); err != nil {
+				return err
+			}
+		}
+		if metric.Dash0 != nil {
+			if err := typesMatch(v1alpha.Dash0); err != nil {
 				return err
 			}
 		}

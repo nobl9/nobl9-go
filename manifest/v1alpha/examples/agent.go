@@ -49,6 +49,7 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
+	v1alpha.Dash0,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -91,6 +92,7 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 	return agent
 }
 
+//nolint:gocyclo
 func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Agent {
 	switch a.typ {
 	case v1alpha.AmazonPrometheus:
@@ -201,6 +203,11 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 			SlicURL:       "https://slic.slic",
 			SlicStep:      60,
 			DataReplayURL: "https://replay.atlas.atlas",
+		}
+	case v1alpha.Dash0:
+		agent.Spec.Dash0 = &v1alphaAgent.Dash0Config{
+			URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+			Step: 60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))

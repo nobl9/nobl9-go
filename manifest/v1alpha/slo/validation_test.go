@@ -2011,6 +2011,9 @@ fetch consumed_api
 			Parameters: map[string]string{"env": "prod"},
 		},
 	}},
+	v1alpha.Dash0: {Dash0: &Dash0Metric{
+		PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {
