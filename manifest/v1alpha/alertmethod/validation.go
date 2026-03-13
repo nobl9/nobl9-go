@@ -223,15 +223,24 @@ var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 )
 
 var serviceNowValidation = govy.New[ServiceNowAlertMethod](
-	govy.For(func(s ServiceNowAlertMethod) string { return s.Username }).
-		WithName("username").
-		Required(),
 	govy.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
 		WithName("instanceName").
 		Required(),
 	govy.ForPointer(func(s ServiceNowAlertMethod) *SendResolution { return s.SendResolution }).
 		WithName("sendResolution").
 		Include(sendResolutionValidation),
+	govy.For(govy.GetSelf[ServiceNowAlertMethod]()).
+		Cascade(govy.CascadeModeStop).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(s ServiceNowAlertMethod) any{
+				"username": func(s ServiceNowAlertMethod) any { return s.Username },
+				"apiToken": func(s ServiceNowAlertMethod) any { return s.ApiToken },
+			}),
+			rules.MutuallyExclusive(true, map[string]func(s ServiceNowAlertMethod) any{
+				"password": func(s ServiceNowAlertMethod) any { return s.Password },
+				"apiToken": func(s ServiceNowAlertMethod) any { return s.ApiToken },
+			}),
+		),
 )
 
 var jiraValidation = govy.New[JiraAlertMethod](

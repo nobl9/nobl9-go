@@ -113,10 +113,14 @@ type OpsgenieAlertMethod struct {
 }
 
 // ServiceNowAlertMethod represents a set of properties required to send message to ServiceNow.
+// Supports two authentication modes:
+// - Basic auth: Username + Password
+// - Token auth: ApiToken (uses x-sn-apikey header)
 type ServiceNowAlertMethod struct {
-	Username       string          `json:"username"`
-	Password       string          `json:"password"` // Field required when AlertMethod is created.
+	Username       string          `json:"username,omitempty"`
+	Password       string          `json:"password,omitempty"`
 	InstanceName   string          `json:"instanceName"`
+	ApiToken       string          `json:"apiToken,omitempty"`
 	SendResolution *SendResolution `json:"sendResolution,omitempty"`
 }
 
