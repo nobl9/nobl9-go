@@ -228,10 +228,6 @@ var (
 	)
 	dash0Validation = govy.New[Dash0Config](
 		urlPropertyRules(func(d Dash0Config) string { return d.URL }),
-		govy.For(func(d Dash0Config) string { return d.AuthToken }).
-			WithName("authToken").
-			HideValue().
-			Required(),
 	)
 )
 
