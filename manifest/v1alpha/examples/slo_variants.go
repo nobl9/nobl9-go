@@ -1135,6 +1135,19 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
 			}))
 		}
+	case v1alpha.ClickHouse:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ClickHouseMetric{
+				Query: `SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date`,
+			}))
+		case metricVariantGoodRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.ClickHouseMetric{
+				Query: `SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE status_code < 500 AND ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date`,
+			}), newMetricSpec(v1alphaSLO.ClickHouseMetric{
+				Query: `SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date`,
+			}))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1239,6 +1252,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.Atlas = &v
 	case v1alphaSLO.Dash0Metric:
 		spec.Dash0 = &v
+	case v1alphaSLO.ClickHouseMetric:
+		spec.ClickHouse = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}

@@ -1190,6 +1190,13 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 				AuthToken: "secret",
 			},
 		},
+		v1alpha.ClickHouse: {
+			ClickHouse: &ClickHouseConfig{
+				URL:      "https://clickhouse.example.com:8443",
+				Username: "readonly_slo",
+				Password: "[secret]",
+			},
+		},
 	}
 
 	return specs[typ]

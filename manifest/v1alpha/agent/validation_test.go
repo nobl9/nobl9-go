@@ -1140,6 +1140,11 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				Step: 60,
 			},
 		},
+		v1alpha.ClickHouse: {
+			ClickHouse: &ClickHouseConfig{
+				URL: "https://clickhouse.example.com:8443",
+			},
+		},
 	}
 
 	return specs[typ]

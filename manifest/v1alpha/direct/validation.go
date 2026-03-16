@@ -115,6 +115,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
+		WithName("clickHouse").
+		Include(clickHouseValidation),
 )
 
 var (
@@ -233,6 +236,9 @@ var (
 			WithName("step").
 			OmitEmpty().
 			Rules(rules.GTE(15)),
+	)
+	clickHouseValidation = govy.New[ClickHouseConfig](
+		urlPropertyRules(func(c ClickHouseConfig) string { return c.URL }),
 	)
 )
 
@@ -357,6 +363,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Dash0 != nil {
 		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
+	if spec.ClickHouse != nil {
+		if err := typesMatch(v1alpha.ClickHouse); err != nil {
 			return err
 		}
 	}
