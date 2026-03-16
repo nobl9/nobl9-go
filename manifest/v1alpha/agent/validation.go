@@ -265,7 +265,7 @@ var (
 		govy.Transform(func(d Dash0Config) string { return d.URL }, url.Parse).
 			WithName("url").
 			Required().
-			Rules(rules.URL(), newHTTPSchemeRule()),
+			Rules(rules.URL(), newHTTPSSchemeRule()),
 		govy.For(func(d Dash0Config) int { return d.Step }).
 			WithName("step").
 			OmitEmpty().
@@ -311,6 +311,7 @@ const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
 	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
+	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -551,6 +552,15 @@ func newHTTPSchemeRule() govy.Rule[*url.URL] {
 			return govy.NewRuleError("valid URL must have a http or https scheme", errCodeHTTPOrHTTPSSchemeRequired)
 		}
 
+		return nil
+	})
+}
+
+func newHTTPSSchemeRule() govy.Rule[*url.URL] {
+	return govy.NewRule(func(v *url.URL) error {
+		if v.Scheme != "https" {
+			return govy.NewRuleError("requires https scheme", errCodeHTTPSSchemeRequired)
+		}
 		return nil
 	})
 }
