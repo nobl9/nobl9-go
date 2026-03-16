@@ -52,6 +52,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
+	v1alpha.ClickHouse,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -215,6 +216,13 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 			AuthToken: "[secret]",
 			Step:      60,
+		}
+	case v1alpha.ClickHouse:
+		direct.Spec.ClickHouse = &v1alphaDirect.ClickHouseConfig{
+			URL:      "https://clickhouse.example.com:8443",
+			Database: "observability",
+			Username: "readonly_slo",
+			Password: "[secret]",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

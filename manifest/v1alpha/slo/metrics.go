@@ -61,6 +61,7 @@ type MetricSpec struct {
 	Coralogix           *CoralogixMetric           `json:"coralogix,omitempty"`
 	Atlas               *AtlasMetric               `json:"atlas,omitempty"`
 	Dash0               *Dash0Metric               `json:"dash0,omitempty"`
+	ClickHouse          *ClickHouseMetric          `json:"clickHouse,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -287,6 +288,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.Atlas
 	case m.Dash0 != nil:
 		return v1alpha.Dash0
+	case m.ClickHouse != nil:
+		return v1alpha.ClickHouse
 	default:
 		return 0
 	}
@@ -380,6 +383,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.Atlas
 	case v1alpha.Dash0:
 		return m.Dash0
+	case v1alpha.ClickHouse:
+		return m.ClickHouse
 	default:
 		return nil
 	}

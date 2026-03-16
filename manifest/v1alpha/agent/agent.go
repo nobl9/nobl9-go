@@ -73,6 +73,7 @@ type Spec struct {
 	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
 	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
+	ClickHouse              *ClickHouseConfig                `json:"clickHouse,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -160,6 +161,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Atlas, nil
 	case s.Dash0 != nil:
 		return v1alpha.Dash0, nil
+	case s.ClickHouse != nil:
+		return v1alpha.ClickHouse, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -310,4 +313,10 @@ type AtlasConfig struct {
 type Dash0Config struct {
 	URL  string `json:"url"`
 	Step int    `json:"step,omitempty"`
+}
+
+// ClickHouseConfig represents content of ClickHouse Configuration typical for Agent Object.
+type ClickHouseConfig struct {
+	URL      string `json:"url"`
+	Database string `json:"database,omitempty"`
 }

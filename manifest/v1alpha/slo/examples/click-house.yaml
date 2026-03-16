@@ -1,0 +1,524 @@
+# Metric type: good over total
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE status_code < 500 AND ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+        total:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: "2022-12-01 00:00:00"
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: good over total
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      countMetrics:
+        incremental: true
+        good:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE status_code < 500 AND ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+        total:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: good over total
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE status_code < 500 AND ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+        total:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: "2022-12-01 00:00:00"
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: good over total
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 1.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      countMetrics:
+        incremental: true
+        good:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE status_code < 500 AND ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+        total:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, count() AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: threshold
+# Budgeting method: Occurrences
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: "2022-12-01 00:00:00"
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: threshold
+# Budgeting method: Occurrences
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Occurrences
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      rawMetric:
+        query:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Calendar
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Month
+      count: 1
+      isRolling: false
+      calendar:
+        startTime: "2022-12-01 00:00:00"
+        timeZone: UTC
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h
+# Metric type: threshold
+# Budgeting method: Timeslices
+# Time window type: Rolling
+- apiVersion: n9/v1alpha
+  kind: SLO
+  metadata:
+    name: api-server-slo
+    displayName: API Server SLO
+    project: default
+    labels:
+      area:
+      - latency
+      - slow-check
+      env:
+      - prod
+      - dev
+      region:
+      - us
+      - eu
+      team:
+      - green
+      - sales
+    annotations:
+      area: latency
+      env: prod
+      region: us
+      team: sales
+  spec:
+    description: Example Click House SLO
+    indicator:
+      metricSource:
+        name: click-house
+        project: default
+        kind: Agent
+    budgetingMethod: Timeslices
+    objectives:
+    - displayName: Good response (200)
+      value: 200.0
+      name: ok
+      target: 0.95
+      timeSliceTarget: 0.9
+      rawMetric:
+        query:
+          clickHouse:
+            query: SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} GROUP BY n9date ORDER BY n9date
+      op: lte
+      primary: true
+    service: api-server
+    timeWindows:
+    - unit: Hour
+      count: 1
+      isRolling: true
+    alertPolicies:
+    - fast-burn-5x-for-last-10m
+    attachments:
+    - url: https://docs.nobl9.com
+      displayName: Nobl9 Documentation
+    anomalyConfig:
+      noData:
+        alertMethods:
+        - name: slack-notification
+          project: default
+        alertAfter: 1h

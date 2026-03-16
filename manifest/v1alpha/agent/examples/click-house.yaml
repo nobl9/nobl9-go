@@ -1,0 +1,27 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: click-house
+  displayName: Click House Agent
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Click House Agent
+  releaseChannel: beta
+  clickHouse:
+    url: https://clickhouse.example.com:8443
+    database: observability
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 31
+    unit: Second
