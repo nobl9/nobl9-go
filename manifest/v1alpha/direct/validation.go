@@ -111,6 +111,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 var (
@@ -222,6 +225,13 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
+	)
+	dash0Validation = govy.New[Dash0Config](
+		urlPropertyRules(func(d Dash0Config) string { return d.URL }),
+		govy.For(func(d Dash0Config) int { return d.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 )
 
@@ -341,6 +351,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.AzurePrometheus != nil {
 		if err := typesMatch(v1alpha.AzurePrometheus); err != nil {
+			return err
+		}
+	}
+	if spec.Dash0 != nil {
+		if err := typesMatch(v1alpha.Dash0); err != nil {
 			return err
 		}
 	}

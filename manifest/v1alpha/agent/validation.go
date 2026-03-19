@@ -139,6 +139,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AtlasConfig { return s.Atlas }).
 		WithName("atlas").
 		Include(atlasValidation),
+	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 var (
@@ -258,6 +261,16 @@ var (
 			Required().
 			Rules(rules.URL(), newHTTPSchemeRule()),
 	)
+	dash0Validation = govy.New[Dash0Config](
+		govy.Transform(func(d Dash0Config) string { return d.URL }, url.Parse).
+			WithName("url").
+			Required().
+			Rules(rules.URL(), newHTTPSSchemeRule()),
+		govy.For(func(d Dash0Config) int { return d.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -298,6 +311,7 @@ const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
 	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
+	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -458,6 +472,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Dash0 != nil {
+		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -533,6 +552,15 @@ func newHTTPSchemeRule() govy.Rule[*url.URL] {
 			return govy.NewRuleError("valid URL must have a http or https scheme", errCodeHTTPOrHTTPSSchemeRequired)
 		}
 
+		return nil
+	})
+}
+
+func newHTTPSSchemeRule() govy.Rule[*url.URL] {
+	return govy.NewRule(func(v *url.URL) error {
+		if v.Scheme != "https" {
+			return govy.NewRuleError("requires https scheme", errCodeHTTPSSchemeRequired)
+		}
 		return nil
 	})
 }

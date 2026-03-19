@@ -1122,6 +1122,19 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				},
 			}))
 		}
+	case v1alpha.Dash0:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+			}))
+		case metricVariantGoodRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total{status=~"2.."}[5m]))`),
+			}), newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+			}))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1224,6 +1237,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.Coralogix = &v
 	case v1alphaSLO.AtlasMetric:
 		spec.Atlas = &v
+	case v1alphaSLO.Dash0Metric:
+		spec.Dash0 = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}

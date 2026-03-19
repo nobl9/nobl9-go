@@ -1132,6 +1132,12 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				DataReplayURL: "https://replay.atlas.example.com",
 			},
 		},
+		v1alpha.Dash0: {
+			Dash0: &Dash0Config{
+				URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+				Step: 60,
+			},
+		},
 	}
 
 	return specs[typ]
