@@ -396,7 +396,12 @@ func (m *MetricSpec) FormatQuery(query json.RawMessage) *string {
 	case v1alpha.SplunkObservability:
 		return m.SplunkObservability.Program
 	case v1alpha.SumoLogic:
-		return m.SumoLogic.Query
+		queries := m.SumoLogic.GetQueries()
+		if len(queries) == 0 {
+			return nil
+		}
+		q := queries[len(queries)-1].Query
+		return &q
 	default:
 		var formattedQuery string
 		if len(query) > 0 {
