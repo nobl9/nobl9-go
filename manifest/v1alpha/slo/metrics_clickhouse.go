@@ -24,5 +24,9 @@ var clickHouseValidation = govy.New[ClickHouseMetric](
 				WithDetails("must contain 'n9date' column"),
 			rules.StringMatchRegexp(regexp.MustCompile(`\bn9value\b`)).
 				WithDetails("must contain 'n9value' column"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date_from\b`)).
+				WithDetails("must contain 'n9date_from' placeholder"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date_to\b`)).
+				WithDetails("must contain 'n9date_to' placeholder"),
 		),
 )

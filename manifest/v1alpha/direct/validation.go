@@ -238,6 +238,13 @@ var (
 	)
 	clickHouseValidation = govy.New[ClickHouseConfig](
 		urlPropertyRules(func(c ClickHouseConfig) string { return c.URL }),
+		govy.For(func(c ClickHouseConfig) string { return c.Username }).
+			WithName("username").
+			Required(),
+		govy.For(func(c ClickHouseConfig) string { return c.Password }).
+			WithName("password").
+			HideValue().
+			Required(),
 	)
 )
 
