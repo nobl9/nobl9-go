@@ -217,9 +217,9 @@ func (c *MockObjectsV1EndpointsGetCall) DoAndReturn(f func(context.Context, mani
 }
 
 // GetAlerts mocks base method.
-func (m *MockObjectsV1Endpoints) GetAlerts(ctx context.Context, header http.Header, query url.Values) ([]manifest.Object, int, error) {
+func (m *MockObjectsV1Endpoints) GetAlerts(ctx context.Context, params v1.GetAlertsRequest) ([]manifest.Object, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAlerts", ctx, header, query)
+	ret := m.ctrl.Call(m, "GetAlerts", ctx, params)
 	ret0, _ := ret[0].([]manifest.Object)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -227,9 +227,9 @@ func (m *MockObjectsV1Endpoints) GetAlerts(ctx context.Context, header http.Head
 }
 
 // GetAlerts indicates an expected call of GetAlerts.
-func (mr *MockObjectsV1EndpointsMockRecorder) GetAlerts(ctx, header, query any) *MockObjectsV1EndpointsGetAlertsCall {
+func (mr *MockObjectsV1EndpointsMockRecorder) GetAlerts(ctx, params any) *MockObjectsV1EndpointsGetAlertsCall {
 	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetAlerts), ctx, header, query)
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlerts", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).GetAlerts), ctx, params)
 	return &MockObjectsV1EndpointsGetAlertsCall{Call: call}
 }
 
@@ -245,13 +245,13 @@ func (c *MockObjectsV1EndpointsGetAlertsCall) Return(arg0 []manifest.Object, arg
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MockObjectsV1EndpointsGetAlertsCall) Do(f func(context.Context, http.Header, url.Values) ([]manifest.Object, int, error)) *MockObjectsV1EndpointsGetAlertsCall {
+func (c *MockObjectsV1EndpointsGetAlertsCall) Do(f func(context.Context, v1.GetAlertsRequest) ([]manifest.Object, int, error)) *MockObjectsV1EndpointsGetAlertsCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockObjectsV1EndpointsGetAlertsCall) DoAndReturn(f func(context.Context, http.Header, url.Values) ([]manifest.Object, int, error)) *MockObjectsV1EndpointsGetAlertsCall {
+func (c *MockObjectsV1EndpointsGetAlertsCall) DoAndReturn(f func(context.Context, v1.GetAlertsRequest) ([]manifest.Object, int, error)) *MockObjectsV1EndpointsGetAlertsCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
