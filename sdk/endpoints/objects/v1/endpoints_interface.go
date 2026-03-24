@@ -55,7 +55,7 @@ type Endpoints interface {
 	// concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
 	//
 	// Deprecated: use [endpoints.GetV1alphaAlerts] instead.
-	GetAlerts(ctx context.Context, header http.Header, query url.Values) ([]manifest.Object, int, error)
+	GetAlerts(ctx context.Context, params GetAlertsRequest) ([]manifest.Object, int, error)
 	GetBudgetAdjustments(ctx context.Context, params GetBudgetAdjustmentRequest) ([]v1alphaBudgetAdjustment.BudgetAdjustment, error)
 	GetReports(ctx context.Context, params GetReportsRequest) ([]v1alphaReport.Report, error)
 }
