@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/nobl9/nobl9-go/internal/sdk"
@@ -131,19 +130,7 @@ func (e endpoints) GetV1alphaAlertMethods(
 }
 
 func (e endpoints) GetV1alphaAlerts(ctx context.Context, params GetAlertsRequest) (*GetAlertsResponse, error) {
-	f := filterBy().
-		Project(params.Project).
-		Strings(QueryKeyName, params.Names).
-		Strings(QueryKeySLOName, params.SLONames).
-		Strings(QueryKeyServiceName, params.ServiceNames).
-		Strings(QueryKeyAlertPolicyName, params.AlertPolicyNames).
-		Strings(QueryKeyObjectiveName, params.ObjectiveNames).
-		Floats(QueryKeyObjectiveValue, params.ObjectiveValues).
-		Bool(QueryKeyResolved, params.Resolved).
-		Bool(QueryKeyTriggered, params.Triggered).
-		Time(QueryKeyFrom, params.From).
-		Time(QueryKeyTo, params.To)
-	objects, truncatedMax, err := e.GetAlerts(ctx, f.Header, f.Query)
+	objects, truncatedMax, err := e.GetAlerts(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -233,17 +220,25 @@ func (e endpoints) GetV1alphaUserGroups(
 // concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
 //
 // Deprecated: use [endpoints.GetV1alphaAlerts] instead.
-func (e endpoints) GetAlerts(
-	ctx context.Context,
-	header http.Header,
-	query url.Values,
-) ([]manifest.Object, int, error) {
+func (e endpoints) GetAlerts(ctx context.Context, params GetAlertsRequest) ([]manifest.Object, int, error) {
+	f := filterBy().
+		Project(params.Project).
+		Strings(QueryKeyName, params.Names).
+		Strings(QueryKeySLOName, params.SLONames).
+		Strings(QueryKeyServiceName, params.ServiceNames).
+		Strings(QueryKeyAlertPolicyName, params.AlertPolicyNames).
+		Strings(QueryKeyObjectiveName, params.ObjectiveNames).
+		Floats(QueryKeyObjectiveValue, params.ObjectiveValues).
+		Bool(QueryKeyResolved, params.Resolved).
+		Bool(QueryKeyTriggered, params.Triggered).
+		Time(QueryKeyFrom, params.From).
+		Time(QueryKeyTo, params.To)
 	req, err := e.client.CreateRequest(
 		ctx,
 		http.MethodGet,
 		resolveGetObjectEndpoint(manifest.KindAlert),
-		header,
-		query,
+		f.Header,
+		f.Query,
 		nil,
 	)
 	if err != nil {
