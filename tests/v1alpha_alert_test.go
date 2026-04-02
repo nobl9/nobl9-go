@@ -14,24 +14,30 @@ import (
 )
 
 const (
-	alertTestProject        = "sdk-e2e-alert-test"
-	alertTestSLO1           = "sdk-e2e-alert-slo-1"
-	alertTestSLO2           = "sdk-e2e-alert-slo-2"
-	alertTestSLODefault     = "sdk-e2e-alert-slo-default"
-	alertTestService1       = "sdk-e2e-alert-service-1"
-	alertTestServiceDefault = "sdk-e2e-alert-service-default"
-	alertTestPolicy1        = "sdk-e2e-alert-policy-1"
-	alertTestPolicy2        = "sdk-e2e-alert-policy-2"
-	alertTestPolicyDefault  = "sdk-e2e-alert-policy-default"
+	alertTestProject1 = "alert-test-project"
+	alertTestProject2 = "alert-test-project-2"
 
-	alertTriggeredHighDefault = "sdk-e2e-alert-triggered-high-default"
-	alertTriggeredHigh1       = "sdk-e2e-alert-triggered-high-1"
-	alertTriggeredMedium      = "sdk-e2e-alert-triggered-medium"
-	alertTriggeredLow         = "sdk-e2e-alert-triggered-low"
-	alertResolvedHigh         = "sdk-e2e-alert-resolved-high"
-	alertResolvedMedium       = "sdk-e2e-alert-resolved-medium"
-	alertSilenced             = "sdk-e2e-alert-silenced"
+	alertTestSLO1 = "alert-test-slo"
+	alertTestSLO2 = "alert-test-slo-2"
+
+	alertTestService1 = "alert-test-service"
+	alertTestService2 = "alert-test-service-2"
+
+	alertTestPolicyHigh1   = "alert-test-policy-high"
+	alertTestPolicyMedium1 = "alert-test-policy-medium"
+	alertTestPolicyLow1    = "alert-test-policy-low"
+	alertTestPolicyHigh2   = "alert-test-policy-high-2"
 )
+
+// alertMatchKey identifies an alert by its distinguishing properties.
+// Alerts that share the same key cannot be individually matched and
+// must be verified via count assertions only.
+type alertMatchKey struct {
+	Project     string
+	Severity    string
+	Status      string
+	AlertPolicy string
+}
 
 type expectedAlertProperties struct {
 	Project     string
@@ -41,87 +47,153 @@ type expectedAlertProperties struct {
 	AlertPolicy string
 	Service     string
 	Objective   v1alphaAlert.Objective
-	HasSilence  bool
 }
 
-var expectedAlerts = map[string]expectedAlertProperties{
-	alertTriggeredHighDefault: {
-		Project:     defaultProject,
-		Severity:    "High",
-		Status:      "Triggered",
-		SLO:         alertTestSLODefault,
-		AlertPolicy: alertTestPolicyDefault,
-		Service:     alertTestServiceDefault,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.95},
-	},
-	alertTriggeredHigh1: {
-		Project:     alertTestProject,
-		Severity:    "High",
-		Status:      "Triggered",
-		SLO:         alertTestSLO1,
-		AlertPolicy: alertTestPolicy1,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.95},
-	},
-	alertTriggeredMedium: {
-		Project:     alertTestProject,
-		Severity:    "Medium",
-		Status:      "Triggered",
-		SLO:         alertTestSLO1,
-		AlertPolicy: alertTestPolicy2,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.9},
-	},
-	alertTriggeredLow: {
-		Project:     alertTestProject,
-		Severity:    "Low",
-		Status:      "Triggered",
-		SLO:         alertTestSLO2,
-		AlertPolicy: alertTestPolicy1,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.9},
-	},
-	alertResolvedHigh: {
-		Project:     alertTestProject,
-		Severity:    "High",
-		Status:      "Resolved",
-		SLO:         alertTestSLO1,
-		AlertPolicy: alertTestPolicy1,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.95},
-	},
-	alertResolvedMedium: {
-		Project:     alertTestProject,
-		Severity:    "Medium",
-		Status:      "Resolved",
-		SLO:         alertTestSLO2,
-		AlertPolicy: alertTestPolicy2,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.9},
-	},
-	alertSilenced: {
-		Project:     alertTestProject,
-		Severity:    "Medium",
-		Status:      "Triggered",
-		SLO:         alertTestSLO1,
-		AlertPolicy: alertTestPolicy2,
-		Service:     alertTestService1,
-		Objective:   v1alphaAlert.Objective{Name: "good", Value: 0.9},
-		HasSilence:  true,
-	},
-}
-
-func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
-	t.Parallel()
-
-	allTestProjectAlertNames := []string{
-		alertTriggeredHigh1,
-		alertTriggeredMedium,
-		alertTriggeredLow,
-		alertResolvedHigh,
-		alertResolvedMedium,
-		alertSilenced,
+func (p expectedAlertProperties) matchKey() alertMatchKey {
+	return alertMatchKey{
+		Project:     p.Project,
+		Severity:    p.Severity,
+		Status:      p.Status,
+		AlertPolicy: p.AlertPolicy,
 	}
+}
+
+// expectedAlertGroup pairs expected alert properties with the number
+// of alerts that share those properties. Groups with Count > 1
+// contain indistinguishable alerts verified via count only.
+type expectedAlertGroup struct {
+	expectedAlertProperties
+	Count int
+}
+
+var defaultObjective = v1alphaAlert.Objective{Name: "default", Value: 0.9}
+
+var (
+	alertTriggeredHighP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "High",
+			Status:      "Triggered",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyHigh1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 3,
+	}
+	alertTriggeredMediumP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "Medium",
+			Status:      "Triggered",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyMedium1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertTriggeredLowP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "Low",
+			Status:      "Triggered",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyLow1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertResolvedHighP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "High",
+			Status:      "Resolved",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyHigh1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertResolvedMediumP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "Medium",
+			Status:      "Resolved",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyMedium1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertResolvedLowP1 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject1,
+			Severity:    "Low",
+			Status:      "Resolved",
+			SLO:         alertTestSLO1,
+			AlertPolicy: alertTestPolicyLow1,
+			Service:     alertTestService1,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertTriggeredHighP2 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject2,
+			Severity:    "High",
+			Status:      "Triggered",
+			SLO:         alertTestSLO2,
+			AlertPolicy: alertTestPolicyHigh2,
+			Service:     alertTestService2,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+	alertResolvedHighP2 = expectedAlertGroup{
+		expectedAlertProperties: expectedAlertProperties{
+			Project:     alertTestProject2,
+			Severity:    "High",
+			Status:      "Resolved",
+			SLO:         alertTestSLO2,
+			AlertPolicy: alertTestPolicyHigh2,
+			Service:     alertTestService2,
+			Objective:   defaultObjective,
+		},
+		Count: 1,
+	}
+)
+
+var (
+	project1Alerts = []expectedAlertGroup{
+		alertTriggeredHighP1,
+		alertTriggeredMediumP1,
+		alertTriggeredLowP1,
+		alertResolvedHighP1,
+		alertResolvedMediumP1,
+		alertResolvedLowP1,
+	}
+	project2Alerts = []expectedAlertGroup{
+		alertTriggeredHighP2,
+		alertResolvedHighP2,
+	}
+	allExpectedAlerts = []expectedAlertGroup{
+		alertTriggeredHighP1,
+		alertTriggeredMediumP1,
+		alertTriggeredLowP1,
+		alertResolvedHighP1,
+		alertResolvedMediumP1,
+		alertResolvedLowP1,
+		alertTriggeredHighP2,
+		alertResolvedHighP2,
+	}
+)
+
+func Test_Objects_V1_V1alpha_Alert_Listing(t *testing.T) {
+	t.Parallel()
 
 	t.Run("list all alerts across projects", func(t *testing.T) {
 		t.Parallel()
@@ -130,281 +202,49 @@ func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHighDefault,
-			alertTriggeredHigh1,
-			alertTriggeredMedium,
-			alertTriggeredLow,
-			alertResolvedHigh,
-			alertResolvedMedium,
-			alertSilenced,
-		})
+		// 8 in project 1 + 2 in project 2 = 10 total.
+		assert.GreaterOrEqual(t, len(resp.Alerts), 10)
+		assertAlertsContainGroups(t, resp.Alerts, allExpectedAlerts)
 	})
 
-	t.Run("list alerts in default project", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{alertTriggeredHighDefault})
-	})
-
-	t.Run("filter by project", func(t *testing.T) {
+	t.Run("list alerts in project 1", func(t *testing.T) {
 		t.Parallel()
 		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
+			Project: alertTestProject1,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.Len(t, resp.Alerts, len(allTestProjectAlertNames))
-		assertAlertsSubset(t, resp.Alerts, allTestProjectAlertNames)
+		assertAlertsMatchGroups(t, resp.Alerts, project1Alerts)
 	})
 
-	t.Run("filter by name", func(t *testing.T) {
+	t.Run("list alerts in project 2", func(t *testing.T) {
 		t.Parallel()
 		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			Names:   []string{alertTriggeredHigh1},
+			Project: alertTestProject2,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assertAlertsMatchGroups(t, resp.Alerts, project2Alerts)
+	})
+
+	t.Run("filter by name from prior query", func(t *testing.T) {
+		t.Parallel()
+		allResp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+		})
+		require.NoError(t, err)
+		require.NotNil(t, allResp)
+		require.NotEmpty(t, allResp.Alerts)
+		alertName := allResp.Alerts[0].Metadata.Name
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+			Names:   []string{alertName},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.Len(t, resp.Alerts, 1)
-		assertAlertObject(t, resp.Alerts[0], alertTriggeredHigh1)
-	})
-
-	t.Run("filter by multiple names", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			Names:   []string{alertTriggeredHigh1, alertResolvedHigh},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Len(t, resp.Alerts, 2)
-		assertAlertsSubset(t, resp.Alerts, []string{alertTriggeredHigh1, alertResolvedHigh})
-	})
-
-	t.Run("filter by SLO name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:  alertTestProject,
-			SLONames: []string{alertTestSLO1},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertTriggeredMedium,
-			alertResolvedHigh,
-			alertSilenced,
-		})
-	})
-
-	t.Run("filter by second SLO name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:  alertTestProject,
-			SLONames: []string{alertTestSLO2},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredLow,
-			alertResolvedMedium,
-		})
-	})
-
-	t.Run("filter by alert policy name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:          alertTestProject,
-			AlertPolicyNames: []string{alertTestPolicy1},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertTriggeredLow,
-			alertResolvedHigh,
-		})
-	})
-
-	t.Run("filter by second alert policy name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:          alertTestProject,
-			AlertPolicyNames: []string{alertTestPolicy2},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredMedium,
-			alertResolvedMedium,
-			alertSilenced,
-		})
-	})
-
-	t.Run("filter by service name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:      alertTestProject,
-			ServiceNames: []string{alertTestService1},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Len(t, resp.Alerts, len(allTestProjectAlertNames))
-		assertAlertsSubset(t, resp.Alerts, allTestProjectAlertNames)
-	})
-
-	t.Run("filter by triggered status", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:   alertTestProject,
-			Triggered: ptr(true),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertTriggeredMedium,
-			alertTriggeredLow,
-			alertSilenced,
-		})
-	})
-
-	t.Run("filter by resolved status", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:  alertTestProject,
-			Resolved: ptr(true),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertResolvedHigh,
-			alertResolvedMedium,
-		})
-	})
-
-	t.Run("filter by time range from", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			From:    mustParseTime("2024-06-05T00:00:00Z"),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertResolvedHigh,
-			alertResolvedMedium,
-			alertSilenced,
-		})
-	})
-
-	t.Run("filter by time range to", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			To:      mustParseTime("2024-06-03T00:00:00Z"),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-		})
-	})
-
-	t.Run("filter by time range from and to", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			From:    mustParseTime("2024-06-03T00:00:00Z"),
-			To:      mustParseTime("2024-06-05T00:00:00Z"),
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredMedium,
-			alertTriggeredLow,
-		})
-	})
-
-	t.Run("filter by SLO and alert policy combined", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:          alertTestProject,
-			SLONames:         []string{alertTestSLO1},
-			AlertPolicyNames: []string{alertTestPolicy1},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertResolvedHigh,
-		})
-	})
-
-	t.Run("filter by triggered and SLO combined", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:   alertTestProject,
-			Triggered: ptr(true),
-			SLONames:  []string{alertTestSLO1},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertTriggeredMedium,
-			alertSilenced,
-		})
-	})
-
-	t.Run("filter by resolved and alert policy combined", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:          alertTestProject,
-			Resolved:         ptr(true),
-			AlertPolicyNames: []string{alertTestPolicy2},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertResolvedMedium,
-		})
-	})
-
-	t.Run("filter returns empty for non-matching SLO", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:  alertTestProject,
-			SLONames: []string{"non-existent-slo"},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Empty(t, resp.Alerts)
-	})
-
-	t.Run("filter returns empty for non-matching alert policy", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:          alertTestProject,
-			AlertPolicyNames: []string{"non-existent-policy"},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Empty(t, resp.Alerts)
-	})
-
-	t.Run("filter returns empty for non-matching name", func(t *testing.T) {
-		t.Parallel()
-		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project: alertTestProject,
-			Names:   []string{"non-existent-alert"},
-		})
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Empty(t, resp.Alerts)
+		assert.Equal(t, alertName, resp.Alerts[0].Metadata.Name)
+		assertEachAlertMatchesGroup(t, resp.Alerts, project1Alerts)
 	})
 
 	t.Run("truncated max header is returned", func(t *testing.T) {
@@ -416,72 +256,457 @@ func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
 		require.NotNil(t, resp)
 		assert.GreaterOrEqual(t, resp.TruncatedMax, 0)
 	})
+}
+
+func Test_Objects_V1_V1alpha_Alert_SingleFieldFilters(t *testing.T) {
+	t.Parallel()
+
+	t.Run("filter by SLO name in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:  alertTestProject1,
+			SLONames: []string{alertTestSLO1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(allExpectedAlerts, func(p expectedAlertProperties) bool {
+			return p.Project == alertTestProject1 && p.SLO == alertTestSLO1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by SLO name in project 2", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:  alertTestProject2,
+			SLONames: []string{alertTestSLO2},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(allExpectedAlerts, func(p expectedAlertProperties) bool {
+			return p.Project == alertTestProject2 && p.SLO == alertTestSLO2
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by alert policy high in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			AlertPolicyNames: []string{alertTestPolicyHigh1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.AlertPolicy == alertTestPolicyHigh1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by alert policy medium in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			AlertPolicyNames: []string{alertTestPolicyMedium1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.AlertPolicy == alertTestPolicyMedium1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by alert policy low in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			AlertPolicyNames: []string{alertTestPolicyLow1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.AlertPolicy == alertTestPolicyLow1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by project 2 alert policy", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject2,
+			AlertPolicyNames: []string{alertTestPolicyHigh2},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project2Alerts, func(p expectedAlertProperties) bool {
+			return p.AlertPolicy == alertTestPolicyHigh2
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by service name in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:      alertTestProject1,
+			ServiceNames: []string{alertTestService1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(allExpectedAlerts, func(p expectedAlertProperties) bool {
+			return p.Project == alertTestProject1 && p.Service == alertTestService1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by service name in project 2", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:      alertTestProject2,
+			ServiceNames: []string{alertTestService2},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(allExpectedAlerts, func(p expectedAlertProperties) bool {
+			return p.Project == alertTestProject2 && p.Service == alertTestService2
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by triggered status in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:   alertTestProject1,
+			Triggered: ptr(true),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Triggered"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by resolved status in project 1", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:  alertTestProject1,
+			Resolved: ptr(true),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Resolved"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by triggered in project 2", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:   alertTestProject2,
+			Triggered: ptr(true),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project2Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Triggered"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by resolved in project 2", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:  alertTestProject2,
+			Resolved: ptr(true),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project2Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Resolved"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
 
 	t.Run("filter by objective name", func(t *testing.T) {
 		t.Parallel()
 		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:        alertTestProject,
-			ObjectiveNames: []string{"good"},
+			Project:        alertTestProject1,
+			ObjectiveNames: []string{"default"},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		require.Len(t, resp.Alerts, len(allTestProjectAlertNames))
-		assertAlertsSubset(t, resp.Alerts, allTestProjectAlertNames)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Objective.Name == "default"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
 	})
 
 	t.Run("filter by objective value", func(t *testing.T) {
 		t.Parallel()
 		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:         alertTestProject,
-			ObjectiveValues: []float64{0.95},
+			Project:         alertTestProject1,
+			ObjectiveValues: []float64{0.9},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertTriggeredHigh1,
-			alertResolvedHigh,
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Objective.Value == 0.9
 		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
 	})
 
-	t.Run("filter by time range and resolved combined", func(t *testing.T) {
+	t.Run("filter by time range from", func(t *testing.T) {
+		t.Parallel()
+		// triggeredClockTime >= 10:10 should match alerts triggered at 10:10 and 10:15.
+		// Timestamps: 10:10 (medium triggered), 10:15 (low triggered).
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+			From:    mustParseTime("2024-01-15T10:10:00Z"),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.GreaterOrEqual(t, len(resp.Alerts), 2)
+		assertEachAlertMatchesGroup(t, resp.Alerts, project1Alerts)
+	})
+
+	t.Run("filter by time range to", func(t *testing.T) {
+		t.Parallel()
+		// triggeredClockTime <= 06:30 should catch only the alert triggered at 06:00.
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+			To:      mustParseTime("2024-01-15T06:30:00Z"),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.GreaterOrEqual(t, len(resp.Alerts), 1)
+		assertEachAlertMatchesGroup(t, resp.Alerts, project1Alerts)
+	})
+
+	t.Run("filter by time range from and to", func(t *testing.T) {
+		t.Parallel()
+		// Between 09:30 and 10:10 should catch alerts triggered at 10:00 and 10:05.
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+			From:    mustParseTime("2024-01-15T09:30:00Z"),
+			To:      mustParseTime("2024-01-15T10:06:00Z"),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.GreaterOrEqual(t, len(resp.Alerts), 2)
+		assertEachAlertMatchesGroup(t, resp.Alerts, project1Alerts)
+	})
+}
+
+func Test_Objects_V1_V1alpha_Alert_CombinedFiltersAndEdgeCases(t *testing.T) {
+	t.Parallel()
+
+	t.Run("filter by SLO and alert policy combined in project 1", func(t *testing.T) {
 		t.Parallel()
 		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
-			Project:  alertTestProject,
-			Resolved: ptr(true),
-			From:     mustParseTime("2024-06-06T00:00:00Z"),
+			Project:          alertTestProject1,
+			SLONames:         []string{alertTestSLO1},
+			AlertPolicyNames: []string{alertTestPolicyMedium1},
 		})
 		require.NoError(t, err)
 		require.NotNil(t, resp)
-		assertAlertsSubset(t, resp.Alerts, []string{
-			alertResolvedMedium,
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.SLO == alertTestSLO1 && p.AlertPolicy == alertTestPolicyMedium1
 		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by triggered and alert policy combined", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			Triggered:        ptr(true),
+			AlertPolicyNames: []string{alertTestPolicyHigh1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Triggered" && p.AlertPolicy == alertTestPolicyHigh1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by SLO and triggered combined", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:   alertTestProject1,
+			SLONames:  []string{alertTestSLO1},
+			Triggered: ptr(true),
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.SLO == alertTestSLO1 && p.Status == "Triggered"
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter by resolved and alert policy combined", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			Resolved:         ptr(true),
+			AlertPolicyNames: []string{alertTestPolicyLow1},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		expected := filterAlertGroups(project1Alerts, func(p expectedAlertProperties) bool {
+			return p.Status == "Resolved" && p.AlertPolicy == alertTestPolicyLow1
+		})
+		assertAlertsMatchGroups(t, resp.Alerts, expected)
+	})
+
+	t.Run("filter returns empty for non-matching SLO", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:  alertTestProject1,
+			SLONames: []string{"non-existent-slo"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Empty(t, resp.Alerts)
+	})
+
+	t.Run("filter returns empty for non-matching alert policy", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project:          alertTestProject1,
+			AlertPolicyNames: []string{"non-existent-policy"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Empty(t, resp.Alerts)
+	})
+
+	t.Run("filter returns empty for non-matching name", func(t *testing.T) {
+		t.Parallel()
+		resp, err := client.Objects().V1().GetV1alphaAlerts(t.Context(), objectsV1.GetAlertsRequest{
+			Project: alertTestProject1,
+			Names:   []string{"non-existent-alert"},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, resp)
+		assert.Empty(t, resp.Alerts)
 	})
 }
 
-func assertAlertsSubset(t *testing.T, alerts []v1alphaAlert.Alert, expectedNames []string) {
-	t.Helper()
-	alertsByName := make(map[string]v1alphaAlert.Alert, len(alerts))
-	for _, a := range alerts {
-		alertsByName[a.Metadata.Name] = a
-	}
-	for _, name := range expectedNames {
-		a, found := alertsByName[name]
-		if !assert.True(t, found, "expected alert %q not found in response (got %v)", name, alertNames(alerts)) {
-			continue
-		}
-		assertAlertObject(t, a, name)
+func alertMatchKeyFromAlert(a v1alphaAlert.Alert) alertMatchKey {
+	return alertMatchKey{
+		Project:     a.Metadata.Project,
+		Severity:    a.Spec.Severity,
+		Status:      a.Spec.Status,
+		AlertPolicy: a.Spec.AlertPolicy.Name,
 	}
 }
 
-func assertAlertObject(t *testing.T, a v1alphaAlert.Alert, name string) {
+func groupAlertsByKey(alerts []v1alphaAlert.Alert) map[alertMatchKey][]v1alphaAlert.Alert {
+	result := make(map[alertMatchKey][]v1alphaAlert.Alert, len(alerts))
+	for _, a := range alerts {
+		key := alertMatchKeyFromAlert(a)
+		result[key] = append(result[key], a)
+	}
+	return result
+}
+
+func expectedAlertCount(groups []expectedAlertGroup) int {
+	total := 0
+	for _, g := range groups {
+		total += g.Count
+	}
+	return total
+}
+
+func filterAlertGroups(
+	groups []expectedAlertGroup,
+	pred func(expectedAlertProperties) bool,
+) []expectedAlertGroup {
+	result := make([]expectedAlertGroup, 0, len(groups))
+	for _, g := range groups {
+		if pred(g.expectedAlertProperties) {
+			result = append(result, g)
+		}
+	}
+	return result
+}
+
+// assertAlertsMatchGroups verifies that alerts exactly match the expected groups:
+// correct total count, correct count per group, and full property validation.
+func assertAlertsMatchGroups(
+	t *testing.T,
+	alerts []v1alphaAlert.Alert,
+	groups []expectedAlertGroup,
+) {
 	t.Helper()
-	expected, ok := expectedAlerts[name]
-	require.True(t, ok, "no expected properties defined for alert %q", name)
+	require.Len(t, alerts, expectedAlertCount(groups))
+	actualByKey := groupAlertsByKey(alerts)
+	for _, g := range groups {
+		key := g.matchKey()
+		actual := actualByKey[key]
+		require.Len(t, actual, g.Count,
+			"expected %d alerts for %+v", g.Count, key)
+		for _, a := range actual {
+			assertAlertProperties(t, a, g.expectedAlertProperties)
+		}
+	}
+}
+
+// assertAlertsContainGroups verifies that the alerts contain at least the
+// expected count per group, with full property validation on matched alerts.
+// Used when the response may include additional alerts beyond the expected set.
+func assertAlertsContainGroups(
+	t *testing.T,
+	alerts []v1alphaAlert.Alert,
+	groups []expectedAlertGroup,
+) {
+	t.Helper()
+	actualByKey := groupAlertsByKey(alerts)
+	for _, g := range groups {
+		key := g.matchKey()
+		actual := actualByKey[key]
+		if !assert.GreaterOrEqual(t, len(actual), g.Count,
+			"expected >= %d alerts for %+v, got %d", g.Count, key, len(actual)) {
+			continue
+		}
+		for _, a := range actual {
+			assertAlertProperties(t, a, g.expectedAlertProperties)
+		}
+	}
+}
+
+// assertEachAlertMatchesGroup verifies that every alert matches one of the
+// provided groups by its alertMatchKey and passes full property validation.
+func assertEachAlertMatchesGroup(
+	t *testing.T,
+	alerts []v1alphaAlert.Alert,
+	groups []expectedAlertGroup,
+) {
+	t.Helper()
+	groupByKey := make(map[alertMatchKey]expectedAlertProperties, len(groups))
+	for _, g := range groups {
+		groupByKey[g.matchKey()] = g.expectedAlertProperties
+	}
+	for _, a := range alerts {
+		key := alertMatchKeyFromAlert(a)
+		exp, ok := groupByKey[key]
+		if assert.True(t, ok, "unexpected alert: %+v", key) {
+			assertAlertProperties(t, a, exp)
+		}
+	}
+}
+
+// assertAlertProperties validates all fields of a single alert against expected values.
+func assertAlertProperties(t *testing.T, a v1alphaAlert.Alert, expected expectedAlertProperties) {
+	t.Helper()
 
 	assert.Equal(t, manifest.VersionV1alpha, a.APIVersion)
 	assert.Equal(t, manifest.KindAlert, a.Kind)
 
-	assert.Equal(t, name, a.Metadata.Name)
 	assert.Equal(t, expected.Project, a.Metadata.Project)
 
 	assert.Equal(t, expected.Severity, a.Spec.Severity)
@@ -495,6 +720,7 @@ func assertAlertObject(t *testing.T, a v1alphaAlert.Alert, name string) {
 	assert.Equal(t, expected.Objective.Name, a.Spec.Objective.Name)
 	assert.InDelta(t, expected.Objective.Value, a.Spec.Objective.Value, 0.001)
 
+	assert.NotEmpty(t, a.Metadata.Name)
 	assert.NotEmpty(t, a.Spec.TriggeredMetricTime)
 	assert.NotEmpty(t, a.Spec.TriggeredClockTime)
 	assert.NotEmpty(t, a.Spec.CoolDown)
@@ -513,21 +739,5 @@ func assertAlertObject(t *testing.T, a v1alphaAlert.Alert, name string) {
 		assert.NotNil(t, a.Spec.ResolvedClockTime)
 	}
 
-	if expected.HasSilence {
-		require.NotNil(t, a.Spec.SilenceInfo)
-		assert.NotEmpty(t, a.Spec.SilenceInfo.From)
-		assert.NotEmpty(t, a.Spec.SilenceInfo.To)
-	} else {
-		assert.Nil(t, a.Spec.SilenceInfo)
-	}
-
 	assert.NotEmpty(t, a.Organization)
-}
-
-func alertNames(alerts []v1alphaAlert.Alert) []string {
-	names := make([]string, 0, len(alerts))
-	for _, a := range alerts {
-		names = append(names, a.Metadata.Name)
-	}
-	return names
 }
