@@ -18,9 +18,9 @@
       value: 0.9
     coolDown: 5m0s
     objective:
-      displayName: default
-      name: default
-      value: 0.9
+      displayName: critical
+      name: critical
+      value: 0.95
     service:
       displayName: Alert Test Service
       name: alert-test-service
@@ -275,9 +275,9 @@
       value: 0.9
     coolDown: 5m0s
     objective:
-      displayName: default
-      name: default
-      value: 0.9
+      displayName: critical
+      name: critical
+      value: 0.95
     service:
       displayName: Alert Test Service
       name: alert-test-service
@@ -310,9 +310,9 @@
       value: 0.85
     coolDown: 5m0s
     objective:
-      displayName: default
-      name: default
-      value: 0.9
+      displayName: p99-latency
+      name: p99-latency
+      value: 0.99
     service:
       displayName: Alert Test Service 2
       name: alert-test-service-2
