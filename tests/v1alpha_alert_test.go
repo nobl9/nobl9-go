@@ -256,7 +256,7 @@ func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		expected := filterSlice(project1Alerts, func(a v1alphaAlert.Alert) bool {
-			return a.Spec.Status == "Resolved"
+			return isResolvedOrCancelledAlertStatus(a.Spec.Status)
 		})
 		require.Len(t, resp.Alerts, 3)
 		assertAlertsMatch(t, resp.Alerts, expected)
@@ -286,7 +286,7 @@ func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		expected := filterSlice(project2Alerts, func(a v1alphaAlert.Alert) bool {
-			return a.Spec.Status == "Resolved"
+			return isResolvedOrCancelledAlertStatus(a.Spec.Status)
 		})
 		require.Len(t, resp.Alerts, 1)
 		assertAlertsMatch(t, resp.Alerts, expected)
@@ -461,7 +461,7 @@ func Test_Objects_V1_V1alpha_Alert(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, resp)
 		expected := filterSlice(project1Alerts, func(a v1alphaAlert.Alert) bool {
-			return a.Spec.Status == "Resolved" &&
+			return isResolvedOrCancelledAlertStatus(a.Spec.Status) &&
 				a.Spec.AlertPolicy.Name == "alert-test-policy-low"
 		})
 		require.Len(t, resp.Alerts, 1)
@@ -583,6 +583,10 @@ func indexAlertsByName(alerts []v1alphaAlert.Alert) map[string]v1alphaAlert.Aler
 		result[a.Metadata.Name] = a
 	}
 	return result
+}
+
+func isResolvedOrCancelledAlertStatus(status string) bool {
+	return status == "Resolved" || status == "Canceled"
 }
 
 // clearEnvironmentFields zeroes fields that vary per test environment
