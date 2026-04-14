@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Annotation{}
+var _ manifest.MetadataProvider[Metadata] = Annotation{}
 var _ manifest.ProjectScopedObject = Annotation{}
 var _ v1alpha.ObjectContext = Annotation{}
 
@@ -23,6 +24,10 @@ func (a Annotation) GetKind() manifest.Kind {
 
 func (a Annotation) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a Annotation) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a Annotation) Validate() error {

@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Report{}
+var _ manifest.MetadataProvider[Metadata] = Report{}
 var _ v1alpha.ObjectContext = Report{}
 
 func (r Report) GetVersion() manifest.Version {
@@ -22,6 +23,10 @@ func (r Report) GetKind() manifest.Kind {
 
 func (r Report) GetName() string {
 	return r.Metadata.Name
+}
+
+func (r Report) GetMetadata() Metadata {
+	return r.Metadata
 }
 
 func (r Report) Validate() error {

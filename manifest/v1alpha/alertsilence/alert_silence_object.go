@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = AlertSilence{}
+var _ manifest.MetadataProvider[Metadata] = AlertSilence{}
 var _ manifest.ProjectScopedObject = AlertSilence{}
 var _ v1alpha.ObjectContext = AlertSilence{}
 
@@ -23,6 +24,10 @@ func (a AlertSilence) GetKind() manifest.Kind {
 
 func (a AlertSilence) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertSilence) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertSilence) Validate() error {

@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Service{}
+var _ manifest.MetadataProvider[Metadata] = Service{}
 var _ manifest.ProjectScopedObject = Service{}
 var _ v1alpha.ObjectContext = Service{}
 
@@ -23,6 +24,10 @@ func (s Service) GetKind() manifest.Kind {
 
 func (s Service) GetName() string {
 	return s.Metadata.Name
+}
+
+func (s Service) GetMetadata() Metadata {
+	return s.Metadata
 }
 
 func (s Service) Validate() error {

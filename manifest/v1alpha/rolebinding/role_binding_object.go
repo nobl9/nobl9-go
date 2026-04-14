@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = RoleBinding{}
+var _ manifest.MetadataProvider[Metadata] = RoleBinding{}
 var _ v1alpha.ObjectContext = RoleBinding{}
 
 func (r RoleBinding) GetVersion() manifest.Version {
@@ -22,6 +23,10 @@ func (r RoleBinding) GetKind() manifest.Kind {
 
 func (r RoleBinding) GetName() string {
 	return r.Metadata.Name
+}
+
+func (r RoleBinding) GetMetadata() Metadata {
+	return r.Metadata
 }
 
 func (r RoleBinding) Validate() error {

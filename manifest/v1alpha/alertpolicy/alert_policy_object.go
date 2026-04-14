@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = AlertPolicy{}
+var _ manifest.MetadataProvider[Metadata] = AlertPolicy{}
 var _ manifest.ProjectScopedObject = AlertPolicy{}
 var _ v1alpha.ObjectContext = AlertPolicy{}
 
@@ -23,6 +24,10 @@ func (a AlertPolicy) GetKind() manifest.Kind {
 
 func (a AlertPolicy) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertPolicy) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertPolicy) Validate() error {

@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = AlertMethod{}
+var _ manifest.MetadataProvider[Metadata] = AlertMethod{}
 var _ manifest.ProjectScopedObject = AlertMethod{}
 var _ v1alpha.ObjectContext = AlertMethod{}
 
@@ -23,6 +24,10 @@ func (a AlertMethod) GetKind() manifest.Kind {
 
 func (a AlertMethod) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertMethod) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertMethod) Validate() error {

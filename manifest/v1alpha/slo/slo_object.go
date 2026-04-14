@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = SLO{}
+var _ manifest.MetadataProvider[Metadata] = SLO{}
 var _ manifest.ProjectScopedObject = SLO{}
 var _ v1alpha.ObjectContext = SLO{}
 
@@ -23,6 +24,10 @@ func (s SLO) GetKind() manifest.Kind {
 
 func (s SLO) GetName() string {
 	return s.Metadata.Name
+}
+
+func (s SLO) GetMetadata() Metadata {
+	return s.Metadata
 }
 
 func (s SLO) Validate() error {

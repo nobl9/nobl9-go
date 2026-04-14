@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Direct{}
+var _ manifest.MetadataProvider[Metadata] = Direct{}
 var _ manifest.ProjectScopedObject = Direct{}
 var _ v1alpha.ObjectContext = Direct{}
 
@@ -23,6 +24,10 @@ func (d Direct) GetKind() manifest.Kind {
 
 func (d Direct) GetName() string {
 	return d.Metadata.Name
+}
+
+func (d Direct) GetMetadata() Metadata {
+	return d.Metadata
 }
 
 func (d Direct) Validate() error {

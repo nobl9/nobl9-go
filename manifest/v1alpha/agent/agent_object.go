@@ -10,6 +10,7 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Agent{}
+var _ manifest.MetadataProvider[Metadata] = Agent{}
 var _ manifest.ProjectScopedObject = Agent{}
 var _ v1alpha.ObjectContext = Agent{}
 
@@ -23,6 +24,10 @@ func (a Agent) GetKind() manifest.Kind {
 
 func (a Agent) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a Agent) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a Agent) Validate() error {
