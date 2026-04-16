@@ -364,7 +364,6 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			})
 		}
 	})
-
 }
 
 func setupMCPProxySession(t *testing.T) (session *mcp.ClientSession, teardown func()) {
