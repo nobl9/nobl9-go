@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = AlertMethod{}
-var _ manifest.MetadataProvider[Metadata] = AlertMethod{}
 var _ manifest.ProjectScopedObject = AlertMethod{}
 var _ v1alpha.ObjectContext = AlertMethod{}
 

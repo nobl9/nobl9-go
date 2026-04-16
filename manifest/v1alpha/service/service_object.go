@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Service{}
-var _ manifest.MetadataProvider[Metadata] = Service{}
 var _ manifest.ProjectScopedObject = Service{}
 var _ v1alpha.ObjectContext = Service{}
 

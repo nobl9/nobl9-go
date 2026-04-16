@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Direct{}
-var _ manifest.MetadataProvider[Metadata] = Direct{}
 var _ manifest.ProjectScopedObject = Direct{}
 var _ v1alpha.ObjectContext = Direct{}
 

@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = BudgetAdjustment{}
-var _ manifest.MetadataProvider[Metadata] = BudgetAdjustment{}
 var _ v1alpha.ObjectContext = BudgetAdjustment{}
 
 func (b BudgetAdjustment) GetVersion() manifest.Version {

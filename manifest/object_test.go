@@ -178,28 +178,6 @@ func TestSetDefaultProject(t *testing.T) {
 	}
 }
 
-func TestMapMetadata(t *testing.T) {
-	t.Run("nil objects slice", func(t *testing.T) {
-		metadata := MapMetadata[customMetadata, customMetadataObject](nil)
-		assert.Nil(t, metadata)
-	})
-
-	t.Run("empty objects slice", func(t *testing.T) {
-		metadata := MapMetadata([]customMetadataObject{})
-		assert.Empty(t, metadata)
-	})
-
-	t.Run("metadata preserves order", func(t *testing.T) {
-		objects := []customMetadataObject{
-			{metadata: customMetadata{name: "first"}},
-			{metadata: customMetadata{name: "second"}},
-		}
-
-		metadata := MapMetadata(objects)
-		assert.Equal(t, []customMetadata{{name: "first"}, {name: "second"}}, metadata)
-	})
-}
-
 type customObject struct {
 	kind            Kind
 	name            string

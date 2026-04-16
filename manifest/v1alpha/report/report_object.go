@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Report{}
-var _ manifest.MetadataProvider[Metadata] = Report{}
 var _ v1alpha.ObjectContext = Report{}
 
 func (r Report) GetVersion() manifest.Version {

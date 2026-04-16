@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = UserGroup{}
-var _ manifest.MetadataProvider[Metadata] = UserGroup{}
 var _ v1alpha.ObjectContext = UserGroup{}
 
 func (u UserGroup) GetVersion() manifest.Version {

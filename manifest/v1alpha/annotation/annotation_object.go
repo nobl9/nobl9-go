@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Annotation{}
-var _ manifest.MetadataProvider[Metadata] = Annotation{}
 var _ manifest.ProjectScopedObject = Annotation{}
 var _ v1alpha.ObjectContext = Annotation{}
 

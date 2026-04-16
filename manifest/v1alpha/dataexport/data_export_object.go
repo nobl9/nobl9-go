@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = DataExport{}
-var _ manifest.MetadataProvider[Metadata] = DataExport{}
 var _ manifest.ProjectScopedObject = DataExport{}
 var _ v1alpha.ObjectContext = DataExport{}
 

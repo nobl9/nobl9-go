@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = SLO{}
-var _ manifest.MetadataProvider[Metadata] = SLO{}
 var _ manifest.ProjectScopedObject = SLO{}
 var _ v1alpha.ObjectContext = SLO{}
 

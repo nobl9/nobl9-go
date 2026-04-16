@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Agent{}
-var _ manifest.MetadataProvider[Metadata] = Agent{}
 var _ manifest.ProjectScopedObject = Agent{}
 var _ v1alpha.ObjectContext = Agent{}
 

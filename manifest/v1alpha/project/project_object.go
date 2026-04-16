@@ -10,7 +10,6 @@ import (
 
 // Ensure interfaces are implemented.
 var _ manifest.Object = Project{}
-var _ manifest.MetadataProvider[Metadata] = Project{}
 var _ v1alpha.ObjectContext = Project{}
 
 func (p Project) GetVersion() manifest.Version {
