@@ -198,13 +198,3 @@ type customProjectScopedObject struct {
 
 func (c customProjectScopedObject) GetProject() string               { return c.project }
 func (c customProjectScopedObject) SetProject(project string) Object { c.project = project; return c }
-
-type customMetadata struct {
-	name string
-}
-
-type customMetadataObject struct {
-	metadata customMetadata
-}
-
-func (c customMetadataObject) GetMetadata() customMetadata { return c.metadata }
