@@ -106,10 +106,16 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Spec.SLO = ""
 		err := validate(alertSilence)
-		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.slo",
-			Code: rules.ErrorCodeRequired,
-		})
+		testutils.AssertContainsErrors(t, alertSilence, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec",
+				Code: errorCodeInvalidSilenceScope,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.slo",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
 	})
 }
 
@@ -156,10 +162,16 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence := validAlertSilence()
 		alertSilence.Spec.AlertPolicy.Name = ""
 		err := validate(alertSilence)
-		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.name",
-			Code: rules.ErrorCodeRequired,
-		})
+		testutils.AssertContainsErrors(t, alertSilence, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec",
+				Code: errorCodeInvalidSilenceScope,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.alertPolicy.name",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
 	})
 	t.Run("fails, invalid project", func(t *testing.T) {
 		alertSilence := validAlertSilence()
@@ -281,6 +293,170 @@ func TestValidate_Spec_EndTime(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestValidate_Spec_ServiceScope(t *testing.T) {
+	t.Run("passes, valid service-level silence", func(t *testing.T) {
+		alertSilence := validServiceSilence()
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("fails, invalid service name", func(t *testing.T) {
+		alertSilence := validServiceSilence()
+		alertSilence.Spec.Service = "INVALID SERVICE!!"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.service",
+			Code: validationV1Alpha.ErrorCodeStringName,
+		})
+	})
+	t.Run("fails, service and slo both set", func(t *testing.T) {
+		alertSilence := validServiceSilence()
+		alertSilence.Spec.SLO = "my-slo"
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{Name: "my-policy"}
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: errorCodeInvalidSilenceScope,
+		})
+	})
+	t.Run("fails, service and integration both set", func(t *testing.T) {
+		alertSilence := validServiceSilence()
+		alertSilence.Spec.Integration = "my-integration"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: errorCodeInvalidSilenceScope,
+		})
+	})
+	t.Run("passes, alertPolicy project consistency not checked for service scope", func(t *testing.T) {
+		alertSilence := validServiceSilence()
+		alertSilence.Metadata.Project = "project-1"
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+}
+
+func TestValidate_Spec_IntegrationScope(t *testing.T) {
+	t.Run("passes, valid integration-level silence", func(t *testing.T) {
+		alertSilence := validIntegrationSilence()
+		err := validate(alertSilence)
+		testutils.AssertNoError(t, alertSilence, err)
+	})
+	t.Run("fails, invalid integration name", func(t *testing.T) {
+		alertSilence := validIntegrationSilence()
+		alertSilence.Spec.Integration = "INVALID INTEGRATION!!"
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec.integration",
+			Code: validationV1Alpha.ErrorCodeStringName,
+		})
+	})
+	t.Run("fails, integration and slo both set", func(t *testing.T) {
+		alertSilence := validIntegrationSilence()
+		alertSilence.Spec.SLO = "my-slo"
+		alertSilence.Spec.AlertPolicy = AlertPolicySource{Name: "my-policy"}
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
+			Prop: "spec",
+			Code: errorCodeInvalidSilenceScope,
+		})
+	})
+}
+
+func TestValidate_Spec_NoScope(t *testing.T) {
+	t.Run("fails, no scope specified", func(t *testing.T) {
+		alertSilence := New(
+			Metadata{
+				Name:    "alert-silence",
+				Project: "default",
+			},
+			Spec{
+				Period: Period{
+					StartTime: ptr(time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)),
+					Duration:  "10m",
+				},
+			},
+		)
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 3,
+			testutils.ExpectedError{
+				Prop: "spec",
+				Code: errorCodeInvalidSilenceScope,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.slo",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.alertPolicy.name",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
+func TestValidate_Spec_SLOScope_RequiresBothFields(t *testing.T) {
+	t.Run("fails, slo set but no alertPolicy", func(t *testing.T) {
+		alertSilence := New(
+			Metadata{
+				Name:    "alert-silence",
+				Project: "default",
+			},
+			Spec{
+				SLO: "my-slo",
+				Period: Period{
+					StartTime: ptr(time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)),
+					Duration:  "10m",
+				},
+			},
+		)
+		err := validate(alertSilence)
+		testutils.AssertContainsErrors(t, alertSilence, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec",
+				Code: errorCodeInvalidSilenceScope,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.alertPolicy.name",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
+func validServiceSilence() AlertSilence {
+	return New(
+		Metadata{
+			Name:    "service-silence",
+			Project: "default",
+		},
+		Spec{
+			Description: "Service-level silence",
+			Service:     "my-service",
+			Period: Period{
+				StartTime: ptr(time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)),
+				Duration:  "15m",
+			},
+		},
+	)
+}
+
+func validIntegrationSilence() AlertSilence {
+	return New(
+		Metadata{
+			Name:    "integration-silence",
+			Project: "default",
+		},
+		Spec{
+			Description: "Integration-level silence",
+			Integration: "my-integration",
+			Period: Period{
+				StartTime: ptr(time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)),
+				Duration:  "15m",
+			},
+		},
+	)
 }
 
 func validAlertSilence() AlertSilence {

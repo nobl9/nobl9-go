@@ -22,7 +22,12 @@ var validator = govy.New[AlertSilence](
 	govy.For(govy.GetSelf[AlertSilence]()).
 		Cascade(govy.CascadeModeStop).
 		Include(metadataValidation).
-		Rules(alertPolicyProjectConsistencyRule),
+		Include(
+			govy.New[AlertSilence](
+				govy.For(govy.GetSelf[AlertSilence]()).
+					Rules(alertPolicyProjectConsistencyRule),
+			).When(func(s AlertSilence) bool { return isSLOScope(s.Spec) }),
+		),
 	govy.For(func(s AlertSilence) Spec { return s.Spec }).
 		WithName("spec").
 		Include(specValidation),
@@ -33,9 +38,57 @@ var metadataValidation = govy.New[AlertSilence](
 	validationV1Alpha.FieldRuleMetadataProject(func(s AlertSilence) string { return s.Metadata.Project }),
 )
 
+// silenceScopeRule validates that exactly one scope is specified:
+// either {slo + alertPolicy} OR {service} OR {integration}.
+var silenceScopeRule = govy.NewRule(func(s Spec) error {
+	hasSLO := s.SLO != "" || s.AlertPolicy.Name != ""
+	hasService := s.Service != ""
+	hasIntegration := s.Integration != ""
+
+	scopeCount := 0
+	if hasSLO {
+		scopeCount++
+	}
+	if hasService {
+		scopeCount++
+	}
+	if hasIntegration {
+		scopeCount++
+	}
+
+	if scopeCount == 0 {
+		return govy.NewRuleError(
+			"exactly one scope must be specified: {slo, alertPolicy}, {service}, or {integration}",
+			errorCodeInvalidSilenceScope,
+		)
+	}
+	if scopeCount > 1 {
+		return govy.NewRuleError(
+			"only one scope can be specified: {slo, alertPolicy}, {service}, or {integration} are mutually exclusive",
+			errorCodeInvalidSilenceScope,
+		)
+	}
+
+	if hasSLO && (s.SLO == "" || s.AlertPolicy.Name == "") {
+		return govy.NewRuleError(
+			"both 'slo' and 'alertPolicy.name' are required when using SLO-level silence",
+			errorCodeInvalidSilenceScope,
+		)
+	}
+
+	return nil
+}).WithErrorCode(errorCodeInvalidSilenceScope)
+
+func isSLOScope(s Spec) bool {
+	return s.Service == "" && s.Integration == ""
+}
+
 var specValidation = govy.New[Spec](
+	govy.For(govy.GetSelf[Spec]()).
+		Rules(silenceScopeRule),
 	govy.For(func(s Spec) string { return s.SLO }).
 		WithName("slo").
+		When(func(s Spec) bool { return isSLOScope(s) }).
 		Required().
 		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.Description }).
@@ -43,7 +96,16 @@ var specValidation = govy.New[Spec](
 		Rules(validationV1Alpha.StringDescription()),
 	govy.For(func(s Spec) AlertPolicySource { return s.AlertPolicy }).
 		WithName("alertPolicy").
+		When(func(s Spec) bool { return isSLOScope(s) }).
 		Include(alertPolicySourceValidation),
+	govy.For(func(s Spec) string { return s.Service }).
+		WithName("service").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(s Spec) string { return s.Integration }).
+		WithName("integration").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) Period { return s.Period }).
 		WithName("period").
 		Cascade(govy.CascadeModeStop).
@@ -80,6 +142,7 @@ var alertPolicySourceValidation = govy.New[AlertPolicySource](
 const (
 	errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
 	errorCodeInconsistentProject                 = "alert_policy_project_inconsistent"
+	errorCodeInvalidSilenceScope                 = "invalid_silence_scope"
 )
 
 var endTimeNotBeforeStartTimeRule = govy.NewRule(func(p Period) error {
