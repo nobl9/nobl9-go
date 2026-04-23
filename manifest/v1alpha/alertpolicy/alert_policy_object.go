@@ -25,6 +25,10 @@ func (a AlertPolicy) GetName() string {
 	return a.Metadata.Name
 }
 
+func (a AlertPolicy) GetMetadata() Metadata {
+	return a.Metadata
+}
+
 func (a AlertPolicy) Validate() error {
 	if err := validate(a); err != nil {
 		return err

@@ -25,6 +25,10 @@ func (d Direct) GetName() string {
 	return d.Metadata.Name
 }
 
+func (d Direct) GetMetadata() Metadata {
+	return d.Metadata
+}
+
 func (d Direct) Validate() error {
 	if err := validate(d); err != nil {
 		return err

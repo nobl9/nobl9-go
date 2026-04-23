@@ -24,6 +24,10 @@ func (r RoleBinding) GetName() string {
 	return r.Metadata.Name
 }
 
+func (r RoleBinding) GetMetadata() Metadata {
+	return r.Metadata
+}
+
 func (r RoleBinding) Validate() error {
 	if err := validate(r); err != nil {
 		return err

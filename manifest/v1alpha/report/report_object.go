@@ -24,6 +24,10 @@ func (r Report) GetName() string {
 	return r.Metadata.Name
 }
 
+func (r Report) GetMetadata() Metadata {
+	return r.Metadata
+}
+
 func (r Report) Validate() error {
 	if err := validate(r); err != nil {
 		return err

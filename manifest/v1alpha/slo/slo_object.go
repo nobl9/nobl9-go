@@ -25,6 +25,10 @@ func (s SLO) GetName() string {
 	return s.Metadata.Name
 }
 
+func (s SLO) GetMetadata() Metadata {
+	return s.Metadata
+}
+
 func (s SLO) Validate() error {
 	if err := validate(s); err != nil {
 		return err

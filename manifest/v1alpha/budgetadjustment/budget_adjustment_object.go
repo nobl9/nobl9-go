@@ -24,6 +24,10 @@ func (b BudgetAdjustment) GetName() string {
 	return b.Metadata.Name
 }
 
+func (b BudgetAdjustment) GetMetadata() Metadata {
+	return b.Metadata
+}
+
 func (b BudgetAdjustment) Validate() error {
 	if err := validate(b); err != nil {
 		return err

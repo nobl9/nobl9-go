@@ -25,6 +25,10 @@ func (s Service) GetName() string {
 	return s.Metadata.Name
 }
 
+func (s Service) GetMetadata() Metadata {
+	return s.Metadata
+}
+
 func (s Service) Validate() error {
 	if err := validate(s); err != nil {
 		return err

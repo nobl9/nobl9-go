@@ -25,6 +25,10 @@ func (d DataExport) GetName() string {
 	return d.Metadata.Name
 }
 
+func (d DataExport) GetMetadata() Metadata {
+	return d.Metadata
+}
+
 func (d DataExport) Validate() error {
 	if err := validate(d); err != nil {
 		return err

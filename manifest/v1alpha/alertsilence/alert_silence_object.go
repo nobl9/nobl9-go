@@ -25,6 +25,10 @@ func (a AlertSilence) GetName() string {
 	return a.Metadata.Name
 }
 
+func (a AlertSilence) GetMetadata() Metadata {
+	return a.Metadata
+}
+
 func (a AlertSilence) Validate() error {
 	if err := validate(a); err != nil {
 		return err

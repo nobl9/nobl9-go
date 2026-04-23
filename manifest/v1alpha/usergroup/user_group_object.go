@@ -24,6 +24,10 @@ func (u UserGroup) GetName() string {
 	return u.Metadata.Name
 }
 
+func (u UserGroup) GetMetadata() Metadata {
+	return u.Metadata
+}
+
 func (u UserGroup) Validate() error {
 	if err := validate(u); err != nil {
 		return err

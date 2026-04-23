@@ -25,6 +25,10 @@ func (a Annotation) GetName() string {
 	return a.Metadata.Name
 }
 
+func (a Annotation) GetMetadata() Metadata {
+	return a.Metadata
+}
+
 func (a Annotation) Validate() error {
 	if err := validate(a); err != nil {
 		return err

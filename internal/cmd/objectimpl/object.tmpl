@@ -32,6 +32,10 @@ func ({{ .Receiver }} {{ .Name }}) GetName() string {
   return {{ .Receiver }}.Metadata.Name
 }
 
+func ({{ .Receiver }} {{ .Name }}) GetMetadata() Metadata {
+  return {{ .Receiver }}.Metadata
+}
+
 func ({{ .Receiver }} {{ .Name }}) Validate() error {
   	if err := validate({{ .Receiver }}); err != nil {
   		return err

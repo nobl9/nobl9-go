@@ -25,6 +25,10 @@ func (a Agent) GetName() string {
 	return a.Metadata.Name
 }
 
+func (a Agent) GetMetadata() Metadata {
+	return a.Metadata
+}
+
 func (a Agent) Validate() error {
 	if err := validate(a); err != nil {
 		return err

@@ -24,6 +24,10 @@ func (p Project) GetName() string {
 	return p.Metadata.Name
 }
 
+func (p Project) GetMetadata() Metadata {
+	return p.Metadata
+}
+
 func (p Project) Validate() error {
 	if err := validate(p); err != nil {
 		return err
