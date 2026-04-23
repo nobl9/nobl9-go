@@ -320,46 +320,49 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		assert.Equal(t, service.Metadata.Project, fetchedService.Metadata.Project)
 	})
 
-	t.Run("getService returns error when name is empty", func(t *testing.T) {
-		params := map[string]any{
-			"name":    "",
-			"project": service.Metadata.Project,
-			"format":  "json",
+	t.Run("getService returns validation errors in tool result", func(t *testing.T) {
+		testCases := map[string]struct {
+			nameArg            string
+			projectArg         string
+			expectedErrMessage string
+		}{
+			"when name is empty": {
+				nameArg:            "",
+				projectArg:         service.Metadata.Project,
+				expectedErrMessage: "minLength",
+			},
+			"when project is empty": {
+				nameArg:            service.Metadata.Name,
+				projectArg:         "",
+				expectedErrMessage: "minLength",
+			},
+			"when project is wildcard": {
+				nameArg:            service.Metadata.Name,
+				projectArg:         "*",
+				expectedErrMessage: "not:",
+			},
 		}
-		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getService",
-			Arguments: params,
-		})
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "minLength")
-	})
 
-	t.Run("getService returns error when project is empty", func(t *testing.T) {
-		params := map[string]any{
-			"name":    service.Metadata.Name,
-			"project": "",
-			"format":  "json",
-		}
-		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getService",
-			Arguments: params,
-		})
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "minLength")
-	})
+		for testName, testCase := range testCases {
+			t.Run(testName, func(t *testing.T) {
+				result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+					Name: "getService",
+					Arguments: map[string]any{
+						"name":    testCase.nameArg,
+						"project": testCase.projectArg,
+						"format":  "json",
+					},
+				})
+				require.NoError(t, err)
+				require.NotNil(t, result)
+				assert.True(t, result.IsError)
+				require.Len(t, result.Content, 1)
 
-	t.Run("getService returns error when project is wildcard", func(t *testing.T) {
-		params := map[string]any{
-			"name":    service.Metadata.Name,
-			"project": "*",
-			"format":  "json",
+				textContent, ok := result.Content[0].(*mcp.TextContent)
+				require.True(t, ok, "Expected TextContent")
+				assert.Contains(t, textContent.Text, testCase.expectedErrMessage)
+			})
 		}
-		_, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getService",
-			Arguments: params,
-		})
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "not:")
 	})
 }
 
