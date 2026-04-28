@@ -203,14 +203,13 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			return name, project
 		}
 
-		existingAlertName, _ := getExistingListItem(t, "listAlerts", map[string]any{
+		existingAlertName, existingAlertProject := getExistingListItem(t, "listAlerts", map[string]any{
 			"alertPolicyNames": []string{},
 			"from":             from,
 			"names":            []string{},
 			"objectiveNames":   []string{},
 			"objectiveValues":  []float64{},
 			"project":          "*",
-			"resolved":         true,
 			"serviceNames":     []string{},
 			"sloNames":         []string{},
 			"to":               to,
@@ -332,14 +331,14 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 					"names":            []string{existingAlertName},
 					"objectiveNames":   []string{},
 					"objectiveValues":  []float64{},
-					"project":          "*",
-					"resolved":         true,
+					"project":          existingAlertProject,
 					"serviceNames":     []string{},
 					"sloNames":         []string{},
 					"to":               to,
 					"triggered":        true,
 				},
-				expectedNames: []string{existingAlertName},
+				expectedNames:   []string{existingAlertName},
+				expectedProject: existingAlertProject,
 			},
 			{
 				toolName: "listAnnotations",
