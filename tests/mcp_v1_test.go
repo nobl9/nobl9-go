@@ -19,6 +19,7 @@ import (
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
+	v1alphaBudgetAdjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -120,6 +121,25 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		Kind:    manifest.KindDirect,
 	}
 
+	budgetAdjustment := v1alphaBudgetAdjustment.New(
+		v1alphaBudgetAdjustment.Metadata{
+			Name: "budget-adjustment-" + fixtureSuffix,
+		},
+		v1alphaBudgetAdjustment.Spec{
+			Description:     e2etestutils.GetObjectDescription(),
+			FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
+			Duration:        "1h",
+			Filters: v1alphaBudgetAdjustment.Filters{
+				SLOs: []v1alphaBudgetAdjustment.SLORef{
+					{
+						Name:    silencedSLO.Metadata.Name,
+						Project: silencedSLO.Metadata.Project,
+					},
+				},
+			},
+		},
+	)
+
 	alertSilenceExample := e2etestutils.GetExample(t, manifest.KindAlertSilence, nil)
 	alertSilence := newV1alphaAlertSilence(t, v1alphaAlertSilence.Metadata{
 		Name:    "alert-silence-" + fixtureSuffix,
@@ -150,6 +170,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		alertMethod,
 		alertPolicy,
 		silencedSLO,
+		budgetAdjustment,
 		alertSilence,
 	}
 	e2etestutils.V1Apply(t, objects)
@@ -226,11 +247,6 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 				"sloName":    "",
 				"to":         to,
 			},
-		)
-		existingBudgetAdjustmentName, _ := getExistingListItem(
-			t,
-			"listBudgetAdjustments",
-			map[string]any{"names": []string{}},
 		)
 		existingDataExportName, existingDataExportProject := getExistingListItem(
 			t,
@@ -355,8 +371,8 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			},
 			{
 				toolName:      "listBudgetAdjustments",
-				args:          map[string]any{"names": []string{existingBudgetAdjustmentName}},
-				expectedNames: []string{existingBudgetAdjustmentName},
+				args:          map[string]any{"names": []string{budgetAdjustment.Metadata.Name}},
+				expectedNames: []string{budgetAdjustment.Metadata.Name},
 			},
 			{
 				toolName: "listDataExports",
