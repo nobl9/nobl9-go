@@ -725,7 +725,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		}
 	})
 
-	t.Run("validate", func(t *testing.T) {
+	t.Run("validateObjects", func(t *testing.T) {
 		projectToManage := generateV1alphaProject(t)
 		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
 			Name:    e2etestutils.GenerateName(),
@@ -745,7 +745,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		}
 
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "validate",
+			Name: "validateObjects",
 			Arguments: map[string]any{
 				"objects": toolObjects,
 			},
@@ -756,7 +756,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		requireObjectsNotExists(t, objectsToManage...)
 	})
 
-	t.Run("apply", func(t *testing.T) {
+	t.Run("applyObjects", func(t *testing.T) {
 		projectToManage := generateV1alphaProject(t)
 		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
 			Name:    e2etestutils.GenerateName(),
@@ -778,7 +778,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		t.Cleanup(func() { e2etestutils.V1Delete(t, objectsToManage) })
 
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "apply",
+			Name: "applyObjects",
 			Arguments: map[string]any{
 				"objects": toolObjects,
 			},
@@ -789,7 +789,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		requireObjectsExists(t, objectsToManage...)
 	})
 
-	t.Run("deleteByName", func(t *testing.T) {
+	t.Run("deleteObjectByName", func(t *testing.T) {
 		projectToManage := generateV1alphaProject(t)
 		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
 			Name:    e2etestutils.GenerateName(),
@@ -807,7 +807,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		})
 
 		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "deleteByName",
+			Name: "deleteObjectByName",
 			Arguments: map[string]any{
 				"kind":    manifest.KindService,
 				"name":    serviceToManage.GetName(),
@@ -821,7 +821,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		requireObjectsExists(t, projectToManage)
 
 		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "deleteByName",
+			Name: "deleteObjectByName",
 			Arguments: map[string]any{
 				"kind": manifest.KindProject,
 				"name": projectToManage.GetName(),
