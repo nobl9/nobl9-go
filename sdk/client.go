@@ -49,6 +49,8 @@ type Client struct {
 	credentials *credentialsStore
 	userAgent   string
 	dryRun      bool
+
+	prometheusAPI prometheusAPIStore
 }
 
 // DefaultClient returns fully configured instance of [Client] with default [Config] and [http.Client].

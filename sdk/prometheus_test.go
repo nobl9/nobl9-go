@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -253,6 +254,33 @@ func TestClient_Prometheus_UsesSDKHTTPClientAuthorization(t *testing.T) {
 
 	_, _, err := client.Prometheus().V1().Query(context.Background(), prometheusV1.QueryRequest{Query: "up"})
 	require.NoError(t, err)
+}
+
+func TestClient_Prometheus_ReusesAPIClient(t *testing.T) {
+	var requests atomic.Int64
+	client, srv := preparePrometheusTestClient(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		assertPrometheusRequest(t, r, http.MethodPost, "/api/prometheus/v1/api/v1/query")
+		writePrometheusResponse(t, w, map[string]any{
+			"resultType": "vector",
+			"result":     []any{},
+		}, nil)
+	})
+	defer srv.Close()
+
+	unusedServer := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Fatal("cached Prometheus API client should keep using the original address")
+	}))
+	defer unusedServer.Close()
+
+	_, _, err := client.Prometheus().V1().Query(context.Background(), prometheusV1.QueryRequest{Query: "up"})
+	require.NoError(t, err)
+
+	client.Config.URL = parseTestURL(t, unusedServer.URL+"/api")
+
+	_, _, err = client.Prometheus().V1().Query(context.Background(), prometheusV1.QueryRequest{Query: "up"})
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), requests.Load())
 }
 
 func preparePrometheusTestClient(
