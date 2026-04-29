@@ -2,15 +2,14 @@ package sdk
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 	"github.com/stretchr/testify/assert"
@@ -192,7 +191,10 @@ func TestClient_Prometheus_MetadataEndpoints(t *testing.T) {
 	assert.Empty(t, labelValueWarnings)
 	assert.Equal(t, model.LabelValues{"api", "worker"}, labelValues)
 
-	metadata, err := endpoints.Metadata(context.Background(), prometheusV1.MetadataRequest{Metric: "up", Limit: "10"})
+	metadata, err := endpoints.Metadata(
+		context.Background(),
+		prometheusV1.MetadataRequest{Metric: "up", Limit: "10"},
+	)
 	require.NoError(t, err)
 	assert.Equal(t, promv1.MetricType("gauge"), metadata["up"][0].Type)
 	assert.Equal(t, "Up", metadata["up"][0].Help)
@@ -228,22 +230,29 @@ func TestClient_Prometheus_ReturnsPrometheusError(t *testing.T) {
 	assert.Equal(t, "invalid query", promErr.Msg)
 }
 
-func TestClient_Prometheus_RequiresClientCredentials(t *testing.T) {
-	var requests atomic.Int64
-	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
-		requests.Add(1)
-	}))
+func TestClient_Prometheus_UsesSDKHTTPClientAuthorization(t *testing.T) {
+	client, srv := preparePrometheusTestClient(t, func(t *testing.T, w http.ResponseWriter, r *http.Request) {
+		assertPrometheusRequest(t, r, http.MethodPost, "/api/prometheus/v1/api/v1/query")
+		assert.Equal(t, "Bearer prom-token", r.Header.Get(HeaderAuthorization))
+		writePrometheusResponse(t, w, map[string]any{
+			"resultType": "vector",
+			"result":     []any{},
+		}, nil)
+	})
 	defer srv.Close()
-	config, err := ReadConfig(ConfigOptionNoConfigFile())
-	require.NoError(t, err)
-	config.DisableOkta = true
-	config.URL = parseTestURL(t, srv.URL+"/api")
-	client, err := NewClient(config)
-	require.NoError(t, err)
 
-	_, _, err = client.Prometheus().V1().Query(context.Background(), prometheusV1.QueryRequest{Query: "up"})
-	require.EqualError(t, err, errMissingPrometheusCredentials.Error())
-	assert.Zero(t, requests.Load())
+	client.credentials.accessToken = "prom-token"
+	client.credentials.claims = &jwtClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
+	}
+	client.credentials.clientID = client.Config.ClientID
+	client.credentials.clientSecret = client.Config.ClientSecret
+	client.Config.DisableOkta = false
+
+	_, _, err := client.Prometheus().V1().Query(context.Background(), prometheusV1.QueryRequest{Query: "up"})
+	require.NoError(t, err)
 }
 
 func preparePrometheusTestClient(
@@ -263,7 +272,6 @@ func preparePrometheusTestClient(
 	config.URL = parseTestURL(t, srv.URL+"/api")
 	client, err := NewClient(config)
 	require.NoError(t, err)
-	client.SetUserAgent("sloctl")
 	return client, srv
 }
 
@@ -271,18 +279,10 @@ func assertPrometheusRequest(t *testing.T, r *http.Request, method, path string)
 	t.Helper()
 	assert.Equal(t, method, r.Method)
 	assert.Equal(t, path, r.URL.Path)
-	assert.Equal(t, "sloctl", r.Header.Get(HeaderUserAgent))
 	assert.Empty(t, r.Header.Get(HeaderOrganization))
 	assert.Empty(t, r.Header.Get(HeaderProject))
-	username, password, ok := r.BasicAuth()
-	require.True(t, ok)
-	assert.Equal(t, "client-id", username)
-	assert.Equal(t, "client-secret", password)
-	assert.Equal(
-		t,
-		"Basic "+base64.StdEncoding.EncodeToString([]byte("client-id:client-secret")),
-		r.Header.Get(HeaderAuthorization),
-	)
+	_, _, ok := r.BasicAuth()
+	assert.False(t, ok)
 }
 
 func writePrometheusResponse(t *testing.T, w http.ResponseWriter, data any, warnings []string) {
