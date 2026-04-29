@@ -4,9 +4,11 @@ package tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
@@ -14,12 +16,19 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
+	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
+	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
+	v1alphaBudgetAdjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
+	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
+	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
+//nolint:gocognit
 func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	// Enable debug logging to see MCP messages (only shown on test failure or with -v flag)
 	handler := slog.NewTextHandler(&testLogWriter{t: t}, &slog.HandlerOptions{
@@ -62,9 +71,116 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	slo2.Spec.AnomalyConfig = nil
 
 	e2etestutils.ProvisionDataSourceForSLO(t, &slo2)
+	require.Equal(t, manifest.KindAgent, slo1.Spec.Indicator.MetricSource.Kind)
+	agentName := slo1.Spec.Indicator.MetricSource.Name
+	agentProject := slo1.Spec.Indicator.MetricSource.Project
+
+	fixtureSuffix := fmt.Sprintf("mcp-list-%d", time.Now().UnixNano())
+	listProject := newV1alphaProject(t, v1alphaProject.Metadata{
+		Name:        "project-" + fixtureSuffix,
+		DisplayName: "MCP List Project",
+		Labels:      v1alpha.Labels{"test": []string{"mcp-list"}},
+	})
+	listService := newV1alphaService(t, v1alphaService.Metadata{
+		Name:    "service-" + fixtureSuffix,
+		Project: listProject.GetName(),
+	})
+	dataExport := e2etestutils.GetExampleObject[v1alphaDataExport.DataExport](t, manifest.KindDataExport, nil)
+	dataExport.Metadata = v1alphaDataExport.Metadata{
+		Name:        "data-export-" + fixtureSuffix,
+		DisplayName: "MCP List Data Export",
+		Project:     listProject.GetName(),
+	}
+	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
+		Name:    "alert-method-" + fixtureSuffix,
+		Project: listProject.GetName(),
+	})
+	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
+	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
+		Name:    "alert-policy-" + fixtureSuffix,
+		Project: listProject.GetName(),
+	}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
+	alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{{
+		Metadata: v1alphaAlertPolicy.AlertMethodRefMetadata{
+			Name:    alertMethod.Metadata.Name,
+			Project: alertMethod.Metadata.Project,
+		},
+	}}
+
+	direct := e2etestutils.ProvisionStaticDirect(t, v1alpha.Datadog)
+	silencedSLO := e2etestutils.GetExampleObject[v1alphaSLO.SLO](
+		t,
+		manifest.KindSLO,
+		e2etestutils.FilterExamplesByDataSourceType(v1alpha.Datadog),
+	)
+	silencedSLO.Metadata = v1alphaSLO.Metadata{
+		Name:        "silenced-slo-" + fixtureSuffix,
+		Project:     listProject.GetName(),
+		Labels:      e2etestutils.AnnotateLabels(t, v1alpha.Labels{"test": []string{"mcp-list"}}),
+		Annotations: commonAnnotations,
+	}
+	silencedSLO.Spec.AnomalyConfig = nil
+	silencedSLO.Spec.AlertPolicies = []string{alertPolicy.Metadata.Name}
+	silencedSLO.Spec.Service = listService.GetName()
+	silencedSLO.Spec.Indicator.MetricSource = v1alphaSLO.MetricSourceSpec{
+		Name:    direct.Metadata.Name,
+		Project: direct.Metadata.Project,
+		Kind:    manifest.KindDirect,
+	}
+
+	budgetAdjustment := v1alphaBudgetAdjustment.New(
+		v1alphaBudgetAdjustment.Metadata{
+			Name: "budget-adjustment-" + fixtureSuffix,
+		},
+		v1alphaBudgetAdjustment.Spec{
+			Description:     e2etestutils.GetObjectDescription(),
+			FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
+			Duration:        "1h",
+			Filters: v1alphaBudgetAdjustment.Filters{
+				SLOs: []v1alphaBudgetAdjustment.SLORef{
+					{
+						Name:    silencedSLO.Metadata.Name,
+						Project: silencedSLO.Metadata.Project,
+					},
+				},
+			},
+		},
+	)
+
+	alertSilenceExample := e2etestutils.GetExample(t, manifest.KindAlertSilence, nil)
+	alertSilence := newV1alphaAlertSilence(t, v1alphaAlertSilence.Metadata{
+		Name:    "alert-silence-" + fixtureSuffix,
+		Project: listProject.GetName(),
+	}, alertSilenceExample.GetVariant(), alertSilenceExample.GetSubVariant())
+	futureTime := time.Now().Add(time.Hour).UTC()
+	if alertSilence.Spec.Period.StartTime != nil {
+		alertSilence.Spec.Period.StartTime = &futureTime
+	}
+	if alertSilence.Spec.Period.EndTime != nil {
+		endTime := futureTime.Add(time.Hour)
+		alertSilence.Spec.Period.EndTime = &endTime
+	}
+	alertSilence.Spec.AlertPolicy = v1alphaAlertSilence.AlertPolicySource{
+		Name:    alertPolicy.Metadata.Name,
+		Project: alertPolicy.Metadata.Project,
+	}
+	alertSilence.Spec.SLO = silencedSLO.Metadata.Name
 
 	// Apply all objects
-	objects := []manifest.Object{project, service, slo1, slo2}
+	objects := []manifest.Object{
+		project,
+		service,
+		slo1,
+		slo2,
+		listProject,
+		listService,
+		dataExport,
+		alertMethod,
+		alertPolicy,
+		silencedSLO,
+		budgetAdjustment,
+		alertSilence,
+	}
 	e2etestutils.V1Apply(t, objects)
 	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
 	requireObjectsExists(t, objects...)
@@ -77,6 +193,269 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		require.NoError(t, err)
 		require.Greater(t, len(toolsResult.Tools), 1)
 		t.Logf("Found %d MCP tools", len(toolsResult.Tools))
+	})
+
+	t.Run("list kinds", func(t *testing.T) {
+		from := time.Now().Add(-10 * 365 * 24 * time.Hour).UTC().Format(time.RFC3339)
+		to := time.Now().UTC().Format(time.RFC3339)
+
+		getExistingListItem := func(t *testing.T, toolName string, args map[string]any) (string, string) {
+			t.Helper()
+
+			result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+				Name:      toolName,
+				Arguments: args,
+			})
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			assert.False(t, result.IsError)
+
+			structuredContent, ok := result.StructuredContent.(map[string]any)
+			require.True(t, ok, "Expected structured content for %s", toolName)
+
+			rawItems, ok := structuredContent["items"].([]any)
+			require.True(t, ok, "Expected items in %s response", toolName)
+
+			items := make([]map[string]any, len(rawItems))
+			for i, rawItem := range rawItems {
+				item, ok := rawItem.(map[string]any)
+				require.True(t, ok, "Expected object item in %s response", toolName)
+				items[i] = item
+			}
+			require.NotEmpty(t, items, "Expected existing %s objects", toolName)
+
+			name, ok := items[0]["name"].(string)
+			require.True(t, ok, "Expected name in %s item", toolName)
+			require.NotEmpty(t, name)
+
+			project, _ := items[0]["project"].(string)
+			return name, project
+		}
+
+		existingAlertName, existingAlertProject := getExistingListItem(t, "listAlerts", map[string]any{
+			"alertPolicyNames": []string{},
+			"from":             from,
+			"names":            []string{},
+			"objectiveNames":   []string{},
+			"objectiveValues":  []float64{},
+			"project":          "*",
+			"serviceNames":     []string{},
+			"sloNames":         []string{},
+			"to":               to,
+			"triggered":        true,
+		})
+		existingAnnotationName, existingAnnotationProject := getExistingListItem(
+			t,
+			"listAnnotations",
+			map[string]any{
+				"categories": []string{},
+				"from":       from,
+				"names":      []string{},
+				"project":    "*",
+				"sloName":    "",
+				"to":         to,
+			},
+		)
+		existingOrganizationRoleBindingName, _ := getExistingListItem(
+			t,
+			"listOrganizationRoleBindings",
+			map[string]any{"names": []string{}},
+		)
+		existingProjectRoleBindingName, _ := getExistingListItem(
+			t,
+			"listProjectRoleBindings",
+			map[string]any{"project": "*", "names": []string{}},
+		)
+		existingReportName, _ := getExistingListItem(
+			t,
+			"listReports",
+			map[string]any{"names": []string{}},
+		)
+		existingUserGroupName, _ := getExistingListItem(
+			t,
+			"listUserGroups",
+			map[string]any{"names": []string{}},
+		)
+
+		testCases := []struct {
+			toolName        string
+			args            map[string]any
+			expectedNames   []string
+			expectedProject string
+		}{
+			{
+				toolName:      "listProjects",
+				args:          map[string]any{"names": []string{project.GetName()}},
+				expectedNames: []string{project.GetName()},
+			},
+			{
+				toolName: "listServices",
+				args: map[string]any{
+					"project": project.GetName(),
+					"names":   []string{service.GetName()},
+				},
+				expectedNames:   []string{service.GetName()},
+				expectedProject: project.GetName(),
+			},
+			{
+				toolName: "listSLOs",
+				args: map[string]any{
+					"project": project.GetName(),
+					"names":   []string{slo1.Metadata.Name, slo2.Metadata.Name},
+				},
+				expectedNames:   []string{slo1.Metadata.Name, slo2.Metadata.Name},
+				expectedProject: project.GetName(),
+			},
+			{
+				toolName: "listAgents",
+				args: map[string]any{
+					"project": agentProject,
+					"names":   []string{agentName},
+				},
+				expectedNames:   []string{agentName},
+				expectedProject: agentProject,
+			},
+			{
+				toolName: "listAlertMethods",
+				args: map[string]any{
+					"project": alertMethod.Metadata.Project,
+					"names":   []string{alertMethod.Metadata.Name},
+				},
+				expectedNames:   []string{alertMethod.Metadata.Name},
+				expectedProject: alertMethod.Metadata.Project,
+			},
+			{
+				toolName: "listAlertPolicies",
+				args: map[string]any{
+					"project": alertPolicy.Metadata.Project,
+					"names":   []string{alertPolicy.Metadata.Name},
+				},
+				expectedNames:   []string{alertPolicy.Metadata.Name},
+				expectedProject: alertPolicy.Metadata.Project,
+			},
+			{
+				toolName: "listAlertSilences",
+				args: map[string]any{
+					"project": alertSilence.Metadata.Project,
+					"names":   []string{alertSilence.Metadata.Name},
+				},
+				expectedNames:   []string{alertSilence.Metadata.Name},
+				expectedProject: alertSilence.Metadata.Project,
+			},
+			{
+				toolName: "listAlerts",
+				args: map[string]any{
+					"alertPolicyNames": []string{},
+					"from":             from,
+					"names":            []string{existingAlertName},
+					"objectiveNames":   []string{},
+					"objectiveValues":  []float64{},
+					"project":          existingAlertProject,
+					"serviceNames":     []string{},
+					"sloNames":         []string{},
+					"to":               to,
+					"triggered":        true,
+				},
+				expectedNames:   []string{existingAlertName},
+				expectedProject: existingAlertProject,
+			},
+			{
+				toolName: "listAnnotations",
+				args: map[string]any{
+					"categories": []string{},
+					"from":       from,
+					"names":      []string{existingAnnotationName},
+					"project":    existingAnnotationProject,
+					"sloName":    "",
+					"to":         to,
+				},
+				expectedNames:   []string{existingAnnotationName},
+				expectedProject: existingAnnotationProject,
+			},
+			{
+				toolName:      "listBudgetAdjustments",
+				args:          map[string]any{"names": []string{budgetAdjustment.Metadata.Name}},
+				expectedNames: []string{budgetAdjustment.Metadata.Name},
+			},
+			{
+				toolName: "listDataExports",
+				args: map[string]any{
+					"project": dataExport.Metadata.Project,
+					"names":   []string{dataExport.Metadata.Name},
+				},
+				expectedNames:   []string{dataExport.Metadata.Name},
+				expectedProject: dataExport.Metadata.Project,
+			},
+			{
+				toolName: "listDirects",
+				args: map[string]any{
+					"project": direct.Metadata.Project,
+					"names":   []string{direct.Metadata.Name},
+				},
+				expectedNames:   []string{direct.Metadata.Name},
+				expectedProject: direct.Metadata.Project,
+			},
+			{
+				toolName:      "listOrganizationRoleBindings",
+				args:          map[string]any{"names": []string{existingOrganizationRoleBindingName}},
+				expectedNames: []string{existingOrganizationRoleBindingName},
+			},
+			{
+				toolName: "listProjectRoleBindings",
+				args: map[string]any{
+					"project": "*",
+					"names":   []string{existingProjectRoleBindingName},
+				},
+				expectedNames: []string{existingProjectRoleBindingName},
+			},
+			{
+				toolName:      "listReports",
+				args:          map[string]any{"names": []string{existingReportName}},
+				expectedNames: []string{existingReportName},
+			},
+			{
+				toolName:      "listUserGroups",
+				args:          map[string]any{"names": []string{existingUserGroupName}},
+				expectedNames: []string{existingUserGroupName},
+			},
+		}
+
+		for _, testCase := range testCases {
+			t.Run(testCase.toolName, func(t *testing.T) {
+				result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+					Name:      testCase.toolName,
+					Arguments: testCase.args,
+				})
+				require.NoError(t, err)
+				require.NotNil(t, result)
+				assert.False(t, result.IsError)
+
+				structuredContent, ok := result.StructuredContent.(map[string]any)
+				require.True(t, ok, "Expected structured content for %s", testCase.toolName)
+
+				rawItems, ok := structuredContent["items"].([]any)
+				require.True(t, ok, "Expected items in %s response", testCase.toolName)
+
+				items := make([]map[string]any, len(rawItems))
+				for i, rawItem := range rawItems {
+					item, ok := rawItem.(map[string]any)
+					require.True(t, ok, "Expected object item in %s response", testCase.toolName)
+					items[i] = item
+				}
+				require.Len(t, items, len(testCase.expectedNames))
+
+				actualNames := make([]any, len(items))
+				for i, item := range items {
+					actualNames[i] = item["name"]
+					if testCase.expectedProject != "" {
+						assert.Equal(t, testCase.expectedProject, item["project"])
+					}
+				}
+				for _, expectedName := range testCase.expectedNames {
+					assert.Contains(t, actualNames, expectedName)
+				}
+			})
+		}
 	})
 
 	t.Run("getSLO", func(t *testing.T) {
@@ -363,6 +742,115 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 				assert.Contains(t, textContent.Text, testCase.expectedErrMessage)
 			})
 		}
+	})
+
+	t.Run("validateObjects", func(t *testing.T) {
+		projectToManage := generateV1alphaProject(t)
+		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: projectToManage.GetName(),
+		})
+
+		objectsToManage := []manifest.Object{projectToManage, serviceToManage}
+		toolObjects := make([]map[string]any, len(objectsToManage))
+		for i, object := range objectsToManage {
+			data, err := json.Marshal(object)
+			require.NoError(t, err)
+
+			var toolObject map[string]any
+			err = json.Unmarshal(data, &toolObject)
+			require.NoError(t, err)
+			toolObjects[i] = toolObject
+		}
+
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name: "validateObjects",
+			Arguments: map[string]any{
+				"objects": toolObjects,
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.False(t, result.IsError)
+		requireObjectsNotExists(t, objectsToManage...)
+	})
+
+	t.Run("applyObjects", func(t *testing.T) {
+		projectToManage := generateV1alphaProject(t)
+		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: projectToManage.GetName(),
+		})
+
+		objectsToManage := []manifest.Object{projectToManage, serviceToManage}
+		toolObjects := make([]map[string]any, len(objectsToManage))
+		for i, object := range objectsToManage {
+			data, err := json.Marshal(object)
+			require.NoError(t, err)
+
+			var toolObject map[string]any
+			err = json.Unmarshal(data, &toolObject)
+			require.NoError(t, err)
+			toolObjects[i] = toolObject
+		}
+
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objectsToManage) })
+
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name: "applyObjects",
+			Arguments: map[string]any{
+				"objects": toolObjects,
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.False(t, result.IsError)
+		requireObjectsExists(t, objectsToManage...)
+	})
+
+	t.Run("deleteObjectByName", func(t *testing.T) {
+		projectToManage := generateV1alphaProject(t)
+		serviceToManage := newV1alphaService(t, v1alphaService.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: projectToManage.GetName(),
+		})
+
+		objectsToManage := []manifest.Object{projectToManage, serviceToManage}
+		e2etestutils.V1Apply(t, objectsToManage)
+
+		shouldCleanup := true
+		t.Cleanup(func() {
+			if shouldCleanup {
+				e2etestutils.V1Delete(t, objectsToManage)
+			}
+		})
+
+		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name: "deleteObjectByName",
+			Arguments: map[string]any{
+				"kind":    manifest.KindService,
+				"name":    serviceToManage.GetName(),
+				"project": projectToManage.GetName(),
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.False(t, result.IsError)
+		requireObjectsNotExists(t, serviceToManage)
+		requireObjectsExists(t, projectToManage)
+
+		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
+			Name: "deleteObjectByName",
+			Arguments: map[string]any{
+				"kind": manifest.KindProject,
+				"name": projectToManage.GetName(),
+			},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.False(t, result.IsError)
+		shouldCleanup = false
+		requireObjectsNotExists(t, projectToManage)
 	})
 }
 
