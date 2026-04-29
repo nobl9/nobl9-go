@@ -20,6 +20,7 @@ import (
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaAlertSilence "github.com/nobl9/nobl9-go/manifest/v1alpha/alertsilence"
 	v1alphaBudgetAdjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
+	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
@@ -84,6 +85,12 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		Name:    "service-" + fixtureSuffix,
 		Project: listProject.GetName(),
 	})
+	dataExport := e2etestutils.GetExampleObject[v1alphaDataExport.DataExport](t, manifest.KindDataExport, nil)
+	dataExport.Metadata = v1alphaDataExport.Metadata{
+		Name:        "data-export-" + fixtureSuffix,
+		DisplayName: "MCP List Data Export",
+		Project:     listProject.GetName(),
+	}
 	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
 		Name:    "alert-method-" + fixtureSuffix,
 		Project: listProject.GetName(),
@@ -167,6 +174,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		slo2,
 		listProject,
 		listService,
+		dataExport,
 		alertMethod,
 		alertPolicy,
 		silencedSLO,
@@ -247,11 +255,6 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 				"sloName":    "",
 				"to":         to,
 			},
-		)
-		existingDataExportName, existingDataExportProject := getExistingListItem(
-			t,
-			"listDataExports",
-			map[string]any{"project": "*", "names": []string{}},
 		)
 		existingOrganizationRoleBindingName, _ := getExistingListItem(
 			t,
@@ -377,11 +380,11 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			{
 				toolName: "listDataExports",
 				args: map[string]any{
-					"project": existingDataExportProject,
-					"names":   []string{existingDataExportName},
+					"project": dataExport.Metadata.Project,
+					"names":   []string{dataExport.Metadata.Name},
 				},
-				expectedNames:   []string{existingDataExportName},
-				expectedProject: existingDataExportProject,
+				expectedNames:   []string{dataExport.Metadata.Name},
+				expectedProject: dataExport.Metadata.Project,
 			},
 			{
 				toolName: "listDirects",
