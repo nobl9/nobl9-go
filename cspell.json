@@ -151,6 +151,7 @@
     "preconfigured",
     "projectservice",
     "promql",
+    "promv",
     "puml",
     "retryable",
     "retryablehttp",
