@@ -1,6 +1,8 @@
 defaultContext = "production"
-filesPromptEnabled = true
-filesPromptThreshold = 25
+
+[sloctl]
+  filesPromptEnabled = true
+  filesPromptThreshold = 25
 
 [contexts]
   [contexts.production]

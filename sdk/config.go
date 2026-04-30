@@ -110,10 +110,24 @@ type Config struct {
 
 // ContextlessConfig stores config not tied to any specific context.
 type ContextlessConfig struct {
-	DefaultContext string `toml:"defaultContext" json:"defaultContext" env:"DEFAULT_CONTEXT"`
-	// Sloctl exclusive.
-	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" json:"filesPromptEnabled" env:"FILES_PROMPT_ENABLED"`
-	FilesPromptThreshold *int  `toml:"filesPromptThreshold" json:"filesPromptThreshold" env:"FILES_PROMPT_THRESHOLD"`
+	DefaultContext string        `toml:"defaultContext" json:"defaultContext" env:"DEFAULT_CONTEXT"`
+	Sloctl         *SloctlConfig `toml:"sloctl,omitempty" json:"sloctl,omitempty"`
+
+	// Deprecated: Use [SloctlConfig.FilesPromptEnabled].
+	FilesPromptEnabled *bool `toml:"filesPromptEnabled,omitempty" json:"-" yaml:"-"`
+	// Deprecated: Use [SloctlConfig.FilesPromptThreshold].
+	FilesPromptThreshold *int `toml:"filesPromptThreshold,omitempty" json:"-" yaml:"-"`
+}
+
+// SloctlConfig stores settings specific to sloctl.
+type SloctlConfig struct {
+	FilesPromptEnabled   *bool `toml:"filesPromptEnabled" json:"filesPromptEnabled,omitempty"`
+	FilesPromptThreshold *int  `toml:"filesPromptThreshold" json:"filesPromptThreshold,omitempty"`
+}
+
+type sloctlEnvConfig struct {
+	FilesPromptEnabled   *bool `env:"FILES_PROMPT_ENABLED"`
+	FilesPromptThreshold *int  `env:"FILES_PROMPT_THRESHOLD"`
 }
 
 // ContextConfig stores context specific config.
@@ -306,20 +320,58 @@ func newConfig(options []ConfigOption) (*Config, error) {
 }
 
 func (c *Config) resolveContextlessConfig() error {
+	c.contextlessConfig.normalizeSloctlConfig()
 	if err := c.processEnvVariables(&c.contextlessConfig, true); err != nil {
 		return err
 	}
+	if c.contextlessConfig.Sloctl == nil {
+		c.contextlessConfig.Sloctl = new(SloctlConfig)
+	}
+	if err := c.processSloctlEnvVariables(); err != nil {
+		return err
+	}
+	c.contextlessConfig.normalizeSloctlConfig()
 	if c.options.context != "" {
 		c.currentContext = c.options.context
 	} else {
 		c.currentContext = c.contextlessConfig.DefaultContext
 	}
-	if c.contextlessConfig.FilesPromptEnabled != nil {
-		c.FilesPromptEnabled = *c.contextlessConfig.FilesPromptEnabled
+	if c.contextlessConfig.Sloctl != nil && c.contextlessConfig.Sloctl.FilesPromptEnabled != nil {
+		c.FilesPromptEnabled = *c.contextlessConfig.Sloctl.FilesPromptEnabled
 	}
-	if c.contextlessConfig.FilesPromptThreshold != nil {
-		c.FilesPromptThreshold = *c.contextlessConfig.FilesPromptThreshold
+	if c.contextlessConfig.Sloctl != nil && c.contextlessConfig.Sloctl.FilesPromptThreshold != nil {
+		c.FilesPromptThreshold = *c.contextlessConfig.Sloctl.FilesPromptThreshold
 	}
+	return nil
+}
+
+func (c *ContextlessConfig) normalizeSloctlConfig() {
+	if c.Sloctl == nil {
+		if c.FilesPromptEnabled == nil && c.FilesPromptThreshold == nil {
+			return
+		}
+		c.Sloctl = new(SloctlConfig)
+	}
+	if c.Sloctl.FilesPromptEnabled == nil {
+		c.Sloctl.FilesPromptEnabled = c.FilesPromptEnabled
+	}
+	if c.Sloctl.FilesPromptThreshold == nil {
+		c.Sloctl.FilesPromptThreshold = c.FilesPromptThreshold
+	}
+	c.FilesPromptEnabled = c.Sloctl.FilesPromptEnabled
+	c.FilesPromptThreshold = c.Sloctl.FilesPromptThreshold
+}
+
+func (c *Config) processSloctlEnvVariables() error {
+	envConfig := sloctlEnvConfig{
+		FilesPromptEnabled:   c.contextlessConfig.Sloctl.FilesPromptEnabled,
+		FilesPromptThreshold: c.contextlessConfig.Sloctl.FilesPromptThreshold,
+	}
+	if err := c.processEnvVariables(&envConfig, true); err != nil {
+		return err
+	}
+	c.contextlessConfig.Sloctl.FilesPromptEnabled = envConfig.FilesPromptEnabled
+	c.contextlessConfig.Sloctl.FilesPromptThreshold = envConfig.FilesPromptThreshold
 	return nil
 }
 

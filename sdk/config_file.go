@@ -50,6 +50,7 @@ func (f *FileConfig) Load(path string) error {
 	if _, err := toml.DecodeFile(path, &f); err != nil {
 		return errors.Wrapf(err, "could not decode config file: %s", path)
 	}
+	f.normalizeSloctlConfig()
 	return nil
 }
 
@@ -72,13 +73,21 @@ func (f *FileConfig) writeToTempFile(path string) (tmpFileName string, err error
 		return "", err
 	}
 	defer func() { _ = tmpFile.Close() }()
-	if err = toml.NewEncoder(tmpFile).Encode(f); err != nil {
+	config := f.normalizedForSave()
+	if err = toml.NewEncoder(tmpFile).Encode(config); err != nil {
 		return "", err
 	}
 	if err = tmpFile.Sync(); err != nil {
 		return "", err
 	}
 	return tmpFile.Name(), nil
+}
+
+func (f FileConfig) normalizedForSave() FileConfig {
+	f.normalizeSloctlConfig()
+	f.FilesPromptEnabled = nil
+	f.FilesPromptThreshold = nil
+	return f
 }
 
 func createDefaultConfigFile(path string) error {

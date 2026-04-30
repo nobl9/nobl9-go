@@ -1,7 +1,8 @@
 contextlessconfig:
   defaultContext: production
-  filesPromptEnabled: true
-  filesPromptThreshold: 25
+  sloctl:
+    filesPromptEnabled: true
+    filesPromptThreshold: 25
 contexts:
   production:
     clientId: prod-client-id
