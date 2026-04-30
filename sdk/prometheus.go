@@ -1,14 +1,11 @@
 package sdk
 
 import (
-	"bytes"
 	"context"
 	"net/http"
-	"net/url"
-	"path"
-	"strings"
 	"sync"
 
+	promapi "github.com/prometheus/client_golang/api"
 	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 
 	prometheusEndpoints "github.com/nobl9/nobl9-go/sdk/endpoints/prometheus"
@@ -20,14 +17,17 @@ func (c *Client) Prometheus() prometheusEndpoints.Versions {
 	return prometheusEndpoints.NewVersions(c.newPrometheusAPI)
 }
 
-func (c *Client) newPrometheusAPI(context.Context) (prometheusEndpointsV1.API, error) {
+func (c *Client) newPrometheusAPI(ctx context.Context) (prometheusEndpointsV1.API, error) {
 	c.prometheusAPI.mu.Lock()
 	defer c.prometheusAPI.mu.Unlock()
 
 	if c.prometheusAPI.api != nil {
 		return c.prometheusAPI.api, nil
 	}
-	api := promv1.NewAPI(prometheusClient{client: c})
+	api, err := c.createPrometheusAPI(ctx)
+	if err != nil {
+		return nil, err
+	}
 	c.prometheusAPI.api = api
 	return api, nil
 }
@@ -37,60 +37,51 @@ type prometheusAPIStore struct {
 	api prometheusEndpointsV1.API
 }
 
-type prometheusClient struct {
+func (c *Client) createPrometheusAPI(ctx context.Context) (prometheusEndpointsV1.API, error) {
+	apiURL, err := c.getAPIURL(ctx)
+	if err != nil {
+		return nil, err
+	}
+	client, err := promapi.NewClient(promapi.Config{
+		Address: apiURL.JoinPath("prometheus", "v1").String(),
+		Client:  c.newPrometheusHTTPClient(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return promv1.NewAPI(client), nil
+}
+
+func (c *Client) newPrometheusHTTPClient() *http.Client {
+	client := *c.HTTP
+	client.Transport = prometheusRoundTripper{
+		client: c,
+		next:   c.HTTP.Transport,
+	}
+	return &client
+}
+
+type prometheusRoundTripper struct {
 	client *Client
+	next   http.RoundTripper
 }
 
-func (c prometheusClient) URL(ep string, args map[string]string) *url.URL {
-	p := path.Join("prometheus", "v1", ep)
-	for arg, val := range args {
-		p = strings.ReplaceAll(p, ":"+arg, val)
+func (r prometheusRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	req.Header = req.Header.Clone()
+	if req.Header == nil {
+		req.Header = make(http.Header)
 	}
-	return &url.URL{Path: p}
-}
 
-func (c prometheusClient) Do(ctx context.Context, req *http.Request) (*http.Response, []byte, error) {
-	requestCtx := ctx
-	if requestCtx == nil {
-		requestCtx = req.Context()
-	}
-	if requestCtx == nil {
-		requestCtx = context.Background()
-	}
-	sdkReq, err := c.client.CreateRequest(
-		requestCtx,
-		req.Method,
-		req.URL.Path,
-		req.Header.Clone(),
-		req.URL.Query(),
-		req.Body,
-	)
+	org, err := r.client.credentials.GetOrganization(req.Context())
 	if err != nil {
-		return nil, nil, err
+		return nil, httpNonRetryableError{Err: err}
 	}
-	sdkReq.GetBody = req.GetBody
-	sdkReq.ContentLength = req.ContentLength
-	resp, err := c.client.HTTP.Do(sdkReq)
-	if err != nil {
-		return nil, nil, err
-	}
+	req.Header.Set(HeaderOrganization, org)
+	req.Header.Set(HeaderUserAgent, r.client.userAgent)
 
-	var body []byte
-	done := make(chan error, 1)
-	go func() {
-		var buf bytes.Buffer
-		_, readErr := buf.ReadFrom(resp.Body)
-		body = buf.Bytes()
-		done <- readErr
-	}()
-
-	select {
-	case <-requestCtx.Done():
-		_ = resp.Body.Close()
-		<-done
-		return resp, nil, requestCtx.Err()
-	case err := <-done:
-		_ = resp.Body.Close()
-		return resp, body, err
+	if r.next == nil {
+		return http.DefaultTransport.RoundTrip(req)
 	}
+	return r.next.RoundTrip(req)
 }
