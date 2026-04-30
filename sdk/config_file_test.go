@@ -88,6 +88,58 @@ func TestFileConfig_Load(t *testing.T) {
 			filePath: filePath,
 		}, *config)
 	})
+
+	t.Run("load legacy sloctl TOML", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "legacy-sloctl-toml")
+		err := os.WriteFile(filePath, []byte(`
+defaultContext = "default"
+filesPromptEnabled = false
+filesPromptThreshold = 30
+
+[contexts]
+  [contexts.default]
+    clientId = "default-id"
+    clientSecret = "default-secret"
+`), 0o600)
+		require.NoError(t, err)
+
+		config := new(FileConfig)
+		require.NoError(t, config.Load(filePath))
+		assert.Equal(t, &SloctlConfig{
+			FilesPromptEnabled:   ptr(false),
+			FilesPromptThreshold: ptr(30),
+		}, config.Sloctl)
+		assert.Equal(t, ptr(false), config.FilesPromptEnabled)
+		assert.Equal(t, ptr(30), config.FilesPromptThreshold)
+	})
+
+	t.Run("new sloctl TOML takes precedence over legacy TOML", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "mixed-sloctl-toml")
+		err := os.WriteFile(filePath, []byte(`
+defaultContext = "default"
+filesPromptEnabled = true
+filesPromptThreshold = 10
+
+[sloctl]
+  filesPromptEnabled = false
+  filesPromptThreshold = 30
+
+[contexts]
+  [contexts.default]
+    clientId = "default-id"
+    clientSecret = "default-secret"
+`), 0o600)
+		require.NoError(t, err)
+
+		config := new(FileConfig)
+		require.NoError(t, config.Load(filePath))
+		assert.Equal(t, &SloctlConfig{
+			FilesPromptEnabled:   ptr(false),
+			FilesPromptThreshold: ptr(30),
+		}, config.Sloctl)
+		assert.Equal(t, ptr(false), config.FilesPromptEnabled)
+		assert.Equal(t, ptr(30), config.FilesPromptThreshold)
+	})
 }
 
 func TestFileConfig_Save(t *testing.T) {
@@ -120,6 +172,10 @@ func TestFileConfig_Save(t *testing.T) {
 		config := &FileConfig{
 			ContextlessConfig: ContextlessConfig{
 				DefaultContext: "my-context",
+				Sloctl: &SloctlConfig{
+					FilesPromptEnabled:   ptr(false),
+					FilesPromptThreshold: ptr(30),
+				},
 			},
 			Contexts: map[string]ContextConfig{
 				"my-context": {
@@ -141,19 +197,56 @@ func TestFileConfig_Save(t *testing.T) {
 		require.NoError(t, err)
 		require.FileExists(t, filePath)
 
-		var savedConfig FileConfig
-		_, err = toml.DecodeFile(filePath, &savedConfig)
+		savedConfig := new(FileConfig)
+		err = savedConfig.Load(filePath)
 		require.NoError(t, err)
-		assert.EqualExportedValues(t, *config, savedConfig)
+		config.normalizeSloctlConfig()
+		assert.EqualExportedValues(t, *config, *savedConfig)
+	})
+
+	t.Run("save migrates legacy sloctl config", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "legacy-sloctl-config-file")
+		config := &FileConfig{
+			ContextlessConfig: ContextlessConfig{
+				DefaultContext:       "my-context",
+				FilesPromptEnabled:   ptr(false),
+				FilesPromptThreshold: ptr(30),
+			},
+			Contexts: map[string]ContextConfig{
+				"my-context": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			},
+			filePath: filePath,
+		}
+
+		err := config.Save(filePath)
+		require.NoError(t, err)
+		data, err := os.ReadFile(filePath)
+		require.NoError(t, err)
+		assert.Contains(t, string(data), "[sloctl]")
+		assert.NotContains(t, string(data), "\nfilesPromptEnabled = false")
+		assert.NotContains(t, string(data), "\nfilesPromptThreshold = 30")
+
+		savedConfig := new(FileConfig)
+		err = savedConfig.Load(filePath)
+		require.NoError(t, err)
+		assert.Equal(t, &SloctlConfig{
+			FilesPromptEnabled:   ptr(false),
+			FilesPromptThreshold: ptr(30),
+		}, savedConfig.Sloctl)
 	})
 }
 
 func TestFileConfig_Encoding(t *testing.T) {
 	testConfig := FileConfig{
 		ContextlessConfig: ContextlessConfig{
-			DefaultContext:       "production",
-			FilesPromptEnabled:   ptr(true),
-			FilesPromptThreshold: ptr(25),
+			DefaultContext: "production",
+			Sloctl: &SloctlConfig{
+				FilesPromptEnabled:   ptr(true),
+				FilesPromptThreshold: ptr(25),
+			},
 		},
 		Contexts: map[string]ContextConfig{
 			"production": {
