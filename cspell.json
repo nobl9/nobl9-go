@@ -150,6 +150,7 @@
     "plantuml",
     "preconfigured",
     "projectservice",
+    "promapi",
     "promql",
     "promv",
     "puml",
