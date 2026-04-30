@@ -81,6 +81,12 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 			Expected:   agentDataRetrievalMaxDuration[CloudWatch],
 		},
 		{
+			Kind:       manifest.KindAgent,
+			SourceType: SplunkObservability,
+			Valid:      true,
+			Expected:   HistoricalRetrievalDuration{Value: ptr(30), Unit: HRDDay},
+		},
+		{
 			Kind: manifest.KindAgent,
 		},
 		{
@@ -88,6 +94,12 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 			SourceType: CloudWatch,
 			Valid:      true,
 			Expected:   directDataRetrievalMaxDuration[CloudWatch],
+		},
+		{
+			Kind:       manifest.KindDirect,
+			SourceType: SplunkObservability,
+			Valid:      true,
+			Expected:   HistoricalRetrievalDuration{Value: ptr(30), Unit: HRDDay},
 		},
 		{
 			Kind:       manifest.KindDirect,
