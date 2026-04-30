@@ -324,9 +324,6 @@ func (c *Config) resolveContextlessConfig() error {
 	if err := c.processEnvVariables(&c.contextlessConfig, true); err != nil {
 		return err
 	}
-	if c.contextlessConfig.Sloctl == nil {
-		c.contextlessConfig.Sloctl = new(SloctlConfig)
-	}
 	if err := c.processSloctlEnvVariables(); err != nil {
 		return err
 	}
@@ -336,6 +333,8 @@ func (c *Config) resolveContextlessConfig() error {
 	} else {
 		c.currentContext = c.contextlessConfig.DefaultContext
 	}
+	c.FilesPromptEnabled = defaultFilesPromptEnabled
+	c.FilesPromptThreshold = defaultFilesPromptThreshold
 	if c.contextlessConfig.Sloctl != nil && c.contextlessConfig.Sloctl.FilesPromptEnabled != nil {
 		c.FilesPromptEnabled = *c.contextlessConfig.Sloctl.FilesPromptEnabled
 	}
@@ -363,16 +362,30 @@ func (c *ContextlessConfig) normalizeSloctlConfig() {
 }
 
 func (c *Config) processSloctlEnvVariables() error {
-	envConfig := sloctlEnvConfig{
-		FilesPromptEnabled:   c.contextlessConfig.Sloctl.FilesPromptEnabled,
-		FilesPromptThreshold: c.contextlessConfig.Sloctl.FilesPromptThreshold,
+	envConfig := sloctlEnvConfig{}
+	if c.contextlessConfig.Sloctl != nil {
+		envConfig.FilesPromptEnabled = c.contextlessConfig.Sloctl.FilesPromptEnabled
+		envConfig.FilesPromptThreshold = c.contextlessConfig.Sloctl.FilesPromptThreshold
 	}
-	if err := c.processEnvVariables(&envConfig, true); err != nil {
+	if err := c.processEnvVariablesWithoutDefaults(&envConfig, true); err != nil {
 		return err
+	}
+	if envConfig.FilesPromptEnabled == nil && envConfig.FilesPromptThreshold == nil {
+		return nil
+	}
+	if c.contextlessConfig.Sloctl == nil {
+		c.contextlessConfig.Sloctl = new(SloctlConfig)
 	}
 	c.contextlessConfig.Sloctl.FilesPromptEnabled = envConfig.FilesPromptEnabled
 	c.contextlessConfig.Sloctl.FilesPromptThreshold = envConfig.FilesPromptThreshold
 	return nil
+}
+
+func (c *Config) processEnvVariablesWithoutDefaults(iv any, overwrite bool) error {
+	defaults := c.envConfigDefaults
+	c.envConfigDefaults = nil
+	defer func() { c.envConfigDefaults = defaults }()
+	return c.processEnvVariables(iv, overwrite)
 }
 
 func (c *Config) resolveContextConfig() error {
