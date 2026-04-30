@@ -31,11 +31,13 @@ const (
 	AlertMethodTypeTeams
 	// AlertMethodTypeEmail is a AlertMethodType of type Email.
 	AlertMethodTypeEmail
+	// AlertMethodTypeSlackApp is a AlertMethodType of type SlackApp.
+	AlertMethodTypeSlackApp
 )
 
 var ErrInvalidAlertMethodType = errors.New("not a valid AlertMethodType")
 
-const _AlertMethodTypeName = "WebhookPagerDutySlackDiscordOpsgenieServiceNowJiraTeamsEmail"
+const _AlertMethodTypeName = "WebhookPagerDutySlackDiscordOpsgenieServiceNowJiraTeamsEmailSlackApp"
 
 // AlertMethodTypeValues returns a list of the values for AlertMethodType
 func AlertMethodTypeValues() []AlertMethodType {
@@ -49,6 +51,7 @@ func AlertMethodTypeValues() []AlertMethodType {
 		AlertMethodTypeJira,
 		AlertMethodTypeTeams,
 		AlertMethodTypeEmail,
+		AlertMethodTypeSlackApp,
 	}
 }
 
@@ -62,6 +65,7 @@ var _AlertMethodTypeMap = map[AlertMethodType]string{
 	AlertMethodTypeJira:       _AlertMethodTypeName[46:50],
 	AlertMethodTypeTeams:      _AlertMethodTypeName[50:55],
 	AlertMethodTypeEmail:      _AlertMethodTypeName[55:60],
+	AlertMethodTypeSlackApp:   _AlertMethodTypeName[60:68],
 }
 
 // String implements the Stringer interface.
@@ -89,6 +93,7 @@ var _AlertMethodTypeValue = map[string]AlertMethodType{
 	_AlertMethodTypeName[46:50]: AlertMethodTypeJira,
 	_AlertMethodTypeName[50:55]: AlertMethodTypeTeams,
 	_AlertMethodTypeName[55:60]: AlertMethodTypeEmail,
+	_AlertMethodTypeName[60:68]: AlertMethodTypeSlackApp,
 }
 
 // ParseAlertMethodType attempts to convert a string to a AlertMethodType.
