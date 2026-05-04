@@ -89,287 +89,171 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	})
 
 	t.Run("getSLO", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "getSLO", map[string]any{
 			"name":    slo1.Metadata.Name,
 			"project": slo1.Metadata.Project,
 			"format":  "json",
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLO",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var fetchedSLO v1alphaSLO.SLO
-		err = json.Unmarshal([]byte(textContent.Text), &fetchedSLO)
-		require.NoError(t, err)
+		unmarshalMCPTextContent(t, result, &fetchedSLO)
 		assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
 		assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
 		t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
 	})
 
 	t.Run("getSLOStatus", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "getSLOStatus", map[string]any{
 			"name":    slo1.Metadata.Name,
 			"project": slo1.Metadata.Project,
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLOStatus",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var status map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &status)
-		require.NoError(t, err)
+		unmarshalMCPTextContent(t, result, &status)
 		assert.Equal(t, slo1.Metadata.Name, status["name"])
 		assert.Equal(t, slo1.Metadata.DisplayName, status["displayName"])
 		t.Logf("Successfully fetched SLO status for: %s", status["name"])
 	})
 
 	t.Run("getSLOsStatuses without limit (default limit)", func(t *testing.T) {
-		params := map[string]any{}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLOsStatuses",
-			Arguments: params,
-		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
+		result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{})
 
 		var statuses map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &statuses)
-		require.NoError(t, err)
-		assert.Contains(t, statuses, "slos")
-		slos := statuses["slos"].([]any)
+		unmarshalMCPTextContent(t, result, &statuses)
+		slos := requireSliceField(t, statuses, "slos")
 		assert.GreaterOrEqual(t, len(slos), 2, "Expected at least two SLOs in statuses")
 		t.Logf("Successfully fetched statuses for %d SLOs", len(slos))
 	})
 
 	t.Run("getSLOsStatuses with pagination", func(t *testing.T) {
-		// First request with limit=1
-		params := map[string]any{
+		result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{
 			"limit": 1,
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLOsStatuses",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var firstPage map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &firstPage)
-		require.NoError(t, err)
-		assert.Contains(t, firstPage, "slos")
-
-		slos := firstPage["slos"].([]any)
+		unmarshalMCPTextContent(t, result, &firstPage)
+		slos := requireSliceField(t, firstPage, "slos")
 		require.Greater(t, len(slos), 0, "Expected at least one SLO in first page")
 
-		// Extract nextCursor from top level
 		require.Contains(t, firstPage, "nextCursor", "Expected nextCursor in paginated response")
 		nextCursor, ok := firstPage["nextCursor"].(string)
 		require.True(t, ok && nextCursor != "", "Expected non-empty nextCursor string")
 
-		// Second request using nextCursor
-		params = map[string]any{
+		result = callMCPTool(t, session, "getSLOsStatuses", map[string]any{
 			"cursor": nextCursor,
-		}
-		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLOsStatuses",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok = result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var secondPage map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &secondPage)
-		require.NoError(t, err)
-		assert.Contains(t, secondPage, "slos")
-
-		slosPage2 := secondPage["slos"].([]any)
+		unmarshalMCPTextContent(t, result, &secondPage)
+		slosPage2 := requireSliceField(t, secondPage, "slos")
 		require.Greater(t, len(slosPage2), 0, "Expected at least one SLO in second page")
 	})
 
 	t.Run("searchSLOs", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "searchSLOs", map[string]any{
 			"pagination": map[string]any{
 				"limit":  10,
 				"offset": 0,
 			},
 			"searchPhrase": slo1.Metadata.Name[:5], // Search by first 5 chars of name
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "searchSLOs",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var searchResult map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &searchResult)
-		require.NoError(t, err)
-		assert.Contains(t, searchResult, "items")
+		unmarshalMCPTextContent(t, result, &searchResult)
+		items := requireSliceField(t, searchResult, "items")
 		assert.Contains(t, searchResult, "moreDataAvailable")
-		items := searchResult["items"].([]any)
 		t.Logf("Search returned %d SLO(s)", len(items))
 	})
 
 	t.Run("searchSLOs with limit 1", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "searchSLOs", map[string]any{
 			"pagination": map[string]any{
 				"limit":  1,
 				"offset": 0,
 			},
 			"projects": []string{slo1.Metadata.Project},
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "searchSLOs",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var searchResult map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &searchResult)
-		require.NoError(t, err)
-		assert.Contains(t, searchResult, "items")
-
-		items := searchResult["items"].([]any)
+		unmarshalMCPTextContent(t, result, &searchResult)
+		items := requireSliceField(t, searchResult, "items")
 		assert.Len(t, items, 1, "Expected exactly 1 SLO with limit=1")
 	})
 
 	t.Run("searchSLOs with limit 10 and offset 1", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "searchSLOs", map[string]any{
 			"pagination": map[string]any{
 				"limit":  10,
 				"offset": 1,
 			},
 			"projects": []string{slo1.Metadata.Project},
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "searchSLOs",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var searchResult map[string]any
-		err = json.Unmarshal([]byte(textContent.Text), &searchResult)
-		require.NoError(t, err)
-		assert.Contains(t, searchResult, "items")
-
-		items := searchResult["items"].([]any)
+		unmarshalMCPTextContent(t, result, &searchResult)
+		items := requireSliceField(t, searchResult, "items")
 		assert.Len(t, items, 1, "Expected exactly 1 SLO with offset=1 (skips first of 2 total)")
 	})
 
 	t.Run("getSLO returns error for non-existent SLO", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "getSLO", map[string]any{
 			"name":    "non-existent-slo-12345",
 			"project": slo1.Metadata.Project,
 			"format":  "json",
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getSLO",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
 
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
-		assert.Contains(t, textContent.Text, "not found")
+		assert.Contains(t, requireMCPTextContent(t, result), "not found")
 	})
 
 	t.Run("getService", func(t *testing.T) {
-		params := map[string]any{
+		result := callMCPTool(t, session, "getService", map[string]any{
 			"name":    service.Metadata.Name,
 			"project": service.Metadata.Project,
 			"format":  "json",
-		}
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name:      "getService",
-			Arguments: params,
 		})
-		require.NoError(t, err)
-		require.Len(t, result.Content, 1)
-
-		textContent, ok := result.Content[0].(*mcp.TextContent)
-		require.True(t, ok, "Expected TextContent")
 
 		var fetchedService v1alphaService.Service
-		err = json.Unmarshal([]byte(textContent.Text), &fetchedService)
-		require.NoError(t, err)
+		unmarshalMCPTextContent(t, result, &fetchedService)
 		assert.Equal(t, service.Metadata.Name, fetchedService.Metadata.Name)
 		assert.Equal(t, service.Metadata.Project, fetchedService.Metadata.Project)
 	})
 
 	t.Run("getService returns validation errors in tool result", func(t *testing.T) {
-		testCases := map[string]struct {
+		testCases := []struct {
+			name               string
 			nameArg            string
 			projectArg         string
 			expectedErrMessage string
 		}{
-			"when name is empty": {
+			{
+				name:               "when name is empty",
 				nameArg:            "",
 				projectArg:         service.Metadata.Project,
 				expectedErrMessage: "minLength",
 			},
-			"when project is empty": {
+			{
+				name:               "when project is empty",
 				nameArg:            service.Metadata.Name,
 				projectArg:         "",
 				expectedErrMessage: "minLength",
 			},
-			"when project is wildcard": {
+			{
+				name:               "when project is wildcard",
 				nameArg:            service.Metadata.Name,
 				projectArg:         "*",
 				expectedErrMessage: "not:",
 			},
 		}
 
-		for testName, testCase := range testCases {
-			t.Run(testName, func(t *testing.T) {
-				result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-					Name: "getService",
-					Arguments: map[string]any{
-						"name":    testCase.nameArg,
-						"project": testCase.projectArg,
-						"format":  "json",
-					},
+		for _, testCase := range testCases {
+			t.Run(testCase.name, func(t *testing.T) {
+				result := callMCPTool(t, session, "getService", map[string]any{
+					"name":    testCase.nameArg,
+					"project": testCase.projectArg,
+					"format":  "json",
 				})
-				require.NoError(t, err)
-				require.NotNil(t, result)
 				assert.True(t, result.IsError)
-				require.Len(t, result.Content, 1)
-
-				textContent, ok := result.Content[0].(*mcp.TextContent)
-				require.True(t, ok, "Expected TextContent")
-				assert.Contains(t, textContent.Text, testCase.expectedErrMessage)
+				assert.Contains(t, requireMCPTextContent(t, result), testCase.expectedErrMessage)
 			})
 		}
 	})
@@ -811,19 +695,13 @@ func setupMCPListKindsFixture(t *testing.T) mcpListKindsFixture {
 func requireMCPListToolItems(t *testing.T, session *mcp.ClientSession, testCase mcpListToolTestCase) {
 	t.Helper()
 
-	result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-		Name:      testCase.toolName,
-		Arguments: testCase.args,
-	})
-	require.NoError(t, err)
-	require.NotNil(t, result)
-	assert.False(t, result.IsError)
+	result := callMCPTool(t, session, testCase.toolName, testCase.args)
+	require.False(t, result.IsError)
 
 	structuredContent, ok := result.StructuredContent.(map[string]any)
 	require.True(t, ok, "Expected structured content for %s", testCase.toolName)
 
-	rawItems, ok := structuredContent["items"].([]any)
-	require.True(t, ok, "Expected items in %s response", testCase.toolName)
+	rawItems := requireSliceField(t, structuredContent, "items")
 
 	items := make([]map[string]any, len(rawItems))
 	for i, rawItem := range rawItems {
@@ -845,6 +723,49 @@ func requireMCPListToolItems(t *testing.T, session *mcp.ClientSession, testCase 
 	}
 }
 
+func callMCPTool(
+	t *testing.T,
+	session *mcp.ClientSession,
+	toolName string,
+	args map[string]any,
+) *mcp.CallToolResult {
+	t.Helper()
+
+	result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
+		Name:      toolName,
+		Arguments: args,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	return result
+}
+
+func requireMCPTextContent(t *testing.T, result *mcp.CallToolResult) string {
+	t.Helper()
+
+	require.NotNil(t, result)
+	require.Len(t, result.Content, 1)
+
+	textContent, ok := result.Content[0].(*mcp.TextContent)
+	require.True(t, ok, "Expected TextContent")
+	return textContent.Text
+}
+
+func unmarshalMCPTextContent(t *testing.T, result *mcp.CallToolResult, out any) {
+	t.Helper()
+
+	err := json.Unmarshal([]byte(requireMCPTextContent(t, result)), out)
+	require.NoError(t, err)
+}
+
+func requireSliceField(t *testing.T, content map[string]any, field string) []any {
+	t.Helper()
+
+	rawItems, ok := content[field].([]any)
+	require.True(t, ok, "Expected %s in response", field)
+	return rawItems
+}
+
 func encodeMCPToolObjects(t *testing.T, objects []manifest.Object) string {
 	t.Helper()
 
@@ -855,6 +776,8 @@ func encodeMCPToolObjects(t *testing.T, objects []manifest.Object) string {
 
 func setupMCPTestLogger(t *testing.T) {
 	t.Helper()
+	previousLogger := slog.Default()
+	t.Cleanup(func() { slog.SetDefault(previousLogger) })
 
 	// Enable debug logging to see MCP messages (only shown on test failure or with -v flag)
 	handler := slog.NewTextHandler(&testLogWriter{t: t}, &slog.HandlerOptions{
