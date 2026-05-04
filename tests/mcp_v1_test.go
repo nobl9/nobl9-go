@@ -5,7 +5,6 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"testing"
@@ -23,7 +22,6 @@ import (
 	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	v1alphaBudgetAdjustment "github.com/nobl9/nobl9-go/manifest/v1alpha/budgetadjustment"
 	v1alphaDataExport "github.com/nobl9/nobl9-go/manifest/v1alpha/dataexport"
-	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaReport "github.com/nobl9/nobl9-go/manifest/v1alpha/report"
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
@@ -55,6 +53,7 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	slo1.Spec.Service = service.GetName()
 	slo1.Spec.AlertPolicies = nil
 	slo1.Spec.AnomalyConfig = nil
+	slo1.Spec.Objectives[0].Name = "good"
 
 	e2etestutils.ProvisionDataSourceForSLO(t, &slo1)
 
@@ -88,17 +87,13 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		t.Logf("Found %d MCP tools", len(toolsResult.Tools))
 	})
 
-	listKindsFixture := setupMCPListKindsFixture(t)
-	listKindsFrom := listKindsFixture.annotation.Spec.StartTime.Add(-time.Minute).UTC().Format(time.RFC3339)
-	listKindsTo := listKindsFixture.annotation.Spec.EndTime.Add(time.Minute).UTC().Format(time.RFC3339)
-
 	t.Run("listProjects", func(t *testing.T) {
 		requireMCPListToolItems(
 			t,
 			session,
 			"listProjects",
-			map[string]any{"names": []string{listKindsFixture.project.GetName()}},
-			[]string{listKindsFixture.project.GetName()},
+			map[string]any{"names": []string{project.GetName()}},
+			[]string{project.GetName()},
 			"",
 		)
 	})
@@ -109,11 +104,11 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			session,
 			"listServices",
 			map[string]any{
-				"project": listKindsFixture.project.GetName(),
-				"names":   []string{listKindsFixture.service.GetName()},
+				"project": project.GetName(),
+				"names":   []string{service.GetName()},
 			},
-			[]string{listKindsFixture.service.GetName()},
-			listKindsFixture.project.GetName(),
+			[]string{service.GetName()},
+			project.GetName(),
 		)
 	})
 
@@ -123,157 +118,367 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			session,
 			"listSLOs",
 			map[string]any{
-				"project": listKindsFixture.project.GetName(),
-				"names":   []string{listKindsFixture.slo.Metadata.Name},
+				"project": project.GetName(),
+				"names":   []string{slo1.Metadata.Name},
 			},
-			[]string{listKindsFixture.slo.Metadata.Name},
-			listKindsFixture.project.GetName(),
+			[]string{slo1.Metadata.Name},
+			project.GetName(),
 		)
 	})
 
 	t.Run("listAgents", func(t *testing.T) {
+		agent := e2etestutils.ProvisionStaticAgent(t, v1alpha.AmazonPrometheus)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listAgents",
 			map[string]any{
-				"project": listKindsFixture.agentProject,
-				"names":   []string{listKindsFixture.agentName},
+				"project": agent.Metadata.Project,
+				"names":   []string{agent.Metadata.Name},
 			},
-			[]string{listKindsFixture.agentName},
-			listKindsFixture.agentProject,
+			[]string{agent.Metadata.Name},
+			agent.Metadata.Project,
 		)
 	})
 
 	t.Run("listAlertMethods", func(t *testing.T) {
+		alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		})
+		objects := []manifest.Object{alertMethod}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listAlertMethods",
 			map[string]any{
-				"project": listKindsFixture.alertMethod.Metadata.Project,
-				"names":   []string{listKindsFixture.alertMethod.Metadata.Name},
+				"project": alertMethod.Metadata.Project,
+				"names":   []string{alertMethod.Metadata.Name},
 			},
-			[]string{listKindsFixture.alertMethod.Metadata.Name},
-			listKindsFixture.alertMethod.Metadata.Project,
+			[]string{alertMethod.Metadata.Name},
+			alertMethod.Metadata.Project,
 		)
 	})
 
 	t.Run("listAlertPolicies", func(t *testing.T) {
+		alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		})
+		alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
+		alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
+		alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{{
+			Metadata: v1alphaAlertPolicy.AlertMethodRefMetadata{
+				Name:    alertMethod.Metadata.Name,
+				Project: alertMethod.Metadata.Project,
+			},
+		}}
+		objects := []manifest.Object{alertMethod, alertPolicy}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listAlertPolicies",
 			map[string]any{
-				"project": listKindsFixture.alertPolicy.Metadata.Project,
-				"names":   []string{listKindsFixture.alertPolicy.Metadata.Name},
+				"project": alertPolicy.Metadata.Project,
+				"names":   []string{alertPolicy.Metadata.Name},
 			},
-			[]string{listKindsFixture.alertPolicy.Metadata.Name},
-			listKindsFixture.alertPolicy.Metadata.Project,
+			[]string{alertPolicy.Metadata.Name},
+			alertPolicy.Metadata.Project,
 		)
 	})
 
 	t.Run("listAlertSilences", func(t *testing.T) {
+		alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		})
+		alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
+		alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
+		alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{{
+			Metadata: v1alphaAlertPolicy.AlertMethodRefMetadata{
+				Name:    alertMethod.Metadata.Name,
+				Project: alertMethod.Metadata.Project,
+			},
+		}}
+		slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t, manifest.KindSLO, nil)
+		slo.Metadata = v1alphaSLO.Metadata{
+			Name:        e2etestutils.GenerateName(),
+			DisplayName: "MCP List SLO",
+			Project:     project.GetName(),
+			Labels:      e2etestutils.AnnotateLabels(t, v1alpha.Labels{"test": []string{"mcp-list"}}),
+			Annotations: commonAnnotations,
+		}
+		slo.Spec.Service = service.GetName()
+		slo.Spec.AlertPolicies = []string{alertPolicy.Metadata.Name}
+		slo.Spec.AnomalyConfig = nil
+		e2etestutils.ProvisionDataSourceForSLO(t, &slo)
+		alertSilenceExample := e2etestutils.GetExample(t, manifest.KindAlertSilence, nil)
+		alertSilence := newV1alphaAlertSilence(t, v1alphaAlertSilence.Metadata{
+			Name:    e2etestutils.GenerateName(),
+			Project: project.GetName(),
+		}, alertSilenceExample.GetVariant(), alertSilenceExample.GetSubVariant())
+		futureTime := time.Now().Add(time.Hour).UTC()
+		if alertSilence.Spec.Period.StartTime != nil {
+			alertSilence.Spec.Period.StartTime = &futureTime
+		}
+		if alertSilence.Spec.Period.EndTime != nil {
+			endTime := futureTime.Add(time.Hour)
+			alertSilence.Spec.Period.EndTime = &endTime
+		}
+		alertSilence.Spec.AlertPolicy = v1alphaAlertSilence.AlertPolicySource{
+			Name:    alertPolicy.Metadata.Name,
+			Project: alertPolicy.Metadata.Project,
+		}
+		alertSilence.Spec.SLO = slo.Metadata.Name
+		objects := []manifest.Object{alertMethod, alertPolicy, slo, alertSilence}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listAlertSilences",
 			map[string]any{
-				"project": listKindsFixture.alertSilence.Metadata.Project,
-				"names":   []string{listKindsFixture.alertSilence.Metadata.Name},
+				"project": alertSilence.Metadata.Project,
+				"names":   []string{alertSilence.Metadata.Name},
 			},
-			[]string{listKindsFixture.alertSilence.Metadata.Name},
-			listKindsFixture.alertSilence.Metadata.Project,
+			[]string{alertSilence.Metadata.Name},
+			alertSilence.Metadata.Project,
 		)
 	})
 
 	t.Run("listAnnotations", func(t *testing.T) {
+		annotationStart := time.Now().Add(-2 * time.Hour).Truncate(time.Second).UTC()
+		annotation := v1alphaAnnotation.New(
+			v1alphaAnnotation.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: slo1.Metadata.Project,
+			},
+			v1alphaAnnotation.Spec{
+				Slo:           slo1.Metadata.Name,
+				ObjectiveName: slo1.Spec.Objectives[0].Name,
+				Description:   e2etestutils.GetObjectDescription(),
+				StartTime:     annotationStart,
+				EndTime:       annotationStart.Add(time.Hour),
+				Category:      v1alphaAnnotation.CategoryComment,
+			},
+		)
+		objects := []manifest.Object{annotation}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listAnnotations",
 			map[string]any{
-				"from":    listKindsFrom,
-				"names":   []string{listKindsFixture.annotation.Metadata.Name},
-				"project": listKindsFixture.annotation.Metadata.Project,
-				"to":      listKindsTo,
+				"from":    annotation.Spec.StartTime.Add(-time.Minute).UTC().Format(time.RFC3339),
+				"names":   []string{annotation.Metadata.Name},
+				"project": annotation.Metadata.Project,
+				"to":      annotation.Spec.EndTime.Add(time.Minute).UTC().Format(time.RFC3339),
 			},
-			[]string{listKindsFixture.annotation.Metadata.Name},
-			listKindsFixture.annotation.Metadata.Project,
+			[]string{annotation.Metadata.Name},
+			annotation.Metadata.Project,
 		)
 	})
 
 	t.Run("listBudgetAdjustments", func(t *testing.T) {
+		budgetAdjustment := v1alphaBudgetAdjustment.New(
+			v1alphaBudgetAdjustment.Metadata{
+				Name: e2etestutils.GenerateName(),
+			},
+			v1alphaBudgetAdjustment.Spec{
+				Description:     e2etestutils.GetObjectDescription(),
+				FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
+				Duration:        "1h",
+				Filters: v1alphaBudgetAdjustment.Filters{
+					SLOs: []v1alphaBudgetAdjustment.SLORef{
+						{
+							Name:    slo1.Metadata.Name,
+							Project: slo1.Metadata.Project,
+						},
+					},
+				},
+			},
+		)
+		objects := []manifest.Object{budgetAdjustment}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listBudgetAdjustments",
-			map[string]any{"names": []string{listKindsFixture.budgetAdjustment.Metadata.Name}},
-			[]string{listKindsFixture.budgetAdjustment.Metadata.Name},
+			map[string]any{"names": []string{budgetAdjustment.Metadata.Name}},
+			[]string{budgetAdjustment.Metadata.Name},
 			"",
 		)
 	})
 
 	t.Run("listDataExports", func(t *testing.T) {
+		dataExport := e2etestutils.GetExampleObject[v1alphaDataExport.DataExport](t, manifest.KindDataExport, nil)
+		dataExport.Metadata = v1alphaDataExport.Metadata{
+			Name:        e2etestutils.GenerateName(),
+			DisplayName: "MCP List Data Export",
+			Project:     project.GetName(),
+		}
+		objects := []manifest.Object{dataExport}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listDataExports",
 			map[string]any{
-				"project": listKindsFixture.dataExport.Metadata.Project,
-				"names":   []string{listKindsFixture.dataExport.Metadata.Name},
+				"project": dataExport.Metadata.Project,
+				"names":   []string{dataExport.Metadata.Name},
 			},
-			[]string{listKindsFixture.dataExport.Metadata.Name},
-			listKindsFixture.dataExport.Metadata.Project,
+			[]string{dataExport.Metadata.Name},
+			dataExport.Metadata.Project,
 		)
 	})
 
 	t.Run("listDirects", func(t *testing.T) {
+		direct := e2etestutils.ProvisionStaticDirect(t, v1alpha.Datadog)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listDirects",
 			map[string]any{
-				"project": listKindsFixture.directProject,
-				"names":   []string{listKindsFixture.directName},
+				"project": direct.Metadata.Project,
+				"names":   []string{direct.Metadata.Name},
 			},
-			[]string{listKindsFixture.directName},
-			listKindsFixture.directProject,
+			[]string{direct.Metadata.Name},
+			direct.Metadata.Project,
 		)
 	})
 
 	t.Run("listProjectRoleBindings", func(t *testing.T) {
+		userGroup := v1alphaUserGroup.New(
+			v1alphaUserGroup.Metadata{Name: e2etestutils.GenerateName()},
+			v1alphaUserGroup.Spec{DisplayName: "MCP List User Group"},
+		)
+		projectRoleBinding := v1alphaRoleBinding.New(
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
+			v1alphaRoleBinding.Spec{
+				GroupRef:   ptr(userGroup.Metadata.Name),
+				RoleRef:    "project-viewer",
+				ProjectRef: project.GetName(),
+			},
+		)
+		objects := []manifest.Object{userGroup, projectRoleBinding}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listProjectRoleBindings",
 			map[string]any{
-				"project": listKindsFixture.project.GetName(),
-				"names":   []string{listKindsFixture.projectRoleBinding.Metadata.Name},
+				"project": project.GetName(),
+				"names":   []string{projectRoleBinding.Metadata.Name},
 			},
-			[]string{listKindsFixture.projectRoleBinding.Metadata.Name},
+			[]string{projectRoleBinding.Metadata.Name},
 			"",
 		)
 	})
 
 	t.Run("listReports", func(t *testing.T) {
+		report := v1alphaReport.New(
+			v1alphaReport.Metadata{
+				Name:        e2etestutils.GenerateName(),
+				DisplayName: "MCP List Report",
+			},
+			v1alphaReport.Spec{
+				Shared: true,
+				Filters: &v1alphaReport.Filters{
+					Projects: []string{project.GetName()},
+				},
+				SystemHealthReview: &v1alphaReport.SystemHealthReviewConfig{
+					TimeFrame: v1alphaReport.SystemHealthReviewTimeFrame{
+						Snapshot: v1alphaReport.SnapshotTimeFrame{
+							Point: v1alphaReport.SnapshotPointLatest,
+						},
+						TimeZone: "Europe/Warsaw",
+					},
+					RowGroupBy: v1alphaReport.RowGroupByProject,
+					Columns: []v1alphaReport.ColumnSpec{
+						{
+							DisplayName: "Column 1",
+							Labels: v1alpha.Labels{
+								"test": {"mcp-list"},
+							},
+						},
+					},
+					Thresholds: v1alphaReport.Thresholds{
+						RedLessThanOrEqual: ptr(0.8),
+						GreenGreaterThan:   ptr(0.95),
+						ShowNoData:         false,
+					},
+				},
+			},
+		)
+		objects := []manifest.Object{report}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listReports",
-			map[string]any{"names": []string{listKindsFixture.report.Metadata.Name}},
-			[]string{listKindsFixture.report.Metadata.Name},
+			map[string]any{"names": []string{report.Metadata.Name}},
+			[]string{report.Metadata.Name},
 			"",
 		)
 	})
 
 	t.Run("listUserGroups", func(t *testing.T) {
+		userGroup := v1alphaUserGroup.New(
+			v1alphaUserGroup.Metadata{Name: e2etestutils.GenerateName()},
+			v1alphaUserGroup.Spec{DisplayName: "MCP List User Group"},
+		)
+		projectRoleBinding := v1alphaRoleBinding.New(
+			v1alphaRoleBinding.Metadata{Name: e2etestutils.GenerateName()},
+			v1alphaRoleBinding.Spec{
+				GroupRef:   ptr(userGroup.Metadata.Name),
+				RoleRef:    "project-viewer",
+				ProjectRef: project.GetName(),
+			},
+		)
+		objects := []manifest.Object{userGroup, projectRoleBinding}
+		e2etestutils.V1Apply(t, objects)
+		t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
+		requireObjectsExists(t, objects...)
+
 		requireMCPListToolItems(
 			t,
 			session,
 			"listUserGroups",
-			map[string]any{"names": []string{listKindsFixture.userGroup.Metadata.Name}},
-			[]string{listKindsFixture.userGroup.Metadata.Name},
+			map[string]any{"names": []string{userGroup.Metadata.Name}},
+			[]string{userGroup.Metadata.Name},
 			"",
 		)
 	})
@@ -505,214 +710,6 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		assert.False(t, result.IsError)
 		requireObjectsNotExists(t, projectToManage)
 	})
-}
-
-type mcpListKindsFixture struct {
-	project            v1alphaProject.Project
-	service            v1alphaService.Service
-	slo                v1alphaSLO.SLO
-	alertMethod        v1alphaAlertMethod.AlertMethod
-	alertPolicy        v1alphaAlertPolicy.AlertPolicy
-	alertSilence       v1alphaAlertSilence.AlertSilence
-	annotation         v1alphaAnnotation.Annotation
-	budgetAdjustment   v1alphaBudgetAdjustment.BudgetAdjustment
-	dataExport         v1alphaDataExport.DataExport
-	report             v1alphaReport.Report
-	projectRoleBinding v1alphaRoleBinding.RoleBinding
-	userGroup          v1alphaUserGroup.UserGroup
-	agentName          string
-	agentProject       string
-	directName         string
-	directProject      string
-}
-
-func setupMCPListKindsFixture(t *testing.T) mcpListKindsFixture {
-	t.Helper()
-
-	fixtureSuffix := fmt.Sprintf("mcp-list-%d", time.Now().UnixNano())
-	project := newV1alphaProject(t, v1alphaProject.Metadata{
-		Name:        "project-" + fixtureSuffix,
-		DisplayName: "MCP List Project",
-		Labels:      v1alpha.Labels{"test": []string{"mcp-list"}},
-	})
-	service := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    "service-" + fixtureSuffix,
-		Project: project.GetName(),
-	})
-	dataExport := e2etestutils.GetExampleObject[v1alphaDataExport.DataExport](t, manifest.KindDataExport, nil)
-	dataExport.Metadata = v1alphaDataExport.Metadata{
-		Name:        "data-export-" + fixtureSuffix,
-		DisplayName: "MCP List Data Export",
-		Project:     project.GetName(),
-	}
-	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
-		Name:    "alert-method-" + fixtureSuffix,
-		Project: project.GetName(),
-	})
-	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
-	alertPolicy := newV1alphaAlertPolicy(t, v1alphaAlertPolicy.Metadata{
-		Name:    "alert-policy-" + fixtureSuffix,
-		Project: project.GetName(),
-	}, alertPolicyExample.GetVariant(), alertPolicyExample.GetSubVariant())
-	alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{{
-		Metadata: v1alphaAlertPolicy.AlertMethodRefMetadata{
-			Name:    alertMethod.Metadata.Name,
-			Project: alertMethod.Metadata.Project,
-		},
-	}}
-
-	slo := e2etestutils.GetExampleObject[v1alphaSLO.SLO](t, manifest.KindSLO, nil)
-	slo.Metadata = v1alphaSLO.Metadata{
-		Name:        "slo-" + fixtureSuffix,
-		DisplayName: "MCP List SLO",
-		Project:     project.GetName(),
-		Labels:      e2etestutils.AnnotateLabels(t, v1alpha.Labels{"test": []string{"mcp-list"}}),
-		Annotations: commonAnnotations,
-	}
-	slo.Spec.Service = service.GetName()
-	slo.Spec.AlertPolicies = []string{alertPolicy.Metadata.Name}
-	slo.Spec.AnomalyConfig = nil
-	slo.Spec.Objectives[0].Name = "good"
-	e2etestutils.ProvisionDataSourceForSLO(t, &slo)
-	require.Equal(t, manifest.KindAgent, slo.Spec.Indicator.MetricSource.Kind)
-
-	direct := e2etestutils.ProvisionStaticDirect(t, v1alpha.Datadog)
-	budgetAdjustment := v1alphaBudgetAdjustment.New(
-		v1alphaBudgetAdjustment.Metadata{
-			Name: "budget-adjustment-" + fixtureSuffix,
-		},
-		v1alphaBudgetAdjustment.Spec{
-			Description:     e2etestutils.GetObjectDescription(),
-			FirstEventStart: time.Now().Add(time.Hour).Truncate(time.Second).UTC(),
-			Duration:        "1h",
-			Filters: v1alphaBudgetAdjustment.Filters{
-				SLOs: []v1alphaBudgetAdjustment.SLORef{
-					{
-						Name:    slo.Metadata.Name,
-						Project: slo.Metadata.Project,
-					},
-				},
-			},
-		},
-	)
-
-	alertSilenceExample := e2etestutils.GetExample(t, manifest.KindAlertSilence, nil)
-	alertSilence := newV1alphaAlertSilence(t, v1alphaAlertSilence.Metadata{
-		Name:    "alert-silence-" + fixtureSuffix,
-		Project: project.GetName(),
-	}, alertSilenceExample.GetVariant(), alertSilenceExample.GetSubVariant())
-	futureTime := time.Now().Add(time.Hour).UTC()
-	if alertSilence.Spec.Period.StartTime != nil {
-		alertSilence.Spec.Period.StartTime = &futureTime
-	}
-	if alertSilence.Spec.Period.EndTime != nil {
-		endTime := futureTime.Add(time.Hour)
-		alertSilence.Spec.Period.EndTime = &endTime
-	}
-	alertSilence.Spec.AlertPolicy = v1alphaAlertSilence.AlertPolicySource{
-		Name:    alertPolicy.Metadata.Name,
-		Project: alertPolicy.Metadata.Project,
-	}
-	alertSilence.Spec.SLO = slo.Metadata.Name
-
-	annotationStart := time.Now().Add(-2 * time.Hour).Truncate(time.Second).UTC()
-	annotation := v1alphaAnnotation.New(
-		v1alphaAnnotation.Metadata{
-			Name:    "annotation-" + fixtureSuffix,
-			Project: project.GetName(),
-		},
-		v1alphaAnnotation.Spec{
-			Slo:           slo.Metadata.Name,
-			ObjectiveName: "good",
-			Description:   e2etestutils.GetObjectDescription(),
-			StartTime:     annotationStart,
-			EndTime:       annotationStart.Add(time.Hour),
-			Category:      v1alphaAnnotation.CategoryComment,
-		},
-	)
-	report := v1alphaReport.New(
-		v1alphaReport.Metadata{
-			Name:        "report-" + fixtureSuffix,
-			DisplayName: "MCP List Report",
-		},
-		v1alphaReport.Spec{
-			Shared: true,
-			Filters: &v1alphaReport.Filters{
-				Projects: []string{project.GetName()},
-			},
-			SystemHealthReview: &v1alphaReport.SystemHealthReviewConfig{
-				TimeFrame: v1alphaReport.SystemHealthReviewTimeFrame{
-					Snapshot: v1alphaReport.SnapshotTimeFrame{
-						Point: v1alphaReport.SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: v1alphaReport.RowGroupByProject,
-				Columns: []v1alphaReport.ColumnSpec{
-					{
-						DisplayName: "Column 1",
-						Labels: v1alpha.Labels{
-							"test": {"mcp-list"},
-						},
-					},
-				},
-				Thresholds: v1alphaReport.Thresholds{
-					RedLessThanOrEqual: ptr(0.8),
-					GreenGreaterThan:   ptr(0.95),
-					ShowNoData:         false,
-				},
-			},
-		},
-	)
-	userGroup := v1alphaUserGroup.New(
-		v1alphaUserGroup.Metadata{Name: "user-group-" + fixtureSuffix},
-		v1alphaUserGroup.Spec{DisplayName: "MCP List User Group"},
-	)
-	projectRoleBinding := v1alphaRoleBinding.New(
-		v1alphaRoleBinding.Metadata{Name: "project-role-binding-" + fixtureSuffix},
-		v1alphaRoleBinding.Spec{
-			GroupRef:   ptr(userGroup.Metadata.Name),
-			RoleRef:    "project-viewer",
-			ProjectRef: project.GetName(),
-		},
-	)
-
-	objects := []manifest.Object{
-		project,
-		service,
-		dataExport,
-		alertMethod,
-		alertPolicy,
-		slo,
-		budgetAdjustment,
-		alertSilence,
-		annotation,
-		report,
-		userGroup,
-		projectRoleBinding,
-	}
-	e2etestutils.V1Apply(t, objects)
-	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
-	requireObjectsExists(t, objects...)
-
-	return mcpListKindsFixture{
-		project:            project,
-		service:            service,
-		slo:                slo,
-		alertMethod:        alertMethod,
-		alertPolicy:        alertPolicy,
-		alertSilence:       alertSilence,
-		annotation:         annotation,
-		budgetAdjustment:   budgetAdjustment,
-		dataExport:         dataExport,
-		report:             report,
-		projectRoleBinding: projectRoleBinding,
-		userGroup:          userGroup,
-		agentName:          slo.Spec.Indicator.MetricSource.Name,
-		agentProject:       slo.Spec.Indicator.MetricSource.Project,
-		directName:         direct.Metadata.Name,
-		directProject:      direct.Metadata.Project,
-	}
 }
 
 func requireMCPListToolItems(
