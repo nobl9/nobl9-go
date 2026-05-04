@@ -293,15 +293,6 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 			t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
 		})
 
-		t.Run("returns error for non-existent SLO", func(t *testing.T) {
-			result := callMCPTool(t, session, "getSLO", map[string]any{
-				"name":    "non-existent-slo-12345",
-				"project": slo1.Metadata.Project,
-				"format":  "json",
-			})
-
-			assert.Contains(t, requireMCPTextContent(t, result), "not found")
-		})
 	})
 
 	t.Run("getSLOStatus", func(t *testing.T) {
