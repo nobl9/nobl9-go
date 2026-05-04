@@ -88,18 +88,220 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		t.Logf("Found %d MCP tools", len(toolsResult.Tools))
 	})
 
+	listKindsFixture := setupMCPListKindsFixture(t)
+	listKindsFrom := listKindsFixture.annotation.Spec.StartTime.Add(-time.Minute).UTC().Format(time.RFC3339)
+	listKindsTo := listKindsFixture.annotation.Spec.EndTime.Add(time.Minute).UTC().Format(time.RFC3339)
+
+	t.Run("listProjects", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listProjects",
+			map[string]any{"names": []string{listKindsFixture.project.GetName()}},
+			[]string{listKindsFixture.project.GetName()},
+			"",
+		)
+	})
+
+	t.Run("listServices", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listServices",
+			map[string]any{
+				"project": listKindsFixture.project.GetName(),
+				"names":   []string{listKindsFixture.service.GetName()},
+			},
+			[]string{listKindsFixture.service.GetName()},
+			listKindsFixture.project.GetName(),
+		)
+	})
+
+	t.Run("listSLOs", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listSLOs",
+			map[string]any{
+				"project": listKindsFixture.project.GetName(),
+				"names":   []string{listKindsFixture.slo.Metadata.Name},
+			},
+			[]string{listKindsFixture.slo.Metadata.Name},
+			listKindsFixture.project.GetName(),
+		)
+	})
+
+	t.Run("listAgents", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listAgents",
+			map[string]any{
+				"project": listKindsFixture.agentProject,
+				"names":   []string{listKindsFixture.agentName},
+			},
+			[]string{listKindsFixture.agentName},
+			listKindsFixture.agentProject,
+		)
+	})
+
+	t.Run("listAlertMethods", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listAlertMethods",
+			map[string]any{
+				"project": listKindsFixture.alertMethod.Metadata.Project,
+				"names":   []string{listKindsFixture.alertMethod.Metadata.Name},
+			},
+			[]string{listKindsFixture.alertMethod.Metadata.Name},
+			listKindsFixture.alertMethod.Metadata.Project,
+		)
+	})
+
+	t.Run("listAlertPolicies", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listAlertPolicies",
+			map[string]any{
+				"project": listKindsFixture.alertPolicy.Metadata.Project,
+				"names":   []string{listKindsFixture.alertPolicy.Metadata.Name},
+			},
+			[]string{listKindsFixture.alertPolicy.Metadata.Name},
+			listKindsFixture.alertPolicy.Metadata.Project,
+		)
+	})
+
+	t.Run("listAlertSilences", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listAlertSilences",
+			map[string]any{
+				"project": listKindsFixture.alertSilence.Metadata.Project,
+				"names":   []string{listKindsFixture.alertSilence.Metadata.Name},
+			},
+			[]string{listKindsFixture.alertSilence.Metadata.Name},
+			listKindsFixture.alertSilence.Metadata.Project,
+		)
+	})
+
+	t.Run("listAnnotations", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listAnnotations",
+			map[string]any{
+				"from":    listKindsFrom,
+				"names":   []string{listKindsFixture.annotation.Metadata.Name},
+				"project": listKindsFixture.annotation.Metadata.Project,
+				"to":      listKindsTo,
+			},
+			[]string{listKindsFixture.annotation.Metadata.Name},
+			listKindsFixture.annotation.Metadata.Project,
+		)
+	})
+
+	t.Run("listBudgetAdjustments", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listBudgetAdjustments",
+			map[string]any{"names": []string{listKindsFixture.budgetAdjustment.Metadata.Name}},
+			[]string{listKindsFixture.budgetAdjustment.Metadata.Name},
+			"",
+		)
+	})
+
+	t.Run("listDataExports", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listDataExports",
+			map[string]any{
+				"project": listKindsFixture.dataExport.Metadata.Project,
+				"names":   []string{listKindsFixture.dataExport.Metadata.Name},
+			},
+			[]string{listKindsFixture.dataExport.Metadata.Name},
+			listKindsFixture.dataExport.Metadata.Project,
+		)
+	})
+
+	t.Run("listDirects", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listDirects",
+			map[string]any{
+				"project": listKindsFixture.directProject,
+				"names":   []string{listKindsFixture.directName},
+			},
+			[]string{listKindsFixture.directName},
+			listKindsFixture.directProject,
+		)
+	})
+
+	t.Run("listProjectRoleBindings", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listProjectRoleBindings",
+			map[string]any{
+				"project": listKindsFixture.project.GetName(),
+				"names":   []string{listKindsFixture.projectRoleBinding.Metadata.Name},
+			},
+			[]string{listKindsFixture.projectRoleBinding.Metadata.Name},
+			"",
+		)
+	})
+
+	t.Run("listReports", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listReports",
+			map[string]any{"names": []string{listKindsFixture.report.Metadata.Name}},
+			[]string{listKindsFixture.report.Metadata.Name},
+			"",
+		)
+	})
+
+	t.Run("listUserGroups", func(t *testing.T) {
+		requireMCPListToolItems(
+			t,
+			session,
+			"listUserGroups",
+			map[string]any{"names": []string{listKindsFixture.userGroup.Metadata.Name}},
+			[]string{listKindsFixture.userGroup.Metadata.Name},
+			"",
+		)
+	})
+
 	t.Run("getSLO", func(t *testing.T) {
-		result := callMCPTool(t, session, "getSLO", map[string]any{
-			"name":    slo1.Metadata.Name,
-			"project": slo1.Metadata.Project,
-			"format":  "json",
+		t.Run("returns SLO", func(t *testing.T) {
+			result := callMCPTool(t, session, "getSLO", map[string]any{
+				"name":    slo1.Metadata.Name,
+				"project": slo1.Metadata.Project,
+				"format":  "json",
+			})
+
+			var fetchedSLO v1alphaSLO.SLO
+			unmarshalMCPTextContent(t, result, &fetchedSLO)
+			assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
+			assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
+			t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
 		})
 
-		var fetchedSLO v1alphaSLO.SLO
-		unmarshalMCPTextContent(t, result, &fetchedSLO)
-		assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
-		assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
-		t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
+		t.Run("returns error for non-existent SLO", func(t *testing.T) {
+			result := callMCPTool(t, session, "getSLO", map[string]any{
+				"name":    "non-existent-slo-12345",
+				"project": slo1.Metadata.Project,
+				"format":  "json",
+			})
+
+			assert.Contains(t, requireMCPTextContent(t, result), "not found")
+		})
 	})
 
 	t.Run("getSLOStatus", func(t *testing.T) {
@@ -115,287 +317,144 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		t.Logf("Successfully fetched SLO status for: %s", status["name"])
 	})
 
-	t.Run("getSLOsStatuses without limit (default limit)", func(t *testing.T) {
-		result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{})
+	t.Run("getSLOsStatuses", func(t *testing.T) {
+		t.Run("uses default limit", func(t *testing.T) {
+			result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{})
 
-		var statuses map[string]any
-		unmarshalMCPTextContent(t, result, &statuses)
-		slos := requireSliceField(t, statuses, "slos")
-		assert.GreaterOrEqual(t, len(slos), 2, "Expected at least two SLOs in statuses")
-		t.Logf("Successfully fetched statuses for %d SLOs", len(slos))
-	})
-
-	t.Run("getSLOsStatuses with pagination", func(t *testing.T) {
-		result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{
-			"limit": 1,
+			var statuses map[string]any
+			unmarshalMCPTextContent(t, result, &statuses)
+			slos := requireSliceField(t, statuses, "slos")
+			assert.GreaterOrEqual(t, len(slos), 2, "Expected at least two SLOs in statuses")
+			t.Logf("Successfully fetched statuses for %d SLOs", len(slos))
 		})
 
-		var firstPage map[string]any
-		unmarshalMCPTextContent(t, result, &firstPage)
-		slos := requireSliceField(t, firstPage, "slos")
-		require.Greater(t, len(slos), 0, "Expected at least one SLO in first page")
+		t.Run("supports pagination", func(t *testing.T) {
+			result := callMCPTool(t, session, "getSLOsStatuses", map[string]any{
+				"limit": 1,
+			})
 
-		require.Contains(t, firstPage, "nextCursor", "Expected nextCursor in paginated response")
-		nextCursor, ok := firstPage["nextCursor"].(string)
-		require.True(t, ok && nextCursor != "", "Expected non-empty nextCursor string")
+			var firstPage map[string]any
+			unmarshalMCPTextContent(t, result, &firstPage)
+			slos := requireSliceField(t, firstPage, "slos")
+			require.Greater(t, len(slos), 0, "Expected at least one SLO in first page")
 
-		result = callMCPTool(t, session, "getSLOsStatuses", map[string]any{
-			"cursor": nextCursor,
+			require.Contains(t, firstPage, "nextCursor", "Expected nextCursor in paginated response")
+			nextCursor, ok := firstPage["nextCursor"].(string)
+			require.True(t, ok && nextCursor != "", "Expected non-empty nextCursor string")
+
+			result = callMCPTool(t, session, "getSLOsStatuses", map[string]any{
+				"cursor": nextCursor,
+			})
+
+			var secondPage map[string]any
+			unmarshalMCPTextContent(t, result, &secondPage)
+			slosPage2 := requireSliceField(t, secondPage, "slos")
+			require.Greater(t, len(slosPage2), 0, "Expected at least one SLO in second page")
 		})
-
-		var secondPage map[string]any
-		unmarshalMCPTextContent(t, result, &secondPage)
-		slosPage2 := requireSliceField(t, secondPage, "slos")
-		require.Greater(t, len(slosPage2), 0, "Expected at least one SLO in second page")
 	})
 
 	t.Run("searchSLOs", func(t *testing.T) {
-		result := callMCPTool(t, session, "searchSLOs", map[string]any{
-			"pagination": map[string]any{
-				"limit":  10,
-				"offset": 0,
-			},
-			"searchPhrase": slo1.Metadata.Name[:5], // Search by first 5 chars of name
+		t.Run("finds by search phrase", func(t *testing.T) {
+			result := callMCPTool(t, session, "searchSLOs", map[string]any{
+				"pagination": map[string]any{
+					"limit":  10,
+					"offset": 0,
+				},
+				"searchPhrase": slo1.Metadata.Name[:5],
+			})
+
+			var searchResult map[string]any
+			unmarshalMCPTextContent(t, result, &searchResult)
+			items := requireSliceField(t, searchResult, "items")
+			assert.Contains(t, searchResult, "moreDataAvailable")
+			t.Logf("Search returned %d SLO(s)", len(items))
 		})
 
-		var searchResult map[string]any
-		unmarshalMCPTextContent(t, result, &searchResult)
-		items := requireSliceField(t, searchResult, "items")
-		assert.Contains(t, searchResult, "moreDataAvailable")
-		t.Logf("Search returned %d SLO(s)", len(items))
-	})
+		t.Run("applies limit", func(t *testing.T) {
+			result := callMCPTool(t, session, "searchSLOs", map[string]any{
+				"pagination": map[string]any{
+					"limit":  1,
+					"offset": 0,
+				},
+				"projects": []string{slo1.Metadata.Project},
+			})
 
-	t.Run("searchSLOs with limit 1", func(t *testing.T) {
-		result := callMCPTool(t, session, "searchSLOs", map[string]any{
-			"pagination": map[string]any{
-				"limit":  1,
-				"offset": 0,
-			},
-			"projects": []string{slo1.Metadata.Project},
+			var searchResult map[string]any
+			unmarshalMCPTextContent(t, result, &searchResult)
+			items := requireSliceField(t, searchResult, "items")
+			assert.Len(t, items, 1, "Expected exactly 1 SLO with limit=1")
 		})
 
-		var searchResult map[string]any
-		unmarshalMCPTextContent(t, result, &searchResult)
-		items := requireSliceField(t, searchResult, "items")
-		assert.Len(t, items, 1, "Expected exactly 1 SLO with limit=1")
-	})
+		t.Run("applies offset", func(t *testing.T) {
+			result := callMCPTool(t, session, "searchSLOs", map[string]any{
+				"pagination": map[string]any{
+					"limit":  10,
+					"offset": 1,
+				},
+				"projects": []string{slo1.Metadata.Project},
+			})
 
-	t.Run("searchSLOs with limit 10 and offset 1", func(t *testing.T) {
-		result := callMCPTool(t, session, "searchSLOs", map[string]any{
-			"pagination": map[string]any{
-				"limit":  10,
-				"offset": 1,
-			},
-			"projects": []string{slo1.Metadata.Project},
+			var searchResult map[string]any
+			unmarshalMCPTextContent(t, result, &searchResult)
+			items := requireSliceField(t, searchResult, "items")
+			assert.Len(t, items, 1, "Expected exactly 1 SLO with offset=1 (skips first of 2 total)")
 		})
-
-		var searchResult map[string]any
-		unmarshalMCPTextContent(t, result, &searchResult)
-		items := requireSliceField(t, searchResult, "items")
-		assert.Len(t, items, 1, "Expected exactly 1 SLO with offset=1 (skips first of 2 total)")
-	})
-
-	t.Run("getSLO returns error for non-existent SLO", func(t *testing.T) {
-		result := callMCPTool(t, session, "getSLO", map[string]any{
-			"name":    "non-existent-slo-12345",
-			"project": slo1.Metadata.Project,
-			"format":  "json",
-		})
-
-		assert.Contains(t, requireMCPTextContent(t, result), "not found")
 	})
 
 	t.Run("getService", func(t *testing.T) {
-		result := callMCPTool(t, session, "getService", map[string]any{
-			"name":    service.Metadata.Name,
-			"project": service.Metadata.Project,
-			"format":  "json",
-		})
-
-		var fetchedService v1alphaService.Service
-		unmarshalMCPTextContent(t, result, &fetchedService)
-		assert.Equal(t, service.Metadata.Name, fetchedService.Metadata.Name)
-		assert.Equal(t, service.Metadata.Project, fetchedService.Metadata.Project)
-	})
-
-	t.Run("getService returns validation errors in tool result", func(t *testing.T) {
-		testCases := []struct {
-			name               string
-			nameArg            string
-			projectArg         string
-			expectedErrMessage string
-		}{
-			{
-				name:               "when name is empty",
-				nameArg:            "",
-				projectArg:         service.Metadata.Project,
-				expectedErrMessage: "minLength",
-			},
-			{
-				name:               "when project is empty",
-				nameArg:            service.Metadata.Name,
-				projectArg:         "",
-				expectedErrMessage: "minLength",
-			},
-			{
-				name:               "when project is wildcard",
-				nameArg:            service.Metadata.Name,
-				projectArg:         "*",
-				expectedErrMessage: "not:",
-			},
-		}
-
-		for _, testCase := range testCases {
-			t.Run(testCase.name, func(t *testing.T) {
-				result := callMCPTool(t, session, "getService", map[string]any{
-					"name":    testCase.nameArg,
-					"project": testCase.projectArg,
-					"format":  "json",
-				})
-				assert.True(t, result.IsError)
-				assert.Contains(t, requireMCPTextContent(t, result), testCase.expectedErrMessage)
+		t.Run("returns service", func(t *testing.T) {
+			result := callMCPTool(t, session, "getService", map[string]any{
+				"name":    service.Metadata.Name,
+				"project": service.Metadata.Project,
+				"format":  "json",
 			})
-		}
-	})
 
-}
-
-func Test_MCPServer_V1_ListKinds(t *testing.T) {
-	setupMCPTestLogger(t)
-
-	fixture := setupMCPListKindsFixture(t)
-	from := fixture.annotation.Spec.StartTime.Add(-time.Minute).UTC().Format(time.RFC3339)
-	to := fixture.annotation.Spec.EndTime.Add(time.Minute).UTC().Format(time.RFC3339)
-
-	session, teardown := setupMCPProxySession(t)
-	defer teardown()
-
-	testCases := []mcpListToolTestCase{
-		{
-			toolName:      "listProjects",
-			args:          map[string]any{"names": []string{fixture.project.GetName()}},
-			expectedNames: []string{fixture.project.GetName()},
-		},
-		{
-			toolName: "listServices",
-			args: map[string]any{
-				"project": fixture.project.GetName(),
-				"names":   []string{fixture.service.GetName()},
-			},
-			expectedNames:   []string{fixture.service.GetName()},
-			expectedProject: fixture.project.GetName(),
-		},
-		{
-			toolName: "listSLOs",
-			args: map[string]any{
-				"project": fixture.project.GetName(),
-				"names":   []string{fixture.slo.Metadata.Name},
-			},
-			expectedNames:   []string{fixture.slo.Metadata.Name},
-			expectedProject: fixture.project.GetName(),
-		},
-		{
-			toolName: "listAgents",
-			args: map[string]any{
-				"project": fixture.agentProject,
-				"names":   []string{fixture.agentName},
-			},
-			expectedNames:   []string{fixture.agentName},
-			expectedProject: fixture.agentProject,
-		},
-		{
-			toolName: "listAlertMethods",
-			args: map[string]any{
-				"project": fixture.alertMethod.Metadata.Project,
-				"names":   []string{fixture.alertMethod.Metadata.Name},
-			},
-			expectedNames:   []string{fixture.alertMethod.Metadata.Name},
-			expectedProject: fixture.alertMethod.Metadata.Project,
-		},
-		{
-			toolName: "listAlertPolicies",
-			args: map[string]any{
-				"project": fixture.alertPolicy.Metadata.Project,
-				"names":   []string{fixture.alertPolicy.Metadata.Name},
-			},
-			expectedNames:   []string{fixture.alertPolicy.Metadata.Name},
-			expectedProject: fixture.alertPolicy.Metadata.Project,
-		},
-		{
-			toolName: "listAlertSilences",
-			args: map[string]any{
-				"project": fixture.alertSilence.Metadata.Project,
-				"names":   []string{fixture.alertSilence.Metadata.Name},
-			},
-			expectedNames:   []string{fixture.alertSilence.Metadata.Name},
-			expectedProject: fixture.alertSilence.Metadata.Project,
-		},
-		{
-			toolName: "listAnnotations",
-			args: map[string]any{
-				"from":    from,
-				"names":   []string{fixture.annotation.Metadata.Name},
-				"project": fixture.annotation.Metadata.Project,
-				"to":      to,
-			},
-			expectedNames:   []string{fixture.annotation.Metadata.Name},
-			expectedProject: fixture.annotation.Metadata.Project,
-		},
-		{
-			toolName:      "listBudgetAdjustments",
-			args:          map[string]any{"names": []string{fixture.budgetAdjustment.Metadata.Name}},
-			expectedNames: []string{fixture.budgetAdjustment.Metadata.Name},
-		},
-		{
-			toolName: "listDataExports",
-			args: map[string]any{
-				"project": fixture.dataExport.Metadata.Project,
-				"names":   []string{fixture.dataExport.Metadata.Name},
-			},
-			expectedNames:   []string{fixture.dataExport.Metadata.Name},
-			expectedProject: fixture.dataExport.Metadata.Project,
-		},
-		{
-			toolName: "listDirects",
-			args: map[string]any{
-				"project": fixture.directProject,
-				"names":   []string{fixture.directName},
-			},
-			expectedNames:   []string{fixture.directName},
-			expectedProject: fixture.directProject,
-		},
-		{
-			toolName: "listProjectRoleBindings",
-			args: map[string]any{
-				"project": fixture.project.GetName(),
-				"names":   []string{fixture.projectRoleBinding.Metadata.Name},
-			},
-			expectedNames: []string{fixture.projectRoleBinding.Metadata.Name},
-		},
-		{
-			toolName:      "listReports",
-			args:          map[string]any{"names": []string{fixture.report.Metadata.Name}},
-			expectedNames: []string{fixture.report.Metadata.Name},
-		},
-		{
-			toolName:      "listUserGroups",
-			args:          map[string]any{"names": []string{fixture.userGroup.Metadata.Name}},
-			expectedNames: []string{fixture.userGroup.Metadata.Name},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.toolName, func(t *testing.T) {
-			requireMCPListToolItems(t, session, testCase)
+			var fetchedService v1alphaService.Service
+			unmarshalMCPTextContent(t, result, &fetchedService)
+			assert.Equal(t, service.Metadata.Name, fetchedService.Metadata.Name)
+			assert.Equal(t, service.Metadata.Project, fetchedService.Metadata.Project)
 		})
-	}
-}
 
-func Test_MCPServer_V1_ObjectMutationTools(t *testing.T) {
-	setupMCPTestLogger(t)
+		t.Run("returns validation errors in tool result", func(t *testing.T) {
+			testCases := []struct {
+				name               string
+				nameArg            string
+				projectArg         string
+				expectedErrMessage string
+			}{
+				{
+					name:               "when name is empty",
+					nameArg:            "",
+					projectArg:         service.Metadata.Project,
+					expectedErrMessage: "minLength",
+				},
+				{
+					name:               "when project is empty",
+					nameArg:            service.Metadata.Name,
+					projectArg:         "",
+					expectedErrMessage: "minLength",
+				},
+				{
+					name:               "when project is wildcard",
+					nameArg:            service.Metadata.Name,
+					projectArg:         "*",
+					expectedErrMessage: "not:",
+				},
+			}
 
-	session, teardown := setupMCPProxySession(t)
-	defer teardown()
+			for _, testCase := range testCases {
+				t.Run(testCase.name, func(t *testing.T) {
+					result := callMCPTool(t, session, "getService", map[string]any{
+						"name":    testCase.nameArg,
+						"project": testCase.projectArg,
+						"format":  "json",
+					})
+					assert.True(t, result.IsError)
+					assert.Contains(t, requireMCPTextContent(t, result), testCase.expectedErrMessage)
+				})
+			}
+		})
+	})
 
 	t.Run("validateObjects", func(t *testing.T) {
 		projectToManage := generateV1alphaProject(t)
@@ -405,14 +464,9 @@ func Test_MCPServer_V1_ObjectMutationTools(t *testing.T) {
 		})
 		objectsToManage := []manifest.Object{projectToManage, serviceToManage}
 
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "validateObjects",
-			Arguments: map[string]any{
-				"objects": encodeMCPToolObjects(t, objectsToManage),
-			},
+		result := callMCPTool(t, session, "validateObjects", map[string]any{
+			"objects": encodeMCPToolObjects(t, objectsToManage),
 		})
-		require.NoError(t, err)
-		require.NotNil(t, result)
 		assert.False(t, result.IsError)
 		requireObjectsNotExists(t, objectsToManage...)
 	})
@@ -426,14 +480,9 @@ func Test_MCPServer_V1_ObjectMutationTools(t *testing.T) {
 		objectsToManage := []manifest.Object{projectToManage, serviceToManage}
 		t.Cleanup(func() { e2etestutils.V1Delete(t, objectsToManage) })
 
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "applyObjects",
-			Arguments: map[string]any{
-				"objects": encodeMCPToolObjects(t, objectsToManage),
-			},
+		result := callMCPTool(t, session, "applyObjects", map[string]any{
+			"objects": encodeMCPToolObjects(t, objectsToManage),
 		})
-		require.NoError(t, err)
-		require.NotNil(t, result)
 		assert.False(t, result.IsError)
 		requireObjectsExists(t, objectsToManage...)
 	})
@@ -449,39 +498,22 @@ func Test_MCPServer_V1_ObjectMutationTools(t *testing.T) {
 		e2etestutils.V1Apply(t, objectsToManage)
 		t.Cleanup(func() { e2etestutils.V1Delete(t, objectsToManage) })
 
-		result, err := session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "deleteObjectByName",
-			Arguments: map[string]any{
-				"kind":    manifest.KindService,
-				"name":    serviceToManage.GetName(),
-				"project": projectToManage.GetName(),
-			},
+		result := callMCPTool(t, session, "deleteObjectByName", map[string]any{
+			"kind":    manifest.KindService,
+			"name":    serviceToManage.GetName(),
+			"project": projectToManage.GetName(),
 		})
-		require.NoError(t, err)
-		require.NotNil(t, result)
 		assert.False(t, result.IsError)
 		requireObjectsNotExists(t, serviceToManage)
 		requireObjectsExists(t, projectToManage)
 
-		result, err = session.CallTool(t.Context(), &mcp.CallToolParams{
-			Name: "deleteObjectByName",
-			Arguments: map[string]any{
-				"kind": manifest.KindProject,
-				"name": projectToManage.GetName(),
-			},
+		result = callMCPTool(t, session, "deleteObjectByName", map[string]any{
+			"kind": manifest.KindProject,
+			"name": projectToManage.GetName(),
 		})
-		require.NoError(t, err)
-		require.NotNil(t, result)
 		assert.False(t, result.IsError)
 		requireObjectsNotExists(t, projectToManage)
 	})
-}
-
-type mcpListToolTestCase struct {
-	toolName        string
-	args            map[string]any
-	expectedNames   []string
-	expectedProject string
 }
 
 type mcpListKindsFixture struct {
@@ -692,33 +724,40 @@ func setupMCPListKindsFixture(t *testing.T) mcpListKindsFixture {
 	}
 }
 
-func requireMCPListToolItems(t *testing.T, session *mcp.ClientSession, testCase mcpListToolTestCase) {
+func requireMCPListToolItems(
+	t *testing.T,
+	session *mcp.ClientSession,
+	toolName string,
+	args map[string]any,
+	expectedNames []string,
+	expectedProject string,
+) {
 	t.Helper()
 
-	result := callMCPTool(t, session, testCase.toolName, testCase.args)
+	result := callMCPTool(t, session, toolName, args)
 	require.False(t, result.IsError)
 
 	structuredContent, ok := result.StructuredContent.(map[string]any)
-	require.True(t, ok, "Expected structured content for %s", testCase.toolName)
+	require.True(t, ok, "Expected structured content for %s", toolName)
 
 	rawItems := requireSliceField(t, structuredContent, "items")
 
 	items := make([]map[string]any, len(rawItems))
 	for i, rawItem := range rawItems {
 		item, ok := rawItem.(map[string]any)
-		require.True(t, ok, "Expected object item in %s response", testCase.toolName)
+		require.True(t, ok, "Expected object item in %s response", toolName)
 		items[i] = item
 	}
-	require.Len(t, items, len(testCase.expectedNames))
+	require.Len(t, items, len(expectedNames))
 
 	actualNames := make([]any, len(items))
 	for i, item := range items {
 		actualNames[i] = item["name"]
-		if testCase.expectedProject != "" {
-			assert.Equal(t, testCase.expectedProject, item["project"])
+		if expectedProject != "" {
+			assert.Equal(t, expectedProject, item["project"])
 		}
 	}
-	for _, expectedName := range testCase.expectedNames {
+	for _, expectedName := range expectedNames {
 		assert.Contains(t, actualNames, expectedName)
 	}
 }
