@@ -484,20 +484,17 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	})
 
 	t.Run("getSLO", func(t *testing.T) {
-		t.Run("returns SLO", func(t *testing.T) {
-			result := callMCPTool(t, session, "getSLO", map[string]any{
-				"name":    slo1.Metadata.Name,
-				"project": slo1.Metadata.Project,
-				"format":  "json",
-			})
-
-			var fetchedSLO v1alphaSLO.SLO
-			unmarshalMCPTextContent(t, result, &fetchedSLO)
-			assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
-			assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
-			t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
+		result := callMCPTool(t, session, "getSLO", map[string]any{
+			"name":    slo1.Metadata.Name,
+			"project": slo1.Metadata.Project,
+			"format":  "json",
 		})
 
+		var fetchedSLO v1alphaSLO.SLO
+		unmarshalMCPTextContent(t, result, &fetchedSLO)
+		assert.Equal(t, slo1.Metadata.Name, fetchedSLO.Metadata.Name)
+		assert.Equal(t, slo1.Metadata.Project, fetchedSLO.Metadata.Project)
+		t.Logf("Successfully fetched SLO: %s/%s", fetchedSLO.Metadata.Project, fetchedSLO.Metadata.Name)
 	})
 
 	t.Run("getSLOStatus", func(t *testing.T) {
