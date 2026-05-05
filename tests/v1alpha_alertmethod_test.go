@@ -117,6 +117,8 @@ func assertV1alphaAlertMethodsAreEqual(t *testing.T, expected, actual v1alphaAle
 		expected.Spec.ServiceNow.Password = "[hidden]"
 	case v1alpha.AlertMethodTypeSlack:
 		expected.Spec.Slack.URL = "[hidden]"
+	case v1alpha.AlertMethodTypeSlackApp:
+		expected.Spec.SlackApp.WebhookSecret = "[hidden]"
 	case v1alpha.AlertMethodTypeTeams:
 		expected.Spec.Teams.URL = "[hidden]"
 	case v1alpha.AlertMethodTypeEmail:
