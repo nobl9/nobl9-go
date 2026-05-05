@@ -23,12 +23,6 @@ type API interface {
 		r promv1.Range,
 		opts ...promv1.Option,
 	) (model.Value, promv1.Warnings, error)
-	Series(
-		ctx context.Context,
-		matches []string,
-		startTime, endTime time.Time,
-		opts ...promv1.Option,
-	) ([]model.LabelSet, promv1.Warnings, error)
 	LabelNames(
 		ctx context.Context,
 		matches []string,
@@ -42,7 +36,6 @@ type API interface {
 		startTime, endTime time.Time,
 		opts ...promv1.Option,
 	) (model.LabelValues, promv1.Warnings, error)
-	Metadata(ctx context.Context, metric, limit string) (map[string][]promv1.Metadata, error)
 	Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error)
 }
 
@@ -70,14 +63,6 @@ func (e endpoints) QueryRange(ctx context.Context, request QueryRangeRequest) (m
 	return api.QueryRange(ctx, request.Query, request.Range, request.Options...)
 }
 
-func (e endpoints) Series(ctx context.Context, request SeriesRequest) ([]model.LabelSet, promv1.Warnings, error) {
-	api, err := e.api(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-	return api.Series(ctx, request.Matches, request.StartTime, request.EndTime, request.Options...)
-}
-
 func (e endpoints) LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error) {
 	api, err := e.api(ctx)
 	if err != nil {
@@ -95,14 +80,6 @@ func (e endpoints) LabelValues(
 		return nil, nil, err
 	}
 	return api.LabelValues(ctx, request.Label, request.Matches, request.StartTime, request.EndTime, request.Options...)
-}
-
-func (e endpoints) Metadata(ctx context.Context, request MetadataRequest) (map[string][]promv1.Metadata, error) {
-	api, err := e.api(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return api.Metadata(ctx, request.Metric, request.Limit)
 }
 
 func (e endpoints) Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error) {

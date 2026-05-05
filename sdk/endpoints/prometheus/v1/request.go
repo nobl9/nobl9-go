@@ -20,14 +20,6 @@ type QueryRangeRequest struct {
 	Options []promv1.Option
 }
 
-// SeriesRequest configures a Prometheus series lookup.
-type SeriesRequest struct {
-	Matches   []string
-	StartTime time.Time
-	EndTime   time.Time
-	Options   []promv1.Option
-}
-
 // LabelNamesRequest configures a Prometheus label names lookup.
 type LabelNamesRequest struct {
 	Matches   []string
@@ -43,10 +35,4 @@ type LabelValuesRequest struct {
 	StartTime time.Time
 	EndTime   time.Time
 	Options   []promv1.Option
-}
-
-// MetadataRequest configures a Prometheus metadata lookup.
-type MetadataRequest struct {
-	Metric string
-	Limit  string
 }
