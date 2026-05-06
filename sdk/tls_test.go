@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewCustomCATransport(t *testing.T) {
+	t.Parallel()
 	t.Run("empty path returns nil transport", func(t *testing.T) {
 		t.Parallel()
 		rt, err := newCustomCATransport("")
@@ -59,7 +60,45 @@ func TestNewCustomCATransport(t *testing.T) {
 		t.Cleanup(func() { _ = resp.Body.Close() })
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
+}
 
+// TestNewClient_CACertFile verifies that [NewClient] surfaces an error from the
+// CA bundle loader rather than silently falling back to the default trust store
+// when [Config.CACertFile] is set but cannot be parsed.
+func TestNewClient_CACertFile(t *testing.T) {
+	t.Parallel()
+
+	t.Run("garbage CA bundle aborts construction", func(t *testing.T) {
+		t.Parallel()
+		path := filepath.Join(t.TempDir(), "garbage.pem")
+		require.NoError(t, os.WriteFile(path, []byte("not a pem file"), 0o600))
+
+		conf, err := ReadConfig(
+			ConfigOptionNoConfigFile(),
+			ConfigOptionWithCredentials("id", "secret"),
+		)
+		require.NoError(t, err)
+		conf.CACertFile = path
+
+		client, err := NewClient(conf)
+		require.Error(t, err)
+		assert.Nil(t, client)
+		assert.Contains(t, err.Error(), "failed to parse any PEM certificates")
+	})
+
+	t.Run("empty CA bundle leaves construction unchanged", func(t *testing.T) {
+		t.Parallel()
+		conf, err := ReadConfig(
+			ConfigOptionNoConfigFile(),
+			ConfigOptionWithCredentials("id", "secret"),
+		)
+		require.NoError(t, err)
+		assert.Empty(t, conf.CACertFile)
+
+		client, err := NewClient(conf)
+		require.NoError(t, err)
+		require.NotNil(t, client)
+	})
 }
 
 // leafCertPEM extracts the leaf certificate from a [tls.Config] (as exposed by
