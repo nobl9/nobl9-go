@@ -1432,6 +1432,346 @@ func TestAtLeastDailyFreq(t *testing.T) {
 	}
 }
 
+func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
+	t.Run("passes with filters and no customHierarchy", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with customHierarchy and no filters", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with deeply nested customHierarchy", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				Children: []HierarchyFolder{
+					{
+						DisplayName: "Compute",
+						Children: []HierarchyFolder{
+							{
+								DisplayName: "Cluster",
+								SLOs: []HierarchySLORef{
+									{Name: "slo1", Project: "project", DisplayName: "Cluster availability"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails when both filters and customHierarchy are set", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec",
+			Message: "spec.filters and spec.reliabilityRollup.customHierarchy are mutually exclusive",
+		})
+	})
+
+	t.Run("fails when neither filters nor customHierarchy are set", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.filters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("fails with empty time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.timeFrame",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("fails with both rolling and calendar time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame.Calendar = &CalendarTimeFrame{
+			Repeat: Repeat{Unit: ptr("Week"), Count: ptr(1)},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.timeFrame",
+			Code: rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+
+	t.Run("fails with invalid timezone", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame.TimeZone = "x"
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reliabilityRollup.timeFrame.timeZone",
+			Message: "not a valid time zone: unknown time zone x",
+		})
+	})
+
+	t.Run("fails when folder has no children and no slos", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{DisplayName: "Empty"},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy[0]",
+			ContainsMessage: "folder must contain at least one child folder or slo",
+		})
+	})
+
+	t.Run("fails when folder has empty displayName", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				SLOs: []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("fails when slo ref is missing required fields", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs:        []HierarchySLORef{{}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+
+	t.Run("fails when slo ref has invalid project or name", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "bad name", Project: "bad project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Code: validationV1Alpha.ErrorCodeStringName,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Code: validationV1Alpha.ErrorCodeStringName,
+			},
+		)
+	})
+
+	t.Run("fails when slo ref displayName exceeds maximum length", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{
+						Name:        "slo1",
+						Project:     "project",
+						DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
+					},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].displayName",
+			Code: rules.ErrorCodeStringMaxLength,
+		})
+	})
+
+	t.Run("fails when folder displayName exceeds maximum length", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Code: rules.ErrorCodeStringMaxLength,
+		})
+	})
+
+	t.Run("fails when nested folder is empty", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				Children: []HierarchyFolder{
+					{DisplayName: "Compute"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy[0].children[0]",
+			ContainsMessage: "folder must contain at least one child folder or slo",
+		})
+	})
+
+	t.Run("passes with multiple top-level folders", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+			{
+				DisplayName: "Application",
+				SLOs:        []HierarchySLORef{{Name: "slo2", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails for empty customHierarchy slice without filters", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.filters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("filters remain required for non-RRR report types", func(t *testing.T) {
+		// SLOHistory must still require filters even after the conditional
+		// filters predicate was added for RRR.
+		report := validSystemHealthReport()
+		report.Spec.SystemHealthReview = nil
+		report.Spec.SLOHistory = &SLOHistoryConfig{
+			TimeFrame: SLOHistoryTimeFrame{
+				Rolling:  &RollingTimeFrame{Repeat: Repeat{Unit: ptr("Week"), Count: ptr(1)}},
+				TimeZone: "Europe/Warsaw",
+			},
+		}
+		report.Spec.Filters = nil
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.filters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("passes with valid calendar repeating time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{
+			Calendar: &CalendarTimeFrame{
+				Repeat: Repeat{Unit: ptr("Quarter"), Count: ptr(1)},
+			},
+			TimeZone: "Europe/Warsaw",
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with valid calendar custom time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{
+			Calendar: &CalendarTimeFrame{
+				From: ptr("2024-07-01"),
+				To:   ptr("2024-07-31"),
+			},
+			TimeZone: "Europe/Warsaw",
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+}
+
+func validReliabilityRollupReport() Report {
+	return Report{
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindReport,
+		Metadata: Metadata{
+			Name:        "my-report",
+			DisplayName: "My Report",
+		},
+		Spec: Spec{
+			Shared: true,
+			Filters: &Filters{
+				Projects: []string{"project"},
+				SLOs: []SLO{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+			ReliabilityRollup: &ReliabilityRollupConfig{
+				TimeFrame: ReliabilityRollupTimeFrame{
+					Rolling: &RollingTimeFrame{
+						Repeat: Repeat{
+							Unit:  ptr("Week"),
+							Count: ptr(1),
+						},
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+			},
+		},
+	}
+}
+
 func validSystemHealthReport() Report {
 	return Report{
 		APIVersion: manifest.VersionV1alpha,
