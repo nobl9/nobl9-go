@@ -29,7 +29,7 @@ func newCredentials(config *Config) (*credentialsStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	apiClient := newAPIHTTPClient(customTransport)
+	apiClient := newAPIClient(customTransport)
 	if config.DisableOkta {
 		return &credentialsStore{config: config, apiHTTPClient: apiClient}, nil
 	}
@@ -45,10 +45,10 @@ func newCredentials(config *Config) (*credentialsStore, error) {
 	}, nil
 }
 
-// newAPIHTTPClient returns the inner [http.Client] used by [credentialsStore.RoundTrip]
+// newAPIClient returns the inner [http.Client] used by [credentialsStore.RoundTrip]
 // to issue authenticated requests to the Nobl9 API.
 // It applies a custom transport (with extended trust roots) when one is provided.
-func newAPIHTTPClient(rt http.RoundTripper) *http.Client {
+func newAPIClient(rt http.RoundTripper) *http.Client {
 	if rt == nil {
 		return &http.Client{}
 	}

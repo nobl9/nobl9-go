@@ -193,6 +193,7 @@
     "usergroup",
     "usrmgmt",
     "vuln",
-    "vulns"
+    "vulns",
+    "wincrypt"
   ]
 }
