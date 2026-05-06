@@ -64,7 +64,8 @@ func TestNewCustomCATransport(t *testing.T) {
 
 // TestNewClient_CACertFile verifies that [NewClient] surfaces an error from the
 // CA bundle loader rather than silently falling back to the default trust store
-// when [Config.CACertFile] is set but cannot be parsed.
+// when [Config.CACertFile] is set but cannot be parsed, and that a valid bundle
+// is wired into both the IDP token client and the inner API client.
 func TestNewClient_CACertFile(t *testing.T) {
 	t.Parallel()
 
@@ -98,6 +99,36 @@ func TestNewClient_CACertFile(t *testing.T) {
 		client, err := NewClient(conf)
 		require.NoError(t, err)
 		require.NotNil(t, client)
+		// No CACertFile means apiHTTPClient stays on http.DefaultTransport,
+		// matching pre-change behavior.
+		assert.Nil(t, client.credentials.apiHTTPClient.Transport)
+	})
+
+	t.Run("valid bundle wires custom transport into the API client", func(t *testing.T) {
+		t.Parallel()
+		// Generate a real PEM bundle to satisfy the loader. The chain it certifies
+		// is unrelated to anything we dial here, the assertion is purely structural.
+		srv := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+		t.Cleanup(srv.Close)
+		path := filepath.Join(t.TempDir(), "bundle.pem")
+		require.NoError(t, os.WriteFile(path, leafCertPEM(t, srv.TLS), 0o600))
+
+		conf, err := ReadConfig(
+			ConfigOptionNoConfigFile(),
+			ConfigOptionWithCredentials("id", "secret"),
+		)
+		require.NoError(t, err)
+		conf.CACertFile = path
+
+		client, err := NewClient(conf)
+		require.NoError(t, err)
+		require.NotNil(t, client)
+
+		apiTransport, ok := client.credentials.apiHTTPClient.Transport.(*http.Transport)
+		require.True(t, ok, "apiHTTPClient transport should be *http.Transport")
+		require.NotNil(t, apiTransport.TLSClientConfig)
+		require.NotNil(t, apiTransport.TLSClientConfig.RootCAs,
+			"RootCAs must be set so Go's pure-Go x509 verifier (not the platform verifier) is used")
 	})
 }
 
