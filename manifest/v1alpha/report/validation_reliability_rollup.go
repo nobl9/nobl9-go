@@ -11,6 +11,8 @@ import (
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
+const MaxHierarchyDepth = 8
+
 var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 	govy.For(func(c ReliabilityRollupConfig) ReliabilityRollupTimeFrame { return c.TimeFrame }).
 		WithName("timeFrame").
@@ -36,10 +38,32 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 				WithName("calendar").
 				Include(calendarTimeFrameValidation),
 		)),
+	govy.For(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
+		WithName("customHierarchy").
+		Rules(govy.NewRule(func(folders []HierarchyFolder) error {
+			if depth := maxHierarchyDepth(folders); depth > MaxHierarchyDepth {
+				return errors.Errorf(
+					"customHierarchy depth %d exceeds maximum allowed (%d)",
+					depth, MaxHierarchyDepth,
+				)
+			}
+			return nil
+		})),
 	govy.ForSlice(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
 		WithName("customHierarchy").
 		IncludeForEach(hierarchyFolderValidation),
 )
+
+func maxHierarchyDepth(folders []HierarchyFolder) int {
+	deepest := 0
+	for _, f := range folders {
+		d := 1 + maxHierarchyDepth(f.Children)
+		if d > deepest {
+			deepest = d
+		}
+	}
+	return deepest
+}
 
 // hierarchyFolderValidation validates a single folder in the reliability rollup
 // custom hierarchy. The builder pattern lets the recursive children rule capture

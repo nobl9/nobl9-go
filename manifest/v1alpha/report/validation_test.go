@@ -1668,6 +1668,45 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		})
 	})
 
+	t.Run("passes with customHierarchy at maximum depth", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		root := HierarchyFolder{
+			DisplayName: "leaf",
+			SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+		}
+		for i := 1; i < MaxHierarchyDepth; i++ {
+			root = HierarchyFolder{
+				DisplayName: "level",
+				Children:    []HierarchyFolder{root},
+			}
+		}
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails when customHierarchy depth exceeds maximum", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		root := HierarchyFolder{
+			DisplayName: "leaf",
+			SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+		}
+		for i := 0; i < MaxHierarchyDepth; i++ {
+			root = HierarchyFolder{
+				DisplayName: "level",
+				Children:    []HierarchyFolder{root},
+			}
+		}
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy",
+			ContainsMessage: "exceeds maximum allowed",
+		})
+	})
+
 	t.Run("passes with multiple top-level folders", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
