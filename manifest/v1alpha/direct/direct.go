@@ -256,8 +256,13 @@ type LightstepConfig struct {
 
 // DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
 type DynatraceConfig struct {
-	URL            string `json:"url"`
-	DynatraceToken string `json:"dynatraceToken"`
+	URL               string `json:"url"`
+	DynatraceToken    string `json:"dynatraceToken"`
+	DQLURL            string `json:"dqlUrl,omitempty"`
+	OAuthClientID     string `json:"oauthClientId,omitempty"`
+	OAuthClientSecret string `json:"oauthClientSecret,omitempty"`
+	AccountURN        string `json:"accountURN,omitempty"`
+	OAuthScopes       string `json:"oauthScopes,omitempty"`
 }
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Direct Object.
