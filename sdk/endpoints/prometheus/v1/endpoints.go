@@ -52,7 +52,7 @@ func (e endpoints) Query(ctx context.Context, request QueryRequest) (model.Value
 	if err != nil {
 		return nil, nil, err
 	}
-	return api.Query(ctx, request.Query, request.Time, request.Options...)
+	return api.Query(ctx, request.Query, request.Time, queryOptions(request)...)
 }
 
 func (e endpoints) QueryRange(ctx context.Context, request QueryRangeRequest) (model.Value, promv1.Warnings, error) {
@@ -60,15 +60,24 @@ func (e endpoints) QueryRange(ctx context.Context, request QueryRangeRequest) (m
 	if err != nil {
 		return nil, nil, err
 	}
-	return api.QueryRange(ctx, request.Query, request.Range, request.Options...)
+	return api.QueryRange(
+		ctx,
+		request.Query,
+		promv1.Range{
+			Start: request.Start,
+			End:   request.End,
+			Step:  request.Step,
+		},
+		queryRangeOptions(request)...)
 }
 
+// Source docs: https://prometheus.io/docs/prometheus/latest/querying/api/#getting-label-names
 func (e endpoints) LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error) {
 	api, err := e.api(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	return api.LabelNames(ctx, request.Matches, request.StartTime, request.EndTime, request.Options...)
+	return api.LabelNames(ctx, request.Matches, request.StartTime, request.EndTime, limitOption(request.Limit)...)
 }
 
 func (e endpoints) LabelValues(
@@ -79,7 +88,13 @@ func (e endpoints) LabelValues(
 	if err != nil {
 		return nil, nil, err
 	}
-	return api.LabelValues(ctx, request.Label, request.Matches, request.StartTime, request.EndTime, request.Options...)
+	return api.LabelValues(
+		ctx,
+		request.Label,
+		request.Matches,
+		request.StartTime,
+		request.EndTime,
+		limitOption(request.Limit)...)
 }
 
 func (e endpoints) Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error) {
@@ -95,4 +110,47 @@ func (e endpoints) api(ctx context.Context) (API, error) {
 		return nil, errors.New("prometheus api factory is not configured")
 	}
 	return e.apiFactory(ctx)
+}
+
+func queryOptions(request QueryRequest) []promv1.Option {
+	opts := make([]promv1.Option, 0, 3)
+	opts = appendLimitOption(opts, request.Limit)
+	opts = appendLookbackDeltaOption(opts, request.LookbackDelta)
+	opts = appendTimeoutOption(opts, request.Timeout)
+	return opts
+}
+
+func queryRangeOptions(request QueryRangeRequest) []promv1.Option {
+	opts := make([]promv1.Option, 0, 3)
+	opts = appendLimitOption(opts, request.Limit)
+	opts = appendLookbackDeltaOption(opts, request.LookbackDelta)
+	opts = appendTimeoutOption(opts, request.Timeout)
+	return opts
+}
+
+func limitOption(limit uint64) []promv1.Option {
+	opts := make([]promv1.Option, 0, 1)
+	opts = appendLimitOption(opts, limit)
+	return opts
+}
+
+func appendLimitOption(opts []promv1.Option, limit uint64) []promv1.Option {
+	if limit == 0 {
+		return opts
+	}
+	return append(opts, promv1.WithLimit(limit))
+}
+
+func appendLookbackDeltaOption(opts []promv1.Option, lookbackDelta time.Duration) []promv1.Option {
+	if lookbackDelta == 0 {
+		return opts
+	}
+	return append(opts, promv1.WithLookbackDelta(lookbackDelta))
+}
+
+func appendTimeoutOption(opts []promv1.Option, timeout time.Duration) []promv1.Option {
+	if timeout == 0 {
+		return opts
+	}
+	return append(opts, promv1.WithTimeout(timeout))
 }

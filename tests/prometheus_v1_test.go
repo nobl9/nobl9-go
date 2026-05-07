@@ -93,7 +93,7 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 		},
 		"limit": {
 			request: prometheusV1.LabelNamesRequest{
-				Options: []promv1.Option{promv1.WithLimit(3)},
+				Limit: 3,
 			},
 			expected: []string{
 				"__name__",
@@ -460,7 +460,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				Matches: []string{
 					fmt.Sprintf(`reliability{project="%s"}`, primaryProject),
 				},
-				Options: []promv1.Option{promv1.WithLimit(2)},
+				Limit: 2,
 			},
 			expected: model.LabelValues{
 				model.LabelValue(availabilitySLO.GetName()),

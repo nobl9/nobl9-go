@@ -2,22 +2,26 @@ package v1
 
 import (
 	"time"
-
-	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
 // QueryRequest configures an instant Prometheus query.
 type QueryRequest struct {
-	Query   string
-	Time    time.Time
-	Options []promv1.Option
+	Query         string
+	Time          time.Time
+	Limit         uint64
+	LookbackDelta time.Duration
+	Timeout       time.Duration
 }
 
 // QueryRangeRequest configures a range Prometheus query.
 type QueryRangeRequest struct {
-	Query   string
-	Range   promv1.Range
-	Options []promv1.Option
+	Query         string
+	Start         time.Time
+	End           time.Time
+	Step          time.Duration
+	Limit         uint64
+	LookbackDelta time.Duration
+	Timeout       time.Duration
 }
 
 // LabelNamesRequest configures a Prometheus label names lookup.
@@ -25,7 +29,7 @@ type LabelNamesRequest struct {
 	Matches   []string
 	StartTime time.Time
 	EndTime   time.Time
-	Options   []promv1.Option
+	Limit     uint64
 }
 
 // LabelValuesRequest configures a Prometheus label values lookup.
@@ -34,5 +38,5 @@ type LabelValuesRequest struct {
 	Matches   []string
 	StartTime time.Time
 	EndTime   time.Time
-	Options   []promv1.Option
+	Limit     uint64
 }
