@@ -1,24 +1,20 @@
 module github.com/nobl9/nobl9-go
 
-go 1.25.9
+go 1.25.10
 
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/bmatcuk/doublestar/v4 v4.10.0
-	// Remove once https://github.com/goccy/go-yaml/pull/698 is released.
-	github.com/goccy/go-yaml v1.17.2-0.20250508142621-500180b7b722
+	github.com/goccy/go-yaml v1.19.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/hashicorp/go-retryablehttp v0.7.8
+	github.com/modelcontextprotocol/go-sdk v1.5.0
 	github.com/nobl9/govy v0.24.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
 	github.com/teambition/rrule-go v1.8.2
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.36.0
-)
-
-require (
-	github.com/modelcontextprotocol/go-sdk v1.5.0
 	golang.org/x/tools v0.44.0
 )
 
