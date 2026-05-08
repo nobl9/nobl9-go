@@ -2,12 +2,10 @@ package slo
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
@@ -46,6 +44,32 @@ func (c CloudWatchMetric) IsJSONConfiguration() bool {
 type CloudWatchMetricDimension struct {
 	Name  *string `json:"name"`
 	Value *string `json:"value"`
+}
+
+type cloudWatchMetricDataQuery struct {
+	AccountId  *string               `json:"AccountId,omitempty"`
+	Expression *string               `json:"Expression,omitempty"`
+	Id         *string               `json:"Id,omitempty"`
+	MetricStat *cloudWatchMetricStat `json:"MetricStat,omitempty"`
+	Period     *int64                `json:"Period,omitempty"`
+	ReturnData *bool                 `json:"ReturnData,omitempty"`
+}
+
+type cloudWatchMetricStat struct {
+	Metric *cloudWatchMetricData `json:"Metric,omitempty"`
+	Period *int64                `json:"Period,omitempty"`
+	Stat   *string               `json:"Stat,omitempty"`
+}
+
+type cloudWatchMetricData struct {
+	Dimensions []cloudWatchMetricDataDimension `json:"Dimensions,omitempty"`
+	MetricName *string                         `json:"MetricName,omitempty"`
+	Namespace  *string                         `json:"Namespace,omitempty"`
+}
+
+type cloudWatchMetricDataDimension struct {
+	Name  *string `json:"Name,omitempty"`
+	Value *string `json:"Value,omitempty"`
 }
 
 var cloudWatchValidation = govy.New[CloudWatchMetric](
@@ -101,7 +125,13 @@ var cloudWatchJSONConfigValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.JSON }).
 		WithName("json").
 		Required().
-		Rules(cloudWatchJSONValidationRule),
+		Cascade(govy.CascadeModeStop),
+	govy.Transform(
+		func(c CloudWatchMetric) *string { return c.JSON },
+		unmarshalCloudWatchMetricDataQueries,
+	).
+		WithName("json").
+		Include(cloudWatchMetricDataQueriesValidation),
 ).When(
 	func(c CloudWatchMetric) bool { return c.IsJSONConfiguration() },
 	govy.WhenDescription("json is provided"),
@@ -174,53 +204,101 @@ var cloudwatchMetricDimensionValidation = govy.New[CloudWatchMetricDimension](
 			rules.StringASCII()),
 )
 
-var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
-	var metricDataQuerySlice []*cloudwatch.MetricDataQuery
-	if err := json.Unmarshal([]byte(v), &metricDataQuerySlice); err != nil {
-		return govy.NewRuleError(err.Error(), rules.ErrorCodeStringJSON)
-	}
+var cloudWatchMetricDataQueryValidation = govy.New[cloudWatchMetricDataQuery](
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *string { return c.AccountId }).
+		WithName("AccountId").
+		Rules(rules.StringMinLength(1)),
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *string { return c.Expression }).
+		WithName("Expression").
+		Rules(rules.StringMinLength(1)),
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *string { return c.Id }).
+		WithName("Id").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.StringMinLength(1)),
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *int64 { return c.Period }).
+		WithName("Period").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.EQ(cloudWatchJSONQueryPeriod)).
+		When(
+			func(c cloudWatchMetricDataQuery) bool { return c.MetricStat == nil },
+			govy.WhenDescription("MetricStat is not provided"),
+		),
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *cloudWatchMetricStat { return c.MetricStat }).
+		WithName("MetricStat").
+		Include(cloudWatchMetricStatValidation),
+)
 
-	returnedData := len(metricDataQuerySlice)
-	for i, metricData := range metricDataQuerySlice {
-		if err := metricData.Validate(); err != nil {
-			return errors.New(strings.TrimSuffix(err.Error(), "\n"))
-		}
-		if metricData.ReturnData != nil && !*metricData.ReturnData {
-			returnedData--
-		}
-		if metricData.MetricStat != nil {
-			if err := validateCloudwatchJSONPeriod(metricData.MetricStat.Period, "MetricStat.Period", i); err != nil {
-				return err
-			}
-		} else {
-			if err := validateCloudwatchJSONPeriod(metricData.Period, "Period", i); err != nil {
-				return err
-			}
+var cloudWatchMetricStatValidation = govy.New[cloudWatchMetricStat](
+	govy.ForPointer(func(c cloudWatchMetricStat) *cloudWatchMetricData { return c.Metric }).
+		WithName("Metric").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Include(cloudWatchMetricValidation),
+	govy.ForPointer(func(c cloudWatchMetricStat) *int64 { return c.Period }).
+		WithName("Period").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.EQ[int64](cloudWatchJSONQueryPeriod)),
+	govy.ForPointer(func(c cloudWatchMetricStat) *string { return c.Stat }).
+		WithName("Stat").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.StringMinLength(1)),
+)
+
+var cloudWatchMetricValidation = govy.New[cloudWatchMetricData](
+	govy.ForPointer(func(c cloudWatchMetricData) *string { return c.MetricName }).
+		WithName("MetricName").
+		Rules(rules.StringMinLength(1)),
+	govy.ForPointer(func(c cloudWatchMetricData) *string { return c.Namespace }).
+		WithName("Namespace").
+		Rules(rules.StringMinLength(1)),
+	govy.ForSlice(func(c cloudWatchMetricData) []cloudWatchMetricDataDimension { return c.Dimensions }).
+		WithName("Dimensions").
+		IncludeForEach(cloudWatchMetricDimensionDataValidation),
+)
+
+var cloudWatchMetricDimensionDataValidation = govy.New[cloudWatchMetricDataDimension](
+	govy.ForPointer(func(c cloudWatchMetricDataDimension) *string { return c.Name }).
+		WithName("Name").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.StringMinLength(1)),
+	govy.ForPointer(func(c cloudWatchMetricDataDimension) *string { return c.Value }).
+		WithName("Value").
+		Cascade(govy.CascadeModeStop).
+		Required().
+		Rules(rules.StringMinLength(1)),
+)
+
+var cloudWatchMetricDataQueriesValidation = govy.New[[]cloudWatchMetricDataQuery](
+	govy.ForSlice(govy.GetSelf[[]cloudWatchMetricDataQuery]()).
+		IncludeForEach(cloudWatchMetricDataQueryValidation).
+		Rules(govy.NewRule(validateCloudWatchReturnedDataCount)),
+)
+
+const cloudWatchJSONQueryPeriod int64 = 60
+
+func unmarshalCloudWatchMetricDataQueries(raw *string) ([]cloudWatchMetricDataQuery, error) {
+	var queries []cloudWatchMetricDataQuery
+	if err := json.Unmarshal([]byte(*raw), &queries); err != nil {
+		return nil, govy.NewRuleError(err.Error(), rules.ErrorCodeStringJSON)
+	}
+	return queries, nil
+}
+
+func validateCloudWatchReturnedDataCount(queries []cloudWatchMetricDataQuery) error {
+	returnedData := 0
+	for _, query := range queries {
+		if query.ReturnData == nil || *query.ReturnData {
+			returnedData++
 		}
 	}
 	if returnedData != 1 {
 		return errors.New("exactly one returned data required," +
 			" provide '\"ReturnData\": false' to metric data query in order to disable returned data")
-	}
-	return nil
-})
-
-func validateCloudwatchJSONPeriod(period *int64, propName string, index int) error {
-	indexPropName := func() string {
-		return fmt.Sprintf(".[%d].%s", index, propName)
-	}
-	const queryPeriod = 60
-	if period == nil {
-		return govy.NewRuleError(
-			fmt.Sprintf("'%s' property is required", indexPropName()),
-			rules.ErrorCodeRequired,
-		)
-	}
-	if *period != queryPeriod {
-		return govy.NewRuleError(
-			fmt.Sprintf("'%s' property should be equal to %d", indexPropName(), queryPeriod),
-			rules.ErrorCodeEqualTo,
-		)
 	}
 	return nil
 }
