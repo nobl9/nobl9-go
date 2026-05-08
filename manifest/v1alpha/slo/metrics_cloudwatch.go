@@ -204,7 +204,7 @@ var cloudwatchMetricDimensionValidation = govy.New[CloudWatchMetricDimension](
 			rules.StringASCII()),
 )
 
-var cloudWatchMetricDataQueryValidation = govy.New[cloudWatchMetricDataQuery](
+var cloudWatchMetricDataQueryValidation = govy.New(
 	govy.ForPointer(func(c cloudWatchMetricDataQuery) *string { return c.AccountId }).
 		WithName("AccountId").
 		Rules(rules.StringMinLength(1)),
@@ -230,7 +230,7 @@ var cloudWatchMetricDataQueryValidation = govy.New[cloudWatchMetricDataQuery](
 		Include(cloudWatchMetricStatValidation),
 )
 
-var cloudWatchMetricStatValidation = govy.New[cloudWatchMetricStat](
+var cloudWatchMetricStatValidation = govy.New(
 	govy.ForPointer(func(c cloudWatchMetricStat) *cloudWatchMetricData { return c.Metric }).
 		WithName("Metric").
 		Cascade(govy.CascadeModeStop).
@@ -240,7 +240,7 @@ var cloudWatchMetricStatValidation = govy.New[cloudWatchMetricStat](
 		WithName("Period").
 		Cascade(govy.CascadeModeStop).
 		Required().
-		Rules(rules.EQ[int64](cloudWatchJSONQueryPeriod)),
+		Rules(rules.EQ(cloudWatchJSONQueryPeriod)),
 	govy.ForPointer(func(c cloudWatchMetricStat) *string { return c.Stat }).
 		WithName("Stat").
 		Cascade(govy.CascadeModeStop).
@@ -248,7 +248,7 @@ var cloudWatchMetricStatValidation = govy.New[cloudWatchMetricStat](
 		Rules(rules.StringMinLength(1)),
 )
 
-var cloudWatchMetricValidation = govy.New[cloudWatchMetricData](
+var cloudWatchMetricValidation = govy.New(
 	govy.ForPointer(func(c cloudWatchMetricData) *string { return c.MetricName }).
 		WithName("MetricName").
 		Rules(rules.StringMinLength(1)),
@@ -260,7 +260,7 @@ var cloudWatchMetricValidation = govy.New[cloudWatchMetricData](
 		IncludeForEach(cloudWatchMetricDimensionDataValidation),
 )
 
-var cloudWatchMetricDimensionDataValidation = govy.New[cloudWatchMetricDataDimension](
+var cloudWatchMetricDimensionDataValidation = govy.New(
 	govy.ForPointer(func(c cloudWatchMetricDataDimension) *string { return c.Name }).
 		WithName("Name").
 		Cascade(govy.CascadeModeStop).
@@ -273,7 +273,7 @@ var cloudWatchMetricDimensionDataValidation = govy.New[cloudWatchMetricDataDimen
 		Rules(rules.StringMinLength(1)),
 )
 
-var cloudWatchMetricDataQueriesValidation = govy.New[[]cloudWatchMetricDataQuery](
+var cloudWatchMetricDataQueriesValidation = govy.New(
 	govy.ForSlice(govy.GetSelf[[]cloudWatchMetricDataQuery]()).
 		IncludeForEach(cloudWatchMetricDataQueryValidation).
 		Rules(govy.NewRule(validateCloudWatchReturnedDataCount)),
