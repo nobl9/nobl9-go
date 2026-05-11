@@ -41,10 +41,10 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 	govy.For(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
 		WithName("customHierarchy").
 		Rules(govy.NewRule(func(folders []HierarchyFolder) error {
-			if depth := maxHierarchyDepth(folders); depth > MaxHierarchyDepth {
+			if hierarchyDepthExceeds(folders, MaxHierarchyDepth) {
 				return errors.Errorf(
-					"customHierarchy depth %d exceeds maximum allowed (%d)",
-					depth, MaxHierarchyDepth,
+					"customHierarchy depth exceeds maximum allowed (%d)",
+					MaxHierarchyDepth,
 				)
 			}
 			return nil
@@ -54,15 +54,30 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 		IncludeForEach(hierarchyFolderValidation),
 )
 
-func maxHierarchyDepth(folders []HierarchyFolder) int {
-	deepest := 0
-	for _, f := range folders {
-		d := 1 + maxHierarchyDepth(f.Children)
-		if d > deepest {
-			deepest = d
+// hierarchyDepthExceeds reports whether any branch of folders is deeper than
+// cap. The walk is iterative with an explicit stack so a pathological input
+// cannot exhaust the goroutine stack.
+func hierarchyDepthExceeds(folders []HierarchyFolder, cap int) bool {
+	type frame struct {
+		children []HierarchyFolder
+		depth    int
+	}
+	stack := []frame{{children: folders, depth: 0}}
+	for len(stack) > 0 {
+		n := len(stack) - 1
+		cur := stack[n]
+		stack = stack[:n]
+		nextDepth := cur.depth + 1
+		if nextDepth > cap && len(cur.children) > 0 {
+			return true
+		}
+		for _, f := range cur.children {
+			if len(f.Children) > 0 {
+				stack = append(stack, frame{children: f.Children, depth: nextDepth})
+			}
 		}
 	}
-	return deepest
+	return false
 }
 
 // hierarchyFolderValidation validates a single folder in the reliability rollup
