@@ -1,6 +1,6 @@
 module mock_example
 
-go 1.25.9
+go 1.25.10
 
 require (
 	github.com/nobl9/nobl9-go v0.126.1
