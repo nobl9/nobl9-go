@@ -191,6 +191,23 @@ func TestCloudWatchJSON(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
 	})
+	t.Run("passes with empty MetricDataQuery.MetricStat.Stat", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &CloudWatchMetric{
+			Region: ptr("eu-central-1"),
+			JSON: ptr(`[{
+				"Id":"m1",
+				"MetricStat":{
+					"Metric":{"Namespace":"AWS/ApplicationELB","MetricName":"RequestCount"},
+					"Period":60,
+					"Stat":""
+				},
+				"ReturnData":true
+			}]`),
+		}
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
 	tests := map[string]struct {
 		Prop            string
 		JSON            *string
@@ -217,18 +234,6 @@ func TestCloudWatchJSON(t *testing.T) {
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.json[0].MetricStat.Metric",
 			JSON: ptr(`[{"Id":"m1","MetricStat":{"Period":60,"Stat":"SampleCount"}}]`),
 			Code: rules.ErrorCodeRequired,
-		},
-		"empty MetricDataQuery.MetricStat.Stat": {
-			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.json[0].MetricStat.Stat",
-			JSON: ptr(`[{
-				"Id":"m1",
-				"MetricStat":{
-					"Metric":{"Namespace":"AWS/ApplicationELB","MetricName":"RequestCount"},
-					"Period":60,
-					"Stat":""
-				}
-			}]`),
-			Code: rules.ErrorCodeStringMinLength,
 		},
 		"no returned data": {
 			Prop:            "spec.objectives[0].rawMetric.query.cloudWatch.json",
@@ -259,6 +264,19 @@ func TestCloudWatchJSON(t *testing.T) {
 			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.json[1].MetricStat.Period",
 			JSON: getCloudWatchJSON(t, "cloudwatch_invalid_metric_stat_period_json"),
 			Code: rules.ErrorCodeEqualTo,
+		},
+		"invalid MetricDataQuery.Period with MetricStat": {
+			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.json[0].Period",
+			JSON: ptr(`[{
+				"Id":"m1",
+				"Period":0,
+				"MetricStat":{
+					"Metric":{"Namespace":"AWS/ApplicationELB","MetricName":"RequestCount"},
+					"Period":60,
+					"Stat":"SampleCount"
+				},
+				"ReturnData":true
+			}]`),
 		},
 	}
 	for name, test := range tests {

@@ -218,6 +218,13 @@ var cloudWatchMetricDataQueryValidation = govy.New(
 		Rules(rules.StringMinLength(1)),
 	govy.ForPointer(func(c cloudWatchMetricDataQuery) *int64 { return c.Period }).
 		WithName("Period").
+		Rules(rules.GTE(int64(1))).
+		When(
+			func(c cloudWatchMetricDataQuery) bool { return c.MetricStat != nil },
+			govy.WhenDescription("MetricStat is provided"),
+		),
+	govy.ForPointer(func(c cloudWatchMetricDataQuery) *int64 { return c.Period }).
+		WithName("Period").
 		Cascade(govy.CascadeModeStop).
 		Required().
 		Rules(rules.EQ(cloudWatchJSONQueryPeriod)).
@@ -244,8 +251,7 @@ var cloudWatchMetricStatValidation = govy.New(
 	govy.ForPointer(func(c cloudWatchMetricStat) *string { return c.Stat }).
 		WithName("Stat").
 		Cascade(govy.CascadeModeStop).
-		Required().
-		Rules(rules.StringMinLength(1)),
+		Required(),
 )
 
 var cloudWatchMetricValidation = govy.New(
