@@ -1,6 +1,8 @@
 defaultContext = "default"
-filesPromptThreshold = 30
-filesPromptEnabled = false
+
+[sloctl]
+  filesPromptThreshold = 30
+  filesPromptEnabled = false
 
 [Contexts]
   [Contexts.default]
