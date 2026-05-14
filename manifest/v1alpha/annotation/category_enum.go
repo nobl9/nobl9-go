@@ -21,6 +21,7 @@ const (
 	CategoryIncrementalMismatchAnomaly Category = "IncrementalMismatchAnomaly"
 	CategoryNoBurnAnomaly              Category = "NoBurnAnomaly"
 	CategoryConstantBurnAnomaly        Category = "ConstantBurnAnomaly"
+	CategoryBurnAnomaly                Category = "BurnAnomaly"
 )
 
 var ErrInvalidCategory = errors.New("not a valid Category")
@@ -37,6 +38,7 @@ func CategoryValues() []Category {
 		CategoryIncrementalMismatchAnomaly,
 		CategoryNoBurnAnomaly,
 		CategoryConstantBurnAnomaly,
+		CategoryBurnAnomaly,
 	}
 }
 
@@ -62,6 +64,7 @@ var _CategoryValue = map[string]Category{
 	"IncrementalMismatchAnomaly": CategoryIncrementalMismatchAnomaly,
 	"NoBurnAnomaly":              CategoryNoBurnAnomaly,
 	"ConstantBurnAnomaly":        CategoryConstantBurnAnomaly,
+	"BurnAnomaly":                CategoryBurnAnomaly,
 }
 
 // ParseCategory attempts to convert a string to a Category.
