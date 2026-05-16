@@ -42,7 +42,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo_project",
+					PropertyPath:    "slo_project",
 					ContainsMessage: "Project is required when SLO is set",
 				},
 			},
@@ -54,7 +54,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo",
+					PropertyPath:    "slo",
 					ContainsMessage: "SLO is required when Project is set",
 				},
 			},
@@ -68,19 +68,19 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo_project",
+					PropertyPath:    "slo_project",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "slo",
+					PropertyPath:    "slo",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "name[0]",
+					PropertyPath:    "name[0]",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "name[1]",
+					PropertyPath:    "name[1]",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 			},

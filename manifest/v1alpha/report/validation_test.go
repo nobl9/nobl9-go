@@ -792,7 +792,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.columns[0].labels.['k ey']",
+				Prop:       "spec.systemHealthReview.columns[0].labels['k ey']",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -916,7 +916,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.labelRows[0].labels.['k ey']",
+				Prop:       "spec.systemHealthReview.labelRows[0].labels['k ey']",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -1054,7 +1054,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.labelRows[0].labels.['k ey']",
+				Prop:       "spec.systemHealthReview.labelRows[0].labels['k ey']",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},

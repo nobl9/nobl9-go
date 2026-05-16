@@ -159,7 +159,7 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 		"fails, value too small": {
 			values:          []string{"60s", "4m"},
 			expectedCode:    rules.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '5m0s'`,
+			expectedMessage: `must be greater than or equal to '5m0s'`,
 		},
 	}
 	for name, testCase := range tests {
@@ -420,7 +420,7 @@ func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
 			},
 
 			expectedCode:    rules.ErrorCodeGreaterThan,
-			expectedMessage: "should be greater than '0s'",
+			expectedMessage: "must be greater than '0s'",
 		},
 		"fails, unexpected format when measurement with lastsFor is averageBurnRate or burnedBudget": {
 			values: []interface{}{
@@ -534,7 +534,7 @@ func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
 			},
 
 			expectedCode:    rules.ErrorCodeGreaterThan,
-			expectedMessage: "should be greater than '0s'",
+			expectedMessage: "must be greater than '0s'",
 		},
 		"fails, unexpected format when measurement with alertingWindow is averageBurnRate or budgetDrop": {
 			values: []interface{}{
@@ -652,7 +652,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"168h1m0s",
 			},
 			expectedCode:    rules.ErrorCodeLessThanOrEqualTo,
-			expectedMessage: `should be less than or equal to '168h0m0s'`,
+			expectedMessage: `must be less than or equal to '168h0m0s'`,
 		},
 		"fails, too short": {
 			values: []string{
@@ -660,7 +660,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"60000ms",
 			},
 			expectedCode:    rules.ErrorCodeGreaterThanOrEqualTo,
-			expectedMessage: `should be greater than or equal to '5m0s'`,
+			expectedMessage: `must be greater than or equal to '5m0s'`,
 		},
 		"fails, zero value": {
 			values: []string{
@@ -670,7 +670,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				"0m",
 			},
 			expectedCode:    govy.ErrorCodeTransform,
-			expectedMessage: `should be greater than or equal to '5m0s'`,
+			expectedMessage: `must be greater than or equal to '5m0s'`,
 		},
 	}
 	for name, testCase := range failTests {

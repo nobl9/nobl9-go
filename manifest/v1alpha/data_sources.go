@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -279,8 +280,7 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 			if dataRetrieval.MaxDuration.Value != nil {
 				maxDurationValue = *dataRetrieval.MaxDuration.Value
 			}
-			return govy.NewPropertyError(
-				"defaultDuration",
+			return govy.NewPropertyError(jsonpath.Parse("defaultDuration"),
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",
