@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
@@ -34,7 +35,7 @@ func (tc MetadataAnnotationsTestCase[T]) Test(t *testing.T, object T, validate f
 
 func GetMetadataAnnotationsTestCases[T manifest.Object](
 	t *testing.T,
-	propertyPath string,
+	propertyPath jsonpath.Path,
 ) map[string]MetadataAnnotationsTestCase[T] {
 	t.Helper()
 
@@ -86,8 +87,9 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "['" + strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" +
-					strings.Repeat("l", 64) + "']",
+				Prop: propertyPath.Key(
+					strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64),
+				),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -103,7 +105,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net_": "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + ".net_",
+				Prop:       propertyPath.Name("net_"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -113,7 +115,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net": strings.Repeat("l", 1051),
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + ".net",
+				Prop: propertyPath.Name("net"),
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},

@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -20,7 +22,14 @@ func TestNewRelic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.NewRelic.NRQL = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("newRelic").
+				Name("nrql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -29,7 +38,14 @@ func TestNewRelic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.NewRelic.NRQL = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("newRelic").
+				Name("nrql"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -94,7 +110,14 @@ uNtIL LIMIT MAX TIMESERIES`,
 				testutils.AssertNoError(t, slo, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].rawMetric.query.newRelic.nrql",
+					Prop: jsonpath.New().
+						Name("spec").
+						Name("objectives").
+						Index(0).
+						Name("rawMetric").
+						Name("query").
+						Name("newRelic").
+						Name("nrql"),
 					Code: rules.ErrorCodeStringDenyRegexp,
 				})
 			}

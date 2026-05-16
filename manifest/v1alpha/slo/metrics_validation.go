@@ -456,13 +456,13 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 		case BudgetingMethodTimeslices.String():
 			if objective.TimeSliceTarget == nil {
 				return govy.NewPropertyError(
-					jsonpath.Parse(fmt.Sprintf("objectives[%d].timeSliceTarget", i)),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget, validationV1Alpha.NewRequiredError())
 			}
 		case BudgetingMethodOccurrences.String():
 			if objective.TimeSliceTarget != nil {
 				return govy.NewPropertyError(
-					jsonpath.Parse(fmt.Sprintf("objectives[%d].timeSliceTarget", i)),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget,
 					govy.NewRuleError(
 						fmt.Sprintf(

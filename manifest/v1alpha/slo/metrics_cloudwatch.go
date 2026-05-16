@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -189,11 +190,13 @@ var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
 			returnedData--
 		}
 		if metricData.MetricStat != nil {
-			if err := validateCloudwatchJSONPeriod(metricData.MetricStat.Period, "MetricStat.Period", i); err != nil {
+			periodPath := jsonpath.New().Name("MetricStat").Name("Period")
+			if err := validateCloudwatchJSONPeriod(metricData.MetricStat.Period, periodPath, i); err != nil {
 				return err
 			}
 		} else {
-			if err := validateCloudwatchJSONPeriod(metricData.Period, "Period", i); err != nil {
+			periodPath := jsonpath.New().Name("Period")
+			if err := validateCloudwatchJSONPeriod(metricData.Period, periodPath, i); err != nil {
 				return err
 			}
 		}
@@ -205,9 +208,9 @@ var cloudWatchJSONValidationRule = govy.NewRule(func(v string) error {
 	return nil
 })
 
-func validateCloudwatchJSONPeriod(period *int64, propName string, index int) error {
+func validateCloudwatchJSONPeriod(period *int64, propPath jsonpath.Path, index int) error {
 	indexPropName := func() string {
-		return fmt.Sprintf(".[%d].%s", index, propName)
+		return "." + jsonpath.New().Index(uint(index)).Join(propPath).String()
 	}
 	const queryPeriod = 60
 	if period == nil {

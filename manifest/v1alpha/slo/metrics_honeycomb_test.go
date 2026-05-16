@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -29,7 +31,14 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 				ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute",
+						Prop: jsonpath.New().
+							Name("spec").
+							Name("objectives").
+							Index(0).
+							Name("countMetrics").
+							Name("goodTotal").
+							Name("honeycomb").
+							Name("attribute"),
 						Code: rules.ErrorCodeStringNotEmpty,
 					},
 				},
@@ -41,7 +50,14 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 				ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute",
+						Prop: jsonpath.New().
+							Name("spec").
+							Name("objectives").
+							Index(0).
+							Name("countMetrics").
+							Name("goodTotal").
+							Name("honeycomb").
+							Name("attribute"),
 						Code: rules.ErrorCodeStringMaxLength,
 					},
 				},
@@ -59,7 +75,7 @@ func TestHoneycomb_rawMetrics_forbidden(t *testing.T) {
 	slo := validRawMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: "spec.objectives[0].rawMetric.query.honeycomb",
+		Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("honeycomb"),
 		Code: rules.ErrorCodeForbidden,
 	})
 }
@@ -68,7 +84,7 @@ func TestHoneycomb_countMetrics_forbidden(t *testing.T) {
 	slo := validCountMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: "spec.objectives[0].countMetrics",
+		Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 		Code: rules.ErrorCodeForbidden,
 	})
 }

@@ -3,6 +3,8 @@ package v1
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
 
@@ -35,7 +37,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "sloNames",
+					PropertyPath:  jsonpath.New().Name("sloNames").String(),
 					Code:          rules.ErrorCodeSliceMinLength,
 					ValidatorName: "Move SLOs request",
 				},
@@ -51,7 +53,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "oldProject",
+					PropertyPath:  jsonpath.New().Name("oldProject").String(),
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -67,7 +69,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "oldProject",
+					PropertyPath:  jsonpath.New().Name("oldProject").String(),
 					Code:          rules.ErrorCodeRequired,
 					ValidatorName: "Move SLOs request",
 				},
@@ -83,7 +85,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "newProject",
+					PropertyPath:  jsonpath.New().Name("newProject").String(),
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -99,7 +101,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "service",
+					PropertyPath:  jsonpath.New().Name("service").String(),
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -150,7 +152,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  "sloNames[1]",
+					PropertyPath:  jsonpath.New().Name("sloNames").Index(1).String(),
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},

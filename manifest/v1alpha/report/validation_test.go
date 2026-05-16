@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/teambition/rrule-go"
 
@@ -31,11 +33,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, report, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -51,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, report, err, 1,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.New().Name("metadata").Name("name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -64,11 +66,11 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 2,
 			testutils.ExpectedError{
-				Prop:    "spec",
+				Prop:    jsonpath.New().Name("spec"),
 				Message: "exactly one report type configuration is required",
 			},
 			testutils.ExpectedError{
-				Prop: "spec.filters",
+				Prop: jsonpath.New().Name("spec").Name("filters"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -108,7 +110,7 @@ func TestValidate_Spec(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 2, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.New().Name("spec"),
 			Message: "exactly one report type configuration is required",
 		})
 	})
@@ -160,7 +162,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters",
+					Prop: jsonpath.New().Name("spec").Name("filters"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -170,7 +172,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.filters",
+					Prop:    jsonpath.New().Name("spec").Name("filters"),
 					Message: "at least one of the following fields is required: projects, services, slos",
 				},
 			},
@@ -184,7 +186,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.projects[0]",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("projects").Index(0),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -196,7 +198,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.services[0].name",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -212,7 +214,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.services[0].name",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("name"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -229,7 +231,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.services[0].project",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("project"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -245,7 +247,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.services[0].project",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("project"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -262,7 +264,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.slos[0].name",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -278,7 +280,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.slos[0].name",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -295,7 +297,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.slos[0].project",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -311,7 +313,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.filters.slos[0].project",
+					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -388,15 +390,15 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 3,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.rolling.unit",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: "spec.sloHistory.timeFrame.rolling.count",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("count"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.timeFrame.rolling",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -409,11 +411,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.rolling.count",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("count"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.timeFrame.rolling",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -430,11 +432,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.rolling.unit",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    "spec.sloHistory.timeFrame.rolling",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -451,11 +453,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.rolling.unit",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    "spec.sloHistory.timeFrame.rolling",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -473,7 +475,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.rolling",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -491,7 +493,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.timeZone",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("timeZone"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -508,7 +510,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.timeZone",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("timeZone"),
 					Message: "not a valid time zone: unknown time zone x",
 				},
 			},
@@ -526,7 +528,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.calendar",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
 					Message: validCalendarPairs,
 				},
 			},
@@ -539,7 +541,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.calendar",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
 					Message: validCalendarPairs,
 				},
 			},
@@ -556,11 +558,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.sloHistory.timeFrame.calendar.unit",
+					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar").Name("unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    "spec.sloHistory.timeFrame.calendar",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -578,7 +580,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.calendar",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -596,7 +598,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.sloHistory.timeFrame.calendar",
+					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
 					Message: "dates must be in the past",
 				},
 			},
@@ -649,7 +651,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails with empty rowGroupBy value": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.rowGroupBy",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("rowGroupBy"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -660,7 +662,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails with empty thresholds": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.thresholds",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("thresholds"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -671,7 +673,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails with invalid thresholds": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.thresholds.greenGt",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("thresholds").Name("greenGt"),
 				Code: rules.ErrorCodeLessThan,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -685,7 +687,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails when red is greater than green": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:    "spec.systemHealthReview.thresholds.redLte",
+				Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("thresholds").Name("redLte"),
 				Message: "must be less than or equal to 'greenGt' (0.1)",
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -699,7 +701,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails when rowGroupBy is 'project'": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeForbidden,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -711,7 +713,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails when rowGroupBy is 'service'": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeForbidden,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -723,7 +725,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails with too long tableHeader": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.tableHeader",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("tableHeader"),
 				Code: rules.ErrorCodeStringMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -754,7 +756,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with empty columns": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.columns",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -765,7 +767,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with too many columns": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.columns",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -781,7 +783,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.columns[0].labels",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("labels"),
 				Code: rules.ErrorCodeMapMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -792,7 +794,13 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.columns[0].labels['k ey']",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("systemHealthReview").
+					Name("columns").
+					Index(0).
+					Name("labels").
+					Key("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -804,7 +812,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with empty displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.columns[0].displayName",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("displayName"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -815,7 +823,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with too long displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.columns[0].displayName",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("displayName"),
 				Code: rules.ErrorCodeStringMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -856,7 +864,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with nil labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -867,7 +875,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with empty labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -878,7 +886,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with too many labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -894,7 +902,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -905,7 +913,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with too many labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -916,7 +924,13 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.labelRows[0].labels['k ey']",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("systemHealthReview").
+					Name("labelRows").
+					Index(0).
+					Name("labels").
+					Key("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -928,7 +942,13 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:    "spec.systemHealthReview.labelRows[0].labels.key1",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("systemHealthReview").
+					Name("labelRows").
+					Index(0).
+					Name("labels").
+					Name("key1"),
 				Message: "label values must be empty",
 				Code:    rules.ErrorCodeSliceMaxLength,
 			}},
@@ -940,7 +960,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
 				Code: rules.ErrorCodeForbidden,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1002,7 +1022,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with too many rows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1021,7 +1041,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with nil labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1032,7 +1052,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty labelRows": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows"),
 				Code: rules.ErrorCodeSliceLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1043,7 +1063,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
 				Code: rules.ErrorCodeMapMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1054,7 +1074,13 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with invalid label key": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:       "spec.systemHealthReview.labelRows[0].labels['k ey']",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("systemHealthReview").
+					Name("labelRows").
+					Index(0).
+					Name("labels").
+					Key("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -1066,7 +1092,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels").Name("key1"),
 				Code: rules.ErrorCodeSliceMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1077,7 +1103,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with nil label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels").Name("key1"),
 				Code: rules.ErrorCodeSliceMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1088,7 +1114,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1099,7 +1125,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with too long displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
 				Code: rules.ErrorCodeStringMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1132,7 +1158,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 				testutils.AssertNoError(t, report, err)
 			default:
 				testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-					Prop: "spec.systemHealthReview.hideUngrouped",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("hideUngrouped"),
 					Code: rules.ErrorCodeForbidden,
 				})
 			}
@@ -1150,7 +1176,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.timeFrame",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1169,7 +1195,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1192,7 +1218,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1217,11 +1243,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
+					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
 					Message: "wrong format",
 				},
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1247,11 +1273,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
+					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
 					Message: "undefined frequency: TEST",
 				},
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1277,7 +1303,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.timeFrame.snapshot.rrule",
+					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
 					Message: "rrule must have at least daily frequency",
 				},
 			},
@@ -1304,11 +1330,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot.rrule",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
 					Code: rules.ErrorCodeForbidden,
 				},
 				{
-					Prop: "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
 					Code: rules.ErrorCodeForbidden,
 				},
 			},
@@ -1335,7 +1361,12 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.systemHealthReview.timeFrame.snapshot.dateTime",
+					Prop: jsonpath.New().
+						Name("spec").
+						Name("systemHealthReview").
+						Name("timeFrame").
+						Name("snapshot").
+						Name("dateTime"),
 					Message: "dateTime must be in the past",
 				},
 			},

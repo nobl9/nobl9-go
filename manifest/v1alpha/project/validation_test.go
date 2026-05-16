@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -32,11 +34,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, project, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -53,18 +55,18 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, project, err, 2,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.New().Name("metadata").Name("name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.displayName",
+			Prop: jsonpath.New().Name("metadata").Name("displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[Project](t, "metadata.labels") {
+	for name, test := range v1alphatest.GetLabelsTestCases[Project](t, jsonpath.New().Name("metadata").Name("labels")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validProject()
 			svc.Metadata.Labels = test.Labels
@@ -74,7 +76,9 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Project](t, "metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Project](t, jsonpath.New().
+		Name("metadata").
+		Name("annotations")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validProject()
 			svc.Metadata.Annotations = test.Annotations
@@ -89,7 +93,7 @@ func TestValidate_Spec(t *testing.T) {
 	err := validate(project)
 	testutils.AssertContainsErrors(t, project, err, 1,
 		testutils.ExpectedError{
-			Prop: "spec.description",
+			Prop: jsonpath.New().Name("spec").Name("description"),
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		},
 	)

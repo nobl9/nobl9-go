@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -61,7 +63,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.url",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 			},
@@ -74,7 +76,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.webhook.template",
+					Prop:    jsonpath.New().Name("spec").Name("webhook").Name("template"),
 					Message: "contains invalid template field: sloname",
 				},
 			},
@@ -87,7 +89,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.webhook.templateFields",
+					Prop:    jsonpath.New().Name("spec").Name("webhook").Name("templateFields"),
 					Message: "contains invalid template field: sloname",
 				},
 			},
@@ -100,7 +102,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.webhook",
+					Prop:    jsonpath.New().Name("spec").Name("webhook"),
 					Message: "must not contain both 'template' and 'templateFields'",
 				},
 			},
@@ -114,7 +116,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.webhook",
+					Prop:    jsonpath.New().Name("spec").Name("webhook"),
 					Message: "must contain either 'template' or 'templateFields'",
 				},
 			},
@@ -177,7 +179,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.headers[0].name",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -197,7 +199,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.headers[0].name",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("name"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
@@ -217,7 +219,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.headers[0].value",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -236,7 +238,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.headers[0].value",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -255,7 +257,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.webhook.headers",
+					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},

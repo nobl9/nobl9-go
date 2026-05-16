@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -39,11 +41,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, slo, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -61,22 +63,22 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, slo, err, 3,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.New().Name("metadata").Name("name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.displayName",
+			Prop: jsonpath.New().Name("metadata").Name("displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.project",
+			Prop: jsonpath.New().Name("metadata").Name("project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[SLO](t, "metadata.labels") {
+	for name, test := range v1alphatest.GetLabelsTestCases[SLO](t, jsonpath.New().Name("metadata").Name("labels")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Labels = test.Labels
@@ -86,7 +88,9 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO](t, "metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO](t, jsonpath.New().
+		Name("metadata").
+		Name("annotations")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Annotations = test.Annotations
@@ -100,7 +104,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	slo.Spec.Description = strings.Repeat("a", 2000)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: "spec.description",
+		Prop: jsonpath.New().Name("spec").Name("description"),
 		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
@@ -119,7 +123,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo.Spec.BudgetingMethod = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.budgetingMethod",
+			Prop: jsonpath.New().Name("spec").Name("budgetingMethod"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -128,7 +132,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo.Spec.BudgetingMethod = "invalid"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.budgetingMethod",
+			Prop:    jsonpath.New().Name("spec").Name("budgetingMethod"),
 			Message: "'invalid' is not a valid budgeting method",
 		})
 	})
@@ -146,7 +150,7 @@ func TestValidate_Spec_Service(t *testing.T) {
 		slo.Spec.Service = "MY SERVICE"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.service",
+			Prop: jsonpath.New().Name("spec").Name("service"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -164,7 +168,7 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		slo.Spec.AlertPolicies = []string{"my-policy", "MY POLICY", "ok-policy"}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicies[1]",
+			Prop: jsonpath.New().Name("spec").Name("alertPolicies").Index(1),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -192,7 +196,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = attachments
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.attachments",
+			Prop: jsonpath.New().Name("spec").Name("attachments"),
 			Code: rules.ErrorCodeSliceLength,
 		})
 	})
@@ -206,15 +210,15 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: "spec.attachments[1].url",
+				Prop: jsonpath.New().Name("spec").Name("attachments").Index(1).Name("url"),
 				Code: rules.ErrorCodeStringURL,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.attachments[2].displayName",
+				Prop: jsonpath.New().Name("spec").Name("attachments").Index(2).Name("displayName"),
 				Code: rules.ErrorCodeStringLength,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.attachments[2].url",
+				Prop: jsonpath.New().Name("spec").Name("attachments").Index(2).Name("url"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -251,7 +255,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.target",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -261,7 +265,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.target",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
 					Code: rules.ErrorCodeGreaterThan,
 				},
 			},
@@ -271,7 +275,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.target",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
 					Code: rules.ErrorCodeLessThan,
 				},
 			},
@@ -281,7 +285,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: -1, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.burnRateCondition.value",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition").Name("value"),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
@@ -291,7 +295,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1001, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.burnRateCondition.value",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition").Name("value"),
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
@@ -301,7 +305,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.burnRateCondition.op",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition").Name("op"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -311,7 +315,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 10, Operator: "lte"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: "spec.composite.burnRateCondition.op",
+					Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition").Name("op"),
 					Code: rules.ErrorCodeEqualTo,
 				},
 			},
@@ -333,7 +337,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.composite.burnRateCondition",
+			Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -347,7 +351,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.composite.burnRateCondition",
+			Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition"),
 			Code: rules.ErrorCodeForbidden,
 		})
 	})
@@ -387,7 +391,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertMethods"),
 						Code: rules.ErrorCodeSliceMinLength,
 					},
 				},
@@ -409,19 +413,25 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods[0].name",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertMethods").Index(0).Name("name"),
 						Code: rules.ErrorCodeRequired,
 					},
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods[1].name",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertMethods").Index(1).Name("name"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods[1].project",
+						Prop: jsonpath.New().
+							Name("spec").
+							Name("anomalyConfig").
+							Name("noData").
+							Name("alertMethods").
+							Index(1).
+							Name("project"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods[2].name",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertMethods").Index(2).Name("name"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 				},
@@ -440,7 +450,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				}}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.alertMethods",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertMethods"),
 						Code: rules.ErrorCodeSliceUnique,
 					},
 				},
@@ -459,7 +469,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.anomalyConfig.noData.alertAfter",
+						Prop:    jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertAfter"),
 						Code:    rules.ErrorCodeGreaterThanOrEqualTo,
 						Message: `must be greater than or equal to '5m0s'`,
 					},
@@ -479,7 +489,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.anomalyConfig.noData.alertAfter",
+						Prop: jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertAfter"),
 						Code: rules.ErrorCodeLessThanOrEqualTo,
 					},
 				},
@@ -498,7 +508,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.anomalyConfig.noData.alertAfter",
+						Prop:    jsonpath.New().Name("spec").Name("anomalyConfig").Name("noData").Name("alertAfter"),
 						Code:    rules.ErrorCodeDurationPrecision,
 						Message: "duration must be defined with 1m0s precision",
 					},
@@ -551,7 +561,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows"),
 						Code: rules.ErrorCodeSliceLength,
 					},
 				},
@@ -561,7 +571,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{{}, {}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows"),
 						Code: rules.ErrorCodeSliceLength,
 					},
 				},
@@ -575,11 +585,11 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0].unit",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("unit"),
 						Code: rules.ErrorCodeRequired,
 					},
 					{
-						Prop: "spec.timeWindows[0].count",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("count"),
 						Code: rules.ErrorCodeGreaterThan,
 					},
 				},
@@ -592,7 +602,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0].unit",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("unit"),
 						Code: rules.ErrorCodeOneOf,
 					},
 				},
@@ -606,11 +616,11 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0].calendar.startTime",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("calendar").Name("startTime"),
 						Code: rules.ErrorCodeRequired,
 					},
 					{
-						Prop: "spec.timeWindows[0].calendar.timeZone",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("calendar").Name("timeZone"),
 						Code: rules.ErrorCodeRequired,
 					},
 				},
@@ -627,11 +637,11 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.timeWindows[0].calendar.startTime",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("calendar").Name("startTime"),
 						Message: `error parsing date: parsing time "asd" as "2006-01-02 15:04:05": cannot parse "asd" as "2006"`,
 					},
 					{
-						Prop:    "spec.timeWindows[0].calendar.timeZone",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0).Name("calendar").Name("timeZone"),
 						Message: "not a valid time zone: unknown time zone asd",
 					},
 				},
@@ -649,7 +659,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.timeWindows[0]",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: "if 'isRolling' property is true, 'calendar' property must be omitted",
 					},
 				},
@@ -663,7 +673,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.timeWindows[0]",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: "if 'isRolling' property is false or not set, 'calendar' property must be provided",
 					},
 				},
@@ -677,7 +687,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.timeWindows[0]",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: "invalid time window unit for Rolling window type: must be one of: Minute, Hour, Day",
 					},
 				},
@@ -695,7 +705,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    "spec.timeWindows[0]",
+						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: "invalid time window unit for Calendar window type: must be one of: Day, Week, Month, Quarter, Year",
 					},
 				},
@@ -709,7 +719,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0]",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: fmt.Sprintf(
 							"rolling time window size must be greater than or equal to %s",
 							minimumRollingTimeWindowSize),
@@ -725,7 +735,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0]",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: fmt.Sprintf(
 							"rolling time window size must be less than or equal to %s",
 							maximumRollingTimeWindowSize),
@@ -745,7 +755,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.timeWindows[0]",
+						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
 						Message: fmt.Sprintf(
 							"calendar time window size must be less than %s",
 							maximumCalendarTimeWindowSize),
@@ -801,7 +811,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: nil,
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator",
+						Prop: jsonpath.New().Name("spec").Name("indicator"),
 						Code: rules.ErrorCodeRequired,
 					},
 				},
@@ -811,7 +821,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: &Indicator{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator.metricSource.name",
+						Prop: jsonpath.New().Name("spec").Name("indicator").Name("metricSource").Name("name"),
 						Code: rules.ErrorCodeRequired,
 					},
 				},
@@ -821,7 +831,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: &Indicator{MetricSource: MetricSourceSpec{Name: "", Project: "default"}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator.metricSource.name",
+						Prop: jsonpath.New().Name("spec").Name("indicator").Name("metricSource").Name("name"),
 						Code: rules.ErrorCodeRequired,
 					},
 				},
@@ -837,15 +847,15 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.indicator.metricSource.name",
+						Prop: jsonpath.New().Name("spec").Name("indicator").Name("metricSource").Name("name"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
-						Prop: "spec.indicator.metricSource.project",
+						Prop: jsonpath.New().Name("spec").Name("indicator").Name("metricSource").Name("project"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
-						Prop: "spec.indicator.metricSource.kind",
+						Prop: jsonpath.New().Name("spec").Name("indicator").Name("metricSource").Name("kind"),
 						Code: rules.ErrorCodeOneOf,
 					},
 				},
@@ -908,7 +918,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives",
+						Prop: jsonpath.New().Name("spec").Name("objectives"),
 						Code: rules.ErrorCodeSliceMinLength,
 					},
 				},
@@ -940,27 +950,27 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives[0].displayName",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("displayName"),
 						Code: rules.ErrorCodeStringMaxLength,
 					},
 					{
-						Prop: "spec.objectives[0].name",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("name"),
 						Code: validationV1Alpha.ErrorCodeStringName,
 					},
 					{
-						Prop: "spec.objectives[0].target",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("target"),
 						Code: rules.ErrorCodeLessThan,
 					},
 					{
-						Prop: "spec.objectives[1].value",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(1).Name("value"),
 						Code: rules.ErrorCodeRequired,
 					},
 					{
-						Prop: "spec.objectives[1].target",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(1).Name("target"),
 						Code: rules.ErrorCodeRequired,
 					},
 					{
-						Prop: "spec.objectives[2].target",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(2).Name("target"),
 						Code: rules.ErrorCodeGreaterThanOrEqualTo,
 					},
 				},
@@ -982,7 +992,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 					},
 				},
 				ExpectedErrors: []testutils.ExpectedError{{
-					Prop: "spec.objectives",
+					Prop: jsonpath.New().Name("spec").Name("objectives"),
 					Code: rules.ErrorCodeSliceUnique,
 				}},
 				ExpectedErrorsCount: 1,
@@ -995,7 +1005,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 					Operator:      ptr("invalid"),
 				}},
 				ExpectedErrors: []testutils.ExpectedError{{
-					Prop: "spec.objectives[0].op",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("op"),
 					Code: rules.ErrorCodeOneOf,
 				}},
 				ExpectedErrorsCount: 1,
@@ -1091,7 +1101,7 @@ func TestValidate_Spec_Objectives_Primary(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: "spec.objectives",
+						Prop: jsonpath.New().Name("spec").Name("objectives"),
 						Code: rules.ErrorCodeForbidden,
 					},
 				},
@@ -1128,7 +1138,7 @@ func TestValidate_Spec_Objectives_RawMetric(t *testing.T) {
 			slo.Spec.Objectives[0].TimeSliceTarget = ptr(test.InputValue)
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: "spec.objectives[0].timeSliceTarget",
+				Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("timeSliceTarget"),
 				Code: test.Code,
 			})
 		})
@@ -1149,7 +1159,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    "spec",
+				Prop:    jsonpath.New().Name("spec"),
 				Message: "[countMetrics, rawMetrics] properties are mutually exclusive, provide only one of them",
 				Code:    rules.ErrorCodeMutuallyExclusive,
 			})
@@ -1160,7 +1170,7 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.New().Name("spec"),
 			Message: "one of [composite, countMetrics, rawMetrics] properties must be set, none was provided",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1174,7 +1184,7 @@ func TestValidate_Spec(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop:    "spec",
+				Prop:    jsonpath.New().Name("spec"),
 				Message: "[countMetrics, rawMetrics] properties are mutually exclusive, provide only one of them",
 				Code:    rules.ErrorCodeMutuallyExclusive,
 			})
@@ -1189,7 +1199,7 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[1].CountMetrics = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.New().Name("spec"),
 			Message: "one of [composite, countMetrics, rawMetrics] properties must be set, none was provided",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1199,7 +1209,7 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.BudgetingMethod = BudgetingMethodTimeslices.String()
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].timeSliceTarget",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("timeSliceTarget"),
 			Code: joinErrorCodes(errCodeTimeSliceTarget, rules.ErrorCodeRequired),
 		})
 	})
@@ -1209,7 +1219,7 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].TimeSliceTarget = ptr(0.1)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].timeSliceTarget",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("timeSliceTarget"),
 			Code: joinErrorCodes(errCodeTimeSliceTarget, rules.ErrorCodeForbidden),
 		})
 	})
@@ -1218,7 +1228,7 @@ func TestValidate_Spec(t *testing.T) {
 		slo.Spec.Objectives[0].Operator = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].op",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("op"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -1230,7 +1240,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Prometheus = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].rawMetric.query",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query"),
 			Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
 		})
 	})
@@ -1260,7 +1270,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec",
+					Prop: jsonpath.New().Name("spec"),
 					Code: errCodeExactlyOneMetricSpecType,
 				})
 			})
@@ -1271,7 +1281,7 @@ func TestValidate_Spec_RawMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -1285,11 +1295,11 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.good",
+				Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics").Name("good"),
 				Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
 			},
 			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.total",
+				Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics").Name("total"),
 				Message: "exactly one valid metric spec has to be provided (e.g. 'prometheus')",
 			},
 		)
@@ -1322,7 +1332,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Message: "[goodTotal, total] properties are mutually exclusive, provide only one of them",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1337,7 +1347,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Message: "[bad, good] properties are mutually exclusive, provide only one of them",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1350,7 +1360,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Message: "one of [goodTotal, total] properties must be set, none was provided",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1363,7 +1373,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Message: "one of [goodTotal, total] properties must be set, none was provided",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1376,7 +1386,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
+			Prop:    jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Message: "one of [bad, good] properties must be set, none was provided",
 			Code:    rules.ErrorCodeMutuallyExclusive,
 		})
@@ -1474,7 +1484,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec",
+					Prop: jsonpath.New().Name("spec"),
 					Code: errCodeExactlyOneMetricSpecType,
 				})
 			})
@@ -1498,7 +1508,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].countMetrics.bad",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics").Name("bad"),
 					Code: joinErrorCodes(errCodeBadOverTotalDisabled, rules.ErrorCodeOneOf),
 				})
 			})
@@ -1517,7 +1527,7 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 				}
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].countMetrics.goodTotal",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics").Name("goodTotal"),
 					Code: joinErrorCodes(errCodeSingleQueryGoodOverTotalDisabled, rules.ErrorCodeOneOf),
 				})
 			})
