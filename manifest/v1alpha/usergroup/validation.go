@@ -2,6 +2,7 @@ package usergroup
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -18,6 +19,6 @@ var validator = govy.New[UserGroup](
 	validationV1Alpha.FieldRuleKind(func(u UserGroup) manifest.Kind { return u.Kind }, manifest.KindUserGroup),
 	validationV1Alpha.FieldRuleMetadataName(func(u UserGroup) string { return u.Metadata.Name }),
 	govy.For(func(u UserGroup) string { return u.Spec.DisplayName }).
-		WithName("spec.displayName").
+		WithPath(jsonpath.Parse("spec.displayName")).
 		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 )

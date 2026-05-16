@@ -69,7 +69,7 @@ func AssertContainsErrors(
 		for _, actual := range objErr.Errors {
 			var propErr *govy.PropertyError
 			require.ErrorAs(t, actual, &propErr)
-			if propErr.PropertyName != expected.Prop {
+			if propErr.PropertyPath.String() != expected.Prop {
 				continue
 			}
 			if expected.IsKeyError != propErr.IsKeyError {

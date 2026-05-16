@@ -35,7 +35,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "sloNames",
+					PropertyPath:  "sloNames",
 					Code:          rules.ErrorCodeSliceMinLength,
 					ValidatorName: "Move SLOs request",
 				},
@@ -51,7 +51,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "oldProject",
+					PropertyPath:  "oldProject",
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -67,7 +67,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "oldProject",
+					PropertyPath:  "oldProject",
 					Code:          rules.ErrorCodeRequired,
 					ValidatorName: "Move SLOs request",
 				},
@@ -83,7 +83,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "newProject",
+					PropertyPath:  "newProject",
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -99,7 +99,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "service",
+					PropertyPath:  "service",
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},
@@ -150,7 +150,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyName:  "sloNames[1]",
+					PropertyPath:  "sloNames[1]",
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},

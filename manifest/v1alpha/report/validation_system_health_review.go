@@ -7,6 +7,7 @@ import (
 	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -138,8 +139,7 @@ var reportThresholdsValidation = govy.New[Thresholds](
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
 	if v.RedLessThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLessThanOrEqual > *v.GreenGreaterThan {
-			return govy.NewPropertyError(
-				"redLte",
+			return govy.NewPropertyError(jsonpath.Parse("redLte"),
 				v.RedLessThanOrEqual,
 				errors.Errorf("must be less than or equal to 'greenGt' (%v)", *v.GreenGreaterThan))
 		}
