@@ -19,6 +19,6 @@ var validator = govy.New[UserGroup](
 	validationV1Alpha.FieldRuleKind(func(u UserGroup) manifest.Kind { return u.Kind }, manifest.KindUserGroup),
 	validationV1Alpha.FieldRuleMetadataName(func(u UserGroup) string { return u.Metadata.Name }),
 	govy.For(func(u UserGroup) string { return u.Spec.DisplayName }).
-		WithPath(jsonpath.Parse("spec.displayName")).
+		WithPath(jsonpath.New().Name("spec").Name("displayName")).
 		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 )

@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -25,7 +27,14 @@ func TestGCM(t *testing.T) {
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1,
 					testutils.ExpectedError{
-						Prop: "spec.objectives[0].rawMetric.query.gcm.projectId",
+						Prop: jsonpath.New().
+							Name("spec").
+							Name("objectives").
+							Index(0).
+							Name("rawMetric").
+							Name("query").
+							Name("gcm").
+							Name("projectId"),
 						Code: rules.ErrorCodeRequired,
 					},
 				)
@@ -38,7 +47,7 @@ func TestGCM(t *testing.T) {
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1,
 					testutils.ExpectedError{
-						Prop: "spec.objectives[0].rawMetric.query.gcm",
+						Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("gcm"),
 						Code: rules.ErrorCodeOneOf,
 					},
 				)
@@ -54,7 +63,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: "spec.objectives[0].rawMetric.query.gcm",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("gcm"),
 					Code: rules.ErrorCodeOneOf,
 				},
 			)
@@ -88,7 +97,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: "spec.objectives[0].countMetrics",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 					Code: rules.ErrorCodeNotEqualTo,
 				},
 			)
@@ -102,7 +111,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: "spec.objectives[0].countMetrics",
+					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 					Code: rules.ErrorCodeNotEqualTo,
 				},
 			)

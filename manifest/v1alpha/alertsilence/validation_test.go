@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -33,11 +35,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -54,11 +56,11 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.New().Name("metadata").Name("name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.project",
+			Prop: jsonpath.New().Name("metadata").Name("project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -70,7 +72,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		alertSilence.Metadata.Project = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "metadata.project",
+			Prop: jsonpath.New().Name("metadata").Name("project"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -81,7 +83,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	alertSilence.Spec.Description = strings.Repeat("A", 2000)
 	err := validate(alertSilence)
 	testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-		Prop: "spec.description",
+		Prop: jsonpath.New().Name("spec").Name("description"),
 		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
@@ -98,7 +100,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		alertSilence.Spec.SLO = "MY SLO"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.slo",
+			Prop: jsonpath.New().Name("spec").Name("slo"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -107,7 +109,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		alertSilence.Spec.SLO = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.slo",
+			Prop: jsonpath.New().Name("spec").Name("slo"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -148,7 +150,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence.Spec.AlertPolicy.Name = "not valid NAME !!"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.name",
+			Prop: jsonpath.New().Name("spec").Name("alertPolicy").Name("name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -157,7 +159,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence.Spec.AlertPolicy.Name = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.name",
+			Prop: jsonpath.New().Name("spec").Name("alertPolicy").Name("name"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -166,7 +168,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence.Spec.AlertPolicy.Project = "not valid NAME !!"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 2, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.project",
+			Prop: jsonpath.New().Name("spec").Name("alertPolicy").Name("project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -176,7 +178,7 @@ func TestValidate_Spec_AlertPolicy(t *testing.T) {
 		alertSilence.Spec.AlertPolicy.Project = "project-2"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.alertPolicy.project",
+			Prop: jsonpath.New().Name("spec").Name("alertPolicy").Name("project"),
 			Code: errorCodeInconsistentProject,
 		})
 	})
@@ -189,7 +191,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		alertSilence.Spec.Period.Duration = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.period",
+			Prop: jsonpath.New().Name("spec").Name("period"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -201,7 +203,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		alertSilence.Spec.Period.Duration = "10m"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.period",
+			Prop: jsonpath.New().Name("spec").Name("period"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -231,7 +233,7 @@ func TestValidate_Spec_Period_Duration(t *testing.T) {
 		alertSilence.Spec.Period.Duration = "3 months"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.period.duration",
+			Prop: jsonpath.New().Name("spec").Name("period").Name("duration"),
 			Code: govy.ErrorCodeTransform,
 		})
 	})
@@ -242,7 +244,7 @@ func TestValidate_Spec_Period_Duration(t *testing.T) {
 		alertSilence.Spec.Period.Duration = "0s"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: "spec.period.duration",
+			Prop: jsonpath.New().Name("spec").Name("period").Name("duration"),
 			Code: rules.ErrorCodeGreaterThan,
 		})
 	})
@@ -276,7 +278,7 @@ func TestValidate_Spec_EndTime(t *testing.T) {
 			alertSilence.Spec.Period = testCase
 			err := validate(alertSilence)
 			testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-				Prop: "spec.period",
+				Prop: jsonpath.New().Name("spec").Name("period"),
 				Code: errorCodeEndTimeNotBeforeOrNotEqualStartTime,
 			})
 		})

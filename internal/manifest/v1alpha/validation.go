@@ -67,40 +67,40 @@ func FieldRuleKind[S manifest.Object](
 
 func FieldRuleMetadataName[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("metadata.name")).
+		WithPath(jsonpath.New().Name("metadata").Name("name")).
 		Required().
 		Rules(StringName())
 }
 
 func FieldRuleMetadataDisplayName[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("metadata.displayName")).
+		WithPath(jsonpath.New().Name("metadata").Name("displayName")).
 		OmitEmpty().
 		Rules(rules.StringMaxLength(NameMaximumLength))
 }
 
 func FieldRuleMetadataProject[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("metadata.project")).
+		WithPath(jsonpath.New().Name("metadata").Name("project")).
 		Required().
 		Rules(StringName())
 }
 
 func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) govy.PropertyRules[v1alpha.Labels, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("metadata.labels")).
+		WithPath(jsonpath.New().Name("metadata").Name("labels")).
 		Include(v1alpha.LabelsValidationRules())
 }
 
 func FieldRuleMetadataAnnotations[S any](getter func(S) v1alpha.MetadataAnnotations,
 ) govy.PropertyRules[v1alpha.MetadataAnnotations, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("metadata.annotations")).
+		WithPath(jsonpath.New().Name("metadata").Name("annotations")).
 		Include(v1alpha.MetadataAnnotationsValidationRules())
 }
 
 func FieldRuleSpecDescription[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithPath(jsonpath.Parse("spec.description")).
+		WithPath(jsonpath.New().Name("spec").Name("description")).
 		Rules(StringDescription())
 }

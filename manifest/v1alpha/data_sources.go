@@ -280,7 +280,7 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 			if dataRetrieval.MaxDuration.Value != nil {
 				maxDurationValue = *dataRetrieval.MaxDuration.Value
 			}
-			return govy.NewPropertyError(jsonpath.Parse("defaultDuration"),
+			return govy.NewPropertyError(jsonpath.New().Name("defaultDuration"),
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",

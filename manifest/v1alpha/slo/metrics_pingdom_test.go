@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -23,7 +25,7 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -41,7 +43,7 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -54,11 +56,25 @@ func TestPingdom_CountMetricsLevel(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.total.pingdom.status",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("countMetrics").
+					Name("total").
+					Name("pingdom").
+					Name("status"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.good.pingdom.status",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("countMetrics").
+					Name("good").
+					Name("pingdom").
+					Name("status"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -77,7 +93,14 @@ func TestPingdom_RawMetricLevel(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkType",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("pingdom").
+				Name("checkType"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -96,7 +119,14 @@ func TestPingdom(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckType = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkType",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("pingdom").
+				Name("checkType"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -105,7 +135,14 @@ func TestPingdom(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("pingdom").
+				Name("checkId"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -114,7 +151,14 @@ func TestPingdom(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("pingdom").
+				Name("checkId"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -123,7 +167,14 @@ func TestPingdom(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = ptr("a12393")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("pingdom").
+				Name("checkId"),
 			Code: rules.ErrorCodeStringMatchRegexp,
 		})
 	})
@@ -138,7 +189,14 @@ func TestPingdom_CheckTypeTransaction(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Pingdom.Status = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.total.pingdom.status",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("countMetrics").
+				Name("total").
+				Name("pingdom").
+				Name("status"),
 			Code: rules.ErrorCodeForbidden,
 		})
 	})
@@ -173,7 +231,14 @@ func TestPingdom_CheckTypeUptime(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.Status = ptr(status)
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.pingdom.status",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("pingdom").
+					Name("status"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		}

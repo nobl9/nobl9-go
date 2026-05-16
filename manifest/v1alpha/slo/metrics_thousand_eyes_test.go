@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -20,11 +22,23 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.total.thousandEyes",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("countMetrics").
+					Name("total").
+					Name("thousandEyes"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.good.thousandEyes",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("countMetrics").
+					Name("good").
+					Name("thousandEyes"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -35,11 +49,25 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("thousandEyes").
+					Name("testID"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("thousandEyes").
+					Name("testType"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -53,11 +81,25 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("thousandEyes").
+					Name("testID"),
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("thousandEyes").
+					Name("testType"),
 				Code: rules.ErrorCodeOneOf,
 			},
 		)
@@ -76,7 +118,14 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.accountGroupID",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("thousandEyes").
+					Name("accountGroupID"),
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 		)

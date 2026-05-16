@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -31,11 +33,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, method, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -53,22 +55,24 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, alertMethod, err, 3,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.New().Name("metadata").Name("name"),
 			Code: v1alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.displayName",
+			Prop: jsonpath.New().Name("metadata").Name("displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.project",
+			Prop: jsonpath.New().Name("metadata").Name("project"),
 			Code: v1alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertMethod](t, "metadata.annotations") {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertMethod](t, jsonpath.New().
+		Name("metadata").
+		Name("annotations")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validAlertMethod()
 			svc.Metadata.Annotations = test.Annotations
@@ -83,7 +87,7 @@ func TestValidate_Spec(t *testing.T) {
 		alertMethod.Spec.Description = strings.Repeat("l", 1051)
 		err := validate(alertMethod)
 		testutils.AssertContainsErrors(t, alertMethod, err, 1, testutils.ExpectedError{
-			Prop: "spec.description",
+			Prop: jsonpath.New().Name("spec").Name("description"),
 			Code: rules.ErrorCodeStringLength,
 		})
 	})
@@ -92,7 +96,7 @@ func TestValidate_Spec(t *testing.T) {
 		alertMethod.Spec = Spec{}
 		err := validate(alertMethod)
 		testutils.AssertContainsErrors(t, alertMethod, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.New().Name("spec"),
 			Message: "exactly one alert method configuration is required",
 		})
 	})
@@ -108,7 +112,7 @@ func TestValidate_Spec(t *testing.T) {
 		}
 		err := validate(alertMethod)
 		testutils.AssertContainsErrors(t, alertMethod, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.New().Name("spec"),
 			Message: "exactly one alert method configuration is required",
 		})
 	})

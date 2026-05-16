@@ -139,7 +139,7 @@ var reportThresholdsValidation = govy.New[Thresholds](
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
 	if v.RedLessThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLessThanOrEqual > *v.GreenGreaterThan {
-			return govy.NewPropertyError(jsonpath.Parse("redLte"),
+			return govy.NewPropertyError(jsonpath.New().Name("redLte"),
 				v.RedLessThanOrEqual,
 				errors.Errorf("must be less than or equal to 'greenGt' (%v)", *v.GreenGreaterThan))
 		}

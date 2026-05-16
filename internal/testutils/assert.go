@@ -8,16 +8,34 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 type ExpectedError struct {
-	Prop            string         `json:"property"`
+	Prop            jsonpath.Path  `json:"property"`
 	Code            govy.ErrorCode `json:"code,omitempty"`
 	Message         string         `json:"message,omitempty"`
 	ContainsMessage string         `json:"containsMessage,omitempty"`
 	IsKeyError      bool           `json:"isKeyError,omitempty"`
+}
+
+func (e ExpectedError) MarshalJSON() ([]byte, error) {
+	type expectedError struct {
+		Prop            string         `json:"property"`
+		Code            govy.ErrorCode `json:"code,omitempty"`
+		Message         string         `json:"message,omitempty"`
+		ContainsMessage string         `json:"containsMessage,omitempty"`
+		IsKeyError      bool           `json:"isKeyError,omitempty"`
+	}
+	return json.Marshal(expectedError{
+		Prop:            e.Prop.String(),
+		Code:            e.Code,
+		Message:         e.Message,
+		ContainsMessage: e.ContainsMessage,
+		IsKeyError:      e.IsKeyError,
+	})
 }
 
 // AssertNoError asserts that the provided v1alpha.ObjectError is nil.
@@ -69,7 +87,7 @@ func AssertContainsErrors(
 		for _, actual := range objErr.Errors {
 			var propErr *govy.PropertyError
 			require.ErrorAs(t, actual, &propErr)
-			if propErr.PropertyPath.String() != expected.Prop {
+			if !propErr.PropertyPath.Equal(expected.Prop) {
 				continue
 			}
 			if expected.IsKeyError != propErr.IsKeyError {
@@ -109,9 +127,9 @@ func AssertContainsErrors(
 	}
 }
 
-func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
+func PrependPropertyPath(errs []ExpectedError, path jsonpath.Path) []ExpectedError {
 	for i := range errs {
-		errs[i].Prop = path + "." + errs[i].Prop
+		errs[i].Prop = path.Join(errs[i].Prop)
 	}
 	return errs
 }

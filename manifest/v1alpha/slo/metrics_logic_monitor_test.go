@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -21,11 +23,25 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("queryType"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("line"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -39,12 +55,26 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("queryType"),
 				Code:    rules.ErrorCodeOneOf,
 				Message: "must be one of: device_metrics, website_metrics",
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("line"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -59,15 +89,36 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("line"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("graphId"),
 				Code: rules.ErrorCodeGreaterThan,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("deviceDataSourceInstanceId"),
 				Code: rules.ErrorCodeGreaterThan,
 			},
 		)
@@ -80,19 +131,47 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("line"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.websiteId",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("websiteId"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.checkpointId",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("checkpointId"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphName",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor").
+					Name("graphName"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
@@ -111,7 +190,13 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor"),
 				Message: "deviceDataSourceInstanceId and graphId must be empty for website_metrics",
 			},
 		)
@@ -130,7 +215,13 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor",
+				Prop: jsonpath.New().
+					Name("spec").
+					Name("objectives").
+					Index(0).
+					Name("rawMetric").
+					Name("query").
+					Name("logicMonitor"),
 				Message: "graphName, checkpointId and websiteId must be empty for device_metrics",
 			},
 		)

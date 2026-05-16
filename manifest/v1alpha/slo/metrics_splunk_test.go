@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
@@ -21,7 +23,14 @@ func TestSplunk(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Splunk.Query = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.splunk.query",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("splunk").
+				Name("query"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -30,7 +39,14 @@ func TestSplunk(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Splunk.Query = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.splunk.query",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("splunk").
+				Name("query"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -72,7 +88,14 @@ fields n9time n9value`,
 				slo.Spec.Objectives[0].RawMetric.MetricQuery.Splunk.Query = ptr(test.Query)
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].rawMetric.query.splunk.query",
+					Prop: jsonpath.New().
+						Name("spec").
+						Name("objectives").
+						Index(0).
+						Name("rawMetric").
+						Name("query").
+						Name("splunk").
+						Name("query"),
 					Code: test.ExpectedCode,
 				})
 			})
@@ -91,7 +114,14 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("countMetrics").
+				Name("goodTotal").
+				Name("splunk").
+				Name("query"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -100,7 +130,14 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("countMetrics").
+				Name("goodTotal").
+				Name("splunk").
+				Name("query"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -109,7 +146,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validMetricSpec(v1alpha.Splunk)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -118,7 +155,7 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validMetricSpec(v1alpha.Splunk)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -173,7 +210,14 @@ func TestSplunk_CountMetrics_SingleQuery(t *testing.T) {
 				slo.Spec.Objectives[0].CountMetrics.GoodTotalMetric.Splunk.Query = ptr(test.Query)
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].countMetrics.goodTotal.splunk.query",
+					Prop: jsonpath.New().
+						Name("spec").
+						Name("objectives").
+						Index(0).
+						Name("countMetrics").
+						Name("goodTotal").
+						Name("splunk").
+						Name("query"),
 					Code: test.ExpectedCode,
 				})
 			})

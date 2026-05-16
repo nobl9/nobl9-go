@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -20,7 +22,14 @@ func TestAzurePrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus = &AzurePrometheusMetric{}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.azurePrometheus.promql",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("azurePrometheus").
+				Name("promql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -29,7 +38,14 @@ func TestAzurePrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzurePrometheus.PromQL = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.azurePrometheus.promql",
+			Prop: jsonpath.New().
+				Name("spec").
+				Name("objectives").
+				Index(0).
+				Name("rawMetric").
+				Name("query").
+				Name("azurePrometheus").
+				Name("promql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})

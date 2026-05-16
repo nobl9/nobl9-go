@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -53,7 +55,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.email",
+					Prop:    jsonpath.New().Name("spec").Name("email"),
 					Message: "must contain at least one recipient",
 				},
 			},
@@ -63,7 +65,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.email.to",
+					Prop: jsonpath.New().Name("spec").Name("email").Name("to"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
@@ -75,7 +77,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.email.cc",
+					Prop: jsonpath.New().Name("spec").Name("email").Name("cc"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
@@ -87,7 +89,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.email.bcc",
+					Prop: jsonpath.New().Name("spec").Name("email").Name("bcc"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},

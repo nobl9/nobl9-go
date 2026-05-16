@@ -3,6 +3,8 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -35,7 +37,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.jira.url",
+					Prop: jsonpath.New().Name("spec").Name("jira").Name("url"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -48,7 +50,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.jira.url",
+					Prop: jsonpath.New().Name("spec").Name("jira").Name("url"),
 					Code: rules.ErrorCodeURL,
 				},
 			},
@@ -62,7 +64,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.jira.url",
+					Prop:    jsonpath.New().Name("spec").Name("jira").Name("url"),
 					Message: "requires https scheme",
 				},
 			},
@@ -76,7 +78,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.jira.username",
+					Prop: jsonpath.New().Name("spec").Name("jira").Name("username"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -89,7 +91,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.jira.projectKey",
+					Prop: jsonpath.New().Name("spec").Name("jira").Name("projectKey"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
