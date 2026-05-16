@@ -24,7 +24,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.Region = ptr("region-2")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -34,7 +34,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.ClusterID = ptr("2")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -44,7 +44,7 @@ func TestRedshift_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Redshift.DatabaseName = ptr("prod-db")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -57,47 +57,19 @@ func TestRedshift(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("redshift").
-					Name("region"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.region"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("redshift").
-					Name("clusterId"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.clusterId"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("redshift").
-					Name("databaseName"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.databaseName"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("redshift").
-					Name("query"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.query"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -107,14 +79,7 @@ func TestRedshift(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Redshift.Region = ptr(strings.Repeat("a", 256))
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("redshift").
-				Name("region"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.region"),
 			Code: rules.ErrorCodeStringMaxLength,
 		})
 	})
@@ -130,14 +95,7 @@ func TestRedshift(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Redshift.Query = ptr(query)
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("redshift").
-					Name("query"),
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.redshift.query"),
 				ContainsMessage: expectedDetails,
 			})
 		}

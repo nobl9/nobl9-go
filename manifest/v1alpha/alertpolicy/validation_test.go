@@ -307,7 +307,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		alertPolicy.Spec.Conditions[0].AlertingWindow = ""
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("measurement"),
+			Prop: jsonpath.Parse("spec.conditions[0].measurement"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -316,7 +316,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		alertPolicy.Spec.Conditions[0].Measurement = "Unknown"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("measurement"),
+			Prop: jsonpath.Parse("spec.conditions[0].measurement"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -326,7 +326,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		alertPolicy.Spec.Conditions[0].Value = 0.1
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("measurement"),
+			Prop: jsonpath.Parse("spec.conditions[0].measurement"),
 			ContainsMessage: fmt.Sprintf(
 				`must be equal to one of '%s' when 'alertingWindow' is defined`,
 				strings.Join(alertingWindowSupportedMeasurements(), ","),
@@ -343,7 +343,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("measurement"),
+				Prop: jsonpath.Parse("spec.conditions[0].measurement"),
 				ContainsMessage: fmt.Sprintf(
 					`must be equal to one of '%s' when 'lastsFor' is defined`,
 					strings.Join(lastsForSupportedMeasurements(), ","),
@@ -351,7 +351,7 @@ func TestValidate_Spec_Condition_Measurement(t *testing.T) {
 				Code: errorCodeMeasurementWithLastsFor,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("measurement"),
+				Prop: jsonpath.Parse("spec.conditions[0].measurement"),
 				ContainsMessage: fmt.Sprintf(
 					`alerting window is required for measurement '%s'`,
 					MeasurementBudgetDrop.String(),
@@ -466,7 +466,7 @@ func TestValidate_Spec_Condition_WithLastsFor_Value(t *testing.T) {
 					alertPolicy.Spec.Conditions[0].AlertingWindow = ""
 					err := validate(alertPolicy)
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-						Prop:            jsonpath.New().Name("spec").Name("conditions").Index(0).Name("value"),
+						Prop:            jsonpath.Parse("spec.conditions[0].value"),
 						ContainsMessage: testCase.expectedMessage,
 						Code:            testCase.expectedCode,
 					})
@@ -580,7 +580,7 @@ func TestValidate_Spec_Condition_WithAlertingWindow_Value(t *testing.T) {
 					alertPolicy.Spec.Conditions[0].AlertingWindow = "10m"
 					err := validate(alertPolicy)
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-						Prop:            jsonpath.New().Name("spec").Name("conditions").Index(0).Name("value"),
+						Prop:            jsonpath.Parse("spec.conditions[0].value"),
 						ContainsMessage: testCase.expectedMessage,
 						Code:            testCase.expectedCode,
 					})
@@ -632,7 +632,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				alertPolicy.Spec.Conditions[0].AlertingWindow = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("alertingWindow"),
+					Prop: jsonpath.Parse("spec.conditions[0].alertingWindow"),
 					Code: testCase.expectedCode,
 				})
 			}
@@ -686,7 +686,7 @@ func TestValidate_Spec_Condition_AlertingWindow(t *testing.T) {
 				alertPolicy.Spec.Conditions[0].AlertingWindow = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    jsonpath.New().Name("spec").Name("conditions").Index(0).Name("alertingWindow"),
+					Prop:    jsonpath.Parse("spec.conditions[0].alertingWindow"),
 					Message: testCase.expectedMessage,
 					Code:    testCase.expectedCode,
 				})
@@ -744,7 +744,7 @@ func TestValidate_Spec_Condition_LastsForDuration(t *testing.T) {
 				alertPolicy.Spec.Conditions[0].LastsForDuration = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("lastsFor"),
+					Prop: jsonpath.Parse("spec.conditions[0].lastsFor"),
 					Code: testCase.expectedCode,
 				})
 			}
@@ -811,7 +811,7 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 					testutils.AssertNoError(t, alertPolicy, err)
 				} else {
 					testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-						Prop: jsonpath.New().Name("spec").Name("conditions").Index(0).Name("op"),
+						Prop: jsonpath.Parse("spec.conditions[0].op"),
 						Message: fmt.Sprintf(
 							`measurement '%s' determines operator must be defined with '%s' or left empty`,
 							measurement.String(), expectedOperator,
@@ -846,7 +846,7 @@ func TestValidate_Spec_Condition_Operator(t *testing.T) {
 		alertPolicy.Spec.Conditions[0].Operator = "noop"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("conditions").Index(0).Name("op"),
+			Prop:    jsonpath.Parse("spec.conditions[0].op"),
 			Message: "'noop' is not valid operator",
 		})
 	})
@@ -889,7 +889,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("alertMethods").Index(0).Name("metadata").Name("name"),
+				Prop: jsonpath.Parse("spec.alertMethods[0].metadata.name"),
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)
@@ -907,7 +907,7 @@ func TestValidate_Spec_AlertMethodsRefMetadata(t *testing.T) {
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("alertMethods").Index(0).Name("metadata").Name("project"),
+				Prop: jsonpath.Parse("spec.alertMethods[0].metadata.project"),
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)

@@ -119,7 +119,7 @@ func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
 			expectedErrorCount: 1,
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("responsibleUsers").Index(1).Name("id"),
+					Prop: jsonpath.Parse("spec.responsibleUsers[1].id"),
 					Code: rules.ErrorCodeStringNotEmpty,
 				},
 			},

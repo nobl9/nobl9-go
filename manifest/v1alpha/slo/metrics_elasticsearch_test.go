@@ -26,25 +26,11 @@ func TestElasticsearch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("elasticsearch").
-					Name("index"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.index"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("elasticsearch").
-					Name("query"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -58,25 +44,11 @@ func TestElasticsearch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("elasticsearch").
-					Name("index"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.index"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("elasticsearch").
-					Name("query"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
@@ -98,14 +70,7 @@ func TestElasticsearch(t *testing.T) {
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("elasticsearch").
-					Name("query"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeStringContains,
 			})
 		}

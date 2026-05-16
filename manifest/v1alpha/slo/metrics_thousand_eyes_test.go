@@ -22,23 +22,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("total").
-					Name("thousandEyes"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.thousandEyes"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("good").
-					Name("thousandEyes"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.thousandEyes"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -49,25 +37,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("thousandEyes").
-					Name("testID"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testID"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("thousandEyes").
-					Name("testType"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testType"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -81,25 +55,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("thousandEyes").
-					Name("testID"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testID"),
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("thousandEyes").
-					Name("testType"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testType"),
 				Code: rules.ErrorCodeOneOf,
 			},
 		)
@@ -118,14 +78,7 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("thousandEyes").
-					Name("accountGroupID"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.accountGroupID"),
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 		)

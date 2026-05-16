@@ -22,14 +22,7 @@ func TestDynatrace(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("dynatrace").
-				Name("metricSelector"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.metricSelector"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -38,14 +31,7 @@ func TestDynatrace(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("dynatrace").
-				Name("metricSelector"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.metricSelector"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})

@@ -25,7 +25,7 @@ func TestLightstep_CountMetricLevel(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -34,7 +34,7 @@ func TestLightstep_CountMetricLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.Incremental = ptr(true)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics").Name("incremental"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics.incremental"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -77,14 +77,7 @@ func TestLightstep_RawMetricLevel(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Lightstep = metric
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("typeOfData"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.typeOfData"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		}
@@ -128,14 +121,7 @@ func TestLightstep_TotalMetricLevel(t *testing.T) {
 			slo.Spec.Objectives[0].CountMetrics.TotalMetric.Lightstep = metric
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("total").
-					Name("lightstep").
-					Name("typeOfData"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.lightstep.typeOfData"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		}
@@ -179,14 +165,7 @@ func TestLightstep_GoodMetricLevel(t *testing.T) {
 			slo.Spec.Objectives[0].CountMetrics.GoodMetric.Lightstep = metric
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("good").
-					Name("lightstep").
-					Name("typeOfData"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.lightstep.typeOfData"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		}
@@ -242,58 +221,23 @@ func TestLightstepLatencyTypeOfData(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 5,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.percentile"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("uql"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.uql"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(1).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("streamId"),
+				Prop: jsonpath.Parse("spec.objectives[1].rawMetric.query.lightstep.streamId"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(1).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[1].rawMetric.query.lightstep.percentile"),
 				Code: rules.ErrorCodeGreaterThan,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(2).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[2].rawMetric.query.lightstep.percentile"),
 				Code: rules.ErrorCodeLessThanOrEqualTo,
 			},
 		)
@@ -321,36 +265,15 @@ func TestLightstepErrorRateTypeOfData(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.percentile"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("uql"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.uql"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("streamId"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.streamId"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -381,36 +304,15 @@ spans count | rate | group_by [], sum
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("uql"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.uql"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.percentile"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("rawMetric").
-					Name("query").
-					Name("lightstep").
-					Name("streamId"),
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.streamId"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -432,14 +334,7 @@ spans_sample count | delta | filter service == android | group_by [], sum) | joi
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1,
 					testutils.ExpectedError{
-						Prop: jsonpath.New().
-							Name("spec").
-							Name("objectives").
-							Index(0).
-							Name("rawMetric").
-							Name("query").
-							Name("lightstep").
-							Name("uql"),
+						Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.lightstep.uql"),
 						Code: rules.ErrorCodeStringDenyRegexp,
 					},
 				)
@@ -479,69 +374,27 @@ func TestLightstepGoodTotalTypeOfData(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 6,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("total").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.lightstep.percentile"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("total").
-					Name("lightstep").
-					Name("uql"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.lightstep.uql"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("total").
-					Name("lightstep").
-					Name("streamId"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.lightstep.streamId"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("good").
-					Name("lightstep").
-					Name("percentile"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.lightstep.percentile"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("good").
-					Name("lightstep").
-					Name("uql"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.lightstep.uql"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("objectives").
-					Index(0).
-					Name("countMetrics").
-					Name("good").
-					Name("lightstep").
-					Name("streamId"),
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.lightstep.streamId"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)

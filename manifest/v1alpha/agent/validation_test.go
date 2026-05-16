@@ -260,11 +260,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration"),
+				Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration"),
+				Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -279,11 +279,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration").Name("unit"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration").Name("unit"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -293,11 +293,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -310,11 +310,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
@@ -327,11 +327,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 3,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration").Name("value"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
@@ -344,11 +344,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration").Name("unit"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration").Name("unit"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 			},
@@ -412,7 +412,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			}
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("defaultDuration"),
+				Prop:    jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
 				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 			})
 		})
@@ -437,7 +437,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				}
 				objErr := validate(agent)
 				testutils.AssertContainsErrors(t, agent, objErr, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("historicalDataRetrieval").Name("maxDuration"),
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
 					Message: fmt.Sprintf("must be less than or equal to %d %s",
 						*maxDuration.Value, maxDuration.Unit),
 				})

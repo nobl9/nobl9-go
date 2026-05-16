@@ -186,7 +186,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("projects").Index(0),
+					Prop: jsonpath.Parse("spec.filters.projects[0]"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -198,7 +198,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.services[0].name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -214,7 +214,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.services[0].name"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -231,7 +231,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.services[0].project"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -247,7 +247,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("services").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.services[0].project"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -264,7 +264,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -280,7 +280,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -297,7 +297,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -313,7 +313,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -390,15 +390,15 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 3,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.rolling.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("count"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.rolling.count"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -411,11 +411,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("count"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.rolling.count"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -432,11 +432,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.rolling.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -453,11 +453,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling").Name("unit"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.rolling.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -475,7 +475,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("rolling"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.rolling"),
 					Message: validUnitAndCountRollingPairs,
 				},
 			},
@@ -493,7 +493,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("timeZone"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.timeZone"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -510,7 +510,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("timeZone"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.timeZone"),
 					Message: "not a valid time zone: unknown time zone x",
 				},
 			},
@@ -528,7 +528,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.calendar"),
 					Message: validCalendarPairs,
 				},
 			},
@@ -541,7 +541,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.calendar"),
 					Message: validCalendarPairs,
 				},
 			},
@@ -558,11 +558,11 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar").Name("unit"),
+					Prop: jsonpath.Parse("spec.sloHistory.timeFrame.calendar.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.calendar"),
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -580,7 +580,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.calendar"),
 					Message: validUnitAndCountCalendarPairs,
 				},
 			},
@@ -598,7 +598,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("sloHistory").Name("timeFrame").Name("calendar"),
+					Prop:    jsonpath.Parse("spec.sloHistory.timeFrame.calendar"),
 					Message: "dates must be in the past",
 				},
 			},
@@ -673,7 +673,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails with invalid thresholds": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("thresholds").Name("greenGt"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.thresholds.greenGt"),
 				Code: rules.ErrorCodeLessThan,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -687,7 +687,7 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 		"fails when red is greater than green": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("thresholds").Name("redLte"),
+				Prop:    jsonpath.Parse("spec.systemHealthReview.thresholds.redLte"),
 				Message: "must be less than or equal to 'greenGt' (0.1)",
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -783,7 +783,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("labels"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.columns[0].labels"),
 				Code: rules.ErrorCodeMapMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -812,7 +812,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with empty displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("displayName"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.columns[0].displayName"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -823,7 +823,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 		"fails with too long displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("columns").Index(0).Name("displayName"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.columns[0].displayName"),
 				Code: rules.ErrorCodeStringMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -902,7 +902,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels"),
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -913,7 +913,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with too many labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels"),
 				Code: rules.ErrorCodeMapLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -942,13 +942,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().
-					Name("spec").
-					Name("systemHealthReview").
-					Name("labelRows").
-					Index(0).
-					Name("labels").
-					Name("key1"),
+				Prop:    jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels.key1"),
 				Message: "label values must be empty",
 				Code:    rules.ErrorCodeSliceMaxLength,
 			}},
@@ -960,7 +954,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 		"fails with displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].displayName"),
 				Code: rules.ErrorCodeForbidden,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1063,7 +1057,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty labels": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels"),
 				Code: rules.ErrorCodeMapMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1092,7 +1086,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels").Name("key1"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels.key1"),
 				Code: rules.ErrorCodeSliceMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1103,7 +1097,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with nil label values": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("labels").Name("key1"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels.key1"),
 				Code: rules.ErrorCodeSliceMinLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1114,7 +1108,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with empty displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].displayName"),
 				Code: rules.ErrorCodeRequired,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1125,7 +1119,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 		"fails with too long displayName": {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("labelRows").Index(0).Name("displayName"),
+				Prop: jsonpath.Parse("spec.systemHealthReview.labelRows[0].displayName"),
 				Code: rules.ErrorCodeStringMaxLength,
 			}},
 			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
@@ -1195,7 +1189,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1218,7 +1212,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1243,11 +1237,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
+					Prop:    jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.rrule"),
 					Message: "wrong format",
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1273,11 +1267,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
+					Prop:    jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.rrule"),
 					Message: "undefined frequency: TEST",
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.dateTime"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -1303,7 +1297,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
+					Prop:    jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.rrule"),
 					Message: "rrule must have at least daily frequency",
 				},
 			},
@@ -1330,11 +1324,11 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("rrule"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.rrule"),
 					Code: rules.ErrorCodeForbidden,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("systemHealthReview").Name("timeFrame").Name("snapshot").Name("dateTime"),
+					Prop: jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.dateTime"),
 					Code: rules.ErrorCodeForbidden,
 				},
 			},
@@ -1361,12 +1355,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().
-						Name("spec").
-						Name("systemHealthReview").
-						Name("timeFrame").
-						Name("snapshot").
-						Name("dateTime"),
+					Prop:    jsonpath.Parse("spec.systemHealthReview.timeFrame.snapshot.dateTime"),
 					Message: "dateTime must be in the past",
 				},
 			},

@@ -31,14 +31,7 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 				ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().
-							Name("spec").
-							Name("objectives").
-							Index(0).
-							Name("countMetrics").
-							Name("goodTotal").
-							Name("honeycomb").
-							Name("attribute"),
+						Prop: jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute"),
 						Code: rules.ErrorCodeStringNotEmpty,
 					},
 				},
@@ -50,14 +43,7 @@ func TestHoneycomb_singleQuery(t *testing.T) {
 				ErrorsCount: 1,
 				Errors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().
-							Name("spec").
-							Name("objectives").
-							Index(0).
-							Name("countMetrics").
-							Name("goodTotal").
-							Name("honeycomb").
-							Name("attribute"),
+						Prop: jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.honeycomb.attribute"),
 						Code: rules.ErrorCodeStringMaxLength,
 					},
 				},
@@ -75,7 +61,7 @@ func TestHoneycomb_rawMetrics_forbidden(t *testing.T) {
 	slo := validRawMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("honeycomb"),
+		Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.honeycomb"),
 		Code: rules.ErrorCodeForbidden,
 	})
 }
@@ -84,7 +70,7 @@ func TestHoneycomb_countMetrics_forbidden(t *testing.T) {
 	slo := validCountMetricSLO(v1alpha.Honeycomb)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+		Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 		Code: rules.ErrorCodeForbidden,
 	})
 }

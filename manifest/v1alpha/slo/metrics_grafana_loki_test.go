@@ -22,14 +22,7 @@ func TestGrafanaLoki(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.GrafanaLoki.Logql = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("grafanaLoki").
-				Name("logql"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.grafanaLoki.logql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -38,14 +31,7 @@ func TestGrafanaLoki(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.GrafanaLoki.Logql = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("grafanaLoki").
-				Name("logql"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.grafanaLoki.logql"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})

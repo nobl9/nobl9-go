@@ -22,14 +22,7 @@ func TestDatadog(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Datadog.Query = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("datadog").
-				Name("query"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.datadog.query"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -38,14 +31,7 @@ func TestDatadog(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Datadog.Query = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("datadog").
-				Name("query"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.datadog.query"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})

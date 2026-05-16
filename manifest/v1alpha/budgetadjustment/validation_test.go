@@ -173,7 +173,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -192,7 +192,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -210,7 +210,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -229,7 +229,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos").Index(0).Name("project"),
+					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},

@@ -22,14 +22,7 @@ func TestPrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Prometheus.PromQL = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("prometheus").
-				Name("promql"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.prometheus.promql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -38,14 +31,7 @@ func TestPrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Prometheus.PromQL = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("prometheus").
-				Name("promql"),
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.prometheus.promql"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})

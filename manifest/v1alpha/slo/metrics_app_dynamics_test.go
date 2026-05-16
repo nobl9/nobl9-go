@@ -21,7 +21,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
@@ -33,7 +33,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.BadMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
@@ -100,13 +100,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 
 			raw := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(raw, test.ExpectedErrors)
-			raw = testutils.PrependPropertyPath(raw, jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("rawMetric").
-				Name("query").
-				Name("appDynamics"))
+			raw = testutils.PrependPropertyPath(raw, jsonpath.Parse("spec.objectives[0].rawMetric.query.appDynamics"))
 			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors), raw...)
 		})
 		t.Run("countMetric "+name, func(t *testing.T) {
@@ -119,20 +113,8 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			copy(total, test.ExpectedErrors)
 			good := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(good, test.ExpectedErrors)
-			total = testutils.PrependPropertyPath(total, jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("countMetrics").
-				Name("total").
-				Name("appDynamics"))
-			good = testutils.PrependPropertyPath(good, jsonpath.New().
-				Name("spec").
-				Name("objectives").
-				Index(0).
-				Name("countMetrics").
-				Name("good").
-				Name("appDynamics"))
+			total = testutils.PrependPropertyPath(total, jsonpath.Parse("spec.objectives[0].countMetrics.total.appDynamics"))
+			good = testutils.PrependPropertyPath(good, jsonpath.Parse("spec.objectives[0].countMetrics.good.appDynamics"))
 			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors)*2, append(total, good...)...) //nolint: makezero
 		})
 	}

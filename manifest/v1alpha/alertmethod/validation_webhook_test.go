@@ -179,7 +179,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.webhook.headers[0].name"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -199,7 +199,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("name"),
+					Prop: jsonpath.Parse("spec.webhook.headers[0].name"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
@@ -219,7 +219,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("value"),
+					Prop: jsonpath.Parse("spec.webhook.headers[0].value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -238,7 +238,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers").Index(0).Name("value"),
+					Prop: jsonpath.Parse("spec.webhook.headers[0].value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},

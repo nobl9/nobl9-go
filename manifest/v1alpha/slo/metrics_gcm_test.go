@@ -27,14 +27,7 @@ func TestGCM(t *testing.T) {
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1,
 					testutils.ExpectedError{
-						Prop: jsonpath.New().
-							Name("spec").
-							Name("objectives").
-							Index(0).
-							Name("rawMetric").
-							Name("query").
-							Name("gcm").
-							Name("projectId"),
+						Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.gcm.projectId"),
 						Code: rules.ErrorCodeRequired,
 					},
 				)
@@ -47,7 +40,7 @@ func TestGCM(t *testing.T) {
 				err := validate(slo)
 				testutils.AssertContainsErrors(t, slo, err, 1,
 					testutils.ExpectedError{
-						Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("gcm"),
+						Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.gcm"),
 						Code: rules.ErrorCodeOneOf,
 					},
 				)
@@ -63,7 +56,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("rawMetric").Name("query").Name("gcm"),
+					Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.gcm"),
 					Code: rules.ErrorCodeOneOf,
 				},
 			)
@@ -97,7 +90,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+					Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 					Code: rules.ErrorCodeNotEqualTo,
 				},
 			)
@@ -111,7 +104,7 @@ func TestGCM(t *testing.T) {
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1,
 				testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("objectives").Index(0).Name("countMetrics"),
+					Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 					Code: rules.ErrorCodeNotEqualTo,
 				},
 			)
