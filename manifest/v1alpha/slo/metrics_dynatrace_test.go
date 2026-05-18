@@ -1,7 +1,6 @@
 package slo
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/nobl9/govy/pkg/jsonpath"
@@ -103,36 +102,6 @@ func TestDynatraceMetric_QueryType(t *testing.T) {
 		metric := DynatraceMetric{DQL: validDynatraceDQL()}
 
 		assert.Equal(t, DynatraceMetricQueryTypeDQL, metric.QueryType())
-	})
-}
-
-func TestDynatraceDQL_UnmarshalJSON(t *testing.T) {
-	t.Run("new object form", func(t *testing.T) {
-		var metric DynatraceMetric
-		err := json.Unmarshal([]byte(`{
-			"dql": {
-				"query": "timeseries value = avg(dt.host.cpu.usage)",
-				"interval": "1m"
-			}
-		}`), &metric)
-
-		assert.NoError(t, err)
-		assert.Equal(t, &DynatraceDQL{
-			Query:    "timeseries value = avg(dt.host.cpu.usage)",
-			Interval: "1m",
-		}, metric.DQL)
-	})
-
-	t.Run("legacy string form", func(t *testing.T) {
-		var metric DynatraceMetric
-		err := json.Unmarshal([]byte(`{
-			"dql": "timeseries value = avg(dt.host.cpu.usage)"
-		}`), &metric)
-
-		assert.NoError(t, err)
-		assert.Equal(t, &DynatraceDQL{
-			Query: "timeseries value = avg(dt.host.cpu.usage)",
-		}, metric.DQL)
 	})
 }
 

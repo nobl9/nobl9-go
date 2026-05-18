@@ -1,7 +1,6 @@
 package slo
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -21,23 +20,6 @@ type DynatraceMetric struct {
 type DynatraceDQL struct {
 	Query    string `json:"query"`
 	Interval string `json:"interval,omitempty"`
-}
-
-func (d *DynatraceDQL) UnmarshalJSON(data []byte) error {
-	var legacyQuery string
-	if err := json.Unmarshal(data, &legacyQuery); err == nil {
-		d.Query = legacyQuery
-		d.Interval = ""
-		return nil
-	}
-
-	type dynatraceDQL DynatraceDQL
-	var decoded dynatraceDQL
-	if err := json.Unmarshal(data, &decoded); err != nil {
-		return err
-	}
-	*d = DynatraceDQL(decoded)
-	return nil
 }
 
 // DynatraceMetricQueryType identifies which Dynatrace query API is configured.
