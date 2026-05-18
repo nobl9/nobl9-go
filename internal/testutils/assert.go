@@ -21,23 +21,6 @@ type ExpectedError struct {
 	IsKeyError      bool           `json:"isKeyError,omitempty"`
 }
 
-func (e ExpectedError) MarshalJSON() ([]byte, error) {
-	type expectedError struct {
-		Prop            string         `json:"property"`
-		Code            govy.ErrorCode `json:"code,omitempty"`
-		Message         string         `json:"message,omitempty"`
-		ContainsMessage string         `json:"containsMessage,omitempty"`
-		IsKeyError      bool           `json:"isKeyError,omitempty"`
-	}
-	return json.Marshal(expectedError{
-		Prop:            e.Prop.String(),
-		Code:            e.Code,
-		Message:         e.Message,
-		ContainsMessage: e.ContainsMessage,
-		IsKeyError:      e.IsKeyError,
-	})
-}
-
 // AssertNoError asserts that the provided v1alpha.ObjectError is nil.
 func AssertNoError(t *testing.T, object any, objErr *v1alpha.ObjectError) {
 	t.Helper()
