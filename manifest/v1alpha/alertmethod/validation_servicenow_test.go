@@ -41,7 +41,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("servicenow").Name("instanceName"),
+					Prop: jsonpath.Parse("spec.servicenow.instanceName"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},

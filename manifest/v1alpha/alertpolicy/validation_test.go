@@ -217,7 +217,7 @@ func TestValidate_Spec_Condition(t *testing.T) {
 		alertPolicy.Spec.Conditions[0].LastsForDuration = "10m"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("conditions").Index(0),
+			Prop: jsonpath.Parse("spec.conditions[0]"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})

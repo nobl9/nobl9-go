@@ -131,11 +131,11 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			err,
 			2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+				Prop: jsonpath.Parse("spec.spec.bucketName"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("roleArn"),
+				Prop: jsonpath.Parse("spec.spec.roleArn"),
 				Code: rules.ErrorCodeRequired,
 			})
 	})
@@ -153,7 +153,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			err,
 			1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+				Prop: jsonpath.Parse("spec.spec.bucketName"),
 				Code: rules.ErrorCodeStringMatchRegexp,
 			})
 	})
@@ -171,7 +171,7 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			err,
 			1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("roleArn"),
+				Prop: jsonpath.Parse("spec.spec.roleArn"),
 				Code: rules.ErrorCodeStringLength,
 			})
 	})
@@ -199,11 +199,11 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			err,
 			2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+				Prop: jsonpath.Parse("spec.spec.bucketName"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("roleArn"),
+				Prop: jsonpath.Parse("spec.spec.roleArn"),
 				Code: rules.ErrorCodeRequired,
 			})
 	})
@@ -221,7 +221,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			err,
 			1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+				Prop: jsonpath.Parse("spec.spec.bucketName"),
 				Code: rules.ErrorCodeStringMatchRegexp,
 			})
 	})
@@ -239,7 +239,7 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			err,
 			1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("spec").Name("roleArn"),
+				Prop: jsonpath.Parse("spec.spec.roleArn"),
 				Code: rules.ErrorCodeStringLength,
 			})
 	})
@@ -269,7 +269,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
@@ -279,7 +279,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
@@ -289,7 +289,7 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -298,11 +298,11 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringLength,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},
@@ -312,11 +312,11 @@ func TestValidate_Spec_Spec_GCS(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringLength,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("spec").Name("bucketName"),
+					Prop: jsonpath.Parse("spec.spec.bucketName"),
 					Code: rules.ErrorCodeStringMatchRegexp,
 				},
 			},

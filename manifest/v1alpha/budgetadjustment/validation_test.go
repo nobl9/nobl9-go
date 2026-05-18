@@ -122,7 +122,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("filters").Name("slos"),
+					Prop:    jsonpath.Parse("spec.filters.slos"),
 					Message: "length must be greater than or equal to 1",
 				},
 			},
@@ -344,7 +344,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos"),
+					Prop: jsonpath.Parse("spec.filters.slos"),
 					Code: rules.ErrorCodeSliceUnique,
 				},
 			},
@@ -369,7 +369,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters").Name("slos"),
+					Prop: jsonpath.Parse("spec.filters.slos"),
 					Code: rules.ErrorCodeSliceUnique,
 				},
 			},

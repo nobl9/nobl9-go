@@ -66,11 +66,11 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("opsgenie").Name("url"),
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("opsgenie").Name("url"),
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},
@@ -82,7 +82,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("opsgenie").Name("url"),
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},
@@ -94,7 +94,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("opsgenie").Name("auth"),
+					Prop:    jsonpath.Parse("spec.opsgenie.auth"),
 					Message: "invalid auth format, should start with either GenieKey or Basic",
 				},
 			},

@@ -177,7 +177,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("startTime"),
+			Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
 			Code: "string_date_time",
 		})
 	})
@@ -191,7 +191,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("startTime"),
+			Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -206,11 +206,11 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("startTime"),
+				Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("startTime"),
+				Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
 				Code: "string_date_time",
 			},
 		)
@@ -225,7 +225,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("timeZone"),
+			Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -240,11 +240,11 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("timeZone"),
+				Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("timeZone"),
+				Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
 				Code: rules.ErrorCodeStringTimeZone,
 			},
 		)
@@ -259,7 +259,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("timeZone"),
+			Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
 			Code: "string_time_zone",
 		})
 	})
@@ -273,7 +273,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("rrule"),
+			Prop: jsonpath.Parse("spec.reviewCycle.rrule"),
 			Code: "transform",
 		})
 	})
@@ -287,7 +287,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("reviewCycle").Name("rrule"),
+			Prop: jsonpath.Parse("spec.reviewCycle.rrule"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -301,7 +301,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("reviewCycle").Name("rrule"),
+			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
 			Message: "wrong format",
 			Code:    "transform",
 		})
@@ -316,7 +316,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("reviewCycle").Name("rrule"),
+			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
 			Message: "rrule frequency must be at least DAILY",
 		})
 	})
@@ -330,7 +330,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("reviewCycle").Name("rrule"),
+			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
 			Message: "rrule frequency must be at least DAILY",
 		})
 	})

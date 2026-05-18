@@ -37,7 +37,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("jira").Name("url"),
+					Prop: jsonpath.Parse("spec.jira.url"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -50,7 +50,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("jira").Name("url"),
+					Prop: jsonpath.Parse("spec.jira.url"),
 					Code: rules.ErrorCodeURL,
 				},
 			},
@@ -64,7 +64,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("jira").Name("url"),
+					Prop:    jsonpath.Parse("spec.jira.url"),
 					Message: "requires https scheme",
 				},
 			},
@@ -78,7 +78,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("jira").Name("username"),
+					Prop: jsonpath.Parse("spec.jira.username"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -91,7 +91,7 @@ func TestValidate_Spec_JiraAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("jira").Name("projectKey"),
+					Prop: jsonpath.Parse("spec.jira.projectKey"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},

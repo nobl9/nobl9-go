@@ -46,7 +46,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("discord").Name("url"),
+					Prop: jsonpath.Parse("spec.discord.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 			},
@@ -58,7 +58,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("discord").Name("url"),
+					Prop:    jsonpath.Parse("spec.discord.url"),
 					Message: "must not end with /slack or /github",
 				},
 			},
@@ -70,7 +70,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("discord").Name("url"),
+					Prop:    jsonpath.Parse("spec.discord.url"),
 					Message: "must not end with /slack or /github",
 				},
 			},

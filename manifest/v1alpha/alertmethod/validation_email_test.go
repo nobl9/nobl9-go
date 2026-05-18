@@ -65,7 +65,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("email").Name("to"),
+					Prop: jsonpath.Parse("spec.email.to"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
@@ -77,7 +77,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("email").Name("cc"),
+					Prop: jsonpath.Parse("spec.email.cc"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},
@@ -89,7 +89,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("email").Name("bcc"),
+					Prop: jsonpath.Parse("spec.email.bcc"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},

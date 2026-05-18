@@ -168,7 +168,7 @@ func TestValidate_Spec_AlertPolicies(t *testing.T) {
 		slo.Spec.AlertPolicies = []string{"my-policy", "MY POLICY", "ok-policy"}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("alertPolicies").Index(1),
+			Prop: jsonpath.Parse("spec.alertPolicies[1]"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -255,7 +255,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
+					Prop: jsonpath.Parse("spec.composite.target"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -265,7 +265,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
+					Prop: jsonpath.Parse("spec.composite.target"),
 					Code: rules.ErrorCodeGreaterThan,
 				},
 			},
@@ -275,7 +275,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 					BurnRateCondition: &CompositeBurnRateCondition{Value: 1000, Operator: "gt"},
 				},
 				ExpectedError: testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("composite").Name("target"),
+					Prop: jsonpath.Parse("spec.composite.target"),
 					Code: rules.ErrorCodeLessThan,
 				},
 			},
@@ -337,7 +337,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition"),
+			Prop: jsonpath.Parse("spec.composite.burnRateCondition"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -351,7 +351,7 @@ func TestValidate_Spec_Composite(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("composite").Name("burnRateCondition"),
+			Prop: jsonpath.Parse("spec.composite.burnRateCondition"),
 			Code: rules.ErrorCodeForbidden,
 		})
 	})
@@ -653,7 +653,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop:    jsonpath.Parse("spec.timeWindows[0]"),
 						Message: "if 'isRolling' property is true, 'calendar' property must be omitted",
 					},
 				},
@@ -667,7 +667,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop:    jsonpath.Parse("spec.timeWindows[0]"),
 						Message: "if 'isRolling' property is false or not set, 'calendar' property must be provided",
 					},
 				},
@@ -681,7 +681,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop:    jsonpath.Parse("spec.timeWindows[0]"),
 						Message: "invalid time window unit for Rolling window type: must be one of: Minute, Hour, Day",
 					},
 				},
@@ -699,7 +699,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop:    jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop:    jsonpath.Parse("spec.timeWindows[0]"),
 						Message: "invalid time window unit for Calendar window type: must be one of: Day, Week, Month, Quarter, Year",
 					},
 				},
@@ -713,7 +713,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop: jsonpath.Parse("spec.timeWindows[0]"),
 						Message: fmt.Sprintf(
 							"rolling time window size must be greater than or equal to %s",
 							minimumRollingTimeWindowSize),
@@ -729,7 +729,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop: jsonpath.Parse("spec.timeWindows[0]"),
 						Message: fmt.Sprintf(
 							"rolling time window size must be less than or equal to %s",
 							maximumRollingTimeWindowSize),
@@ -749,7 +749,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("timeWindows").Index(0),
+						Prop: jsonpath.Parse("spec.timeWindows[0]"),
 						Message: fmt.Sprintf(
 							"calendar time window size must be less than %s",
 							maximumCalendarTimeWindowSize),

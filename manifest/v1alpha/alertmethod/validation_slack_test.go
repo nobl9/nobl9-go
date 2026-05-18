@@ -46,11 +46,11 @@ func TestValidate_Spec_SlackAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("slack").Name("url"),
+					Prop: jsonpath.Parse("spec.slack.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 				{
-					Prop: jsonpath.New().Name("spec").Name("slack").Name("url"),
+					Prop: jsonpath.Parse("spec.slack.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},
@@ -62,7 +62,7 @@ func TestValidate_Spec_SlackAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("slack").Name("url"),
+					Prop: jsonpath.Parse("spec.slack.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},

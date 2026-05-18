@@ -47,7 +47,7 @@ func TestValidate_Spec_PagerDutyAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("pagerduty").Name("integrationKey"),
+					Prop: jsonpath.Parse("spec.pagerduty.integrationKey"),
 					Code: rules.ErrorCodeStringMaxLength,
 				},
 			},

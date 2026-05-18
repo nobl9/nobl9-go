@@ -63,7 +63,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("url"),
+					Prop: jsonpath.Parse("spec.webhook.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 			},
@@ -76,7 +76,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("webhook").Name("template"),
+					Prop:    jsonpath.Parse("spec.webhook.template"),
 					Message: "contains invalid template field: sloname",
 				},
 			},
@@ -89,7 +89,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("webhook").Name("templateFields"),
+					Prop:    jsonpath.Parse("spec.webhook.templateFields"),
 					Message: "contains invalid template field: sloname",
 				},
 			},
@@ -257,7 +257,7 @@ func TestValidate_Spec_WebhookHeaders(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("webhook").Name("headers"),
+					Prop: jsonpath.Parse("spec.webhook.headers"),
 					Code: rules.ErrorCodeSliceMaxLength,
 				},
 			},

@@ -43,7 +43,7 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("msteams").Name("url"),
+					Prop: jsonpath.Parse("spec.msteams.url"),
 					Code: rules.ErrorCodeURL,
 				},
 			},
@@ -55,7 +55,7 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("msteams").Name("url"),
+					Prop:    jsonpath.Parse("spec.msteams.url"),
 					Message: "requires https scheme",
 				},
 			},
