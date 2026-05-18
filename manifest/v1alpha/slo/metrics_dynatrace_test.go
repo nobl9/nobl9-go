@@ -21,13 +21,13 @@ func TestDynatrace(t *testing.T) {
 	t.Run("passes with dql", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = ptr("fetch metrics")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = validDynatraceDQL()
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("rejects both query fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = ptr("fetch metrics")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = validDynatraceDQL()
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.dynatrace",
@@ -58,14 +58,25 @@ func TestDynatrace(t *testing.T) {
 	t.Run("empty dql", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = ptr("")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{Interval: "1m"}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.dynatrace",
 			Code: rules.ErrorCodeRequired,
 		}, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql",
+			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql.query",
 			Code: rules.ErrorCodeStringNotEmpty,
+		})
+	})
+	t.Run("empty dql interval", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{
+			Query: "timeseries value = avg(dt.host.cpu.usage)",
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql.interval",
 		})
 	})
 }
@@ -78,9 +89,15 @@ func TestDynatraceMetric_QueryType(t *testing.T) {
 		assert.Equal(t, DynatraceMetricQueryTypeMetricSelector, metric.QueryType())
 	})
 	t.Run("dql", func(t *testing.T) {
-		dql := "fetch metrics"
-		metric := DynatraceMetric{DQL: &dql}
+		metric := DynatraceMetric{DQL: validDynatraceDQL()}
 
 		assert.Equal(t, DynatraceMetricQueryTypeDQL, metric.QueryType())
 	})
+}
+
+func validDynatraceDQL() *DynatraceDQL {
+	return &DynatraceDQL{
+		Query:    "timeseries value = avg(dt.host.cpu.usage)",
+		Interval: "1m",
+	}
 }

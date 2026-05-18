@@ -2,6 +2,7 @@ package slo
 
 import (
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -11,8 +12,14 @@ import (
 
 // DynatraceMetric represents metric from Dynatrace.
 type DynatraceMetric struct {
-	MetricSelector *string `json:"metricSelector"`
-	DQL            *string `json:"dql,omitempty"`
+	MetricSelector *string       `json:"metricSelector"`
+	DQL            *DynatraceDQL `json:"dql,omitempty"`
+}
+
+// DynatraceDQL represents a Dynatrace Query Language query.
+type DynatraceDQL struct {
+	Query    string `json:"query"`
+	Interval string `json:"interval"`
 }
 
 // DynatraceMetricQueryType identifies which Dynatrace query API is configured.
@@ -32,7 +39,7 @@ func (d DynatraceMetric) IsMetricSelectorConfiguration() bool {
 
 // IsDQLConfiguration returns true if the metric uses Dynatrace Query Language.
 func (d DynatraceMetric) IsDQLConfiguration() bool {
-	return d.DQL != nil && strings.TrimSpace(*d.DQL) != ""
+	return d.DQL != nil && strings.TrimSpace(d.DQL.Query) != ""
 }
 
 // QueryType returns which Dynatrace query API the metric uses.
@@ -52,9 +59,18 @@ var dynatraceValidation = govy.New[DynatraceMetric](
 	govy.ForPointer(func(d DynatraceMetric) *string { return d.MetricSelector }).
 		WithName("metricSelector").
 		Rules(rules.StringNotEmpty()),
-	govy.ForPointer(func(d DynatraceMetric) *string { return d.DQL }).
+	govy.ForPointer(func(d DynatraceMetric) *DynatraceDQL { return d.DQL }).
 		WithName("dql").
+		Include(dynatraceDQLValidation),
+)
+
+var dynatraceDQLValidation = govy.New[DynatraceDQL](
+	govy.For(func(d DynatraceDQL) string { return d.Query }).
+		WithName("query").
 		Rules(rules.StringNotEmpty()),
+	govy.Transform(func(d DynatraceDQL) string { return d.Interval }, time.ParseDuration).
+		WithName("interval").
+		Rules(rules.GT[time.Duration](0)),
 )
 
 var dynatraceMetricQueryRequiredRule = govy.NewRule(func(d DynatraceMetric) error {
