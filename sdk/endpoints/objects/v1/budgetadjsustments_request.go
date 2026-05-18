@@ -23,7 +23,7 @@ var validator = govy.New(
 				// Check if SLOName is set when Project is set
 				if v.Project != "" && v.SLOName == "" {
 					return govy.NewPropertyError(
-						jsonpath.Parse(QueryKeySLOName),
+						jsonpath.New().Name(QueryKeySLOName),
 						v.SLOName,
 						govy.NewRuleError("SLO is required when Project is set", "required"),
 					)
@@ -32,7 +32,7 @@ var validator = govy.New(
 				// Check if Project is set when SLOName is set
 				if v.SLOName != "" && v.Project == "" {
 					return govy.NewPropertyError(
-						jsonpath.Parse(QueryKeySLOProjectName),
+						jsonpath.New().Name(QueryKeySLOProjectName),
 						v.Project,
 						govy.NewRuleError("Project is required when SLO is set", "required"),
 					)

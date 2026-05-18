@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -20,7 +22,7 @@ func TestAmazonPrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AmazonPrometheus.PromQL = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.amazonPrometheus.promql",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.amazonPrometheus.promql"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -29,7 +31,7 @@ func TestAmazonPrometheus(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AmazonPrometheus.PromQL = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.amazonPrometheus.promql",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.amazonPrometheus.promql"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})

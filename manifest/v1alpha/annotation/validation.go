@@ -39,7 +39,7 @@ func getValidator(includeUserCategoryRules bool) govy.Validator[Annotation] {
 var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	govy.For(func(m Metadata) string { return m.Project }).
-		WithPath(jsonpath.Parse("metadata.project")).
+		WithPath(jsonpath.New().Name("metadata").Name("project")).
 		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),

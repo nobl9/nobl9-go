@@ -3,6 +3,8 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -64,11 +66,11 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 2,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.opsgenie.url",
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 				{
-					Prop: "spec.opsgenie.url",
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},
@@ -80,7 +82,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.opsgenie.url",
+					Prop: jsonpath.Parse("spec.opsgenie.url"),
 					Code: rules.ErrorCodeStringStartsWith,
 				},
 			},
@@ -92,7 +94,7 @@ func TestValidate_Spec_OpsgenieAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.opsgenie.auth",
+					Prop:    jsonpath.Parse("spec.opsgenie.auth"),
 					Message: "invalid auth format, should start with either GenieKey or Basic",
 				},
 			},

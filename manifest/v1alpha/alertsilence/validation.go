@@ -98,7 +98,7 @@ var endTimeNotBeforeStartTimeRule = govy.NewRule(func(p Period) error {
 // as declared in metadata for AlertSilence. Should be removed when cross-project Alert Policy is allowed PI-622.
 var alertPolicyProjectConsistencyRule = govy.NewRule(func(s AlertSilence) error {
 	if s.Spec.AlertPolicy.Project != "" && s.Spec.AlertPolicy.Project != s.Metadata.Project {
-		return govy.NewPropertyError(jsonpath.Parse("spec.alertPolicy.project"),
+		return govy.NewPropertyError(jsonpath.New().Name("spec").Name("alertPolicy").Name("project"),
 			s.Spec.AlertPolicy.Project,
 			govy.NewRuleError(
 				fmt.Sprintf(
