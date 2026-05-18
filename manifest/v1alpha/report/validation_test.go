@@ -800,7 +800,7 @@ func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
 					Name("columns").
 					Index(0).
 					Name("labels").
-					Key("k ey"),
+					Name("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -930,7 +930,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
 					Name("labelRows").
 					Index(0).
 					Name("labels").
-					Key("k ey"),
+					Name("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
@@ -1074,7 +1074,7 @@ func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
 					Name("labelRows").
 					Index(0).
 					Name("labels").
-					Key("k ey"),
+					Name("k ey"),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			}},
