@@ -64,7 +64,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			slo.Spec.Indicator = &ind
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("indicator"),
+				Prop:    jsonpath.Parse("spec.indicator"),
 				Code:    rules.ErrorCodeForbidden,
 				Message: "property is forbidden; indicator section is forbidden when spec.objectives[0].composite is provided",
 			})
@@ -79,7 +79,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("objectives"),
+				Prop:    jsonpath.Parse("spec.objectives"),
 				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
@@ -100,7 +100,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("anomalyConfig"),
+				Prop:    jsonpath.Parse("spec.anomalyConfig"),
 				Code:    rules.ErrorCodeForbidden,
 				Message: "property is forbidden; anomalyConfig section is forbidden when spec.objectives[0].composite is provided",
 			},
@@ -154,7 +154,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("objectives"),
+				Prop:    jsonpath.Parse("spec.objectives"),
 				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
@@ -182,7 +182,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.New().Name("spec").Name("objectives"),
+				Prop:    jsonpath.Parse("spec.objectives"),
 				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
 			},
@@ -204,7 +204,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			err := validate(slo)
 
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("composite"),
+				Prop: jsonpath.Parse("spec.composite"),
 				Code: rules.ErrorCodeForbidden,
 				Message: "property is forbidden; composite section is forbidden " +
 					"when spec.objectives[0].composite is provided",

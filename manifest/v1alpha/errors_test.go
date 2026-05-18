@@ -22,12 +22,12 @@ var errorsTestData embed.FS
 func TestObjectError(t *testing.T) {
 	errs := govy.PropertyErrors{
 		&govy.PropertyError{
-			PropertyPath:  jsonpath.New().Name("metadata").Name("name"),
+			PropertyPath:  jsonpath.Parse("metadata.name"),
 			PropertyValue: "default",
 			Errors:        []*govy.RuleError{{Message: "here's an error"}},
 		},
 		&govy.PropertyError{
-			PropertyPath:  jsonpath.New().Name("spec").Name("description"),
+			PropertyPath:  jsonpath.Parse("spec.description"),
 			PropertyValue: "some long description",
 			Errors:        []*govy.RuleError{{Message: "here's another error"}},
 		},
@@ -71,12 +71,12 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 		},
 		Errors: govy.PropertyErrors{
 			{
-				PropertyPath:  jsonpath.New().Name("metadata").Name("project"),
+				PropertyPath:  jsonpath.Parse("metadata.project"),
 				PropertyValue: "default",
 				Errors:        []*govy.RuleError{{Message: "nested"}},
 			},
 			{
-				PropertyPath:  jsonpath.New().Name("metadata").Name("name"),
+				PropertyPath:  jsonpath.Parse("metadata.name"),
 				PropertyValue: "my-project",
 			},
 		},

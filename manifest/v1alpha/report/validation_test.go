@@ -53,7 +53,7 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, report, err, 1,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -70,7 +70,7 @@ func TestValidate_Spec(t *testing.T) {
 				Message: "exactly one report type configuration is required",
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("filters"),
+				Prop: jsonpath.Parse("spec.filters"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -162,7 +162,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("spec").Name("filters"),
+					Prop: jsonpath.Parse("spec.filters"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -172,7 +172,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("filters"),
+					Prop:    jsonpath.Parse("spec.filters"),
 					Message: "at least one of the following fields is required: projects, services, slos",
 				},
 			},

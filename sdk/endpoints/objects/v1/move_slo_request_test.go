@@ -152,7 +152,7 @@ func TestMoveSLOsRequest_Validate_MoveToProject(t *testing.T) {
 			},
 			errChecks: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:  jsonpath.New().Name("sloNames").Index(1).String(),
+					PropertyPath:  jsonpath.Parse("sloNames[1]").String(),
 					Code:          validationV1Alpha.ErrorCodeStringName,
 					ValidatorName: "Move SLOs request",
 				},

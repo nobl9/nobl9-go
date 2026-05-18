@@ -63,22 +63,22 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, slo, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("displayName"),
+			Prop: jsonpath.Parse("metadata.displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[SLO](t, jsonpath.New().Name("metadata").Name("labels")) {
+	for name, test := range v1alphatest.GetLabelsTestCases[SLO](t, jsonpath.Parse("metadata.labels")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Labels = test.Labels
@@ -88,9 +88,7 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO](t, jsonpath.New().
-		Name("metadata").
-		Name("annotations")) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[SLO](t, jsonpath.Parse("metadata.annotations")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validSLO()
 			svc.Metadata.Annotations = test.Annotations
@@ -104,7 +102,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	slo.Spec.Description = strings.Repeat("a", 2000)
 	err := validate(slo)
 	testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-		Prop: jsonpath.New().Name("spec").Name("description"),
+		Prop: jsonpath.Parse("spec.description"),
 		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
@@ -123,7 +121,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo.Spec.BudgetingMethod = ""
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("budgetingMethod"),
+			Prop: jsonpath.Parse("spec.budgetingMethod"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -132,7 +130,7 @@ func TestValidate_Spec_BudgetingMethod(t *testing.T) {
 		slo.Spec.BudgetingMethod = "invalid"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("budgetingMethod"),
+			Prop:    jsonpath.Parse("spec.budgetingMethod"),
 			Message: "'invalid' is not a valid budgeting method",
 		})
 	})
@@ -150,7 +148,7 @@ func TestValidate_Spec_Service(t *testing.T) {
 		slo.Spec.Service = "MY SERVICE"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("service"),
+			Prop: jsonpath.Parse("spec.service"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -196,7 +194,7 @@ func TestValidate_Spec_Attachments(t *testing.T) {
 		slo.Spec.Attachments = attachments
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("attachments"),
+			Prop: jsonpath.Parse("spec.attachments"),
 			Code: rules.ErrorCodeSliceLength,
 		})
 	})
@@ -555,7 +553,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("timeWindows"),
+						Prop: jsonpath.Parse("spec.timeWindows"),
 						Code: rules.ErrorCodeSliceLength,
 					},
 				},
@@ -565,7 +563,7 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 				TimeWindows: []TimeWindow{{}, {}},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("timeWindows"),
+						Prop: jsonpath.Parse("spec.timeWindows"),
 						Code: rules.ErrorCodeSliceLength,
 					},
 				},
@@ -805,7 +803,7 @@ func TestValidate_Spec_Indicator(t *testing.T) {
 				Indicator: nil,
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("indicator"),
+						Prop: jsonpath.Parse("spec.indicator"),
 						Code: rules.ErrorCodeRequired,
 					},
 				},
@@ -912,7 +910,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 				Objectives: []Objective{},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("objectives"),
+						Prop: jsonpath.Parse("spec.objectives"),
 						Code: rules.ErrorCodeSliceMinLength,
 					},
 				},
@@ -986,7 +984,7 @@ func TestValidate_Spec_Objectives(t *testing.T) {
 					},
 				},
 				ExpectedErrors: []testutils.ExpectedError{{
-					Prop: jsonpath.New().Name("spec").Name("objectives"),
+					Prop: jsonpath.Parse("spec.objectives"),
 					Code: rules.ErrorCodeSliceUnique,
 				}},
 				ExpectedErrorsCount: 1,
@@ -1095,7 +1093,7 @@ func TestValidate_Spec_Objectives_Primary(t *testing.T) {
 				},
 				ExpectedErrors: []testutils.ExpectedError{
 					{
-						Prop: jsonpath.New().Name("spec").Name("objectives"),
+						Prop: jsonpath.Parse("spec.objectives"),
 						Code: rules.ErrorCodeForbidden,
 					},
 				},

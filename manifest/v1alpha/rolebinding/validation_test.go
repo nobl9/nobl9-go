@@ -60,7 +60,7 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, rb, err, 1,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -73,7 +73,7 @@ func TestSpec(t *testing.T) {
 		err := validate(rb)
 		testutils.AssertContainsErrors(t, rb, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("roleRef"),
+				Prop: jsonpath.Parse("spec.roleRef"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -84,7 +84,7 @@ func TestSpec(t *testing.T) {
 		err := validate(rb)
 		testutils.AssertContainsErrors(t, rb, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("projectRef"),
+				Prop: jsonpath.Parse("spec.projectRef"),
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)

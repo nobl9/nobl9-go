@@ -102,7 +102,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("webhook"),
+					Prop:    jsonpath.Parse("spec.webhook"),
 					Message: "must not contain both 'template' and 'templateFields'",
 				},
 			},
@@ -116,7 +116,7 @@ func TestValidate_Spec_WebhookAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("webhook"),
+					Prop:    jsonpath.Parse("spec.webhook"),
 					Message: "must contain either 'template' or 'templateFields'",
 				},
 			},

@@ -78,11 +78,11 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyPath:    jsonpath.New().Name("name").Index(0).String(),
+					PropertyPath:    jsonpath.Parse("name[0]").String(),
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyPath:    jsonpath.New().Name("name").Index(1).String(),
+					PropertyPath:    jsonpath.Parse("name[1]").String(),
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 			},

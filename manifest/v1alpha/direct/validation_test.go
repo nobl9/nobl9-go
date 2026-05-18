@@ -58,24 +58,23 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, direct, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("displayName"),
+			Prop: jsonpath.Parse("metadata.displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Direct](t, jsonpath.New().
-		Name("metadata").
-		Name("annotations")) {
+	tests := v1alphatest.GetMetadataAnnotationsTestCases[Direct](t, jsonpath.Parse("metadata.annotations"))
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := validDirect(v1alpha.Datadog)
 			svc.Metadata.Annotations = test.Annotations
@@ -90,7 +89,7 @@ func TestValidateSpec(t *testing.T) {
 		direct.Spec.Description = strings.Repeat("a", 2000)
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("description"),
+			Prop: jsonpath.Parse("spec.description"),
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
 	})
@@ -139,7 +138,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = -1
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("releaseChannel"),
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -154,7 +153,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("releaseChannel"),
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
@@ -163,7 +162,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("releaseChannel"),
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
@@ -232,7 +231,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -245,7 +244,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -260,7 +259,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				}}
 				err := validate(direct)
 				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+					Prop: jsonpath.Parse("spec.queryDelay"),
 					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
@@ -423,7 +422,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		}
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("historicalDataRetrieval"),
+			Prop:    jsonpath.Parse("spec.historicalDataRetrieval"),
 			Message: "historical data retrieval is not supported for Instana Direct",
 		})
 	})

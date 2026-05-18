@@ -55,7 +55,7 @@ func TestValidate_Spec_EmailAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.New().Name("spec").Name("email"),
+					Prop:    jsonpath.Parse("spec.email"),
 					Message: "must contain at least one recipient",
 				},
 			},

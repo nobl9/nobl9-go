@@ -59,24 +59,22 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, agent, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("displayName"),
+			Prop: jsonpath.Parse("metadata.displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Agent](t, jsonpath.New().
-		Name("metadata").
-		Name("annotations")) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Agent](t, jsonpath.Parse("metadata.annotations")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validAgent(v1alpha.Prometheus)
 			svc.Metadata.Annotations = test.Annotations
@@ -91,7 +89,7 @@ func TestValidate_Spec(t *testing.T) {
 		agent.Spec.Description = strings.Repeat("A", 2000)
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("description"),
+			Prop: jsonpath.Parse("spec.description"),
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
 	})
@@ -140,7 +138,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		agent.Spec.ReleaseChannel = -1
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("releaseChannel"),
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -203,7 +201,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -215,7 +213,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -230,7 +228,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				}}
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec").Name("queryDelay"),
+					Prop: jsonpath.Parse("spec.queryDelay"),
 					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
@@ -393,7 +391,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.New().Name("spec").Name("historicalDataRetrieval"),
+			Prop:    jsonpath.Parse("spec.historicalDataRetrieval"),
 			Message: "historical data retrieval is not supported for Generic Agent",
 		})
 	})

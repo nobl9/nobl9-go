@@ -58,20 +58,18 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, policy, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[AlertPolicy](t, jsonpath.New().
-		Name("metadata").
-		Name("labels")) {
+	for name, test := range v1alphatest.GetLabelsTestCases[AlertPolicy](t, jsonpath.Parse("metadata.labels")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validAlertPolicy()
 			svc.Metadata.Labels = test.Labels
@@ -81,9 +79,8 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy](t, jsonpath.New().
-		Name("metadata").
-		Name("annotations")) {
+	tests := v1alphatest.GetMetadataAnnotationsTestCases[AlertPolicy](t, jsonpath.Parse("metadata.annotations"))
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := validAlertPolicy()
 			svc.Metadata.Annotations = test.Annotations
@@ -98,7 +95,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		alertPolicy.Metadata.Project = ""
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -109,7 +106,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	alertPolicy.Spec.Description = strings.Repeat("A", 2000)
 	err := validate(alertPolicy)
 	testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-		Prop: jsonpath.New().Name("spec").Name("description"),
+		Prop: jsonpath.Parse("spec.description"),
 		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
@@ -128,7 +125,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		alertPolicy.Spec.Severity = ""
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("severity"),
+			Prop: jsonpath.Parse("spec.severity"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -137,7 +134,7 @@ func TestValidate_Spec_Severity(t *testing.T) {
 		alertPolicy.Spec.Severity = "Highest"
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("severity"),
+			Prop: jsonpath.Parse("spec.severity"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -175,7 +172,7 @@ func TestValidate_Spec_CoolDownDuration(t *testing.T) {
 				alertPolicy.Spec.CoolDownDuration = value
 				err := validate(alertPolicy)
 				testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-					Prop:    jsonpath.New().Name("spec").Name("coolDown"),
+					Prop:    jsonpath.Parse("spec.coolDown"),
 					Code:    testCase.expectedCode,
 					Message: testCase.expectedMessage,
 				})
@@ -196,7 +193,7 @@ func TestValidate_Spec_Conditions(t *testing.T) {
 		alertPolicy.Spec.Conditions = make([]AlertCondition, 0)
 		err := validate(alertPolicy)
 		testutils.AssertContainsErrors(t, alertPolicy, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("conditions"),
+			Prop: jsonpath.Parse("spec.conditions"),
 			Code: rules.ErrorCodeSliceMinLength,
 		})
 	})

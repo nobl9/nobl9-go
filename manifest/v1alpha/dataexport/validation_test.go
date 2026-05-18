@@ -54,15 +54,15 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, dataExport, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("displayName"),
+			Prop: jsonpath.Parse("metadata.displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -103,7 +103,7 @@ func TestValidate_Spec_ExportType(t *testing.T) {
 		dataExport.Spec.ExportType = "Azure"
 		err := validate(dataExport)
 		testutils.AssertContainsErrors(t, dataExport, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("exportType"),
+			Prop: jsonpath.Parse("spec.exportType"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})

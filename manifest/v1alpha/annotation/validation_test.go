@@ -54,11 +54,11 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, annotation, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: v1alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: v1alpha.ErrorCodeStringName,
 		},
 	)
@@ -85,7 +85,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("description"),
+			Prop: jsonpath.Parse("spec.description"),
 			Code: rules.ErrorCodeStringLength,
 		})
 	})
@@ -94,7 +94,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 		annotation.Spec.Description = ""
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("description"),
+			Prop: jsonpath.Parse("spec.description"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -112,7 +112,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		annotation.Spec.Slo = "MY SLO"
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("slo"),
+			Prop: jsonpath.Parse("spec.slo"),
 			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
@@ -121,7 +121,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		annotation.Spec.Slo = ""
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("slo"),
+			Prop: jsonpath.Parse("spec.slo"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -139,7 +139,7 @@ func TestValidate_Spec_Objective(t *testing.T) {
 		annotation.Spec.ObjectiveName = "MY OBJECTIVE"
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("objectiveName"),
+			Prop: jsonpath.Parse("spec.objectiveName"),
 			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
@@ -203,7 +203,7 @@ func TestSpec_Category(t *testing.T) {
 			annotation.Spec.Category = category
 			err := validate(annotation)
 			testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("category"),
+				Prop: jsonpath.Parse("spec.category"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		})
@@ -211,7 +211,7 @@ func TestSpec_Category(t *testing.T) {
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[Annotation](t, jsonpath.New().Name("metadata").Name("labels")) {
+	for name, test := range v1alphatest.GetLabelsTestCases[Annotation](t, jsonpath.Parse("metadata.labels")) {
 		t.Run(name, func(t *testing.T) {
 			svc := validAnnotation()
 			svc.Metadata.Labels = test.Labels

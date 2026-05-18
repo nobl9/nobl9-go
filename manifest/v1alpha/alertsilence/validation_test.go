@@ -56,11 +56,11 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, silence, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("name"),
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -72,7 +72,7 @@ func TestValidate_Metadata_Project(t *testing.T) {
 		alertSilence.Metadata.Project = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("metadata").Name("project"),
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -83,7 +83,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 	alertSilence.Spec.Description = strings.Repeat("A", 2000)
 	err := validate(alertSilence)
 	testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-		Prop: jsonpath.New().Name("spec").Name("description"),
+		Prop: jsonpath.Parse("spec.description"),
 		Code: validationV1Alpha.ErrorCodeStringDescription,
 	})
 }
@@ -100,7 +100,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		alertSilence.Spec.SLO = "MY SLO"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("slo"),
+			Prop: jsonpath.Parse("spec.slo"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
@@ -109,7 +109,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		alertSilence.Spec.SLO = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("slo"),
+			Prop: jsonpath.Parse("spec.slo"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -191,7 +191,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		alertSilence.Spec.Period.Duration = ""
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("period"),
+			Prop: jsonpath.Parse("spec.period"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -203,7 +203,7 @@ func TestValidate_Spec_Period(t *testing.T) {
 		alertSilence.Spec.Period.Duration = "10m"
 		err := validate(alertSilence)
 		testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec").Name("period"),
+			Prop: jsonpath.Parse("spec.period"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -278,7 +278,7 @@ func TestValidate_Spec_EndTime(t *testing.T) {
 			alertSilence.Spec.Period = testCase
 			err := validate(alertSilence)
 			testutils.AssertContainsErrors(t, alertSilence, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec").Name("period"),
+				Prop: jsonpath.Parse("spec.period"),
 				Code: errorCodeEndTimeNotBeforeOrNotEqualStartTime,
 			})
 		})
