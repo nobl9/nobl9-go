@@ -19,7 +19,7 @@ type DynatraceMetric struct {
 // DynatraceDQL represents a Dynatrace Query Language query.
 type DynatraceDQL struct {
 	Query    string `json:"query"`
-	Interval string `json:"interval"`
+	Interval string `json:"interval,omitempty"`
 }
 
 // DynatraceMetricQueryType identifies which Dynatrace query API is configured.
@@ -70,6 +70,7 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 		Rules(rules.StringNotEmpty()),
 	govy.Transform(func(d DynatraceDQL) string { return d.Interval }, time.ParseDuration).
 		WithName("interval").
+		OmitEmpty().
 		Rules(rules.GT[time.Duration](0)),
 )
 

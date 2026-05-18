@@ -75,6 +75,16 @@ func TestDynatrace(t *testing.T) {
 			Query: "timeseries value = avg(dt.host.cpu.usage)",
 		}
 		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("invalid dql interval", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{
+			Query:    "timeseries value = avg(dt.host.cpu.usage)",
+			Interval: "invalid",
+		}
+		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql.interval",
 		})
