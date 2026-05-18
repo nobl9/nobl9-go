@@ -86,8 +86,8 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "." + strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" +
-					strings.Repeat("l", 64),
+				Prop: propertyPath + "['" + strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" +
+					strings.Repeat("l", 64) + "']",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -103,7 +103,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net_": "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "net_",
+				Prop:       propertyPath + ".net_",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -113,7 +113,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net": strings.Repeat("l", 1051),
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "." + "net",
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},

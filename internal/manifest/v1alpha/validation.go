@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -66,40 +67,40 @@ func FieldRuleKind[S manifest.Object](
 
 func FieldRuleMetadataName[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithName("metadata.name").
+		WithPath(jsonpath.Parse("metadata.name")).
 		Required().
 		Rules(StringName())
 }
 
 func FieldRuleMetadataDisplayName[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithName("metadata.displayName").
+		WithPath(jsonpath.Parse("metadata.displayName")).
 		OmitEmpty().
 		Rules(rules.StringMaxLength(NameMaximumLength))
 }
 
 func FieldRuleMetadataProject[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithName("metadata.project").
+		WithPath(jsonpath.Parse("metadata.project")).
 		Required().
 		Rules(StringName())
 }
 
 func FieldRuleMetadataLabels[S any](getter func(S) v1alpha.Labels) govy.PropertyRules[v1alpha.Labels, S] {
 	return govy.For(getter).
-		WithName("metadata.labels").
+		WithPath(jsonpath.Parse("metadata.labels")).
 		Include(v1alpha.LabelsValidationRules())
 }
 
 func FieldRuleMetadataAnnotations[S any](getter func(S) v1alpha.MetadataAnnotations,
 ) govy.PropertyRules[v1alpha.MetadataAnnotations, S] {
 	return govy.For(getter).
-		WithName("metadata.annotations").
+		WithPath(jsonpath.Parse("metadata.annotations")).
 		Include(v1alpha.MetadataAnnotationsValidationRules())
 }
 
 func FieldRuleSpecDescription[S any](getter func(S) string) govy.PropertyRules[string, S] {
 	return govy.For(getter).
-		WithName("spec.description").
+		WithPath(jsonpath.Parse("spec.description")).
 		Rules(StringDescription())
 }

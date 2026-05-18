@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -81,8 +82,7 @@ var sloValidationComposite = govy.New[SLO](
 					isSameName := component.Objective == s.Metadata.Name
 
 					if isSameProject && isSameName {
-						return govy.NewPropertyError(
-							"slo",
+						return govy.NewPropertyError(jsonpath.Parse("slo"),
 							s.Metadata.Name,
 							errors.Errorf("composite SLO cannot have itself as one of its objectives"),
 						)
@@ -103,7 +103,10 @@ var sloValidationComposite = govy.New[SLO](
 					_, exists := sloMap[key]
 					if exists {
 						return govy.NewPropertyError(
-							fmt.Sprintf("spec.objectives[0].composite.components.objectives[%d]", objKey),
+							jsonpath.Parse(fmt.Sprintf(
+								"spec.objectives[0].composite.components.objectives[%d]",
+								objKey,
+							)),
 							obj.SLO,
 							errors.Errorf("composite SLO cannot have duplicated SLOs as its objectives"),
 						)
@@ -215,16 +218,14 @@ var specCompositeValidationRule = govy.NewRule(func(s Spec) error {
 	switch s.BudgetingMethod {
 	case BudgetingMethodOccurrences.String():
 		if s.Composite.BurnRateCondition == nil {
-			return govy.NewPropertyError(
-				"burnRateCondition",
+			return govy.NewPropertyError(jsonpath.Parse("burnRateCondition"),
 				s.Composite.BurnRateCondition,
 				validationV1Alpha.NewRequiredError(),
 			)
 		}
 	case BudgetingMethodTimeslices.String():
 		if s.Composite.BurnRateCondition != nil {
-			return govy.NewPropertyError(
-				"burnRateCondition",
+			return govy.NewPropertyError(jsonpath.Parse("burnRateCondition"),
 				s.Composite.BurnRateCondition,
 				govy.NewRuleError(
 					fmt.Sprintf(
@@ -453,10 +454,10 @@ var specValidationComposite = govy.New[Spec](
 							rules.GTE(time.Minute),
 						),
 					govy.For(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
-						WithName("components.objectives").
+						WithPath(jsonpath.Parse("components.objectives")).
 						Required(),
 					govy.ForSlice(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
-						WithName("components.objectives").
+						WithPath(jsonpath.Parse("components.objectives")).
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),

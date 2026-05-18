@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -372,15 +373,14 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ)
 	if err != nil {
-		return govy.NewPropertyError("historicalDataRetrieval", nil, err)
+		return govy.NewPropertyError(jsonpath.Parse("historicalDataRetrieval"), nil, err)
 	}
 	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
 		Value: maxDuration.Value,
 		Unit:  maxDuration.Unit,
 	}
 	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		return govy.NewPropertyError(
-			"historicalDataRetrieval.maxDuration",
+		return govy.NewPropertyError(jsonpath.Parse("historicalDataRetrieval.maxDuration"),
 			spec.HistoricalDataRetrieval.MaxDuration,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
@@ -400,16 +400,14 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 		Unit:  maxQueryDelay.Unit,
 	}
 	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.Parse("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
 	}
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.Parse("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("should be greater than or equal to %s", agentDefault),
 		)
@@ -421,16 +419,14 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
 		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
-		return govy.NewPropertyError(
-			"releaseChannel",
+		return govy.NewPropertyError(jsonpath.Parse("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be one of [stable, beta]"),
 		)
 	}
 
 	if typ == v1alpha.SplunkObservability && spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
-		return govy.NewPropertyError(
-			"releaseChannel",
+		return govy.NewPropertyError(jsonpath.Parse("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be 'alpha' for Splunk Observability"),
 		)

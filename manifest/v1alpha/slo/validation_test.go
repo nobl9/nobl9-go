@@ -461,7 +461,7 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 					{
 						Prop:    "spec.anomalyConfig.noData.alertAfter",
 						Code:    rules.ErrorCodeGreaterThanOrEqualTo,
-						Message: `should be greater than or equal to '5m0s'`,
+						Message: `must be greater than or equal to '5m0s'`,
 					},
 				},
 				ExpectedErrorsCount: 1,

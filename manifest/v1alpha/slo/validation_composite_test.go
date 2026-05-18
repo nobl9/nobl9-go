@@ -225,7 +225,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives[0].composite.maxDelay",
 				Code:    rules.ErrorCodeGreaterThanOrEqualTo,
-				Message: "should be greater than or equal to '1m0s'",
+				Message: "must be greater than or equal to '1m0s'",
 			},
 		)
 	})
@@ -321,7 +321,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[0].weight",
 			Code:    rules.ErrorCodeGreaterThan,
-			Message: "should be greater than '0'",
+			Message: "must be greater than '0'",
 		})
 	})
 	t.Run("fails - invalid whenDelayed behavior", func(t *testing.T) {
