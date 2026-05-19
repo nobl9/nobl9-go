@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -24,6 +25,21 @@ func TestAgent_Spec_GetType(t *testing.T) {
 			assert.Equal(t, typ.String(), agent.String())
 		})
 	}
+}
+
+func TestDynatraceConfig_JSONFields(t *testing.T) {
+	data, err := json.Marshal(DynatraceConfig{
+		URL:               "https://example.live.dynatrace.com",
+		OAuthClientID:     "client-id",
+		OAuthClientSecret: "client-secret",
+		AccountURN:        "urn:dtaccount:example",
+		OAuthScopes:       "storage:buckets:read storage:logs:read",
+	})
+	require.NoError(t, err)
+
+	assert.Contains(t, string(data), `"accountUrn":"urn:dtaccount:example"`)
+	assert.NotContains(t, string(data), "accountURN")
+	assert.NotContains(t, string(data), "dqlUrl")
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.

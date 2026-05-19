@@ -258,10 +258,9 @@ type LightstepConfig struct {
 type DynatraceConfig struct {
 	URL               string `json:"url"`
 	DynatraceToken    string `json:"dynatraceToken"`
-	DQLURL            string `json:"dqlUrl,omitempty"`
 	OAuthClientID     string `json:"oauthClientId,omitempty"`
 	OAuthClientSecret string `json:"oauthClientSecret,omitempty"`
-	AccountURN        string `json:"accountURN,omitempty"`
+	AccountURN        string `json:"accountUrn,omitempty"`
 	OAuthScopes       string `json:"oauthScopes,omitempty"`
 }
 
