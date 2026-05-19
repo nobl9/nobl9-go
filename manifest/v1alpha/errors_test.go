@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 
 	"github.com/nobl9/nobl9-go/internal/stringutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -21,12 +22,12 @@ var errorsTestData embed.FS
 func TestObjectError(t *testing.T) {
 	errs := govy.PropertyErrors{
 		&govy.PropertyError{
-			PropertyName:  "metadata.name",
+			PropertyPath:  jsonpath.Parse("metadata.name"),
 			PropertyValue: "default",
 			Errors:        []*govy.RuleError{{Message: "here's an error"}},
 		},
 		&govy.PropertyError{
-			PropertyName:  "spec.description",
+			PropertyPath:  jsonpath.Parse("spec.description"),
 			PropertyValue: "some long description",
 			Errors:        []*govy.RuleError{{Message: "here's another error"}},
 		},
@@ -70,12 +71,12 @@ func TestObjectError_UnmarshalJSON(t *testing.T) {
 		},
 		Errors: govy.PropertyErrors{
 			{
-				PropertyName:  "metadata.project",
+				PropertyPath:  jsonpath.Parse("metadata.project"),
 				PropertyValue: "default",
 				Errors:        []*govy.RuleError{{Message: "nested"}},
 			},
 			{
-				PropertyName:  "metadata.name",
+				PropertyPath:  jsonpath.Parse("metadata.name"),
 				PropertyValue: "my-project",
 			},
 		},

@@ -3,6 +3,8 @@ package alertmethod
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -44,7 +46,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: "spec.discord.url",
+					Prop: jsonpath.Parse("spec.discord.url"),
 					Code: rules.ErrorCodeStringURL,
 				},
 			},
@@ -56,7 +58,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.discord.url",
+					Prop:    jsonpath.Parse("spec.discord.url"),
 					Message: "must not end with /slack or /github",
 				},
 			},
@@ -68,7 +70,7 @@ func TestValidate_Spec_DiscordAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    "spec.discord.url",
+					Prop:    jsonpath.Parse("spec.discord.url"),
 					Message: "must not end with /slack or /github",
 				},
 			},

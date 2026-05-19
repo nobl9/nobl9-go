@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
@@ -22,7 +23,7 @@ var validator = govy.New(
 				// Check if SLOName is set when Project is set
 				if v.Project != "" && v.SLOName == "" {
 					return govy.NewPropertyError(
-						QueryKeySLOName,
+						jsonpath.New().Name(QueryKeySLOName),
 						v.SLOName,
 						govy.NewRuleError("SLO is required when Project is set", "required"),
 					)
@@ -31,7 +32,7 @@ var validator = govy.New(
 				// Check if Project is set when SLOName is set
 				if v.SLOName != "" && v.Project == "" {
 					return govy.NewPropertyError(
-						QueryKeySLOProjectName,
+						jsonpath.New().Name(QueryKeySLOProjectName),
 						v.Project,
 						govy.NewRuleError("Project is required when SLO is set", "required"),
 					)
