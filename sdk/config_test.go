@@ -233,6 +233,7 @@ func TestReadConfig_Defaults(t *testing.T) {
 		currentContext:       defaultContext,
 		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
+	assert.Nil(t, conf.contextlessConfig.Sloctl)
 }
 
 func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
@@ -403,6 +404,21 @@ func TestSaveAccessToken(t *testing.T) {
 		assert.Equal(t, "new", newConf.AccessToken)
 		oldConf.AccessToken = "new"
 		assertConfigsAreEqual(t, oldConf, newConf)
+	})
+
+	t.Run("does not persist default sloctl config", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "sloctl-defaults.toml")
+		copyEmbeddedFile(t, "minimal_config.toml", filePath)
+
+		config, err := ReadConfig(ConfigOptionFilePath(filePath))
+		require.NoError(t, err)
+		require.NoError(t, config.saveAccessToken("new"))
+
+		data, err := os.ReadFile(filePath)
+		require.NoError(t, err)
+		assert.NotContains(t, string(data), "[sloctl]")
+		assert.NotContains(t, string(data), "filesPromptEnabled")
+		assert.NotContains(t, string(data), "filesPromptThreshold")
 	})
 }
 

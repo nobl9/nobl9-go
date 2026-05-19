@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -30,11 +32,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, group, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -48,7 +50,7 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, group, err, 1,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -60,7 +62,7 @@ func TestValidate_Spec(t *testing.T) {
 		group.Spec.DisplayName = strings.Repeat("MY GROUP", 32)
 		err := validate(group)
 		testutils.AssertContainsErrors(t, group, err, 1, testutils.ExpectedError{
-			Prop: "spec.displayName",
+			Prop: jsonpath.Parse("spec.displayName"),
 			Code: rules.ErrorCodeStringLength,
 		})
 	})

@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -490,15 +491,14 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
 	if err != nil {
-		return govy.NewPropertyError("historicalDataRetrieval", nil, err)
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval"), nil, err)
 	}
 	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
 		Value: maxDuration.Value,
 		Unit:  maxDuration.Unit,
 	}
 	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		return govy.NewPropertyError(
-			"historicalDataRetrieval.maxDuration",
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval").Name("maxDuration"),
 			spec.HistoricalDataRetrieval.MaxDuration,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
@@ -518,16 +518,14 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 		Unit:  maxQueryDelay.Unit,
 	}
 	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
 	}
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("should be greater than or equal to %s", agentDefault),
 		)

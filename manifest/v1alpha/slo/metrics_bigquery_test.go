@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -21,7 +23,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.BigQuery.ProjectID = "2"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -31,7 +33,7 @@ func TestBigQuery_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.BigQuery.Location = "2"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -44,15 +46,15 @@ func TestBigQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.bigQuery.projectId",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.bigQuery.projectId"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.bigQuery.location",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.bigQuery.location"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.bigQuery.query",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.bigQuery.query"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -80,7 +82,7 @@ WHERE http_code = 200 AND created = DATETIME(@n9date_from)`,
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.BigQuery.Query = query
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.bigQuery.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.bigQuery.query"),
 				ContainsMessage: expectedDetails,
 			})
 		}

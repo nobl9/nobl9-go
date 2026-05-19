@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -26,7 +28,7 @@ func TestSumoLogic_CountMetricsLevel(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -56,7 +58,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -68,7 +70,7 @@ func TestSumoLogic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Type = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.type"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -77,7 +79,7 @@ func TestSumoLogic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Type = ptr("invalid")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.type",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.type"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -86,7 +88,7 @@ func TestSumoLogic(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Query = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic",
+			Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic"),
 			Code:    rules.ErrorCodeRequired,
 			Message: "one of 'query' or 'queries' is required",
 		})
@@ -101,11 +103,11 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.quantization"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.rollup"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -115,7 +117,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = ptr("invalid")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
+			Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.quantization"),
 			Message: `error parsing quantization string to duration - time: invalid duration "invalid"`,
 		})
 	})
@@ -124,7 +126,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Quantization = ptr("14s")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
+			Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.quantization"),
 			Message: "minimum quantization value is [15s], got: [14s]",
 		})
 	})
@@ -141,7 +143,7 @@ func TestSumoLogic_MetricType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SumoLogic.Rollup = ptr("invalid")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.rollup"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -166,11 +168,11 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.quantization",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.quantization"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.rollup",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.rollup"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -188,7 +190,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "query must contain a 'timeslice' operator",
 			},
 		},
@@ -203,7 +205,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "exactly one 'timeslice' usage is required in the query",
 			},
 		},
@@ -217,7 +219,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "timeslice value must be 15, 30, or 60 seconds, got: [015s]",
 			},
 		},
@@ -231,7 +233,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
 			},
 		},
@@ -245,7 +247,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
 			},
 		},
@@ -259,7 +261,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: "timeslice value must be 15, 30, or 60 seconds, got: [15000ms]",
 			},
 		},
@@ -273,7 +275,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: `error parsing timeslice duration: time: unknown unit "x" in duration "20x"`,
 			},
 		},
@@ -287,7 +289,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Message: `timeslice value must be 15, 30, or 60 seconds, got: [14s]`,
 			},
 		},
@@ -301,7 +303,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) by n9_time
   | sort by n9_time asc`,
 			Error: testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				ContainsMessage: "n9_value is required",
 			},
 		},
@@ -315,7 +317,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | sum(log_level_not_error) as n9_value by time
   | sort by time asc`,
 			Error: testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				ContainsMessage: "timeslice operator requires an n9_time alias",
 			},
 		},
@@ -328,7 +330,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
   | if (log_level matches "error" ,0,1) as log_level_not_error
   | sum(log_level_not_error) as n9_value`,
 			Error: testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				ContainsMessage: "aggregation function is required",
 			},
 		},
@@ -401,11 +403,11 @@ func TestSumoLogic_LogsType_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic.quantization",
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.quantization"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic.rollup",
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.rollup"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -423,7 +425,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "query must contain a 'timeslice' operator",
 			},
 		},
@@ -438,7 +440,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "exactly one 'timeslice' usage is required in the query",
 			},
 		},
@@ -452,7 +454,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "timeslice value must be 15, 30, or 60 seconds, got: [015s]",
 			},
 		},
@@ -466,7 +468,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
 			},
 		},
@@ -480,7 +482,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "timeslice interval must be in a NumberUnit form - for example '30s'",
 			},
 		},
@@ -494,7 +496,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: "timeslice value must be 15, 30, or 60 seconds, got: [15000ms]",
 			},
 		},
@@ -508,7 +510,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: `error parsing timeslice duration: time: unknown unit "x" in duration "20x"`,
 			},
 		},
@@ -522,7 +524,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Message: `timeslice value must be 15, 30, or 60 seconds, got: [14s]`,
 			},
 		},
@@ -536,7 +538,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_bad, sum(total) as n9_total by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Code:    rules.ErrorCodeStringContains,
 				Message: "string must contain the following substrings: 'n9_good', 'n9_total'",
 			},
@@ -551,7 +553,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_all by n9_time`,
 			Error: testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:    jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				Code:    rules.ErrorCodeStringContains,
 				Message: "string must contain the following substrings: 'n9_good', 'n9_total'",
 			},
@@ -566,7 +568,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total by time`,
 			Error: testutils.ExpectedError{
-				Prop:            "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				ContainsMessage: "timeslice operator requires an n9_time alias",
 			},
 		},
@@ -580,7 +582,7 @@ _collector="n9-dev-tooling-cluster" _source="logs"
 	| 1 as total
 	| sum(good) as n9_good, sum(total) as n9_total`,
 			Error: testutils.ExpectedError{
-				Prop:            "spec.objectives[0].countMetrics.goodTotal.sumoLogic.query",
+				Prop:            jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic.query"),
 				ContainsMessage: "aggregation function is required",
 			},
 		},
@@ -686,7 +688,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -708,7 +710,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries"),
 		})
 	})
 	t.Run("duplicate row IDs", func(t *testing.T) {
@@ -724,7 +726,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries"),
 		})
 	})
 	t.Run("valid non-sequential row IDs", func(t *testing.T) {
@@ -753,7 +755,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries[0]"),
 			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
 		})
 	})
@@ -769,7 +771,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries[0]"),
 			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
 		})
 	})
@@ -785,7 +787,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries[0]"),
 			ContainsMessage: "'rowId' must be a single uppercase letter A-F",
 		})
 	})
@@ -801,7 +803,7 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:            "spec.objectives[0].rawMetric.query.sumoLogic.queries[0]",
+			Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries[0]"),
 			ContainsMessage: "'query' must not be empty",
 		})
 	})
@@ -816,11 +818,11 @@ func TestSumoLogic_MultiQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.queries",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.queries"),
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.sumoLogic.query",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.sumoLogic.query"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -915,7 +917,7 @@ func TestSumoLogic_MultiQuery_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
@@ -929,7 +931,7 @@ func TestSumoLogic_MetricsType_SingleQuery(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].countMetrics.goodTotal.sumoLogic",
+				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.goodTotal.sumoLogic"),
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
