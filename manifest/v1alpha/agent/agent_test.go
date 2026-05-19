@@ -29,16 +29,13 @@ func TestAgent_Spec_GetType(t *testing.T) {
 
 func TestDynatraceConfig_JSONFields(t *testing.T) {
 	data, err := json.Marshal(DynatraceConfig{
-		URL:           "https://example.live.dynatrace.com",
-		OAuthClientID: "client-id",
-		AccountURN:    "urn:dtaccount:example",
-		OAuthScopes:   "storage:buckets:read storage:logs:read",
+		URL: "https://example.live.dynatrace.com",
 	})
 	require.NoError(t, err)
 
-	assert.Contains(t, string(data), `"accountUrn":"urn:dtaccount:example"`)
 	assert.NotContains(t, string(data), "accountURN")
-	assert.NotContains(t, string(data), "oauthClientSecret")
+	assert.NotContains(t, string(data), "accountUrn")
+	assert.NotContains(t, string(data), "platformToken")
 	assert.NotContains(t, string(data), "dqlUrl")
 }
 
