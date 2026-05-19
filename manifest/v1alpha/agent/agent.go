@@ -204,11 +204,10 @@ type SplunkObservabilityConfig struct {
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceConfig struct {
-	URL               string `json:"url"`
-	OAuthClientID     string `json:"oauthClientId,omitempty"`
-	OAuthClientSecret string `json:"oauthClientSecret,omitempty"`
-	AccountURN        string `json:"accountUrn,omitempty"`
-	OAuthScopes       string `json:"oauthScopes,omitempty"`
+	URL           string `json:"url"`
+	OAuthClientID string `json:"oauthClientId,omitempty"`
+	AccountURN    string `json:"accountUrn,omitempty"`
+	OAuthScopes   string `json:"oauthScopes,omitempty"`
 }
 
 // ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
