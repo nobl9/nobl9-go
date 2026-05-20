@@ -42,7 +42,8 @@ var specValidation = govy.New[Spec](
 		Rules(exactlyOneDataSourceTypeValidationRule).
 		Rules(
 			historicalDataRetrievalValidationRule,
-			queryDelayValidationRule),
+			queryDelayValidationRule,
+			releaseChannelValidationRule),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -321,6 +322,7 @@ var (
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
+	errCodeUnsupportedReleaseChannel = "unsupported_release_channel"
 	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
 	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
@@ -542,6 +544,17 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayOutOfBounds)
+
+var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
+	typ, _ := spec.GetType()
+	if typ == v1alpha.SplunkObservability && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for Splunk Observability"),
+		)
+	}
+	return nil
+}).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
 func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {

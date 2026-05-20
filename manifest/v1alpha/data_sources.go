@@ -446,7 +446,6 @@ func DataDogSiteValidationRule() govy.Rule[string] {
 
 func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {
 	return []DataSourceType{
-		SplunkObservability,
 		Honeycomb,
 	}
 }
