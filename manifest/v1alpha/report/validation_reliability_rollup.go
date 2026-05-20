@@ -92,13 +92,6 @@ func buildHierarchyFolderValidation() govy.Validator[HierarchyFolder] {
 			WithName("displayName").
 			Required().
 			Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
-		govy.For(govy.GetSelf[HierarchyFolder]()).
-			Rules(govy.NewRule(func(f HierarchyFolder) error {
-				if len(f.Children) == 0 && len(f.SLOs) == 0 {
-					return errors.New("folder must contain at least one child folder or slo")
-				}
-				return nil
-			})),
 		govy.ForSlice(func(f HierarchyFolder) []HierarchyFolder { return f.Children }).
 			WithName("children").
 			RulesForEach(govy.NewRule(func(child HierarchyFolder) error { //nolint:gocritic

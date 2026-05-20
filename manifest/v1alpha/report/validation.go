@@ -53,9 +53,18 @@ var specValidation = govy.New[Spec](
 				return nil
 			}),
 			govy.NewRule(func(s Spec) error {
-				if rrrUsesCustomHierarchy(s) && s.Filters != nil {
+				if s.ReliabilityRollup == nil {
+					return nil
+				}
+				hasHierarchy := len(s.ReliabilityRollup.CustomHierarchy) > 0
+				switch {
+				case s.Filters != nil && hasHierarchy:
 					return errors.New(
 						"spec.filters and spec.reliabilityRollup.customHierarchy are mutually exclusive",
+					)
+				case s.Filters == nil && !hasHierarchy:
+					return errors.New(
+						"spec.filters or spec.reliabilityRollup.customHierarchy is required",
 					)
 				}
 				return nil
@@ -63,12 +72,14 @@ var specValidation = govy.New[Spec](
 		),
 	govy.ForPointer(func(s Spec) *Filters { return s.Filters }).
 		WithName("filters").
-		When(
-			func(s Spec) bool { return !rrrUsesCustomHierarchy(s) },
-			govy.WhenDescription("reliabilityRollup.customHierarchy is not set"),
-		).
-		Required().
 		Include(filtersValidation),
+	govy.ForPointer(func(s Spec) *Filters { return s.Filters }).
+		WithName("filters").
+		When(
+			func(s Spec) bool { return s.ReliabilityRollup == nil },
+			govy.WhenDescription("report is not a reliability rollup"),
+		).
+		Required(),
 	govy.ForPointer(func(s Spec) *SLOHistoryConfig { return s.SLOHistory }).
 		WithName("sloHistory").
 		Include(sloHistoryValidation),
@@ -125,13 +136,5 @@ var sloValidation = govy.New[SLO](
 		WithName("name").
 		Include(requiredNameValidation),
 )
-
-// rrrUsesCustomHierarchy reports whether the spec describes a Reliability
-// Rollup report whose structure is defined by an explicit customHierarchy.
-// In that mode spec.filters must not be set; in every other case it is
-// required.
-func rrrUsesCustomHierarchy(s Spec) bool {
-	return s.ReliabilityRollup != nil && len(s.ReliabilityRollup.CustomHierarchy) > 0
-}
 
 func ptr[T any](v T) *T { return &v }

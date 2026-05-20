@@ -1501,8 +1501,8 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.Filters = nil
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.filters",
-			Code: rules.ErrorCodeRequired,
+			Prop:    "spec",
+			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
 		})
 	})
 
@@ -1538,17 +1538,15 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		})
 	})
 
-	t.Run("fails when folder has no children and no slos", func(t *testing.T) {
+	t.Run("passes when folder has no children and no slos", func(t *testing.T) {
+		// The web UI allows empty folders; sloctl apply must accept them too.
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
 			{DisplayName: "Empty"},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:            "spec.reliabilityRollup.customHierarchy[0]",
-			ContainsMessage: "folder must contain at least one child folder or slo",
-		})
+		testutils.AssertNoError(t, report, err)
 	})
 
 	t.Run("fails when folder has empty displayName", func(t *testing.T) {
@@ -1650,7 +1648,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		})
 	})
 
-	t.Run("fails when nested folder is empty", func(t *testing.T) {
+	t.Run("passes when nested folder is empty", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
@@ -1662,10 +1660,24 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 			},
 		}
 		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:            "spec.reliabilityRollup.customHierarchy[0].children[0]",
-			ContainsMessage: "folder must contain at least one child folder or slo",
-		})
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with a deeply nested hierarchy of empty folders", func(t *testing.T) {
+		// Mirrors a QA report: an 8-level-deep customHierarchy with no SLOs
+		// attached anywhere. The web UI allows this, so sloctl must too.
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		root := HierarchyFolder{DisplayName: "leaf"}
+		for i := 1; i < MaxHierarchyDepth; i++ {
+			root = HierarchyFolder{
+				DisplayName: "level",
+				Children:    []HierarchyFolder{root},
+			}
+		}
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
 	})
 
 	t.Run("passes with customHierarchy at maximum depth", func(t *testing.T) {
@@ -1751,8 +1763,8 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.filters",
-			Code: rules.ErrorCodeRequired,
+			Prop:    "spec",
+			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
 		})
 	})
 
