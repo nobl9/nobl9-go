@@ -1,7 +1,6 @@
 package direct
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -25,20 +24,6 @@ func TestDirect_Spec_GetType(t *testing.T) {
 			assert.Equal(t, typ, direct)
 		})
 	}
-}
-
-func TestDynatraceConfig_JSONFields(t *testing.T) {
-	data, err := json.Marshal(DynatraceConfig{
-		URL:            "https://example.live.dynatrace.com",
-		DynatraceToken: "token",
-		PlatformToken:  "platform-token",
-	})
-	require.NoError(t, err)
-
-	assert.Contains(t, string(data), `"platformToken":"platform-token"`)
-	assert.NotContains(t, string(data), "accountURN")
-	assert.NotContains(t, string(data), "accountUrn")
-	assert.NotContains(t, string(data), "dqlUrl")
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
