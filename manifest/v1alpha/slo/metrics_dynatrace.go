@@ -53,18 +53,8 @@ func (d DynatraceMetric) QueryType() DynatraceMetricQueryType {
 var dynatraceValidation = govy.New[DynatraceMetric](
 	govy.For(govy.GetSelf[DynatraceMetric]()).
 		Rules(rules.MutuallyExclusive(true, map[string]func(d DynatraceMetric) any{
-			"metricSelector": func(d DynatraceMetric) any {
-				if d.IsMetricSelectorConfiguration() {
-					return d.MetricSelector
-				}
-				return nil
-			},
-			"dql": func(d DynatraceMetric) any {
-				if d.IsDQLConfiguration() {
-					return d.DQL
-				}
-				return nil
-			},
+			"metricSelector": func(d DynatraceMetric) any { return d.MetricSelector },
+			"dql":            func(d DynatraceMetric) any { return d.DQL },
 		})),
 	govy.ForPointer(func(d DynatraceMetric) *string { return d.MetricSelector }).
 		WithName("metricSelector").

@@ -47,10 +47,7 @@ func TestDynatrace(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = ptr("")
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
-			Code: rules.ErrorCodeMutuallyExclusive,
-		}, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.metricSelector"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
@@ -60,10 +57,7 @@ func TestDynatrace(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{Interval: "1m"}
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
-			Code: rules.ErrorCodeMutuallyExclusive,
-		}, testutils.ExpectedError{
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.query"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
