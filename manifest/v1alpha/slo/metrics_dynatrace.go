@@ -77,7 +77,7 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 	govy.Transform(func(d DynatraceDQL) string { return d.Interval }, time.ParseDuration).
 		WithName("interval").
 		OmitEmpty().
-		Rules(rules.GT(dynatraceDQLMinInterval)),
+		Rules(rules.GTE(dynatraceDQLMinInterval)),
 )
 
 var dynatraceMetricQueryRequiredRule = govy.NewRule(func(d DynatraceMetric) error {

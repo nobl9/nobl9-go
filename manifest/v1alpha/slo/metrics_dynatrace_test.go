@@ -89,24 +89,24 @@ func TestDynatrace(t *testing.T) {
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.interval"),
 		})
 	})
-	t.Run("dql interval must be greater than 15 seconds", func(t *testing.T) {
+	t.Run("dql interval must be at least 15 seconds", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{
 			Query:    "timeseries value = avg(dt.host.cpu.usage)",
-			Interval: "15s",
+			Interval: "14s",
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.interval"),
 		})
 	})
-	t.Run("dql interval allows values greater than 15 seconds", func(t *testing.T) {
+	t.Run("dql interval allows values equal to 15 seconds", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{
 			Query:    "timeseries value = avg(dt.host.cpu.usage)",
-			Interval: "16s",
+			Interval: "15s",
 		}
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
