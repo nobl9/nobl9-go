@@ -105,6 +105,77 @@ func TestDynatraceMetric_QueryType(t *testing.T) {
 	})
 }
 
+func TestDynatraceDQL_Query(t *testing.T) {
+	tests := []struct {
+		name    string
+		query   string
+		isValid bool
+	}{
+		{
+			name: "allows DQL without time range parameters",
+			query: "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service} " +
+				"| fields response_time, dt.entity.service, timeframe, interval",
+			isValid: true,
+		},
+		{
+			name:    "rejects interval parameter",
+			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, interval:1m",
+			isValid: false,
+		},
+		{
+			name:    "rejects bins parameter",
+			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, bins:120",
+			isValid: false,
+		},
+		{
+			name:    "rejects from parameter",
+			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, from:-1h",
+			isValid: false,
+		},
+		{
+			name:    "rejects to parameter",
+			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, to:now()",
+			isValid: false,
+		},
+		{
+			name:    "rejects timeframe parameter",
+			query:   `timeseries response_time = avg(dt.service.request.response_time), timeframe:"2026-05-01/2026-05-02"`,
+			isValid: false,
+		},
+		{
+			name:    "rejects shift parameter",
+			query:   "timeseries response_time_yesterday = avg(dt.service.request.response_time), by:{dt.entity.service}, shift:-24h",
+			isValid: false,
+		},
+		{
+			name: "rejects forbidden parameters anywhere in the query",
+			query: "fetch logs " +
+				`| filter contains(content, "from: now()") ` +
+				"| makeTimeseries errors = count(), interval:5m",
+			isValid: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			slo := validRawMetricSLO(v1alpha.Dynatrace)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.MetricSelector = nil
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{
+				Query:    test.query,
+				Interval: "1m",
+			}
+			err := validate(slo)
+			if test.isValid {
+				testutils.AssertNoError(t, slo, err)
+			} else {
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.query"),
+					Code: rules.ErrorCodeStringDenyRegexp,
+				})
+			}
+		})
+	}
+}
+
 func validDynatraceDQL() *DynatraceDQL {
 	return &DynatraceDQL{
 		Query:    "timeseries value = avg(dt.host.cpu.usage)",

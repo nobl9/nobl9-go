@@ -1,6 +1,7 @@
 package slo
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
@@ -67,7 +68,11 @@ var dynatraceValidation = govy.New[DynatraceMetric](
 var dynatraceDQLValidation = govy.New[DynatraceDQL](
 	govy.For(func(d DynatraceDQL) string { return d.Query }).
 		WithName("query").
-		Rules(rules.StringNotEmpty()),
+		Rules(rules.StringNotEmpty()).
+		Rules(rules.StringDenyRegexp(dynatraceDQLForbiddenTimeParametersRegexp).
+			WithDetails("query must not contain 'from:', 'to:', 'timeframe:', 'interval:', 'bins:', or 'shift:' parameters; "+
+				"Nobl9 controls the query timeframe and time-series granularity. "+
+				"To adjust the time-series interval, configure dql.interval.")),
 	govy.Transform(func(d DynatraceDQL) string { return d.Interval }, time.ParseDuration).
 		WithName("interval").
 		OmitEmpty().
@@ -87,3 +92,7 @@ var dynatraceMetricQueryMutuallyExclusiveRule = govy.NewRule(func(d DynatraceMet
 	}
 	return nil
 }).WithErrorCode(rules.ErrorCodeMutuallyExclusive)
+
+var dynatraceDQLForbiddenTimeParametersRegexp = regexp.MustCompile( //nolint:gochecknoglobals
+	`(?i)(^|[^[:alnum:]_.])(from|to|timeframe|interval|bins|shift)\s*:`,
+)
