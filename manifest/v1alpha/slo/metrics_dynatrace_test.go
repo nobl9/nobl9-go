@@ -40,7 +40,7 @@ func TestDynatrace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
-			Code: rules.ErrorCodeRequired,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
 	t.Run("empty metric selector", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestDynatrace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
-			Code: rules.ErrorCodeRequired,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		}, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.metricSelector"),
 			Code: rules.ErrorCodeStringNotEmpty,
@@ -62,7 +62,7 @@ func TestDynatrace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
-			Code: rules.ErrorCodeRequired,
+			Code: rules.ErrorCodeMutuallyExclusive,
 		}, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.query"),
 			Code: rules.ErrorCodeStringNotEmpty,

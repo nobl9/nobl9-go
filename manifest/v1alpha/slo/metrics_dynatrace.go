@@ -5,8 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 )
@@ -54,10 +52,20 @@ func (d DynatraceMetric) QueryType() DynatraceMetricQueryType {
 
 var dynatraceValidation = govy.New[DynatraceMetric](
 	govy.For(govy.GetSelf[DynatraceMetric]()).
-		Rules(
-			dynatraceMetricQueryRequiredRule,
-			dynatraceMetricQueryMutuallyExclusiveRule,
-		),
+		Rules(rules.MutuallyExclusive(true, map[string]func(d DynatraceMetric) any{
+			"metricSelector": func(d DynatraceMetric) any {
+				if d.IsMetricSelectorConfiguration() {
+					return d.MetricSelector
+				}
+				return nil
+			},
+			"dql": func(d DynatraceMetric) any {
+				if d.IsDQLConfiguration() {
+					return d.DQL
+				}
+				return nil
+			},
+		})),
 	govy.ForPointer(func(d DynatraceMetric) *string { return d.MetricSelector }).
 		WithName("metricSelector").
 		Rules(rules.StringNotEmpty()),
@@ -79,20 +87,6 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 		OmitEmpty().
 		Rules(rules.GTE(dynatraceDQLMinInterval)),
 )
-
-var dynatraceMetricQueryRequiredRule = govy.NewRule(func(d DynatraceMetric) error {
-	if !d.IsMetricSelectorConfiguration() && !d.IsDQLConfiguration() {
-		return errors.New("one of 'metricSelector' or 'dql' is required")
-	}
-	return nil
-}).WithErrorCode(rules.ErrorCodeRequired)
-
-var dynatraceMetricQueryMutuallyExclusiveRule = govy.NewRule(func(d DynatraceMetric) error {
-	if d.IsMetricSelectorConfiguration() && d.IsDQLConfiguration() {
-		return errors.New("'metricSelector' and 'dql' are mutually exclusive")
-	}
-	return nil
-}).WithErrorCode(rules.ErrorCodeMutuallyExclusive)
 
 var dynatraceDQLForbiddenTimeParametersRegexp = regexp.MustCompile( //nolint:gochecknoglobals
 	`(?i)(^|[^[:alnum:]_.])(from|to|timeframe|interval|bins|shift)\s*:`,
