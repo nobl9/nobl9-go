@@ -129,35 +129,77 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 
 	tests := map[string]struct {
 		request  prometheusV1.LabelValuesRequest
-		expected model.LabelValues
+		expected []string
 	}{
+		"empty matcher returns all values for __name__": {
+			request: prometheusV1.LabelValuesRequest{
+				Label:   model.MetricNameLabel,
+				Matches: []string{},
+			},
+			expected: []string{
+				"budget",
+				"burn_rate",
+				"component_delay",
+				"component_impact",
+				"component_was_delayed",
+				"component_weight",
+				"composite_max_delay",
+				"count_good",
+				"count_total",
+				"reliability",
+				"sli_ratio_received_bad",
+				"sli_ratio_received_good",
+				"sli_ratio_received_total",
+				"sli_ratio_used_good",
+				"sli_ratio_used_total",
+				"sli_threshold",
+				"sli_threshold_status",
+				"target",
+				"threshold",
+				"time_slice_allowance",
+				"time_slice_reliability",
+				"time_slice_status",
+			},
+		},
+		"empty matcher returns all values for projects": {
+			request: prometheusV1.LabelValuesRequest{
+				Label:   "project",
+				Matches: []string{},
+			},
+			expected: []string{
+				alertTestProject1,
+				alertTestProject2,
+				primaryProject,
+				secondaryProject,
+			},
+		},
 		"metric name values filtered by SLO metric matcher": {
 			request: prometheusV1.LabelValuesRequest{
-				Label: string(model.MetricNameLabel),
+				Label: model.MetricNameLabel,
 				Matches: []string{
 					fmt.Sprintf(`reliability{project="%s",slo="%s"}`, primaryProject, availabilitySLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{"reliability"},
+			expected: []string{"reliability"},
 		},
 		"metric name values filtered by component metric matcher": {
 			request: prometheusV1.LabelValuesRequest{
-				Label: string(model.MetricNameLabel),
+				Label: model.MetricNameLabel,
 				Matches: []string{
 					fmt.Sprintf(`component_weight{project="%s",component_slo="%s"}`, primaryProject, availabilitySLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{"component_weight"},
+			expected: []string{"component_weight"},
 		},
 		"SLO values filtered by project": {
 			request: prometheusV1.LabelValuesRequest{
 				Label:   "slo",
 				Matches: []string{fmt.Sprintf(`reliability{project="%s"}`, primaryProject)},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(compositeSLO.GetName()),
-				model.LabelValue(latencySLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				compositeSLO.GetName(),
+				latencySLO.GetName(),
 			},
 		},
 		"SLO values filtered by secondary project": {
@@ -165,7 +207,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				Label:   "slo",
 				Matches: []string{fmt.Sprintf(`reliability{project="%s"}`, secondaryProject)},
 			},
-			expected: model.LabelValues{model.LabelValue(externalSLO.GetName())},
+			expected: []string{externalSLO.GetName()},
 		},
 		"project values from multiple projects": {
 			request: prometheusV1.LabelValuesRequest{
@@ -175,9 +217,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{slo="%s"}`, externalSLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(primaryProject),
-				model.LabelValue(secondaryProject),
+			expected: []string{
+				primaryProject,
+				secondaryProject,
 			},
 		},
 		"SLO values filtered by project and service": {
@@ -187,9 +229,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{project="%s",service="%s"}`, primaryProject, objects.services[0].GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(latencySLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				latencySLO.GetName(),
 			},
 		},
 		"SLO values filtered by project service and SLO": {
@@ -204,7 +246,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(latencySLO.GetName())},
+			expected: []string{latencySLO.GetName()},
 		},
 		"SLO values filtered by mismatched service and SLO": {
 			request: prometheusV1.LabelValuesRequest{
@@ -218,7 +260,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{},
+			expected: []string{},
 		},
 		"SLO values filtered by service regexp": {
 			request: prometheusV1.LabelValuesRequest{
@@ -231,9 +273,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(latencySLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				latencySLO.GetName(),
 			},
 		},
 		"SLO values filtered by negative regexp": {
@@ -243,9 +285,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{project="%s",slo!~".*-latency"}`, primaryProject),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(compositeSLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				compositeSLO.GetName(),
 			},
 		},
 		"SLO values from multiple selectors": {
@@ -261,9 +303,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`component_weight{project="%s",component_slo="%s"}`, primaryProject, latencySLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(compositeSLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				compositeSLO.GetName(),
 			},
 		},
 		"service values filtered by SLO matcher": {
@@ -273,7 +315,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{project="%s",slo="%s"}`, primaryProject, availabilitySLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(objects.services[0].GetName())},
+			expected: []string{objects.services[0].GetName()},
 		},
 		"service values filtered by project service and SLO": {
 			request: prometheusV1.LabelValuesRequest{
@@ -287,7 +329,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(objects.services[0].GetName())},
+			expected: []string{objects.services[0].GetName()},
 		},
 		"service values from multiple selectors": {
 			request: prometheusV1.LabelValuesRequest{
@@ -297,9 +339,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`component_weight{project="%s",slo="%s"}`, primaryProject, compositeSLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(objects.services[0].GetName()),
-				model.LabelValue(objects.services[1].GetName()),
+			expected: []string{
+				objects.services[0].GetName(),
+				objects.services[1].GetName(),
 			},
 		},
 		"objective values filtered by negative SLO matcher": {
@@ -309,9 +351,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{project="%s",slo!="%s"}`, primaryProject, compositeSLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.Spec.Objectives[0].Name),
-				model.LabelValue(latencySLO.Spec.Objectives[0].Name),
+			expected: []string{
+				availabilitySLO.Spec.Objectives[0].Name,
+				latencySLO.Spec.Objectives[0].Name,
 			},
 		},
 		"objective values filtered by project service and SLO": {
@@ -326,7 +368,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(availabilitySLO.Spec.Objectives[0].Name)},
+			expected: []string{availabilitySLO.Spec.Objectives[0].Name},
 		},
 		"component SLO values filtered by composite metric": {
 			request: prometheusV1.LabelValuesRequest{
@@ -335,10 +377,10 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`component_weight{project="%s",slo="%s"}`, primaryProject, compositeSLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(externalSLO.GetName()),
-				model.LabelValue(latencySLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				externalSLO.GetName(),
+				latencySLO.GetName(),
 			},
 		},
 		"component SLO values filtered by secondary component project": {
@@ -352,7 +394,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(externalSLO.GetName())},
+			expected: []string{externalSLO.GetName()},
 		},
 		"composite SLO values filtered by component matcher": {
 			request: prometheusV1.LabelValuesRequest{
@@ -365,7 +407,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(compositeSLO.GetName())},
+			expected: []string{compositeSLO.GetName()},
 		},
 		"composite SLO values filtered by component project SLO and objective": {
 			request: prometheusV1.LabelValuesRequest{
@@ -380,7 +422,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(compositeSLO.GetName())},
+			expected: []string{compositeSLO.GetName()},
 		},
 		"component objective values filtered by component project": {
 			request: prometheusV1.LabelValuesRequest{
@@ -389,9 +431,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`component_weight{project="%s",component_project="%s"}`, primaryProject, primaryProject),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.Spec.Objectives[0].Name),
-				model.LabelValue(latencySLO.Spec.Objectives[0].Name),
+			expected: []string{
+				availabilitySLO.Spec.Objectives[0].Name,
+				latencySLO.Spec.Objectives[0].Name,
 			},
 		},
 		"component objective values filtered by secondary component project": {
@@ -405,7 +447,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(externalSLO.Spec.Objectives[0].Name)},
+			expected: []string{externalSLO.Spec.Objectives[0].Name},
 		},
 		"component project values filtered by composite metric": {
 			request: prometheusV1.LabelValuesRequest{
@@ -414,9 +456,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`component_weight{project="%s",slo="%s"}`, primaryProject, compositeSLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{
-				model.LabelValue(primaryProject),
-				model.LabelValue(secondaryProject),
+			expected: []string{
+				primaryProject,
+				secondaryProject,
 			},
 		},
 		"component project values filtered by component SLO": {
@@ -430,7 +472,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					),
 				},
 			},
-			expected: model.LabelValues{model.LabelValue(secondaryProject)},
+			expected: []string{secondaryProject},
 		},
 		"component label values filtered by non-component metric": {
 			request: prometheusV1.LabelValuesRequest{
@@ -439,20 +481,20 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 					fmt.Sprintf(`reliability{project="%s",slo="%s"}`, primaryProject, availabilitySLO.GetName()),
 				},
 			},
-			expected: model.LabelValues{},
+			expected: []string{},
 		},
 		"unknown metric": {
 			request: prometheusV1.LabelValuesRequest{
 				Label:   "slo",
 				Matches: []string{fmt.Sprintf(`definitely_unknown_metric{project="%s"}`, primaryProject)},
 			},
-			expected: model.LabelValues{},
+			expected: []string{},
 		},
 		"unsupported label": {
 			request: prometheusV1.LabelValuesRequest{
 				Label: "job",
 			},
-			expected: model.LabelValues{},
+			expected: []string{},
 		},
 		"limit": {
 			request: prometheusV1.LabelValuesRequest{
@@ -462,9 +504,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				},
 				Limit: 2,
 			},
-			expected: model.LabelValues{
-				model.LabelValue(availabilitySLO.GetName()),
-				model.LabelValue(compositeSLO.GetName()),
+			expected: []string{
+				availabilitySLO.GetName(),
+				compositeSLO.GetName(),
 			},
 		},
 	}
@@ -630,7 +672,7 @@ func newPrometheusLabelValuesCompositeSLO(
 func requirePrometheusLabelValues(
 	t *testing.T,
 	request prometheusV1.LabelValuesRequest,
-	expected model.LabelValues,
+	expected []string,
 ) {
 	t.Helper()
 
@@ -639,14 +681,18 @@ func requirePrometheusLabelValues(
 	defer ticker.Stop()
 	defer timer.Stop()
 
+	expectedValues := make(model.LabelValues, 0, len(expected))
+	for _, v := range expected {
+		expectedValues = append(expectedValues, model.LabelValue(v))
+	}
 	var (
-		labelValues model.LabelValues
-		warnings    promv1.Warnings
-		err         error
+		actualValues model.LabelValues
+		warnings     promv1.Warnings
+		err          error
 	)
 	for {
-		labelValues, warnings, err = client.Prometheus().V1().LabelValues(t.Context(), request)
-		if err == nil && len(warnings) == 0 && assert.ObjectsAreEqual(expected, labelValues) {
+		actualValues, warnings, err = client.Prometheus().V1().LabelValues(t.Context(), request)
+		if err == nil && len(warnings) == 0 && assert.ObjectsAreEqual(expected, actualValues) {
 			return
 		}
 
@@ -655,7 +701,7 @@ func requirePrometheusLabelValues(
 		case <-timer.C:
 			require.NoError(t, err)
 			require.Empty(t, warnings)
-			require.Equal(t, expected, labelValues)
+			require.Equal(t, expectedValues, actualValues)
 			return
 		}
 	}
