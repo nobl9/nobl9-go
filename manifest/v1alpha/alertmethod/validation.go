@@ -319,6 +319,13 @@ var slackAppValidation = govy.New[SlackAppAlertMethod](
 		WithName("channelId").
 		Required().
 		Rules(rules.StringNotEmpty()),
+	govy.For(func(s SlackAppAlertMethod) string { return s.WebhookSecret }).
+		WithName("webhookSecret").
+		HideValue().
+		When(
+			func(s SlackAppAlertMethod) bool { return !isHiddenValue(s.WebhookSecret) },
+			govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
+		),
 )
 
 func optionalUrlWithPrefixValidation(prefixes ...string) govy.Validator[string] {
