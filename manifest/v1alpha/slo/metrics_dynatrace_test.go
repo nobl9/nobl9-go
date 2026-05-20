@@ -30,7 +30,7 @@ func TestDynatrace(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = validDynatraceDQL()
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -61,10 +61,10 @@ func TestDynatrace(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Dynatrace.DQL = &DynatraceDQL{Interval: "1m"}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace"),
 			Code: rules.ErrorCodeRequired,
 		}, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql.query",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.query"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -86,7 +86,7 @@ func TestDynatrace(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.dynatrace.dql.interval",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.dynatrace.dql.interval"),
 		})
 	})
 }
