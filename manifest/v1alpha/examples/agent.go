@@ -50,6 +50,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
 	v1alpha.Dash0,
+	// Replay only enabled on alpha and beta channels.
+	v1alpha.SplunkObservability,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
