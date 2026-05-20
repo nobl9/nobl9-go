@@ -20,6 +20,10 @@ const (
 	maxDescriptionLength             = 1050
 	maxWebhookHeaders                = 10
 	maxEmailRecipients               = 10
+	// maxSlackAppWebhookSecretLen bounds the user-supplied Slack signing secret.
+	// Slack signing secrets are 64 hex chars today; 100 leaves room for future
+	// format changes while still preventing pathological inputs.
+	maxSlackAppWebhookSecretLen = 100
 )
 
 var (
@@ -325,7 +329,8 @@ var slackAppValidation = govy.New[SlackAppAlertMethod](
 		When(
 			func(s SlackAppAlertMethod) bool { return !isHiddenValue(s.WebhookSecret) },
 			govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
-		),
+		).
+		Rules(rules.StringMaxLength(maxSlackAppWebhookSecretLen)),
 )
 
 func optionalUrlWithPrefixValidation(prefixes ...string) govy.Validator[string] {
