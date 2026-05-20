@@ -27,6 +27,7 @@ type DynatraceDQL struct {
 type DynatraceMetricQueryType string
 
 const (
+	dynatraceDQLMinInterval = 15 * time.Second
 	// DynatraceMetricQueryTypeMetricSelector uses the Dynatrace Metrics API selector.
 	DynatraceMetricQueryTypeMetricSelector DynatraceMetricQueryType = "metricSelector"
 	// DynatraceMetricQueryTypeDQL uses Dynatrace Query Language.
@@ -76,7 +77,7 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 	govy.Transform(func(d DynatraceDQL) string { return d.Interval }, time.ParseDuration).
 		WithName("interval").
 		OmitEmpty().
-		Rules(rules.GT[time.Duration](0)),
+		Rules(rules.GT(dynatraceDQLMinInterval)),
 )
 
 var dynatraceMetricQueryRequiredRule = govy.NewRule(func(d DynatraceMetric) error {
