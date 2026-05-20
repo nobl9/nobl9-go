@@ -143,8 +143,9 @@ func TestDynatraceDQL_Query(t *testing.T) {
 			isValid: false,
 		},
 		{
-			name:    "rejects shift parameter",
-			query:   "timeseries response_time_yesterday = avg(dt.service.request.response_time), by:{dt.entity.service}, shift:-24h",
+			name: "rejects shift parameter",
+			query: "timeseries response_time_yesterday = avg(dt.service.request.response_time), " +
+				"by:{dt.entity.service}, shift:-24h",
 			isValid: false,
 		},
 		{
