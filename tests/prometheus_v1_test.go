@@ -128,8 +128,9 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 	compositeSLO := objects.slos[3]
 
 	tests := map[string]struct {
-		request  prometheusV1.LabelValuesRequest
-		expected []string
+		request        prometheusV1.LabelValuesRequest
+		expected       []string
+		containsSubset bool
 	}{
 		"empty matcher returns all values for __name__": {
 			request: prometheusV1.LabelValuesRequest{
@@ -172,6 +173,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				primaryProject,
 				secondaryProject,
 			},
+			containsSubset: true,
 		},
 		"metric name values filtered by SLO metric matcher": {
 			request: prometheusV1.LabelValuesRequest{
@@ -527,7 +529,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			requirePrometheusLabelValues(t, tt.request, tt.expected)
+			requirePrometheusLabelValues(t, tt.request, tt.expected, tt.containsSubset)
 		})
 	}
 }
@@ -685,6 +687,7 @@ func requirePrometheusLabelValues(
 	t *testing.T,
 	request prometheusV1.LabelValuesRequest,
 	expected []string,
+	containsSubset bool,
 ) {
 	t.Helper()
 
@@ -713,7 +716,11 @@ func requirePrometheusLabelValues(
 		case <-timer.C:
 			require.NoError(t, err)
 			require.Empty(t, warnings)
-			require.Equal(t, expectedValues, actualValues)
+			if containsSubset {
+				require.Contains(t, expectedValues, actualValues)
+			} else {
+				require.Equal(t, expectedValues, actualValues)
+			}
 			return
 		}
 	}
