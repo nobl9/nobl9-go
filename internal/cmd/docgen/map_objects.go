@@ -15,7 +15,7 @@ type objectMapper struct {
 }
 
 func (o *objectMapper) Map(typ reflect.Type, path string) {
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 
@@ -72,7 +72,7 @@ func extractTypeInfo(typ reflect.Type) typeInfo {
 	if typ == nil {
 		return info
 	}
-	if typ.Kind() == reflect.Ptr {
+	if typ.Kind() == reflect.Pointer {
 		typ = typ.Elem()
 	}
 	if typ.Kind() == reflect.Slice {
