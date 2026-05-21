@@ -1,8 +1,6 @@
 package report
 
 import (
-	"time"
-
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -25,12 +23,7 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 			govy.For(func(t ReliabilityRollupTimeFrame) string { return t.TimeZone }).
 				WithName("timeZone").
 				Required().
-				Rules(govy.NewRule(func(v string) error {
-					if _, err := time.LoadLocation(v); err != nil {
-						return errors.Wrap(err, "not a valid time zone")
-					}
-					return nil
-				})),
+				Rules(timeZoneValidationRule),
 			govy.ForPointer(func(t ReliabilityRollupTimeFrame) *RollingTimeFrame { return t.Rolling }).
 				WithName("rolling").
 				Include(rollingTimeFrameValidation),

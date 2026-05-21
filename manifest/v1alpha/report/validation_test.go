@@ -733,6 +733,17 @@ func TestValidate_Spec_SystemHealthReview(t *testing.T) {
 				return conf
 			},
 		},
+		"fails with invalid timeZone": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:    jsonpath.Parse("spec.systemHealthReview.timeFrame.timeZone"),
+				Message: "not a valid time zone: unknown time zone x",
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.TimeFrame.TimeZone = "x"
+				return conf
+			},
+		},
 	}
 
 	for name, test := range tests {
