@@ -1681,14 +1681,9 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		// attached anywhere. The web UI allows this, so sloctl must too.
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
-		root := HierarchyFolder{DisplayName: "leaf"}
-		for i := 1; i < MaxHierarchyDepth; i++ {
-			root = HierarchyFolder{
-				DisplayName: "level",
-				Children:    []HierarchyFolder{root},
-			}
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth, HierarchyFolder{DisplayName: "leaf"}),
 		}
-		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertNoError(t, report, err)
 	})
@@ -1696,17 +1691,12 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 	t.Run("passes with customHierarchy at maximum depth", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
-		root := HierarchyFolder{
-			DisplayName: "leaf",
-			SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
 		}
-		for i := 1; i < MaxHierarchyDepth; i++ {
-			root = HierarchyFolder{
-				DisplayName: "level",
-				Children:    []HierarchyFolder{root},
-			}
-		}
-		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertNoError(t, report, err)
 	})
@@ -1714,17 +1704,12 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 	t.Run("fails when customHierarchy depth exceeds maximum", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
-		root := HierarchyFolder{
-			DisplayName: "leaf",
-			SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth+1, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
 		}
-		for i := 0; i < MaxHierarchyDepth; i++ {
-			root = HierarchyFolder{
-				DisplayName: "level",
-				Children:    []HierarchyFolder{root},
-			}
-		}
-		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
 			Prop:            jsonpath.Parse("spec.reliabilityRollup.customHierarchy"),
@@ -1735,14 +1720,9 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 	t.Run("stops customHierarchy validation when depth exceeds maximum", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
-		root := HierarchyFolder{}
-		for i := 0; i < MaxHierarchyDepth; i++ {
-			root = HierarchyFolder{
-				DisplayName: "level",
-				Children:    []HierarchyFolder{root},
-			}
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth+1, HierarchyFolder{}),
 		}
-		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
 			Prop:            jsonpath.Parse("spec.reliabilityRollup.customHierarchy"),
@@ -1753,17 +1733,12 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 	t.Run("rejects pathological customHierarchy depth without panic", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		report.Spec.Filters = nil
-		root := HierarchyFolder{
-			DisplayName: "leaf",
-			SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(100_001, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
 		}
-		for i := 0; i < 100_000; i++ {
-			root = HierarchyFolder{
-				DisplayName: "level",
-				Children:    []HierarchyFolder{root},
-			}
-		}
-		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
 			Prop:            jsonpath.Parse("spec.reliabilityRollup.customHierarchy"),
@@ -1873,6 +1848,17 @@ func validReliabilityRollupReport() Report {
 			},
 		},
 	}
+}
+
+func nestedHierarchy(depth int, leaf HierarchyFolder) HierarchyFolder {
+	root := leaf
+	for i := 1; i < depth; i++ {
+		root = HierarchyFolder{
+			DisplayName: "level",
+			Children:    []HierarchyFolder{root},
+		}
+	}
+	return root
 }
 
 func validSystemHealthReport() Report {
