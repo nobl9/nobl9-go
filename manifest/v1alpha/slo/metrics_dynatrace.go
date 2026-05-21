@@ -11,7 +11,7 @@ import (
 
 // DynatraceMetric represents metric from Dynatrace.
 type DynatraceMetric struct {
-	MetricSelector *string       `json:"metricSelector"`
+	MetricSelector *string       `json:"metricSelector,omitempty"`
 	DQL            *DynatraceDQL `json:"dql,omitempty"`
 }
 
