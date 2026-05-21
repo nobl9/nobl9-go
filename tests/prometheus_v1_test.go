@@ -4,6 +4,7 @@ package tests
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -707,7 +708,8 @@ func requirePrometheusLabelValues(
 	)
 	for {
 		actualValues, warnings, err = client.Prometheus().V1().LabelValues(t.Context(), request)
-		if err == nil && len(warnings) == 0 && assert.ObjectsAreEqual(expected, actualValues) {
+		if err == nil && len(warnings) == 0 &&
+			labelValuesMatch(actualValues, expectedValues, containsSubset) {
 			return
 		}
 
@@ -717,11 +719,31 @@ func requirePrometheusLabelValues(
 			require.NoError(t, err)
 			require.Empty(t, warnings)
 			if containsSubset {
-				require.Contains(t, expectedValues, actualValues)
+				require.Subset(t, actualValues, expectedValues)
 			} else {
 				require.Equal(t, expectedValues, actualValues)
 			}
 			return
 		}
 	}
+}
+
+func labelValuesMatch(
+	actualValues model.LabelValues,
+	expectedValues model.LabelValues,
+	containsSubset bool,
+) bool {
+	if containsSubset {
+		return labelValuesContainSubset(actualValues, expectedValues)
+	}
+	return slices.Equal(expectedValues, actualValues)
+}
+
+func labelValuesContainSubset(actualValues, expectedValues model.LabelValues) bool {
+	for _, expectedValue := range expectedValues {
+		if !slices.Contains(actualValues, expectedValue) {
+			return false
+		}
+	}
+	return true
 }
