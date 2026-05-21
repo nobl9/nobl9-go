@@ -38,7 +38,7 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 				WithName("calendar").
 				Include(calendarTimeFrameValidation),
 		)),
-	govy.For(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
+	govy.ForSlice(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
 		WithName("customHierarchy").
 		Rules(govy.NewRule(func(folders []HierarchyFolder) error {
 			if hierarchyDepthExceeds(folders, MaxHierarchyDepth) {
@@ -48,9 +48,8 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 				)
 			}
 			return nil
-		})),
-	govy.ForSlice(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
-		WithName("customHierarchy").
+		})).
+		Cascade(govy.CascadeModeStop).
 		IncludeForEach(hierarchyFolderValidation),
 )
 
