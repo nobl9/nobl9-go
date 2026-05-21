@@ -496,7 +496,19 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 			},
 			expected: []string{},
 		},
-		"limit": {
+		"limit for __name__": {
+			request: prometheusV1.LabelValuesRequest{
+				Label:   model.MetricNameLabel,
+				Matches: []string{},
+				Limit:   3,
+			},
+			expected: []string{
+				"budget",
+				"burn_rate",
+				"component_delay",
+			},
+		},
+		"limit for slo": {
 			request: prometheusV1.LabelValuesRequest{
 				Label: "slo",
 				Matches: []string{
