@@ -1493,7 +1493,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.Parse("spec"),
 			Message: "spec.filters and spec.reliabilityRollup.customHierarchy are mutually exclusive",
 		})
 	})
@@ -1503,7 +1503,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.Filters = nil
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.Parse("spec"),
 			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
 		})
 	})
@@ -1513,7 +1513,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.reliabilityRollup.timeFrame",
+			Prop: jsonpath.Parse("spec.reliabilityRollup.timeFrame"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -1525,7 +1525,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.reliabilityRollup.timeFrame",
+			Prop: jsonpath.Parse("spec.reliabilityRollup.timeFrame"),
 			Code: rules.ErrorCodeMutuallyExclusive,
 		})
 	})
@@ -1535,7 +1535,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.TimeFrame.TimeZone = "x"
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec.reliabilityRollup.timeFrame.timeZone",
+			Prop:    jsonpath.Parse("spec.reliabilityRollup.timeFrame.timeZone"),
 			Message: "not a valid time zone: unknown time zone x",
 		})
 	})
@@ -1561,7 +1561,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].displayName"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -1578,11 +1578,11 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].slos[0].project"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].slos[0].name"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -1602,11 +1602,11 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].slos[0].project"),
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].slos[0].name"),
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)
@@ -1629,7 +1629,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].displayName",
+			Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].slos[0].displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		})
 	})
@@ -1645,7 +1645,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Prop: jsonpath.Parse("spec.reliabilityRollup.customHierarchy[0].displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		})
 	})
@@ -1716,7 +1716,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:            "spec.reliabilityRollup.customHierarchy",
+			Prop:            jsonpath.Parse("spec.reliabilityRollup.customHierarchy"),
 			ContainsMessage: "exceeds maximum allowed",
 		})
 	})
@@ -1737,7 +1737,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{root}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:            "spec.reliabilityRollup.customHierarchy",
+			Prop:            jsonpath.Parse("spec.reliabilityRollup.customHierarchy"),
 			ContainsMessage: "exceeds maximum allowed",
 		})
 	})
@@ -1765,7 +1765,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec",
+			Prop:    jsonpath.Parse("spec"),
 			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
 		})
 	})
@@ -1784,7 +1784,7 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		report.Spec.Filters = nil
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop: "spec.filters",
+			Prop: jsonpath.Parse("spec.filters"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
