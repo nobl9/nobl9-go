@@ -11,7 +11,7 @@ metadata:
     team: sales
 spec:
   description: Example Splunk Observability Agent
-  releaseChannel: stable
+  releaseChannel: beta
   splunkObservability:
     realm: us1
   historicalDataRetrieval:
