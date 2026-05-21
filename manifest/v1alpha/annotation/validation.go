@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -38,7 +39,7 @@ func getValidator(includeUserCategoryRules bool) govy.Validator[Annotation] {
 var metadataValidation = govy.New[Metadata](
 	validationV1Alpha.FieldRuleMetadataName(func(m Metadata) string { return m.Name }),
 	govy.For(func(m Metadata) string { return m.Project }).
-		WithName("metadata.project").
+		WithPath(jsonpath.New().Name("metadata").Name("project")).
 		OmitEmpty().
 		Rules(validationV1Alpha.StringName()),
 	validationV1Alpha.FieldRuleMetadataLabels(func(m Metadata) v1alpha.Labels { return m.Labels }),

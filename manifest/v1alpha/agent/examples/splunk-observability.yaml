@@ -11,9 +11,16 @@ metadata:
     team: sales
 spec:
   description: Example Splunk Observability Agent
-  releaseChannel: stable
+  releaseChannel: beta
   splunkObservability:
     realm: us1
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 6
     unit: Minute

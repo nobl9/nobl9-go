@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/pkg/errors"
 
@@ -455,13 +456,13 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 		case BudgetingMethodTimeslices.String():
 			if objective.TimeSliceTarget == nil {
 				return govy.NewPropertyError(
-					fmt.Sprintf("objectives[%d].timeSliceTarget", i),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget, validationV1Alpha.NewRequiredError())
 			}
 		case BudgetingMethodOccurrences.String():
 			if objective.TimeSliceTarget != nil {
 				return govy.NewPropertyError(
-					fmt.Sprintf("objectives[%d].timeSliceTarget", i),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget,
 					govy.NewRuleError(
 						fmt.Sprintf(
