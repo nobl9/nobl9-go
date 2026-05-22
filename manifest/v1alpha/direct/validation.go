@@ -222,7 +222,7 @@ var (
 			func(d DynatraceConfig) string { return d.DynatraceToken },
 			"url",
 			func(d DynatraceConfig) string { return d.URL },
-		).HideValue(),
+		),
 		requiredDynatracePairPropertyRules(
 			"platformUrl",
 			func(d DynatraceConfig) string { return d.PlatformURL },
@@ -235,7 +235,7 @@ var (
 			func(d DynatraceConfig) string { return d.PlatformToken },
 			"platformUrl",
 			func(d DynatraceConfig) string { return d.PlatformURL },
-		).HideValue(),
+		),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
