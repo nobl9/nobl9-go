@@ -83,40 +83,40 @@ var dynatraceDQLForbiddenTimeParametersRegexp = regexp.MustCompile( //nolint:goc
 )
 
 var dynatraceDQLForbiddenTimeParametersRule = govy.NewRule(func(query string) error { //nolint:gochecknoglobals
-	if !dynatraceDQLForbiddenTimeParametersRegexp.MatchString(stripDQLStringLiterals(query)) {
+	if !dynatraceDQLForbiddenTimeParametersRegexp.MatchString(maskDQLStringLiterals(query)) {
 		return nil
 	}
 	return govy.NewRuleError("query contains a forbidden time range parameter", rules.ErrorCodeStringDenyRegexp)
 })
 
-func stripDQLStringLiterals(query string) string {
+func maskDQLStringLiterals(query string) string {
+	if !strings.ContainsAny(query, `"'`) {
+		return query
+	}
 	var (
-		builder    strings.Builder
-		quote      rune
+		masked     = []byte(query)
+		quote      byte
 		isEscaping bool
 	)
-	builder.Grow(len(query))
-	for _, r := range query {
+	for i, char := range masked {
 		if quote == 0 {
-			if r == '"' || r == '\'' {
-				quote = r
-				builder.WriteRune(' ')
-				continue
+			if char == '"' || char == '\'' {
+				quote = char
+				masked[i] = ' '
 			}
-			builder.WriteRune(r)
 			continue
 		}
-		builder.WriteRune(' ')
+		masked[i] = ' '
 		if isEscaping {
 			isEscaping = false
 			continue
 		}
-		switch r {
+		switch char {
 		case '\\':
 			isEscaping = true
 		case quote:
 			quote = 0
 		}
 	}
-	return builder.String()
+	return string(masked)
 }
