@@ -205,7 +205,13 @@ var (
 			Rules(rules.URL()),
 	)
 	dynatraceValidation = govy.New[DynatraceConfig](
-		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
+		govy.For(govy.GetSelf[DynatraceConfig]()).
+			Rules(rules.OneOfProperties(map[string]func(DynatraceConfig) any{
+				"url":         func(d DynatraceConfig) any { return d.URL },
+				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
+			})),
+		optionalHTTPSURLPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
+		optionalHTTPSURLPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -442,6 +448,23 @@ func urlPropertyRules[S any](getter govy.PropertyGetter[string, S]) govy.Propert
 		WithName("url").
 		Cascade(govy.CascadeModeStop).
 		Required().
+		Rules(rules.URL()).
+		Rules(govy.NewRule(func(u *url.URL) error {
+			if u.Scheme != "https" {
+				return errors.New("requires https scheme")
+			}
+			return nil
+		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func optionalHTTPSURLPropertyRules[S any](
+	name string,
+	getter govy.PropertyGetter[string, S],
+) govy.PropertyRules[*url.URL, S] {
+	return govy.Transform(getter, url.Parse).
+		WithName(name).
+		Cascade(govy.CascadeModeStop).
+		OmitEmpty().
 		Rules(rules.URL()).
 		Rules(govy.NewRule(func(u *url.URL) error {
 			if u.Scheme != "https" {

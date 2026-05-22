@@ -659,17 +659,26 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 func TestValidateSpec_Dynatrace(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})
-	t.Run("required url", func(t *testing.T) {
+	t.Run("requires url or platformUrl", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
 		agent.Spec.Dynatrace.URL = ""
+		agent.Spec.Dynatrace.PlatformURL = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.dynatrace.url"),
-			Code: rules.ErrorCodeRequired,
+			Prop: jsonpath.Parse("spec.dynatrace"),
+			Code: rules.ErrorCodeOneOfProperties,
 		})
+	})
+	t.Run("allows empty url with platformUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.URL = ""
+		agent.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
 	})
 	t.Run("invalid url", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
@@ -678,6 +687,24 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 			Prop: jsonpath.Parse("spec.dynatrace.url"),
 			Code: rules.ErrorCodeURL,
+		})
+	})
+	t.Run("invalid platformUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "h ttp"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: jsonpath.Parse("spec.dynatrace.platformUrl"),
+			Code: rules.ErrorCodeURL,
+		})
+	})
+	t.Run("platformUrl must be https", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "http://nobl9.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: jsonpath.Parse("spec.dynatrace.platformUrl"),
+			Code: errCodeHTTPSSchemeRequired,
 		})
 	})
 	urlTests := map[string]struct {
@@ -1036,7 +1063,8 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.Dynatrace: {
 			Dynatrace: &DynatraceConfig{
-				URL: "https://rxh70845.live.dynatrace.com/",
+				URL:         "https://rxh70845.live.dynatrace.com/",
+				PlatformURL: "https://rxh70845.apps.dynatrace.com/",
 			},
 		},
 		v1alpha.Elasticsearch: {
