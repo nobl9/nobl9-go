@@ -67,29 +67,46 @@ var dynatraceValidation = govy.New[DynatraceMetric](
 )
 
 var dynatraceCountMetricsQueryTypeValidation = govy.New[CountMetricsSpec](
-	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
-		govy.NewRule(func(c CountMetricsSpec) error {
-			total := c.TotalMetric
-			good := c.GoodMetric
-			bad := c.BadMetric
-
-			if total == nil || total.Dynatrace == nil {
-				return nil
-			}
-			if good != nil && good.Dynatrace != nil &&
-				good.Dynatrace.QueryType() != total.Dynatrace.QueryType() {
-				return countMetricsPropertyEqualityError("dynatrace.queryType", goodMetric)
-			}
-			if bad != nil && bad.Dynatrace != nil &&
-				bad.Dynatrace.QueryType() != total.Dynatrace.QueryType() {
-				return countMetricsPropertyEqualityError("dynatrace.queryType", badMetric)
-			}
-			return nil
-		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(hasDynatraceGoodAndTotalMetrics).
+		Rules(rules.EqualProperties[DynatraceMetricQueryType, CountMetricsSpec](
+			rules.CompareFunc,
+			map[string]func(CountMetricsSpec) DynatraceMetricQueryType{
+				"good.dynatrace.queryType": func(c CountMetricsSpec) DynatraceMetricQueryType {
+					return c.GoodMetric.Dynatrace.QueryType()
+				},
+				"total.dynatrace.queryType": func(c CountMetricsSpec) DynatraceMetricQueryType {
+					return c.TotalMetric.Dynatrace.QueryType()
+				},
+			},
+		)),
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		When(hasDynatraceBadAndTotalMetrics).
+		Rules(rules.EqualProperties[DynatraceMetricQueryType, CountMetricsSpec](
+			rules.CompareFunc,
+			map[string]func(CountMetricsSpec) DynatraceMetricQueryType{
+				"bad.dynatrace.queryType": func(c CountMetricsSpec) DynatraceMetricQueryType {
+					return c.BadMetric.Dynatrace.QueryType()
+				},
+				"total.dynatrace.queryType": func(c CountMetricsSpec) DynatraceMetricQueryType {
+					return c.TotalMetric.Dynatrace.QueryType()
+				},
+			},
+		)),
 ).When(
 	whenCountMetricsIs(v1alpha.Dynatrace),
 	govy.WhenDescription("countMetrics is dynatrace"),
 )
+
+func hasDynatraceGoodAndTotalMetrics(c CountMetricsSpec) bool {
+	return c.GoodMetric != nil && c.GoodMetric.Dynatrace != nil &&
+		c.TotalMetric != nil && c.TotalMetric.Dynatrace != nil
+}
+
+func hasDynatraceBadAndTotalMetrics(c CountMetricsSpec) bool {
+	return c.BadMetric != nil && c.BadMetric.Dynatrace != nil &&
+		c.TotalMetric != nil && c.TotalMetric.Dynatrace != nil
+}
 
 var dynatraceDQLValidation = govy.New[DynatraceDQL](
 	govy.For(func(d DynatraceDQL) string { return d.Query }).

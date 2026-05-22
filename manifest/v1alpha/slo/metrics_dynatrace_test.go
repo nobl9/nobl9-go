@@ -145,9 +145,8 @@ func TestDynatrace_CountMetricsQueryType(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
-			Message: "'dynatrace.queryType' must be the same for both 'good' and 'total' metrics",
-			Code:    rules.ErrorCodeNotEqualTo,
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Code: rules.ErrorCodeEqualProperties,
 		})
 	})
 	t.Run("rejects dql good and metric selector total", func(t *testing.T) {
@@ -157,9 +156,8 @@ func TestDynatrace_CountMetricsQueryType(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
-			Message: "'dynatrace.queryType' must be the same for both 'good' and 'total' metrics",
-			Code:    rules.ErrorCodeNotEqualTo,
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Code: rules.ErrorCodeEqualProperties,
 		})
 	})
 }
