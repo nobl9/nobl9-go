@@ -164,6 +164,11 @@ func TestDynatraceDQL_Query(t *testing.T) {
 			isValid: true,
 		},
 		{
+			name:    "allows forbidden keyword after escaped quote inside string literal",
+			query:   `fetch logs | search content ~ "message says \"from:\" inside" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
 			name:    "rejects interval parameter",
 			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, interval:1m",
 			isValid: false,
