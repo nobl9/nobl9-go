@@ -210,8 +210,32 @@ var (
 				"url":         func(d DynatraceConfig) any { return d.URL },
 				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
 			})),
+		requiredDynatracePairPropertyRules(
+			"url",
+			func(d DynatraceConfig) string { return d.URL },
+			"dynatraceToken",
+			func(d DynatraceConfig) string { return d.DynatraceToken },
+		),
 		optionalHTTPSURLPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
+		requiredDynatracePairPropertyRules(
+			"dynatraceToken",
+			func(d DynatraceConfig) string { return d.DynatraceToken },
+			"url",
+			func(d DynatraceConfig) string { return d.URL },
+		).HideValue(),
+		requiredDynatracePairPropertyRules(
+			"platformUrl",
+			func(d DynatraceConfig) string { return d.PlatformURL },
+			"platformToken",
+			func(d DynatraceConfig) string { return d.PlatformToken },
+		),
 		optionalHTTPSURLPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
+		requiredDynatracePairPropertyRules(
+			"platformToken",
+			func(d DynatraceConfig) string { return d.PlatformToken },
+			"platformUrl",
+			func(d DynatraceConfig) string { return d.PlatformURL },
+		).HideValue(),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -472,6 +496,21 @@ func optionalHTTPSURLPropertyRules[S any](
 			}
 			return nil
 		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func requiredDynatracePairPropertyRules(
+	name string,
+	getter govy.PropertyGetter[string, DynatraceConfig],
+	pairedName string,
+	pairedGetter govy.PropertyGetter[string, DynatraceConfig],
+) govy.PropertyRules[string, DynatraceConfig] {
+	return govy.For(getter).
+		WithName(name).
+		When(
+			func(d DynatraceConfig) bool { return pairedGetter(d) != "" },
+			govy.WhenDescriptionf("%s is provided", pairedName),
+		).
+		Required()
 }
 
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
