@@ -25,9 +25,6 @@ func Agent() []Example {
 	examples := make([]Example, 0, len(types)+1)
 	for _, typ := range types {
 		variant := toKebabCase(typ.String())
-		// Splunk Observability only supports replay on the beta channel, so its
-		// canonical example stays on stable without HDR; the replay subvariant
-		// adds beta + HDR alongside.
 		if typ == v1alpha.SplunkObservability {
 			examples = append(examples,
 				newAgentExample(typ, variant, "", false),
@@ -102,12 +99,9 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	switch {
-	case typ == v1alpha.SplunkObservability && !a.replayEnabled:
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-	case slices.Contains(betaChannelAgents, typ):
+	if slices.Contains(betaChannelAgents, typ) && (typ != v1alpha.SplunkObservability || a.replayEnabled) {
 		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	default:
+	} else {
 		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	}
 	return agent
