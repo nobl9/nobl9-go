@@ -105,8 +105,6 @@ func staticDataSourcesKey(kind manifest.Kind, typ v1alpha.DataSourceType, channe
 	return kind.String() + ":" + typ.String() + ":" + channel.String()
 }
 
-// staticFixtureName suffixes non-stable channels so each channel has its own persisted
-// fixture, making Apply a create instead of a channel-switch update the backend forbids.
 func staticFixtureName(kind manifest.Kind, typ v1alpha.DataSourceType, channel v1alpha.ReleaseChannel) string {
 	base := fmt.Sprintf("e2e-%s-%s", strings.ToLower(kind.String()), strings.ToLower(typ.String()))
 	if channel == 0 || channel == v1alpha.ReleaseChannelStable {
