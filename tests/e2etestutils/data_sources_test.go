@@ -1,3 +1,4 @@
+// cspell:ignore splunkobservability appdynamics unsuffixed
 package e2etestutils
 
 import (
