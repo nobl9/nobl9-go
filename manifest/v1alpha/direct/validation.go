@@ -216,7 +216,7 @@ var (
 			"dynatraceToken",
 			func(d DynatraceConfig) string { return d.DynatraceToken },
 		),
-		optionalHTTPSURLPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
+		optionalHTTPSUrlPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
 		requiredDynatracePairPropertyRules(
 			"dynatraceToken",
 			func(d DynatraceConfig) string { return d.DynatraceToken },
@@ -229,7 +229,7 @@ var (
 			"platformToken",
 			func(d DynatraceConfig) string { return d.PlatformToken },
 		),
-		optionalHTTPSURLPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
+		optionalHTTPSUrlPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
 		requiredDynatracePairPropertyRules(
 			"platformToken",
 			func(d DynatraceConfig) string { return d.PlatformToken },
@@ -481,7 +481,7 @@ func urlPropertyRules[S any](getter govy.PropertyGetter[string, S]) govy.Propert
 		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
 }
 
-func optionalHTTPSURLPropertyRules[S any](
+func optionalHTTPSUrlPropertyRules[S any](
 	name string,
 	getter govy.PropertyGetter[string, S],
 ) govy.PropertyRules[*url.URL, S] {
