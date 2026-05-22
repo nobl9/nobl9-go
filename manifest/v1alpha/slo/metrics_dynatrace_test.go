@@ -134,6 +134,36 @@ func TestDynatraceDQL_Query(t *testing.T) {
 			isValid: true,
 		},
 		{
+			name:    "allows from keyword inside string literal",
+			query:   `fetch logs | search content ~ "from:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
+			name:    "allows to keyword inside string literal",
+			query:   `fetch logs | search content ~ "to:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
+			name:    "allows timeframe keyword inside string literal",
+			query:   `fetch logs | search content ~ "timeframe:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
+			name:    "allows interval keyword inside string literal",
+			query:   `fetch logs | search content ~ "interval:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
+			name:    "allows bins keyword inside string literal",
+			query:   `fetch logs | search content ~ "bins:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
+			name:    "allows shift keyword inside string literal",
+			query:   `fetch logs | search content ~ "shift:" | makeTimeseries value = count()`,
+			isValid: true,
+		},
+		{
 			name:    "rejects interval parameter",
 			query:   "timeseries response_time = avg(dt.service.request.response_time), by:{dt.entity.service}, interval:1m",
 			isValid: false,

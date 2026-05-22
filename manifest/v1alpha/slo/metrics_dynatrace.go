@@ -68,7 +68,7 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 	govy.For(func(d DynatraceDQL) string { return d.Query }).
 		WithName("query").
 		Rules(rules.StringNotEmpty()).
-		Rules(rules.StringDenyRegexp(dynatraceDQLForbiddenTimeParametersRegexp).
+		Rules(dynatraceDQLForbiddenTimeParametersRule.
 			WithDetails("query must not contain 'from:', 'to:', 'timeframe:', 'interval:', 'bins:', or 'shift:' parameters; "+
 				"Nobl9 controls the query timeframe and time-series granularity. "+
 				"To adjust the time-series interval, configure dql.interval.")),
@@ -81,3 +81,42 @@ var dynatraceDQLValidation = govy.New[DynatraceDQL](
 var dynatraceDQLForbiddenTimeParametersRegexp = regexp.MustCompile( //nolint:gochecknoglobals
 	`(?i)(^|[^[:alnum:]_.])(from|to|timeframe|interval|bins|shift)\s*:`,
 )
+
+var dynatraceDQLForbiddenTimeParametersRule = govy.NewRule(func(query string) error { //nolint:gochecknoglobals
+	if !dynatraceDQLForbiddenTimeParametersRegexp.MatchString(stripDQLStringLiterals(query)) {
+		return nil
+	}
+	return govy.NewRuleError("query contains a forbidden time range parameter", rules.ErrorCodeStringDenyRegexp)
+})
+
+func stripDQLStringLiterals(query string) string {
+	var (
+		builder    strings.Builder
+		quote      rune
+		isEscaping bool
+	)
+	builder.Grow(len(query))
+	for _, r := range query {
+		if quote == 0 {
+			if r == '"' || r == '\'' {
+				quote = r
+				builder.WriteRune(' ')
+				continue
+			}
+			builder.WriteRune(r)
+			continue
+		}
+		builder.WriteRune(' ')
+		if isEscaping {
+			isEscaping = false
+			continue
+		}
+		switch r {
+		case '\\':
+			isEscaping = true
+		case quote:
+			quote = 0
+		}
+	}
+	return builder.String()
+}
