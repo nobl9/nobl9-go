@@ -7,6 +7,8 @@ import (
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 // DynatraceMetric represents metric from Dynatrace.
@@ -62,6 +64,31 @@ var dynatraceValidation = govy.New[DynatraceMetric](
 	govy.ForPointer(func(d DynatraceMetric) *DynatraceDQL { return d.DQL }).
 		WithName("dql").
 		Include(dynatraceDQLValidation),
+)
+
+var dynatraceCountMetricsQueryTypeValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).Rules(
+		govy.NewRule(func(c CountMetricsSpec) error {
+			total := c.TotalMetric
+			good := c.GoodMetric
+			bad := c.BadMetric
+
+			if total == nil || total.Dynatrace == nil {
+				return nil
+			}
+			if good != nil && good.Dynatrace != nil &&
+				good.Dynatrace.QueryType() != total.Dynatrace.QueryType() {
+				return countMetricsPropertyEqualityError("dynatrace.queryType", goodMetric)
+			}
+			if bad != nil && bad.Dynatrace != nil &&
+				bad.Dynatrace.QueryType() != total.Dynatrace.QueryType() {
+				return countMetricsPropertyEqualityError("dynatrace.queryType", badMetric)
+			}
+			return nil
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+).When(
+	whenCountMetricsIs(v1alpha.Dynatrace),
+	govy.WhenDescription("countMetrics is dynatrace"),
 )
 
 var dynatraceDQLValidation = govy.New[DynatraceDQL](
