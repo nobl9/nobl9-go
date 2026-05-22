@@ -12,6 +12,7 @@ import (
 type Endpoints interface {
 	Query(ctx context.Context, request QueryRequest) (model.Value, promv1.Warnings, error)
 	QueryRange(ctx context.Context, request QueryRangeRequest) (model.Value, promv1.Warnings, error)
+	// Source docs: https://prometheus.io/docs/prometheus/latest/querying/api/#getting-label-names
 	LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error)
 	LabelValues(ctx context.Context, request LabelValuesRequest) (model.LabelValues, promv1.Warnings, error)
 	Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error)

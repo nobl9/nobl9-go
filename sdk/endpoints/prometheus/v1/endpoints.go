@@ -77,7 +77,7 @@ func (e endpoints) LabelNames(ctx context.Context, request LabelNamesRequest) ([
 	if err != nil {
 		return nil, nil, err
 	}
-	return api.LabelNames(ctx, request.Matches, request.StartTime, request.EndTime, limitOption(request.Limit)...)
+	return api.LabelNames(ctx, request.Matches, time.Time{}, time.Time{}, limitOption(request.Limit)...)
 }
 
 func (e endpoints) LabelValues(
@@ -92,8 +92,8 @@ func (e endpoints) LabelValues(
 		ctx,
 		request.Label,
 		request.Matches,
-		request.StartTime,
-		request.EndTime,
+		time.Time{},
+		time.Time{},
 		limitOption(request.Limit)...)
 }
 

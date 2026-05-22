@@ -26,17 +26,13 @@ type QueryRangeRequest struct {
 
 // LabelNamesRequest configures a Prometheus label names lookup.
 type LabelNamesRequest struct {
-	Matches   []string
-	StartTime time.Time
-	EndTime   time.Time
-	Limit     uint64
+	Matches []string
+	Limit   uint64
 }
 
 // LabelValuesRequest configures a Prometheus label values lookup.
 type LabelValuesRequest struct {
-	Label     string
-	Matches   []string
-	StartTime time.Time
-	EndTime   time.Time
-	Limit     uint64
+	Label   string
+	Matches []string
+	Limit   uint64
 }
