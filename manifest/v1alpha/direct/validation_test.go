@@ -938,15 +938,11 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
-	t.Run("requires dynatraceToken with url", func(t *testing.T) {
+	t.Run("allows empty dynatraceToken with url", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
 		direct.Spec.Dynatrace.DynatraceToken = ""
 		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:            jsonpath.Parse("spec.dynatrace.dynatraceToken"),
-			Code:            rules.ErrorCodeRequired,
-			ContainsMessage: "property is required but was empty",
-		})
+		testutils.AssertNoError(t, direct, err)
 	})
 	t.Run("requires url with dynatraceToken", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
@@ -957,15 +953,11 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("requires platformToken with platformUrl", func(t *testing.T) {
+	t.Run("allows empty platformToken with platformUrl", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
 		direct.Spec.Dynatrace.PlatformToken = ""
 		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:            jsonpath.Parse("spec.dynatrace.platformToken"),
-			Code:            rules.ErrorCodeRequired,
-			ContainsMessage: "property is required but was empty",
-		})
+		testutils.AssertNoError(t, direct, err)
 	})
 	t.Run("requires platformUrl with platformToken", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)

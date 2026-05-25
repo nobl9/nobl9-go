@@ -218,24 +218,12 @@ var (
 		),
 		optionalHTTPSUrlPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
 		requiredDynatracePairPropertyRules(
-			"dynatraceToken",
-			func(d DynatraceConfig) string { return d.DynatraceToken },
-			"url",
-			func(d DynatraceConfig) string { return d.URL },
-		),
-		requiredDynatracePairPropertyRules(
 			"platformUrl",
 			func(d DynatraceConfig) string { return d.PlatformURL },
 			"platformToken",
 			func(d DynatraceConfig) string { return d.PlatformToken },
 		),
 		optionalHTTPSUrlPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
-		requiredDynatracePairPropertyRules(
-			"platformToken",
-			func(d DynatraceConfig) string { return d.PlatformToken },
-			"platformUrl",
-			func(d DynatraceConfig) string { return d.PlatformURL },
-		),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
