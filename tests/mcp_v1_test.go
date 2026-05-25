@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -85,6 +87,99 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		require.NoError(t, err)
 		require.Greater(t, len(toolsResult.Tools), 1)
 		t.Logf("Found %d MCP tools", len(toolsResult.Tools))
+	})
+
+	t.Run("prometheus tools expose supported parameters", func(t *testing.T) {
+		toolsResult, err := session.ListTools(t.Context(), nil)
+		require.NoError(t, err)
+		require.NotEmpty(t, toolsResult.Tools)
+
+		queryProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusQuery"))
+		toolNames := slices.Collect(maps.Keys(queryProperties))
+		assert.ElementsMatch(t, toolNames, []string{"query", "time", "timeout", "limit"})
+
+		queryRangeProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusQueryRange"))
+		toolNames = slices.Collect(maps.Keys(queryRangeProperties))
+		assert.ElementsMatch(t, toolNames, []string{"query", "start", "end", "step", "timeout", "limit"})
+
+		labelNamesProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusLabelNames"))
+		toolNames = slices.Collect(maps.Keys(labelNamesProperties))
+		assert.ElementsMatch(t, toolNames, []string{"match", "limit"})
+
+		labelValuesProperties := requireMCPToolInputProperties(
+			t,
+			requireMCPTool(t, toolsResult.Tools, "prometheusLabelValues"),
+		)
+		toolNames = slices.Collect(maps.Keys(labelValuesProperties))
+		assert.ElementsMatch(t, toolNames, []string{"labelName", "match", "limit"})
+	})
+
+	t.Run("prometheusQuery", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusQuery", map[string]any{
+			"query": "reliability{project=\"" + project.GetName() + "\"}",
+			"time":  time.Now().Add(-time.Hour).UTC().Format(time.RFC3339),
+			"limit": 1,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			ResultType string `json:"resultType"`
+			Result     any    `json:"result"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, "vector", output.ResultType)
+		assert.NotNil(t, output.Result)
+	})
+
+	t.Run("prometheusQueryRange", func(t *testing.T) {
+		end := time.Now().Add(-time.Hour).Truncate(time.Minute).UTC()
+		start := end.Add(-time.Minute)
+
+		result := callMCPTool(t, session, "prometheusQueryRange", map[string]any{
+			"query": "remaining_error_budget{project=\"" + project.GetName() + "\"}",
+			"start": start.Format(time.RFC3339),
+			"end":   end.Format(time.RFC3339),
+			"step":  "1m",
+			"limit": 1,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			ResultType string `json:"resultType"`
+			Result     any    `json:"result"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, "matrix", output.ResultType)
+		assert.NotNil(t, output.Result)
+	})
+
+	t.Run("prometheusLabelNames", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelNames", map[string]any{
+			"match": []string{"reliability{project=\"" + project.GetName() + "\"}"},
+			"limit": 10,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Names []string `json:"names"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.NotNil(t, output.Names)
+	})
+
+	t.Run("prometheusLabelValues", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelValues", map[string]any{
+			"labelName": "__name__",
+			"match":     []string{"reliability{project=\"" + project.GetName() + "\"}"},
+			"limit":     10,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Values []string `json:"values"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.NotNil(t, output.Values)
 	})
 
 	t.Run("listProjects", func(t *testing.T) {
@@ -707,6 +802,29 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		assert.False(t, result.IsError)
 		requireObjectsNotExists(t, projectToManage)
 	})
+}
+
+func requireMCPTool(t *testing.T, tools []*mcp.Tool, name string) *mcp.Tool {
+	t.Helper()
+
+	for _, tool := range tools {
+		if tool.Name == name {
+			return tool
+		}
+	}
+	require.Failf(t, "MCP tool not found", "%s tool should be registered", name)
+	return nil
+}
+
+func requireMCPToolInputProperties(t *testing.T, tool *mcp.Tool) map[string]any {
+	t.Helper()
+
+	inputSchema, ok := tool.InputSchema.(map[string]any)
+	require.True(t, ok, "Expected input schema for %s", tool.Name)
+
+	properties, ok := inputSchema["properties"].(map[string]any)
+	require.True(t, ok, "Expected input properties for %s", tool.Name)
+	return properties
 }
 
 func requireMCPListToolItems(
