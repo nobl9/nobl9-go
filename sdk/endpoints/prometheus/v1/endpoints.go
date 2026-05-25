@@ -71,7 +71,6 @@ func (e endpoints) QueryRange(ctx context.Context, request QueryRangeRequest) (m
 		queryRangeOptions(request)...)
 }
 
-// Source docs: https://prometheus.io/docs/prometheus/latest/querying/api/#getting-label-names
 func (e endpoints) LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error) {
 	api, err := e.api(ctx)
 	if err != nil {
