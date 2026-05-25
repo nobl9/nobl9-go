@@ -99,12 +99,18 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	if slices.Contains(betaChannelAgents, typ) && (typ != v1alpha.SplunkObservability || a.replayEnabled) {
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	} else {
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-	}
+	agent.Spec.ReleaseChannel = releaseChannelFor(typ, a.replayEnabled)
 	return agent
+}
+
+func releaseChannelFor(typ v1alpha.DataSourceType, replayEnabled bool) v1alpha.ReleaseChannel {
+	if !slices.Contains(betaChannelAgents, typ) {
+		return v1alpha.ReleaseChannelStable
+	}
+	if typ == v1alpha.SplunkObservability && !replayEnabled {
+		return v1alpha.ReleaseChannelStable
+	}
+	return v1alpha.ReleaseChannelBeta
 }
 
 //nolint:gocyclo
