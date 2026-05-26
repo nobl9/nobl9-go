@@ -109,12 +109,7 @@ var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
 	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(govy.NewRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
-			}
-			return nil
-		})),
+		Rules(timeZoneValidationRule),
 	govy.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
 		WithName("snapshot").
 		Required().

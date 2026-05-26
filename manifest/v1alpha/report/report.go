@@ -40,6 +40,7 @@ type Spec struct {
 	SystemHealthReview *SystemHealthReviewConfig `json:"systemHealthReview,omitempty"`
 	SLOHistory         *SLOHistoryConfig         `json:"sloHistory,omitempty"`
 	ErrorBudgetStatus  *ErrorBudgetStatusConfig  `json:"errorBudgetStatus,omitempty"`
+	ReliabilityRollup  *ReliabilityRollupConfig  `json:"reliabilityRollup,omitempty"`
 }
 
 type RollingTimeFrame struct {
