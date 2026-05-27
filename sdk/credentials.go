@@ -25,13 +25,16 @@ type accessTokenProvider interface {
 type accessTokenPostRequestHook = func(token string) error
 
 func newCredentials(config *Config) (*credentialsStore, error) {
-	customTransport, err := newCustomCATransport(config.CACertFile)
-	if err != nil {
-		return nil, err
+	transport := http.DefaultTransport
+	if config.CACertFile != "" {
+		customCATransport, err := newCustomCATransport(config.CACertFile)
+		if err != nil {
+			return nil, err
+		}
+		transport = customCATransport
 	}
-	apiClient := newAPIClient(customTransport)
 	if config.DisableOkta {
-		return &credentialsStore{config: config, apiHTTPClient: apiClient}, nil
+		return &credentialsStore{config: config, apiTransport: transport}, nil
 	}
 	authServerURL := oktaAuthServerURL(config.OktaOrgURL, config.OktaAuthServer)
 	return &credentialsStore{
@@ -39,20 +42,10 @@ func newCredentials(config *Config) (*credentialsStore, error) {
 		tokenParser: newJWTParser(authServerURL.String()),
 		tokenProvider: newOktaClient(func() string {
 			return oktaTokenEndpoint(authServerURL).String()
-		}, customTransport),
+		}, transport),
 		postRequestHook: config.saveAccessToken,
-		apiHTTPClient:   apiClient,
+		apiTransport:    transport,
 	}, nil
-}
-
-// newAPIClient returns the inner [http.Client] used by [credentialsStore.RoundTrip]
-// to issue authenticated requests to the Nobl9 API.
-// It applies a custom transport (with extended trust roots) when one is provided.
-func newAPIClient(rt http.RoundTripper) *http.Client {
-	if rt == nil {
-		return &http.Client{}
-	}
-	return &http.Client{Transport: rt}
 }
 
 // credentialsStore stores and manages IDP app credentials and claims.
@@ -72,11 +65,11 @@ type credentialsStore struct {
 	tokenType tokenType
 	claims    *jwtClaims
 
-	HTTP *http.Client
-	// apiHTTPClient is the inner client used by [credentialsStore.RoundTrip].
-	// It carries the optional custom TLS transport so that authenticated requests
+	// apiTransport is the final transport used by [credentialsStore.RoundTrip]
+	// after it refreshes credentials and mutates the request headers.
+	// It carries the optional custom TLS transport so authenticated requests
 	// to the Nobl9 API observe [Config.CACertFile] just like the IDP token request.
-	apiHTTPClient *http.Client
+	apiTransport http.RoundTripper
 	// tokenParser is used to verify the token and its claims.
 	tokenParser accessTokenParser
 	// tokenProvider is used to provide an access token.
@@ -157,10 +150,10 @@ func (c *credentialsStore) GetUserID(ctx context.Context) (string, error) {
 // It will wrap any errors returned from [credentialsStore.refreshAccessToken]
 // in [httpNonRetryableError] to ensure the request is not retried by the wrapping client.
 //
-// The inner [http.Client] is constructed once in [newCredentials] and may carry a
+// The final [http.RoundTripper] is constructed once in [newCredentials] and may carry a
 // custom transport with extended trust roots when [Config.CACertFile] is set.
-// Request middleware in Go is clunky and requires chaining multiple HTTP clients;
-// timeouts and retries are handled by the predecessors of this one.
+// This keeps a single outer [http.Client] while still allowing request middleware
+// to refresh credentials before delegating to the actual transport.
 func (c *credentialsStore) RoundTrip(req *http.Request) (*http.Response, error) {
 	tokenUpdated, err := c.refreshAccessToken(req.Context())
 	if err != nil {
@@ -169,7 +162,11 @@ func (c *credentialsStore) RoundTrip(req *http.Request) (*http.Response, error) 
 	if _, authHeaderSet := req.Header[HeaderAuthorization]; tokenUpdated || !authHeaderSet {
 		c.setAuthorizationHeader(req)
 	}
-	return c.apiHTTPClient.Do(req)
+	apiTransport := c.apiTransport
+	if apiTransport == nil {
+		apiTransport = http.DefaultTransport
+	}
+	return apiTransport.RoundTrip(req)
 }
 
 // setAuthorizationHeader sets an authorization header which should be included

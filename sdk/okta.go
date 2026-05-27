@@ -37,11 +37,9 @@ type oktaClient struct {
 }
 
 // newOktaClient returns a client that talks to the Okta IDP token endpoint.
-// When customTransport is non-nil it is used as the inner [http.RoundTripper] of the
-// retryable client, which is how [Config.CACertFile] reaches the IDP request path.
-func newOktaClient(getTokenEndpoint getTokenEndpointFunc, customTransport http.RoundTripper) *oktaClient {
+func newOktaClient(getTokenEndpoint getTokenEndpointFunc, transport http.RoundTripper) *oktaClient {
 	return &oktaClient{
-		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, customTransport),
+		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, transport),
 		getTokenEndpoint: getTokenEndpoint,
 	}
 }
