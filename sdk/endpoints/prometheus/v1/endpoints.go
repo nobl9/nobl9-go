@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -36,6 +37,7 @@ type API interface {
 		startTime, endTime time.Time,
 		opts ...promv1.Option,
 	) (model.LabelValues, promv1.Warnings, error)
+	Metadata(ctx context.Context, metric, limit string) (map[string][]promv1.Metadata, error)
 	Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error)
 }
 
@@ -94,6 +96,17 @@ func (e endpoints) LabelValues(
 		time.Time{},
 		time.Time{},
 		limitOption(request.Limit)...)
+}
+
+func (e endpoints) Metadata(ctx context.Context, request MetadataRequest) (map[string][]promv1.Metadata, error) {
+	api, err := e.api(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return api.Metadata(
+		ctx,
+		request.Metric,
+		strconv.Itoa(int(request.Limit)))
 }
 
 func (e endpoints) Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error) {

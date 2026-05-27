@@ -4,6 +4,7 @@ package tests
 
 import (
 	"fmt"
+	"maps"
 	"slices"
 	"testing"
 	"time"
@@ -22,6 +23,31 @@ import (
 	prometheusV1 "github.com/nobl9/nobl9-go/sdk/endpoints/prometheus/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
+
+var allPrometheusMetricNames = []string{
+	"budget",
+	"burn_rate",
+	"component_delay",
+	"component_impact",
+	"component_was_delayed",
+	"component_weight",
+	"composite_max_delay",
+	"count_good",
+	"count_total",
+	"reliability",
+	"sli_ratio_received_bad",
+	"sli_ratio_received_good",
+	"sli_ratio_received_total",
+	"sli_ratio_used_good",
+	"sli_ratio_used_total",
+	"sli_threshold",
+	"sli_threshold_status",
+	"target",
+	"threshold",
+	"time_slice_allowance",
+	"time_slice_reliability",
+	"time_slice_status",
+}
 
 func Test_Prometheus_V1_Buildinfo(t *testing.T) {
 	t.Parallel()
@@ -138,30 +164,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				Label:   model.MetricNameLabel,
 				Matches: []string{},
 			},
-			expected: []string{
-				"budget",
-				"burn_rate",
-				"component_delay",
-				"component_impact",
-				"component_was_delayed",
-				"component_weight",
-				"composite_max_delay",
-				"count_good",
-				"count_total",
-				"reliability",
-				"sli_ratio_received_bad",
-				"sli_ratio_received_good",
-				"sli_ratio_received_total",
-				"sli_ratio_used_good",
-				"sli_ratio_used_total",
-				"sli_threshold",
-				"sli_threshold_status",
-				"target",
-				"threshold",
-				"time_slice_allowance",
-				"time_slice_reliability",
-				"time_slice_status",
-			},
+			expected: allPrometheusMetricNames,
 		},
 		"empty matcher returns all values for projects": {
 			request: prometheusV1.LabelValuesRequest{
@@ -505,11 +508,7 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 				Matches: []string{},
 				Limit:   3,
 			},
-			expected: []string{
-				"budget",
-				"burn_rate",
-				"component_delay",
-			},
+			expected: allPrometheusMetricNames[:3],
 		},
 		"limit for slo": {
 			request: prometheusV1.LabelValuesRequest{
@@ -531,6 +530,49 @@ func Test_Prometheus_V1_LabelValues(t *testing.T) {
 			t.Parallel()
 
 			requirePrometheusLabelValues(t, tt.request, tt.expected, tt.containsSubset)
+		})
+	}
+}
+
+func Test_Prometheus_V1_Metadata(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		request       prometheusV1.MetadataRequest
+		expected      map[string][]promv1.Metadata
+		expectedNames []string
+	}{
+		"all metadata": {
+			request:       prometheusV1.MetadataRequest{},
+			expectedNames: allPrometheusMetricNames,
+		},
+		"all metadata with limit": {
+			request:       prometheusV1.MetadataRequest{Limit: 2},
+			expectedNames: allPrometheusMetricNames[:2],
+		},
+		"metadata for one metric": {
+			request: prometheusV1.MetadataRequest{Metric: "composite_max_delay"},
+			expected: map[string][]promv1.Metadata{
+				"composite_max_delay": {{
+					Type: promv1.MetricTypeGauge,
+					Help: "Composite max delay setting in seconds.",
+					Unit: "seconds",
+				}},
+			},
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			metadata, err := client.Prometheus().V1().Metadata(t.Context(), tt.request)
+			require.NoError(t, err)
+			if tt.expectedNames != nil {
+				assert.Equal(t, tt.expectedNames, slices.Sorted(maps.Keys(metadata)))
+			} else {
+				assert.Equal(t, tt.expected, metadata)
+			}
 		})
 	}
 }

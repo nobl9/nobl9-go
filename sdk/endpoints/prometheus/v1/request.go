@@ -36,3 +36,8 @@ type LabelValuesRequest struct {
 	Matches []string
 	Limit   uint64
 }
+
+type MetadataRequest struct {
+	Metric string
+	Limit  uint64
+}
