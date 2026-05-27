@@ -205,7 +205,25 @@ var (
 			Rules(rules.URL()),
 	)
 	dynatraceValidation = govy.New[DynatraceConfig](
-		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
+		govy.For(govy.GetSelf[DynatraceConfig]()).
+			Rules(rules.OneOfProperties(map[string]func(DynatraceConfig) any{
+				"url":         func(d DynatraceConfig) any { return d.URL },
+				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
+			})),
+		requiredDynatracePairPropertyRules(
+			"url",
+			func(d DynatraceConfig) string { return d.URL },
+			"dynatraceToken",
+			func(d DynatraceConfig) string { return d.DynatraceToken },
+		),
+		optionalHTTPSUrlPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
+		requiredDynatracePairPropertyRules(
+			"platformUrl",
+			func(d DynatraceConfig) string { return d.PlatformURL },
+			"platformToken",
+			func(d DynatraceConfig) string { return d.PlatformToken },
+		),
+		optionalHTTPSUrlPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -449,6 +467,38 @@ func urlPropertyRules[S any](getter govy.PropertyGetter[string, S]) govy.Propert
 			}
 			return nil
 		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func optionalHTTPSUrlPropertyRules[S any](
+	name string,
+	getter govy.PropertyGetter[string, S],
+) govy.PropertyRules[*url.URL, S] {
+	return govy.Transform(getter, url.Parse).
+		WithName(name).
+		Cascade(govy.CascadeModeStop).
+		OmitEmpty().
+		Rules(rules.URL()).
+		Rules(govy.NewRule(func(u *url.URL) error {
+			if u.Scheme != "https" {
+				return errors.New("requires https scheme")
+			}
+			return nil
+		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func requiredDynatracePairPropertyRules(
+	name string,
+	getter govy.PropertyGetter[string, DynatraceConfig],
+	pairedName string,
+	pairedGetter govy.PropertyGetter[string, DynatraceConfig],
+) govy.PropertyRules[string, DynatraceConfig] {
+	return govy.For(getter).
+		WithName(name).
+		When(
+			func(d DynatraceConfig) bool { return pairedGetter(d) != "" },
+			govy.WhenDescriptionf("%s is provided", pairedName),
+		).
+		Required()
 }
 
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }
