@@ -256,7 +256,7 @@ type LightstepConfig struct {
 
 // DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
 type DynatraceConfig struct {
-	URL            string `json:"url"`
+	URL            string `json:"url,omitempty"`
 	PlatformURL    string `json:"platformUrl,omitempty"`
 	DynatraceToken string `json:"dynatraceToken,omitempty"`
 	PlatformToken  string `json:"platformToken,omitempty"`
