@@ -126,7 +126,7 @@ func objectPlansToDocs(plan *govy.ValidatorPlan) []PropertyDoc {
 	for _, plan := range plan.Properties {
 		docs = append(docs, PropertyDoc{
 			Doc:      "TODO",
-			Path:     plan.Path,
+			Path:     plan.Path.String(),
 			Type:     plan.TypeInfo.Name,
 			Package:  plan.TypeInfo.Package,
 			Examples: plan.Examples,

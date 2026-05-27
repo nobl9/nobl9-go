@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -24,11 +26,11 @@ func TestElasticsearch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.index",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.index"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -42,11 +44,11 @@ func TestElasticsearch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.index",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.index"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
@@ -68,7 +70,7 @@ func TestElasticsearch(t *testing.T) {
 			}
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.elasticsearch.query",
+				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.elasticsearch.query"),
 				Code: rules.ErrorCodeStringContains,
 			})
 		}

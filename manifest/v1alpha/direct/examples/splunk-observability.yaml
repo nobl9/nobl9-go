@@ -15,6 +15,13 @@ spec:
   splunkObservability:
     realm: us1
     accessToken: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
   queryDelay:
     value: 6
     unit: Minute

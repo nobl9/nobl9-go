@@ -39,6 +39,7 @@ const (
 //   - [Client.Objects] for accessing the [manifest.Object] API.
 //   - [Client.AuthData] for accessing the authentication APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
+//   - [Client.Prometheus] for accessing the Prometheus-compatible API.
 //
 // [SLO Status API]: https://docs.nobl9.com/api/slo-v2
 type Client struct {
@@ -48,6 +49,8 @@ type Client struct {
 	credentials *credentialsStore
 	userAgent   string
 	dryRun      bool
+
+	prometheusAPI prometheusAPIStore
 }
 
 // DefaultClient returns fully configured instance of [Client] with default [Config] and [http.Client].

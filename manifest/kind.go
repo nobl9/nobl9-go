@@ -2,7 +2,10 @@ package manifest
 
 //go:generate ../bin/go-enum --nocase --lower --names --values
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // Kind represents all the [Object] kinds available in the API to perform operations on.
 /*ENUM(
@@ -39,6 +42,15 @@ func (k Kind) Equals(s string) bool {
 // In other words, it informs whether the [Kind] lifecycle is managed by the user.
 func (k Kind) Applicable() bool {
 	return k != KindAlert && k != KindUserGroup
+}
+
+// ProjectScoped returns true if the [Kind] is tied to a specific [KindProject].
+// It is equivalent to a type assertion for [ProjectScopedObject]:
+//
+//	_, ok := object.(ProjectScopedObject)
+//	return ok == object.GetKind().ProjectScoped() // always true
+func (k Kind) ProjectScoped() bool {
+	return slices.Contains(ProjectScopedKinds(), k)
 }
 
 // ApplicableKinds returns all the [Kind] instances which can be applied or deleted by the user.

@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -279,8 +280,7 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 			if dataRetrieval.MaxDuration.Value != nil {
 				maxDurationValue = *dataRetrieval.MaxDuration.Value
 			}
-			return govy.NewPropertyError(
-				"defaultDuration",
+			return govy.NewPropertyError(jsonpath.New().Name("defaultDuration"),
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",
@@ -378,6 +378,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	AmazonPrometheus:      {Value: ptr(30), Unit: HRDDay},
 	NewRelic:              {Value: ptr(30), Unit: HRDDay},
 	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	SplunkObservability:   {Value: ptr(30), Unit: HRDDay},
 	Graphite:              {Value: ptr(30), Unit: HRDDay},
 	Lightstep:             {Value: ptr(30), Unit: HRDDay},
 	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
@@ -400,6 +401,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	Datadog:               {Value: ptr(30), Unit: HRDDay},
 	NewRelic:              {Value: ptr(30), Unit: HRDDay},
 	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	SplunkObservability:   {Value: ptr(30), Unit: HRDDay},
 	Lightstep:             {Value: ptr(30), Unit: HRDDay},
 	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
 	Dynatrace:             {Value: ptr(28), Unit: HRDDay},

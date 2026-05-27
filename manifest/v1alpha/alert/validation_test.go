@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -26,11 +28,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, alert, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)

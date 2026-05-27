@@ -1,0 +1,49 @@
+# custom hierarchy
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: reliability-rollup-report
+    displayName: Reliability Rollup
+  spec:
+    shared: true
+    reliabilityRollup:
+      timeFrame:
+        rolling:
+          unit: Week
+          count: 4
+        timeZone: America/New_York
+      customHierarchy:
+      - displayName: Platform
+        children:
+        - displayName: Compute
+          slos:
+          - name: cluster-availability
+            project: infrastructure
+      - displayName: Application
+        slos:
+        - name: api-availability
+          project: core-platform
+        - name: api-latency
+          project: core-platform
+          displayName: API latency
+# filters
+- apiVersion: n9/v1alpha
+  kind: Report
+  metadata:
+    name: reliability-rollup-report
+    displayName: Reliability Rollup
+  spec:
+    shared: true
+    filters:
+      projects:
+      - project-1
+      - project-2
+      services:
+      - name: service-1
+        project: project-1
+    reliabilityRollup:
+      timeFrame:
+        rolling:
+          unit: Week
+          count: 1
+        timeZone: Europe/Warsaw

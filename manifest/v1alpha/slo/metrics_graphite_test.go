@@ -3,6 +3,8 @@ package slo
 import (
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -20,7 +22,7 @@ func TestGraphite(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.graphite.metricPath",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.graphite.metricPath"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -29,7 +31,7 @@ func TestGraphite(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.graphite.metricPath",
+			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.graphite.metricPath"),
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
@@ -43,7 +45,7 @@ func TestGraphite(t *testing.T) {
 			slo.Spec.Objectives[0].RawMetric.MetricQuery.Graphite.MetricPath = ptr(path)
 			err := validate(slo)
 			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:            "spec.objectives[0].rawMetric.query.graphite.metricPath",
+				Prop:            jsonpath.Parse("spec.objectives[0].rawMetric.query.graphite.metricPath"),
 				ContainsMessage: containsMessage,
 			})
 		}

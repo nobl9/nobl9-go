@@ -1,10 +1,6 @@
 package report
 
 import (
-	"time"
-
-	"github.com/pkg/errors"
-
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 )
@@ -21,12 +17,7 @@ var sloHistoryValidation = govy.New[SLOHistoryConfig](
 			govy.For(func(s SLOHistoryTimeFrame) string { return s.TimeZone }).
 				WithName("timeZone").
 				Required().
-				Rules(govy.NewRule(func(v string) error {
-					if _, err := time.LoadLocation(v); err != nil {
-						return errors.Wrap(err, "not a valid time zone")
-					}
-					return nil
-				})),
+				Rules(timeZoneValidationRule),
 			govy.ForPointer(func(s SLOHistoryTimeFrame) *RollingTimeFrame { return s.Rolling }).
 				WithName("rolling").
 				Include(rollingTimeFrameValidation),

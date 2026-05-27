@@ -7,6 +7,7 @@ import (
 	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -108,12 +109,7 @@ var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
 	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(govy.NewRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
-			}
-			return nil
-		})),
+		Rules(timeZoneValidationRule),
 	govy.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
 		WithName("snapshot").
 		Required().
@@ -138,8 +134,7 @@ var reportThresholdsValidation = govy.New[Thresholds](
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
 	if v.RedLessThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLessThanOrEqual > *v.GreenGreaterThan {
-			return govy.NewPropertyError(
-				"redLte",
+			return govy.NewPropertyError(jsonpath.New().Name("redLte"),
 				v.RedLessThanOrEqual,
 				errors.Errorf("must be less than or equal to 'greenGt' (%v)", *v.GreenGreaterThan))
 		}

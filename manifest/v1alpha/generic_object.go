@@ -17,7 +17,7 @@ const (
 // GenericObject represents a generic map[string]interface{} representation of manifest.Object.
 // It's useful for scenarios where an implementation does not want to be tied to specific
 // v1alpha versions.
-type GenericObject map[string]interface{}
+type GenericObject map[string]any
 
 func (g GenericObject) GetVersion() manifest.Version {
 	name, _ := g[genericFieldVersion].(string)
@@ -32,7 +32,7 @@ func (g GenericObject) GetKind() manifest.Kind {
 }
 
 func (g GenericObject) GetName() string {
-	meta, ok := g[genericFieldMetadata].(map[string]interface{})
+	meta, ok := g[genericFieldMetadata].(map[string]any)
 	if !ok {
 		return ""
 	}
@@ -45,7 +45,7 @@ func (g GenericObject) Validate() error {
 }
 
 func (g GenericObject) GetProject() string {
-	meta, ok := g[genericFieldMetadata].(map[string]interface{})
+	meta, ok := g[genericFieldMetadata].(map[string]any)
 	if !ok {
 		return ""
 	}
@@ -54,18 +54,16 @@ func (g GenericObject) GetProject() string {
 }
 
 func (g GenericObject) SetProject(project string) manifest.Object {
-	switch g.GetKind() {
-	case 0, manifest.KindProject, manifest.KindRoleBinding, manifest.KindUserGroup:
-		return g
-	default:
-		meta, ok := g[genericFieldMetadata].(map[string]interface{})
-		if !ok {
-			return g
-		}
-		meta[genericFieldProject] = project
-		g[genericFieldMetadata] = meta
+	if !g.GetKind().ProjectScoped() {
 		return g
 	}
+	meta, ok := g[genericFieldMetadata].(map[string]any)
+	if !ok {
+		return g
+	}
+	meta[genericFieldProject] = project
+	g[genericFieldMetadata] = meta
+	return g
 }
 
 func (g GenericObject) GetOrganization() string {

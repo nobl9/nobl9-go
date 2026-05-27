@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
+
 	"github.com/stretchr/testify/assert"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -34,11 +36,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, direct, err, 2,
 		testutils.ExpectedError{
-			Prop: "apiVersion",
+			Prop: jsonpath.New().Name("apiVersion"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: "kind",
+			Prop: jsonpath.New().Name("kind"),
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -56,22 +58,23 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, direct, err, 3,
 		testutils.ExpectedError{
-			Prop: "metadata.name",
+			Prop: jsonpath.Parse("metadata.name"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.displayName",
+			Prop: jsonpath.Parse("metadata.displayName"),
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: "metadata.project",
+			Prop: jsonpath.Parse("metadata.project"),
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Direct](t, "metadata.annotations") {
+	tests := v1alphatest.GetMetadataAnnotationsTestCases[Direct](t, jsonpath.Parse("metadata.annotations"))
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := validDirect(v1alpha.Datadog)
 			svc.Metadata.Annotations = test.Annotations
@@ -86,7 +89,7 @@ func TestValidateSpec(t *testing.T) {
 		direct.Spec.Description = strings.Repeat("a", 2000)
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.description",
+			Prop: jsonpath.Parse("spec.description"),
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
 	})
@@ -95,7 +98,7 @@ func TestValidateSpec(t *testing.T) {
 		direct.Spec.Datadog = nil
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec",
+			Prop: jsonpath.New().Name("spec"),
 			Code: errCodeExactlyOneDataSourceType,
 		})
 	})
@@ -110,7 +113,7 @@ func TestValidateSpec(t *testing.T) {
 			direct.Spec.Datadog = validDirectSpec(v1alpha.Datadog).Datadog
 			err := validate(direct)
 			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-				Prop: "spec",
+				Prop: jsonpath.New().Name("spec"),
 				Code: errCodeExactlyOneDataSourceType,
 			})
 		}
@@ -135,7 +138,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = -1
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -150,7 +153,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
@@ -159,7 +162,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
+			Prop: jsonpath.Parse("spec.releaseChannel"),
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
@@ -178,11 +181,11 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.queryDelay.value",
+				Prop: jsonpath.Parse("spec.queryDelay.value"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.queryDelay.unit",
+				Prop: jsonpath.Parse("spec.queryDelay.unit"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -214,7 +217,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			}}
 			err := validate(direct)
 			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-				Prop: "spec.queryDelay.unit",
+				Prop: jsonpath.Parse("spec.queryDelay.unit"),
 				Code: rules.ErrorCodeOneOf,
 			})
 		}
@@ -228,7 +231,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.queryDelay",
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -241,7 +244,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.queryDelay",
+			Prop: jsonpath.Parse("spec.queryDelay"),
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -256,7 +259,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				}}
 				err := validate(direct)
 				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-					Prop: "spec.queryDelay",
+					Prop: jsonpath.Parse("spec.queryDelay"),
 					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
@@ -286,11 +289,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.maxDuration",
+				Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.historicalDataRetrieval.defaultDuration",
+				Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -305,11 +308,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -319,11 +322,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -336,11 +339,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
-					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
@@ -353,11 +356,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 3,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: "spec.historicalDataRetrieval.maxDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 				{
-					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
@@ -370,11 +373,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
 					Code: rules.ErrorCodeOneOf,
 				},
 			},
@@ -419,7 +422,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		}
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.historicalDataRetrieval",
+			Prop:    jsonpath.Parse("spec.historicalDataRetrieval"),
 			Message: "historical data retrieval is not supported for Instana Direct",
 		})
 	})
@@ -438,7 +441,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			}
 			err := validate(direct)
 			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-				Prop:    "spec.historicalDataRetrieval.defaultDuration",
+				Prop:    jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
 				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 			})
 		})
@@ -463,7 +466,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				}
 				objErr := validate(direct)
 				testutils.AssertContainsErrors(t, direct, objErr, 1, testutils.ExpectedError{
-					Prop: "spec.historicalDataRetrieval.maxDuration",
+					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
 					Message: fmt.Sprintf("must be less than or equal to %d %s",
 						*maxDuration.Value, maxDuration.Unit),
 				})
@@ -500,7 +503,7 @@ func TestValidateSpec_Datadog(t *testing.T) {
 		direct.Spec.Datadog.Site = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
+			Prop: jsonpath.Parse("spec.datadog.site"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -509,7 +512,7 @@ func TestValidateSpec_Datadog(t *testing.T) {
 		direct.Spec.Datadog.Site = "invalid"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
+			Prop: jsonpath.Parse("spec.datadog.site"),
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -541,7 +544,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		direct.Spec.NewRelic.AccountID = 0
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.newRelic.accountId",
+			Prop: jsonpath.Parse("spec.newRelic.accountId"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -550,7 +553,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		direct.Spec.NewRelic.AccountID = -1
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.newRelic.accountId",
+			Prop: jsonpath.Parse("spec.newRelic.accountId"),
 			Code: rules.ErrorCodeGreaterThanOrEqualTo,
 		})
 	})
@@ -559,7 +562,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		direct.Spec.NewRelic.InsightsQueryKey = "123"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.newRelic.insightsQueryKey",
+			Prop: jsonpath.Parse("spec.newRelic.insightsQueryKey"),
 			Code: rules.ErrorCodeStringStartsWith,
 		})
 	})
@@ -579,15 +582,15 @@ func TestValidateSpec_AppDynamics(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 3,
 			testutils.ExpectedError{
-				Prop: "spec.appDynamics.url",
+				Prop: jsonpath.Parse("spec.appDynamics.url"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.appDynamics.clientName",
+				Prop: jsonpath.Parse("spec.appDynamics.clientName"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.appDynamics.accountName",
+				Prop: jsonpath.Parse("spec.appDynamics.accountName"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -597,7 +600,7 @@ func TestValidateSpec_AppDynamics(t *testing.T) {
 		direct.Spec.AppDynamics.URL = "nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.appDynamics.url",
+			Prop: jsonpath.Parse("spec.appDynamics.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -606,7 +609,7 @@ func TestValidateSpec_AppDynamics(t *testing.T) {
 		direct.Spec.AppDynamics.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.appDynamics.url",
+			Prop: jsonpath.Parse("spec.appDynamics.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -638,7 +641,7 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 		direct.Spec.BigQuery.ServiceAccountKey = "{["
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.bigQuery.serviceAccountKey",
+			Prop: jsonpath.Parse("spec.bigQuery.serviceAccountKey"),
 			Code: rules.ErrorCodeStringJSON,
 		})
 	})
@@ -657,7 +660,7 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.splunkObservability.realm",
+			Prop: jsonpath.Parse("spec.splunkObservability.realm"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -674,7 +677,7 @@ func TestValidateSpec_Splunk(t *testing.T) {
 		direct.Spec.Splunk.URL = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.splunk.url",
+			Prop: jsonpath.Parse("spec.splunk.url"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -683,7 +686,7 @@ func TestValidateSpec_Splunk(t *testing.T) {
 		direct.Spec.Splunk.URL = "nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.splunk.url",
+			Prop: jsonpath.Parse("spec.splunk.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -692,7 +695,7 @@ func TestValidateSpec_Splunk(t *testing.T) {
 		direct.Spec.Splunk.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.splunk.url",
+			Prop: jsonpath.Parse("spec.splunk.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -709,7 +712,7 @@ func TestValidateSpec_Redshift(t *testing.T) {
 		direct.Spec.Redshift.SecretARN = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.redshift.secretARN",
+			Prop: jsonpath.Parse("spec.redshift.secretARN"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -726,7 +729,7 @@ func TestValidateSpec_SumoLogic(t *testing.T) {
 		direct.Spec.SumoLogic.URL = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.sumoLogic.url",
+			Prop: jsonpath.Parse("spec.sumoLogic.url"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -735,7 +738,7 @@ func TestValidateSpec_SumoLogic(t *testing.T) {
 		direct.Spec.SumoLogic.URL = "nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.sumoLogic.url",
+			Prop: jsonpath.Parse("spec.sumoLogic.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -744,7 +747,7 @@ func TestValidateSpec_SumoLogic(t *testing.T) {
 		direct.Spec.SumoLogic.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.sumoLogic.url",
+			Prop: jsonpath.Parse("spec.sumoLogic.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -761,7 +764,7 @@ func TestValidateSpec_Instana(t *testing.T) {
 		direct.Spec.Instana.URL = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.instana.url",
+			Prop: jsonpath.Parse("spec.instana.url"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -770,7 +773,7 @@ func TestValidateSpec_Instana(t *testing.T) {
 		direct.Spec.Instana.URL = "nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.instana.url",
+			Prop: jsonpath.Parse("spec.instana.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -779,7 +782,7 @@ func TestValidateSpec_Instana(t *testing.T) {
 		direct.Spec.Instana.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.instana.url",
+			Prop: jsonpath.Parse("spec.instana.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -796,7 +799,7 @@ func TestValidateSpec_InfluxDB(t *testing.T) {
 		direct.Spec.InfluxDB.URL = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.influxdb.url",
+			Prop: jsonpath.Parse("spec.influxdb.url"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -805,7 +808,7 @@ func TestValidateSpec_InfluxDB(t *testing.T) {
 		direct.Spec.InfluxDB.URL = "nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.influxdb.url",
+			Prop: jsonpath.Parse("spec.influxdb.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -814,7 +817,7 @@ func TestValidateSpec_InfluxDB(t *testing.T) {
 		direct.Spec.InfluxDB.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.influxdb.url",
+			Prop: jsonpath.Parse("spec.influxdb.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -846,7 +849,7 @@ func TestValidateSpec_GCM(t *testing.T) {
 		direct.Spec.GCM.ServiceAccountKey = "{["
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.gcm.serviceAccountKey",
+			Prop: jsonpath.Parse("spec.gcm.serviceAccountKey"),
 			Code: rules.ErrorCodeStringJSON,
 		})
 	})
@@ -866,11 +869,11 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.lightstep.organization",
+				Prop: jsonpath.Parse("spec.lightstep.organization"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.lightstep.project",
+				Prop: jsonpath.Parse("spec.lightstep.project"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -880,7 +883,7 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 		direct.Spec.Lightstep.URL = "h ttp"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.lightstep.url",
+			Prop: jsonpath.Parse("spec.lightstep.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -918,7 +921,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		direct.Spec.Dynatrace.URL = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.dynatrace.url",
+			Prop: jsonpath.Parse("spec.dynatrace.url"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -927,7 +930,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		direct.Spec.Dynatrace.URL = "h ttp"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.dynatrace.url",
+			Prop: jsonpath.Parse("spec.dynatrace.url"),
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -936,7 +939,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		direct.Spec.Dynatrace.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.dynatrace.url",
+			Prop: jsonpath.Parse("spec.dynatrace.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -953,7 +956,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 		direct.Spec.AzureMonitor.TenantID = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.azureMonitor.tenantId",
+			Prop: jsonpath.Parse("spec.azureMonitor.tenantId"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -962,7 +965,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 		direct.Spec.AzureMonitor.TenantID = "invalid"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.azureMonitor.tenantId",
+			Prop: jsonpath.Parse("spec.azureMonitor.tenantId"),
 			Code: rules.ErrorCodeStringUUID,
 		})
 	})
@@ -979,7 +982,7 @@ func TestValidateSpec_LogicMonitor(t *testing.T) {
 		direct.Spec.LogicMonitor.Account = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.logicMonitor.account",
+			Prop: jsonpath.Parse("spec.logicMonitor.account"),
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -996,7 +999,7 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		direct.Spec.AzurePrometheus.TenantID = "invalid"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.azurePrometheus.tenantId",
+			Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
 			Code: rules.ErrorCodeStringUUID,
 		})
 	})
@@ -1009,11 +1012,11 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.url",
+				Prop: jsonpath.Parse("spec.azurePrometheus.url"),
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.tenantId",
+				Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -1025,11 +1028,11 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 2,
 			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.url",
+				Prop: jsonpath.Parse("spec.azurePrometheus.url"),
 				Code: rules.ErrorCodeURL,
 			},
 			testutils.ExpectedError{
-				Prop: "spec.azurePrometheus.tenantId",
+				Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
 				Code: rules.ErrorCodeStringUUID,
 			},
 		)
@@ -1040,7 +1043,7 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		direct.Spec.AzurePrometheus.URL = "http://nobl9.com"
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.azurePrometheus.url",
+			Prop: jsonpath.Parse("spec.azurePrometheus.url"),
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
