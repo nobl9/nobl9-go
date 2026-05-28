@@ -73,7 +73,7 @@ func GetLabelsTestCases[T manifest.Object](
 				"net": {"same", "same", "same"},
 			},
 			error: testutils.ExpectedError{
-				Prop: jsonpath.Parse(propertyPath).Name("net").String(),
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
@@ -82,7 +82,7 @@ func GetLabelsTestCases[T manifest.Object](
 				"net": {"", ""},
 			},
 			error: testutils.ExpectedError{
-				Prop: jsonpath.Parse(propertyPath).Name("net").String(),
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
@@ -97,7 +97,7 @@ func GetLabelsTestCases[T manifest.Object](
 				strings.Repeat("net", 40): {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       jsonpath.Parse(propertyPath).Name(strings.Repeat("net", 40)).String(),
+				Prop:       propertyPath + "." + strings.Repeat("net", 40),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringLength,
 			},
@@ -117,7 +117,7 @@ func GetLabelsTestCases[T manifest.Object](
 				"net_": {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       jsonpath.Parse(propertyPath).Name("net_").String(),
+				Prop:       propertyPath + ".net_",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
@@ -127,7 +127,7 @@ func GetLabelsTestCases[T manifest.Object](
 				"nEt": {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       jsonpath.Parse(propertyPath).Name("nEt").String(),
+				Prop:       propertyPath + ".nEt",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
