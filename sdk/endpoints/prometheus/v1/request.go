@@ -8,7 +8,6 @@ import (
 type QueryRequest struct {
 	Query         string
 	Time          time.Time
-	Limit         uint64
 	LookbackDelta time.Duration
 	Timeout       time.Duration
 }
@@ -19,7 +18,6 @@ type QueryRangeRequest struct {
 	Start         time.Time
 	End           time.Time
 	Step          time.Duration
-	Limit         uint64
 	LookbackDelta time.Duration
 	Timeout       time.Duration
 }
