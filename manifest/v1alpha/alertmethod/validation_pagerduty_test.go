@@ -4,8 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -47,7 +45,7 @@ func TestValidate_Spec_PagerDutyAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.pagerduty.integrationKey"),
+					Prop: "spec.pagerduty.integrationKey",
 					Code: rules.ErrorCodeStringMaxLength,
 				},
 			},

@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -32,11 +30,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, rb, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("apiVersion"),
+			Prop: "apiVersion",
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("kind"),
+			Prop: "kind",
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -60,7 +58,7 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, rb, err, 1,
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.name"),
+			Prop: "metadata.name",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
@@ -73,7 +71,7 @@ func TestSpec(t *testing.T) {
 		err := validate(rb)
 		testutils.AssertContainsErrors(t, rb, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.roleRef"),
+				Prop: "spec.roleRef",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -84,7 +82,7 @@ func TestSpec(t *testing.T) {
 		err := validate(rb)
 		testutils.AssertContainsErrors(t, rb, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.projectRef"),
+				Prop: "spec.projectRef",
 				Code: validationV1Alpha.ErrorCodeStringName,
 			},
 		)
@@ -124,7 +122,7 @@ func TestSpec(t *testing.T) {
 				rb := New(Metadata{Name: "my-name"}, spec)
 				err := validate(rb)
 				testutils.AssertContainsErrors(t, rb, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.New().Name("spec"),
+					Prop: "spec",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				})
 			})
