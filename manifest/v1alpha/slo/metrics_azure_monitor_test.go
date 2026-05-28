@@ -4,8 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -32,7 +30,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.metricNamespace' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -40,7 +38,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.metricNamespace' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -61,7 +59,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.resourceId' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -69,7 +67,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.resourceId' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -80,7 +78,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AzureMonitor = getValidAzureMetric(AzureMonitorDataTypeLogs)
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.dataType' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -88,7 +86,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.dataType' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -103,7 +101,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 			SubscriptionID = "11111111-1111-1111-1111-111111111111"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.subscriptionId' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -111,7 +109,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.subscriptionId' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -126,7 +124,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 			ResourceGroup = "rg-2"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.resourceGroup' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -134,7 +132,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.resourceGroup' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -149,7 +147,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 			WorkspaceID = "11111111-1111-1111-1111-111111111111"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.workspaceId' must be the same for both 'good' and 'total' metrics",
 		})
 		// Bad.
@@ -157,7 +155,7 @@ func TestAzureMonitor_CountMetrics(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric = nil
 		err = validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop:    "spec.objectives[0].countMetrics",
 			Message: "'azureMonitor.workspace.workspaceId' must be the same for both 'bad' and 'total' metrics",
 		})
 	})
@@ -172,7 +170,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dataType"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -190,7 +188,7 @@ func TestAzureMonitor_DataType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.DataType = "invalid"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dataType"),
+			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dataType",
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -207,11 +205,11 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -224,7 +222,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
 				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 		)
@@ -237,7 +235,7 @@ func TestAzureMonitor_LogsDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
 				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 		)
@@ -256,15 +254,15 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.resourceId"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.metricName"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.aggregation"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -281,11 +279,11 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.kqlQuery",
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -303,7 +301,7 @@ func TestAzureMonitor_MetricDataType(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.AzureMonitor.Aggregation = "invalid"
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.aggregation"),
+			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -321,15 +319,15 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
 				Code: rules.ErrorCodeRequired,
 			})
 	})
@@ -349,23 +347,23 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 5,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.resourceId"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.metricName"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricName",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.metricNamespace"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.metricNamespace",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.aggregation"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.aggregation",
 				Code: rules.ErrorCodeForbidden,
 			})
 	})
@@ -376,7 +374,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.subscriptionId",
 				Code: rules.ErrorCodeStringUUID,
 			})
 	})
@@ -425,7 +423,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 				} else {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
-							Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup"),
+							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.resourceGroup",
 							Code: rules.ErrorCodeStringMatchRegexp,
 						})
 				}
@@ -480,7 +478,7 @@ func TestAzureMonitorLogAnalyticsWorkspace(t *testing.T) {
 				} else {
 					testutils.AssertContainsErrors(t, slo, err, 1,
 						testutils.ExpectedError{
-							Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId"),
+							Prop: "spec.objectives[0].rawMetric.query.azureMonitor.workspace.workspaceId",
 							Code: rules.ErrorCodeStringUUID,
 						})
 				}
@@ -525,35 +523,35 @@ func TestAzureMonitorDimension(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 9,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].name",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].value"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[0].value",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].name"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].name",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].value"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[1].value",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].name"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].name",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].value"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[2].value",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].name"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].name",
 				Code: rules.ErrorCodeStringASCII,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].value"),
+				Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions[3].value",
 				Code: rules.ErrorCodeStringASCII,
 			},
 		)
@@ -572,7 +570,7 @@ func TestAzureMonitorDimension(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.dimensions"),
+			Prop: "spec.objectives[0].rawMetric.query.azureMonitor.dimensions",
 			Code: rules.ErrorCodeSliceUnique,
 		})
 	})
@@ -634,7 +632,7 @@ func TestAzureMonitor_ResourceID(t *testing.T) {
 				testutils.AssertNoError(t, slo, err)
 			} else {
 				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.azureMonitor.resourceId"),
+					Prop: "spec.objectives[0].rawMetric.query.azureMonitor.resourceId",
 					Code: rules.ErrorCodeStringMatchRegexp,
 				})
 			}

@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -22,11 +20,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.total.thousandEyes"),
+				Prop: "spec.objectives[0].countMetrics.total.thousandEyes",
 				Code: rules.ErrorCodeForbidden,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].countMetrics.good.thousandEyes"),
+				Prop: "spec.objectives[0].countMetrics.good.thousandEyes",
 				Code: rules.ErrorCodeForbidden,
 			},
 		)
@@ -37,11 +35,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testID"),
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testType"),
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -55,11 +53,11 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testID"),
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testID",
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.testType"),
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.testType",
 				Code: rules.ErrorCodeOneOf,
 			},
 		)
@@ -78,7 +76,7 @@ func TestThousandEyes(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.thousandEyes.accountGroupID"),
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.accountGroupID",
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 		)
