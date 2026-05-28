@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 )
 
 func TestEndpoints_StartAnalysis(t *testing.T) {

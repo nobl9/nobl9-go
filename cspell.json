@@ -35,6 +35,7 @@
   ],
   "words": [
     "00u2y4e4atkzaYkXP4x8",
+    "Alertsmetrics",
     "BYHOUR",
     "BYMINUTE",
     "BYSECOND",
@@ -53,7 +54,6 @@
     "alertmethod",
     "alertpolicy",
     "alertsilence",
-    "Alertsmetrics",
     "alertsmetrics",
     "alphatest",
     "apikey",
