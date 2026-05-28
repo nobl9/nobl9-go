@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/teambition/rrule-go"
 
@@ -35,11 +33,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("apiVersion"),
+			Prop: "apiVersion",
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("kind"),
+			Prop: "kind",
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -56,11 +54,11 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.name"),
+			Prop: "metadata.name",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.displayName"),
+			Prop: "metadata.displayName",
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 	)
@@ -82,7 +80,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.description"),
+					Prop: "spec.description",
 					Code: validationV1Alpha.ErrorCodeStringDescription,
 				},
 			},
@@ -95,7 +93,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.firstEventStart"),
+					Prop: "spec.firstEventStart",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -108,7 +106,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.duration"),
+					Prop: "spec.duration",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -122,7 +120,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.filters.slos"),
+					Prop:    "spec.filters.slos",
 					Message: "length must be greater than or equal to 1",
 				},
 			},
@@ -141,7 +139,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.duration"),
+					Prop:    "spec.duration",
 					Message: "duration must be at least 1 minute",
 				},
 			},
@@ -173,7 +171,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
+					Prop: "spec.filters.slos[0].name",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -192,7 +190,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos[0].name"),
+					Prop: "spec.filters.slos[0].name",
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -210,7 +208,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
+					Prop: "spec.filters.slos[0].project",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -229,7 +227,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos[0].project"),
+					Prop: "spec.filters.slos[0].project",
 					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
@@ -249,7 +247,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.rrule"),
+					Prop:    "spec.rrule",
 					Message: "wrong format",
 				},
 			},
@@ -269,7 +267,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.rrule"),
+					Prop:    "spec.rrule",
 					Message: "undefined frequency: TEST",
 				},
 			},
@@ -289,7 +287,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.rrule"),
+					Prop:    "spec.rrule",
 					Message: "interval must be at least 60 minutes for minutely frequency",
 				},
 			},
@@ -309,7 +307,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.rrule"),
+					Prop: "spec.rrule",
 					Code: "transform",
 				},
 			},
@@ -344,7 +342,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos"),
+					Prop: "spec.filters.slos",
 					Code: rules.ErrorCodeSliceUnique,
 				},
 			},
@@ -369,7 +367,7 @@ func TestValidate_Spec(t *testing.T) {
 			},
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.filters.slos"),
+					Prop: "spec.filters.slos",
 					Code: rules.ErrorCodeSliceUnique,
 				},
 			},

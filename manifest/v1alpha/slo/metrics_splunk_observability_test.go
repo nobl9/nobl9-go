@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -22,7 +20,7 @@ func TestSplunkObservability(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SplunkObservability.Program = nil
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.splunkObservability.program"),
+			Prop: "spec.objectives[0].rawMetric.query.splunkObservability.program",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -31,7 +29,7 @@ func TestSplunkObservability(t *testing.T) {
 		slo.Spec.Objectives[0].RawMetric.MetricQuery.SplunkObservability.Program = ptr("")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.splunkObservability.program"),
+			Prop: "spec.objectives[0].rawMetric.query.splunkObservability.program",
 			Code: rules.ErrorCodeStringNotEmpty,
 		})
 	})
