@@ -46,7 +46,7 @@ func TestEndpoints_StartAnalysis(t *testing.T) {
 	require.Len(t, client.requests, 1)
 	req := client.requests[0]
 	assert.Equal(t, http.MethodPost, req.Method)
-	assert.Equal(t, "/api/analysis", req.URL.Path)
+	assert.Equal(t, "/api/alerting/v1/analysis", req.URL.Path)
 
 	var payload StartAnalysisRequest
 	require.NoError(t, json.NewDecoder(req.Body).Decode(&payload))
@@ -113,7 +113,7 @@ func TestEndpoints_GetAnalysis(t *testing.T) {
 	require.Len(t, client.requests, 1)
 	req := client.requests[0]
 	assert.Equal(t, http.MethodGet, req.Method)
-	assert.Equal(t, "/api/analysis/analysis-id", req.URL.Path)
+	assert.Equal(t, "/api/alerting/v1/analysis/analysis-id", req.URL.Path)
 	assert.Equal(t, from.Format(time.RFC3339Nano), req.URL.Query().Get("from"))
 	assert.Equal(t, to.Format(time.RFC3339Nano), req.URL.Query().Get("to"))
 	assert.Equal(t, "false", req.URL.Query().Get("includeTimeseries"))
@@ -165,7 +165,7 @@ func TestEndpoints_RetryAnalysis(t *testing.T) {
 	require.Len(t, client.requests, 1)
 	req := client.requests[0]
 	assert.Equal(t, http.MethodPost, req.Method)
-	assert.Equal(t, "/api/analysis/analysis-id/retry", req.URL.Path)
+	assert.Equal(t, "/api/alerting/v1/analysis/analysis-id/retry", req.URL.Path)
 }
 
 type fakeClient struct {

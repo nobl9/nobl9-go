@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	baseAPIPath = "analysis"
+	baseAPIPath = "alerting/v1/analysis"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
