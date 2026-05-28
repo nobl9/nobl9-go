@@ -495,7 +495,10 @@ func requiredDynatracePairPropertyRules(
 	return govy.For(getter).
 		WithName(name).
 		When(
-			func(d DynatraceConfig) bool { return pairedGetter(d) != "" },
+			func(d DynatraceConfig) bool {
+				pairedValue := pairedGetter(d)
+				return pairedValue != "" && pairedValue != v1alpha.HiddenValue
+			},
 			govy.WhenDescriptionf("%s is provided", pairedName),
 		).
 		Required()
