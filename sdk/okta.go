@@ -36,9 +36,10 @@ type oktaClient struct {
 	getTokenEndpoint getTokenEndpointFunc
 }
 
-func newOktaClient(getTokenEndpoint getTokenEndpointFunc) *oktaClient {
+// newOktaClient returns a client that talks to the Okta IDP token endpoint.
+func newOktaClient(getTokenEndpoint getTokenEndpointFunc, transport http.RoundTripper) *oktaClient {
 	return &oktaClient{
-		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, nil),
+		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, transport),
 		getTokenEndpoint: getTokenEndpoint,
 	}
 }

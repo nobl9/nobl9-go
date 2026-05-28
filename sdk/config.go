@@ -93,6 +93,13 @@ type Config struct {
 	Organization string
 	// Timeout is the timeout duration of each HTTP request run against the API.
 	Timeout time.Duration
+	// CACertFile is an optional path to a PEM-encoded bundle of CA certificates that will be
+	// trusted in addition to the system cert pool when establishing TLS connections to
+	// the Nobl9 API and IDP. When set it forces the use of Go's native x509 verifier
+	// instead of the platform verifier (Security.framework on macOS, wincrypt on Windows),
+	// which is the supported escape hatch for environments where the platform verifier
+	// rejects a chain that the Go verifier accepts.
+	CACertFile string
 	// FilesPromptEnabled is a flag that enables a prompt for applying/deleting large numbers of files.
 	// It is sloctl exclusive.
 	FilesPromptEnabled bool
@@ -142,6 +149,7 @@ type ContextConfig struct {
 	DisableOkta    *bool          `toml:"disableOkta,omitempty" json:"disableOkta,omitempty" env:"DISABLE_OKTA"`
 	Organization   string         `toml:"organization,omitempty" json:"organization,omitempty" env:"ORGANIZATION"`
 	Timeout        *time.Duration `toml:"timeout,omitempty" json:"timeout,omitempty" env:"TIMEOUT"`
+	CACertFile     string         `toml:"caCertFile,omitempty" json:"caCertFile,omitempty" env:"CA_CERT_FILE"`
 }
 
 // ConfigOption conveys extra configuration details for [ReadConfig] function.
@@ -421,6 +429,7 @@ func (c *Config) resolveContextConfig() error {
 	c.Timeout = *c.contextConfig.Timeout
 	c.DisableOkta = *c.contextConfig.DisableOkta
 	c.Organization = c.contextConfig.Organization
+	c.CACertFile = c.contextConfig.CACertFile
 	if c.options.platformInstance != "" {
 		if c.options.platformInstance == PlatformInstanceCustom {
 			return errors.Errorf("%q platform instance is not supported as a config option, "+
