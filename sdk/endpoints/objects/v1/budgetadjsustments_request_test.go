@@ -3,8 +3,6 @@ package v1
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/govytest"
 )
 
@@ -44,7 +42,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:    jsonpath.New().Name("slo_project").String(),
+					PropertyPath:    "slo_project",
 					ContainsMessage: "Project is required when SLO is set",
 				},
 			},
@@ -56,7 +54,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:    jsonpath.New().Name("slo").String(),
+					PropertyPath:    "slo",
 					ContainsMessage: "SLO is required when Project is set",
 				},
 			},
@@ -70,19 +68,19 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyPath:    jsonpath.New().Name("slo_project").String(),
+					PropertyPath:    "slo_project",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyPath:    jsonpath.New().Name("slo").String(),
+					PropertyPath:    "slo",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyPath:    jsonpath.Parse("name[0]").String(),
+					PropertyPath:    "name[0]",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyPath:    jsonpath.Parse("name[1]").String(),
+					PropertyPath:    "name[1]",
 					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 			},

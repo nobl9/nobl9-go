@@ -35,7 +35,7 @@ func (tc MetadataAnnotationsTestCase[T]) Test(t *testing.T, object T, validate f
 
 func GetMetadataAnnotationsTestCases[T manifest.Object](
 	t *testing.T,
-	propertyPath jsonpath.Path,
+	propertyPath string,
 ) map[string]MetadataAnnotationsTestCase[T] {
 	t.Helper()
 
@@ -87,10 +87,9 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64): "x",
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath.Name(
-					strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" +
-						strings.Repeat("l", 64),
-				),
+				Prop: jsonpath.Parse(propertyPath).
+					Name(strings.Repeat("l", validationV1Alpha.NameMaximumLength+1) + "/" + strings.Repeat("l", 64)).
+					String(),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -106,7 +105,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net_": "x",
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath.Name("net_"),
+				Prop:       propertyPath + ".net_",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringKubernetesQualifiedName,
 			},
@@ -116,7 +115,7 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 				"net": strings.Repeat("l", 1051),
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath.Name("net"),
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},

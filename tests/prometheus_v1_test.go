@@ -68,15 +68,42 @@ var allPrometheusReliabilityMetricLabelNames = []string{
 	"slo",
 }
 
-func Test_Prometheus_V1_Buildinfo(t *testing.T) {
+func Test_Prometheus_V1_Query(t *testing.T) {
 	t.Parallel()
 
-	buildInfo, err := client.Prometheus().V1().Buildinfo(t.Context())
+	value, warnings, err := client.Prometheus().V1().Query(
+		t.Context(),
+		prometheusV1.QueryRequest{
+			Query: "unknown_metric",
+		},
+	)
 	require.NoError(t, err)
-	assert.NotEmpty(t, buildInfo.Version)
-	assert.NotEmpty(t, buildInfo.Revision)
-	assert.NotEmpty(t, buildInfo.Branch)
-	assert.NotEmpty(t, buildInfo.GoVersion)
+	require.Empty(t, warnings)
+
+	vector, ok := value.(model.Vector)
+	require.True(t, ok)
+	assert.Empty(t, vector)
+}
+
+func Test_Prometheus_V1_QueryRange(t *testing.T) {
+	t.Parallel()
+
+	end := time.Now()
+	value, warnings, err := client.Prometheus().V1().QueryRange(
+		t.Context(),
+		prometheusV1.QueryRangeRequest{
+			Query: "unknown_metric",
+			Start: end.Add(-time.Minute),
+			End:   end,
+			Step:  time.Minute,
+		},
+	)
+	require.NoError(t, err)
+	require.Empty(t, warnings)
+
+	matrix, ok := value.(model.Matrix)
+	require.True(t, ok)
+	assert.Empty(t, matrix)
 }
 
 func Test_Prometheus_V1_LabelNames(t *testing.T) {
@@ -566,6 +593,17 @@ func Test_Prometheus_V1_Metadata(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_Prometheus_V1_Buildinfo(t *testing.T) {
+	t.Parallel()
+
+	buildInfo, err := client.Prometheus().V1().Buildinfo(t.Context())
+	require.NoError(t, err)
+	assert.NotEmpty(t, buildInfo.Version)
+	assert.NotEmpty(t, buildInfo.Revision)
+	assert.NotEmpty(t, buildInfo.Branch)
+	assert.NotEmpty(t, buildInfo.GoVersion)
 }
 
 type prometheusLabelValuesObjects struct {

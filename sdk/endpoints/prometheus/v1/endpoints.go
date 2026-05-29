@@ -126,7 +126,6 @@ func (e endpoints) api(ctx context.Context) (API, error) {
 
 func queryOptions(request QueryRequest) []promv1.Option {
 	opts := make([]promv1.Option, 0, 3)
-	opts = appendLimitOption(opts, request.Limit)
 	opts = appendLookbackDeltaOption(opts, request.LookbackDelta)
 	opts = appendTimeoutOption(opts, request.Timeout)
 	return opts
@@ -134,7 +133,6 @@ func queryOptions(request QueryRequest) []promv1.Option {
 
 func queryRangeOptions(request QueryRangeRequest) []promv1.Option {
 	opts := make([]promv1.Option, 0, 3)
-	opts = appendLimitOption(opts, request.Limit)
 	opts = appendLookbackDeltaOption(opts, request.LookbackDelta)
 	opts = appendTimeoutOption(opts, request.Timeout)
 	return opts
