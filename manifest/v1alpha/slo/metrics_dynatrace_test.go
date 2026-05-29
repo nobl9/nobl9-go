@@ -163,6 +163,20 @@ func TestDynatrace_CountMetricsQueryType(t *testing.T) {
 			Code: rules.ErrorCodeEqualTo,
 		})
 	})
+	t.Run("rejects omitted good dql interval and explicit total dql interval", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Dynatrace.DQL.Interval = ""
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Dynatrace.DQL.Interval = "2m"
+
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Code: rules.ErrorCodeEqualTo,
+		})
+	})
 	t.Run("rejects metric selector good and dql total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validDynatraceDQLMetricSpec()
