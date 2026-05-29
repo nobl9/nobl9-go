@@ -7,10 +7,13 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -85,6 +88,216 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		require.NoError(t, err)
 		require.Greater(t, len(toolsResult.Tools), 1)
 		t.Logf("Found %d MCP tools", len(toolsResult.Tools))
+	})
+
+	t.Run("prometheus tools expose supported parameters", func(t *testing.T) {
+		toolsResult, err := session.ListTools(t.Context(), nil)
+		require.NoError(t, err)
+		require.NotEmpty(t, toolsResult.Tools)
+
+		queryProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusQuery"))
+		toolNames := slices.Collect(maps.Keys(queryProperties))
+		assert.ElementsMatch(t, toolNames, []string{"query", "time", "timeout", "limit"})
+
+		queryRangeProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusQueryRange"))
+		toolNames = slices.Collect(maps.Keys(queryRangeProperties))
+		assert.ElementsMatch(t, toolNames, []string{"query", "start", "end", "step", "timeout", "limit"})
+
+		labelNamesProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusLabelNames"))
+		toolNames = slices.Collect(maps.Keys(labelNamesProperties))
+		assert.ElementsMatch(t, toolNames, []string{"match", "limit"})
+
+		labelValuesProperties := requireMCPToolInputProperties(
+			t,
+			requireMCPTool(t, toolsResult.Tools, "prometheusLabelValues"),
+		)
+		toolNames = slices.Collect(maps.Keys(labelValuesProperties))
+		assert.ElementsMatch(t, toolNames, []string{"labelName", "match", "limit"})
+
+		metadataProperties := requireMCPToolInputProperties(t, requireMCPTool(t, toolsResult.Tools, "prometheusMetadata"))
+		toolNames = slices.Collect(maps.Keys(metadataProperties))
+		assert.ElementsMatch(t, toolNames, []string{"metric", "limit"})
+	})
+
+	t.Run("prometheusQuery", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusQuery", map[string]any{
+			"query": "reliability{project=\"" + project.GetName() + "\"}",
+			"time":  time.Now().Add(-time.Hour).UTC().Format(time.RFC3339),
+			"limit": 1,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			ResultType string `json:"resultType"`
+			Result     any    `json:"result"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, "vector", output.ResultType)
+		assert.NotNil(t, output.Result)
+	})
+
+	t.Run("prometheusQueryRange", func(t *testing.T) {
+		end := time.Now().Add(-time.Hour).Truncate(time.Minute).UTC()
+		start := end.Add(-time.Minute)
+
+		result := callMCPTool(t, session, "prometheusQueryRange", map[string]any{
+			"query": "remaining_error_budget{project=\"" + project.GetName() + "\"}",
+			"start": start.Format(time.RFC3339),
+			"end":   end.Format(time.RFC3339),
+			"step":  "1m",
+			"limit": 1,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			ResultType string `json:"resultType"`
+			Result     any    `json:"result"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, "matrix", output.ResultType)
+		assert.NotNil(t, output.Result)
+	})
+
+	t.Run("prometheusLabelNames", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelNames", map[string]any{})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Names []string `json:"names"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusLabelNames, output.Names)
+	})
+
+	t.Run("prometheusLabelNames with limit", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelNames", map[string]any{
+			"limit": 3,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Names []string `json:"names"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusLabelNames[:3], output.Names)
+	})
+
+	t.Run("prometheusLabelNames with match", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelNames", map[string]any{
+			"match": []string{"reliability{project=\"" + project.GetName() + "\"}"},
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Names []string `json:"names"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusReliabilityMetricLabelNames, output.Names)
+	})
+
+	t.Run("prometheusLabelNames with match and limit", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelNames", map[string]any{
+			"match": []string{"reliability{project=\"" + project.GetName() + "\"}"},
+			"limit": 2,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Names []string `json:"names"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusReliabilityMetricLabelNames[:2], output.Names)
+	})
+
+	t.Run("prometheusLabelValues missing labelName", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelValues", map[string]any{})
+		content := mustMarshalJSON(t, result.Content)
+		require.True(t, result.IsError, content)
+		assert.Contains(t, content, "required: missing properties: [\\\"labelName\\\"]")
+	})
+
+	t.Run("prometheusLabelValues", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelValues", map[string]any{
+			"labelName": "__name__",
+		})
+		require.False(t, result.IsError, mustMarshalJSON(t, result.Content))
+
+		var output struct {
+			Values []string `json:"values"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusMetricNames, output.Values)
+	})
+
+	t.Run("prometheusLabelValues with limit", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelValues", map[string]any{
+			"labelName": "__name__",
+			"limit":     4,
+		})
+		require.False(t, result.IsError, mustMarshalJSON(t, result.Content))
+
+		var output struct {
+			Values []string `json:"values"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusMetricNames[:4], output.Values)
+	})
+
+	t.Run("prometheusLabelValues with match", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusLabelValues", map[string]any{
+			"labelName": "__name__",
+			"match":     []string{"reliability{project=\"" + project.GetName() + "\"}"},
+		})
+		require.False(t, result.IsError, mustMarshalJSON(t, result.Content))
+
+		var output struct {
+			Values []string `json:"values"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, []string{"reliability"}, output.Values)
+	})
+
+	t.Run("prometheusMetadata", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusMetadata", map[string]any{})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Metadata map[string][]promv1.Metadata `json:"metadata"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusMetricNames, slices.Sorted(maps.Keys(output.Metadata)))
+	})
+
+	t.Run("prometheusMetadata with limit", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusMetadata", map[string]any{
+			"limit": 3,
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Metadata map[string][]promv1.Metadata `json:"metadata"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, allPrometheusMetricNames[:3], slices.Sorted(maps.Keys(output.Metadata)))
+	})
+
+	t.Run("prometheusMetadata with metric name", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusMetadata", map[string]any{
+			"metric": "composite_max_delay",
+		})
+		require.False(t, result.IsError)
+
+		var output struct {
+			Metadata map[string][]promv1.Metadata `json:"metadata"`
+		}
+		unmarshalMCPTextContent(t, result, &output)
+		assert.Equal(t, map[string][]promv1.Metadata{
+			"composite_max_delay": {{
+				Type: promv1.MetricTypeGauge,
+				Help: "Composite max delay setting in seconds.",
+				Unit: "seconds",
+			}},
+		}, output.Metadata)
 	})
 
 	t.Run("listProjects", func(t *testing.T) {
@@ -709,6 +922,29 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 	})
 }
 
+func requireMCPTool(t *testing.T, tools []*mcp.Tool, name string) *mcp.Tool {
+	t.Helper()
+
+	for _, tool := range tools {
+		if tool.Name == name {
+			return tool
+		}
+	}
+	require.Failf(t, "MCP tool not found", "%s tool should be registered", name)
+	return nil
+}
+
+func requireMCPToolInputProperties(t *testing.T, tool *mcp.Tool) map[string]any {
+	t.Helper()
+
+	inputSchema, ok := tool.InputSchema.(map[string]any)
+	require.True(t, ok, "Expected input schema for %s", tool.Name)
+
+	properties, ok := inputSchema["properties"].(map[string]any)
+	require.True(t, ok, "Expected input properties for %s", tool.Name)
+	return properties
+}
+
 func requireMCPListToolItems(
 	t *testing.T,
 	session *mcp.ClientSession,
@@ -865,4 +1101,11 @@ type testLogWriter struct {
 func (w *testLogWriter) Write(p []byte) (n int, err error) {
 	w.t.Log(string(p))
 	return len(p), nil
+}
+
+func mustMarshalJSON(t *testing.T, v any) string {
+	t.Helper()
+	data, err := json.Marshal(v)
+	require.NoError(t, err)
+	return string(data)
 }
