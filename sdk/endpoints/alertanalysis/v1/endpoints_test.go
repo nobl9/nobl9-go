@@ -57,6 +57,66 @@ func TestEndpoints_StartAnalysis(t *testing.T) {
 	assert.Equal(t, endTime, payload.EndTime)
 }
 
+func TestEndpoints_CalculateAlertPolicy(t *testing.T) {
+	client := &fakeClient{
+		responseBody: `{
+			"alertPolicies": [{
+				"apiVersion": "n9/v1alpha",
+				"kind": "AlertPolicy",
+				"metadata": {
+					"name": "alert-policy",
+					"project": "project-name"
+				},
+				"spec": {
+					"severity": "High",
+					"conditions": [{
+						"measurement": "averageBurnRate",
+						"value": 2,
+						"alertingWindow": "10m"
+					}],
+					"alertMethods": null
+				}
+			}],
+			"adjustedStartTime": "2026-05-01T12:00:00Z",
+			"adjustedEndTime": "2026-05-02T12:00:00Z",
+			"remainingBudgetAtStart": 99.9,
+			"remainingBudgetAtEnd": 99.8
+		}`,
+	}
+	endpoints := NewEndpoints(client)
+	startTime := time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)
+	endTime := time.Date(2026, 5, 2, 12, 0, 0, 0, time.UTC)
+
+	response, err := endpoints.CalculateAlertPolicy(t.Context(), CalculateAlertPolicyRequest{
+		SLO:       "slo-name",
+		Project:   "project-name",
+		Objective: "objective-name",
+		StartTime: startTime,
+		EndTime:   endTime,
+	})
+
+	require.NoError(t, err)
+	require.Len(t, response.AlertPolicies, 1)
+	assert.Equal(t, "alert-policy", response.AlertPolicies[0].Metadata.Name)
+	assert.Equal(t, startTime, response.AdjustedStartTime)
+	assert.Equal(t, endTime, response.AdjustedEndTime)
+	assert.Equal(t, 99.9, response.RemainingBudgetAtStart)
+	assert.Equal(t, 99.8, response.RemainingBudgetAtEnd)
+
+	require.Len(t, client.requests, 1)
+	req := client.requests[0]
+	assert.Equal(t, http.MethodPost, req.Method)
+	assert.Equal(t, "/api/alerting/v1/calculate-alert-policy", req.URL.Path)
+
+	var payload CalculateAlertPolicyRequest
+	require.NoError(t, json.NewDecoder(req.Body).Decode(&payload))
+	assert.Equal(t, "slo-name", payload.SLO)
+	assert.Equal(t, "project-name", payload.Project)
+	assert.Equal(t, "objective-name", payload.Objective)
+	assert.Equal(t, startTime, payload.StartTime)
+	assert.Equal(t, endTime, payload.EndTime)
+}
+
 func TestEndpoints_GetAnalysis(t *testing.T) {
 	client := &fakeClient{
 		responseBody: `{
@@ -78,6 +138,9 @@ func TestEndpoints_GetAnalysis(t *testing.T) {
 					"alertMethods": null
 				}
 			},
+			"slo": "slo-name",
+			"project": "project-name",
+			"objective": "objective-name",
 			"startTime": "2026-05-01T12:00:00Z",
 			"endTime": "2026-05-02T12:00:00Z",
 			"status": "done",
@@ -104,6 +167,9 @@ func TestEndpoints_GetAnalysis(t *testing.T) {
 	})
 
 	require.NoError(t, err)
+	assert.Equal(t, "slo-name", response.SLO)
+	assert.Equal(t, "project-name", response.Project)
+	assert.Equal(t, "objective-name", response.Objective)
 	assert.Equal(t, AlertAnalysisStatusDone, response.Status)
 	assert.Equal(t, AnalysisReadinessStatusReady, response.DetectionStatus)
 	assert.Equal(t, AnalysisReadinessStatusReady, response.TimeseriesStatus)

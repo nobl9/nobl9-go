@@ -11,9 +11,20 @@ type StartAnalysisResponse struct {
 	AnalysisID string `json:"analysisId"`
 }
 
+type CalculateAlertPolicyResponse struct {
+	AlertPolicies          []alertpolicy.AlertPolicy `json:"alertPolicies"`
+	AdjustedStartTime      time.Time                 `json:"adjustedStartTime"`
+	AdjustedEndTime        time.Time                 `json:"adjustedEndTime"`
+	RemainingBudgetAtStart float64                   `json:"remainingBudgetAtStart"`
+	RemainingBudgetAtEnd   float64                   `json:"remainingBudgetAtEnd"`
+}
+
 type GetAnalysisResponse struct {
 	Alerts           []alert.Alert           `json:"alerts"`
 	AlertPolicy      alertpolicy.AlertPolicy `json:"alertPolicy"`
+	SLO              string                  `json:"slo"`
+	Project          string                  `json:"project"`
+	Objective        string                  `json:"objective"`
 	StartTime        time.Time               `json:"startTime"`
 	EndTime          time.Time               `json:"endTime"`
 	Status           AlertAnalysisStatus     `json:"status"`

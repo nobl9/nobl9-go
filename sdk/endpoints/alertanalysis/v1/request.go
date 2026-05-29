@@ -15,6 +15,14 @@ type StartAnalysisRequest struct {
 	AlertPolicy alertpolicy.AlertPolicy `json:"alertPolicy"`
 }
 
+type CalculateAlertPolicyRequest struct {
+	SLO       string    `json:"slo"`
+	Project   string    `json:"project"`
+	Objective string    `json:"objective"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+}
+
 type GetAnalysisRequest struct {
 	AnalysisID        string
 	From              *time.Time
