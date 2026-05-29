@@ -138,6 +138,31 @@ func TestDynatrace_CountMetricsQueryType(t *testing.T) {
 
 		testutils.AssertNoError(t, slo, err)
 	})
+	t.Run("allows omitted and explicit default dql intervals for good and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Dynatrace.DQL.Interval = ""
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Dynatrace.DQL.Interval = "1m"
+
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("rejects different dql intervals for good and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.Dynatrace)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.Dynatrace.DQL.Interval = "16s"
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validDynatraceDQLMetricSpec()
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.Dynatrace.DQL.Interval = "16m"
+
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Code: rules.ErrorCodeEqualTo,
+		})
+	})
 	t.Run("rejects metric selector good and dql total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.Dynatrace)
 		slo.Spec.Objectives[0].CountMetrics.TotalMetric = validDynatraceDQLMetricSpec()
