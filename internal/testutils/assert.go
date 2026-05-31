@@ -14,7 +14,7 @@ import (
 )
 
 type ExpectedError struct {
-	Prop            jsonpath.Path  `json:"property"`
+	Prop            string         `json:"property"`
 	Code            govy.ErrorCode `json:"code,omitempty"`
 	Message         string         `json:"message,omitempty"`
 	ContainsMessage string         `json:"containsMessage,omitempty"`
@@ -70,7 +70,7 @@ func AssertContainsErrors(
 		for _, actual := range objErr.Errors {
 			var propErr *govy.PropertyError
 			require.ErrorAs(t, actual, &propErr)
-			if !propErr.PropertyPath.Equal(expected.Prop) {
+			if propErr.PropertyPath.String() != expected.Prop {
 				continue
 			}
 			if expected.IsKeyError != propErr.IsKeyError {
@@ -110,9 +110,14 @@ func AssertContainsErrors(
 	}
 }
 
-func PrependPropertyPath(errs []ExpectedError, path jsonpath.Path) []ExpectedError {
+func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
+	prefix := jsonpath.Parse(path)
 	for i := range errs {
-		errs[i].Prop = path.Join(errs[i].Prop)
+		if errs[i].Prop == "" {
+			errs[i].Prop = prefix.String()
+			continue
+		}
+		errs[i].Prop = prefix.Join(jsonpath.Parse(errs[i].Prop)).String()
 	}
 	return errs
 }

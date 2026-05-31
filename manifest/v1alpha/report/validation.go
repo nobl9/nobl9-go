@@ -32,32 +32,63 @@ var metadataValidation = govy.New[Metadata](
 
 var specValidation = govy.New[Spec](
 	govy.For(govy.GetSelf[Spec]()).
-		Rules(govy.NewRule(func(s Spec) error {
-			reportTypeCounter := 0
-			if s.SystemHealthReview != nil {
-				reportTypeCounter++
-			}
-			if s.SLOHistory != nil {
-				reportTypeCounter++
-			}
-			if s.ErrorBudgetStatus != nil {
-				reportTypeCounter++
-			}
-			if reportTypeCounter != 1 {
-				return errors.New("exactly one report type configuration is required")
-			}
-			return nil
-		})),
+		Rules(
+			govy.NewRule(func(s Spec) error {
+				reportTypeCounter := 0
+				if s.SystemHealthReview != nil {
+					reportTypeCounter++
+				}
+				if s.SLOHistory != nil {
+					reportTypeCounter++
+				}
+				if s.ErrorBudgetStatus != nil {
+					reportTypeCounter++
+				}
+				if s.ReliabilityRollup != nil {
+					reportTypeCounter++
+				}
+				if reportTypeCounter != 1 {
+					return errors.New("exactly one report type configuration is required")
+				}
+				return nil
+			}),
+			govy.NewRule(func(s Spec) error {
+				if s.ReliabilityRollup == nil {
+					return nil
+				}
+				hasHierarchy := len(s.ReliabilityRollup.CustomHierarchy) > 0
+				switch {
+				case s.Filters != nil && hasHierarchy:
+					return errors.New(
+						"spec.filters and spec.reliabilityRollup.customHierarchy are mutually exclusive",
+					)
+				case s.Filters == nil && !hasHierarchy:
+					return errors.New(
+						"spec.filters or spec.reliabilityRollup.customHierarchy is required",
+					)
+				}
+				return nil
+			}),
+		),
 	govy.ForPointer(func(s Spec) *Filters { return s.Filters }).
 		WithName("filters").
-		Required().
 		Include(filtersValidation),
+	govy.ForPointer(func(s Spec) *Filters { return s.Filters }).
+		WithName("filters").
+		When(
+			func(s Spec) bool { return s.ReliabilityRollup == nil },
+			govy.WhenDescription("report is not a reliability rollup"),
+		).
+		Required(),
 	govy.ForPointer(func(s Spec) *SLOHistoryConfig { return s.SLOHistory }).
 		WithName("sloHistory").
 		Include(sloHistoryValidation),
 	govy.ForPointer(func(s Spec) *SystemHealthReviewConfig { return s.SystemHealthReview }).
 		WithName("systemHealthReview").
 		Include(systemHealthReviewValidation),
+	govy.ForPointer(func(s Spec) *ReliabilityRollupConfig { return s.ReliabilityRollup }).
+		WithName("reliabilityRollup").
+		Include(reliabilityRollupValidation),
 )
 
 var filtersValidation = govy.New[Filters](

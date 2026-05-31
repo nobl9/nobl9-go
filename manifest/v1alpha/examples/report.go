@@ -218,6 +218,84 @@ func Report() []Example {
 				},
 			),
 		},
+		{
+			Variant:    "Reliability Rollup",
+			SubVariant: "filters",
+			Object: report.New(
+				report.Metadata{
+					Name:        "reliability-rollup-report",
+					DisplayName: "Reliability Rollup",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+						Services: []report.Service{
+							{Name: "service-1", Project: "project-1"},
+						},
+					},
+					ReliabilityRollup: &report.ReliabilityRollupConfig{
+						TimeFrame: report.ReliabilityRollupTimeFrame{
+							Rolling: &report.RollingTimeFrame{
+								Repeat: report.Repeat{
+									Unit:  ptr("Week"),
+									Count: ptr(1),
+								},
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+					},
+				},
+			),
+		},
+		{
+			Variant:    "Reliability Rollup",
+			SubVariant: "custom hierarchy",
+			Object: report.New(
+				report.Metadata{
+					Name:        "reliability-rollup-report",
+					DisplayName: "Reliability Rollup",
+				},
+				report.Spec{
+					Shared: true,
+					ReliabilityRollup: &report.ReliabilityRollupConfig{
+						TimeFrame: report.ReliabilityRollupTimeFrame{
+							Rolling: &report.RollingTimeFrame{
+								Repeat: report.Repeat{
+									Unit:  ptr("Week"),
+									Count: ptr(4),
+								},
+							},
+							TimeZone: "America/New_York",
+						},
+						CustomHierarchy: []report.HierarchyFolder{
+							{
+								DisplayName: "Platform",
+								Children: []report.HierarchyFolder{
+									{
+										DisplayName: "Compute",
+										SLOs: []report.HierarchySLORef{
+											{Name: "cluster-availability", Project: "infrastructure"},
+										},
+									},
+								},
+							},
+							{
+								DisplayName: "Application",
+								SLOs: []report.HierarchySLORef{
+									{Name: "api-availability", Project: "core-platform"},
+									{
+										Name:        "api-latency",
+										Project:     "core-platform",
+										DisplayName: "API latency",
+									},
+								},
+							},
+						},
+					},
+				},
+			),
+		},
 	}
 	return newExampleSlice(examples...)
 }
