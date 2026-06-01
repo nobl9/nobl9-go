@@ -28,6 +28,8 @@ func Test_AlertAnalysis_V1(t *testing.T) {
 	endTime := time.Now().UTC().Truncate(time.Second)
 
 	t.Run("calculate alert policy", func(t *testing.T) {
+		t.Parallel()
+
 		response, err := tryExecuteRequest(t, func() (alertanalysisV1.CalculateAlertPolicyResponse, error) {
 			return client.AlertAnalysis().V1().CalculateAlertPolicy(t.Context(), alertanalysisV1.CalculateAlertPolicyRequest{
 				SLO:       slo.Metadata.Name,
@@ -45,6 +47,8 @@ func Test_AlertAnalysis_V1(t *testing.T) {
 	})
 
 	t.Run("start get and retry analysis", func(t *testing.T) {
+		t.Parallel()
+
 		startResponse, err := tryExecuteRequest(t, func() (alertanalysisV1.StartAnalysisResponse, error) {
 			return client.AlertAnalysis().V1().StartAnalysis(t.Context(), alertanalysisV1.StartAnalysisRequest{
 				SLO:         slo.Metadata.Name,
