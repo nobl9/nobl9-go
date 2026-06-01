@@ -27,39 +27,39 @@ type GetAnalysisResponse struct {
 	Objective        string                  `json:"objective"`
 	StartTime        time.Time               `json:"startTime"`
 	EndTime          time.Time               `json:"endTime"`
-	Status           AlertAnalysisStatus     `json:"status"`
-	DetectionStatus  AnalysisReadinessStatus `json:"detectionStatus"`
-	TimeseriesStatus AnalysisReadinessStatus `json:"timeseriesStatus"`
-	Timeseries       []AlertingTimeseries    `json:"timeseries"`
+	Status           Status                  `json:"status"`
+	DetectionStatus  ReadinessStatus         `json:"detectionStatus"`
+	TimeseriesStatus ReadinessStatus         `json:"timeseriesStatus"`
+	Timeseries       []Timeseries            `json:"timeseries"`
 }
 
-type AlertAnalysisStatus string
+type Status string
 
 const (
-	AlertAnalysisStatusExportingTimeseries      AlertAnalysisStatus = "exporting_timeseries"
-	AlertAnalysisStatusCalculatingAlertsmetrics AlertAnalysisStatus = "calculating_alertsmetrics"
-	AlertAnalysisStatusCalculatingAlerts        AlertAnalysisStatus = "calculating_alerts"
-	AlertAnalysisStatusStoreAlerts              AlertAnalysisStatus = "store_alerts"
-	AlertAnalysisStatusCreatingVersion          AlertAnalysisStatus = "creating_version"
-	AlertAnalysisStatusDownsampling             AlertAnalysisStatus = "downsampling"
-	AlertAnalysisStatusUpdatingTimeseries       AlertAnalysisStatus = "updating_timeseries"
-	AlertAnalysisStatusEnablingVersion          AlertAnalysisStatus = "enabling_version"
-	AlertAnalysisStatusDone                     AlertAnalysisStatus = "done"
-	AlertAnalysisStatusCanceled                 AlertAnalysisStatus = "canceled"
-	AlertAnalysisStatusError                    AlertAnalysisStatus = "error"
+	StatusExportingTimeseries      Status = "exporting_timeseries"
+	StatusCalculatingAlertsmetrics Status = "calculating_alertsmetrics"
+	StatusCalculatingAlerts        Status = "calculating_alerts"
+	StatusStoreAlerts              Status = "store_alerts"
+	StatusCreatingVersion          Status = "creating_version"
+	StatusDownsampling             Status = "downsampling"
+	StatusUpdatingTimeseries       Status = "updating_timeseries"
+	StatusEnablingVersion          Status = "enabling_version"
+	StatusDone                     Status = "done"
+	StatusCanceled                 Status = "canceled"
+	StatusError                    Status = "error"
 )
 
-type AnalysisReadinessStatus string
+type ReadinessStatus string
 
 const (
-	AnalysisReadinessStatusPending  AnalysisReadinessStatus = "pending"
-	AnalysisReadinessStatusRunning  AnalysisReadinessStatus = "running"
-	AnalysisReadinessStatusReady    AnalysisReadinessStatus = "ready"
-	AnalysisReadinessStatusCanceled AnalysisReadinessStatus = "canceled"
-	AnalysisReadinessStatusError    AnalysisReadinessStatus = "error"
+	ReadinessStatusPending  ReadinessStatus = "pending"
+	ReadinessStatusRunning  ReadinessStatus = "running"
+	ReadinessStatusReady    ReadinessStatus = "ready"
+	ReadinessStatusCanceled ReadinessStatus = "canceled"
+	ReadinessStatusError    ReadinessStatus = "error"
 )
 
-type AlertingTimeseries struct {
+type Timeseries struct {
 	Measurement string         `json:"measurement"`
 	Timestamps  []int64        `json:"timestamps"`
 	Values      []float64      `json:"values"`

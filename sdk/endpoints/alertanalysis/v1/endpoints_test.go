@@ -170,9 +170,9 @@ func TestEndpoints_GetAnalysis(t *testing.T) {
 	assert.Equal(t, "slo-name", response.SLO)
 	assert.Equal(t, "project-name", response.Project)
 	assert.Equal(t, "objective-name", response.Objective)
-	assert.Equal(t, AlertAnalysisStatusDone, response.Status)
-	assert.Equal(t, AnalysisReadinessStatusReady, response.DetectionStatus)
-	assert.Equal(t, AnalysisReadinessStatusReady, response.TimeseriesStatus)
+	assert.Equal(t, StatusDone, response.Status)
+	assert.Equal(t, ReadinessStatusReady, response.DetectionStatus)
+	assert.Equal(t, ReadinessStatusReady, response.TimeseriesStatus)
 	require.Len(t, response.Timeseries, 1)
 	assert.Equal(t, "remaining_budget", response.Timeseries[0].Measurement)
 
