@@ -35,8 +35,8 @@ func (c *Client) newPrometheusAPI(ctx context.Context) (prometheusEndpointsV1.AP
 }
 
 type prometheusAPIStore struct {
-	mu  sync.Mutex
 	api prometheusEndpointsV1.API
+	mu  sync.Mutex
 }
 
 func (c *Client) createPrometheusAPI(ctx context.Context) (prometheusEndpointsV1.API, error) {
