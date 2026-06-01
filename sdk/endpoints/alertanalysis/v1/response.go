@@ -30,7 +30,7 @@ type GetAnalysisResponse struct {
 	Status           AlertAnalysisStatus     `json:"status"`
 	DetectionStatus  AnalysisReadinessStatus `json:"detectionStatus"`
 	TimeseriesStatus AnalysisReadinessStatus `json:"timeseriesStatus"`
-	Timeseries       []AlertingTimeseries    `json:"timeseries,omitempty"`
+	Timeseries       []AlertingTimeseries    `json:"timeseries"`
 }
 
 type AlertAnalysisStatus string
@@ -63,5 +63,5 @@ type AlertingTimeseries struct {
 	Measurement string         `json:"measurement"`
 	Timestamps  []int64        `json:"timestamps"`
 	Values      []float64      `json:"values"`
-	Attributes  map[string]any `json:"attributes,omitempty"`
+	Attributes  map[string]any `json:"attributes"`
 }
