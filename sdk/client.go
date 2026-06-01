@@ -39,7 +39,7 @@ const (
 // It provides access to the following APIs:
 //   - [Client.Objects] for accessing the [manifest.Object] API.
 //   - [Client.AuthData] for accessing the authentication APIs.
-//   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer analysis APIs.
+//   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
 //   - [Client.Prometheus] for accessing the Prometheus-compatible API.
 //
@@ -100,7 +100,7 @@ func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
 }
 
-// AlertAnalysis is used to access specific Alert Policy Analyzer analysis API version.
+// AlertAnalysis is used to access specific Alert Policy Analyzer API version.
 func (c *Client) AlertAnalysis() alertanalysis.Versions {
 	return alertanalysis.NewVersions(c)
 }
