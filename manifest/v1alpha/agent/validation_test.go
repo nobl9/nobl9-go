@@ -8,8 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -37,11 +35,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, method, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("apiVersion"),
+			Prop: "apiVersion",
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("kind"),
+			Prop: "kind",
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -59,22 +57,22 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, agent, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.name"),
+			Prop: "metadata.name",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.displayName"),
+			Prop: "metadata.displayName",
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.project"),
+			Prop: "metadata.project",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Agent](t, jsonpath.Parse("metadata.annotations")) {
+	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Agent](t, "metadata.annotations") {
 		t.Run(name, func(t *testing.T) {
 			svc := validAgent(v1alpha.Prometheus)
 			svc.Metadata.Annotations = test.Annotations
@@ -89,7 +87,7 @@ func TestValidate_Spec(t *testing.T) {
 		agent.Spec.Description = strings.Repeat("A", 2000)
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.description"),
+			Prop: "spec.description",
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
 	})
@@ -98,7 +96,7 @@ func TestValidate_Spec(t *testing.T) {
 		agent.Spec.Prometheus = nil
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.New().Name("spec"),
+			Prop: "spec",
 			Code: errCodeExactlyOneDataSourceType,
 		})
 	})
@@ -113,7 +111,7 @@ func TestValidate_Spec(t *testing.T) {
 			agent.Spec.Prometheus = validAgentSpec(v1alpha.Prometheus).Prometheus
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.New().Name("spec"),
+				Prop: "spec",
 				Code: errCodeExactlyOneDataSourceType,
 			})
 		}
@@ -138,7 +136,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		agent.Spec.ReleaseChannel = -1
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.releaseChannel"),
+			Prop: "spec.releaseChannel",
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -151,11 +149,11 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.queryDelay.value"),
+				Prop: "spec.queryDelay.value",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.queryDelay.unit"),
+				Prop: "spec.queryDelay.unit",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -187,7 +185,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 			}}
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.queryDelay.unit"),
+				Prop: "spec.queryDelay.unit",
 				Code: rules.ErrorCodeOneOf,
 			})
 		}
@@ -201,7 +199,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.queryDelay"),
+			Prop: "spec.queryDelay",
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -213,7 +211,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 		}}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.queryDelay"),
+			Prop: "spec.queryDelay",
 			Code: errCodeQueryDelayOutOfBounds,
 		})
 	})
@@ -228,7 +226,7 @@ func TestValidateSpec_QueryDelay(t *testing.T) {
 				}}
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse("spec.queryDelay"),
+					Prop: "spec.queryDelay",
 					Code: errCodeQueryDelayOutOfBounds,
 				})
 			})
@@ -258,11 +256,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
+				Prop: "spec.historicalDataRetrieval.maxDuration",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
+				Prop: "spec.historicalDataRetrieval.defaultDuration",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -277,11 +275,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
+					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
+					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -291,11 +289,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -308,11 +306,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				},
 			},
@@ -325,11 +323,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 3,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.value"),
+					Prop: "spec.historicalDataRetrieval.maxDuration.value",
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.value"),
+					Prop: "spec.historicalDataRetrieval.defaultDuration.value",
 					Code: rules.ErrorCodeLessThanOrEqualTo,
 				},
 			},
@@ -342,11 +340,11 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			ErrorsCount: 2,
 			Errors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration.unit"),
+					Prop: "spec.historicalDataRetrieval.maxDuration.unit",
 					Code: rules.ErrorCodeOneOf,
 				},
 				{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration.unit"),
+					Prop: "spec.historicalDataRetrieval.defaultDuration.unit",
 					Code: rules.ErrorCodeOneOf,
 				},
 			},
@@ -391,7 +389,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 		}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.historicalDataRetrieval"),
+			Prop:    "spec.historicalDataRetrieval",
 			Message: "historical data retrieval is not supported for Generic Agent",
 		})
 	})
@@ -410,7 +408,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 			}
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-				Prop:    jsonpath.Parse("spec.historicalDataRetrieval.defaultDuration"),
+				Prop:    "spec.historicalDataRetrieval.defaultDuration",
 				Message: "must be less than or equal to 'maxDuration' (1 Hour)",
 			})
 		})
@@ -435,7 +433,7 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 				}
 				objErr := validate(agent)
 				testutils.AssertContainsErrors(t, agent, objErr, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse("spec.historicalDataRetrieval.maxDuration"),
+					Prop: "spec.historicalDataRetrieval.maxDuration",
 					Message: fmt.Sprintf("must be less than or equal to %d %s",
 						*maxDuration.Value, maxDuration.Unit),
 				})
@@ -466,7 +464,7 @@ func TestValidateSpec_URLOnlyAgents(t *testing.T) {
 				setURLValue(t, &agent.Spec, typ.String(), "")
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse(fmt.Sprintf("spec.%s.url", propName)),
+					Prop: fmt.Sprintf("spec.%s.url", propName),
 					Code: rules.ErrorCodeRequired,
 				})
 			})
@@ -475,7 +473,7 @@ func TestValidateSpec_URLOnlyAgents(t *testing.T) {
 				setURLValue(t, &agent.Spec, typ.String(), "invalid")
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse(fmt.Sprintf("spec.%s.url", propName)),
+					Prop: fmt.Sprintf("spec.%s.url", propName),
 					Code: rules.ErrorCodeStringURL,
 				})
 			})
@@ -524,7 +522,7 @@ func TestValidateSpec_PrometheusLikeAgents(t *testing.T) {
 				setStepValue(t, &agent.Spec, field, 9)
 				err := validate(agent)
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse(fmt.Sprintf("spec.%s.step", propName)),
+					Prop: fmt.Sprintf("spec.%s.step", propName),
 					Code: rules.ErrorCodeGreaterThanOrEqualTo,
 				})
 			})
@@ -543,7 +541,7 @@ func TestValidateSpec_Datadog(t *testing.T) {
 		agent.Spec.Datadog.Site = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.datadog.site"),
+			Prop: "spec.datadog.site",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -552,7 +550,7 @@ func TestValidateSpec_Datadog(t *testing.T) {
 		agent.Spec.Datadog.Site = "invalid"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.datadog.site"),
+			Prop: "spec.datadog.site",
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
@@ -569,7 +567,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		agent.Spec.NewRelic.AccountID = 0
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.newRelic.accountId"),
+			Prop: "spec.newRelic.accountId",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -578,7 +576,7 @@ func TestValidateSpec_NewRelic(t *testing.T) {
 		agent.Spec.NewRelic.AccountID = -1
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.newRelic.accountId"),
+			Prop: "spec.newRelic.accountId",
 			Code: rules.ErrorCodeGreaterThanOrEqualTo,
 		})
 	})
@@ -598,11 +596,11 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.lightstep.organization"),
+				Prop: "spec.lightstep.organization",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.lightstep.project"),
+				Prop: "spec.lightstep.project",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -612,7 +610,7 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 		agent.Spec.Lightstep.URL = "h ttp"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.lightstep.url"),
+			Prop: "spec.lightstep.url",
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -650,7 +648,7 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 		agent.Spec.SplunkObservability.Realm = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.splunkObservability.realm"),
+			Prop: "spec.splunkObservability.realm",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -669,7 +667,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		agent.Spec.Dynatrace.PlatformURL = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.dynatrace"),
+			Prop: "spec.dynatrace",
 			Code: rules.ErrorCodeOneOfProperties,
 		})
 	})
@@ -685,7 +683,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		agent.Spec.Dynatrace.URL = "h ttp"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.dynatrace.url"),
+			Prop: "spec.dynatrace.url",
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -694,7 +692,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		agent.Spec.Dynatrace.PlatformURL = "h ttp"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.dynatrace.platformUrl"),
+			Prop: "spec.dynatrace.platformUrl",
 			Code: rules.ErrorCodeURL,
 		})
 	})
@@ -703,7 +701,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		agent.Spec.Dynatrace.PlatformURL = "http://nobl9.com"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.dynatrace.platformUrl"),
+			Prop: "spec.dynatrace.platformUrl",
 			Code: errCodeHTTPSSchemeRequired,
 		})
 	})
@@ -753,7 +751,7 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 				testutils.AssertNoError(t, agent, err)
 			} else {
 				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-					Prop: jsonpath.Parse("spec.dynatrace.url"),
+					Prop: "spec.dynatrace.url",
 					ContainsMessage: "Dynatrace SaaS URL (live.dynatrace.com)" +
 						" requires https scheme and empty URL path",
 				})
@@ -776,11 +774,11 @@ func TestValidateSpec_AmazonPrometheus(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.amazonPrometheus.url"),
+				Prop: "spec.amazonPrometheus.url",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.amazonPrometheus.region"),
+				Prop: "spec.amazonPrometheus.region",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -792,11 +790,11 @@ func TestValidateSpec_AmazonPrometheus(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.amazonPrometheus.url"),
+				Prop: "spec.amazonPrometheus.url",
 				Code: rules.ErrorCodeStringURL,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.amazonPrometheus.region"),
+				Prop: "spec.amazonPrometheus.region",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 		)
@@ -814,7 +812,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 		agent.Spec.AzureMonitor.TenantID = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.azureMonitor.tenantId"),
+			Prop: "spec.azureMonitor.tenantId",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -823,7 +821,7 @@ func TestValidateSpec_AzureMonitor(t *testing.T) {
 		agent.Spec.AzureMonitor.TenantID = "invalid"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.azureMonitor.tenantId"),
+			Prop: "spec.azureMonitor.tenantId",
 			Code: rules.ErrorCodeStringUUID,
 		})
 	})
@@ -840,7 +838,7 @@ func TestValidateSpec_LogicMonitor(t *testing.T) {
 		agent.Spec.LogicMonitor.Account = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.logicMonitor.account"),
+			Prop: "spec.logicMonitor.account",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -857,7 +855,7 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		agent.Spec.AzurePrometheus.TenantID = "invalid"
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
+			Prop: "spec.azurePrometheus.tenantId",
 			Code: rules.ErrorCodeStringUUID,
 		})
 	})
@@ -868,11 +866,11 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.azurePrometheus.url"),
+				Prop: "spec.azurePrometheus.url",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
+				Prop: "spec.azurePrometheus.tenantId",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -884,11 +882,11 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.azurePrometheus.url"),
+				Prop: "spec.azurePrometheus.url",
 				Code: rules.ErrorCodeStringURL,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.azurePrometheus.tenantId"),
+				Prop: "spec.azurePrometheus.tenantId",
 				Code: rules.ErrorCodeStringUUID,
 			},
 		)
@@ -908,7 +906,7 @@ func TestValidateSpec_Coralogix(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.coralogix.domain"),
+				Prop: "spec.coralogix.domain",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -919,7 +917,7 @@ func TestValidateSpec_Coralogix(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.coralogix.domain"),
+				Prop: "spec.coralogix.domain",
 				Code: rules.ErrorCodeStringFQDN,
 			},
 		)
@@ -938,7 +936,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.slicUrl"),
+				Prop: "spec.atlas.slicUrl",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -949,7 +947,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.slicUrl"),
+				Prop: "spec.atlas.slicUrl",
 				Code: rules.ErrorCodeURL,
 			},
 		)
@@ -960,7 +958,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.slicUrl"),
+				Prop: "spec.atlas.slicUrl",
 				Code: errCodeHTTPOrHTTPSSchemeRequired,
 			},
 		)
@@ -971,7 +969,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.slicStep"),
+				Prop: "spec.atlas.slicStep",
 				Code: rules.ErrorCodeGreaterThanOrEqualTo,
 			},
 		)
@@ -982,7 +980,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.dataReplayUrl"),
+				Prop: "spec.atlas.dataReplayUrl",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -993,7 +991,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.dataReplayUrl"),
+				Prop: "spec.atlas.dataReplayUrl",
 				Code: rules.ErrorCodeURL,
 			},
 		)
@@ -1004,7 +1002,7 @@ func TestValidateSpec_Atlas(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.atlas.dataReplayUrl"),
+				Prop: "spec.atlas.dataReplayUrl",
 				Code: errCodeHTTPOrHTTPSSchemeRequired,
 			},
 		)

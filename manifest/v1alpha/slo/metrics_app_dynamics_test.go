@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/nobl9/govy/pkg/rules"
@@ -21,7 +19,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.GoodMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop: "spec.objectives[0].countMetrics",
 			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
@@ -33,7 +31,7 @@ func TestValidate_AppDynamics_ObjectiveLevel(t *testing.T) {
 		slo.Spec.Objectives[0].CountMetrics.BadMetric.AppDynamics.ApplicationName = ptr("different")
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.objectives[0].countMetrics"),
+			Prop: "spec.objectives[0].countMetrics",
 			Code: rules.ErrorCodeNotEqualTo,
 		})
 	})
@@ -63,11 +61,11 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			Spec: &AppDynamicsMetric{},
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.New().Name("applicationName"),
+					Prop: "applicationName",
 					Code: rules.ErrorCodeRequired,
 				},
 				{
-					Prop: jsonpath.New().Name("metricPath"),
+					Prop: "metricPath",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -78,7 +76,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 				MetricPath:      ptr("path"),
 			},
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("applicationName"),
+				Prop: "applicationName",
 				Code: rules.ErrorCodeStringNotEmpty,
 			}},
 		},
@@ -88,7 +86,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 				MetricPath:      ptr("App | This* | Latency"),
 			},
 			ExpectedErrors: []testutils.ExpectedError{{
-				Prop: jsonpath.New().Name("metricPath"),
+				Prop: "metricPath",
 				Code: errCodeAppDynamicsWildcardNotSupported,
 			}},
 		},
@@ -100,7 +98,7 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 
 			raw := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(raw, test.ExpectedErrors)
-			raw = testutils.PrependPropertyPath(raw, jsonpath.Parse("spec.objectives[0].rawMetric.query.appDynamics"))
+			raw = testutils.PrependPropertyPath(raw, "spec.objectives[0].rawMetric.query.appDynamics")
 			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors), raw...)
 		})
 		t.Run("countMetric "+name, func(t *testing.T) {
@@ -113,8 +111,8 @@ func TestValidate_AppDynamics_Invalid(t *testing.T) {
 			copy(total, test.ExpectedErrors)
 			good := make([]testutils.ExpectedError, len(test.ExpectedErrors))
 			copy(good, test.ExpectedErrors)
-			total = testutils.PrependPropertyPath(total, jsonpath.Parse("spec.objectives[0].countMetrics.total.appDynamics"))
-			good = testutils.PrependPropertyPath(good, jsonpath.Parse("spec.objectives[0].countMetrics.good.appDynamics"))
+			total = testutils.PrependPropertyPath(total, "spec.objectives[0].countMetrics.total.appDynamics")
+			good = testutils.PrependPropertyPath(good, "spec.objectives[0].countMetrics.good.appDynamics")
 			testutils.AssertContainsErrors(t, slo, err, len(test.ExpectedErrors)*2, append(total, good...)...) //nolint: makezero
 		})
 	}

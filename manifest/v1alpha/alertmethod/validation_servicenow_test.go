@@ -3,8 +3,6 @@ package alertmethod
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -41,7 +39,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow.instanceName"),
+					Prop: "spec.servicenow.instanceName",
 					Code: rules.ErrorCodeRequired,
 				},
 			},
@@ -54,7 +52,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
@@ -66,7 +64,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
@@ -80,7 +78,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
@@ -94,7 +92,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
@@ -109,7 +107,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
@@ -122,7 +120,7 @@ func TestValidate_Spec_ServiceNowAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.servicenow"),
+					Prop: "spec.servicenow",
 					Code: rules.ErrorCodeMutuallyExclusive,
 				},
 			},
