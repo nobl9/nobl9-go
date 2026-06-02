@@ -136,6 +136,18 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		assert.NotNil(t, output.Result)
 	})
 
+	t.Run("prometheusQuery bad request", func(t *testing.T) {
+		result := callMCPTool(t, session, "prometheusQuery", map[string]any{
+			"query": "sum(rate(reliability",
+		})
+		require.True(t, result.IsError)
+		assert.Contains(
+			t,
+			result.Content[0].(*mcp.TextContent).Text,
+			"Bad Request: bad_data: Field Namespace:query ERROR:1 error occurred:\n\t* line 1:20 no viable alternative at input 'sum(rate(reliability'",
+		)
+	})
+
 	t.Run("prometheusQueryRange", func(t *testing.T) {
 		end := time.Now().Add(-time.Hour).Truncate(time.Minute).UTC()
 		start := end.Add(-time.Minute)
