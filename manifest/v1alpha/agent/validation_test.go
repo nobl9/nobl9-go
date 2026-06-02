@@ -140,6 +140,26 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
+	t.Run("ClickHouse requires beta", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelAlpha,
+		} {
+			agent := validAgent(v1alpha.ClickHouse)
+			agent.Spec.ReleaseChannel = rc
+			err := validate(agent)
+			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+				Prop: "spec.releaseChannel",
+				Code: errCodeUnsupportedReleaseChannel,
+			})
+		}
+	})
+	t.Run("ClickHouse beta passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {

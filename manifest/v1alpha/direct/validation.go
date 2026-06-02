@@ -450,6 +450,13 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		)
 	}
 
+	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for ClickHouse"),
+		)
+	}
+
 	return nil
 }).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
