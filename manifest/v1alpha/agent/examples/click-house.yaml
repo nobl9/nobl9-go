@@ -2,7 +2,7 @@ apiVersion: n9/v1alpha
 kind: Agent
 metadata:
   name: click-house
-  displayName: Click House Agent
+  displayName: ClickHouse Agent
   project: default
   annotations:
     area: latency
@@ -10,7 +10,7 @@ metadata:
     region: us
     team: sales
 spec:
-  description: Example Click House Agent
+  description: Example ClickHouse Agent
   releaseChannel: beta
   clickHouse:
     url: https://clickhouse.example.com:8443

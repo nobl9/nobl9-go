@@ -2,7 +2,7 @@ apiVersion: n9/v1alpha
 kind: Direct
 metadata:
   name: click-house
-  displayName: Click House Direct
+  displayName: ClickHouse Direct
   project: default
   annotations:
     area: latency
@@ -10,7 +10,7 @@ metadata:
     region: us
     team: sales
 spec:
-  description: Example Click House Direct
+  description: Example ClickHouse Direct
   releaseChannel: beta
   clickHouse:
     url: https://clickhouse.example.com:8443
