@@ -14,7 +14,9 @@ spec:
   releaseChannel: stable
   dynatrace:
     url: https://zvf10945.live.dynatrace.com/
+    platformUrl: https://zvf10945.apps.dynatrace.com/
     dynatraceToken: "[secret]"
+    platformToken: "[secret]"
   historicalDataRetrieval:
     maxDuration:
       value: 28
