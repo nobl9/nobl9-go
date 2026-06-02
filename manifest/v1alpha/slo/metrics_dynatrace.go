@@ -126,12 +126,12 @@ func dynatraceDQLCountMetricsIntervalRule(metric string) govy.Rule[CountMetricsS
 			c.TotalMetric == nil || c.TotalMetric.Dynatrace == nil || !c.TotalMetric.Dynatrace.IsDQLConfiguration() {
 			return nil
 		}
-		numeratorInterval, err := effectiveDynatraceDQLInterval(numerator.Dynatrace.DQL)
-		if err != nil {
+		numeratorInterval, ok := effectiveDynatraceDQLInterval(numerator.Dynatrace.DQL)
+		if !ok {
 			return nil
 		}
-		totalInterval, err := effectiveDynatraceDQLInterval(c.TotalMetric.Dynatrace.DQL)
-		if err != nil {
+		totalInterval, ok := effectiveDynatraceDQLInterval(c.TotalMetric.Dynatrace.DQL)
+		if !ok {
 			return nil
 		}
 		if numeratorInterval != totalInterval {
@@ -141,11 +141,12 @@ func dynatraceDQLCountMetricsIntervalRule(metric string) govy.Rule[CountMetricsS
 	}).WithErrorCode(rules.ErrorCodeEqualTo)
 }
 
-func effectiveDynatraceDQLInterval(dql *DynatraceDQL) (time.Duration, error) {
+func effectiveDynatraceDQLInterval(dql *DynatraceDQL) (time.Duration, bool) {
 	if dql == nil || strings.TrimSpace(dql.Interval) == "" {
-		return dynatraceDQLDefaultInterval, nil
+		return dynatraceDQLDefaultInterval, true
 	}
-	return time.ParseDuration(dql.Interval)
+	interval, err := time.ParseDuration(dql.Interval)
+	return interval, err == nil
 }
 
 var dynatraceDQLValidation = govy.New[DynatraceDQL](
