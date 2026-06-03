@@ -9,14 +9,14 @@ import (
 	"os"
 )
 
-// newCustomCATransport returns an [http.RoundTripper] that trusts the certificates
-// loaded from the PEM file at caCertFile in addition to the system cert pool.
+// newCustomCATransport returns an [http.RoundTripper] that uses the PEM
+// certificates loaded from caCertFile as explicit TLS roots.
 //
-// Setting [tls.Config.RootCAs] forces Go's native [crypto/x509] verifier to be used
-// instead of the platform verifier (Security.framework on macOS, wincrypt on Windows).
-// This is the supported escape hatch for environments where the platform verifier
-// rejects a chain that Go's verifier (and the loaded roots) accept - e.g. corporate
-// laptops with MDM-installed trust profiles that interfere with SecTrustEvaluateWithError.
+// The transport starts from [x509.SystemCertPool] and appends the configured
+// bundle. On macOS and Windows, platform-verifier failures can fall through to
+// Go verification with the appended roots, so callers using this as a
+// platform-verifier escape hatch should provide a complete bundle containing
+// the public roots required by Nobl9 and Okta plus any private corporate CAs.
 func newCustomCATransport(caCertFile string) (http.RoundTripper, error) {
 	if caCertFile == "" {
 		return nil, nil

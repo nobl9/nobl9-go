@@ -62,7 +62,7 @@ func TestNewCustomCATransport(t *testing.T) {
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode)
 	})
 
-	t.Run("builds RootCAs from system pool plus configured bundle", func(t *testing.T) {
+	t.Run("builds explicit RootCAs with configured bundle", func(t *testing.T) {
 		t.Parallel()
 		srv := httptest.NewTLSServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
 		t.Cleanup(srv.Close)

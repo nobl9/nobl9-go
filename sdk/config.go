@@ -93,12 +93,15 @@ type Config struct {
 	Organization string
 	// Timeout is the timeout duration of each HTTP request run against the API.
 	Timeout time.Duration
-	// CACertFile is an optional path to a PEM-encoded bundle of CA certificates that will be
-	// trusted in addition to the system cert pool when establishing TLS connections to
-	// the Nobl9 API and IDP. When set it forces the use of Go's native x509 verifier
-	// instead of the platform verifier (Security.framework on macOS, wincrypt on Windows),
-	// which is the supported escape hatch for environments where the platform verifier
-	// rejects a chain that the Go verifier accepts.
+	// CACertFile is an optional path to a PEM-encoded CA certificate bundle used
+	// when establishing TLS connections to the Nobl9 API and IDP.
+	//
+	// On macOS and Windows, setting this field is intended to bypass platform
+	// verifier failures by giving Go an explicit root CA pool.
+	// For that use case, the file should be a complete trust bundle containing
+	// the public roots needed for Nobl9 and Okta plus any private corporate CAs.
+	// Supplying only private corporate CAs can still reject public certificate
+	// chains after the platform verifier fails.
 	CACertFile string
 	// FilesPromptEnabled is a flag that enables a prompt for applying/deleting large numbers of files.
 	// It is sloctl exclusive.
