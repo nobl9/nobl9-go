@@ -144,7 +144,8 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.Dynatrace:
 		agent.Spec.Dynatrace = &v1alphaAgent.DynatraceConfig{
-			URL: "https://zvf10945.live.dynatrace.com/",
+			URL:         "https://zvf10945.live.dynatrace.com/",
+			PlatformURL: "https://zvf10945.apps.dynatrace.com/",
 		}
 	case v1alpha.Elasticsearch:
 		agent.Spec.Elasticsearch = &v1alphaAgent.ElasticsearchConfig{
