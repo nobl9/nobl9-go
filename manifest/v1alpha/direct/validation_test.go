@@ -936,10 +936,38 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 func TestValidateSpec_Dynatrace(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
-	t.Run("required url", func(t *testing.T) {
+	t.Run("requires url or platformUrl", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.URL = ""
+		direct.Spec.Dynatrace.PlatformURL = ""
+		direct.Spec.Dynatrace.DynatraceToken = ""
+		direct.Spec.Dynatrace.PlatformToken = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace",
+			Code: rules.ErrorCodeOneOfProperties,
+		})
+	})
+	t.Run("allows empty url with platformUrl", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.URL = ""
+		direct.Spec.Dynatrace.DynatraceToken = ""
+		direct.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
+		direct.Spec.Dynatrace.PlatformToken = "secret"
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("allows empty dynatraceToken with url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.DynatraceToken = ""
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("requires url with dynatraceToken", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
 		direct.Spec.Dynatrace.URL = ""
 		err := validate(direct)
@@ -947,6 +975,44 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 			Prop: "spec.dynatrace.url",
 			Code: rules.ErrorCodeRequired,
 		})
+	})
+	t.Run("allows hidden dynatraceToken without url", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.URL = ""
+		direct.Spec.Dynatrace.DynatraceToken = v1alpha.HiddenValue
+		direct.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
+		direct.Spec.Dynatrace.PlatformToken = "secret"
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("allows empty platformToken with platformUrl", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformToken = ""
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("requires platformUrl with platformToken", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformURL = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.platformUrl",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("allows hidden platformToken without platformUrl", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformURL = ""
+		direct.Spec.Dynatrace.PlatformToken = v1alpha.HiddenValue
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("allows hidden token values with urls", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.DynatraceToken = v1alpha.HiddenValue
+		direct.Spec.Dynatrace.PlatformToken = v1alpha.HiddenValue
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
 	})
 	t.Run("invalid url", func(t *testing.T) {
 		direct := validDirect(v1alpha.Dynatrace)
@@ -963,6 +1029,24 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
 			Prop: "spec.dynatrace.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+	t.Run("invalid platformUrl", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformURL = "h ttp"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.platformUrl",
+			Code: rules.ErrorCodeURL,
+		})
+	})
+	t.Run("platformUrl must be https", func(t *testing.T) {
+		direct := validDirect(v1alpha.Dynatrace)
+		direct.Spec.Dynatrace.PlatformURL = "http://nobl9.com"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.platformUrl",
 			Code: errorCodeHTTPSSchemeRequired,
 		})
 	})
@@ -1177,7 +1261,9 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 		v1alpha.Dynatrace: {
 			Dynatrace: &DynatraceConfig{
 				URL:            "https://rxh70845.live.dynatrace.com/",
+				PlatformURL:    "https://rxh70845.apps.dynatrace.com/",
 				DynatraceToken: "secret",
+				PlatformToken:  "secret",
 			},
 		},
 		v1alpha.AzureMonitor: {
