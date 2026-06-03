@@ -646,11 +646,26 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
+	t.Run("passes with alpha or beta release channel", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			v1alpha.ReleaseChannelAlpha,
+			v1alpha.ReleaseChannelBeta,
+		} {
+			direct := validDirect(v1alpha.SplunkObservability)
+			direct.Spec.ReleaseChannel = rc
+			err := validate(direct)
+			testutils.AssertNoError(t, direct, err)
+		}
+	})
+	t.Run("rejects non-alpha/beta release channel", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop:    "spec.releaseChannel",
+			Code:    errCodeUnsupportedReleaseChannel,
+			Message: "must be 'alpha' or 'beta' for Splunk Observability",
+		})
 	})
 	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)

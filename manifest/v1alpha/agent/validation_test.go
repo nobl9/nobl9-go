@@ -638,11 +638,17 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		agent := validAgent(v1alpha.SplunkObservability)
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-		err := validate(agent)
-		testutils.AssertNoError(t, agent, err)
+	t.Run("allows any release channel (agent mode is unrestricted)", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelBeta,
+			v1alpha.ReleaseChannelAlpha,
+		} {
+			agent := validAgent(v1alpha.SplunkObservability)
+			agent.Spec.ReleaseChannel = rc
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
 	})
 	t.Run("required fields", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
