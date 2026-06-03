@@ -383,6 +383,12 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}), newMetricSpec(v1alphaSLO.SplunkObservabilityMetric{
 				Program: ptr(`data('demo.trans.count', filter=filter('api_server'), rollup='rate').mean().publish()`),
 			}))
+		case metricVariantBadRatio:
+			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SplunkObservabilityMetric{
+				Program: ptr(`data('demo.trans.count', filter=filter('api_server'), rollup='rate').count(filter=filter('error', 'true')).publish()`),
+			}), newMetricSpec(v1alphaSLO.SplunkObservabilityMetric{
+				Program: ptr(`data('demo.trans.count', filter=filter('api_server'), rollup='rate').mean().publish()`),
+			}))
 		}
 	case v1alpha.Dynatrace:
 		switch s.MetricVariant {
