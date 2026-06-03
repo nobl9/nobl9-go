@@ -51,6 +51,25 @@ var allPrometheusMetricNames = []string{
 	"time_slice_status",
 }
 
+var allPrometheusLabelNames = []string{
+	"__name__",
+	"component_objective",
+	"component_project",
+	"component_slo",
+	"objective",
+	"project",
+	"service",
+	"slo",
+}
+
+var allPrometheusReliabilityMetricLabelNames = []string{
+	"__name__",
+	"objective",
+	"project",
+	"service",
+	"slo",
+}
+
 func Test_Prometheus_V1_Query(t *testing.T) {
 	t.Parallel()
 
@@ -126,43 +145,19 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 		expected []string
 	}{
 		"all labels": {
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-				"component_slo",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusLabelNames,
 		},
 		"SLO metric labels": {
 			request: prometheusV1.LabelNamesRequest{
 				Matches: []string{"reliability"},
 			},
-			expected: []string{
-				"__name__",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusReliabilityMetricLabelNames,
 		},
 		"component metric labels": {
 			request: prometheusV1.LabelNamesRequest{
 				Matches: []string{"component_weight"},
 			},
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-				"component_slo",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusLabelNames,
 		},
 		"unknown metric": {
 			request: prometheusV1.LabelNamesRequest{
@@ -180,11 +175,7 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 			request: prometheusV1.LabelNamesRequest{
 				Limit: 3,
 			},
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-			},
+			expected: allPrometheusLabelNames[:3],
 		},
 	}
 
