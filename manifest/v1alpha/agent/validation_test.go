@@ -165,6 +165,15 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})
+	t.Run("alpha rejected for non-alpha-enabled source", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.releaseChannel",
+			Code: errCodeUnsupportedReleaseChannel,
+		})
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
