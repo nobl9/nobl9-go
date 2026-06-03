@@ -143,7 +143,6 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("ClickHouse requires beta", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
 			v1alpha.ReleaseChannelStable,
-			v1alpha.ReleaseChannelAlpha,
 		} {
 			agent := validAgent(v1alpha.ClickHouse)
 			agent.Spec.ReleaseChannel = rc
@@ -157,6 +156,12 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("ClickHouse beta passes", func(t *testing.T) {
 		agent := validAgent(v1alpha.ClickHouse)
 		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("ClickHouse alpha passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})

@@ -452,6 +452,7 @@ func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {
 	return []DataSourceType{
 		SplunkObservability,
 		Honeycomb,
+		ClickHouse,
 	}
 }
 

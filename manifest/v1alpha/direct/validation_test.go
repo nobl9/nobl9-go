@@ -173,7 +173,6 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("ClickHouse requires beta", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
 			v1alpha.ReleaseChannelStable,
-			v1alpha.ReleaseChannelAlpha,
 		} {
 			direct := validDirect(v1alpha.ClickHouse)
 			direct.Spec.ReleaseChannel = rc
@@ -187,6 +186,12 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("ClickHouse beta passes", func(t *testing.T) {
 		direct := validDirect(v1alpha.ClickHouse)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("ClickHouse alpha passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
