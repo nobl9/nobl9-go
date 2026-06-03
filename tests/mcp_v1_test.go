@@ -144,7 +144,8 @@ func Test_MCPServer_V1_ProxyStreaming(t *testing.T) {
 		assert.Contains(
 			t,
 			result.Content[0].(*mcp.TextContent).Text,
-			"Bad Request: bad_data: Field Namespace:query ERROR:1 error occurred:\n\t* line 1:20 no viable alternative at input 'sum(rate(reliability'",
+			"Bad Request: bad_data: Field Namespace:query ERROR:1 error occurred:"+
+				"\n\t* line 1:20 no viable alternative at input 'sum(rate(reliability'",
 		)
 	})
 
