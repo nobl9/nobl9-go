@@ -19,3 +19,4 @@ defaultContext = "non-default"
     url = "https://non-default-url.com"
     disableOkta = true
     organization = "non-default-organization"
+    caCertFile = "/etc/non-default/ca-bundle.pem"
