@@ -204,7 +204,8 @@ type SplunkObservabilityConfig struct {
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceConfig struct {
-	URL string `json:"url"`
+	URL         string `json:"url"`
+	PlatformURL string `json:"platformUrl,omitempty"`
 }
 
 // ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.

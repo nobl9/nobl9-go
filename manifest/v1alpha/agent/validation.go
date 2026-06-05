@@ -178,9 +178,14 @@ var (
 			Required(),
 	)
 	dynatraceValidation = govy.New[DynatraceConfig](
+		govy.For(govy.GetSelf[DynatraceConfig]()).
+			Rules(rules.OneOfProperties(map[string]func(DynatraceConfig) any{
+				"url":         func(d DynatraceConfig) any { return d.URL },
+				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
+			})),
 		govy.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
 			WithName("url").
-			Required().
+			OmitEmpty().
 			Rules(
 				rules.URL(),
 				govy.NewRule(func(u *url.URL) error {
@@ -197,6 +202,11 @@ var (
 					return nil
 				}),
 			),
+		govy.Transform(func(d DynatraceConfig) string { return d.PlatformURL }, url.Parse).
+			WithName("platformUrl").
+			Cascade(govy.CascadeModeStop).
+			OmitEmpty().
+			Rules(rules.URL(), newHTTPSSchemeRule()),
 	)
 	amazonPrometheusValidation = govy.New[AmazonPrometheusConfig](
 		govy.For(func(a AmazonPrometheusConfig) string { return a.URL }).
