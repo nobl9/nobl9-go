@@ -19,6 +19,8 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/mcp"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/prometheus"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/replay"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
 )
@@ -122,6 +124,16 @@ func (c *Client) Users() users.Versions {
 // MCP is used to access specific MCP server proxy API version.
 func (c *Client) MCP() mcp.Versions {
 	return mcp.NewVersions(c)
+}
+
+// Prometheus is used to access specific Prometheus-compatible API version.
+func (c *Client) Prometheus() prometheus.Versions {
+	return prometheus.NewVersions(c.newPrometheusAPI)
+}
+
+// Replay is used to access specific Replay API version.
+func (c *Client) Replay() replay.Versions {
+	return replay.NewVersions(c)
 }
 
 // CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.
