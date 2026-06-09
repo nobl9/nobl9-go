@@ -6,8 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/stretchr/testify/assert"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -34,11 +32,11 @@ func TestValidate_VersionAndKind(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, svc, err, 2,
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("apiVersion"),
+			Prop: "apiVersion",
 			Code: rules.ErrorCodeEqualTo,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.New().Name("kind"),
+			Prop: "kind",
 			Code: rules.ErrorCodeEqualTo,
 		},
 	)
@@ -56,22 +54,22 @@ func TestValidate_Metadata(t *testing.T) {
 	assert.Regexp(t, validationMessageRegexp, err.Error())
 	testutils.AssertContainsErrors(t, svc, err, 3,
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.name"),
+			Prop: "metadata.name",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.displayName"),
+			Prop: "metadata.displayName",
 			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
-			Prop: jsonpath.Parse("metadata.project"),
+			Prop: "metadata.project",
 			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {
-	for name, test := range v1alphatest.GetLabelsTestCases[Service](t, jsonpath.Parse("metadata.labels")) {
+	for name, test := range v1alphatest.GetLabelsTestCases[Service](t, "metadata.labels") {
 		t.Run(name, func(t *testing.T) {
 			svc := validService()
 			svc.Metadata.Labels = test.Labels
@@ -81,7 +79,7 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	tests := v1alphatest.GetMetadataAnnotationsTestCases[Service](t, jsonpath.Parse("metadata.annotations"))
+	tests := v1alphatest.GetMetadataAnnotationsTestCases[Service](t, "metadata.annotations")
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := validService()
@@ -97,7 +95,7 @@ func TestValidate_Spec(t *testing.T) {
 		svc.Spec.Description = strings.Repeat("A", 2000)
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.description"),
+			Prop: "spec.description",
 			Code: validationV1Alpha.ErrorCodeStringDescription,
 		})
 	})
@@ -118,7 +116,7 @@ func TestValidate_Spec_ResponsibleUsers(t *testing.T) {
 			expectedErrorCount: 1,
 			expectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.responsibleUsers[1].id"),
+					Prop: "spec.responsibleUsers[1].id",
 					Code: rules.ErrorCodeStringNotEmpty,
 				},
 			},
@@ -176,7 +174,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
+			Prop: "spec.reviewCycle.startTime",
 			Code: "string_date_time",
 		})
 	})
@@ -190,7 +188,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
+			Prop: "spec.reviewCycle.startTime",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -205,11 +203,11 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
+				Prop: "spec.reviewCycle.startTime",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.reviewCycle.startTime"),
+				Prop: "spec.reviewCycle.startTime",
 				Code: "string_date_time",
 			},
 		)
@@ -224,7 +222,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
+			Prop: "spec.reviewCycle.timeZone",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -239,11 +237,11 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
+				Prop: "spec.reviewCycle.timeZone",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
+				Prop: "spec.reviewCycle.timeZone",
 				Code: rules.ErrorCodeStringTimeZone,
 			},
 		)
@@ -258,7 +256,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.timeZone"),
+			Prop: "spec.reviewCycle.timeZone",
 			Code: "string_time_zone",
 		})
 	})
@@ -272,7 +270,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.rrule"),
+			Prop: "spec.reviewCycle.rrule",
 			Code: "transform",
 		})
 	})
@@ -286,7 +284,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop: jsonpath.Parse("spec.reviewCycle.rrule"),
+			Prop: "spec.reviewCycle.rrule",
 			Code: rules.ErrorCodeRequired,
 		})
 	})
@@ -300,7 +298,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
+			Prop:    "spec.reviewCycle.rrule",
 			Message: "wrong format",
 			Code:    "transform",
 		})
@@ -315,7 +313,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
+			Prop:    "spec.reviewCycle.rrule",
 			Message: "rrule frequency must be at least DAILY",
 		})
 	})
@@ -329,7 +327,7 @@ func TestValidate_ReviewCycle(t *testing.T) {
 		}
 		err := validate(svc)
 		testutils.AssertContainsErrors(t, svc, err, 1, testutils.ExpectedError{
-			Prop:    jsonpath.Parse("spec.reviewCycle.rrule"),
+			Prop:    "spec.reviewCycle.rrule",
 			Message: "rrule frequency must be at least DAILY",
 		})
 	})

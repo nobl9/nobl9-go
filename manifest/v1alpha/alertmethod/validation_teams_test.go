@@ -3,8 +3,6 @@ package alertmethod
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -43,7 +41,7 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop: jsonpath.Parse("spec.msteams.url"),
+					Prop: "spec.msteams.url",
 					Code: rules.ErrorCodeURL,
 				},
 			},
@@ -55,7 +53,7 @@ func TestValidate_Spec_TeamsAlertMethod(t *testing.T) {
 			ExpectedErrorsCount: 1,
 			ExpectedErrors: []testutils.ExpectedError{
 				{
-					Prop:    jsonpath.Parse("spec.msteams.url"),
+					Prop:    "spec.msteams.url",
 					Message: "requires https scheme",
 				},
 			},

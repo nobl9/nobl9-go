@@ -3,8 +3,6 @@ package slo
 import (
 	"testing"
 
-	"github.com/nobl9/govy/pkg/jsonpath"
-
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -23,11 +21,11 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.queryType"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.line"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -41,12 +39,12 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
-				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.queryType"),
+				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor.queryType",
 				Code:    rules.ErrorCodeOneOf,
 				Message: "must be one of: device_metrics, website_metrics",
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.line"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeRequired,
 			},
 		)
@@ -61,15 +59,15 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 3,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.line"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.graphId"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphId",
 				Code: rules.ErrorCodeGreaterThan,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.deviceDataSourceInstanceId",
 				Code: rules.ErrorCodeGreaterThan,
 			},
 		)
@@ -82,19 +80,19 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 4,
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.line"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.line",
 				Code: rules.ErrorCodeRequired,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.websiteId"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.websiteId",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.checkpointId"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.checkpointId",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 			testutils.ExpectedError{
-				Prop: jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor.graphName"),
+				Prop: "spec.objectives[0].rawMetric.query.logicMonitor.graphName",
 				Code: rules.ErrorCodeStringNotEmpty,
 			},
 		)
@@ -113,7 +111,7 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor"),
+				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor",
 				Message: "deviceDataSourceInstanceId and graphId must be empty for website_metrics",
 			},
 		)
@@ -132,7 +130,7 @@ func TestLogicMonitor(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1,
 			testutils.ExpectedError{
-				Prop:    jsonpath.Parse("spec.objectives[0].rawMetric.query.logicMonitor"),
+				Prop:    "spec.objectives[0].rawMetric.query.logicMonitor",
 				Message: "graphName, checkpointId and websiteId must be empty for device_metrics",
 			},
 		)

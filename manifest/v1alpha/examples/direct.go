@@ -132,7 +132,9 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 	case v1alpha.Dynatrace:
 		direct.Spec.Dynatrace = &v1alphaDirect.DynatraceConfig{
 			URL:            "https://zvf10945.live.dynatrace.com/",
+			PlatformURL:    "https://zvf10945.apps.dynatrace.com/",
 			DynatraceToken: "[secret]",
+			PlatformToken:  "[secret]",
 		}
 	case v1alpha.GCM:
 		direct.Spec.GCM = &v1alphaDirect.GCMConfig{

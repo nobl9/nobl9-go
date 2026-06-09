@@ -15,6 +15,7 @@ import (
 
 	internal "github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/alertanalysis"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/mcp"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
@@ -38,7 +39,9 @@ const (
 // It provides access to the following APIs:
 //   - [Client.Objects] for accessing the [manifest.Object] API.
 //   - [Client.AuthData] for accessing the authentication APIs.
+//   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
+//   - [Client.Prometheus] for accessing the Prometheus-compatible API.
 //
 // [SLO Status API]: https://docs.nobl9.com/api/slo-v2
 type Client struct {
@@ -48,6 +51,8 @@ type Client struct {
 	credentials *credentialsStore
 	userAgent   string
 	dryRun      bool
+
+	prometheusAPI prometheusAPIStore
 }
 
 // DefaultClient returns fully configured instance of [Client] with default [Config] and [http.Client].
@@ -61,7 +66,10 @@ func DefaultClient() (*Client, error) {
 
 // NewClient creates a new [Client] instance with provided [Config].
 func NewClient(config *Config) (*Client, error) {
-	creds := newCredentials(config)
+	creds, err := newCredentials(config)
+	if err != nil {
+		return nil, err
+	}
 	client := &Client{
 		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,
@@ -93,6 +101,11 @@ func (c *Client) Objects() objects.Versions {
 // AuthData is used to access specific authentication API version.
 func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
+}
+
+// AlertAnalysis is used to access specific Alert Policy Analyzer API version.
+func (c *Client) AlertAnalysis() alertanalysis.Versions {
+	return alertanalysis.NewVersions(c)
 }
 
 // SLOStatusAPI is used to access specific SLO Status API version.

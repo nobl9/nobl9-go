@@ -78,6 +78,7 @@ func TestReadConfig_FromFullConfigFile(t *testing.T) {
 		URL:                  &url.URL{Scheme: "https", Host: "non-default-url.com"},
 		DisableOkta:          true,
 		Organization:         "non-default-organization",
+		CACertFile:           "/etc/non-default/ca-bundle.pem",
 		FilesPromptEnabled:   false,
 		FilesPromptThreshold: 30,
 		currentContext:       "non-default",
@@ -287,6 +288,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			"TIMEOUT":                "60m",
 			"FILES_PROMPT_ENABLED":   "false",
 			"FILES_PROMPT_THRESHOLD": "30",
+			"CA_CERT_FILE":           "/etc/env/ca-bundle.pem",
 		} {
 			t.Setenv(envPrefix+k, v)
 		}
@@ -301,6 +303,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			OktaAuthServer:       "123",
 			DisableOkta:          false,
 			Organization:         "org",
+			CACertFile:           "/etc/env/ca-bundle.pem",
 			Timeout:              60 * time.Minute,
 			FilesPromptEnabled:   false,
 			FilesPromptThreshold: 30,
