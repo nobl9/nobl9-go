@@ -223,22 +223,9 @@ func (o objectKindAndProject) String() string {
 
 func assertObjectsExistsOrNot(t *testing.T, objects []manifest.Object, exists bool) bool {
 	t.Helper()
-	objectNamesPerKindAndProject := map[objectKindAndProject][]string{}
-	for _, object := range objects {
-		key := objectKindAndProject{
-			Kind: object.GetKind(),
-		}
-		if projectScoped, ok := object.(manifest.ProjectScopedObject); ok {
-			key.Project = projectScoped.GetProject()
-		}
-		v, ok := objectNamesPerKindAndProject[key]
-		if !ok {
-			v = make([]string, 0)
-		}
-		v = append(v, object.GetName())
-		objectNamesPerKindAndProject[key] = v
-	}
 
+	ok := true
+	objectNamesPerKindAndProject := groupObjectNamesByKindAndProject(objects)
 	for key, names := range objectNamesPerKindAndProject {
 		headers := http.Header{}
 		if key.Project != "" {
@@ -247,18 +234,36 @@ func assertObjectsExistsOrNot(t *testing.T, objects []manifest.Object, exists bo
 		params := url.Values{objectsV1.QueryKeyName: names}
 		objects, err := client.Objects().V1().Get(t.Context(), key.Kind, headers, params)
 		if !assert.NoError(t, err) {
-			return false
+			ok = false
+			continue
 		}
 		switch exists {
 		case true:
-			return assert.Lenf(t, objects, len(names),
-				"expected %d objects in response, got %d (%s)", len(names), len(objects), key)
+			ok = assert.Lenf(t, objects, len(names),
+				"expected %d objects in response, got %d (%s)", len(names), len(objects), key) && ok
 		case false:
-			return assert.Empty(t, objects,
-				"expected no objects in response, got %d (%s)", len(objects), key)
+			ok = assert.Emptyf(t, objects,
+				"expected no objects in response, got %d (%s)", len(objects), key) && ok
 		}
 	}
-	return true
+	return ok
+}
+
+func groupObjectNamesByKindAndProject(objects []manifest.Object) map[objectKindAndProject][]string {
+	objectNamesPerKindAndProject := map[objectKindAndProject][]string{}
+	for _, object := range objects {
+		key := objectKindAndProject{
+			Kind: object.GetKind(),
+		}
+		switch object := object.(type) {
+		case manifest.ProjectScopedObject:
+			key.Project = object.GetProject()
+		case v1alphaRoleBinding.RoleBinding:
+			key.Project = object.Spec.ProjectRef
+		}
+		objectNamesPerKindAndProject[key] = append(objectNamesPerKindAndProject[key], object.GetName())
+	}
+	return objectNamesPerKindAndProject
 }
 
 func ptr[T any](v T) *T { return &v }
