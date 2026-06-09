@@ -15,9 +15,9 @@ type ReplayStatus struct {
 	CanceledBy   string `json:"canceledBy,omitempty"`
 	TriggeredBy  string `json:"triggeredBy"`
 	Unit         string `json:"unit"`
-	Value        int    `json:"value"`
 	StartTime    string `json:"startTime"`
 	EndTime      string `json:"endTime,omitempty"`
+	Value        int    `json:"value"`
 }
 
 func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
@@ -40,8 +40,8 @@ const (
 )
 
 type ReplayAvailability struct {
-	Available bool   `json:"available"`
 	Reason    string `json:"reason,omitempty"`
+	Available bool   `json:"available"`
 }
 
 // Variants of [ReplayAvailability.Reason].

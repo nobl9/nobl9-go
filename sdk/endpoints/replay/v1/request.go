@@ -16,26 +16,23 @@ import (
 const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 type RunRequest struct {
-	TimeRange TimeRange  `json:"timeRange,omitzero"`
-	SourceSLO *SourceSLO `json:"sourceSlo,omitempty"`
+	TimeRange TimeRange  `json:"timeRange"`
+	SourceSLO *SourceSLO `json:"sourceSlo"`
 	Project   string     `json:"project"`
 	SLO       string     `json:"slo"`
 	Duration  Duration   `json:"duration"`
 }
 
-type internalDeleteRequest struct {
-	DeleteRequest
-	All bool `json:"all,omitempty"`
-}
-
 type DeleteRequest struct {
-	Project string `json:"project,omitempty"`
-	SLO     string `json:"slo,omitempty"`
+	Project string `json:"project"`
+	SLO     string `json:"slo"`
+	// If All is provided, Project and SLO are ignored and all replays are deleted.
+	All bool `json:"all"`
 }
 
 type CancelRequest struct {
-	Project string `json:"project,omitempty"`
-	SLO     string `json:"slo,omitempty"`
+	Project string `json:"project"`
+	SLO     string `json:"slo"`
 }
 
 type GetStatusRequest struct {
@@ -61,7 +58,6 @@ type Duration struct {
 
 type TimeRange struct {
 	StartDate time.Time `json:"startDate,omitzero"`
-	EndDate   time.Time `json:"endDate,omitzero"` // not supported yet
 }
 
 type SourceSLO struct {

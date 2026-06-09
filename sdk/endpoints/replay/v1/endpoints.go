@@ -53,11 +53,7 @@ func (e endpoints) Run(ctx context.Context, params RunRequest) (err error) {
 }
 
 func (e endpoints) Delete(ctx context.Context, params DeleteRequest) (err error) {
-	return e.deleteReplay(ctx, internalDeleteRequest{DeleteRequest: params})
-}
-
-func (e endpoints) DeleteAll(ctx context.Context) (err error) {
-	return e.deleteReplay(ctx, internalDeleteRequest{All: true})
+	return e.deleteReplay(ctx, params)
 }
 
 func (e endpoints) Cancel(ctx context.Context, params CancelRequest) (err error) {
@@ -142,7 +138,7 @@ func (e endpoints) GetAvailability(
 	return &availability, nil
 }
 
-func (e endpoints) deleteReplay(ctx context.Context, params internalDeleteRequest) (err error) {
+func (e endpoints) deleteReplay(ctx context.Context, params DeleteRequest) (err error) {
 	body := new(bytes.Buffer)
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
