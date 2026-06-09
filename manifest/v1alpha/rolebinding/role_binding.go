@@ -22,8 +22,8 @@ type RoleBinding struct {
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -31,8 +31,17 @@ type Metadata struct {
 }
 
 type Spec struct {
+	// Deprecated: Use AccountID instead.
 	User       *string `json:"user,omitempty"`
+	AccountID  *string `json:"accountId,omitempty"`
 	GroupRef   *string `json:"groupRef,omitempty"`
 	RoleRef    string  `json:"roleRef"`
 	ProjectRef string  `json:"projectRef,omitempty"`
+}
+
+func (r RoleBinding) GetType() Type {
+	if r.Spec.ProjectRef != "" {
+		return TypeProject
+	}
+	return TypeOrganization
 }

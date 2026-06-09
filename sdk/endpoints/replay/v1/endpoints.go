@@ -6,11 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 
 	"github.com/pkg/errors"
 
 	endpointsHelpers "github.com/nobl9/nobl9-go/internal/endpoints"
-	"github.com/nobl9/nobl9-go/sdk"
+	internalSDK "github.com/nobl9/nobl9-go/internal/sdk"
 )
 
 const (
@@ -37,14 +39,14 @@ func (e endpoints) Run(ctx context.Context, params RunRequest) (err error) {
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
-	header := http.Header{sdk.HeaderProject: []string{params.Project}}
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
 	req, err := e.client.CreateRequest(ctx, http.MethodPost, apiCreateReplay, header, nil, body)
 	if err != nil {
 		return err
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return handleReplayError(err)
+		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	return nil
@@ -58,19 +60,19 @@ func (e endpoints) DeleteAll(ctx context.Context) (err error) {
 	return e.deleteReplay(ctx, internalDeleteRequest{All: true})
 }
 
-func (e endpoints) Cancel(ctx context.Context, params DeleteRequest) (err error) {
+func (e endpoints) Cancel(ctx context.Context, params CancelRequest) (err error) {
 	body := new(bytes.Buffer)
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
-	header := http.Header{sdk.HeaderProject: []string{params.Project}}
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
 	req, err := e.client.CreateRequest(ctx, http.MethodPost, apiCancelReplay, header, nil, body)
 	if err != nil {
 		return err
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return handleReplayError(err)
+		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	return nil
@@ -83,7 +85,7 @@ func (e endpoints) List(ctx context.Context) ([]ReplayListItem, error) {
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return nil, handleReplayError(err)
+		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	var list []ReplayListItem
@@ -95,21 +97,49 @@ func (e endpoints) List(ctx context.Context) ([]ReplayListItem, error) {
 
 func (e endpoints) GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error) {
 	path := fmt.Sprintf(apiReplayStatus, params.SLO)
-	header := http.Header{sdk.HeaderProject: []string{params.Project}}
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, path, header, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return nil, handleReplayError(err)
+		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	var list []ReplayListItem
-	if err = json.NewDecoder(resp.Body).Decode(&list); err != nil {
-		return nil, errors.Wrap(err, "cannot decode list Replays response")
+	var status ReplayWithStatus
+	if err = json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		return nil, errors.Wrap(err, "cannot decode Replay status response")
 	}
-	return list, nil
+	return &status, nil
+}
+
+func (e endpoints) GetAvailability(
+	ctx context.Context,
+	params GetAvailabilityRequest,
+) (*ReplayAvailability, error) {
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
+	req, err := e.client.CreateRequest(
+		ctx,
+		http.MethodGet,
+		apiReplayAvailability,
+		header,
+		params.queryValues(),
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var availability ReplayAvailability
+	if err = json.NewDecoder(resp.Body).Decode(&availability); err != nil {
+		return nil, errors.Wrap(err, "cannot decode Replay availability response")
+	}
+	return &availability, nil
 }
 
 func (e endpoints) deleteReplay(ctx context.Context, params internalDeleteRequest) (err error) {
@@ -117,50 +147,44 @@ func (e endpoints) deleteReplay(ctx context.Context, params internalDeleteReques
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
 	}
-	header := http.Header{sdk.HeaderProject: []string{params.Project}}
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
 	req, err := e.client.CreateRequest(ctx, http.MethodDelete, apiDeleteReplay, header, nil, body)
 	if err != nil {
 		return err
 	}
 	resp, err := e.client.Do(req)
 	if err != nil {
-		return handleReplayError(err)
+		return err
 	}
 	defer func() { _ = resp.Body.Close() }()
 	return nil
 }
 
-func handleReplayError(err error) error {
-	if err == nil {
+func (r GetAvailabilityRequest) queryValues() url.Values {
+	q := url.Values{}
+	if r.DataSourceProject != "" {
+		q.Set("dataSourceProject", r.DataSourceProject)
+	}
+	if r.DataSource != "" {
+		q.Set("dataSource", r.DataSource)
+	}
+	if r.DataSourceKind != "" {
+		q.Set("dataSourceKind", r.DataSourceKind)
+	}
+	if r.SLOName != "" {
+		q.Set("sloName", r.SLOName)
+	}
+	if r.Type != "" {
+		q.Set("type", r.Type)
+	}
+	if r.DurationUnit != "" {
+		q.Set("durationUnit", r.DurationUnit)
+	}
+	if r.DurationValue != 0 {
+		q.Set("durationValue", strconv.Itoa(r.DurationValue))
+	}
+	if len(q) == 0 {
 		return nil
 	}
-	var httpErr *sdk.HTTPError
-	if errors.As(err, &httpErr) && len(httpErr.Errors) == 0 {
-		httpErr.Errors[0].Title = replayUnavailabilityReasonExplanation(httpErr.Errors[0].Title)
-	}
-	return err
-}
-
-func replayUnavailabilityReasonExplanation(reason string) string {
-	switch reason {
-	case ReplayIntegrationDoesNotSupportReplay:
-		return "The Data Source does not support Replay yet"
-	case ReplayAgentVersionDoesNotSupportReplay:
-		return "Update your Agent version to the latest to use Replay for this Data Source."
-	case ReplayMaxHistoricalDataRetrievalTooLow:
-		return "Value configured for spec.historicalDataRetrieval.maxDuration.value" +
-			" for the Data Source is lower than the duration you're trying to run Replay for."
-	case ReplayConcurrentReplayRunsLimitExhausted:
-		return "You've exceeded the limit of concurrent Replay runs. Wait until the current Replay(s) are done."
-	case ReplayUnknownAgentVersion:
-		return "Your Agent isn't connected to the Data Source. Deploy the Agent and run Replay once again."
-	case "single_query_not_supported":
-		return "Historical data retrieval for single-query ratio metrics is not supported"
-	case "composite_slo_not_supported":
-		return "Historical data retrieval for Composite SLO is not supported"
-	case "promql_in_gcm_not_supported":
-		return "Historical data retrieval for PromQL metrics is not supported"
-	default:
-		return reason
-	}
+	return q
 }

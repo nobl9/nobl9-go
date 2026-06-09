@@ -4,7 +4,6 @@ package project
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -14,15 +13,19 @@ var _ manifest.Object = Project{}
 var _ v1alpha.ObjectContext = Project{}
 
 func (p Project) GetVersion() manifest.Version {
-	return p.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (p Project) GetKind() manifest.Kind {
-	return p.Kind
+	return manifest.KindProject
 }
 
 func (p Project) GetName() string {
 	return p.Metadata.Name
+}
+
+func (p Project) GetMetadata() Metadata {
+	return p.Metadata
 }
 
 func (p Project) Validate() error {

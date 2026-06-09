@@ -6,6 +6,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -19,17 +20,17 @@ func TestValidate_CompositeSLO(t *testing.T) {
 	})
 	t.Run("fails - invalid objective name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].Name = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].Name = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective display name - too long", func(t *testing.T) {
 		slo := validCompositeSLO()
-		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", 64)
+		slo.Spec.Objectives[0].DisplayName = strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
 		err := validate(slo)
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
@@ -79,6 +80,27 @@ func TestValidate_CompositeSLO(t *testing.T) {
 				Prop:    "spec.objectives",
 				Code:    rules.ErrorCodeSliceLength,
 				Message: "this SLO contains a composite objective. No more objectives can be added to it",
+			},
+		)
+	})
+	t.Run("fails - spec.anomalyConfig provided", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.AnomalyConfig = &AnomalyConfig{
+			NoData: &AnomalyConfigNoData{
+				AlertMethods: []AnomalyConfigAlertMethod{
+					{
+						Name: "my-name",
+					},
+				},
+			},
+		}
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop:    "spec.anomalyConfig",
+				Code:    rules.ErrorCodeForbidden,
+				Message: "property is forbidden; anomalyConfig section is forbidden when spec.objectives[0].composite is provided",
 			},
 		)
 	})
@@ -203,7 +225,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 			testutils.ExpectedError{
 				Prop:    "spec.objectives[0].composite.maxDelay",
 				Code:    rules.ErrorCodeGreaterThanOrEqualTo,
-				Message: "should be greater than or equal to '1m0s'",
+				Message: "must be greater than or equal to '1m0s'",
 			},
 		)
 	})
@@ -268,7 +290,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid objective slo name", func(t *testing.T) {
@@ -278,7 +300,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - invalid underlying objective name", func(t *testing.T) {
@@ -288,7 +310,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectives[0].composite.components.objectives[0].objective",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails - weight less than zero", func(t *testing.T) {
@@ -299,7 +321,7 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
 			Prop:    "spec.objectives[0].composite.components.objectives[0].weight",
 			Code:    rules.ErrorCodeGreaterThan,
-			Message: "should be greater than '0'",
+			Message: "must be greater than '0'",
 		})
 	})
 	t.Run("fails - invalid whenDelayed behavior", func(t *testing.T) {
@@ -354,5 +376,40 @@ func TestValidate_CompositeSLO(t *testing.T) {
 		err := validate(slo)
 
 		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("passes - valid aggregation ErrorBudgetState", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Aggregation = ComponentAggregationMethodErrorBudgetState
+
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("passes - valid aggregation Reliability", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Aggregation = ComponentAggregationMethodReliability
+
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("passes - empty aggregation defaults to Reliability", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Aggregation = ""
+
+		err := validate(slo)
+
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("fails - invalid aggregation", func(t *testing.T) {
+		slo := validCompositeSLO()
+		slo.Spec.Objectives[0].Composite.Aggregation = "InvalidMethod"
+
+		err := validate(slo)
+
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].composite.aggregation",
+			Code: rules.ErrorCodeOneOf,
+		})
 	})
 }

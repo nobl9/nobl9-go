@@ -46,7 +46,7 @@ func TestValidate_Metadata(t *testing.T) {
 	project := validProject()
 	project.Metadata = Metadata{
 		Name:        strings.Repeat("MY PROJECT", 20),
-		DisplayName: strings.Repeat("my-project", 20),
+		DisplayName: strings.Repeat("my-project", 26),
 	}
 	project.ManifestSource = "/home/me/project.yaml"
 	err := validate(project)
@@ -54,11 +54,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, project, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: rules.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringMaxLength,
 		},
 	)
 }
@@ -74,7 +74,8 @@ func TestValidate_Metadata_Labels(t *testing.T) {
 }
 
 func TestValidate_Metadata_Annotations(t *testing.T) {
-	for name, test := range v1alphatest.GetMetadataAnnotationsTestCases[Project](t, "metadata.annotations") {
+	tests := v1alphatest.GetMetadataAnnotationsTestCases[Project](t, "metadata.annotations")
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			svc := validProject()
 			svc.Metadata.Annotations = test.Annotations

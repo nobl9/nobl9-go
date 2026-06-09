@@ -182,7 +182,6 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, err := readTestFile(t, "annotations.yaml").WriteTo(w)
 			require.NoError(t, err)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
 		require.Regexp(t, "^http://", srv.URL)
@@ -196,7 +195,6 @@ func TestReadDefinitions_FromURL(t *testing.T) {
 		srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			_, err := readTestFile(t, "annotations.yaml").WriteTo(w)
 			require.NoError(t, err)
-			w.WriteHeader(http.StatusOK)
 		}))
 		defer srv.Close()
 		httpClientFactory = func(url string) *http.Client { return srv.Client() }
@@ -257,13 +255,13 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		require.NoError(t, os.WriteFile(
 			tmpDir(path),
 			readTestFile(t, filepath.Base(path)).Bytes(),
-			0o666))
+			0o600))
 	}
 	// - Create temporary directory.
 	createDir := func(path string) {
 		require.NoError(t, os.Mkdir(
 			tmpDir(path),
-			0o777))
+			0o750))
 	}
 	// - Create symlink.
 	createSymlink := func(oldName, newName string) { require.NoError(t, os.Symlink(oldName, newName)) }
@@ -432,8 +430,8 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 
 func TestReadRawDefinitionsFromSources(t *testing.T) {
 	tmp := t.TempDir()
-	path := filepath.Join(tmp, "test.yaml")
-	f, err := os.Create(path)
+	testFilePath := filepath.Join(tmp, "test.yaml")
+	f, err := os.Create(testFilePath)
 	require.NoError(t, err)
 	defer func() { _ = f.Close() }()
 
@@ -446,7 +444,7 @@ func TestReadRawDefinitionsFromSources(t *testing.T) {
 	}{
 		"single file": {
 			typ: ObjectSourceTypeFile,
-			src: path,
+			src: testFilePath,
 		},
 		"directory": {
 			typ: ObjectSourceTypeDirectory,
@@ -468,7 +466,7 @@ func TestReadRawDefinitionsFromSources(t *testing.T) {
 			require.Len(t, definitions, 1)
 			expected := RawDefinition{
 				SourceType:     tc.typ,
-				ResolvedSource: path,
+				ResolvedSource: testFilePath,
 				Definition:     []byte(`apiVersion: foo`),
 			}
 			assert.Equal(t, expected, *definitions[0])
@@ -519,6 +517,8 @@ func definitionsMatchExpected(t *testing.T, definitions []manifest.Object, meta 
 // readTestFile attempts to read the designated file from test_data folder.
 func readTestFile(t *testing.T, filename string) *bytes.Buffer {
 	t.Helper()
+	// Use path.Join instead of filepath.Join because embed.FS always uses forward slashes
+	// as path separators, regardless of the host operating system.
 	data, err := readerTestData.ReadFile(path.Join("test_data", "reader", "inputs", filename))
 	require.NoError(t, err)
 	return bytes.NewBuffer(data)

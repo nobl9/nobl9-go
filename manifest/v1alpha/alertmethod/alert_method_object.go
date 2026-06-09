@@ -4,7 +4,6 @@ package alertmethod
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = AlertMethod{}
 var _ v1alpha.ObjectContext = AlertMethod{}
 
 func (a AlertMethod) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a AlertMethod) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAlertMethod
 }
 
 func (a AlertMethod) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertMethod) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertMethod) Validate() error {

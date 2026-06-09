@@ -25,11 +25,17 @@ import (
 )
 
 type Endpoints interface {
+	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Apply] instead.
 	Apply(ctx context.Context, objects []manifest.Object) error
+	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.Delete] instead.
 	Delete(ctx context.Context, objects []manifest.Object) error
+	// Deprecated: Use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.DeleteByName] instead.
 	DeleteByName(ctx context.Context, kind manifest.Kind, project string, names ...string) error
 	Get(ctx context.Context, kind manifest.Kind, header http.Header, query url.Values) ([]manifest.Object, error)
 	// MoveSLOs allows moving SLOs between Projects.
+	//
+	// [MoveSLOsRequest] is not validated by this method,
+	// in order to verify the request parameters, use [MoveSLOsRequest.Validate].
 	MoveSLOs(ctx context.Context, params MoveSLOsRequest) error
 	GetV1alphaProjects(ctx context.Context, params GetProjectsRequest) ([]v1alphaProject.Project, error)
 	GetV1alphaServices(ctx context.Context, params GetServicesRequest) ([]v1alphaService.Service, error)
@@ -42,11 +48,14 @@ type Endpoints interface {
 	GetV1alphaDirects(ctx context.Context, params GetDirectsRequest) ([]v1alphaDirect.Direct, error)
 	GetV1alphaDataExports(ctx context.Context, params GetDataExportsRequest) ([]v1alphaDataExport.DataExport, error)
 	GetV1alphaRoleBindings(ctx context.Context, params GetRoleBindingsRequest) ([]v1alphaRoleBinding.RoleBinding, error)
+	// Deprecated: use [github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2.Endpoints.GetV1alphaAnnotations] instead.
 	GetV1alphaAnnotations(ctx context.Context, params GetAnnotationsRequest) ([]v1alphaAnnotation.Annotation, error)
 	GetV1alphaUserGroups(ctx context.Context, params GetAnnotationsRequest) ([]v1alphaUserGroup.UserGroup, error)
 	// GetAlerts is exported for internal usage, use methods returning
-	// concrete manifest.Version instead, like GetV1alphaAlerts
-	GetAlerts(ctx context.Context, header http.Header, query url.Values) ([]manifest.Object, int, error)
+	// concrete manifest.Version instead, like [endpoints.GetV1alphaAlerts].
+	//
+	// Deprecated: use [endpoints.GetV1alphaAlerts] instead.
+	GetAlerts(ctx context.Context, params GetAlertsRequest) ([]manifest.Object, int, error)
 	GetBudgetAdjustments(ctx context.Context, params GetBudgetAdjustmentRequest) ([]v1alphaBudgetAdjustment.BudgetAdjustment, error)
 	GetReports(ctx context.Context, params GetReportsRequest) ([]v1alphaReport.Report, error)
 }

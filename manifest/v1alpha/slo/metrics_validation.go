@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/pkg/errors"
 
@@ -62,7 +63,9 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			bigQueryCountMetricsLevelValidation,
 			gcmCountMetricsLevelValidation,
 			logicMonitorCountMetricsQueryTypeValidation,
+			dynatraceCountMetricsQueryTypeValidation,
 			honeycombCountMetricsValidation,
+			atlasCountMetricsValidation,
 		).
 		Include(
 			goodAndBadOverTotalMetricsValidation,
@@ -132,6 +135,7 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 			thousandEyesRawMetricValidation,
 			instanaRawMetricValidation,
 			honeycombRawMetricValidation,
+			atlasRawMetricValidation,
 		),
 )
 
@@ -150,6 +154,15 @@ var singleQueryMetricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *HoneycombMetric { return m.Honeycomb }).
 		WithName("honeycomb").
 		Include(honeycombSingleQueryValidation),
+	govy.ForPointer(func(m MetricSpec) *SumoLogicMetric { return m.SumoLogic }).
+		WithName("sumoLogic").
+		Include(
+			sumoLogicSingleQueryLogsTypeValidation,
+			sumoLogicSingleQueryMetricsTypeValidation,
+		),
+	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
+		WithName("atlas").
+		Include(atlasSingleQueryValidation),
 )
 
 var metricSpecValidation = govy.New[MetricSpec](
@@ -235,6 +248,12 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *CoralogixMetric { return m.Coralogix }).
 		WithName("coralogix").
 		Include(coralogixValidation),
+	govy.ForPointer(func(m MetricSpec) *AtlasMetric { return m.Atlas }).
+		WithName("atlas").
+		Include(atlasValidation),
+	govy.ForPointer(func(m MetricSpec) *Dash0Metric { return m.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -418,6 +437,16 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 				return err
 			}
 		}
+		if metric.Atlas != nil {
+			if err := typesMatch(v1alpha.Atlas); err != nil {
+				return err
+			}
+		}
+		if metric.Dash0 != nil {
+			if err := typesMatch(v1alpha.Dash0); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -428,13 +457,13 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 		case BudgetingMethodTimeslices.String():
 			if objective.TimeSliceTarget == nil {
 				return govy.NewPropertyError(
-					fmt.Sprintf("objectives[%d].timeSliceTarget", i),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget, validationV1Alpha.NewRequiredError())
 			}
 		case BudgetingMethodOccurrences.String():
 			if objective.TimeSliceTarget != nil {
 				return govy.NewPropertyError(
-					fmt.Sprintf("objectives[%d].timeSliceTarget", i),
+					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
 					objective.TimeSliceTarget,
 					govy.NewRuleError(
 						fmt.Sprintf(

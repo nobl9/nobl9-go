@@ -7,8 +7,10 @@ import (
 	"github.com/teambition/rrule-go"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
@@ -16,12 +18,36 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 	govy.For(func(s SystemHealthReviewConfig) RowGroupBy { return s.RowGroupBy }).
 		WithName("rowGroupBy").
 		Required().
-		Rules(RowGroupByValidation()),
+		Rules(rowGroupByValidation()),
 	govy.ForSlice(func(s SystemHealthReviewConfig) []ColumnSpec { return s.Columns }).
 		WithName("columns").
-		Rules(rules.SliceMinLength[[]ColumnSpec](1)).
-		Rules(rules.SliceMaxLength[[]ColumnSpec](30)).
+		Rules(rules.SliceLength[[]ColumnSpec](1, 30)).
 		IncludeForEach(columnValidation),
+	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
+		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByLabel },
+			govy.WhenDescriptionf("rowGroupBy is '%s'", RowGroupByLabel),
+		).
+		Rules(rules.SliceLength[[]LabelRowSpec](1, 1)).
+		IncludeForEach(labelRowsGroupByLabelValidation),
+	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
+		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy == RowGroupByCustomRows },
+			govy.WhenDescriptionf("rowGroupBy is '%s'", RowGroupByCustomRows),
+		).
+		Rules(rules.SliceLength[[]LabelRowSpec](1, 50)).
+		IncludeForEach(labelRowsGroupByCustomValidation),
+	govy.ForSlice(func(s SystemHealthReviewConfig) []LabelRowSpec { return s.LabelRows }).
+		WithName("labelRows").
+		When(
+			func(s SystemHealthReviewConfig) bool {
+				return s.RowGroupBy == RowGroupByProject || s.RowGroupBy == RowGroupByService
+			},
+			govy.WhenDescriptionf("rowGroupBy is '%s' or '%s'", RowGroupByProject, RowGroupByService),
+		).
+		Rules(rules.Forbidden[[]LabelRowSpec]()),
 	govy.For(func(s SystemHealthReviewConfig) SystemHealthReviewTimeFrame { return s.TimeFrame }).
 		WithName("timeFrame").
 		Required().
@@ -30,28 +56,60 @@ var systemHealthReviewValidation = govy.New[SystemHealthReviewConfig](
 		WithName("thresholds").
 		Required().
 		Include(reportThresholdsValidation),
+	govy.For(func(s SystemHealthReviewConfig) string { return s.TableHeader }).
+		WithName("tableHeader").
+		OmitEmpty().
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
+	govy.For(func(s SystemHealthReviewConfig) *bool { return s.HideUngrouped }).
+		WithName("hideUngrouped").
+		When(
+			func(s SystemHealthReviewConfig) bool { return s.RowGroupBy != RowGroupByLabel },
+			govy.WhenDescriptionf("rowGroupBy is not '%s'", RowGroupByLabel),
+		).
+		Rules(rules.Forbidden[*bool]()),
 )
 
 var columnValidation = govy.New[ColumnSpec](
 	govy.For(func(s ColumnSpec) string { return s.DisplayName }).
 		WithName("displayName").
 		Required().
-		Rules(rules.StringMaxLength(63)),
-	govy.ForMap(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
+	govy.For(func(c ColumnSpec) v1alpha.Labels { return c.Labels }).
 		WithName("labels").
+		Include(v1alpha.LabelsValidationRules()).
 		Rules(rules.MapMinLength[v1alpha.Labels](1)),
 )
+
+var labelRowsGroupByLabelValidation = govy.New[LabelRowSpec](
+	govy.For(func(l LabelRowSpec) string { return l.DisplayName }).
+		WithName("displayName").
+		Rules(rules.Forbidden[string]()),
+	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
+		WithName("labels").
+		Rules(rules.MapLength[v1alpha.Labels](1, 1)).
+		Include(v1alpha.LabelsValidationRules()).
+		RulesForValues(rules.SliceMaxLength[[]string](0).WithMessage("label values must be empty")),
+).
+	Cascade(govy.CascadeModeStop)
+
+var labelRowsGroupByCustomValidation = govy.New[LabelRowSpec](
+	govy.For(func(l LabelRowSpec) string { return l.DisplayName }).
+		WithName("displayName").
+		Required().
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
+	govy.ForMap(func(l LabelRowSpec) v1alpha.Labels { return l.Labels }).
+		WithName("labels").
+		Rules(rules.MapMinLength[v1alpha.Labels](1)).
+		Include(v1alpha.LabelsValidationRules()).
+		RulesForValues(rules.SliceMinLength[[]string](1)),
+).
+	Cascade(govy.CascadeModeStop)
 
 var timeFrameValidation = govy.New[SystemHealthReviewTimeFrame](
 	govy.For(func(s SystemHealthReviewTimeFrame) string { return s.TimeZone }).
 		WithName("timeZone").
 		Required().
-		Rules(govy.NewRule(func(v string) error {
-			if _, err := time.LoadLocation(v); err != nil {
-				return errors.Wrap(err, "not a valid time zone")
-			}
-			return nil
-		})),
+		Rules(timeZoneValidationRule),
 	govy.For(func(s SystemHealthReviewTimeFrame) SnapshotTimeFrame { return s.Snapshot }).
 		WithName("snapshot").
 		Required().
@@ -76,8 +134,7 @@ var reportThresholdsValidation = govy.New[Thresholds](
 var redLteValidation = govy.NewRule(func(v Thresholds) error {
 	if v.RedLessThanOrEqual != nil && v.GreenGreaterThan != nil {
 		if *v.RedLessThanOrEqual > *v.GreenGreaterThan {
-			return govy.NewPropertyError(
-				"redLte",
+			return govy.NewPropertyError(jsonpath.New().Name("redLte"),
 				v.RedLessThanOrEqual,
 				errors.Errorf("must be less than or equal to 'greenGt' (%v)", *v.GreenGreaterThan))
 		}

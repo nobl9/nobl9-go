@@ -19,7 +19,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 		name      string
 		replay    RunRequest
 		isValid   bool
-		ErrorCode govy.ErrorCode
+		errorCode govy.ErrorCode
 	}{
 		{
 			name: "correct struct",
@@ -44,7 +44,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing project",
@@ -57,7 +57,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing duration unit",
@@ -69,7 +69,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing duration value",
@@ -81,7 +81,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeGreaterThan,
+			errorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
 			name: "invalid duration unit",
@@ -94,7 +94,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: durationUnitValidationErrorCode,
+			errorCode: durationUnitValidationErrorCode,
 		},
 		{
 			name: "invalid duration value",
@@ -107,7 +107,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeGreaterThan,
+			errorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
 			name: "maximum duration exceeded",
@@ -120,7 +120,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: durationValidationErrorCode,
+			errorCode: durationValidationErrorCode,
 		},
 		{
 			name: "missing duration",
@@ -129,7 +129,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				SLO:     "slo",
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "correct struct start date",
@@ -156,7 +156,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: durationAndStartDateValidationError,
+			errorCode: durationAndStartDateValidationError,
 		},
 		{
 			name: "start date cannot be in the future",
@@ -168,7 +168,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: startDateInTheFutureValidationError,
+			errorCode: startDateInTheFutureValidationError,
 		},
 		{
 			name: "use start date without duration",
@@ -215,7 +215,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "source project is required",
@@ -232,7 +232,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeRequired,
+			errorCode: rules.ErrorCodeRequired,
 		},
 		{
 			name: "missing objectives map when replaying source slo",
@@ -249,7 +249,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeSliceMinLength,
+			errorCode: rules.ErrorCodeSliceMinLength,
 		},
 		{
 			name: "empty objectives map when replaying source slo",
@@ -267,7 +267,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			ErrorCode: rules.ErrorCodeSliceMinLength,
+			errorCode: rules.ErrorCodeSliceMinLength,
 		},
 		{
 			name: "not empty objectives map when replaying source slo",
@@ -304,7 +304,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 			} else {
 				require.Error(t, err)
 				require.IsType(t, &govy.ValidatorError{}, err)
-				assert.True(t, govy.HasErrorCode(err, tc.ErrorCode))
+				assert.True(t, govy.HasErrorCode(err, tc.errorCode))
 			}
 		})
 	}

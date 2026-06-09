@@ -4,7 +4,6 @@ package dataexport
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = DataExport{}
 var _ v1alpha.ObjectContext = DataExport{}
 
 func (d DataExport) GetVersion() manifest.Version {
-	return d.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (d DataExport) GetKind() manifest.Kind {
-	return d.Kind
+	return manifest.KindDataExport
 }
 
 func (d DataExport) GetName() string {
 	return d.Metadata.Name
+}
+
+func (d DataExport) GetMetadata() Metadata {
+	return d.Metadata
 }
 
 func (d DataExport) Validate() error {

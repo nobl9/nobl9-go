@@ -7,8 +7,9 @@ import (
 
 // ThousandEyesMetric represents metric from ThousandEyes
 type ThousandEyesMetric struct {
-	TestID   *int64  `json:"testID"`
-	TestType *string `json:"testType"`
+	TestID         *int64  `json:"testID"`
+	TestType       *string `json:"testType"`
+	AccountGroupID *int64  `json:"accountGroupID,omitempty"`
 }
 
 const (
@@ -62,4 +63,7 @@ var thousandEyesValidation = govy.New[ThousandEyesMetric](
 		WithName("testType").
 		Required().
 		Rules(rules.OneOf(supportedThousandEyesTestTypes...)),
+	govy.ForPointer(func(m ThousandEyesMetric) *int64 { return m.AccountGroupID }).
+		WithName("accountGroupID").
+		Rules(rules.GTE[int64](0)),
 )

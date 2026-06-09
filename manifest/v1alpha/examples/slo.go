@@ -93,6 +93,10 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 			metricSubVariantSumoLogicMetrics,
 			metricSubVariantSumoLogicLogs,
 		},
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{
+			metricSubVariantSumoLogicLogs,
+			metricSubVariantSumoLogicLogsAllTotal,
+		},
 	},
 	v1alpha.Instana: {
 		metricVariantThreshold: []metricSubVariant{
@@ -126,6 +130,14 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
 		metricVariantGoodRatio:            []metricSubVariant{},
 		metricVariantThreshold:            []metricSubVariant{},
+	},
+	v1alpha.Atlas: {
+		metricVariantThreshold:            []metricSubVariant{},
+		metricVariantSingleQueryGoodRatio: []metricSubVariant{},
+	},
+	v1alpha.Dash0: {
+		metricVariantThreshold: []metricSubVariant{},
+		metricVariantGoodRatio: []metricSubVariant{},
 	},
 }
 

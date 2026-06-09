@@ -25,22 +25,33 @@ type RunRequest struct {
 
 type internalDeleteRequest struct {
 	DeleteRequest
-	All bool `json:"all"`
+	All bool `json:"all,omitempty"`
 }
 
 type DeleteRequest struct {
-	Project string `json:"project"`
-	SLO     string `json:"slo"`
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
 }
 
 type CancelRequest struct {
-	Project string `json:"project"`
-	SLO     string `json:"slo"`
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
 }
 
 type GetStatusRequest struct {
 	Project string `json:"project"`
 	SLO     string `json:"slo"`
+}
+
+type GetAvailabilityRequest struct {
+	Project           string
+	DataSourceProject string
+	DataSource        string
+	DataSourceKind    string
+	SLOName           string
+	Type              string
+	DurationUnit      string
+	DurationValue     int
 }
 
 type Duration struct {
@@ -181,7 +192,7 @@ func startTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 	}).WithErrorCode(startDateInTheFutureValidationError)
 }
 
-// ParseJSONToReplayStruct parse raw json into v1alpha.Replay struct with govy.
+// ParseJSONToReplayStruct parses raw JSON into [RunRequest] with govy validation.
 func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 	replay := RunRequest{}
 	if err := json.NewDecoder(data).Decode(&replay); err != nil {
@@ -224,7 +235,7 @@ func (d Duration) Duration() (time.Duration, error) {
 	return 0, nil
 }
 
-// ValidateDurationUnit check if given string is allowed period unit.
+// ValidateDurationUnit reports whether unit is an allowed replay duration unit.
 func ValidateDurationUnit(unit string) error {
 	if slices.Contains(allowedDurationUnit, unit) {
 		return nil

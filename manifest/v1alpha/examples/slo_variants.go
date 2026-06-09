@@ -1,3 +1,4 @@
+// nolint: lll,gocyclo
 package v1alphaExamples
 
 import (
@@ -61,7 +62,7 @@ func (s sloExample) GetDataSourceType() v1alpha.DataSourceType {
 func (s sloExample) String() string {
 	subVariantStr := s.MetricSubVariant
 	if subVariantStr != "" {
-		subVariantStr = subVariantStr + " "
+		subVariantStr += " "
 	}
 	return fmt.Sprintf(
 		"%s %s %sSLO using %s budgeting method and %s time window",
@@ -232,8 +233,9 @@ const (
 	metricSubVariantPingdomUptime      metricVariant = "uptime"
 	metricSubVariantPingdomTransaction metricVariant = "transaction"
 	// SumoLogic.
-	metricSubVariantSumoLogicMetrics metricVariant = "metrics"
-	metricSubVariantSumoLogicLogs    metricVariant = "logs"
+	metricSubVariantSumoLogicMetrics      metricVariant = "metrics"
+	metricSubVariantSumoLogicLogs         metricVariant = "logs"
+	metricSubVariantSumoLogicLogsAllTotal metricVariant = "logs all total"
 	// Instana.
 	metricSubVariantInstanaInfrastructureQuery      metricVariant = "infrastructure query"
 	metricSubVariantInstanaInfrastructureSnapshotID metricVariant = "infrastructure snapshot id"
@@ -247,6 +249,7 @@ const (
 // The standard variants are: raw, good/total, and bad/total (only supported sources).
 // If a metric source has non-standard variants (e.g. Lightstep), it can extend metricVariant with it's own types.
 // It is up to the caller to nil-out the unwanted fields.
+// nolint: gocognit,gocyclo
 func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 	switch s.DataSourceType {
 	case v1alpha.Prometheus:
@@ -444,8 +447,9 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesAPITransactionTime:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
-				TestID:   ptr[int64](2280492),
-				TestType: ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
+				TestID:         ptr[int64](2280492),
+				TestType:       ptr(v1alphaSLO.ThousandEyesAPITransactionTime),
+				AccountGroupID: ptr[int64](2114119),
 			}))
 		case metricVariantThreshold + metricSubVariantThousandEyesServerAvailability:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ThousandEyesMetric{
@@ -696,26 +700,26 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 		switch s.MetricVariant + s.MetricSubVariant {
 		case metricVariantThreshold + metricSubVariantSumoLogicMetrics:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=CPU_Usage`),
 			}))
 		case metricVariantGoodRatio + metricSubVariantSumoLogicMetrics:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=Mem_Used`),
 			}), newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type:         ptr("metrics"),
+				Type:         ptr(v1alphaSLO.SumoLogicTypeMetric),
 				Rollup:       ptr("Avg"),
 				Quantization: ptr("15s"),
 				Query:        ptr(`metric=Mem_Total`),
 			}))
 		case metricVariantThreshold + metricSubVariantSumoLogicLogs:
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_sourceCategory=uploads/nginx
 | timeslice 1m as n9_time
 | parse "HTTP/1.1" * * " as (status_code, size, tail)
@@ -725,7 +729,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			}))
 		case metricVariantGoodRatio + metricSubVariantSumoLogicLogs:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_collector="app-cluster" _source="logs"
 | json "log"
 | timeslice 15s as n9_time
@@ -734,12 +738,35 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | sum(log_level_not_error) as n9_value by n9_time
 | sort by n9_time asc`),
 			}), newMetricSpec(v1alphaSLO.SumoLogicMetric{
-				Type: ptr("logs"),
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
 				Query: ptr(`_collector="app-cluster" _source="logs"
 | json "log"
 | timeslice 15s as n9_time
 | parse "level=* *" as (log_level, tail)
 | count(*) as n9_value by n9_time
+| sort by n9_time asc`),
+			}))
+		case metricVariantSingleQueryGoodRatio + metricSubVariantSumoLogicLogs:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
+				Query: ptr(`_sourcecategory="kubernetes/applications/frontend/cache"
+| parse "cache_status=* response_time=*" as cache_status, response_time
+| timeslice 15s as n9_time
+| if(cache_status="HIT", 1, 0) as good
+| if(cache_status="HIT" OR cache_status="MISS", 1, 0) as total
+| sum(good) as n9_good, sum(total) as n9_total by n9_time
+| sort by n9_time asc`),
+			}))
+		case metricVariantSingleQueryGoodRatio + metricSubVariantSumoLogicLogsAllTotal:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.SumoLogicMetric{
+				Type: ptr(v1alphaSLO.SumoLogicTypeLogs),
+				Query: ptr(`_collector="n9-dev-tooling-cluster" _source="logs"
+| json "log"
+| timeslice 15s as n9_time
+| parse "level=* *" as (log_level, tail)
+| if (log_level = "info", 1, 0) as good
+| 1 as total
+| sum(good) as n9_good, sum(total) as n9_total by n9_time
 | sort by n9_time asc`),
 			}))
 		}
@@ -851,7 +878,8 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | align delta(1m)
 | every 1m
 | group_by [resource.service],
-    [value_request_latencies_mean: mean(value.request_latencies)]`}))
+    [value_request_latencies_mean: mean(value.request_latencies)]`,
+			}))
 		case metricVariantGoodRatio:
 			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.GCMMetric{
 				ProjectID: "my-project-id",
@@ -873,7 +901,8 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 | align rate(1m)
 | every 1m
 | group_by [resource.service],
-    [value_request_count_aggregate: aggregate(value.request_count)]`}))
+    [value_request_count_aggregate: aggregate(value.request_count)]`,
+			}))
 		}
 	case v1alpha.AzureMonitor:
 		switch s.MetricVariant + s.MetricSubVariant {
@@ -1062,6 +1091,50 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				PromQL: `sum(http_request_duration_seconds_count{handler="/api/v1/slos"})`,
 			}))
 		}
+	case v1alpha.Atlas:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
+				PromQL: `sum(the_alertgroup__the_alert) or on() vector(0)`,
+				DataReplay: &v1alphaSLO.AtlasDataReplay{
+					Parameters: map[string]string{
+						"alertGroup": "the_alertgroup",
+						"alert":      "the_alert",
+					},
+				},
+			}))
+		case metricVariantSingleQueryGoodRatio:
+			return setSingleQueryGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.AtlasMetric{
+				PromQL: `label_replace(
+  label_replace(
+    sum by (burnRateLabel) (the_alertgroup__the_alert) or on() vector(0),
+    "n9metric", "n9total", "burnRateLabel", "total_count"
+  ),
+  "n9metric", "n9good", "burnRateLabel", "good_count"
+)`,
+				DataReplay: &v1alphaSLO.AtlasDataReplay{
+					GoodSeriesLabel:  "good_count",
+					TotalSeriesLabel: "total_count",
+					Parameters: map[string]string{
+						"alertGroup": "the_alertgroup",
+						"alert":      "the_alert",
+					},
+				},
+			}))
+		}
+	case v1alpha.Dash0:
+		switch s.MetricVariant {
+		case metricVariantThreshold:
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+			}))
+		case metricVariantGoodRatio:
+			return setGoodOverTotalMetric(slo, newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total{status=~"2.."}[5m]))`),
+			}), newMetricSpec(v1alphaSLO.Dash0Metric{
+				PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+			}))
+		}
 	default:
 		panic(fmt.Sprintf("unsupported data source type: %s", s.DataSourceType))
 	}
@@ -1101,7 +1174,7 @@ func setSingleQueryGoodOverTotalMetric(slo v1alphaSLO.SLO, goodTotal *v1alphaSLO
 
 func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 	v := reflect.ValueOf(metric)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		metric = v.Elem().Interface()
 	}
 	spec := &v1alphaSLO.MetricSpec{}
@@ -1162,6 +1235,10 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.AzurePrometheus = &v
 	case v1alphaSLO.CoralogixMetric:
 		spec.Coralogix = &v
+	case v1alphaSLO.AtlasMetric:
+		spec.Atlas = &v
+	case v1alphaSLO.Dash0Metric:
+		spec.Dash0 = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}

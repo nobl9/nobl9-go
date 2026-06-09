@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,7 +18,6 @@ import (
 
 func Test_Objects_V1_V1alpha_Service(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	project.Metadata.DisplayName = "Project 1"
 	allObjects := []manifest.Object{
@@ -111,7 +109,7 @@ func Test_Objects_V1_V1alpha_Service(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaServices(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaServices(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

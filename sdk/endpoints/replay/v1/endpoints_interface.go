@@ -7,5 +7,11 @@ import (
 )
 
 type Endpoints interface {
-	Replay(ctx context.Context, params RunRequest) (err error)
+	Run(ctx context.Context, params RunRequest) (err error)
+	Delete(ctx context.Context, params DeleteRequest) (err error)
+	DeleteAll(ctx context.Context) (err error)
+	Cancel(ctx context.Context, params CancelRequest) (err error)
+	List(ctx context.Context) ([]ReplayListItem, error)
+	GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error)
+	GetAvailability(ctx context.Context, params GetAvailabilityRequest) (*ReplayAvailability, error)
 }

@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -29,7 +28,6 @@ const slosPerService = 50
 // nolint: gocognit
 func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	// Prepare dependencies.
 	project := generateV1alphaProject(t)
 	defaultProjectService := newV1alphaService(t, v1alphaService.Metadata{
@@ -118,17 +116,9 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 
 			metricSpecs := slo.Spec.AllMetricSpecs()
 			require.Greater(t, len(metricSpecs), 0, "expected at least 1 metric spec")
-
 			sourceType := metricSpecs[0].DataSourceType()
-			var source manifest.Object
-			switch slo.Spec.Indicator.MetricSource.Kind {
-			case manifest.KindDirect:
-				source = e2etestutils.ProvisionStaticDirect(t, sourceType)
-			default:
-				source = e2etestutils.ProvisionStaticAgent(t, sourceType)
-			}
-			slo.Spec.Indicator.MetricSource.Name = source.GetName()
-			slo.Spec.Indicator.MetricSource.Project = source.(manifest.ProjectScopedObject).GetProject()
+
+			e2etestutils.ProvisionDataSourceForSLO(t, &slo)
 
 			switch i {
 			case 0:
@@ -266,7 +256,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := client.Objects().V1().GetV1alphaSLOs(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Equal(t, len(test.expected), len(actual),

@@ -16,6 +16,7 @@ func Service() []Example {
 			v1alphaService.Spec{
 				Description: "Example Service",
 			},
-		)},
+		),
+	},
 	)
 }

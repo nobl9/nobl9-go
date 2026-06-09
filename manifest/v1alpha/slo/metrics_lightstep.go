@@ -101,7 +101,7 @@ var lightstepLatencyDataTypeValidation = govy.New[LightstepMetric](
 ).
 	When(
 		func(m LightstepMetric) bool { return m.TypeOfData != nil && *m.TypeOfData == LightstepLatencyDataType },
-		govy.WhenDescription("typeOfData is '%s'", LightstepLatencyDataType),
+		govy.WhenDescriptionf("typeOfData is '%s'", LightstepLatencyDataType),
 	)
 
 var lightstepUQLRegexp = regexp.MustCompile(`((spans_sample|assemble)\s+[a-z\d.])`)
@@ -120,7 +120,7 @@ var lightstepMetricDataTypeValidation = govy.New[LightstepMetric](
 ).
 	When(
 		func(m LightstepMetric) bool { return m.TypeOfData != nil && *m.TypeOfData == LightstepMetricDataType },
-		govy.WhenDescription("typeOfData is '%s'", LightstepMetricDataType),
+		govy.WhenDescriptionf("typeOfData is '%s'", LightstepMetricDataType),
 	)
 
 var lightstepGoodAndTotalDataTypeValidation = govy.New[LightstepMetric](
@@ -140,7 +140,7 @@ var lightstepGoodAndTotalDataTypeValidation = govy.New[LightstepMetric](
 				(*m.TypeOfData == LightstepGoodCountDataType ||
 					*m.TypeOfData == LightstepTotalCountDataType)
 		},
-		govy.WhenDescription("typeOfData is either '%s' or '%s'",
+		govy.WhenDescriptionf("typeOfData is either '%s' or '%s'",
 			LightstepGoodCountDataType, LightstepTotalCountDataType),
 	)
 
@@ -159,5 +159,5 @@ var lightstepErrorRateDataTypeValidation = govy.New[LightstepMetric](
 		func(m LightstepMetric) bool {
 			return m.TypeOfData != nil && *m.TypeOfData == LightstepErrorRateDataType
 		},
-		govy.WhenDescription("typeOfData is '%s'", LightstepErrorRateDataType),
+		govy.WhenDescriptionf("typeOfData is '%s'", LightstepErrorRateDataType),
 	)

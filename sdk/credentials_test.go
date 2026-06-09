@@ -261,12 +261,14 @@ func TestCredentials_RefreshAccessToken(t *testing.T) {
 		}
 		tokenParser := &mockTokenParser{
 			claims: jwtClaims{
-				M2MProfile: stringOrObject[jwtClaimM2MProfile]{Value: &jwtClaimM2MProfile{
-					User:         "test@user.com",
-					Organization: "my-org",
-					Environment:  "app.nobl9.com",
+				M2MProfile: stringOrObject[jwtClaimM2MProfile]{
+					Value: &jwtClaimM2MProfile{
+						User:         "test@user.com",
+						Organization: "my-org",
+						Environment:  "app.nobl9.com",
+					},
 				},
-				}},
+			},
 		}
 		hookCalled := false
 		creds := &credentialsStore{

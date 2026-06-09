@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -81,8 +82,7 @@ var sloValidationComposite = govy.New[SLO](
 					isSameName := component.Objective == s.Metadata.Name
 
 					if isSameProject && isSameName {
-						return govy.NewPropertyError(
-							"slo",
+						return govy.NewPropertyError(jsonpath.New().Name("slo"),
 							s.Metadata.Name,
 							errors.Errorf("composite SLO cannot have itself as one of its objectives"),
 						)
@@ -103,7 +103,14 @@ var sloValidationComposite = govy.New[SLO](
 					_, exists := sloMap[key]
 					if exists {
 						return govy.NewPropertyError(
-							fmt.Sprintf("spec.objectives[0].composite.components.objectives[%d]", objKey),
+							jsonpath.New().
+								Name("spec").
+								Name("objectives").
+								Index(0).
+								Name("composite").
+								Name("components").
+								Name("objectives").
+								Index(uint(objKey)),
 							obj.SLO,
 							errors.Errorf("composite SLO cannot have duplicated SLOs as its objectives"),
 						)
@@ -140,14 +147,14 @@ var specValidation = govy.New[Spec](
 		})),
 	govy.ForPointer(func(s Spec) *string { return s.Tier }).
 		WithName("tier").
-		Rules(rules.StringLength(0, 63)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 	govy.For(func(s Spec) string { return s.Service }).
 		WithName("service").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []string { return s.AlertPolicies }).
 		WithName("alertPolicies").
-		RulesForEach(rules.StringDNSLabel()),
+		RulesForEach(validationV1Alpha.StringName()),
 	govy.ForSlice(func(s Spec) []Attachment { return s.Attachments }).
 		WithName("attachments").
 		Cascade(govy.CascadeModeStop).
@@ -190,7 +197,7 @@ var attachmentValidation = govy.New[Attachment](
 		Rules(rules.StringURL()),
 	govy.ForPointer(func(a Attachment) *string { return a.DisplayName }).
 		WithName("displayName").
-		Rules(rules.StringLength(0, 63)),
+		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
 )
 
 var compositeValidation = govy.New[Composite](
@@ -215,16 +222,14 @@ var specCompositeValidationRule = govy.NewRule(func(s Spec) error {
 	switch s.BudgetingMethod {
 	case BudgetingMethodOccurrences.String():
 		if s.Composite.BurnRateCondition == nil {
-			return govy.NewPropertyError(
-				"burnRateCondition",
+			return govy.NewPropertyError(jsonpath.New().Name("burnRateCondition"),
 				s.Composite.BurnRateCondition,
 				validationV1Alpha.NewRequiredError(),
 			)
 		}
 	case BudgetingMethodTimeslices.String():
 		if s.Composite.BurnRateCondition != nil {
-			return govy.NewPropertyError(
-				"burnRateCondition",
+			return govy.NewPropertyError(jsonpath.New().Name("burnRateCondition"),
 				s.Composite.BurnRateCondition,
 				govy.NewRuleError(
 					fmt.Sprintf(
@@ -242,15 +247,15 @@ var compositeObjectiveRule = govy.New[CompositeObjective](
 	govy.For(func(c CompositeObjective) string { return c.Project }).
 		WithName("project").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.SLO }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) string { return c.Objective }).
 		WithName("objective").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(c CompositeObjective) float64 { return c.Weight }).
 		WithName("weight").
 		Rules(rules.GT(0.0)),
@@ -277,10 +282,10 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Name }).
 						WithName("name").
 						Required().
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 					govy.For(func(a AnomalyConfigAlertMethod) string { return a.Project }).
 						WithName("project").
-						Rules(rules.StringDNSLabel()),
+						Rules(validationV1Alpha.StringName()),
 				)),
 			govy.ForPointer(func(a AnomalyConfigNoData) *string { return a.AlertAfter }).
 				WithName("alertAfter").
@@ -300,11 +305,11 @@ var indicatorValidation = govy.New[Indicator](
 			govy.For(func(m MetricSourceSpec) string { return m.Name }).
 				WithName("name").
 				Required().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) string { return m.Project }).
 				WithName("project").
 				OmitEmpty().
-				Rules(rules.StringDNSLabel()),
+				Rules(validationV1Alpha.StringName()),
 			govy.For(func(m MetricSourceSpec) manifest.Kind { return m.Kind }).
 				WithName("kind").
 				OmitEmpty().
@@ -353,11 +358,11 @@ var objectiveBaseValidation = govy.New[ObjectiveBase](
 	govy.For(func(o ObjectiveBase) string { return o.Name }).
 		WithName("name").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(o ObjectiveBase) string { return o.DisplayName }).
 		WithName("displayName").
 		OmitEmpty().
-		Rules(rules.StringMaxLength(63)),
+		Rules(rules.StringMaxLength(validationV1Alpha.NameMaximumLength)),
 )
 
 func arePointerValuesEqual[T comparable](p1, p2 *T) bool {
@@ -408,6 +413,13 @@ var specValidationComposite = govy.New[Spec](
 				"composite section is forbidden when spec.objectives[0].composite is provided",
 			),
 		),
+	govy.ForPointer(func(s Spec) *AnomalyConfig { return s.AnomalyConfig }).
+		WithName("anomalyConfig").
+		Rules(
+			rules.Forbidden[AnomalyConfig]().WithDetails(
+				"anomalyConfig section is forbidden when spec.objectives[0].composite is provided",
+			),
+		),
 	govy.ForSlice(func(s Spec) []Objective { return s.Objectives }).
 		WithName("objectives").
 		Rules(rules.SliceLength[[]Objective](1, 1).
@@ -434,6 +446,10 @@ var specValidationComposite = govy.New[Spec](
 					govy.For(func(c CompositeSpec) string { return c.MaxDelay }).
 						WithName("maxDelay").
 						Required(),
+					govy.For(func(c CompositeSpec) ComponentAggregationMethod { return c.Aggregation }).
+						WithName("aggregation").
+						OmitEmpty().
+						Rules(rules.OneOf(ComponentAggregationMethodValues()...)),
 					govy.Transform(func(c CompositeSpec) string { return c.MaxDelay }, time.ParseDuration).
 						WithName("maxDelay").
 						When(func(c CompositeSpec) bool { return len(c.MaxDelay) > 0 }).
@@ -442,10 +458,10 @@ var specValidationComposite = govy.New[Spec](
 							rules.GTE(time.Minute),
 						),
 					govy.For(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
-						WithName("components.objectives").
+						WithPath(jsonpath.New().Name("components").Name("objectives")).
 						Required(),
 					govy.ForSlice(func(c CompositeSpec) []CompositeObjective { return c.Components.Objectives }).
-						WithName("components.objectives").
+						WithPath(jsonpath.New().Name("components").Name("objectives")).
 						IncludeForEach(compositeObjectiveRule),
 				)),
 		)),

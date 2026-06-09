@@ -59,6 +59,8 @@ type MetricSpec struct {
 	LogicMonitor        *LogicMonitorMetric        `json:"logicMonitor,omitempty"`
 	AzurePrometheus     *AzurePrometheusMetric     `json:"azurePrometheus,omitempty"`
 	Coralogix           *CoralogixMetric           `json:"coralogix,omitempty"`
+	Atlas               *AtlasMetric               `json:"atlas,omitempty"`
+	Dash0               *Dash0Metric               `json:"dash0,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -66,6 +68,7 @@ func (s *Spec) containsIndicatorRawMetric() bool {
 }
 
 // IsComposite returns true if SLOSpec contains composite type.
+//
 // Deprecated: this implementation of Composite will be removed and replaced with new CompositeSpec
 // use HasCompositeObjectives instead for new implementation
 func (s *Spec) IsComposite() bool {
@@ -208,18 +211,20 @@ func (s *Spec) GoodTotalCountMetrics() (good, total []*MetricSpec) {
 			total = append(total, objective.CountMetrics.TotalMetric)
 		}
 	}
-	return
+	return good, total
 }
 
 // AllMetricSpecs returns slice of all metrics defined in SLO regardless of their type.
 func (s *Spec) AllMetricSpecs() []*MetricSpec {
-	var metrics []*MetricSpec
+	metrics := make([]*MetricSpec, 0, s.ObjectivesRawMetricsCount()+s.CountMetricsCount())
 	metrics = append(metrics, s.RawMetrics()...)
 	metrics = append(metrics, s.CountMetrics()...)
 	return metrics
 }
 
 // DataSourceType returns a type of data source.
+//
+//nolint:gocyclo
 func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 	switch {
 	case m.Prometheus != nil:
@@ -278,6 +283,10 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.AzurePrometheus
 	case m.Coralogix != nil:
 		return v1alpha.Coralogix
+	case m.Atlas != nil:
+		return v1alpha.Atlas
+	case m.Dash0 != nil:
+		return v1alpha.Dash0
 	default:
 		return 0
 	}
@@ -367,6 +376,10 @@ func (m *MetricSpec) Query() interface{} {
 		return m.AzurePrometheus
 	case v1alpha.Coralogix:
 		return m.Coralogix
+	case v1alpha.Atlas:
+		return m.Atlas
+	case v1alpha.Dash0:
+		return m.Dash0
 	default:
 		return nil
 	}
@@ -383,7 +396,12 @@ func (m *MetricSpec) FormatQuery(query json.RawMessage) *string {
 	case v1alpha.SplunkObservability:
 		return m.SplunkObservability.Program
 	case v1alpha.SumoLogic:
-		return m.SumoLogic.Query
+		queries := m.SumoLogic.GetQueries()
+		if len(queries) == 0 {
+			return nil
+		}
+		q := queries[len(queries)-1].Query
+		return &q
 	default:
 		var formattedQuery string
 		if len(query) > 0 {
@@ -411,13 +429,13 @@ func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
 
 		switch jsonObj := jsonObjAny.(type) {
 		case string:
-			sb.WriteString(fmt.Sprintf("%s\n", jsonObj))
+			fmt.Fprintf(&sb, "%s\n", jsonObj)
 		case float64:
 			number := jsonObj
 			if math.Floor(number) == number {
-				sb.WriteString(fmt.Sprintf("%d\n", int64(number)))
+				fmt.Fprintf(&sb, "%d\n", int64(number))
 			} else {
-				sb.WriteString(fmt.Sprintf("%f\n", number))
+				fmt.Fprintf(&sb, "%f\n", number)
 			}
 		case map[string]any:
 			keys := make([]string, 0, len(jsonObj))
@@ -426,17 +444,13 @@ func formatRawJSONMetricQueryToString(queryAsJSON []byte) string {
 			}
 			sort.Strings(keys)
 			for _, k := range keys {
-				sb.WriteString(
-					fmt.Sprintf("%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix)),
-				)
+				fmt.Fprintf(&sb, "%s%s: %s", prefix, toTitle(k), formatJSONToString(jsonObj[k], prefix))
 			}
 		case []any:
 			sb.WriteString("\n")
 			prefix += " "
 			for i, val := range jsonObj {
-				sb.WriteString(
-					fmt.Sprintf("%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" ")),
-				)
+				fmt.Fprintf(&sb, "%s%d:\n%s", prefix, i+1, formatJSONToString(val, prefix+" "))
 			}
 		default:
 			sb.WriteString("")

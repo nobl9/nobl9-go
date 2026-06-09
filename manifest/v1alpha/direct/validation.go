@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -111,6 +112,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *AzurePrometheusConfig { return s.AzurePrometheus }).
 		WithName("azurePrometheus").
 		Include(azurePrometheusValidation),
+	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 var (
@@ -130,7 +134,7 @@ var (
 			HideValue().
 			When(
 				func(c NewRelicConfig) bool { return !isHiddenValue(c.InsightsQueryKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringStartsWith("NRIQ-")),
 	)
@@ -155,7 +159,7 @@ var (
 			HideValue().
 			When(
 				func(b BigQueryConfig) bool { return !isHiddenValue(b.ServiceAccountKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringJSON()),
 	)
@@ -184,7 +188,7 @@ var (
 			HideValue().
 			When(
 				func(g GCMConfig) bool { return !isHiddenValue(g.ServiceAccountKey) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringJSON()),
 	)
@@ -201,7 +205,25 @@ var (
 			Rules(rules.URL()),
 	)
 	dynatraceValidation = govy.New[DynatraceConfig](
-		urlPropertyRules(func(d DynatraceConfig) string { return d.URL }),
+		govy.For(govy.GetSelf[DynatraceConfig]()).
+			Rules(rules.OneOfProperties(map[string]func(DynatraceConfig) any{
+				"url":         func(d DynatraceConfig) any { return d.URL },
+				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
+			})),
+		requiredDynatracePairPropertyRules(
+			"url",
+			func(d DynatraceConfig) string { return d.URL },
+			"dynatraceToken",
+			func(d DynatraceConfig) string { return d.DynatraceToken },
+		),
+		optionalHTTPSUrlPropertyRules("url", func(d DynatraceConfig) string { return d.URL }),
+		requiredDynatracePairPropertyRules(
+			"platformUrl",
+			func(d DynatraceConfig) string { return d.PlatformURL },
+			"platformToken",
+			func(d DynatraceConfig) string { return d.PlatformToken },
+		),
+		optionalHTTPSUrlPropertyRules("platformUrl", func(d DynatraceConfig) string { return d.PlatformURL }),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -222,6 +244,13 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
+	)
+	dash0Validation = govy.New[Dash0Config](
+		urlPropertyRules(func(d Dash0Config) string { return d.URL }),
+		govy.For(func(d Dash0Config) int { return d.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 )
 
@@ -344,6 +373,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Dash0 != nil {
+		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -357,15 +391,14 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindDirect, typ)
 	if err != nil {
-		return govy.NewPropertyError("historicalDataRetrieval", nil, err)
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval"), nil, err)
 	}
 	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
 		Value: maxDuration.Value,
 		Unit:  maxDuration.Unit,
 	}
 	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		return govy.NewPropertyError(
-			"historicalDataRetrieval.maxDuration",
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval").Name("maxDuration"),
 			spec.HistoricalDataRetrieval.MaxDuration,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
@@ -385,16 +418,14 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 		Unit:  maxQueryDelay.Unit,
 	}
 	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
 	}
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("should be greater than or equal to %s", agentDefault),
 		)
@@ -406,16 +437,14 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
 		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
-		return govy.NewPropertyError(
-			"releaseChannel",
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be one of [stable, beta]"),
 		)
 	}
 
 	if typ == v1alpha.SplunkObservability && spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
-		return govy.NewPropertyError(
-			"releaseChannel",
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be 'alpha' for Splunk Observability"),
 		)
@@ -438,6 +467,41 @@ func urlPropertyRules[S any](getter govy.PropertyGetter[string, S]) govy.Propert
 			}
 			return nil
 		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func optionalHTTPSUrlPropertyRules[S any](
+	name string,
+	getter govy.PropertyGetter[string, S],
+) govy.PropertyRules[*url.URL, S] {
+	return govy.Transform(getter, url.Parse).
+		WithName(name).
+		Cascade(govy.CascadeModeStop).
+		OmitEmpty().
+		Rules(rules.URL()).
+		Rules(govy.NewRule(func(u *url.URL) error {
+			if u.Scheme != "https" {
+				return errors.New("requires https scheme")
+			}
+			return nil
+		}).WithErrorCode(errorCodeHTTPSSchemeRequired))
+}
+
+func requiredDynatracePairPropertyRules(
+	name string,
+	getter govy.PropertyGetter[string, DynatraceConfig],
+	pairedName string,
+	pairedGetter govy.PropertyGetter[string, DynatraceConfig],
+) govy.PropertyRules[string, DynatraceConfig] {
+	return govy.For(getter).
+		WithName(name).
+		When(
+			func(d DynatraceConfig) bool {
+				pairedValue := pairedGetter(d)
+				return pairedValue != "" && pairedValue != v1alpha.HiddenValue
+			},
+			govy.WhenDescriptionf("%s is provided", pairedName),
+		).
+		Required()
 }
 
 func isHiddenValue(s string) bool { return s == "" || s == v1alpha.HiddenValue }

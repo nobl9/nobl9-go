@@ -8,6 +8,7 @@ import (
 	"github.com/nobl9/nobl9-go/internal/examples"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/report"
+	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func ExampleReport_systemHealthReview() {
@@ -93,7 +94,10 @@ func ExampleReport_systemHealthReview() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:
@@ -200,7 +204,10 @@ func ExampleReport_sloHistory() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:
@@ -279,7 +286,10 @@ func ExampleReport_errorBudgetStatus() {
 	}
 	// Apply the object:
 	client := examples.GetOfflineEchoClient()
-	if err := client.Objects().V1().Apply(context.Background(), []manifest.Object{myReport}); err != nil {
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
 		log.Fatalf("failed to apply report, err: %v", err)
 	}
 	// Output:
@@ -307,6 +317,73 @@ func ExampleReport_errorBudgetStatus() {
 	//       - value1
 	//       - value2
 	//   errorBudgetStatus: {}
+}
+
+func ExampleReport_reliabilityRollup() {
+	// Create the object:
+	myReport := report.New(
+		report.Metadata{
+			Name:        "report",
+			DisplayName: "My report",
+		},
+		report.Spec{
+			Shared: true,
+			ReliabilityRollup: &report.ReliabilityRollupConfig{
+				TimeFrame: report.ReliabilityRollupTimeFrame{
+					Rolling: &report.RollingTimeFrame{
+						Repeat: report.Repeat{
+							Unit:  ptr("Week"),
+							Count: ptr(4),
+						},
+					},
+					TimeZone: "America/New_York",
+				},
+				CustomHierarchy: []report.HierarchyFolder{
+					{
+						DisplayName: "Platform",
+						SLOs: []report.HierarchySLORef{
+							{
+								Name:    "api-availability",
+								Project: "core-platform",
+							},
+						},
+					},
+				},
+			},
+		},
+	)
+
+	// Verify the object:
+	if err := myReport.Validate(); err != nil {
+		log.Fatalf("report validation failed, err: %v", err)
+	}
+	// Apply the object:
+	client := examples.GetOfflineEchoClient()
+	if err := client.Objects().V2().Apply(
+		context.Background(),
+		objectsV2.ApplyRequest{Objects: []manifest.Object{myReport}},
+	); err != nil {
+		log.Fatalf("failed to apply report, err: %v", err)
+	}
+	// Output:
+	// apiVersion: n9/v1alpha
+	// kind: Report
+	// metadata:
+	//   name: report
+	//   displayName: My report
+	// spec:
+	//   shared: true
+	//   reliabilityRollup:
+	//     timeFrame:
+	//       rolling:
+	//         unit: Week
+	//         count: 4
+	//       timeZone: America/New_York
+	//     customHierarchy:
+	//     - displayName: Platform
+	//       slos:
+	//       - name: api-availability
+	//         project: core-platform
 }
 
 func ptr[T any](v T) *T { return &v }

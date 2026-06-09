@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 
 func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	alertMethodTypes := v1alpha.AlertMethodTypeValues()
 	allObjects := make([]manifest.Object, 0, len(alertMethodTypes)+1)
@@ -77,7 +75,7 @@ func Test_Objects_V1_V1alpha_AlertMethod(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaAlertMethods(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaAlertMethods(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

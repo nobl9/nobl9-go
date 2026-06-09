@@ -36,8 +36,9 @@ func dataSourceTypePrettyName(typ v1alpha.DataSourceType) string {
 	case v1alpha.AppDynamics, v1alpha.ThousandEyes, v1alpha.BigQuery,
 		v1alpha.OpenTSDB, v1alpha.CloudWatch, v1alpha.InfluxDB, v1alpha.LogicMonitor:
 		return typ.String()
+	default:
+		return splitCamelCase(typ.String())
 	}
-	return splitCamelCase(typ.String())
 }
 
 func splitCamelCase(input string) string {

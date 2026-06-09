@@ -24,10 +24,10 @@ type Direct struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -62,12 +62,13 @@ type Spec struct {
 	Honeycomb               *HoneycombConfig                 `json:"honeycomb,omitempty"`
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
+	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
-	Interval *v1alpha.Interval `json:"interval,omitempty"`
-	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty"`
-	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty"`
+	Interval *v1alpha.Interval `json:"interval,omitempty" nobl9:"computed"`
+	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty" nobl9:"computed"`
+	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty" nobl9:"computed"`
 }
 
 // Status represents content of Status optional for Direct Object
@@ -96,6 +97,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.Honeycomb:           {},
 	v1alpha.LogicMonitor:        {},
 	v1alpha.AzurePrometheus:     {},
+	v1alpha.Dash0:               {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -145,6 +147,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.LogicMonitor, nil
 	case spec.AzurePrometheus != nil:
 		return v1alpha.AzurePrometheus, nil
+	case spec.Dash0 != nil:
+		return v1alpha.Dash0, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -240,6 +244,7 @@ type InfluxDBConfig struct {
 // GCMConfig represents content of GCM configuration typical for Direct Object.
 type GCMConfig struct {
 	ServiceAccountKey string `json:"serviceAccountKey"`
+	Step              int    `json:"step,omitempty"`
 }
 
 type LightstepConfig struct {
@@ -251,8 +256,10 @@ type LightstepConfig struct {
 
 // DynatraceConfig represents content of Dynatrace configuration typical for Direct Object.
 type DynatraceConfig struct {
-	URL            string `json:"url"`
-	DynatraceToken string `json:"dynatraceToken"`
+	URL            string `json:"url,omitempty"`
+	PlatformURL    string `json:"platformUrl,omitempty"`
+	DynatraceToken string `json:"dynatraceToken,omitempty"`
+	PlatformToken  string `json:"platformToken,omitempty"`
 }
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Direct Object.
@@ -280,4 +287,12 @@ type AzurePrometheusConfig struct {
 	TenantID     string `json:"tenantId"`
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
+	Step         int    `json:"step,omitempty"`
+}
+
+// Dash0Config represents content of Dash0 Configuration typical for Direct Object.
+type Dash0Config struct {
+	URL       string `json:"url"`
+	AuthToken string `json:"authToken"`
+	Step      int    `json:"step,omitempty"`
 }

@@ -3,11 +3,13 @@ package agent
 import (
 	"net/url"
 	"path"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -135,6 +137,12 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *CoralogixConfig { return s.Coralogix }).
 		WithName("coralogix").
 		Include(coralogixValidation),
+	govy.ForPointer(func(s Spec) *AtlasConfig { return s.Atlas }).
+		WithName("atlas").
+		Include(atlasValidation),
+	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
+		WithName("dash0").
+		Include(dash0Validation),
 )
 
 var (
@@ -170,9 +178,14 @@ var (
 			Required(),
 	)
 	dynatraceValidation = govy.New[DynatraceConfig](
+		govy.For(govy.GetSelf[DynatraceConfig]()).
+			Rules(rules.OneOfProperties(map[string]func(DynatraceConfig) any{
+				"url":         func(d DynatraceConfig) any { return d.URL },
+				"platformUrl": func(d DynatraceConfig) any { return d.PlatformURL },
+			})),
 		govy.Transform(func(d DynatraceConfig) string { return d.URL }, url.Parse).
 			WithName("url").
-			Required().
+			OmitEmpty().
 			Rules(
 				rules.URL(),
 				govy.NewRule(func(u *url.URL) error {
@@ -189,6 +202,11 @@ var (
 					return nil
 				}),
 			),
+		govy.Transform(func(d DynatraceConfig) string { return d.PlatformURL }, url.Parse).
+			WithName("platformUrl").
+			Cascade(govy.CascadeModeStop).
+			OmitEmpty().
+			Rules(rules.URL(), newHTTPSSchemeRule()),
 	)
 	amazonPrometheusValidation = govy.New[AmazonPrometheusConfig](
 		govy.For(func(a AmazonPrometheusConfig) string { return a.URL }).
@@ -199,6 +217,10 @@ var (
 			WithName("region").
 			Required().
 			Rules(rules.StringMaxLength(255)),
+		govy.For(func(a AmazonPrometheusConfig) int { return a.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	azureMonitorValidation = govy.New[AzureMonitorConfig](
 		govy.For(func(a AzureMonitorConfig) string { return a.TenantID }).
@@ -221,15 +243,62 @@ var (
 			WithName("tenantId").
 			Required().
 			Rules(rules.StringUUID()),
+		govy.For(func(a AzurePrometheusConfig) int { return a.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	coralogixValidation = govy.New[CoralogixConfig](
-		govy.For(func(a CoralogixConfig) string { return a.Domain }).
+		govy.For(func(c CoralogixConfig) string { return c.Domain }).
 			WithName("domain").
 			Required().
 			Rules(rules.StringFQDN()),
+		govy.For(func(c CoralogixConfig) int { return c.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
+	atlasValidation = govy.New[AtlasConfig](
+		govy.Transform(func(a AtlasConfig) string { return a.SlicURL }, url.Parse).
+			WithName("slicUrl").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+		govy.For(func(a AtlasConfig) int { return a.SlicStep }).
+			WithName("slicStep").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+		govy.Transform(func(a AtlasConfig) string { return a.DataReplayURL }, url.Parse).
+			WithName("dataReplayUrl").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+	)
+	dash0Validation = govy.New[Dash0Config](
+		govy.Transform(func(d Dash0Config) string { return d.URL }, url.Parse).
+			WithName("url").
+			Required().
+			Rules(rules.URL(), newHTTPSSchemeRule()),
+		govy.For(func(d Dash0Config) int { return d.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
+	prometheusValidation = govy.New[PrometheusConfig](
+		govy.For(func(p PrometheusConfig) string { return p.URL }).
+			WithName("url").
+			Required().
+			Rules(rules.StringURL()),
+		govy.For(func(p PrometheusConfig) int { return p.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
+	)
+	gcmValidation = govy.New[GCMConfig](
+		govy.For(func(g GCMConfig) int { return g.Step }).
+			WithName("step").
+			OmitEmpty().
+			Rules(rules.GTE(15)),
 	)
 	// URL only.
-	prometheusValidation    = newURLValidator(func(p PrometheusConfig) string { return p.URL })
 	appDynamicsValidation   = newURLValidator(func(a AppDynamicsConfig) string { return a.URL })
 	splunkValidation        = newURLValidator(func(s SplunkConfig) string { return s.URL })
 	elasticsearchValidation = newURLValidator(func(e ElasticsearchConfig) string { return e.URL })
@@ -245,14 +314,15 @@ var (
 	cloudWatchValidation   = govy.New[CloudWatchConfig]()
 	pingdomValidation      = govy.New[PingdomConfig]()
 	redshiftValidation     = govy.New[RedshiftConfig]()
-	gcmValidation          = govy.New[GCMConfig]()
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )
 
 const (
-	errCodeExactlyOneDataSourceType = "exactly_one_data_source_type"
-	errCodeQueryDelayOutOfBounds    = "query_delay_out_of_bounds"
+	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
+	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
+	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
+	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
 
 var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error {
@@ -408,6 +478,16 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Atlas != nil {
+		if err := typesMatch(v1alpha.Atlas); err != nil {
+			return err
+		}
+	}
+	if spec.Dash0 != nil {
+		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -421,15 +501,14 @@ var historicalDataRetrievalValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
 	maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ)
 	if err != nil {
-		return govy.NewPropertyError("historicalDataRetrieval", nil, err)
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval"), nil, err)
 	}
 	maxDurationAllowed := v1alpha.HistoricalRetrievalDuration{
 		Value: maxDuration.Value,
 		Unit:  maxDuration.Unit,
 	}
 	if spec.HistoricalDataRetrieval.MaxDuration.BiggerThan(maxDurationAllowed) {
-		return govy.NewPropertyError(
-			"historicalDataRetrieval.maxDuration",
+		return govy.NewPropertyError(jsonpath.New().Name("historicalDataRetrieval").Name("maxDuration"),
 			spec.HistoricalDataRetrieval.MaxDuration,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxDurationAllowed.Value, maxDurationAllowed.Unit))
@@ -449,16 +528,14 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 		Unit:  maxQueryDelay.Unit,
 	}
 	if spec.QueryDelay.Duration.GreaterThan(maxQueryDelayAllowed) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("must be less than or equal to %d %s",
 				*maxQueryDelayAllowed.Value, maxQueryDelayAllowed.Unit))
 	}
 	agentDefault := v1alpha.GetQueryDelayDefaults()[typ]
 	if spec.QueryDelay.LessThan(agentDefault) {
-		return govy.NewPropertyError(
-			"queryDelay",
+		return govy.NewPropertyError(jsonpath.New().Name("queryDelay"),
 			spec.QueryDelay,
 			errors.Errorf("should be greater than or equal to %s", agentDefault),
 		)
@@ -474,4 +551,24 @@ func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validato
 			Required().
 			Rules(rules.StringURL()),
 	)
+}
+
+func newHTTPSchemeRule() govy.Rule[*url.URL] {
+	httpSchemes := []string{"http", "https"}
+	return govy.NewRule(func(v *url.URL) error {
+		if !slices.Contains(httpSchemes, v.Scheme) {
+			return govy.NewRuleError("valid URL must have a http or https scheme", errCodeHTTPOrHTTPSSchemeRequired)
+		}
+
+		return nil
+	})
+}
+
+func newHTTPSSchemeRule() govy.Rule[*url.URL] {
+	return govy.NewRule(func(v *url.URL) error {
+		if v.Scheme != "https" {
+			return govy.NewRuleError("requires https scheme", errCodeHTTPSSchemeRequired)
+		}
+		return nil
+	})
 }

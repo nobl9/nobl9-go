@@ -2,6 +2,7 @@ package report
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -9,8 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/teambition/rrule-go"
 
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
@@ -22,7 +25,7 @@ var validationMessageRegexp = regexp.MustCompile(strings.TrimSpace(`
 `))
 
 func TestValidate_VersionAndKind(t *testing.T) {
-	report := validReport()
+	report := validSystemHealthReport()
 	report.APIVersion = "v0.1"
 	report.Kind = manifest.KindProject
 	err := validate(report)
@@ -40,7 +43,7 @@ func TestValidate_VersionAndKind(t *testing.T) {
 }
 
 func TestValidate_Metadata(t *testing.T) {
-	report := validReport()
+	report := validSystemHealthReport()
 	report.Metadata = Metadata{
 		Name: strings.Repeat("-my report", 20),
 	}
@@ -50,14 +53,14 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, report, err, 1,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
 
 func TestValidate_Spec(t *testing.T) {
 	t.Run("fails with empty spec", func(t *testing.T) {
-		report := validReport()
+		report := validSystemHealthReport()
 		report.Spec = Spec{}
 		err := validate(report)
 		testutils.AssertContainsErrors(t, report, err, 2,
@@ -72,7 +75,7 @@ func TestValidate_Spec(t *testing.T) {
 		)
 	})
 	t.Run("fails with more than one report type configuration defined in spec", func(t *testing.T) {
-		report := validReport()
+		report := validSystemHealthReport()
 		report.Spec = Spec{
 			Filters: &Filters{Projects: []string{"project"}},
 			SystemHealthReview: &SystemHealthReviewConfig{
@@ -143,7 +146,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
+			report := validSystemHealthReport()
 			report.Spec.Filters = &filters
 			err := validate(report)
 			testutils.AssertNoError(t, report, err)
@@ -183,7 +186,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.projects[0]",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -211,7 +214,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].name",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -244,7 +247,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.services[0].project",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -277,7 +280,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -310,7 +313,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 			Filters: &Filters{
@@ -324,7 +327,7 @@ func TestValidate_Spec_Filters(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
+			report := validSystemHealthReport()
 			report.Spec.Filters = test.Filters
 			err := validate(report)
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
@@ -367,7 +370,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
+			report := validSystemHealthReport()
 			report.Spec.SystemHealthReview = nil
 			report.Spec.SLOHistory = &SLOHistoryConfig{
 				TimeFrame: timeFrame,
@@ -608,7 +611,7 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
+			report := validSystemHealthReport()
 			report.Spec.SystemHealthReview = nil
 			report.Spec.SLOHistory = &SLOHistoryConfig{
 				TimeFrame: test.TimeFrame,
@@ -620,269 +623,532 @@ func TestValidate_Spec_SLOHistory_TimeFrame(t *testing.T) {
 }
 
 func TestValidate_Spec_SystemHealthReview(t *testing.T) {
-	properLabel := v1alpha.Labels{"key1": {"value1"}}
-	for name, test := range map[string]struct {
+	t.Run("valid rowGroupBy values", func(t *testing.T) {
+		for _, rowGroupBy := range RowGroupByValues() {
+			report := validSystemHealthReport()
+			config := validSystemHealthReviewConfig(rowGroupBy)
+			report.Spec.SystemHealthReview = &config
+			err := validate(report)
+			testutils.AssertNoError(t, report, err)
+		}
+	})
+
+	t.Run("valid tableHeader", func(t *testing.T) {
+		report := validSystemHealthReport()
+		config := validSystemHealthReviewConfig(RowGroupByService)
+		config.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength)
+		report.Spec.SystemHealthReview = &config
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
 		ExpectedErrorsCount int
 		ExpectedErrors      []testutils.ExpectedError
-		Config              SystemHealthReviewConfig
+		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
 	}{
 		"fails with empty rowGroupBy value": {
 			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.rowGroupBy",
-					Code: rules.ErrorCodeRequired,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{Point: SnapshotPointLatest},
-					TimeZone: "America/New_York",
-				},
-				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: properLabel},
-				},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
-			},
-		},
-		"fails with empty columns": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.columns",
-					Code: rules.ErrorCodeSliceMinLength,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns:    []ColumnSpec{},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
-			},
-		},
-		"fails with too many columns": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.columns",
-					Code: rules.ErrorCodeSliceMaxLength,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: properLabel},
-					{DisplayName: "Column 2", Labels: properLabel},
-					{DisplayName: "Column 3", Labels: properLabel},
-					{DisplayName: "Column 4", Labels: properLabel},
-					{DisplayName: "Column 5", Labels: properLabel},
-					{DisplayName: "Column 6", Labels: properLabel},
-					{DisplayName: "Column 7", Labels: properLabel},
-					{DisplayName: "Column 8", Labels: properLabel},
-					{DisplayName: "Column 9", Labels: properLabel},
-					{DisplayName: "Column 10", Labels: properLabel},
-					{DisplayName: "Column 11", Labels: properLabel},
-					{DisplayName: "Column 12", Labels: properLabel},
-					{DisplayName: "Column 13", Labels: properLabel},
-					{DisplayName: "Column 14", Labels: properLabel},
-					{DisplayName: "Column 15", Labels: properLabel},
-					{DisplayName: "Column 16", Labels: properLabel},
-					{DisplayName: "Column 17", Labels: properLabel},
-					{DisplayName: "Column 18", Labels: properLabel},
-					{DisplayName: "Column 19", Labels: properLabel},
-					{DisplayName: "Column 20", Labels: properLabel},
-					{DisplayName: "Column 21", Labels: properLabel},
-					{DisplayName: "Column 22", Labels: properLabel},
-					{DisplayName: "Column 23", Labels: properLabel},
-					{DisplayName: "Column 24", Labels: properLabel},
-					{DisplayName: "Column 25", Labels: properLabel},
-					{DisplayName: "Column 26", Labels: properLabel},
-					{DisplayName: "Column 27", Labels: properLabel},
-					{DisplayName: "Column 28", Labels: properLabel},
-					{DisplayName: "Column 29", Labels: properLabel},
-					{DisplayName: "Column 30", Labels: properLabel},
-					{DisplayName: "Column 31", Labels: properLabel},
-				},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
-			},
-		},
-		"fails with empty labels": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.columns[0].labels",
-					Code: rules.ErrorCodeMapMinLength,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: v1alpha.Labels{}},
-				},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
-			},
-		},
-		"fails with empty displayName": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.columns[0].displayName",
-					Code: rules.ErrorCodeRequired,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{Labels: properLabel},
-				},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
-			},
-		},
-		"fails with too long displayName": {
-			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.columns[0].displayName",
-					Code: rules.ErrorCodeStringMaxLength,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{
-						DisplayName: "it is a very long display name, longer than sixty three characters",
-						Labels:      properLabel,
-					},
-				},
-				Thresholds: Thresholds{
-					RedLessThanOrEqual: ptr(0.0),
-					GreenGreaterThan:   ptr(0.2),
-				},
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.rowGroupBy",
+				Code: rules.ErrorCodeRequired,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupBy(0)
+				return conf
 			},
 		},
 		"fails with empty thresholds": {
 			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.thresholds",
-					Code: rules.ErrorCodeRequired,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: properLabel},
-				},
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.thresholds",
+				Code: rules.ErrorCodeRequired,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Thresholds = Thresholds{}
+				return conf
 			},
 		},
 		"fails with invalid thresholds": {
 			ExpectedErrorsCount: 1,
-			ExpectedErrors: []testutils.ExpectedError{
-				{
-					Prop: "spec.systemHealthReview.thresholds.greenGt",
-					Code: rules.ErrorCodeLessThan,
-				},
-			},
-			Config: SystemHealthReviewConfig{
-				TimeFrame: SystemHealthReviewTimeFrame{
-					Snapshot: SnapshotTimeFrame{
-						Point: SnapshotPointLatest,
-					},
-					TimeZone: "Europe/Warsaw",
-				},
-				RowGroupBy: RowGroupByProject,
-				Columns: []ColumnSpec{
-					{DisplayName: "Column 1", Labels: properLabel},
-				},
-				Thresholds: Thresholds{
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.thresholds.greenGt",
+				Code: rules.ErrorCodeLessThan,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Thresholds = Thresholds{
 					RedLessThanOrEqual: ptr(-0.1),
 					GreenGreaterThan:   ptr(1.1),
-				},
+				}
+				return conf
+			},
+		},
+		"fails when red is greater than green": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:    "spec.systemHealthReview.thresholds.redLte",
+				Message: "must be less than or equal to 'greenGt' (0.1)",
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Thresholds = Thresholds{
+					RedLessThanOrEqual: ptr(0.2),
+					GreenGreaterThan:   ptr(0.1),
+				}
+				return conf
+			},
+		},
+		"fails when rowGroupBy is 'project'": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeForbidden,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByProject
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails when rowGroupBy is 'service'": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeForbidden,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.RowGroupBy = RowGroupByService
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails with too long tableHeader": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.tableHeader",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.TableHeader = strings.Repeat("l", validationV1Alpha.NameMaximumLength+1)
+				return conf
+			},
+		},
+		"fails with invalid timeZone": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:    "spec.systemHealthReview.timeFrame.timeZone",
+				Message: "not a valid time zone: unknown time zone x",
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.TimeFrame.TimeZone = "x"
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(RowGroupByService)
+			conf = test.ConfigFunc(conf)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
+}
+
+func TestValidate_Spec_SystemHealthReview_Columns(t *testing.T) {
+	for name, test := range map[string]struct {
+		ExpectedErrorsCount int
+		ExpectedErrors      []testutils.ExpectedError
+		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
+	}{
+		"fails with empty columns": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.columns",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Columns = []ColumnSpec{}
+				return conf
+			},
+		},
+		"fails with too many columns": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.columns",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				limit := 31
+				result := make([]ColumnSpec, limit)
+				for i := range limit {
+					result[i] = ColumnSpec{DisplayName: strconv.Itoa(i), Labels: v1alpha.Labels{"key1": {"value1"}}}
+				}
+				conf.Columns = result
+				return conf
+			},
+		},
+		"fails with empty labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.columns[0].labels",
+				Code: rules.ErrorCodeMapMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Columns[0].Labels = v1alpha.Labels{}
+				return conf
+			},
+		},
+		"fails with invalid label key": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:       jsonpath.Parse("spec.systemHealthReview.columns[0].labels").Name("k ey").String(),
+				IsKeyError: true,
+				Code:       rules.ErrorCodeStringMatchRegexp,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Columns[0].Labels = v1alpha.Labels{"k ey": nil}
+				return conf
+			},
+		},
+		"fails with empty displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.columns[0].displayName",
+				Code: rules.ErrorCodeRequired,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Columns[0].DisplayName = ""
+				return conf
+			},
+		},
+		"fails with too long displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.columns[0].displayName",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.Columns[0].DisplayName = strings.Repeat("l", 254)
+				return conf
 			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
-			report.Spec.SystemHealthReview = &test.Config
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(RowGroupByProject)
+			conf = test.ConfigFunc(conf)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
+}
+
+func TestValidate_Spec_SystemHealthReview_RowGroupByLabel(t *testing.T) {
+	t.Run("passes with valid labelRows when rowGroupBy is label", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := validSystemHealthReviewConfig(RowGroupByLabel)
+		conf.RowGroupBy = RowGroupByLabel
+		conf.LabelRows = []LabelRowSpec{
+			{Labels: v1alpha.Labels{"env": nil}},
+		}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
+		ExpectedErrorsCount int
+		ExpectedErrors      []testutils.ExpectedError
+		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
+	}{
+		"fails with nil labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = nil
+				return conf
+			},
+		},
+		"fails with empty labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{}
+				return conf
+			},
+		},
+		"fails with too many labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				limit := 2
+				result := make([]LabelRowSpec, limit)
+				for i := range limit {
+					result[i] = LabelRowSpec{Labels: v1alpha.Labels{"key" + strconv.Itoa(i): nil}}
+				}
+				conf.LabelRows = result
+				return conf
+			},
+		},
+		"fails with empty labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{}}}
+				return conf
+			},
+		},
+		"fails with too many labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": nil, "key2": nil}}}
+				return conf
+			},
+		},
+		"fails with invalid label key": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:       jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels").Name("k ey").String(),
+				IsKeyError: true,
+				Code:       rules.ErrorCodeStringMatchRegexp,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"k ey": nil}}}
+				return conf
+			},
+		},
+		"fails with label values": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:    "spec.systemHealthReview.labelRows[0].labels.key1",
+				Message: "label values must be empty",
+				Code:    rules.ErrorCodeSliceMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{{Labels: v1alpha.Labels{"key1": {"value1"}}}}
+				return conf
+			},
+		},
+		"fails with displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeForbidden,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].DisplayName = "foo"
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(RowGroupByLabel)
+			conf = test.ConfigFunc(conf)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
+		})
+	}
+}
+
+func TestValidate_Spec_SystemHealthReview_RowGroupByCustom(t *testing.T) {
+	t.Run("passes with valid labelRows when rowGroupBy is custom", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+		conf.RowGroupBy = RowGroupByCustomRows
+		conf.LabelRows = []LabelRowSpec{{
+			DisplayName: "Environment",
+			Labels:      v1alpha.Labels{"env": []string{"prod"}},
+		}}
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with many rows", func(t *testing.T) {
+		report := validSystemHealthReport()
+		conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+		conf.RowGroupBy = RowGroupByCustomRows
+		limit := 50
+		rows := make([]LabelRowSpec, 0, limit)
+		for i := range limit {
+			rows = append(rows, LabelRowSpec{
+				DisplayName: strconv.Itoa(i),
+				Labels:      v1alpha.Labels{"env": []string{"prod"}},
+			})
+		}
+		conf.LabelRows = rows
+		report.Spec.SystemHealthReview = &conf
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	tests := map[string]struct {
+		ExpectedErrorsCount int
+		ExpectedErrors      []testutils.ExpectedError
+		ConfigFunc          func(conf SystemHealthReviewConfig) SystemHealthReviewConfig
+	}{
+		"fails with too many rows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				limit := 51
+				rows := make([]LabelRowSpec, 0, limit)
+				for i := range limit {
+					rows = append(rows, LabelRowSpec{
+						DisplayName: strconv.Itoa(i),
+						Labels:      v1alpha.Labels{"env": []string{"prod"}},
+					})
+				}
+				conf.LabelRows = rows
+				return conf
+			},
+		},
+		"fails with nil labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = nil
+				return conf
+			},
+		},
+		"fails with empty labelRows": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows",
+				Code: rules.ErrorCodeSliceLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows = []LabelRowSpec{}
+				return conf
+			},
+		},
+		"fails with empty labels": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels",
+				Code: rules.ErrorCodeMapMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{}
+				return conf
+			},
+		},
+		"fails with invalid label key": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop:       jsonpath.Parse("spec.systemHealthReview.labelRows[0].labels").Name("k ey").String(),
+				IsKeyError: true,
+				Code:       rules.ErrorCodeStringMatchRegexp,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"k ey": nil}
+				return conf
+			},
+		},
+		"fails with empty label values": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"key1": []string{}}
+				return conf
+			},
+		},
+		"fails with nil label values": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].labels.key1",
+				Code: rules.ErrorCodeSliceMinLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].Labels = v1alpha.Labels{"key1": nil}
+				return conf
+			},
+		},
+		"fails with empty displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeRequired,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].DisplayName = ""
+				return conf
+			},
+		},
+		"fails with too long displayName": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{{
+				Prop: "spec.systemHealthReview.labelRows[0].displayName",
+				Code: rules.ErrorCodeStringMaxLength,
+			}},
+			ConfigFunc: func(conf SystemHealthReviewConfig) SystemHealthReviewConfig {
+				conf.LabelRows[0].DisplayName = strings.Repeat("l", validationV1Alpha.NameMaximumLength+1)
+				return conf
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(RowGroupByCustomRows)
+			conf = test.ConfigFunc(conf)
+			report.Spec.SystemHealthReview = &conf
 			err := validate(report)
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
 		})
 	}
 
-	t.Run("fails when red is greater than green", func(t *testing.T) {
-		report := validReport()
-		report.Spec.SystemHealthReview = &SystemHealthReviewConfig{
-			TimeFrame: SystemHealthReviewTimeFrame{
-				Snapshot: SnapshotTimeFrame{
-					Point: SnapshotPointLatest,
-				},
-				TimeZone: "Europe/Warsaw",
-			},
-			RowGroupBy: RowGroupByProject,
-			Columns: []ColumnSpec{
-				{DisplayName: "Column 1", Labels: properLabel},
-			},
-			Thresholds: Thresholds{
-				RedLessThanOrEqual: ptr(0.2),
-				GreenGreaterThan:   ptr(0.1),
-			},
+	t.Run("fails if hideUngrouped is set for anything but 'label'", func(t *testing.T) {
+		for _, rowGroupBy := range RowGroupByValues() {
+			report := validSystemHealthReport()
+			conf := validSystemHealthReviewConfig(rowGroupBy)
+			conf.HideUngrouped = ptr(true)
+			report.Spec.SystemHealthReview = &conf
+			err := validate(report)
+			switch rowGroupBy {
+			case RowGroupByLabel:
+				testutils.AssertNoError(t, report, err)
+			default:
+				testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+					Prop: "spec.systemHealthReview.hideUngrouped",
+					Code: rules.ErrorCodeForbidden,
+				})
+			}
 		}
-		err := validate(report)
-		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
-			Prop:    "spec.systemHealthReview.thresholds.redLte",
-			Message: "must be less than or equal to 'greenGt' (0.1)",
-		},
-		)
 	})
 }
 
@@ -1105,7 +1371,7 @@ func TestValidate_Spec_SystemHealthReview_TimeFrame(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			report := validReport()
+			report := validSystemHealthReport()
 			report.Spec.SystemHealthReview = &test.Config
 			err := validate(report)
 			testutils.AssertContainsErrors(t, report, err, test.ExpectedErrorsCount, test.ExpectedErrors...)
@@ -1178,7 +1444,423 @@ func TestAtLeastDailyFreq(t *testing.T) {
 	}
 }
 
-func validReport() Report {
+func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
+	t.Run("passes with filters and no customHierarchy", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with customHierarchy and no filters", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with deeply nested customHierarchy", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				Children: []HierarchyFolder{
+					{
+						DisplayName: "Compute",
+						Children: []HierarchyFolder{
+							{
+								DisplayName: "Cluster",
+								SLOs: []HierarchySLORef{
+									{Name: "slo1", Project: "project", DisplayName: "Cluster availability"},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails when both filters and customHierarchy are set", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec",
+			Message: "spec.filters and spec.reliabilityRollup.customHierarchy are mutually exclusive",
+		})
+	})
+
+	t.Run("fails when neither filters nor customHierarchy are set", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec",
+			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
+		})
+	})
+
+	t.Run("fails with empty time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.timeFrame",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("fails with both rolling and calendar time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame.Calendar = &CalendarTimeFrame{
+			Repeat: Repeat{Unit: ptr("Week"), Count: ptr(1)},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.timeFrame",
+			Code: rules.ErrorCodeMutuallyExclusive,
+		})
+	})
+
+	t.Run("fails with invalid timezone", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame.TimeZone = "x"
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec.reliabilityRollup.timeFrame.timeZone",
+			Message: "not a valid time zone: unknown time zone x",
+		})
+	})
+
+	t.Run("passes when folder has no children and no slos", func(t *testing.T) {
+		// The web UI allows empty folders; sloctl apply must accept them too.
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{DisplayName: "Empty"},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails when folder has empty displayName", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				SLOs: []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("fails when slo ref is missing required fields", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs:        []HierarchySLORef{{}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+
+	t.Run("fails when slo ref has invalid project or name", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{Name: "bad name", Project: "bad project"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].project",
+				Code: validationV1Alpha.ErrorCodeStringName,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].name",
+				Code: validationV1Alpha.ErrorCodeStringName,
+			},
+		)
+	})
+
+	t.Run("fails when slo ref displayName exceeds maximum length", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs: []HierarchySLORef{
+					{
+						Name:        "slo1",
+						Project:     "project",
+						DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
+					},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].slos[0].displayName",
+			Code: rules.ErrorCodeStringMaxLength,
+		})
+	})
+
+	t.Run("fails when folder displayName exceeds maximum length", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: strings.Repeat("l", validationV1Alpha.NameMaximumLength+1),
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.customHierarchy[0].displayName",
+			Code: rules.ErrorCodeStringMaxLength,
+		})
+	})
+
+	t.Run("passes when nested folder is empty", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				Children: []HierarchyFolder{
+					{DisplayName: "Compute"},
+				},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with a deeply nested hierarchy of empty folders", func(t *testing.T) {
+		// Mirrors a QA report: an 8-level-deep customHierarchy with no SLOs
+		// attached anywhere. The web UI allows this, so sloctl must too.
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth, HierarchyFolder{DisplayName: "leaf"}),
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with customHierarchy at maximum depth", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails when customHierarchy depth exceeds maximum", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth+1, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy",
+			ContainsMessage: "exceeds maximum allowed",
+		})
+	})
+
+	t.Run("stops customHierarchy validation when depth exceeds maximum", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(MaxHierarchyDepth+1, HierarchyFolder{}),
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy",
+			ContainsMessage: "exceeds maximum allowed",
+		})
+	})
+
+	t.Run("rejects pathological customHierarchy depth without panic", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			nestedHierarchy(100_001, HierarchyFolder{
+				DisplayName: "leaf",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			}),
+		}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:            "spec.reliabilityRollup.customHierarchy",
+			ContainsMessage: "exceeds maximum allowed",
+		})
+	})
+
+	t.Run("passes with multiple top-level folders", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{
+			{
+				DisplayName: "Platform",
+				SLOs:        []HierarchySLORef{{Name: "slo1", Project: "project"}},
+			},
+			{
+				DisplayName: "Application",
+				SLOs:        []HierarchySLORef{{Name: "slo2", Project: "project"}},
+			},
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("fails for empty customHierarchy slice without filters", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.Filters = nil
+		report.Spec.ReliabilityRollup.CustomHierarchy = []HierarchyFolder{}
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop:    "spec",
+			Message: "spec.filters or spec.reliabilityRollup.customHierarchy is required",
+		})
+	})
+
+	t.Run("filters remain required for non-RRR report types", func(t *testing.T) {
+		// SLOHistory must still require filters even after the conditional
+		// filters predicate was added for RRR.
+		report := validSystemHealthReport()
+		report.Spec.SystemHealthReview = nil
+		report.Spec.SLOHistory = &SLOHistoryConfig{
+			TimeFrame: SLOHistoryTimeFrame{
+				Rolling:  &RollingTimeFrame{Repeat: Repeat{Unit: ptr("Week"), Count: ptr(1)}},
+				TimeZone: "Europe/Warsaw",
+			},
+		}
+		report.Spec.Filters = nil
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.filters",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+
+	t.Run("passes with valid calendar repeating time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{
+			Calendar: &CalendarTimeFrame{
+				Repeat: Repeat{Unit: ptr("Quarter"), Count: ptr(1)},
+			},
+			TimeZone: "Europe/Warsaw",
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with valid calendar custom time frame", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.TimeFrame = ReliabilityRollupTimeFrame{
+			Calendar: &CalendarTimeFrame{
+				From: ptr("2024-07-01"),
+				To:   ptr("2024-07-31"),
+			},
+			TimeZone: "Europe/Warsaw",
+		}
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+}
+
+func validReliabilityRollupReport() Report {
+	return Report{
+		APIVersion: manifest.VersionV1alpha,
+		Kind:       manifest.KindReport,
+		Metadata: Metadata{
+			Name:        "my-report",
+			DisplayName: "My Report",
+		},
+		Spec: Spec{
+			Shared: true,
+			Filters: &Filters{
+				Projects: []string{"project"},
+				SLOs: []SLO{
+					{Name: "slo1", Project: "project"},
+				},
+			},
+			ReliabilityRollup: &ReliabilityRollupConfig{
+				TimeFrame: ReliabilityRollupTimeFrame{
+					Rolling: &RollingTimeFrame{
+						Repeat: Repeat{
+							Unit:  ptr("Week"),
+							Count: ptr(1),
+						},
+					},
+					TimeZone: "Europe/Warsaw",
+				},
+			},
+		},
+	}
+}
+
+func nestedHierarchy(depth int, leaf HierarchyFolder) HierarchyFolder {
+	root := leaf
+	for i := 1; i < depth; i++ {
+		root = HierarchyFolder{
+			DisplayName: "level",
+			Children:    []HierarchyFolder{root},
+		}
+	}
+	return root
+}
+
+func validSystemHealthReport() Report {
 	return Report{
 		APIVersion: manifest.VersionV1alpha,
 		Kind:       manifest.KindReport,
@@ -1253,4 +1935,46 @@ func validReport() Report {
 			},
 		},
 	}
+}
+
+func validSystemHealthReviewConfig(rowGroupBy RowGroupBy) SystemHealthReviewConfig {
+	config := SystemHealthReviewConfig{
+		TimeFrame: SystemHealthReviewTimeFrame{
+			Snapshot: SnapshotTimeFrame{
+				Point: SnapshotPointLatest,
+			},
+			TimeZone: "Europe/Warsaw",
+		},
+		RowGroupBy: rowGroupBy,
+		Columns: []ColumnSpec{
+			{DisplayName: "Column 1", Labels: v1alpha.Labels{"key1": {"value1"}}},
+		},
+		Thresholds: Thresholds{
+			RedLessThanOrEqual: ptr(0.0),
+			GreenGreaterThan:   ptr(0.2),
+		},
+	}
+	// nolint: exhaustive
+	switch rowGroupBy {
+	case RowGroupByLabel:
+		config.LabelRows = []LabelRowSpec{{
+			Labels: v1alpha.Labels{"environment": nil},
+		}}
+	case RowGroupByCustomRows:
+		config.LabelRows = []LabelRowSpec{
+			{
+				DisplayName: "Production databases",
+				Labels:      v1alpha.Labels{"environment": []string{"prod"}, "type": []string{"database"}},
+			},
+			{
+				DisplayName: "R&D",
+				Labels:      v1alpha.Labels{"team": []string{"green", "gray"}},
+			},
+			{
+				DisplayName: "Critical",
+				Labels:      v1alpha.Labels{"level": []string{"critical"}},
+			},
+		}
+	}
+	return config
 }

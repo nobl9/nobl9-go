@@ -4,7 +4,6 @@ package alertsilence
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = AlertSilence{}
 var _ v1alpha.ObjectContext = AlertSilence{}
 
 func (a AlertSilence) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a AlertSilence) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAlertSilence
 }
 
 func (a AlertSilence) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertSilence) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertSilence) Validate() error {

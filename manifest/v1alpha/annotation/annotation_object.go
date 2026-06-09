@@ -4,7 +4,6 @@ package annotation
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = Annotation{}
 var _ v1alpha.ObjectContext = Annotation{}
 
 func (a Annotation) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a Annotation) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAnnotation
 }
 
 func (a Annotation) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a Annotation) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a Annotation) Validate() error {

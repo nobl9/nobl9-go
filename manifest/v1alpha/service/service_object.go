@@ -4,7 +4,6 @@ package service
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = Service{}
 var _ v1alpha.ObjectContext = Service{}
 
 func (s Service) GetVersion() manifest.Version {
-	return s.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (s Service) GetKind() manifest.Kind {
-	return s.Kind
+	return manifest.KindService
 }
 
 func (s Service) GetName() string {
 	return s.Metadata.Name
+}
+
+func (s Service) GetMetadata() Metadata {
+	return s.Metadata
 }
 
 func (s Service) Validate() error {

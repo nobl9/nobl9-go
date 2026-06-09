@@ -4,7 +4,6 @@ package usergroup
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -14,15 +13,19 @@ var _ manifest.Object = UserGroup{}
 var _ v1alpha.ObjectContext = UserGroup{}
 
 func (u UserGroup) GetVersion() manifest.Version {
-	return u.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (u UserGroup) GetKind() manifest.Kind {
-	return u.Kind
+	return manifest.KindUserGroup
 }
 
 func (u UserGroup) GetName() string {
 	return u.Metadata.Name
+}
+
+func (u UserGroup) GetMetadata() Metadata {
+	return u.Metadata
 }
 
 func (u UserGroup) Validate() error {

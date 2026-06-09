@@ -16,7 +16,6 @@ import (
 
 const (
 	oktaTokenEndpointPath = "v1/token"
-	oktaKeysEndpointPath  = "v1/keys"
 	oktaHeaderContentType = "application/x-www-form-urlencoded"
 
 	oktaRequestTimeout = 5 * time.Second
@@ -30,10 +29,6 @@ func oktaTokenEndpoint(authServerURL *url.URL) *url.URL {
 	return authServerURL.JoinPath(oktaTokenEndpointPath)
 }
 
-func oktaKeysEndpoint(authServerURL *url.URL) *url.URL {
-	return authServerURL.JoinPath(oktaKeysEndpointPath)
-}
-
 type getTokenEndpointFunc = func() string
 
 type oktaClient struct {
@@ -41,9 +36,10 @@ type oktaClient struct {
 	getTokenEndpoint getTokenEndpointFunc
 }
 
-func newOktaClient(getTokenEndpoint getTokenEndpointFunc) *oktaClient {
+// newOktaClient returns a client that talks to the Okta IDP token endpoint.
+func newOktaClient(getTokenEndpoint getTokenEndpointFunc, transport http.RoundTripper) *oktaClient {
 	return &oktaClient{
-		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, nil),
+		HTTP:             newRetryableHTTPClient(oktaRequestTimeout, transport),
 		getTokenEndpoint: getTokenEndpoint,
 	}
 }
@@ -97,6 +93,5 @@ func (okta *oktaClient) RequestAccessToken(
 }
 
 func (okta *oktaClient) authHeader(clientID, clientSecret string) string {
-	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(
-		[]byte(fmt.Sprintf("%s:%s", clientID, clientSecret))))
+	return fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString(fmt.Appendf(nil, "%s:%s", clientID, clientSecret)))
 }

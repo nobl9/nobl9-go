@@ -27,10 +27,10 @@ type DataExport struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status"`
+	Status     *Status          `json:"status" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -86,7 +86,7 @@ type unmarshalFunc = func(data []byte, v any) error
 
 func (s *Spec) unmarshalSpec(bytes []byte, unmarshal unmarshalFunc) error {
 	var genericSpec struct {
-		ExportType string               `json:"exportType" example:"Snowflake"`
+		ExportType string               `json:"exportType"`
 		Spec       serdeutil.RawMessage `json:"spec"`
 	}
 	if err := unmarshal(bytes, &genericSpec); err != nil {

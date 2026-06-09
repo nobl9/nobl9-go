@@ -15,7 +15,9 @@ import (
 
 	internal "github.com/nobl9/nobl9-go/internal/sdk"
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/alertanalysis"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/mcp"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
@@ -37,7 +39,10 @@ const (
 // It provides access to the following APIs:
 //   - [Client.Objects] for accessing the [manifest.Object] API.
 //   - [Client.AuthData] for accessing the authentication APIs.
+//   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
+//   - [Client.Prometheus] for accessing the Prometheus-compatible API.
+//   - [Client.Replay] for accessing the Replay API.
 //
 // [SLO Status API]: https://docs.nobl9.com/api/slo-v2
 type Client struct {
@@ -47,6 +52,8 @@ type Client struct {
 	credentials *credentialsStore
 	userAgent   string
 	dryRun      bool
+
+	prometheusAPI prometheusAPIStore
 }
 
 // DefaultClient returns fully configured instance of [Client] with default [Config] and [http.Client].
@@ -60,7 +67,10 @@ func DefaultClient() (*Client, error) {
 
 // NewClient creates a new [Client] instance with provided [Config].
 func NewClient(config *Config) (*Client, error) {
-	creds := newCredentials(config)
+	creds, err := newCredentials(config)
+	if err != nil {
+		return nil, err
+	}
 	client := &Client{
 		HTTP:        newRetryableHTTPClient(config.Timeout, creds),
 		Config:      config,
@@ -94,6 +104,11 @@ func (c *Client) AuthData() authdata.Versions {
 	return authdata.NewVersions(c)
 }
 
+// AlertAnalysis is used to access specific Alert Policy Analyzer API version.
+func (c *Client) AlertAnalysis() alertanalysis.Versions {
+	return alertanalysis.NewVersions(c)
+}
+
 // SLOStatusAPI is used to access specific SLO Status API version.
 func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 	return slostatusapi.NewVersions(c)
@@ -102,6 +117,11 @@ func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 // Users is used to access specific users management API version.
 func (c *Client) Users() users.Versions {
 	return users.NewVersions(c)
+}
+
+// MCP is used to access specific MCP server proxy API version.
+func (c *Client) MCP() mcp.Versions {
+	return mcp.NewVersions(c)
 }
 
 // CreateRequest creates a new [http.Request] pointing at the Nobl9 API URL.
@@ -157,6 +177,13 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 }
 
 // WithDryRun configures the [Client] to run all supported state changing operations in dry-run mode.
+// This setting applies only to [v1 objects API].
+//
+// Deprecated: Use per-request parameters instead.
+// See [v2 objects API].
+//
+// [v1 objects API]: https://pkg.go.dev/github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1
+// [v2 objects API]: https://pkg.go.dev/github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2
 func (c *Client) WithDryRun() *Client {
 	c.dryRun = true
 	return c
@@ -167,13 +194,18 @@ func (c *Client) GetOrganization(ctx context.Context) (string, error) {
 	return c.credentials.GetOrganization(ctx)
 }
 
-// GetUser returns the email of the user associated with the access token used by [Client].
-func (c *Client) GetUser(ctx context.Context) (string, error) {
+// GetUserID returns the user ID associated with the access token used by [Client].
+func (c *Client) GetUserID(ctx context.Context) (string, error) {
+	return c.credentials.GetUser(ctx)
+}
+
+// GetUserEmail returns the email of the user associated with the access token used by [Client].
+func (c *Client) GetUserEmail(ctx context.Context) (string, error) {
 	userDataFromToken, err := c.credentials.GetUser(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get user data from token")
 	}
-	var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 	if emailRegex.MatchString(userDataFromToken) {
 		return userDataFromToken, nil
 	}
@@ -187,6 +219,13 @@ func (c *Client) GetUser(ctx context.Context) (string, error) {
 	}
 
 	return user.Email, nil
+}
+
+// GetUser returns the email of the user associated with the access token used by [Client].
+//
+// Deprecated: Use [GetUserEmail] instead.
+func (c *Client) GetUser(ctx context.Context) (string, error) {
+	return c.GetUserEmail(ctx)
 }
 
 // SetUserAgent will set [HeaderUserAgent] to the provided value.

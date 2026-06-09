@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/goccy/go-yaml"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/require"
 
@@ -31,7 +32,10 @@ func (tc LabelsTestCase[T]) Test(t *testing.T, object T, validate func(T) *v1alp
 	}
 }
 
-func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) map[string]LabelsTestCase[T] {
+func GetLabelsTestCases[T manifest.Object](
+	t *testing.T,
+	propertyPath string,
+) map[string]LabelsTestCase[T] {
 	t.Helper()
 
 	sourcedTestCases, err := os.ReadFile(filepath.Join(
@@ -69,7 +73,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"net": {"same", "same", "same"},
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "." + "net",
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
@@ -78,7 +82,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"net": {"", ""},
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "." + "net",
+				Prop: propertyPath + ".net",
 				Code: rules.ErrorCodeSliceUnique,
 			},
 		},
@@ -103,7 +107,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"9net": {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "9net",
+				Prop:       jsonpath.Parse(propertyPath).Name("9net").String(),
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
@@ -113,7 +117,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"net_": {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "net_",
+				Prop:       propertyPath + ".net_",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
@@ -123,7 +127,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"nEt": {},
 			},
 			error: testutils.ExpectedError{
-				Prop:       propertyPath + "." + "nEt",
+				Prop:       propertyPath + ".nEt",
 				IsKeyError: true,
 				Code:       rules.ErrorCodeStringMatchRegexp,
 			},
@@ -133,7 +137,7 @@ func GetLabelsTestCases[T manifest.Object](t *testing.T, propertyPath string) ma
 				"net": {strings.Repeat("label-", 40)},
 			},
 			error: testutils.ExpectedError{
-				Prop: propertyPath + "." + "net[0]",
+				Prop: propertyPath + ".net[0]",
 				Code: rules.ErrorCodeStringMaxLength,
 			},
 		},

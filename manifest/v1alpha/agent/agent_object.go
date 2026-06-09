@@ -4,7 +4,6 @@ package agent
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = Agent{}
 var _ v1alpha.ObjectContext = Agent{}
 
 func (a Agent) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a Agent) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAgent
 }
 
 func (a Agent) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a Agent) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a Agent) Validate() error {

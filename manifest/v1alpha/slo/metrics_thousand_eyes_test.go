@@ -70,4 +70,21 @@ func TestThousandEyes(t *testing.T) {
 			testutils.AssertNoError(t, slo, err)
 		}
 	})
+	t.Run("invalid accountGroupID", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.ThousandEyes)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.ThousandEyes.AccountGroupID = ptr[int64](-1)
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.thousandEyes.accountGroupID",
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+			},
+		)
+	})
+	t.Run("valid accountGroupID", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.ThousandEyes)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.ThousandEyes.AccountGroupID = ptr[int64](2114119)
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
 }

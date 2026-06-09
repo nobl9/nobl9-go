@@ -21,13 +21,15 @@ func EncodeObject(object manifest.Object, out io.Writer, format manifest.ObjectF
 }
 
 // PrintObjects prints objects to the given [io.Writer] in the specified [manifest.ObjectFormat].
-// Deprecated: Use EncodeObjects instead.
+//
+// Deprecated: Use [EncodeObjects] instead.
 func PrintObjects(objects []manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
 	return encodeObjects(objects, out, format)
 }
 
 // PrintObject prints a single object to the given [io.Writer] in the specified [manifest.ObjectFormat].
-// Deprecated: Use EncodeObject instead.
+//
+// Deprecated: Use [EncodeObject] instead.
 func PrintObject(object manifest.Object, out io.Writer, format manifest.ObjectFormat) error {
 	return encodeObjects(object, out, format)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -37,7 +38,7 @@ var specValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.SLO }).
 		WithName("slo").
 		Required().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").
 		Rules(validationV1Alpha.StringDescription()),
@@ -74,11 +75,13 @@ var alertPolicySourceValidation = govy.New[AlertPolicySource](
 	govy.For(func(s AlertPolicySource) string { return s.Project }).
 		WithName("project").
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
-const errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
-const errorCodeInconsistentProject = "alert_policy_project_inconsistent"
+const (
+	errorCodeEndTimeNotBeforeOrNotEqualStartTime = "end_time_not_before_or_not_equal_start_time"
+	errorCodeInconsistentProject                 = "alert_policy_project_inconsistent"
+)
 
 var endTimeNotBeforeStartTimeRule = govy.NewRule(func(p Period) error {
 	if p.EndTime != nil && p.StartTime != nil && !p.EndTime.After(*p.StartTime) {
@@ -95,8 +98,7 @@ var endTimeNotBeforeStartTimeRule = govy.NewRule(func(p Period) error {
 // as declared in metadata for AlertSilence. Should be removed when cross-project Alert Policy is allowed PI-622.
 var alertPolicyProjectConsistencyRule = govy.NewRule(func(s AlertSilence) error {
 	if s.Spec.AlertPolicy.Project != "" && s.Spec.AlertPolicy.Project != s.Metadata.Project {
-		return govy.NewPropertyError(
-			"spec.alertPolicy.project",
+		return govy.NewPropertyError(jsonpath.New().Name("spec").Name("alertPolicy").Name("project"),
 			s.Spec.AlertPolicy.Project,
 			govy.NewRuleError(
 				fmt.Sprintf(

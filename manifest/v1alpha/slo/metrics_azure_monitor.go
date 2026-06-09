@@ -93,7 +93,7 @@ var azureMonitorMetricDataTypeValidation = govy.New[AzureMonitorMetric](
 		Rules(rules.Forbidden[string]()),
 ).When(
 	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeMetrics },
-	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeMetrics),
+	govy.WhenDescriptionf("dataType is '%s'", AzureMonitorDataTypeMetrics),
 )
 
 var validAzureResourceGroupRegex = regexp.MustCompile(`^[a-zA-Z0-9-._()]+$`)
@@ -144,7 +144,7 @@ var azureMonitorMetricLogsDataTypeValidation = govy.New[AzureMonitorMetric](
 		Rules(rules.Forbidden[[]AzureMonitorMetricDimension]()),
 ).When(
 	func(a AzureMonitorMetric) bool { return a.DataType == AzureMonitorDataTypeLogs },
-	govy.WhenDescription("dataType is '%s'", AzureMonitorDataTypeLogs),
+	govy.WhenDescriptionf("dataType is '%s'", AzureMonitorDataTypeLogs),
 )
 
 var azureMonitorMetricDimensionValidation = govy.New[AzureMonitorMetricDimension](

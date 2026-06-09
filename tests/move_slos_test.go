@@ -34,7 +34,6 @@ type v1MoveSLOsTestCase struct {
 
 func Test_Objects_V1_MoveSLOs(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 
 	directProject := newV1alphaProject(t, v1alphaProject.Metadata{
 		Name: e2etestutils.GenerateName(),
@@ -48,6 +47,31 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 	t.Cleanup(func() { e2etestutils.V1Delete(t, globalDependencyObjects) })
 
 	tests := map[string]v1MoveSLOsTestCase{
+		"move SLO to another service within the same project": func() v1MoveSLOsTestCase {
+			project := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
+			oldService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: project.GetName(),
+			})
+			newService := newV1alphaService(t, v1alphaService.Metadata{
+				Name:    e2etestutils.GenerateName(),
+				Project: project.GetName(),
+			})
+			slo := newV1alphaSLOForMoveSLO(t, project.GetName(), oldService.GetName(), direct)
+
+			payload := v1.MoveSLOsRequest{
+				SLONames:   []string{slo.GetName()},
+				OldProject: project.GetName(),
+				Service:    newService.GetName(),
+			}
+			movedSLO := slo
+			movedSLO.Spec.Service = newService.GetName()
+			return v1MoveSLOsTestCase{
+				setupObjects:    []manifest.Object{project, oldService, newService, slo},
+				payload:         payload,
+				expectedObjects: []manifest.Object{project, oldService, newService, movedSLO},
+			}
+		}(),
 		"move SLO to an existing Project and Service": func() v1MoveSLOsTestCase {
 			oldProject := newV1alphaProject(t, v1alphaProject.Metadata{Name: e2etestutils.GenerateName()})
 			oldService := newV1alphaService(t, v1alphaService.Metadata{
@@ -186,7 +210,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				expectedObjects: []manifest.Object{oldProject, oldService, movedSLO, newProject, newService},
 			}
 		}(),
-		"validation error": {
+		"validation error - move to project with empty sloNames": {
 			setupObjects: []manifest.Object{},
 			payload: v1.MoveSLOsRequest{
 				SLONames:   []string{},
@@ -343,7 +367,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				e2etestutils.V1Delete(t, uniqueObjects(t, append(test.setupObjects, test.expectedObjects...)))
 			})
 
-			err := client.Objects().V1().MoveSLOs(ctx, test.payload)
+			err := client.Objects().V1().MoveSLOs(t.Context(), test.payload)
 			if test.expectedError != nil {
 				require.Error(t, err)
 				var httpErr *sdk.HTTPError
@@ -359,7 +383,7 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 			require.NoError(t, err)
 
 			projects := getProjectNamesFromObjects(t, test.expectedObjects)
-			actualObjects := getObjectsInProjects(t, ctx, projects)
+			actualObjects := getObjectsInProjects(t, t.Context(), projects)
 			require.Lenf(
 				t,
 				actualObjects,
@@ -402,7 +426,7 @@ func getObjectsInProject(t *testing.T, ctx context.Context, project string) []ma
 		manifest.KindService,
 		manifest.KindAlertPolicy,
 	}
-	var allObjects []manifest.Object
+	allObjects := make([]manifest.Object, 0, 10)
 	for _, kind := range kinds {
 		objects, err := client.Objects().V1().Get(
 			ctx,

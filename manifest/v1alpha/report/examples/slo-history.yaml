@@ -1,0 +1,27 @@
+apiVersion: n9/v1alpha
+kind: Report
+metadata:
+  name: slo-history-report
+  displayName: SLO History
+spec:
+  shared: true
+  filters:
+    projects:
+    - project-1
+    - project-2
+    services:
+    - name: service-1
+      project: project-1
+    - name: service-2
+      project: project-1
+    slos:
+    - name: slo-1
+      project: project-1
+    - name: slo-2
+      project: project-1
+  sloHistory:
+    timeFrame:
+      rolling:
+        unit: Week
+        count: 2
+      timeZone: Europe/Warsaw

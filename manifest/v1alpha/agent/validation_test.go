@@ -49,7 +49,7 @@ func TestValidate_Metadata(t *testing.T) {
 	agent := validAgent(v1alpha.Prometheus)
 	agent.Metadata = Metadata{
 		Name:        strings.Repeat("MY AGENT", 20),
-		DisplayName: strings.Repeat("my-agent", 10),
+		DisplayName: strings.Repeat("my-agent", 33),
 		Project:     strings.Repeat("MY PROJECT", 20),
 	}
 	agent.ManifestSource = "/home/me/agent.yaml"
@@ -58,15 +58,15 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, agent, err, 3,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: rules.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringMaxLength,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -444,7 +444,6 @@ func TestValidateSpec_HistoricalDataRetrieval(t *testing.T) {
 
 func TestValidateSpec_URLOnlyAgents(t *testing.T) {
 	for propName, typ := range map[string]v1alpha.DataSourceType{
-		"prometheus":  v1alpha.Prometheus,
 		"appDynamics": v1alpha.AppDynamics,
 		"splunk":      v1alpha.Splunk,
 		"graphite":    v1alpha.Graphite,
@@ -489,7 +488,6 @@ func TestValidateSpec_EmptyConfigs(t *testing.T) {
 		v1alpha.CloudWatch,
 		v1alpha.Pingdom,
 		v1alpha.Redshift,
-		v1alpha.GCM,
 		v1alpha.Generic,
 		v1alpha.Honeycomb,
 	} {
@@ -497,6 +495,37 @@ func TestValidateSpec_EmptyConfigs(t *testing.T) {
 			agent := validAgent(typ)
 			err := validate(agent)
 			testutils.AssertNoError(t, agent, err)
+		})
+	}
+}
+
+func TestValidateSpec_PrometheusLikeAgents(t *testing.T) {
+	for propName, typ := range map[string]v1alpha.DataSourceType{
+		"prometheus":       v1alpha.Prometheus,
+		"gcm":              v1alpha.GCM,
+		"azurePrometheus":  v1alpha.AzurePrometheus,
+		"amazonPrometheus": v1alpha.AmazonPrometheus,
+		"coralogix":        v1alpha.Coralogix,
+	} {
+		t.Run(typ.String(), func(t *testing.T) {
+			t.Run("passes", func(t *testing.T) {
+				agent := validAgent(typ)
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
+			t.Run("value less than 15s", func(t *testing.T) {
+				agent := validAgent(typ)
+				field := typ.String()
+				if typ == v1alpha.GCM {
+					field = "GCM"
+				}
+				setStepValue(t, &agent.Spec, field, 9)
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: fmt.Sprintf("spec.%s.step", propName),
+					Code: rules.ErrorCodeGreaterThanOrEqualTo,
+				})
+			})
 		})
 	}
 }
@@ -628,17 +657,26 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 func TestValidateSpec_Dynatrace(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})
-	t.Run("required url", func(t *testing.T) {
+	t.Run("requires url or platformUrl", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
 		agent.Spec.Dynatrace.URL = ""
+		agent.Spec.Dynatrace.PlatformURL = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.dynatrace.url",
-			Code: rules.ErrorCodeRequired,
+			Prop: "spec.dynatrace",
+			Code: rules.ErrorCodeOneOfProperties,
 		})
+	})
+	t.Run("allows empty url with platformUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.URL = ""
+		agent.Spec.Dynatrace.PlatformURL = "https://rxh70845.apps.dynatrace.com/"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
 	})
 	t.Run("invalid url", func(t *testing.T) {
 		agent := validAgent(v1alpha.Dynatrace)
@@ -647,6 +685,24 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
 			Prop: "spec.dynatrace.url",
 			Code: rules.ErrorCodeURL,
+		})
+	})
+	t.Run("invalid platformUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "h ttp"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.platformUrl",
+			Code: rules.ErrorCodeURL,
+		})
+	})
+	t.Run("platformUrl must be https", func(t *testing.T) {
+		agent := validAgent(v1alpha.Dynatrace)
+		agent.Spec.Dynatrace.PlatformURL = "http://nobl9.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.dynatrace.platformUrl",
+			Code: errCodeHTTPSSchemeRequired,
 		})
 	})
 	urlTests := map[string]struct {
@@ -868,6 +924,91 @@ func TestValidateSpec_Coralogix(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_Atlas(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required slic", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid slic url", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: rules.ErrorCodeURL,
+			},
+		)
+	})
+	t.Run("invalid slic url scheme", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicURL = "ftp://slic.atlas.example.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicUrl",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+	t.Run("slicStep minimum value", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.SlicStep = 14
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.slicStep",
+				Code: rules.ErrorCodeGreaterThanOrEqualTo,
+			},
+		)
+	})
+	t.Run("required dataReplayUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid dataReplayUrl", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = "invalid"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: rules.ErrorCodeURL,
+			},
+		)
+	})
+	t.Run("invalid dataReplayUrl scheme", func(t *testing.T) {
+		agent := validAgent(v1alpha.Atlas)
+		agent.Spec.Atlas.DataReplayURL = "ftp://replay.atlas.example.com"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.atlas.dataReplayUrl",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
@@ -920,7 +1061,8 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 		},
 		v1alpha.Dynatrace: {
 			Dynatrace: &DynatraceConfig{
-				URL: "https://rxh70845.live.dynatrace.com/",
+				URL:         "https://rxh70845.live.dynatrace.com/",
+				PlatformURL: "https://rxh70845.apps.dynatrace.com/",
 			},
 		},
 		v1alpha.Elasticsearch: {
@@ -980,7 +1122,9 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			},
 		},
 		v1alpha.GCM: {
-			GCM: &GCMConfig{},
+			GCM: &GCMConfig{
+				Step: 15,
+			},
 		},
 		v1alpha.AzureMonitor: {
 			AzureMonitor: &AzureMonitorConfig{
@@ -1009,6 +1153,19 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				Domain: "coralogix.com",
 			},
 		},
+		v1alpha.Atlas: {
+			Atlas: &AtlasConfig{
+				SlicURL:       "http://slic.atlas.example.com",
+				SlicStep:      60,
+				DataReplayURL: "https://replay.atlas.example.com",
+			},
+		},
+		v1alpha.Dash0: {
+			Dash0: &Dash0Config{
+				URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+				Step: 60,
+			},
+		},
 	}
 
 	return specs[typ]
@@ -1023,6 +1180,17 @@ func setURLValue(t *testing.T, obj interface{}, fieldName, value string) {
 		Elem().
 		FieldByName("URL").
 		SetString(value)
+}
+
+// setStepValue is a help function which sets the value of 'Step' field of the given Agent config.
+func setStepValue(t *testing.T, obj interface{}, fieldName string, value int64) {
+	t.Helper()
+	v := reflect.ValueOf(obj)
+	v.Elem().
+		FieldByName(fieldName).
+		Elem().
+		FieldByName("Step").
+		SetInt(value)
 }
 
 func ptr[T any](v T) *T { return &v }

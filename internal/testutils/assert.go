@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -69,7 +70,7 @@ func AssertContainsErrors(
 		for _, actual := range objErr.Errors {
 			var propErr *govy.PropertyError
 			require.ErrorAs(t, actual, &propErr)
-			if propErr.PropertyName != expected.Prop {
+			if propErr.PropertyPath.String() != expected.Prop {
 				continue
 			}
 			if expected.IsKeyError != propErr.IsKeyError {
@@ -110,8 +111,13 @@ func AssertContainsErrors(
 }
 
 func PrependPropertyPath(errs []ExpectedError, path string) []ExpectedError {
+	prefix := jsonpath.Parse(path)
 	for i := range errs {
-		errs[i].Prop = path + "." + errs[i].Prop
+		if errs[i].Prop == "" {
+			errs[i].Prop = prefix.String()
+			continue
+		}
+		errs[i].Prop = prefix.Join(jsonpath.Parse(errs[i].Prop)).String()
 	}
 	return errs
 }

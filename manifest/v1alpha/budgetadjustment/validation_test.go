@@ -55,11 +55,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, budgetAdjustment, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: validationV1Alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.displayName",
-			Code: rules.ErrorCodeStringLength,
+			Code: rules.ErrorCodeStringMaxLength,
 		},
 	)
 }
@@ -191,7 +191,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].name",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},
@@ -228,7 +228,7 @@ func TestValidate_Spec(t *testing.T) {
 			expectedErrors: []testutils.ExpectedError{
 				{
 					Prop: "spec.filters.slos[0].project",
-					Code: rules.ErrorCodeStringDNSLabel,
+					Code: validationV1Alpha.ErrorCodeStringName,
 				},
 			},
 		},

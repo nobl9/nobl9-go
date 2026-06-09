@@ -2,8 +2,9 @@ package slo
 
 // CompositeSpec represents a composite of SLOs and Composite SLOs.
 type CompositeSpec struct {
-	MaxDelay   string `json:"maxDelay"`
-	Components `json:"components"`
+	MaxDelay    string `json:"maxDelay"`
+	Components  `json:"components"`
+	Aggregation ComponentAggregationMethod `json:"aggregation"`
 }
 
 type Components struct {

@@ -4,7 +4,6 @@ package alertpolicy
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = AlertPolicy{}
 var _ v1alpha.ObjectContext = AlertPolicy{}
 
 func (a AlertPolicy) GetVersion() manifest.Version {
-	return a.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (a AlertPolicy) GetKind() manifest.Kind {
-	return a.Kind
+	return manifest.KindAlertPolicy
 }
 
 func (a AlertPolicy) GetName() string {
 	return a.Metadata.Name
+}
+
+func (a AlertPolicy) GetMetadata() Metadata {
+	return a.Metadata
 }
 
 func (a AlertPolicy) Validate() error {

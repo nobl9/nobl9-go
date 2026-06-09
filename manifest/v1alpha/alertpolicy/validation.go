@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
@@ -111,9 +112,9 @@ var conditionValidation = govy.New[AlertCondition](
 var alertMethodRefValidation = govy.New[AlertMethodRef](
 	validationV1Alpha.FieldRuleMetadataName(func(m AlertMethodRef) string { return m.Metadata.Name }),
 	govy.For(func(m AlertMethodRef) string { return m.Metadata.Project }).
-		WithName("metadata.project").
+		WithPath(jsonpath.New().Name("metadata").Name("project")).
 		OmitEmpty().
-		Rules(rules.StringDNSLabel()),
+		Rules(validationV1Alpha.StringName()),
 )
 
 const (
@@ -132,7 +133,7 @@ var timeDurationBasedMeasurementsValueValidation = govy.New[AlertCondition](
 			return c.Measurement == MeasurementTimeToBurnBudget.String() ||
 				c.Measurement == MeasurementTimeToBurnEntireBudget.String()
 		},
-		govy.WhenDescription("measurement is is either '%s' or '%s'",
+		govy.WhenDescriptionf("measurement is is either '%s' or '%s'",
 			MeasurementTimeToBurnBudget, MeasurementTimeToBurnEntireBudget),
 	)
 
@@ -147,7 +148,7 @@ var floatBasedMeasurementsValueValidation = govy.New[AlertCondition](
 				c.Measurement == MeasurementAverageBurnRate.String() ||
 				c.Measurement == MeasurementBudgetDrop.String()
 		},
-		govy.WhenDescription("measurement is is either '%s', '%s' or '%s'",
+		govy.WhenDescriptionf("measurement is is either '%s', '%s' or '%s'",
 			MeasurementBurnedBudget, MeasurementAverageBurnRate, MeasurementBudgetDrop),
 	)
 
@@ -160,8 +161,7 @@ var measurementWithAlertingWindowValidation = govy.NewRule(func(c AlertCondition
 		}
 	}
 	if c.AlertingWindow != "" && !isAlertingWindowSupported {
-		return govy.NewPropertyError(
-			"measurement",
+		return govy.NewPropertyError(jsonpath.New().Name("measurement"),
 			c.Measurement,
 			govy.NewRuleError(
 				fmt.Sprintf(
@@ -184,8 +184,7 @@ var measurementWithLastsForValidation = govy.NewRule(func(c AlertCondition) erro
 		}
 	}
 	if c.LastsForDuration != "" && !isLastsForSupported {
-		return govy.NewPropertyError(
-			"measurement",
+		return govy.NewPropertyError(jsonpath.New().Name("measurement"),
 			c.Measurement,
 			govy.NewRuleError(
 				fmt.Sprintf(
@@ -215,8 +214,7 @@ var measurementWithRequiredAlertingWindowValidation = govy.NewRule(func(c AlertC
 		}
 	}
 	if c.AlertingWindow == "" && isAlertingWindowSupported && !isLastsForSupported {
-		return govy.NewPropertyError(
-			"measurement",
+		return govy.NewPropertyError(jsonpath.New().Name("measurement"),
 			c.Measurement,
 			govy.NewRuleError(
 				fmt.Sprintf(

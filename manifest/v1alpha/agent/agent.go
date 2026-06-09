@@ -25,11 +25,11 @@ type Agent struct {
 	Kind       manifest.Kind    `json:"kind"`
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
-	Status     *Status          `json:"status,omitempty"`
+	Status     *Status          `json:"status,omitempty" nobl9:"computed"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
-	OktaClientID   string `json:"oktaClientID,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
+	OktaClientID   string `json:"oktaClientID,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
@@ -71,12 +71,14 @@ type Spec struct {
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
+	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
+	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
-	Interval *v1alpha.Interval `json:"interval,omitempty"`
-	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty"`
-	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty"`
+	Interval *v1alpha.Interval `json:"interval,omitempty" nobl9:"computed"`
+	Timeout  *v1alpha.Timeout  `json:"timeout,omitempty" nobl9:"computed"`
+	Jitter   *v1alpha.Jitter   `json:"jitter,omitempty" nobl9:"computed"`
 }
 
 // Status holds dynamic content which is not part of the static Agent definition.
@@ -95,6 +97,7 @@ type Environment struct {
 	IntervalOverride *v1alpha.Interval `json:"intervalOverride,omitempty"`
 }
 
+//nolint:gocyclo
 func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 	switch {
 	case s.Prometheus != nil:
@@ -153,13 +156,18 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzurePrometheus, nil
 	case s.Coralogix != nil:
 		return v1alpha.Coralogix, nil
+	case s.Atlas != nil:
+		return v1alpha.Atlas, nil
+	case s.Dash0 != nil:
+		return v1alpha.Dash0, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
 
 // PrometheusConfig represents content of Prometheus Configuration typical for Agent Object.
 type PrometheusConfig struct {
-	URL string `json:"url"`
+	URL  string `json:"url"`
+	Step int    `json:"step,omitempty"`
 }
 
 // DatadogConfig represents content of Datadog Configuration typical for Agent Object.
@@ -196,7 +204,8 @@ type SplunkObservabilityConfig struct {
 
 // DynatraceConfig represents content of Dynatrace Configuration typical for Agent Object.
 type DynatraceConfig struct {
-	URL string `json:"url"`
+	URL         string `json:"url"`
+	PlatformURL string `json:"platformUrl,omitempty"`
 }
 
 // ElasticsearchConfig represents content of Elasticsearch Configuration typical for Agent Object.
@@ -235,6 +244,7 @@ type PingdomConfig struct{}
 type AmazonPrometheusConfig struct {
 	URL    string `json:"url"`
 	Region string `json:"region"`
+	Step   int    `json:"step,omitempty"`
 }
 
 // RedshiftConfig represents content of Redshift configuration typical for Agent Object
@@ -256,7 +266,9 @@ type InfluxDBConfig struct {
 }
 
 // GCMConfig represents content of GCM configuration.
-type GCMConfig struct{}
+type GCMConfig struct {
+	Step int `json:"step,omitempty"`
+}
 
 // AzureMonitorConfig represents content of AzureMonitor Configuration typical for Agent Object.
 type AzureMonitorConfig struct {
@@ -277,6 +289,7 @@ type LogicMonitorConfig struct {
 type AzurePrometheusConfig struct {
 	URL      string `json:"url"`
 	TenantID string `json:"tenantId"`
+	Step     int    `json:"step,omitempty"`
 }
 
 type CoralogixConfig struct {
@@ -284,4 +297,18 @@ type CoralogixConfig struct {
 	//
 	// [here]: https://coralogix.com/docs/user-guides/account-management/account-settings/coralogix-domain/#domains
 	Domain string `json:"domain"`
+	Step   int    `json:"step,omitempty"`
+}
+
+// AtlasConfig represents content of Atlas Configuration typical for Agent Object.
+type AtlasConfig struct {
+	SlicURL       string `json:"slicUrl"`
+	SlicStep      int    `json:"slicStep,omitempty"`
+	DataReplayURL string `json:"dataReplayUrl"`
+}
+
+// Dash0Config represents content of Dash0 Configuration typical for Agent Object.
+type Dash0Config struct {
+	URL  string `json:"url"`
+	Step int    `json:"step,omitempty"`
 }

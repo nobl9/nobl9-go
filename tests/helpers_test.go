@@ -4,10 +4,14 @@ package tests
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"regexp"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -25,6 +29,8 @@ import (
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	"github.com/nobl9/nobl9-go/sdk"
+	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/authdata/v1"
 )
 
 var (
@@ -177,6 +183,82 @@ func uniqueObjects[T manifest.Object](t *testing.T, objects []T) []T {
 		}
 	}
 	return unique
+}
+
+func requireObjectsExists(t *testing.T, objects ...manifest.Object) {
+	t.Helper()
+	if !assertObjectsExists(t, objects...) {
+		t.FailNow()
+	}
+}
+
+func requireObjectsNotExists(t *testing.T, objects ...manifest.Object) {
+	t.Helper()
+	if !assertObjectsNotExists(t, objects...) {
+		t.FailNow()
+	}
+}
+
+func assertObjectsExists(t *testing.T, objects ...manifest.Object) bool {
+	t.Helper()
+	return assertObjectsExistsOrNot(t, objects, true)
+}
+
+func assertObjectsNotExists(t *testing.T, objects ...manifest.Object) bool {
+	t.Helper()
+	return assertObjectsExistsOrNot(t, objects, false)
+}
+
+type objectKindAndProject struct {
+	Kind    manifest.Kind
+	Project string
+}
+
+func (o objectKindAndProject) String() string {
+	if o.Project != "" {
+		return fmt.Sprintf("Kind: '%s' in Project: '%s'", o.Kind, o.Project)
+	}
+	return fmt.Sprintf("Kind: '%s'", o.Kind)
+}
+
+func assertObjectsExistsOrNot(t *testing.T, objects []manifest.Object, exists bool) bool {
+	t.Helper()
+	objectNamesPerKindAndProject := map[objectKindAndProject][]string{}
+	for _, object := range objects {
+		key := objectKindAndProject{
+			Kind: object.GetKind(),
+		}
+		if projectScoped, ok := object.(manifest.ProjectScopedObject); ok {
+			key.Project = projectScoped.GetProject()
+		}
+		v, ok := objectNamesPerKindAndProject[key]
+		if !ok {
+			v = make([]string, 0)
+		}
+		v = append(v, object.GetName())
+		objectNamesPerKindAndProject[key] = v
+	}
+
+	for key, names := range objectNamesPerKindAndProject {
+		headers := http.Header{}
+		if key.Project != "" {
+			headers.Set(sdk.HeaderProject, key.Project)
+		}
+		params := url.Values{objectsV1.QueryKeyName: names}
+		objects, err := client.Objects().V1().Get(t.Context(), key.Kind, headers, params)
+		if !assert.NoError(t, err) {
+			return false
+		}
+		switch exists {
+		case true:
+			return assert.Lenf(t, objects, len(names),
+				"expected %d objects in response, got %d (%s)", len(names), len(objects), key)
+		case false:
+			return assert.Empty(t, objects,
+				"expected no objects in response, got %d (%s)", len(objects), key)
+		}
+	}
+	return true
 }
 
 func ptr[T any](v T) *T { return &v }

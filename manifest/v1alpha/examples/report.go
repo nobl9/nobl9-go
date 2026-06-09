@@ -10,6 +10,8 @@ import (
 func Report() []Example {
 	examples := []standardExample{
 		{
+			Variant:    "System Health Review",
+			SubVariant: "group by project",
 			Object: report.New(
 				report.Metadata{
 					Name:        "shr-report",
@@ -51,6 +53,105 @@ func Report() []Example {
 			),
 		},
 		{
+			Variant:    "System Health Review",
+			SubVariant: "group by label",
+			Object: report.New(
+				report.Metadata{
+					Name:        "shr-report",
+					DisplayName: "System Health Review",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+					},
+					SystemHealthReview: &report.SystemHealthReviewConfig{
+						TimeFrame: report.SystemHealthReviewTimeFrame{
+							Snapshot: report.SnapshotTimeFrame{
+								Point:    report.SnapshotPointPast,
+								DateTime: ptr(time.Date(2024, 7, 1, 10, 0, 0, 0, time.UTC)),
+								Rrule:    "FREQ=WEEKLY",
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+						RowGroupBy: report.RowGroupByLabel,
+						Columns: []report.ColumnSpec{
+							{
+								DisplayName: "US East",
+								Labels:      v1alpha.Labels{"region": {"us-east"}},
+							},
+							{
+								DisplayName: "US West",
+								Labels:      v1alpha.Labels{"region": {"us-west"}},
+							},
+						},
+						LabelRows: []report.LabelRowSpec{
+							{
+								Labels: v1alpha.Labels{"env": nil},
+							},
+						},
+						Thresholds: report.Thresholds{
+							RedLessThanOrEqual: ptr(0.8),
+							GreenGreaterThan:   ptr(0.95),
+						},
+						HideUngrouped: ptr(true),
+					},
+				},
+			),
+		},
+		{
+			Variant:    "System Health Review",
+			SubVariant: "group by custom",
+			Object: report.New(
+				report.Metadata{
+					Name:        "shr-report",
+					DisplayName: "System Health Review",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+					},
+					SystemHealthReview: &report.SystemHealthReviewConfig{
+						TimeFrame: report.SystemHealthReviewTimeFrame{
+							Snapshot: report.SnapshotTimeFrame{
+								Point:    report.SnapshotPointPast,
+								DateTime: ptr(time.Date(2024, 7, 1, 10, 0, 0, 0, time.UTC)),
+								Rrule:    "FREQ=WEEKLY",
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+						RowGroupBy: report.RowGroupByCustomRows,
+						Columns: []report.ColumnSpec{
+							{
+								DisplayName: "Team Orange",
+								Labels:      v1alpha.Labels{"team": {"orange"}},
+							},
+							{
+								DisplayName: "On-calls",
+								Labels:      v1alpha.Labels{"team": {"on-call-1", "on-call-2"}},
+							},
+						},
+						LabelRows: []report.LabelRowSpec{
+							{
+								DisplayName: "Production and Development on us-east",
+								Labels:      v1alpha.Labels{"env": {"prod", "dev"}, "region": {"us-east"}},
+							},
+							{
+								DisplayName: "Staging (all regions)",
+								Labels:      v1alpha.Labels{"env": {"staging"}},
+							},
+						},
+						Thresholds: report.Thresholds{
+							RedLessThanOrEqual: ptr(0.8),
+							GreenGreaterThan:   ptr(0.95),
+						},
+					},
+				},
+			),
+		},
+		{
+			Variant: "SLO History",
 			Object: report.New(
 				report.Metadata{
 					Name:        "slo-history-report",
@@ -99,6 +200,7 @@ func Report() []Example {
 			),
 		},
 		{
+			Variant: "Error Budget Status",
 			Object: report.New(
 				report.Metadata{
 					Name:        "ebs-report",
@@ -113,6 +215,84 @@ func Report() []Example {
 						},
 					},
 					ErrorBudgetStatus: &report.ErrorBudgetStatusConfig{},
+				},
+			),
+		},
+		{
+			Variant:    "Reliability Rollup",
+			SubVariant: "filters",
+			Object: report.New(
+				report.Metadata{
+					Name:        "reliability-rollup-report",
+					DisplayName: "Reliability Rollup",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						Projects: []string{"project-1", "project-2"},
+						Services: []report.Service{
+							{Name: "service-1", Project: "project-1"},
+						},
+					},
+					ReliabilityRollup: &report.ReliabilityRollupConfig{
+						TimeFrame: report.ReliabilityRollupTimeFrame{
+							Rolling: &report.RollingTimeFrame{
+								Repeat: report.Repeat{
+									Unit:  ptr("Week"),
+									Count: ptr(1),
+								},
+							},
+							TimeZone: "Europe/Warsaw",
+						},
+					},
+				},
+			),
+		},
+		{
+			Variant:    "Reliability Rollup",
+			SubVariant: "custom hierarchy",
+			Object: report.New(
+				report.Metadata{
+					Name:        "reliability-rollup-report",
+					DisplayName: "Reliability Rollup",
+				},
+				report.Spec{
+					Shared: true,
+					ReliabilityRollup: &report.ReliabilityRollupConfig{
+						TimeFrame: report.ReliabilityRollupTimeFrame{
+							Rolling: &report.RollingTimeFrame{
+								Repeat: report.Repeat{
+									Unit:  ptr("Week"),
+									Count: ptr(4),
+								},
+							},
+							TimeZone: "America/New_York",
+						},
+						CustomHierarchy: []report.HierarchyFolder{
+							{
+								DisplayName: "Platform",
+								Children: []report.HierarchyFolder{
+									{
+										DisplayName: "Compute",
+										SLOs: []report.HierarchySLORef{
+											{Name: "cluster-availability", Project: "infrastructure"},
+										},
+									},
+								},
+							},
+							{
+								DisplayName: "Application",
+								SLOs: []report.HierarchySLORef{
+									{Name: "api-availability", Project: "core-platform"},
+									{
+										Name:        "api-latency",
+										Project:     "core-platform",
+										DisplayName: "API latency",
+									},
+								},
+							},
+						},
+					},
 				},
 			),
 		},

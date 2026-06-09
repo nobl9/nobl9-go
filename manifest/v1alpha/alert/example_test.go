@@ -50,7 +50,7 @@ func ExampleAlert_withSilence() {
 	if err != nil {
 		log.Fatal("failed to fetch alerts, err: %w", err)
 	}
-	err = sdk.PrintObject(alerts.Alerts[0], os.Stdout, manifest.ObjectFormatYAML)
+	err = sdk.EncodeObject(alerts.Alerts[0], os.Stdout, manifest.ObjectFormatYAML)
 	if err != nil {
 		log.Fatal("failed to print alert, err: %w", err)
 	}

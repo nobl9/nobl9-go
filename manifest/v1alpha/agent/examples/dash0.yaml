@@ -1,0 +1,27 @@
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: dash0
+  displayName: Dash0 Agent
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Dash0 Agent
+  releaseChannel: beta
+  dash0:
+    url: https://api.eu-west-1.aws.dash0.com/api/prometheus
+    step: 60
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 2
+    unit: Minute

@@ -12,7 +12,8 @@ import (
 
 type agentExample struct {
 	standardExample
-	typ v1alpha.DataSourceType
+	typ           v1alpha.DataSourceType
+	replayEnabled bool
 }
 
 func (a agentExample) GetDataSourceType() v1alpha.DataSourceType {
@@ -21,18 +22,29 @@ func (a agentExample) GetDataSourceType() v1alpha.DataSourceType {
 
 func Agent() []Example {
 	types := v1alpha.DataSourceTypeValues()
-	examples := make([]Example, 0, len(types))
+	examples := make([]Example, 0, len(types)+1)
 	for _, typ := range types {
-		example := agentExample{
-			standardExample: standardExample{
-				Variant: toKebabCase(typ.String()),
-			},
-			typ: typ,
+		variant := toKebabCase(typ.String())
+		if typ == v1alpha.SplunkObservability {
+			examples = append(examples,
+				newAgentExample(typ, variant, "", false),
+				newAgentExample(typ, variant, "replay", true),
+			)
+			continue
 		}
-		example.Object = example.Generate()
-		examples = append(examples, example)
+		examples = append(examples, newAgentExample(typ, variant, "", true))
 	}
 	return examples
+}
+
+func newAgentExample(typ v1alpha.DataSourceType, variant, subVariant string, replayEnabled bool) agentExample {
+	example := agentExample{
+		standardExample: standardExample{Variant: variant, SubVariant: subVariant},
+		typ:             typ,
+		replayEnabled:   replayEnabled,
+	}
+	example.Object = example.Generate()
+	return example
 }
 
 var betaChannelAgents = []v1alpha.DataSourceType{
@@ -46,6 +58,11 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.Elasticsearch,
 	v1alpha.ThousandEyes,
+	// Support for Replay only in beta.
+	v1alpha.SumoLogic,
+	v1alpha.Atlas,
+	v1alpha.Dash0,
+	v1alpha.SplunkObservability,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -63,14 +80,16 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 	)
 	agent = a.generateVariant(agent)
 	typ, _ := agent.Spec.GetType()
-	if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err == nil {
-		defaultDuration := v1alpha.HistoricalRetrievalDuration{
-			Value: ptr(*maxDuration.Value / 2),
-			Unit:  maxDuration.Unit,
-		}
-		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-			MaxDuration:     maxDuration,
-			DefaultDuration: defaultDuration,
+	if a.replayEnabled {
+		if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err == nil {
+			defaultDuration := v1alpha.HistoricalRetrievalDuration{
+				Value: ptr(*maxDuration.Value / 2),
+				Unit:  maxDuration.Unit,
+			}
+			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+				MaxDuration:     maxDuration,
+				DefaultDuration: defaultDuration,
+			}
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]
@@ -80,14 +99,21 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	if slices.Contains(betaChannelAgents, typ) {
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	} else {
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-	}
+	agent.Spec.ReleaseChannel = releaseChannelFor(typ, a.replayEnabled)
 	return agent
 }
 
+func releaseChannelFor(typ v1alpha.DataSourceType, replayEnabled bool) v1alpha.ReleaseChannel {
+	if !slices.Contains(betaChannelAgents, typ) {
+		return v1alpha.ReleaseChannelStable
+	}
+	if typ == v1alpha.SplunkObservability && !replayEnabled {
+		return v1alpha.ReleaseChannelStable
+	}
+	return v1alpha.ReleaseChannelBeta
+}
+
+//nolint:gocyclo
 func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Agent {
 	switch a.typ {
 	case v1alpha.AmazonPrometheus:
@@ -118,14 +144,17 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.Dynatrace:
 		agent.Spec.Dynatrace = &v1alphaAgent.DynatraceConfig{
-			URL: "https://zvf10945.live.dynatrace.com/",
+			URL:         "https://zvf10945.live.dynatrace.com/",
+			PlatformURL: "https://zvf10945.apps.dynatrace.com/",
 		}
 	case v1alpha.Elasticsearch:
 		agent.Spec.Elasticsearch = &v1alphaAgent.ElasticsearchConfig{
 			URL: "http://elasticsearch-main.elasticsearch:9200",
 		}
 	case v1alpha.GCM:
-		agent.Spec.GCM = &v1alphaAgent.GCMConfig{}
+		agent.Spec.GCM = &v1alphaAgent.GCMConfig{
+			Step: 15,
+		}
 	case v1alpha.Generic:
 		agent.Spec.Generic = &v1alphaAgent.GenericConfig{}
 	case v1alpha.GrafanaLoki:
@@ -168,7 +197,8 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.Pingdom = &v1alphaAgent.PingdomConfig{}
 	case v1alpha.Prometheus:
 		agent.Spec.Prometheus = &v1alphaAgent.PrometheusConfig{
-			URL: "http://prometheus.prometheus:9090",
+			URL:  "http://prometheus.prometheus:9090",
+			Step: 15,
 		}
 	case v1alpha.Redshift:
 		agent.Spec.Redshift = &v1alphaAgent.RedshiftConfig{}
@@ -189,6 +219,17 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 	case v1alpha.Coralogix:
 		agent.Spec.Coralogix = &v1alphaAgent.CoralogixConfig{
 			Domain: "coralogix.com",
+		}
+	case v1alpha.Atlas:
+		agent.Spec.Atlas = &v1alphaAgent.AtlasConfig{
+			SlicURL:       "https://slic.slic",
+			SlicStep:      60,
+			DataReplayURL: "https://replay.atlas.atlas",
+		}
+	case v1alpha.Dash0:
+		agent.Spec.Dash0 = &v1alphaAgent.Dash0Config{
+			URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+			Step: 60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))

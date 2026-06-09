@@ -28,8 +28,8 @@ func TestReadConfig_FromMinimalConfigFile(t *testing.T) {
 		ClientID:             "someId",
 		ClientSecret:         "someSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -78,6 +78,7 @@ func TestReadConfig_FromFullConfigFile(t *testing.T) {
 		URL:                  &url.URL{Scheme: "https", Host: "non-default-url.com"},
 		DisableOkta:          true,
 		Organization:         "non-default-organization",
+		CACertFile:           "/etc/non-default/ca-bundle.pem",
 		FilesPromptEnabled:   false,
 		FilesPromptThreshold: 30,
 		currentContext:       "non-default",
@@ -92,8 +93,8 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Second,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -162,14 +163,57 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              10 * time.Minute,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       "my-context",
 		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
+}
+
+func TestConfigOptionPlatformInstance(t *testing.T) {
+	t.Run("default instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceDefault),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "auseg9kiegWKEtJZC416", conf.OktaAuthServer)
+	})
+
+	t.Run("US1 instance", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceUS1),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		assert.Equal(t, "https://accounts-us1.nobl9.com", conf.OktaOrgURL.String())
+		assert.Equal(t, "ausaew9480S3Sn89f5d7", conf.OktaAuthServer)
+	})
+
+	t.Run("custom instance", func(t *testing.T) {
+		_, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstanceCustom),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, `+
+			`provide auth server URL and ID directly in the sdk.ContextlessConfig`)
+	})
+
+	t.Run("invalid instance", func(t *testing.T) {
+		_, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionPlatformInstance(PlatformInstance("invalid.instance.com")),
+			ConfigOptionNoConfigFile())
+		require.Error(t, err)
+		assert.EqualError(t, err, `"invalid.instance.com" platform instance is not supported`)
+	})
 }
 
 func TestReadConfig_Defaults(t *testing.T) {
@@ -182,14 +226,15 @@ func TestReadConfig_Defaults(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
 		currentContext:       defaultContext,
 		options:              optionsConfig{NoConfigFile: ptr(true)},
 	}, conf)
+	assert.Nil(t, conf.contextlessConfig.Sloctl)
 }
 
 func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
@@ -212,8 +257,8 @@ func TestReadConfig_EnvVariablesMinimal(t *testing.T) {
 		ClientID:             "clientId",
 		ClientSecret:         "clientSecret",
 		Project:              DefaultProject,
-		OktaOrgURL:           &defaultOktaOrgURL,
-		OktaAuthServer:       defaultOktaAuthServerID,
+		OktaOrgURL:           defaultOktaOrgURL,
+		OktaAuthServer:       defaultOktaAuthServer,
 		Timeout:              defaultTimeout,
 		FilesPromptEnabled:   defaultFilesPromptEnabled,
 		FilesPromptThreshold: defaultFilesPromptThreshold,
@@ -243,6 +288,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			"TIMEOUT":                "60m",
 			"FILES_PROMPT_ENABLED":   "false",
 			"FILES_PROMPT_THRESHOLD": "30",
+			"CA_CERT_FILE":           "/etc/env/ca-bundle.pem",
 		} {
 			t.Setenv(envPrefix+k, v)
 		}
@@ -257,6 +303,7 @@ func TestReadConfig_EnvVariablesFull(t *testing.T) {
 			OktaAuthServer:       "123",
 			DisableOkta:          false,
 			Organization:         "org",
+			CACertFile:           "/etc/env/ca-bundle.pem",
 			Timeout:              60 * time.Minute,
 			FilesPromptEnabled:   false,
 			FilesPromptThreshold: 30,
@@ -361,6 +408,21 @@ func TestSaveAccessToken(t *testing.T) {
 		oldConf.AccessToken = "new"
 		assertConfigsAreEqual(t, oldConf, newConf)
 	})
+
+	t.Run("does not persist default sloctl config", func(t *testing.T) {
+		filePath := filepath.Join(tempDir, "sloctl-defaults.toml")
+		copyEmbeddedFile(t, "minimal_config.toml", filePath)
+
+		config, err := ReadConfig(ConfigOptionFilePath(filePath))
+		require.NoError(t, err)
+		require.NoError(t, config.saveAccessToken("new"))
+
+		data, err := os.ReadFile(filePath)
+		require.NoError(t, err)
+		assert.NotContains(t, string(data), "[sloctl]")
+		assert.NotContains(t, string(data), "filesPromptEnabled")
+		assert.NotContains(t, string(data), "filesPromptThreshold")
+	})
 }
 
 func TestReadConfig_Errors(t *testing.T) {
@@ -390,7 +452,7 @@ func TestReadConfig_Verify(t *testing.T) {
 
 	t.Run("no credentials", func(t *testing.T) {
 		configPath := filepath.Join(t.TempDir(), "config.toml")
-		err := os.WriteFile(configPath, []byte("[contexts]\n[contexts.default]"), 0o700)
+		err := os.WriteFile(configPath, []byte("[contexts]\n[contexts.default]"), 0o600)
 		require.NoError(t, err)
 
 		config, err := ReadConfig(
@@ -454,6 +516,45 @@ func copyEmbeddedFile(t *testing.T, sourceName, dest string) {
 
 	_, err = io.Copy(tmpFile, embeddedFile)
 	require.NoError(t, err)
+}
+
+func TestGetFileConfig(t *testing.T) {
+	t.Run("returns nil when NoConfigFile option is set", func(t *testing.T) {
+		conf, err := ReadConfig(
+			ConfigOptionWithCredentials("clientId", "clientSecret"),
+			ConfigOptionNoConfigFile())
+		require.NoError(t, err)
+
+		result := conf.GetFileConfig()
+		assert.Nil(t, result)
+	})
+
+	t.Run("returns a copy of file config", func(t *testing.T) {
+		fileConfig := FileConfig{
+			ContextlessConfig: ContextlessConfig{
+				DefaultContext: "default",
+			},
+			Contexts: map[string]ContextConfig{
+				"default": {
+					ClientID:     "client-id",
+					ClientSecret: "client-secret",
+				},
+			},
+		}
+		conf := Config{
+			fileConfig: &fileConfig,
+		}
+
+		fileConfigCopy := conf.GetFileConfig()
+		require.NotNil(t, fileConfigCopy)
+		assert.Equal(t, fileConfig, *fileConfigCopy)
+
+		// Verify it's a copy, not the original.
+		assert.NotSame(t, conf.fileConfig, fileConfigCopy)
+		// Modifying the copy doesn't affect the original
+		fileConfigCopy.DefaultContext = "modified"
+		assert.NotEqual(t, conf.fileConfig.DefaultContext, fileConfigCopy.DefaultContext)
+	})
 }
 
 func setHomeEnv(t *testing.T, homePath string) {

@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/nobl9/govy/pkg/rules"
-
+	"github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 	"github.com/nobl9/nobl9-go/internal/testutils"
 	"github.com/nobl9/nobl9-go/manifest"
@@ -53,11 +53,11 @@ func TestValidate_Metadata(t *testing.T) {
 	testutils.AssertContainsErrors(t, annotation, err, 2,
 		testutils.ExpectedError{
 			Prop: "metadata.name",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 		testutils.ExpectedError{
 			Prop: "metadata.project",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		},
 	)
 }
@@ -72,9 +72,15 @@ func TestValidate_Metadata_Project(t *testing.T) {
 }
 
 func TestValidate_Spec_Description(t *testing.T) {
+	t.Run("max length", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength)
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
 	t.Run("too long", func(t *testing.T) {
 		annotation := validAnnotation()
-		annotation.Spec.Description = strings.Repeat("A", 2000)
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
@@ -105,7 +111,7 @@ func TestValidate_Spec_Slo(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.slo",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
 	t.Run("fails, required", func(t *testing.T) {
@@ -132,7 +138,7 @@ func TestValidate_Spec_Objective(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.objectiveName",
-			Code: rules.ErrorCodeStringDNSLabel,
+			Code: v1alpha.ErrorCodeStringName,
 		})
 	})
 }
@@ -146,6 +152,10 @@ func TestSpec_Time(t *testing.T) {
 		"passes, end time equals start time": {
 			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 			EndTime:   time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+		},
+		"passes, no end time": {
+			StartTime: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
+			EndTime:   time.Time{},
 		},
 	}
 	for name, spec := range tests {
@@ -177,15 +187,25 @@ func TestSpec_Category(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	t.Run("fails, invalid category", func(t *testing.T) {
-		annotation := validAnnotation()
-		annotation.Spec.Category = "Invalid"
-		err := validate(annotation)
-		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
-			Prop: "spec",
-			Code: errorCodeCategoryUserDefined,
+	for _, category := range GetUserCategories() {
+		t.Run("passes, valid category: "+category.String(), func(t *testing.T) {
+			annotation := validAnnotation()
+			annotation.Spec.Category = category
+			err := validate(annotation)
+			testutils.AssertNoError(t, annotation, err)
 		})
-	})
+	}
+	for _, category := range append(GetSystemCategories(), "Invalid") {
+		t.Run("fails, invalid category: "+category.String(), func(t *testing.T) {
+			annotation := validAnnotation()
+			annotation.Spec.Category = category
+			err := validate(annotation)
+			testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+				Prop: "spec.category",
+				Code: rules.ErrorCodeOneOf,
+			})
+		})
+	}
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {

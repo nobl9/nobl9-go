@@ -4,7 +4,6 @@ package direct
 
 import (
 	"github.com/nobl9/govy/pkg/govy"
-
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
@@ -15,15 +14,19 @@ var _ manifest.ProjectScopedObject = Direct{}
 var _ v1alpha.ObjectContext = Direct{}
 
 func (d Direct) GetVersion() manifest.Version {
-	return d.APIVersion
+	return manifest.VersionV1alpha
 }
 
 func (d Direct) GetKind() manifest.Kind {
-	return d.Kind
+	return manifest.KindDirect
 }
 
 func (d Direct) GetName() string {
 	return d.Metadata.Name
+}
+
+func (d Direct) GetMetadata() Metadata {
+	return d.Metadata
 }
 
 func (d Direct) Validate() error {

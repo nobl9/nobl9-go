@@ -3,7 +3,6 @@
 package tests
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 
 func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 	t.Parallel()
-	ctx := context.Background()
 	project := generateV1alphaProject(t)
 	examples := e2etestutils.GetAllExamples(t, manifest.KindDataExport)
 	allObjects := make([]manifest.Object, 0, len(examples))
@@ -78,7 +76,7 @@ func Test_Objects_V1_V1alpha_DataExport(t *testing.T) {
 	for name, test := range filterTests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			actual, err := client.Objects().V1().GetV1alphaDataExports(ctx, test.request)
+			actual, err := client.Objects().V1().GetV1alphaDataExports(t.Context(), test.request)
 			require.NoError(t, err)
 			if !test.returnsAll {
 				require.Len(t, actual, len(test.expected))

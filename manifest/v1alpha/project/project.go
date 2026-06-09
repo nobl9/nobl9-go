@@ -28,8 +28,8 @@ type Project struct {
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 // Metadata provides identity information for Project.
@@ -44,8 +44,8 @@ type Metadata struct {
 
 // Spec holds detailed specification of the Project.
 type Spec struct {
-	CreatedAt string `json:"createdAt,omitempty"`
-	CreatedBy string `json:"createdBy,omitempty"`
+	CreatedAt string `json:"createdAt,omitempty" nobl9:"computed"`
+	CreatedBy string `json:"createdBy,omitempty" nobl9:"computed"`
 	// Description allows for a more detailed description of the Project.
-	Description string `json:"description" validate:"description" example:"Bleeding edge web app"`
+	Description string `json:"description"`
 }

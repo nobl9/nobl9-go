@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/jsonpath"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -51,6 +52,8 @@ Honeycomb
 LogicMonitor
 AzurePrometheus
 Coralogix
+Atlas
+Dash0
 )*/
 type DataSourceType int
 
@@ -59,8 +62,8 @@ type DataSourceType int
 const GCM = GoogleCloudMonitoring
 
 type Duration struct {
-	Value *int         `json:"value" validate:"required,min=0,max=86400"`
-	Unit  DurationUnit `json:"unit" validate:"required"`
+	Value *int         `json:"value"`
+	Unit  DurationUnit `json:"unit"`
 }
 
 type DurationUnit string
@@ -231,15 +234,17 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		LogicMonitor:        {Value: ptr(2), Unit: Minute},
 		AzurePrometheus:     {Value: ptr(0), Unit: Second},
 		Coralogix:           {Value: ptr(0), Unit: Second},
+		Atlas:               {Value: ptr(10), Unit: Minute},
+		Dash0:               {Value: ptr(1), Unit: Minute},
 	}
 }
 
 // HistoricalDataRetrieval represents optional parameters for agent to regard when configuring
 // TimeMachine-related SLO properties
 type HistoricalDataRetrieval struct {
-	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty"`
-	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration" validate:"required"`
-	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration" validate:"required"`
+	MinimumAgentVersion string                      `json:"minimumAgentVersion,omitempty" nobl9:"computed"`
+	MaxDuration         HistoricalRetrievalDuration `json:"maxDuration"`
+	DefaultDuration     HistoricalRetrievalDuration `json:"defaultDuration"`
 }
 
 func HistoricalDataRetrievalValidation() govy.Validator[HistoricalDataRetrieval] {
@@ -275,8 +280,7 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 			if dataRetrieval.MaxDuration.Value != nil {
 				maxDurationValue = *dataRetrieval.MaxDuration.Value
 			}
-			return govy.NewPropertyError(
-				"defaultDuration",
+			return govy.NewPropertyError(jsonpath.New().Name("defaultDuration"),
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",
@@ -292,8 +296,8 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 // we have time travel duration unit related enum, that's specifically named for data retrieval purposes. Thus,
 // it was easier to split those Durations into separate structures.
 type HistoricalRetrievalDuration struct {
-	Value *int                            `json:"value" validate:"required,min=0,max=43200"`
-	Unit  HistoricalRetrievalDurationUnit `json:"unit" validate:"required"`
+	Value *int                            `json:"value"`
+	Unit  HistoricalRetrievalDurationUnit `json:"unit"`
 }
 
 type HistoricalRetrievalDurationUnit string
@@ -374,6 +378,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	AmazonPrometheus:      {Value: ptr(30), Unit: HRDDay},
 	NewRelic:              {Value: ptr(30), Unit: HRDDay},
 	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	SplunkObservability:   {Value: ptr(30), Unit: HRDDay},
 	Graphite:              {Value: ptr(30), Unit: HRDDay},
 	Lightstep:             {Value: ptr(30), Unit: HRDDay},
 	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
@@ -388,12 +393,15 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	Coralogix:             {Value: ptr(30), Unit: HRDDay},
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
+	Atlas:                 {Value: ptr(730), Unit: HRDDay},
+	Dash0:                 {Value: ptr(30), Unit: HRDDay},
 }
 
 var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDuration{
 	Datadog:               {Value: ptr(30), Unit: HRDDay},
 	NewRelic:              {Value: ptr(30), Unit: HRDDay},
 	Splunk:                {Value: ptr(30), Unit: HRDDay},
+	SplunkObservability:   {Value: ptr(30), Unit: HRDDay},
 	Lightstep:             {Value: ptr(30), Unit: HRDDay},
 	CloudWatch:            {Value: ptr(15), Unit: HRDDay},
 	Dynatrace:             {Value: ptr(28), Unit: HRDDay},
@@ -405,6 +413,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	LogicMonitor:          {Value: ptr(30), Unit: HRDDay},
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
+	Dash0:                 {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {

@@ -42,7 +42,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo_project",
+					PropertyPath:    "slo_project",
 					ContainsMessage: "Project is required when SLO is set",
 				},
 			},
@@ -54,7 +54,7 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo",
+					PropertyPath:    "slo",
 					ContainsMessage: "SLO is required when Project is set",
 				},
 			},
@@ -68,20 +68,20 @@ func TestGetBudgetAdjustmentsInputValidation(t *testing.T) {
 			},
 			wantErr: []govytest.ExpectedRuleError{
 				{
-					PropertyName:    "slo_project",
-					ContainsMessage: "RFC-1123 compliant label",
+					PropertyPath:    "slo_project",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "slo",
-					ContainsMessage: "RFC-1123 compliant label",
+					PropertyPath:    "slo",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "name[0]",
-					ContainsMessage: "RFC-1123 compliant label",
+					PropertyPath:    "name[0]",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 				{
-					PropertyName:    "name[1]",
-					ContainsMessage: "RFC-1123 compliant label",
+					PropertyPath:    "name[1]",
+					ContainsMessage: "must consist of lower case alphanumeric characters",
 				},
 			},
 		},

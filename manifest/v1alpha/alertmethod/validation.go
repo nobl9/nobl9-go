@@ -22,8 +22,10 @@ const (
 	maxEmailRecipients               = 10
 )
 
-var headerNameRegex = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
-var templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
+var (
+	headerNameRegex     = regexp.MustCompile(`^([a-zA-Z0-9]+[_-]?)+$`)
+	templateFieldsRegex = regexp.MustCompile(`\$([a-z_]+(\[])?)`)
+)
 
 func validate(a AlertMethod) *v1alpha.ObjectError {
 	return v1alpha.ValidateObject(validator, a, manifest.KindAlertMethod)
@@ -155,7 +157,7 @@ var pagerDutyValidation = govy.New[PagerDutyAlertMethod](
 		HideValue().
 		When(
 			func(p PagerDutyAlertMethod) bool { return !isHiddenValue(p.IntegrationKey) },
-			govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 		).
 		Rules(rules.StringMaxLength(32)),
 	govy.ForPointer(func(s PagerDutyAlertMethod) *SendResolution { return s.SendResolution }).
@@ -208,7 +210,7 @@ var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 		HideValue().
 		When(
 			func(o OpsgenieAlertMethod) bool { return !isHiddenValue(o.Auth) },
-			govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+			govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 		).
 		Rules(
 			govy.NewRule(func(v string) error {
@@ -221,15 +223,24 @@ var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 )
 
 var serviceNowValidation = govy.New[ServiceNowAlertMethod](
-	govy.For(func(s ServiceNowAlertMethod) string { return s.Username }).
-		WithName("username").
-		Required(),
 	govy.For(func(s ServiceNowAlertMethod) string { return s.InstanceName }).
 		WithName("instanceName").
 		Required(),
 	govy.ForPointer(func(s ServiceNowAlertMethod) *SendResolution { return s.SendResolution }).
 		WithName("sendResolution").
 		Include(sendResolutionValidation),
+	govy.For(govy.GetSelf[ServiceNowAlertMethod]()).
+		Cascade(govy.CascadeModeStop).
+		Rules(
+			rules.MutuallyExclusive(true, map[string]func(s ServiceNowAlertMethod) any{
+				"username": func(s ServiceNowAlertMethod) any { return s.Username },
+				"apiToken": func(s ServiceNowAlertMethod) any { return s.ApiToken },
+			}),
+			rules.MutuallyExclusive(true, map[string]func(s ServiceNowAlertMethod) any{
+				"password": func(s ServiceNowAlertMethod) any { return s.Password },
+				"apiToken": func(s ServiceNowAlertMethod) any { return s.ApiToken },
+			}),
+		),
 )
 
 var jiraValidation = govy.New[JiraAlertMethod](
@@ -270,7 +281,7 @@ var teamsValidation = govy.New[TeamsAlertMethod](
 		),
 ).When(
 	func(v TeamsAlertMethod) bool { return !isHiddenValue(v.URL) },
-	govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+	govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 )
 
 var emailValidation = govy.New[EmailAlertMethod](
@@ -298,7 +309,7 @@ func optionalUrlWithPrefixValidation(prefixes ...string) govy.Validator[string] 
 		govy.For(govy.GetSelf[string]()).
 			When(
 				func(v string) bool { return !isHiddenValue(v) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringURL(), rules.StringStartsWith(prefixes...)),
 	)
@@ -309,7 +320,7 @@ func optionalUrlValidation() govy.Validator[string] {
 		govy.For(govy.GetSelf[string]()).
 			When(
 				func(v string) bool { return !isHiddenValue(v) },
-				govy.WhenDescription("is empty or equal to '%s'", v1alpha.HiddenValue),
+				govy.WhenDescriptionf("is empty or equal to '%s'", v1alpha.HiddenValue),
 			).
 			Rules(rules.StringURL()),
 	)

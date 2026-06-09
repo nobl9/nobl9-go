@@ -22,24 +22,25 @@ type Report struct {
 	Metadata   Metadata         `json:"metadata"`
 	Spec       Spec             `json:"spec"`
 
-	Organization   string `json:"organization,omitempty"`
-	ManifestSource string `json:"manifestSrc,omitempty"`
+	Organization   string `json:"organization,omitempty" nobl9:"computed"`
+	ManifestSource string `json:"manifestSrc,omitempty" nobl9:"computed"`
 }
 
 type Metadata struct {
-	Name        string `json:"name" validate:"required,objectName"`
+	Name        string `json:"name"`
 	DisplayName string `json:"displayName,omitempty"`
 }
 
 type Spec struct {
-	CreatedAt          string                    `json:"createdAt,omitempty"`
-	UpdatedAt          string                    `json:"updatedAt,omitempty"`
-	Shared             bool                      `json:"shared" validate:"required"`
-	CreatedBy          *string                   `json:"createdBy,omitempty"`
+	CreatedAt          string                    `json:"createdAt,omitempty" nobl9:"computed"`
+	UpdatedAt          string                    `json:"updatedAt,omitempty" nobl9:"computed"`
+	Shared             bool                      `json:"shared"`
+	CreatedBy          *string                   `json:"createdBy,omitempty" nobl9:"computed"`
 	Filters            *Filters                  `json:"filters,omitempty"`
 	SystemHealthReview *SystemHealthReviewConfig `json:"systemHealthReview,omitempty"`
 	SLOHistory         *SLOHistoryConfig         `json:"sloHistory,omitempty"`
 	ErrorBudgetStatus  *ErrorBudgetStatusConfig  `json:"errorBudgetStatus,omitempty"`
+	ReliabilityRollup  *ReliabilityRollupConfig  `json:"reliabilityRollup,omitempty"`
 }
 
 type RollingTimeFrame struct {
@@ -53,8 +54,8 @@ type CalendarTimeFrame struct {
 }
 
 type Repeat struct {
-	Unit  *string `json:"unit,omitempty" example:"Week"`
-	Count *int    `json:"count,omitempty" example:"1"`
+	Unit  *string `json:"unit,omitempty"`
+	Count *int    `json:"count,omitempty"`
 }
 
 type CustomPeriod struct {
@@ -69,16 +70,20 @@ type Filters struct {
 	Labels   v1alpha.Labels `json:"labels,omitempty"`
 }
 
-type Services []Service
-type Service struct {
-	Name    string `json:"name" validate:"required"`
-	Project string `json:"project" validate:"required"`
-}
+type (
+	Services []Service
+	Service  struct {
+		Name    string `json:"name"`
+		Project string `json:"project"`
+	}
+)
 
-type SLOs []SLO
-type SLO struct {
-	Name    string `json:"name" validate:"required"`
-	Project string `json:"project" validate:"required"`
-}
+type (
+	SLOs []SLO
+	SLO  struct {
+		Name    string `json:"name"`
+		Project string `json:"project"`
+	}
+)
 
 type ErrorBudgetStatusConfig struct{}

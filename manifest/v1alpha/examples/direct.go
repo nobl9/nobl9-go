@@ -49,6 +49,9 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.GoogleCloudMonitoring,
 	v1alpha.AzurePrometheus,
 	v1alpha.ThousandEyes,
+	// Support for Replay only in beta.
+	v1alpha.SumoLogic,
+	v1alpha.Dash0,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -84,11 +87,12 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	if slices.Contains(alphaChannelDirects, typ) {
+	switch {
+	case slices.Contains(alphaChannelDirects, typ):
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
-	} else if slices.Contains(betaChannelDirects, typ) {
+	case slices.Contains(betaChannelDirects, typ):
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	} else {
+	default:
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 	}
 	return direct
@@ -128,11 +132,14 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 	case v1alpha.Dynatrace:
 		direct.Spec.Dynatrace = &v1alphaDirect.DynatraceConfig{
 			URL:            "https://zvf10945.live.dynatrace.com/",
+			PlatformURL:    "https://zvf10945.apps.dynatrace.com/",
 			DynatraceToken: "[secret]",
+			PlatformToken:  "[secret]",
 		}
 	case v1alpha.GCM:
 		direct.Spec.GCM = &v1alphaDirect.GCMConfig{
 			ServiceAccountKey: gcloudServiceAccountKey,
+			Step:              15,
 		}
 	case v1alpha.Honeycomb:
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
@@ -203,6 +210,13 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			TenantID:     "5cdecca3-c2c5-4072-89dd-5555faf05202",
 			ClientID:     "70747025-9367-41a5-98f1-59b18b5793c3",
 			ClientSecret: "[secret]",
+			Step:         60,
+		}
+	case v1alpha.Dash0:
+		direct.Spec.Dash0 = &v1alphaDirect.Dash0Config{
+			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
+			AuthToken: "[secret]",
+			Step:      60,
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))
