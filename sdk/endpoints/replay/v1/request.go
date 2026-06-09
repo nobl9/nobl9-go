@@ -16,11 +16,11 @@ import (
 const maximumAllowedReplayDuration = time.Hour * 24 * 30
 
 type RunRequest struct {
+	TimeRange TimeRange  `json:"timeRange,omitzero"`
+	SourceSLO *SourceSLO `json:"sourceSlo,omitempty"`
 	Project   string     `json:"project"`
 	SLO       string     `json:"slo"`
 	Duration  Duration   `json:"duration"`
-	TimeRange TimeRange  `json:"timeRange,omitzero"`
-	SourceSLO *SourceSLO `json:"sourceSlo,omitempty"`
 }
 
 type internalDeleteRequest struct {
@@ -75,7 +75,7 @@ type SourceSLOItem struct {
 	Target string `json:"target"`
 }
 
-var runRequestValidation = govy.New[RunRequest](
+var runRequestValidation = govy.New(
 	govy.For(func(r RunRequest) string { return r.Project }).
 		WithName("project").
 		Required(),
@@ -113,7 +113,7 @@ var runRequestValidation = govy.New[RunRequest](
 		}).WithErrorCode(durationAndStartDateValidationError)),
 )
 
-var durationValidation = govy.New[Duration](
+var durationValidation = govy.New(
 	govy.For(func(d Duration) string { return d.Unit }).
 		WithName("unit").
 		Required().
@@ -124,7 +124,7 @@ var durationValidation = govy.New[Duration](
 		Rules(rules.GT(0)),
 )
 
-var sourceSLOValidation = govy.New[SourceSLO](
+var sourceSLOValidation = govy.New(
 	govy.For(func(r SourceSLO) string { return r.Project }).
 		WithName("project").
 		Required(),
@@ -137,7 +137,7 @@ var sourceSLOValidation = govy.New[SourceSLO](
 		IncludeForEach(sourceSLOItemValidation),
 )
 
-var sourceSLOItemValidation = govy.New[SourceSLOItem](
+var sourceSLOItemValidation = govy.New(
 	govy.For(func(r SourceSLOItem) string { return r.Source }).
 		WithName("source").
 		Required(),
