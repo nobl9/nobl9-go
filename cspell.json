@@ -35,6 +35,7 @@
   ],
   "words": [
     "00u2y4e4atkzaYkXP4x8",
+    "Alertsmetrics",
     "BYHOUR",
     "BYMINUTE",
     "BYSECOND",
@@ -48,10 +49,12 @@
     "Metricname",
     "TIMEMAX",
     "aggs",
+    "alertanalysis",
     "alertgroup",
     "alertmethod",
     "alertpolicy",
     "alertsilence",
+    "alertsmetrics",
     "alphatest",
     "apikey",
     "apiurl",
@@ -196,6 +199,7 @@
     "usergroup",
     "usrmgmt",
     "vuln",
-    "vulns"
+    "vulns",
+    "wincrypt"
   ]
 }

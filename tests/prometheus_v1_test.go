@@ -5,6 +5,7 @@ package tests
 import (
 	"fmt"
 	"maps"
+	"net/http"
 	"slices"
 	"testing"
 	"time"
@@ -20,6 +21,7 @@ import (
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	"github.com/nobl9/nobl9-go/sdk"
 	prometheusV1 "github.com/nobl9/nobl9-go/sdk/endpoints/prometheus/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
@@ -49,21 +51,69 @@ var allPrometheusMetricNames = []string{
 	"time_slice_status",
 }
 
+var allPrometheusLabelNames = []string{
+	"__name__",
+	"component_objective",
+	"component_project",
+	"component_slo",
+	"objective",
+	"project",
+	"service",
+	"slo",
+}
+
+var allPrometheusReliabilityMetricLabelNames = []string{
+	"__name__",
+	"objective",
+	"project",
+	"service",
+	"slo",
+}
+
 func Test_Prometheus_V1_Query(t *testing.T) {
 	t.Parallel()
 
-	value, warnings, err := client.Prometheus().V1().Query(
-		t.Context(),
-		prometheusV1.QueryRequest{
-			Query: "unknown_metric",
-		},
-	)
-	require.NoError(t, err)
-	require.Empty(t, warnings)
+	t.Run("non-existent metric", func(t *testing.T) {
+		t.Parallel()
 
-	vector, ok := value.(model.Vector)
-	require.True(t, ok)
-	assert.Empty(t, vector)
+		value, warnings, err := client.Prometheus().V1().Query(
+			t.Context(),
+			prometheusV1.QueryRequest{
+				Query: "unknown_metric",
+			},
+		)
+		require.NoError(t, err)
+		require.Empty(t, warnings)
+
+		vector, ok := value.(model.Vector)
+		require.True(t, ok)
+		assert.Empty(t, vector)
+	})
+
+	t.Run("bad response error", func(t *testing.T) {
+		t.Parallel()
+
+		_, _, err := client.Prometheus().V1().Query(
+			t.Context(),
+			prometheusV1.QueryRequest{
+				Query: "sum(rate(",
+			},
+		)
+
+		require.Error(t, err)
+		var httpErr *sdk.HTTPError
+		require.ErrorAs(t, err, &httpErr)
+		assert.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+		assert.Equal(t, http.MethodPost, httpErr.Method)
+		assert.Contains(t, httpErr.URL, "/api/prometheus/v1/api/v1/query")
+		assert.NotEmpty(t, httpErr.TraceID)
+		require.Len(t, httpErr.Errors, 1)
+		assert.Equal(
+			t,
+			"bad_data: Field Namespace:query ERROR:1 error occurred:\n\t* line 1:9 no viable alternative at input 'sum(rate('",
+			httpErr.Errors[0].Title,
+		)
+	})
 }
 
 func Test_Prometheus_V1_QueryRange(t *testing.T) {
@@ -95,43 +145,19 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 		expected []string
 	}{
 		"all labels": {
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-				"component_slo",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusLabelNames,
 		},
 		"SLO metric labels": {
 			request: prometheusV1.LabelNamesRequest{
 				Matches: []string{"reliability"},
 			},
-			expected: []string{
-				"__name__",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusReliabilityMetricLabelNames,
 		},
 		"component metric labels": {
 			request: prometheusV1.LabelNamesRequest{
 				Matches: []string{"component_weight"},
 			},
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-				"component_slo",
-				"objective",
-				"project",
-				"service",
-				"slo",
-			},
+			expected: allPrometheusLabelNames,
 		},
 		"unknown metric": {
 			request: prometheusV1.LabelNamesRequest{
@@ -149,11 +175,7 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 			request: prometheusV1.LabelNamesRequest{
 				Limit: 3,
 			},
-			expected: []string{
-				"__name__",
-				"component_objective",
-				"component_project",
-			},
+			expected: allPrometheusLabelNames[:3],
 		},
 	}
 
