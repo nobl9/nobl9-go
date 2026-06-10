@@ -3,6 +3,7 @@
 package tests
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -11,8 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+	"github.com/nobl9/nobl9-go/sdk"
 	alertanalysisV1 "github.com/nobl9/nobl9-go/sdk/endpoints/alertanalysis/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
@@ -30,17 +34,34 @@ func Test_AlertAnalysis_V1(t *testing.T) {
 	t.Run("calculate alert policy", func(t *testing.T) {
 		t.Parallel()
 
-		response, err := tryExecuteRequest(t, func() (alertanalysisV1.CalculateAlertPolicyResponse, error) {
-			return client.AlertAnalysis().V1().CalculateAlertPolicy(t.Context(), alertanalysisV1.CalculateAlertPolicyRequest{
-				SLO:       slo.Metadata.Name,
-				Project:   slo.Metadata.Project,
-				Objective: slo.Spec.Objectives[0].Name,
-				StartTime: startTime,
-				EndTime:   endTime,
-			})
-		})
-
-		require.NoError(t, err)
+		response, err := tryExecuteRequestWhile(
+			t,
+			func() (alertanalysisV1.CalculateAlertPolicyResponse, error) {
+				return client.AlertAnalysis().V1().CalculateAlertPolicy(
+					t.Context(),
+					alertanalysisV1.CalculateAlertPolicyRequest{
+						SLO:       slo.Metadata.Name,
+						Project:   slo.Metadata.Project,
+						Objective: slo.Spec.Objectives[0].Name,
+						StartTime: startTime,
+						EndTime:   endTime,
+					},
+				)
+			},
+			func(err error) bool {
+				// Alertsapi can return 404 immediately after creating the SLO because
+				// object propagation is eventually consistent.
+				var httpErr *sdk.HTTPError
+				return errors.As(err, &httpErr) && httpErr.StatusCode == 404
+			},
+		)
+		if err != nil {
+			var httpErr *sdk.HTTPError
+			require.ErrorAs(t, err, &httpErr)
+			assert.Equal(t, 400, httpErr.StatusCode)
+			assert.ErrorContains(t, err, "no data points found in the selected time range")
+			return
+		}
 		assert.NotEmpty(t, response.AlertPolicies)
 		assert.False(t, response.AdjustedStartTime.IsZero())
 		assert.False(t, response.AdjustedEndTime.IsZero())
@@ -106,6 +127,10 @@ func setupAlertAnalysisTest(t *testing.T) ([]manifest.Object, v1alphaSLO.SLO, v1
 	project := objects[0]
 	slo := objects[2].(v1alphaSLO.SLO)
 
+	alertMethod := newV1alphaAlertMethod(t, v1alpha.AlertMethodTypeSlack, v1alphaAlertMethod.Metadata{
+		Name:    e2etestutils.GenerateName(),
+		Project: project.GetName(),
+	})
 	alertPolicyExample := e2etestutils.GetExample(t, manifest.KindAlertPolicy, nil)
 	alertPolicy := newV1alphaAlertPolicy(t,
 		v1alphaAlertPolicy.Metadata{
@@ -115,10 +140,16 @@ func setupAlertAnalysisTest(t *testing.T) ([]manifest.Object, v1alphaSLO.SLO, v1
 		alertPolicyExample.GetVariant(),
 		alertPolicyExample.GetSubVariant(),
 	)
+	alertPolicy.Spec.AlertMethods = []v1alphaAlertPolicy.AlertMethodRef{{
+		Metadata: v1alphaAlertPolicy.AlertMethodRefMetadata{
+			Name:    alertMethod.Metadata.Name,
+			Project: alertMethod.Metadata.Project,
+		},
+	}}
 
 	slo.Spec.AlertPolicies = []string{alertPolicy.Metadata.Name}
 	objects[2] = slo
-	objects = append(objects, alertPolicy)
+	objects = append(objects, alertMethod, alertPolicy)
 	return objects, slo, alertPolicy
 }
 
