@@ -38,8 +38,6 @@ func Direct() []Example {
 	return examples
 }
 
-var alphaChannelDirects = []v1alpha.DataSourceType{}
-
 var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
@@ -87,8 +85,6 @@ func (d directExample) Generate() v1alphaDirect.Direct {
 		},
 	}
 	switch {
-	case slices.Contains(alphaChannelDirects, typ):
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 	case slices.Contains(betaChannelDirects, typ):
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 	default:
