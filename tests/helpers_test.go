@@ -99,6 +99,15 @@ func mustParseTime(s string) time.Time {
 
 func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
 	t.Helper()
+	return tryExecuteRequestWhile(t, reqFunc, func(error) bool { return true })
+}
+
+func tryExecuteRequestWhile[T any](
+	t *testing.T,
+	reqFunc func() (T, error),
+	shouldRetry func(error) bool,
+) (T, error) {
+	t.Helper()
 	ticker := time.NewTicker(5 * time.Second)
 	timer := time.NewTimer(time.Minute)
 	defer ticker.Stop()
@@ -111,8 +120,8 @@ func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error
 		select {
 		case <-ticker.C:
 			response, err = reqFunc()
-			if err == nil {
-				return response, nil
+			if err == nil || !shouldRetry(err) {
+				return response, err
 			}
 		case <-timer.C:
 			t.Error("timeout")
