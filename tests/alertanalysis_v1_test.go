@@ -49,7 +49,7 @@ func Test_AlertAnalysis_V1(t *testing.T) {
 				)
 			},
 			func(err error) bool {
-				// Alertsapi can return 404 immediately after creating the SLO because
+				// Alerts API can return 404 immediately after creating the SLO because
 				// object propagation is eventually consistent.
 				var httpErr *sdk.HTTPError
 				return errors.As(err, &httpErr) && httpErr.StatusCode == 404
