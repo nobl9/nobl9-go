@@ -37,7 +37,7 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	}
 	switch len(users) {
 	case 1:
-		return users[0], nil
+		return &users[0], nil
 	case 0:
 		return nil, nil
 	default:
@@ -46,12 +46,12 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 }
 
 // GetUsers fetches users filtered by the provided request.
-func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]*User, error) {
+func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]User, error) {
 	return e.getUsers(ctx, getUsersRequest{IDs: params.IDs})
 }
 
 // getUsers fetches a list of [User] filtered by the provided parameters.
-func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*User, error) {
+func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]User, error) {
 	q := make(url.Values)
 	if params.Phrase != "" {
 		q["phrase"] = []string{params.Phrase}
@@ -69,7 +69,7 @@ func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*Use
 	}
 	defer func() { _ = resp.Body.Close() }()
 	var users struct {
-		Users []*User `json:"users"`
+		Users []User `json:"users"`
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&users); err != nil {
 		return nil, err
