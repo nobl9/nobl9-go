@@ -45,9 +45,20 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	}
 }
 
-// getUsers fetches a list of [User] filtered by the provided search phrase.
+// GetUsers fetches users filtered by the provided request.
+func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]*User, error) {
+	return e.getUsers(ctx, getUsersRequest{IDs: params.IDs})
+}
+
+// getUsers fetches a list of [User] filtered by the provided parameters.
 func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*User, error) {
-	q := url.Values{"phrase": []string{params.Phrase}}
+	q := make(url.Values)
+	if params.Phrase != "" {
+		q["phrase"] = []string{params.Phrase}
+	}
+	if len(params.IDs) > 0 {
+		q["id"] = params.IDs
+	}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, baseAPIPath, nil, q, nil)
 	if err != nil {
 		return nil, err
