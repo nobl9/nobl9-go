@@ -110,7 +110,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 			errorCode: rules.ErrorCodeGreaterThan,
 		},
 		{
-			name: "maximum duration exceeded",
+			name: "duration over 30 days",
 			replay: RunRequest{
 				Project: "project",
 				SLO:     "slo",
@@ -119,8 +119,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 					Value: 31,
 				},
 			},
-			isValid:   false,
-			errorCode: durationValidationErrorCode,
+			isValid: true,
 		},
 		{
 			name: "missing duration",

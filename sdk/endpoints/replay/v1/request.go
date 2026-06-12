@@ -12,32 +12,29 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
-// maximumAllowedReplayDuration currently is 30 days.
-const maximumAllowedReplayDuration = time.Hour * 24 * 30
-
 type RunRequest struct {
-	TimeRange TimeRange  `json:"timeRange"`
-	SourceSLO *SourceSLO `json:"sourceSlo"`
+	TimeRange TimeRange  `json:"timeRange,omitempty,omitzero"`
+	SourceSLO *SourceSLO `json:"sourceSlo,omitempty"`
 	Project   string     `json:"project"`
 	SLO       string     `json:"slo"`
-	Duration  Duration   `json:"duration"`
+	Duration  Duration   `json:"duration,omitempty,omitzero"`
 }
 
 type DeleteRequest struct {
-	Project string `json:"project"`
-	SLO     string `json:"slo"`
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
 	// If All is provided, Project and SLO are ignored and all replays are deleted.
-	All bool `json:"all"`
+	All bool `json:"all,omitempty"`
 }
 
 type CancelRequest struct {
-	Project string `json:"project"`
-	SLO     string `json:"slo"`
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
 }
 
 type GetStatusRequest struct {
-	Project string `json:"project"`
-	SLO     string `json:"slo"`
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
 }
 
 type GetAvailabilityRequest struct {
@@ -86,8 +83,7 @@ var runRequestValidation = govy.New(
 			},
 		).
 		Cascade(govy.CascadeModeStop).
-		Include(durationValidation).
-		Rules(durationValidationRule()),
+		Include(durationValidation),
 	govy.ForPointer(func(r RunRequest) *SourceSLO { return r.SourceSLO }).
 		WithName("sourceSLO").
 		Include(sourceSLOValidation),
@@ -96,10 +92,7 @@ var runRequestValidation = govy.New(
 		When(
 			func(r RunRequest) bool { return !r.TimeRange.StartDate.IsZero() },
 		).
-		Rules(
-			startTimeValidationRule(),
-			startTimeNotInFutureValidationRule(),
-		),
+		Rules(startTimeNotInFutureValidationRule()),
 	govy.For(func(r RunRequest) RunRequest { return r }).
 		Rules(govy.NewRule(func(r RunRequest) error {
 			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
@@ -147,36 +140,10 @@ func (r RunRequest) Validate() error {
 }
 
 const (
-	durationValidationErrorCode         = "replay_duration"
 	durationUnitValidationErrorCode     = "replay_duration_unit"
 	durationAndStartDateValidationError = "replay_duration_or_start_date"
 	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
-
-func durationValidationRule() govy.Rule[Duration] {
-	return govy.NewRule(func(v Duration) error {
-		duration, err := v.Duration()
-		if err != nil {
-			return err
-		}
-		if duration > maximumAllowedReplayDuration {
-			return errors.Errorf("%s duration must not be greater than %s",
-				duration, maximumAllowedReplayDuration)
-		}
-		return nil
-	}).WithErrorCode(durationValidationErrorCode)
-}
-
-func startTimeValidationRule() govy.Rule[time.Time] {
-	return govy.NewRule(func(v time.Time) error {
-		duration := time.Since(v)
-		if duration > maximumAllowedReplayDuration {
-			return errors.Errorf("%s duration must not be greater than %s",
-				duration, maximumAllowedReplayDuration)
-		}
-		return nil
-	}).WithErrorCode(durationValidationErrorCode)
-}
 
 func startTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 	return govy.NewRule(func(v time.Time) error {
