@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/pkg/errors"
 
@@ -47,7 +48,7 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 
 // GetUsers fetches users filtered by the provided request.
 func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]User, error) {
-	return e.getUsers(ctx, getUsersRequest{IDs: params.IDs})
+	return e.getUsers(ctx, getUsersRequest{GetUsersRequest: params})
 }
 
 // getUsers fetches a list of [User] filtered by the provided parameters.
@@ -58,6 +59,9 @@ func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]User
 	}
 	if len(params.IDs) > 0 {
 		q["id"] = params.IDs
+	}
+	if params.Limit > 0 {
+		q["limit"] = []string{strconv.Itoa(int(params.Limit))}
 	}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, baseAPIPath, nil, q, nil)
 	if err != nil {
