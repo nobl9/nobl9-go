@@ -37,7 +37,7 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	}
 	switch len(users) {
 	case 1:
-		return users[0], nil
+		return &users[0], nil
 	case 0:
 		return nil, nil
 	default:
@@ -45,9 +45,20 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	}
 }
 
-// getUsers fetches a list of [User] filtered by the provided search phrase.
-func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*User, error) {
-	q := url.Values{"phrase": []string{params.Phrase}}
+// GetUsers fetches users filtered by the provided request.
+func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]User, error) {
+	return e.getUsers(ctx, getUsersRequest{IDs: params.IDs})
+}
+
+// getUsers fetches a list of [User] filtered by the provided parameters.
+func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]User, error) {
+	q := make(url.Values)
+	if params.Phrase != "" {
+		q["phrase"] = []string{params.Phrase}
+	}
+	if len(params.IDs) > 0 {
+		q["id"] = params.IDs
+	}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, baseAPIPath, nil, q, nil)
 	if err != nil {
 		return nil, err
@@ -58,7 +69,7 @@ func (e endpoints) getUsers(ctx context.Context, params getUsersRequest) ([]*Use
 	}
 	defer func() { _ = resp.Body.Close() }()
 	var users struct {
-		Users []*User `json:"users"`
+		Users []User `json:"users"`
 	}
 	if err = json.NewDecoder(resp.Body).Decode(&users); err != nil {
 		return nil, err

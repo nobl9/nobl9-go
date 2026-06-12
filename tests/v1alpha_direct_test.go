@@ -127,6 +127,7 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 		expected.Spec.Datadog.ApplicationKey = "[hidden]"
 	case v1alpha.Dynatrace:
 		expected.Spec.Dynatrace.DynatraceToken = "[hidden]"
+		expected.Spec.Dynatrace.PlatformToken = "[hidden]"
 	case v1alpha.GCM:
 		expected.Spec.GCM.ServiceAccountKey = "[hidden]"
 	case v1alpha.Honeycomb:
