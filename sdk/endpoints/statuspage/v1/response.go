@@ -3,7 +3,7 @@ package v1
 import "time"
 
 // ComponentStatus is the computed status of a status page component.
-// Disruption severities share the same values, except "operational".
+// Disruption severities share the same values, except [ComponentStatusOperational].
 type ComponentStatus = string
 
 const (

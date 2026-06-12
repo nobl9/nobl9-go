@@ -15,9 +15,7 @@ import (
 func Test_StatusPage_V1_GetStatus(t *testing.T) {
 	t.Parallel()
 
-	response, err := tryExecuteRequest(t, func() (statusPageV1.GetStatusResponse, error) {
-		return client.StatusPage().V1().GetStatus(t.Context())
-	})
+	response, err := client.StatusPage().V1().GetStatus(t.Context())
 	require.NoError(t, err)
 	for _, component := range response.Components {
 		assertStatusComponent(t, component)
@@ -32,12 +30,10 @@ func Test_StatusPage_V1_ListDisruptions(t *testing.T) {
 		statusPageV1.DisruptionStateImpacting,
 		statusPageV1.DisruptionStateCleared,
 	} {
-		response, err := tryExecuteRequest(t, func() (statusPageV1.ListDisruptionsResponse, error) {
-			return client.StatusPage().V1().ListDisruptions(
-				t.Context(),
-				statusPageV1.ListDisruptionsRequest{State: state, Limit: limit},
-			)
-		})
+		response, err := client.StatusPage().V1().ListDisruptions(
+			t.Context(),
+			statusPageV1.ListDisruptionsRequest{State: state, Limit: limit},
+		)
 		require.NoError(t, err)
 		assert.LessOrEqual(t, len(response.Disruptions), limit)
 		assert.LessOrEqual(t, int64(len(response.Disruptions)), response.Total)
