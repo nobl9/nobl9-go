@@ -60,8 +60,6 @@ If generated output is stale, update source definitions and run
 
 ## Verification
 
-Always verify changes with project targets before claiming completion.
-For Markdown-only changes, run `make check/markdown` at minimum.
-
+Always verify changes with project Makefile targets before claiming completion.
 If a command cannot be run locally, report the exact command and exact error.
 Do not replace failed verification with assumptions.

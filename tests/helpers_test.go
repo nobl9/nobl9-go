@@ -109,7 +109,7 @@ func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error
 //
 // Use it ONLY for requests which check for state that propagates asynchronously.
 // For instance, an object is applied instantly,
-// but it will appear in SLO Status API only after and indeterminate amount of time.
+// but it will appear in SLO Status API only after an indeterminate amount of time.
 func tryExecuteRequestWhile[T any](
 	t *testing.T,
 	reqFunc func() (T, error),
