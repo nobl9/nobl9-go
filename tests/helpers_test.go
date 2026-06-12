@@ -97,11 +97,19 @@ func mustParseTime(s string) time.Time {
 	return t
 }
 
+// tryExecuteRequest will try executing a request until a timeout occurs or the request is successful.
+// See [tryExecuteRequestWhile] docs for more details.
 func tryExecuteRequest[T any](t *testing.T, reqFunc func() (T, error)) (T, error) {
 	t.Helper()
 	return tryExecuteRequestWhile(t, reqFunc, func(error) bool { return true })
 }
 
+// tryExecuteRequestWhile will try executing a request until a timeout occurs or the request is successful.
+// It will keep on trying only while the `shouldRetry` condition is met.
+//
+// Use it ONLY for requests which check for state that propagates asynchronously.
+// For instance, an object is applied instantly,
+// but it will appear in SLO Status API only after and indeterminate amount of time.
 func tryExecuteRequestWhile[T any](
 	t *testing.T,
 	reqFunc func() (T, error),

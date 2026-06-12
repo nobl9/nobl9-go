@@ -30,46 +30,39 @@ and makes local debugging easier.
 The e2e workflow retries the test target because platform-backed tests can be
 transient.
 
+## Modifying objects
+
+> [!CAUTION]
+> Validation rule tests are mandatory.
+> If you add new fields with validation rules or modify existing ones
+> you must cover them with [validation tests](#govy-validation-tests).
+
+When modifying manifest objects, make sure the SDK, generated artifacts, tests,
+and examples stay in sync.
+At minimum, check the following:
+
+- Update the object type, validation rules, and any shared helpers used by that
+  object.
+- Update or add object examples under `manifest/v1alpha/examples`.
+  These examples feed generated YAML test fixtures and object documentation.
+- Run `make generate` after changing object shapes, generated examples,
+  validation-derived docs, or generated object implementations.
+- Add or update Govy validation tests when validation behavior changes.
+  Follow [Govy validation tests](#govy-validation-tests): test whole manifest
+  objects, assert the exact error count, and use full govy property paths.
+- Add or update end-to-end coverage under [tests](../tests/) when the change
+  affects behavior visible through the Objects API.
+- Keep [docs/mock_example](./mock_example) in sync when SDK interfaces used by
+  the mock example change.
+
 ## Testing
 
-It is encouraged to create a simple MVP program which verifies that introduced
-changes work. There's a dedicated section in PR template `## Testing` which
-is a great place to add such `main.go` code snippet.
-Here's an example:
+### Unit tests
 
-```go
-package main
+**AVOID** adding unit tests that cover what end-to-end tests are better
+equipped to cover, don't mock the HTTP stack, unless it's absolutely necessary.
 
-import (
-	"context"
-	"encoding/json"
-	"log"
-	"os"
-
-	"github.com/nobl9/nobl9-go/sdk"
-	v1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
-)
-
-func main() {
-	client, err := sdk.DefaultClient()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	projects, err := client.Objects().V1().GetV1alphaProjects(context.Background(), v1.GetProjectsRequest{
-		Names: []string{"default"},
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	_ = enc.Encode(projects)
-}
-```
-
-### Govy validation tests
+#### Govy validation tests
 
 Govy validation tests are used as regression material for dependent tools, so
 write them against the same object shape users submit.
@@ -105,11 +98,6 @@ When writing validation for Nobl9 manifest objects, follow these rules:
 - If one invalid value is validated in multiple branches, assert each produced
   path and the full error count.
 
-### Unit tests
-
-- **AVOID** adding unit tests that cover what end-to-end tests are better
-  equipped to cover, don't mock the HTTP stack, unless it's absolutely necessary.
-
 ### Recording tests
 
 If you wish to record the tests run `make test/record`.
@@ -121,7 +109,8 @@ Tests which are run against Nobl9 API are located under [tests](../tests)
 folder.
 They are standard Go tests, annotated with build tag `e2e_test`, they can
 be executed with `make test/e2e`.
-In order to run them, a set of basic Nobl9 credentials is required:
+In order to run them, you either need to have `~/.config/nobl9/config.toml`
+or a set of basic Nobl9 credentials via environment variables:
 
 - *NOBL9_SDK_CLIENT_ID*
 - *NOBL9_SDK_CLIENT_SECRET*
