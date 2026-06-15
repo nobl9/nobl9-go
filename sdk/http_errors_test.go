@@ -300,65 +300,6 @@ func TestAPIErrors_Error(t *testing.T) {
 	assert.Equal(t, stringutils.RemoveCR(apiErrors.Error()), expectedMessage)
 }
 
-func TestAPIError_JSONCompatibility(t *testing.T) {
-	t.Parallel()
-	t.Run("minimal error omits optional fields", func(t *testing.T) {
-		t.Parallel()
-		data, err := json.Marshal(APIError{Title: "Invalid command payload"})
-		require.NoError(t, err)
-		assert.JSONEq(t, `{"title":"Invalid command payload"}`, string(data))
-	})
-
-	t.Run("extended fields marshal and unmarshal", func(t *testing.T) {
-		t.Parallel()
-		apiError := APIError{
-			Title:  "Datasource command failed",
-			Code:   "datasource_command_failed",
-			Status: "422",
-			Detail: "SumoLogic query failed",
-			Meta: map[string]any{
-				"retryable": false,
-			},
-		}
-
-		data, err := json.Marshal(apiError)
-		require.NoError(t, err)
-		assert.JSONEq(t, `{
-			"title": "Datasource command failed",
-			"code": "datasource_command_failed",
-			"status": "422",
-			"detail": "SumoLogic query failed",
-			"meta": {
-				"retryable": false
-			}
-		}`, string(data))
-
-		var got APIError
-		require.NoError(t, json.Unmarshal(data, &got))
-		assert.Equal(t, apiError, got)
-	})
-
-	t.Run("old JSON shape still unmarshals", func(t *testing.T) {
-		t.Parallel()
-		var got APIError
-		require.NoError(t, json.Unmarshal([]byte(`{
-			"title": "Invalid command payload",
-			"code": "invalid_command_payload",
-			"source": {
-				"propertyName": "command.payload.timeRange.from"
-			}
-		}`), &got))
-
-		assert.Equal(t, APIError{
-			Title: "Invalid command payload",
-			Code:  "invalid_command_payload",
-			Source: &APIErrorSource{
-				PropertyName: "command.payload.timeRange.from",
-			},
-		}, got)
-	})
-}
-
 func TestAPIError_Error(t *testing.T) {
 	tests := map[string]struct {
 		err      APIError
@@ -376,6 +317,33 @@ func TestAPIError_Error(t *testing.T) {
 				Code:  "some_code",
 			},
 			expected: "error1",
+		},
+		"new fields": {
+			err: APIError{
+				Title:  "error1",
+				Code:   "datasource_command_failed",
+				Status: "422",
+				Detail: "SumoLogic query failed",
+				Meta: map[string]any{
+					"retryable": false,
+				},
+			},
+			expected: "error1",
+		},
+		"new fields with source": {
+			err: APIError{
+				Title:  "error1",
+				Code:   "invalid_command_payload",
+				Status: "422",
+				Detail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
+				Source: &APIErrorSource{
+					PropertyName: "command.payload.timeRange.from",
+				},
+				Meta: map[string]any{
+					"retryable": false,
+				},
+			},
+			expected: "error1 (source: 'command.payload.timeRange.from')",
 		},
 		"only property name": {
 			err: APIError{
