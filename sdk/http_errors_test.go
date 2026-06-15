@@ -300,10 +300,13 @@ func TestAPIErrors_Error(t *testing.T) {
 	assert.Equal(t, stringutils.RemoveCR(apiErrors.Error()), expectedMessage)
 }
 
-func TestAPIError_Error(t *testing.T) {
+func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 	tests := map[string]struct {
-		err      APIError
-		expected string
+		err            APIError
+		expected       string
+		expectedStatus string
+		expectedDetail string
+		expectedMeta   map[string]any
 	}{
 		"no code, no source": {
 			err: APIError{
@@ -318,7 +321,7 @@ func TestAPIError_Error(t *testing.T) {
 			},
 			expected: "error1",
 		},
-		"new fields": {
+		"status detail and meta do not change output": {
 			err: APIError{
 				Title:  "error1",
 				Code:   "datasource_command_failed",
@@ -328,9 +331,14 @@ func TestAPIError_Error(t *testing.T) {
 					"retryable": false,
 				},
 			},
-			expected: "error1",
+			expected:       "error1",
+			expectedStatus: "422",
+			expectedDetail: "SumoLogic query failed",
+			expectedMeta: map[string]any{
+				"retryable": false,
+			},
 		},
-		"new fields with source": {
+		"status detail and meta do not change source output": {
 			err: APIError{
 				Title:  "error1",
 				Code:   "invalid_command_payload",
@@ -343,7 +351,12 @@ func TestAPIError_Error(t *testing.T) {
 					"retryable": false,
 				},
 			},
-			expected: "error1 (source: 'command.payload.timeRange.from')",
+			expected:       "error1 (source: 'command.payload.timeRange.from')",
+			expectedStatus: "422",
+			expectedDetail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
+			expectedMeta: map[string]any{
+				"retryable": false,
+			},
 		},
 		"only property name": {
 			err: APIError{
@@ -371,6 +384,9 @@ func TestAPIError_Error(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, test.expected, test.err.Error())
+			assert.Equal(t, test.expectedStatus, test.err.Status)
+			assert.Equal(t, test.expectedDetail, test.err.Detail)
+			assert.Equal(t, test.expectedMeta, test.err.Meta)
 		})
 	}
 }
