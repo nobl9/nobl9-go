@@ -13,4 +13,6 @@ type Endpoints interface {
 	//
 	// It returns nil if the user was not found.
 	GetUser(ctx context.Context, id string) (*User, error)
+	// GetUsers fetches users filtered by the provided request.
+	GetUsers(ctx context.Context, params GetUsersRequest) ([]User, error)
 }
