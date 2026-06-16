@@ -13,8 +13,10 @@ List related changes from other PRs (if any).
 
 ## Testing
 
-- Describe how to check introduced code changes manually. Simple `main.go` which takes advantage of the introduced changes is preferred (if possible and useful).
-- Take care of test coverage on unit, integration or even end-to-end levels.
+Take care of test coverage on unit, integration or even end-to-end levels.
+In addition to the tests,
+you can also describe how to check the introduced code changes manually
+with a simple `main.go` which utilizes the introduced changes.
 
 ## Release Notes
 
