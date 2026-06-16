@@ -304,7 +304,6 @@ func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 	tests := map[string]struct {
 		err            APIError
 		expected       string
-		expectedStatus string
 		expectedDetail string
 		expectedMeta   map[string]any
 	}{
@@ -321,28 +320,25 @@ func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 			},
 			expected: "error1",
 		},
-		"status detail and meta do not change output": {
+		"detail and meta do not change output": {
 			err: APIError{
 				Title:  "error1",
 				Code:   "datasource_command_failed",
-				Status: "422",
 				Detail: "SumoLogic query failed",
 				Meta: map[string]any{
 					"retryable": false,
 				},
 			},
 			expected:       "error1",
-			expectedStatus: "422",
 			expectedDetail: "SumoLogic query failed",
 			expectedMeta: map[string]any{
 				"retryable": false,
 			},
 		},
-		"status detail and meta do not change source output": {
+		"detail and meta do not change source output": {
 			err: APIError{
 				Title:  "error1",
 				Code:   "invalid_command_payload",
-				Status: "422",
 				Detail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
 				Source: &APIErrorSource{
 					PropertyName: "command.payload.timeRange.from",
@@ -352,7 +348,6 @@ func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 				},
 			},
 			expected:       "error1 (source: 'command.payload.timeRange.from')",
-			expectedStatus: "422",
 			expectedDetail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
 			expectedMeta: map[string]any{
 				"retryable": false,
@@ -384,7 +379,6 @@ func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, test.expected, test.err.Error())
-			assert.Equal(t, test.expectedStatus, test.err.Status)
 			assert.Equal(t, test.expectedDetail, test.err.Detail)
 			assert.Equal(t, test.expectedMeta, test.err.Meta)
 		})

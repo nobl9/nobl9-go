@@ -82,8 +82,6 @@ type APIError struct {
 	Title string `json:"title"`
 	// Code is an application-specific error code. It is optional.
 	Code string `json:"code,omitempty"`
-	// Status is the HTTP status code applicable to this error. It is optional.
-	Status string `json:"status,omitempty"`
 	// Detail is a human-readable explanation specific to this occurrence of the error. It is optional.
 	Detail string `json:"detail,omitempty"`
 	// Source provides additional context for the source of the error. It is optional.
