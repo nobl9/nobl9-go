@@ -29,6 +29,8 @@ func Test_Users_V2_GetUsers(t *testing.T) {
 	t.Parallel()
 
 	t.Run("get current user", func(t *testing.T) {
+		t.Parallel()
+
 		userID, err := client.GetUserID(t.Context())
 		require.NoError(t, err)
 
@@ -44,12 +46,16 @@ func Test_Users_V2_GetUsers(t *testing.T) {
 	})
 
 	t.Run("get all users", func(t *testing.T) {
+		t.Parallel()
+
 		users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{})
 		require.NoError(t, err)
 		assert.Greater(t, len(users), 1)
 	})
 
 	t.Run("get all users with limit", func(t *testing.T) {
+		t.Parallel()
+
 		users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{Limit: 1})
 		require.NoError(t, err)
 		assert.Len(t, users, 1)
