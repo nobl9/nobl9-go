@@ -22,6 +22,7 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/prometheus"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/replay"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/statuspage"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
 )
 
@@ -43,6 +44,7 @@ const (
 //   - [Client.AuthData] for accessing the authentication APIs.
 //   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
+//   - [Client.StatusPage] for accessing the Status Page APIs.
 //   - [Client.Prometheus] for accessing the Prometheus-compatible API.
 //   - [Client.Replay] for accessing the Replay API.
 //
@@ -114,6 +116,11 @@ func (c *Client) AlertAnalysis() alertanalysis.Versions {
 // SLOStatusAPI is used to access specific SLO Status API version.
 func (c *Client) SLOStatusAPI() slostatusapi.Versions {
 	return slostatusapi.NewVersions(c)
+}
+
+// StatusPage is used to access specific Status Page API version.
+func (c *Client) StatusPage() statuspage.Versions {
+	return statuspage.NewVersions(c)
 }
 
 // Users is used to access specific users management API version.
