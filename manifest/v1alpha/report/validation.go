@@ -93,12 +93,34 @@ var specValidation = govy.New[Spec](
 
 var filtersValidation = govy.New[Filters](
 	govy.For(govy.GetSelf[Filters]()).
+		When(
+			func(f Filters) bool { return f.ProjectScope == ProjectScopeAll },
+			govy.WhenDescription("projectScope is set to all"),
+		).
 		Rules(govy.NewRule(func(f Filters) error {
-			if len(f.Projects) == 0 && len(f.Services) == 0 && len(f.SLOs) == 0 {
-				return errors.New("at least one of the following fields is required: projects, services, slos")
+			if len(f.Projects) > 0 || len(f.Services) > 0 || len(f.SLOs) > 0 {
+				return errors.New("projectScope=all cannot be combined with projects, services, or slos")
 			}
 			return nil
 		})),
+	govy.For(govy.GetSelf[Filters]()).
+		When(
+			func(f Filters) bool { return f.ProjectScope == ProjectScopeSelected || f.ProjectScope == "" },
+			govy.WhenDescription("projectScope is selected or unspecified"),
+		).
+		Rules(govy.NewRule(func(f Filters) error {
+			if len(f.Projects) == 0 && len(f.Services) == 0 && len(f.SLOs) == 0 {
+				return errors.New("at least one of the following fields is required: projectScope=all, projects, services, slos")
+			}
+			return nil
+		})),
+	govy.For(func(f Filters) ProjectScope { return f.ProjectScope }).
+		WithName("projectScope").
+		When(
+			func(f Filters) bool { return f.ProjectScope != "" },
+			govy.WhenDescription("projectScope is set"),
+		).
+		Rules(rules.OneOf(ProjectScopeSelected, ProjectScopeAll)),
 	govy.ForSlice(func(f Filters) []string { return f.Projects }).
 		WithName("projects").
 		RulesForEach(
