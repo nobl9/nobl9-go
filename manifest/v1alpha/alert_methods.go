@@ -14,5 +14,6 @@ ServiceNow
 Jira
 Teams
 Email
+SlackApp
 )*/
 type AlertMethodType int

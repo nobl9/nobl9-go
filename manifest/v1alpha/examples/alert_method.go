@@ -24,6 +24,7 @@ const (
 var standardAlertMethods = []v1alpha.AlertMethodType{
 	v1alpha.AlertMethodTypePagerDuty,
 	v1alpha.AlertMethodTypeSlack,
+	v1alpha.AlertMethodTypeSlackApp,
 	v1alpha.AlertMethodTypeDiscord,
 	v1alpha.AlertMethodTypeServiceNow,
 	v1alpha.AlertMethodTypeJira,
@@ -151,6 +152,13 @@ func (a alertMethodExample) generateVariant(am v1alphaAlertMethod.AlertMethod) v
 	case v1alpha.AlertMethodTypeSlack:
 		am.Spec.Slack = &v1alphaAlertMethod.SlackAlertMethod{
 			URL: "https://hooks.slack.com/services/321/123/secret",
+		}
+	case v1alpha.AlertMethodTypeSlackApp:
+		am.Spec.SlackApp = &v1alphaAlertMethod.SlackAppAlertMethod{
+			WorkspaceID:   "T0123456789",
+			ChannelID:     "C0123456789",
+			ChannelName:   "alerts",
+			WebhookSecret: "very-secret",
 		}
 	case v1alpha.AlertMethodTypeTeams:
 		am.Spec.Teams = &v1alphaAlertMethod.TeamsAlertMethod{
