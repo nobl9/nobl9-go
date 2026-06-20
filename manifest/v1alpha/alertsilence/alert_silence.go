@@ -39,10 +39,11 @@ type Metadata struct {
 
 // Spec represents content of AlertSilence's Spec.
 type Spec struct {
-	Description string            `json:"description"`
-	SLO         string            `json:"slo"`
-	AlertPolicy AlertPolicySource `json:"alertPolicy"`
-	Period      Period            `json:"period"`
+	Description      string            `json:"description"`
+	SLO              string            `json:"slo"`
+	AlertPolicy      AlertPolicySource `json:"alertPolicy"`
+	Period           Period            `json:"period"`
+	CreateAnnotation *bool             `json:"createAnnotation,omitempty"`
 }
 
 // AlertPolicySource represents AlertPolicy attached to the SLO.
