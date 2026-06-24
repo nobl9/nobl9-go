@@ -443,10 +443,12 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		)
 	}
 
-	if typ == v1alpha.SplunkObservability && spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
+	if typ == v1alpha.SplunkObservability &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
-			errors.New("must be 'alpha' for Splunk Observability"),
+			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
 		)
 	}
 
