@@ -58,8 +58,6 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	// Support for Replay only in beta.
 	v1alpha.Elasticsearch,
 	v1alpha.ThousandEyes,
-	// Gated to alpha and beta release channels.
-	v1alpha.SplunkObservability,
 	// Support for Replay only in beta.
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
