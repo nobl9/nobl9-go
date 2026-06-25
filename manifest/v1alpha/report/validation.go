@@ -116,10 +116,7 @@ var filtersValidation = govy.New[Filters](
 		})),
 	govy.For(func(f Filters) ProjectScope { return f.ProjectScope }).
 		WithName("projectScope").
-		When(
-			func(f Filters) bool { return f.ProjectScope != "" },
-			govy.WhenDescription("projectScope is set"),
-		).
+		OmitEmpty().
 		Rules(rules.OneOf(ProjectScopeSelected, ProjectScopeAll)),
 	govy.ForSlice(func(f Filters) []string { return f.Projects }).
 		WithName("projects").
