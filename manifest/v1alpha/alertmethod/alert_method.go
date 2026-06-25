@@ -139,7 +139,8 @@ type JiraAlertMethod struct {
 
 // TeamsAlertMethod represents a set of properties required create Microsoft Teams notifications.
 type TeamsAlertMethod struct {
-	URL string `json:"url"`
+	URL            string          `json:"url"`
+	SendResolution *SendResolution `json:"sendResolution,omitempty"`
 }
 
 // EmailAlertMethod represents a set of properties required to send an email.
