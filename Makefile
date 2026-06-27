@@ -10,7 +10,7 @@ GOLANGCI_LINT_VERSION := v2.12.2
 # renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
 GOVULNCHECK_VERSION := v1.5.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
-IFACEMAKER_VERSION := v1.3.0
+IFACEMAKER_VERSION := v1.4.0
 
 # Check if the program is present in $PATH and install otherwise.
 # ${1} - oneOf{binary,yarn}
