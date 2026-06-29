@@ -63,11 +63,19 @@ type CustomPeriod struct {
 	EndDate   string `json:"endDate,omitempty"`
 }
 
+type ProjectScope string
+
+const (
+	ProjectScopeSelected ProjectScope = "selected"
+	ProjectScopeAll      ProjectScope = "all"
+)
+
 type Filters struct {
-	Projects []string       `json:"projects,omitempty"`
-	Services Services       `json:"services,omitempty"`
-	SLOs     SLOs           `json:"slos,omitempty"`
-	Labels   v1alpha.Labels `json:"labels,omitempty"`
+	ProjectScope ProjectScope   `json:"projectScope,omitempty"`
+	Projects     []string       `json:"projects,omitempty"`
+	Services     Services       `json:"services,omitempty"`
+	SLOs         SLOs           `json:"slos,omitempty"`
+	Labels       v1alpha.Labels `json:"labels,omitempty"`
 }
 
 type (

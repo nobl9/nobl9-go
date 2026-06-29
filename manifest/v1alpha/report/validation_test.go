@@ -120,6 +120,13 @@ func TestValidate_Spec_Filters(t *testing.T) {
 		"passes with valid projects": {
 			Projects: []string{"project1", "project2"},
 		},
+		"passes with selected project scope and valid projects": {
+			ProjectScope: ProjectScopeSelected,
+			Projects:     []string{"project1", "project2"},
+		},
+		"passes with all project scope": {
+			ProjectScope: ProjectScopeAll,
+		},
 		"passes with valid services": {
 			Services: Services{
 				Service{
@@ -172,13 +179,50 @@ func TestValidate_Spec_Filters(t *testing.T) {
 			ExpectedErrors: []testutils.ExpectedError{
 				{
 					Prop:    "spec.filters",
-					Message: "at least one of the following fields is required: projects, services, slos",
+					Message: "at least one of the following fields is required: projectScope=all, projects, services, slos",
 				},
 			},
 			Filters: &Filters{
 				Labels: v1alpha.Labels{
 					"key1": {"value1"},
 				},
+			},
+		},
+		"fails with selected project scope and nothing selected": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.filters",
+					Message: "at least one of the following fields is required: projectScope=all, projects, services, slos",
+				},
+			},
+			Filters: &Filters{
+				ProjectScope: ProjectScopeSelected,
+			},
+		},
+		"fails with invalid project scope": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop: "spec.filters.projectScope",
+					Code: rules.ErrorCodeOneOf,
+				},
+			},
+			Filters: &Filters{
+				ProjectScope: ProjectScope("invalid"),
+			},
+		},
+		"fails with all project scope and explicit projects": {
+			ExpectedErrorsCount: 1,
+			ExpectedErrors: []testutils.ExpectedError{
+				{
+					Prop:    "spec.filters",
+					Message: "projectScope=all cannot be combined with projects, services, or slos",
+				},
+			},
+			Filters: &Filters{
+				ProjectScope: ProjectScopeAll,
+				Projects:     []string{"project"},
 			},
 		},
 		"fails with invalid project names": {
