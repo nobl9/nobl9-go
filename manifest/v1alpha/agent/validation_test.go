@@ -638,13 +638,30 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
+	t.Run("passes with alpha or beta release channel", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			v1alpha.ReleaseChannelAlpha,
+			v1alpha.ReleaseChannelBeta,
+		} {
+			agent := validAgent(v1alpha.SplunkObservability)
+			agent.Spec.ReleaseChannel = rc
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		}
+	})
+	t.Run("rejects non-alpha/beta release channel", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
 		err := validate(agent)
-		testutils.AssertNoError(t, agent, err)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.releaseChannel",
+			Code:    errCodeUnsupportedReleaseChannel,
+			Message: "must be 'alpha' or 'beta' for Splunk Observability",
+		})
 	})
 	t.Run("required fields", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		agent.Spec.SplunkObservability.Realm = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{

@@ -28,16 +28,36 @@ func Test_Users_V2_GetUser(t *testing.T) {
 func Test_Users_V2_GetUsers(t *testing.T) {
 	t.Parallel()
 
-	userID, err := client.GetUserID(t.Context())
-	require.NoError(t, err)
+	t.Run("get current user", func(t *testing.T) {
+		t.Parallel()
 
-	users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{
-		IDs: []string{userID},
+		userID, err := client.GetUserID(t.Context())
+		require.NoError(t, err)
+
+		users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{
+			IDs: []string{userID},
+		})
+		require.NoError(t, err)
+		require.Len(t, users, 1)
+		assert.NotEmpty(t, users[0].Email)
+		assert.NotEmpty(t, users[0].FirstName)
+		assert.NotEmpty(t, users[0].LastName)
+		assert.Equal(t, userID, users[0].UserID)
 	})
-	require.NoError(t, err)
-	require.Len(t, users, 1)
-	assert.NotEmpty(t, users[0].Email)
-	assert.NotEmpty(t, users[0].FirstName)
-	assert.NotEmpty(t, users[0].LastName)
-	assert.Equal(t, userID, users[0].UserID)
+
+	t.Run("get all users", func(t *testing.T) {
+		t.Parallel()
+
+		users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{})
+		require.NoError(t, err)
+		assert.Greater(t, len(users), 1)
+	})
+
+	t.Run("get all users with limit", func(t *testing.T) {
+		t.Parallel()
+
+		users, err := client.Users().V2().GetUsers(t.Context(), usersV2.GetUsersRequest{Limit: 1})
+		require.NoError(t, err)
+		assert.Len(t, users, 1)
+	})
 }
