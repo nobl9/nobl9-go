@@ -82,8 +82,12 @@ type APIError struct {
 	Title string `json:"title"`
 	// Code is an application-specific error code. It is optional.
 	Code string `json:"code,omitempty"`
+	// Detail is a human-readable explanation specific to this occurrence of the error. It is optional.
+	Detail string `json:"detail,omitempty"`
 	// Source provides additional context for the source of the error. It is optional.
 	Source *APIErrorSource `json:"source,omitempty"`
+	// Meta contains non-standard metadata about the error. It is optional.
+	Meta map[string]any `json:"meta,omitempty"`
 }
 
 // Error returns a string representation of the error.

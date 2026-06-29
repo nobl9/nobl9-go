@@ -300,10 +300,12 @@ func TestAPIErrors_Error(t *testing.T) {
 	assert.Equal(t, stringutils.RemoveCR(apiErrors.Error()), expectedMessage)
 }
 
-func TestAPIError_Error(t *testing.T) {
+func TestAPIError_ErrorFormatsTitleAndSource(t *testing.T) {
 	tests := map[string]struct {
-		err      APIError
-		expected string
+		err            APIError
+		expected       string
+		expectedDetail string
+		expectedMeta   map[string]any
 	}{
 		"no code, no source": {
 			err: APIError{
@@ -317,6 +319,39 @@ func TestAPIError_Error(t *testing.T) {
 				Code:  "some_code",
 			},
 			expected: "error1",
+		},
+		"detail and meta do not change output": {
+			err: APIError{
+				Title:  "error1",
+				Code:   "datasource_command_failed",
+				Detail: "SumoLogic query failed",
+				Meta: map[string]any{
+					"retryable": false,
+				},
+			},
+			expected:       "error1",
+			expectedDetail: "SumoLogic query failed",
+			expectedMeta: map[string]any{
+				"retryable": false,
+			},
+		},
+		"detail and meta do not change source output": {
+			err: APIError{
+				Title:  "error1",
+				Code:   "invalid_command_payload",
+				Detail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
+				Source: &APIErrorSource{
+					PropertyName: "command.payload.timeRange.from",
+				},
+				Meta: map[string]any{
+					"retryable": false,
+				},
+			},
+			expected:       "error1 (source: 'command.payload.timeRange.from')",
+			expectedDetail: "command.payload.timeRange.from must be before command.payload.timeRange.to",
+			expectedMeta: map[string]any{
+				"retryable": false,
+			},
 		},
 		"only property name": {
 			err: APIError{
@@ -344,6 +379,8 @@ func TestAPIError_Error(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, test.expected, test.err.Error())
+			assert.Equal(t, test.expectedDetail, test.err.Detail)
+			assert.Equal(t, test.expectedMeta, test.err.Meta)
 		})
 	}
 }
