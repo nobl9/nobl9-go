@@ -118,10 +118,10 @@ func TestClient_DataSource_V1_Query_ReturnsAPIErrors(t *testing.T) {
 	var httpErr *HTTPError
 	require.True(t, errors.As(err, &httpErr))
 	assert.Equal(t, http.StatusUnprocessableEntity, httpErr.StatusCode)
-	require.Len(t, httpErr.APIErrors.Errors, 1)
+	require.Len(t, httpErr.Errors, 1)
 	assert.Equal(t, APIError{
 		Title:  "unsupported datasource",
 		Code:   "unsupported_datasource",
 		Detail: "datasource type version does not support V2 commands",
-	}, httpErr.APIErrors.Errors[0])
+	}, httpErr.Errors[0])
 }
