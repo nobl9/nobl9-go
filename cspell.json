@@ -49,6 +49,7 @@
     "Metricname",
     "TIMEMAX",
     "aggs",
+    "agentcommander",
     "alertanalysis",
     "alertgroup",
     "alertmethod",
