@@ -159,6 +159,7 @@
     "promql",
     "promv",
     "puml",
+    "reimports",
     "retryable",
     "retryablehttp",
     "retryhttp",
