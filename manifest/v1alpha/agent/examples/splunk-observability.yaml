@@ -1,46 +1,26 @@
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: splunk-observability
-    displayName: Splunk Observability Agent
-    project: default
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Splunk Observability Agent
-    releaseChannel: stable
-    splunkObservability:
-      realm: us1
-    queryDelay:
-      value: 6
-      unit: Minute
-# replay
-- apiVersion: n9/v1alpha
-  kind: Agent
-  metadata:
-    name: splunk-observability
-    displayName: Splunk Observability Agent
-    project: default
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Splunk Observability Agent
-    releaseChannel: beta
-    splunkObservability:
-      realm: us1
-    historicalDataRetrieval:
-      maxDuration:
-        value: 30
-        unit: Day
-      defaultDuration:
-        value: 15
-        unit: Day
-    queryDelay:
-      value: 6
-      unit: Minute
+apiVersion: n9/v1alpha
+kind: Agent
+metadata:
+  name: splunk-observability
+  displayName: Splunk Observability Agent
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Splunk Observability Agent
+  releaseChannel: beta
+  splunkObservability:
+    realm: us1
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 6
+    unit: Minute

@@ -575,6 +575,15 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 			errors.New("must be 'beta' for ClickHouse"),
 		)
 	}
+
+	if typ == v1alpha.SplunkObservability &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
+		)
+	}
 	return nil
 }).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
