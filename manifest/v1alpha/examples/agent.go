@@ -12,8 +12,7 @@ import (
 
 type agentExample struct {
 	standardExample
-	typ           v1alpha.DataSourceType
-	replayEnabled bool
+	typ v1alpha.DataSourceType
 }
 
 func (a agentExample) GetDataSourceType() v1alpha.DataSourceType {
@@ -22,29 +21,18 @@ func (a agentExample) GetDataSourceType() v1alpha.DataSourceType {
 
 func Agent() []Example {
 	types := v1alpha.DataSourceTypeValues()
-	examples := make([]Example, 0, len(types)+1)
+	examples := make([]Example, 0, len(types))
 	for _, typ := range types {
-		variant := toKebabCase(typ.String())
-		if typ == v1alpha.SplunkObservability {
-			examples = append(examples,
-				newAgentExample(typ, variant, "", false),
-				newAgentExample(typ, variant, "replay", true),
-			)
-			continue
+		example := agentExample{
+			standardExample: standardExample{
+				Variant: toKebabCase(typ.String()),
+			},
+			typ: typ,
 		}
-		examples = append(examples, newAgentExample(typ, variant, "", true))
+		example.Object = example.Generate()
+		examples = append(examples, example)
 	}
 	return examples
-}
-
-func newAgentExample(typ v1alpha.DataSourceType, variant, subVariant string, replayEnabled bool) agentExample {
-	example := agentExample{
-		standardExample: standardExample{Variant: variant, SubVariant: subVariant},
-		typ:             typ,
-		replayEnabled:   replayEnabled,
-	}
-	example.Object = example.Generate()
-	return example
 }
 
 var betaChannelAgents = []v1alpha.DataSourceType{
@@ -80,16 +68,14 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 	)
 	agent = a.generateVariant(agent)
 	typ, _ := agent.Spec.GetType()
-	if a.replayEnabled {
-		if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err == nil {
-			defaultDuration := v1alpha.HistoricalRetrievalDuration{
-				Value: ptr(*maxDuration.Value / 2),
-				Unit:  maxDuration.Unit,
-			}
-			agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
-				MaxDuration:     maxDuration,
-				DefaultDuration: defaultDuration,
-			}
+	if maxDuration, err := v1alpha.GetDataRetrievalMaxDuration(manifest.KindAgent, typ); err == nil {
+		defaultDuration := v1alpha.HistoricalRetrievalDuration{
+			Value: ptr(*maxDuration.Value / 2),
+			Unit:  maxDuration.Unit,
+		}
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration:     maxDuration,
+			DefaultDuration: defaultDuration,
 		}
 	}
 	defaultQueryDelay := v1alpha.GetQueryDelayDefaults()[typ]
@@ -99,15 +85,12 @@ func (a agentExample) Generate() v1alphaAgent.Agent {
 			Unit:  defaultQueryDelay.Unit,
 		},
 	}
-	agent.Spec.ReleaseChannel = releaseChannelFor(typ, a.replayEnabled)
+	agent.Spec.ReleaseChannel = releaseChannelFor(typ)
 	return agent
 }
 
-func releaseChannelFor(typ v1alpha.DataSourceType, replayEnabled bool) v1alpha.ReleaseChannel {
+func releaseChannelFor(typ v1alpha.DataSourceType) v1alpha.ReleaseChannel {
 	if !slices.Contains(betaChannelAgents, typ) {
-		return v1alpha.ReleaseChannelStable
-	}
-	if typ == v1alpha.SplunkObservability && !replayEnabled {
 		return v1alpha.ReleaseChannelStable
 	}
 	return v1alpha.ReleaseChannelBeta

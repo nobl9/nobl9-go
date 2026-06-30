@@ -48,6 +48,7 @@
     "MAXRTT",
     "Metricname",
     "TIMEMAX",
+    "agentcommander",
     "aggs",
     "alertanalysis",
     "alertgroup",

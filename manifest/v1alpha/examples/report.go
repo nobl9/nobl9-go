@@ -200,7 +200,8 @@ func Report() []Example {
 			),
 		},
 		{
-			Variant: "Error Budget Status",
+			Variant:    "Error Budget Status",
+			SubVariant: "selected projects",
 			Object: report.New(
 				report.Metadata{
 					Name:        "ebs-report",
@@ -213,6 +214,23 @@ func Report() []Example {
 							"project-1",
 							"project-2",
 						},
+					},
+					ErrorBudgetStatus: &report.ErrorBudgetStatusConfig{},
+				},
+			),
+		},
+		{
+			Variant:    "Error Budget Status",
+			SubVariant: "all projects",
+			Object: report.New(
+				report.Metadata{
+					Name:        "ebs-report",
+					DisplayName: "Error Budget Status",
+				},
+				report.Spec{
+					Shared: true,
+					Filters: &report.Filters{
+						ProjectScope: report.ProjectScopeAll,
 					},
 					ErrorBudgetStatus: &report.ErrorBudgetStatusConfig{},
 				},
