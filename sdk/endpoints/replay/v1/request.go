@@ -13,11 +13,13 @@ import (
 )
 
 type RunRequest struct {
-	TimeRange TimeRange  `json:"timeRange,omitempty,omitzero"`
-	SourceSLO *SourceSLO `json:"sourceSlo,omitempty"`
-	Project   string     `json:"project"`
-	SLO       string     `json:"slo"`
-	Duration  Duration   `json:"duration,omitempty,omitzero"`
+	TimeRange  TimeRange    `json:"timeRange,omitempty,omitzero"`
+	SourceSLO  *SourceSLO   `json:"sourceSlo,omitempty"`
+	Source     ReplaySource `json:"source,omitempty"`
+	Project    string       `json:"project"`
+	SLO        string       `json:"slo"`
+	ReplayType ReplayType   `json:"replayType,omitempty"`
+	Duration   Duration     `json:"duration,omitempty,omitzero"`
 }
 
 type DeleteRequest struct {
@@ -43,14 +45,14 @@ type GetAvailabilityRequest struct {
 	DataSource        string
 	DataSourceKind    string
 	SLOName           string
-	Type              string
-	DurationUnit      string
+	Type              ReplayType
+	DurationUnit      DurationUnit
 	DurationValue     int
 }
 
 type Duration struct {
-	Unit  string `json:"unit"`
-	Value int    `json:"value"`
+	Unit  DurationUnit `json:"unit"`
+	Value int          `json:"value"`
 }
 
 type TimeRange struct {
@@ -69,6 +71,16 @@ type SourceSLOItem struct {
 }
 
 var runRequestValidation = govy.New(
+	govy.For(func(r RunRequest) ReplaySource { return r.Source }).
+		WithName("source").
+		When(func(r RunRequest) bool { return r.Source != "" }).
+		Rules(govy.NewRule(ValidateReplaySource).
+			WithErrorCode(replaySourceValidationErrorCode)),
+	govy.For(func(r RunRequest) ReplayType { return r.ReplayType }).
+		WithName("replayType").
+		When(func(r RunRequest) bool { return r.ReplayType != "" }).
+		Rules(govy.NewRule(ValidateReplayType).
+			WithErrorCode(replayTypeValidationErrorCode)),
 	govy.For(func(r RunRequest) string { return r.Project }).
 		WithName("project").
 		Required(),
@@ -103,7 +115,7 @@ var runRequestValidation = govy.New(
 )
 
 var durationValidation = govy.New(
-	govy.For(func(d Duration) string { return d.Unit }).
+	govy.For(func(d Duration) DurationUnit { return d.Unit }).
 		WithName("unit").
 		Required().
 		Rules(govy.NewRule(ValidateDurationUnit).
@@ -141,6 +153,8 @@ func (r RunRequest) Validate() error {
 
 const (
 	durationUnitValidationErrorCode     = "replay_duration_unit"
+	replaySourceValidationErrorCode     = "replay_source"
+	replayTypeValidationErrorCode       = "replay_type"
 	durationAndStartDateValidationError = "replay_duration_or_start_date"
 	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
@@ -168,18 +182,54 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 }
 
 const (
-	DurationUnitMinute = "Minute"
-	DurationUnitHour   = "Hour"
-	DurationUnitDay    = "Day"
+	DurationUnitMinute DurationUnit = "Minute"
+	DurationUnitHour   DurationUnit = "Hour"
+	DurationUnitDay    DurationUnit = "Day"
+)
+
+// DurationUnit is the granularity for replay lookback duration in run and availability requests.
+type DurationUnit string
+
+// ReplaySource identifies the workflow that created a replay request.
+type ReplaySource string
+
+const (
+	ReplaySourceUser                  ReplaySource = "user"
+	ReplaySourceErrorBudgetAdjustment ReplaySource = "error_budget_adjustment"
+)
+
+// ReplayType selects whether Nobl9 reimports historical data before recalculation
+// or recalculates from already available data.
+type ReplayType string
+
+const (
+	ReplayTypeReimportAndRecalculation ReplayType = "reimport_and_recalculation"
+	ReplayTypeRecalculation            ReplayType = "recalculation"
 )
 
 var ErrInvalidReplayDurationUnit = errors.Errorf(
 	"invalid duration unit, available units are: %v", allowedDurationUnit)
 
-var allowedDurationUnit = []string{
+var ErrInvalidReplaySource = errors.Errorf(
+	"invalid source, available sources are: %v", allowedReplaySource)
+
+var ErrInvalidReplayType = errors.Errorf(
+	"invalid replayType, available types are: %v", allowedReplayType)
+
+var allowedDurationUnit = []DurationUnit{
 	DurationUnitMinute,
 	DurationUnitHour,
 	DurationUnitDay,
+}
+
+var allowedReplaySource = []ReplaySource{
+	ReplaySourceUser,
+	ReplaySourceErrorBudgetAdjustment,
+}
+
+var allowedReplayType = []ReplayType{
+	ReplayTypeReimportAndRecalculation,
+	ReplayTypeRecalculation,
 }
 
 // Duration converts unit and value to [time.Duration].
@@ -199,11 +249,27 @@ func (d Duration) Duration() (time.Duration, error) {
 }
 
 // ValidateDurationUnit reports whether unit is an allowed replay duration unit.
-func ValidateDurationUnit(unit string) error {
+func ValidateDurationUnit(unit DurationUnit) error {
 	if slices.Contains(allowedDurationUnit, unit) {
 		return nil
 	}
 	return ErrInvalidReplayDurationUnit
+}
+
+// ValidateReplaySource reports whether source is an allowed replay source.
+func ValidateReplaySource(source ReplaySource) error {
+	if slices.Contains(allowedReplaySource, source) {
+		return nil
+	}
+	return ErrInvalidReplaySource
+}
+
+// ValidateReplayType reports whether replayType is an allowed replay type.
+func ValidateReplayType(replayType ReplayType) error {
+	if slices.Contains(allowedReplayType, replayType) {
+		return nil
+	}
+	return ErrInvalidReplayType
 }
 
 func isEmpty(duration Duration) bool {

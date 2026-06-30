@@ -9,7 +9,7 @@ type ReplayWithStatus struct {
 }
 
 type ReplayStatus struct {
-	Source       string                   `json:"source"`
+	Source       ReplaySource             `json:"source"`
 	Status       ReplayProcessStatus      `json:"status"`
 	Cancellation ReplayCancellationStatus `json:"cancellation"`
 	CanceledBy   string                   `json:"canceledBy,omitempty"`
@@ -33,10 +33,11 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	}
 }
 
-// ReplayProcessStatus is a replay process lifecycle state returned by the API.
+// ReplayProcessStatus is the detailed lifecycle state returned by the status endpoint.
 type ReplayProcessStatus string
 
-// Replay process lifecycle states.
+// Status responses expose internal replay processing steps.
+// Use ReplayListStatus for list responses.
 const (
 	ReplayStatusQueued                                 ReplayProcessStatus = "queued"
 	ReplayStatusNew                                    ReplayProcessStatus = "New"
@@ -66,10 +67,10 @@ const (
 	ReplayStatusRevertingCompositeAggregation          ReplayProcessStatus = "reverting_composite_aggregation"
 )
 
-// ReplayCancellationStatus describes whether and how a replay can be canceled.
+// ReplayCancellationStatus describes server-side replay cancellation state.
 type ReplayCancellationStatus string
 
-// Replay cancellation states.
+// Cancellation states are used in status and list responses.
 const (
 	ReplayCancellationStatusPossible  ReplayCancellationStatus = "possible"
 	ReplayCancellationStatusBlocked   ReplayCancellationStatus = "blocked"
@@ -79,20 +80,39 @@ const (
 )
 
 type ReplayAvailability struct {
-	Reason    string `json:"reason,omitempty"`
-	Available bool   `json:"available"`
+	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
+	Available bool                     `json:"available"`
 }
 
-// Variants of [ReplayAvailability.Reason].
+// ReplayAvailabilityReason is a machine-readable reason why replay is unavailable.
+// The availability endpoint can also return formatted reason text outside this
+// fixed set, so callers should keep unknown values as raw strings.
+type ReplayAvailabilityReason string
+
 const (
-	ReplayDataSourceTypeInvalid              = "datasource_type_invalid"
-	ReplayProjectDoesNotExist                = "project_does_not_exist"
-	ReplayDataSourceDoesNotExist             = "data_source_does_not_exist"
-	ReplayIntegrationDoesNotSupportReplay    = "integration_does_not_support_replay"
-	ReplayAgentVersionDoesNotSupportReplay   = "agent_version_does_not_support_replay"
-	ReplayMaxHistoricalDataRetrievalTooLow   = "max_historical_data_retrieval_too_low"
-	ReplayConcurrentReplayRunsLimitExhausted = "concurrent_replay_runs_limit_exhausted"
-	ReplayUnknownAgentVersion                = "unknown_agent_version"
+	ReplayDataSourceTypeInvalid              ReplayAvailabilityReason = "datasource_type_invalid"
+	ReplayProjectDoesNotExist                ReplayAvailabilityReason = "project_does_not_exist"
+	ReplayDataSourceDoesNotExist             ReplayAvailabilityReason = "data_source_does_not_exist"
+	ReplayIntegrationDoesNotSupportReplay    ReplayAvailabilityReason = "integration_does_not_support_replay"
+	ReplayAgentVersionDoesNotSupportReplay   ReplayAvailabilityReason = "agent_version_does_not_support_replay"
+	ReplayMaxHistoricalDataRetrievalTooLow   ReplayAvailabilityReason = "max_historical_data_retrieval_too_low"
+	ReplayConcurrentReplayRunsLimitExhausted ReplayAvailabilityReason = "concurrent_replay_runs_limit_exhausted"
+	ReplayUnknownAgentVersion                ReplayAvailabilityReason = "unknown_agent_version"
+	ReplaySingleQueryNotSupported            ReplayAvailabilityReason = "single_query_not_supported"
+	ReplayCompositeSLONotSupported           ReplayAvailabilityReason = "composite_slo_not_supported"
+	ReplayPromQLInGCMNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
+)
+
+// ReplayListStatus is the coarse public status set returned by list responses.
+type ReplayListStatus string
+
+const (
+	ReplayListStatusUnknown    ReplayListStatus = "unknown"
+	ReplayListStatusQueued     ReplayListStatus = "queued"
+	ReplayListStatusInProgress ReplayListStatus = "in progress"
+	ReplayListStatusCompleted  ReplayListStatus = "completed"
+	ReplayListStatusFailed     ReplayListStatus = "failed"
+	ReplayListStatusCanceled   ReplayListStatus = "canceled"
 )
 
 type ReplayListItem struct {
@@ -101,6 +121,6 @@ type ReplayListItem struct {
 	ElapsedTime    string                   `json:"elapsedTime,omitempty"`
 	RetrievedScope string                   `json:"retrievedScope,omitempty"`
 	RetrievedFrom  string                   `json:"retrievedFrom,omitempty"`
-	Status         ReplayProcessStatus      `json:"status"`
+	Status         ReplayListStatus         `json:"status"`
 	Cancellation   ReplayCancellationStatus `json:"cancellation,omitempty"`
 }

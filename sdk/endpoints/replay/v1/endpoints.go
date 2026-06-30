@@ -167,10 +167,10 @@ func (r GetAvailabilityRequest) queryValues() url.Values {
 		q.Set("sloName", r.SLOName)
 	}
 	if r.Type != "" {
-		q.Set("type", r.Type)
+		q.Set("type", string(r.Type))
 	}
 	if r.DurationUnit != "" {
-		q.Set("durationUnit", r.DurationUnit)
+		q.Set("durationUnit", string(r.DurationUnit))
 	}
 	if r.DurationValue != 0 {
 		q.Set("durationValue", strconv.Itoa(r.DurationValue))

@@ -24,14 +24,44 @@ func TestRunRequestDatesValidation(t *testing.T) {
 		{
 			name: "correct struct",
 			replay: RunRequest{
-				Project: "project",
-				SLO:     "slo",
+				Project:    "project",
+				SLO:        "slo",
+				Source:     ReplaySourceUser,
+				ReplayType: ReplayTypeRecalculation,
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 			},
 			isValid: true,
+		},
+		{
+			name: "invalid replay source",
+			replay: RunRequest{
+				Project: "project",
+				SLO:     "slo",
+				Source:  ReplaySource("unsupported"),
+				Duration: Duration{
+					Unit:  DurationUnitDay,
+					Value: 30,
+				},
+			},
+			isValid:   false,
+			errorCode: replaySourceValidationErrorCode,
+		},
+		{
+			name: "invalid replay type",
+			replay: RunRequest{
+				Project:    "project",
+				SLO:        "slo",
+				ReplayType: ReplayType("unsupported"),
+				Duration: Duration{
+					Unit:  DurationUnitDay,
+					Value: 30,
+				},
+			},
+			isValid:   false,
+			errorCode: replayTypeValidationErrorCode,
 		},
 		{
 			name: "missing slo",
@@ -39,7 +69,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 			},
@@ -52,7 +82,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 			},
@@ -77,7 +107,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit: "Day",
+					Unit: DurationUnitDay,
 				},
 			},
 			isValid:   false,
@@ -89,7 +119,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Test",
+					Unit:  DurationUnit("Test"),
 					Value: 30,
 				},
 			},
@@ -102,7 +132,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: -30,
 				},
 			},
@@ -115,7 +145,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 31,
 				},
 			},
@@ -147,7 +177,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				TimeRange: TimeRange{
@@ -190,7 +220,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				TimeRange: TimeRange{
@@ -205,7 +235,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				SourceSLO: &SourceSLO{
@@ -222,7 +252,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				SourceSLO: &SourceSLO{
@@ -239,7 +269,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				SourceSLO: &SourceSLO{
@@ -256,7 +286,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				SourceSLO: &SourceSLO{
@@ -274,7 +304,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				Project: "project",
 				SLO:     "slo",
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 30,
 				},
 				SourceSLO: &SourceSLO{
@@ -319,13 +349,24 @@ func TestParseJSONToRunRequest(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name:      "pass valid json",
-			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Day", "value": 20}}`,
+			name: "pass valid json",
+			inputJSON: `{
+				"project": "default",
+				"slo": "annotation-test",
+				"source": "user",
+				"replayType": "recalculation",
+				"duration": {
+					"unit": "Day",
+					"value": 20
+				}
+			}`,
 			want: RunRequest{
-				Project: "default",
-				SLO:     "annotation-test",
+				Project:    "default",
+				SLO:        "annotation-test",
+				Source:     ReplaySourceUser,
+				ReplayType: ReplayTypeRecalculation,
 				Duration: Duration{
-					Unit:  "Day",
+					Unit:  DurationUnitDay,
 					Value: 20,
 				},
 			},
@@ -342,6 +383,34 @@ func TestParseJSONToRunRequest(t *testing.T) {
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Days", "value": 20}}`,
 			want:      RunRequest{},
 			wantErr:   true,
+		},
+		{
+			name: "pass invalid source",
+			inputJSON: `{
+				"project": "default",
+				"slo": "annotation-test",
+				"source": "unsupported",
+				"duration": {
+					"unit": "Day",
+					"value": 20
+				}
+			}`,
+			want:    RunRequest{},
+			wantErr: true,
+		},
+		{
+			name: "pass invalid replay type",
+			inputJSON: `{
+				"project": "default",
+				"slo": "annotation-test",
+				"replayType": "unsupported",
+				"duration": {
+					"unit": "Day",
+					"value": 20
+				}
+			}`,
+			want:    RunRequest{},
+			wantErr: true,
 		},
 		{
 			name:      "pass empty object",
@@ -374,7 +443,7 @@ func TestCheckPeriodUnit(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		unit    string
+		unit    DurationUnit
 		wantErr error
 	}{
 		{
@@ -384,7 +453,7 @@ func TestCheckPeriodUnit(t *testing.T) {
 		},
 		{
 			name:    "Invalid duration unit",
-			unit:    "Days",
+			unit:    DurationUnit("Days"),
 			wantErr: ErrInvalidReplayDurationUnit,
 		},
 	}
@@ -438,7 +507,7 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 		{
 			name: "invalid time unit",
 			duration: Duration{
-				Unit:  "TEST",
+				Unit:  DurationUnit("TEST"),
 				Value: 30,
 			},
 			wantErr:      ErrInvalidReplayDurationUnit,

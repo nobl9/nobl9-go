@@ -37,17 +37,19 @@ func Test_Replay_V1(t *testing.T) {
 		DataSource:        direct.GetName(),
 		DataSourceKind:    direct.GetKind().String(),
 		SLOName:           sloName,
-		Type:              "recalculation",
+		Type:              replayV1.ReplayTypeRecalculation,
 		DurationUnit:      replayV1.DurationUnitHour,
 		DurationValue:     1,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, availability)
-	require.True(t, true, availability.Available, availability.Reason)
+	require.True(t, availability.Available, string(availability.Reason))
 
 	err = client.Replay().V1().Run(t.Context(), replayV1.RunRequest{
-		Project: projectName,
-		SLO:     sloName,
+		Project:    projectName,
+		SLO:        sloName,
+		Source:     replayV1.ReplaySourceUser,
+		ReplayType: replayV1.ReplayTypeReimportAndRecalculation,
 		Duration: replayV1.Duration{
 			Unit:  replayV1.DurationUnitHour,
 			Value: 1,
@@ -75,6 +77,13 @@ func Test_Replay_V1(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, projectName, listItem.Project)
 	assert.Equal(t, sloName, listItem.SLO)
+	assert.Contains(t, []replayV1.ReplayListStatus{
+		replayV1.ReplayListStatusQueued,
+		replayV1.ReplayListStatusInProgress,
+		replayV1.ReplayListStatusCompleted,
+		replayV1.ReplayListStatusFailed,
+		replayV1.ReplayListStatusCanceled,
+	}, listItem.Status)
 
 	status, err := tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
