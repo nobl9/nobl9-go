@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -436,6 +437,31 @@ func TestParseJSONToRunRequest(t *testing.T) {
 			assert.Equal(t, tc.want, got)
 		})
 	}
+}
+
+func TestGetAvailabilityRequestQueryValues(t *testing.T) {
+	t.Parallel()
+
+	values := GetAvailabilityRequest{
+		Project:           "request-project",
+		DataSourceProject: "source-project",
+		DataSource:        "datadog",
+		DataSourceKind:    "Direct",
+		SLOName:           "latency-slo",
+		Type:              ReplayTypeRecalculation,
+		DurationUnit:      DurationUnitHour,
+		DurationValue:     1,
+	}.queryValues()
+
+	assert.Equal(t, url.Values{
+		"dataSourceProject": {"source-project"},
+		"dataSource":        {"datadog"},
+		"dataSourceKind":    {"Direct"},
+		"sloName":           {"latency-slo"},
+		"type":              {"recalculation"},
+		"durationUnit":      {"Hour"},
+		"durationValue":     {"1"},
+	}, values)
 }
 
 func TestCheckPeriodUnit(t *testing.T) {

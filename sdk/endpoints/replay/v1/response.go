@@ -33,44 +33,21 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	}
 }
 
-// ReplayProcessStatus is the detailed lifecycle state returned by the status endpoint.
+// ReplayProcessStatus is the coarse public replay processing status.
 type ReplayProcessStatus string
 
-// Status responses expose internal replay processing steps.
-// Use ReplayListStatus for list responses.
 const (
-	ReplayStatusQueued                                 ReplayProcessStatus = "queued"
-	ReplayStatusNew                                    ReplayProcessStatus = "New"
-	ReplayStatusPausingCalculations                    ReplayProcessStatus = "pausing_calculations"
-	ReplayStatusDraining                               ReplayProcessStatus = "draining"
-	ReplayStatusFetchingHistoricalData                 ReplayProcessStatus = "fetching_historical_data"
-	ReplayStatusFailed                                 ReplayProcessStatus = "failed"
-	ReplayStatusCompleted                              ReplayProcessStatus = "completed"
-	ReplayStatusCommittingStoreMetricsCache            ReplayProcessStatus = "committing_store_metrics_cache"
-	ReplayStatusAggregatingCompositeData               ReplayProcessStatus = "aggregating_composite_data"
-	ReplayStatusBackfilling                            ReplayProcessStatus = "backfilling"
-	ReplayStatusDownsampling                           ReplayProcessStatus = "downsampling"
-	ReplayStatusCreateNewTimeSeriesVersion             ReplayProcessStatus = "create_new_time_series_version"
-	ReplayStatusOverwritingTimeSeries                  ReplayProcessStatus = "overwriting_time_series"
-	ReplayStatusResettingCalculationsToNewHistory      ReplayProcessStatus = "resetting_calculations_to_new_history"
-	ReplayStatusEnableTimeSeriesVersion                ReplayProcessStatus = "enable_time_series_version"
-	ReplayStatusDisableTimeSeriesVersion               ReplayProcessStatus = "disable_time_series_version"
-	ReplayStatusResumingCalculations                   ReplayProcessStatus = "resuming_calculations"
-	ReplayStatusCatchingUp                             ReplayProcessStatus = "catching_up"
-	ReplayStatusRevertingTimeSeries                    ReplayProcessStatus = "reverting_time_series"
-	ReplayStatusResettingCalculationsToOriginalHistory ReplayProcessStatus = "resetting_calculations_to_original_history"
-	ReplayStatusBackfillingOriginal                    ReplayProcessStatus = "backfilling_original"
-	ReplayStatusResettingAlertingToOriginalHistory     ReplayProcessStatus = "resetting_alerting_to_original_history"
-	ReplayStatusResettingAlertingToNewHistory          ReplayProcessStatus = "resetting_alerting_to_new_history"
-	ReplayStatusCancelingOverwritingTimeSeries         ReplayProcessStatus = "canceling_overwriting_time_series"
-	ReplayStatusCanceled                               ReplayProcessStatus = "canceled"
-	ReplayStatusRevertingCompositeAggregation          ReplayProcessStatus = "reverting_composite_aggregation"
+	ReplayStatusUnknown    ReplayProcessStatus = "unknown"
+	ReplayStatusQueued     ReplayProcessStatus = "queued"
+	ReplayStatusInProgress ReplayProcessStatus = "in progress"
+	ReplayStatusCompleted  ReplayProcessStatus = "completed"
+	ReplayStatusFailed     ReplayProcessStatus = "failed"
+	ReplayStatusCanceled   ReplayProcessStatus = "canceled"
 )
 
 // ReplayCancellationStatus describes server-side replay cancellation state.
 type ReplayCancellationStatus string
 
-// Cancellation states are used in status and list responses.
 const (
 	ReplayCancellationStatusPossible  ReplayCancellationStatus = "possible"
 	ReplayCancellationStatusBlocked   ReplayCancellationStatus = "blocked"
@@ -103,16 +80,16 @@ const (
 	ReplayPromQLInGCMNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
 )
 
-// ReplayListStatus is the coarse public status set returned by list responses.
-type ReplayListStatus string
+// ReplayListStatus uses the same coarse status values as ReplayProcessStatus.
+type ReplayListStatus = ReplayProcessStatus
 
 const (
-	ReplayListStatusUnknown    ReplayListStatus = "unknown"
-	ReplayListStatusQueued     ReplayListStatus = "queued"
-	ReplayListStatusInProgress ReplayListStatus = "in progress"
-	ReplayListStatusCompleted  ReplayListStatus = "completed"
-	ReplayListStatusFailed     ReplayListStatus = "failed"
-	ReplayListStatusCanceled   ReplayListStatus = "canceled"
+	ReplayListStatusUnknown    = ReplayStatusUnknown
+	ReplayListStatusQueued     = ReplayStatusQueued
+	ReplayListStatusInProgress = ReplayStatusInProgress
+	ReplayListStatusCompleted  = ReplayStatusCompleted
+	ReplayListStatusFailed     = ReplayStatusFailed
+	ReplayListStatusCanceled   = ReplayStatusCanceled
 )
 
 type ReplayListItem struct {

@@ -18,6 +18,29 @@ func TestReplayListItemStatusUnmarshal(t *testing.T) {
 	assert.Equal(t, ReplayListStatusInProgress, item.Status)
 }
 
+func TestReplayWithStatusUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	var replay ReplayWithStatus
+	err := json.Unmarshal([]byte(`{
+		"project": "default",
+		"slo": "latency",
+		"status": {
+			"source": "user",
+			"status": "in progress",
+			"cancellation": "possible",
+			"triggeredBy": "user@example.com",
+			"unit": "Hour",
+			"startTime": "2026-01-01T00:00:00Z",
+			"value": 1
+		}
+	}`), &replay)
+
+	require.NoError(t, err)
+	assert.Equal(t, ReplayStatusInProgress, replay.Status.Status)
+	assert.Equal(t, ReplayCancellationStatusPossible, replay.Status.Cancellation)
+}
+
 func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 	t.Parallel()
 
