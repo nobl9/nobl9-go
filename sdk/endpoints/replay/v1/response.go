@@ -9,21 +9,21 @@ type ReplayWithStatus struct {
 }
 
 type ReplayStatus struct {
-	Source       string `json:"source"`
-	Status       string `json:"status"`
-	Cancellation string `json:"cancellation"`
-	CanceledBy   string `json:"canceledBy,omitempty"`
-	TriggeredBy  string `json:"triggeredBy"`
-	Unit         string `json:"unit"`
-	StartTime    string `json:"startTime"`
-	EndTime      string `json:"endTime,omitempty"`
-	Value        int    `json:"value"`
+	Source       string                   `json:"source"`
+	Status       ReplayProcessStatus      `json:"status"`
+	Cancellation ReplayCancellationStatus `json:"cancellation"`
+	CanceledBy   string                   `json:"canceledBy,omitempty"`
+	TriggeredBy  string                   `json:"triggeredBy"`
+	Unit         string                   `json:"unit"`
+	StartTime    string                   `json:"startTime"`
+	EndTime      string                   `json:"endTime,omitempty"`
+	Value        int                      `json:"value"`
 }
 
 func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	return v1alphaSLO.ProcessStatus{
-		Status:       s.Status,
-		Cancellation: s.Cancellation,
+		Status:       string(s.Status),
+		Cancellation: string(s.Cancellation),
 		CanceledBy:   s.CanceledBy,
 		TriggeredBy:  s.TriggeredBy,
 		Unit:         s.Unit,
@@ -33,10 +33,49 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	}
 }
 
-// Variants of [ReplayStatus.Status].
+// ReplayProcessStatus is a replay process lifecycle state returned by the API.
+type ReplayProcessStatus string
+
+// Replay process lifecycle states.
 const (
-	ReplayStatusFailed    = "failed"
-	ReplayStatusCompleted = "completed"
+	ReplayStatusQueued                                 ReplayProcessStatus = "queued"
+	ReplayStatusNew                                    ReplayProcessStatus = "New"
+	ReplayStatusPausingCalculations                    ReplayProcessStatus = "pausing_calculations"
+	ReplayStatusDraining                               ReplayProcessStatus = "draining"
+	ReplayStatusFetchingHistoricalData                 ReplayProcessStatus = "fetching_historical_data"
+	ReplayStatusFailed                                 ReplayProcessStatus = "failed"
+	ReplayStatusCompleted                              ReplayProcessStatus = "completed"
+	ReplayStatusCommittingStoreMetricsCache            ReplayProcessStatus = "committing_store_metrics_cache"
+	ReplayStatusAggregatingCompositeData               ReplayProcessStatus = "aggregating_composite_data"
+	ReplayStatusBackfilling                            ReplayProcessStatus = "backfilling"
+	ReplayStatusDownsampling                           ReplayProcessStatus = "downsampling"
+	ReplayStatusCreateNewTimeSeriesVersion             ReplayProcessStatus = "create_new_time_series_version"
+	ReplayStatusOverwritingTimeSeries                  ReplayProcessStatus = "overwriting_time_series"
+	ReplayStatusResettingCalculationsToNewHistory      ReplayProcessStatus = "resetting_calculations_to_new_history"
+	ReplayStatusEnableTimeSeriesVersion                ReplayProcessStatus = "enable_time_series_version"
+	ReplayStatusDisableTimeSeriesVersion               ReplayProcessStatus = "disable_time_series_version"
+	ReplayStatusResumingCalculations                   ReplayProcessStatus = "resuming_calculations"
+	ReplayStatusCatchingUp                             ReplayProcessStatus = "catching_up"
+	ReplayStatusRevertingTimeSeries                    ReplayProcessStatus = "reverting_time_series"
+	ReplayStatusResettingCalculationsToOriginalHistory ReplayProcessStatus = "resetting_calculations_to_original_history"
+	ReplayStatusBackfillingOriginal                    ReplayProcessStatus = "backfilling_original"
+	ReplayStatusResettingAlertingToOriginalHistory     ReplayProcessStatus = "resetting_alerting_to_original_history"
+	ReplayStatusResettingAlertingToNewHistory          ReplayProcessStatus = "resetting_alerting_to_new_history"
+	ReplayStatusCancelingOverwritingTimeSeries         ReplayProcessStatus = "canceling_overwriting_time_series"
+	ReplayStatusCanceled                               ReplayProcessStatus = "canceled"
+	ReplayStatusRevertingCompositeAggregation          ReplayProcessStatus = "reverting_composite_aggregation"
+)
+
+// ReplayCancellationStatus describes whether and how a replay can be canceled.
+type ReplayCancellationStatus string
+
+// Replay cancellation states.
+const (
+	ReplayCancellationStatusPossible  ReplayCancellationStatus = "possible"
+	ReplayCancellationStatusBlocked   ReplayCancellationStatus = "blocked"
+	ReplayCancellationStatusRequested ReplayCancellationStatus = "requested"
+	ReplayCancellationStatusDenied    ReplayCancellationStatus = "denied"
+	ReplayCancellationStatusDone      ReplayCancellationStatus = "done"
 )
 
 type ReplayAvailability struct {
@@ -57,11 +96,11 @@ const (
 )
 
 type ReplayListItem struct {
-	SLO            string `json:"slo,omitempty"`
-	Project        string `json:"project"`
-	ElapsedTime    string `json:"elapsedTime,omitempty"`
-	RetrievedScope string `json:"retrievedScope,omitempty"`
-	RetrievedFrom  string `json:"retrievedFrom,omitempty"`
-	Status         string `json:"status"`
-	Cancellation   string `json:"cancellation,omitempty"`
+	SLO            string                   `json:"slo,omitempty"`
+	Project        string                   `json:"project"`
+	ElapsedTime    string                   `json:"elapsedTime,omitempty"`
+	RetrievedScope string                   `json:"retrievedScope,omitempty"`
+	RetrievedFrom  string                   `json:"retrievedFrom,omitempty"`
+	Status         ReplayProcessStatus      `json:"status"`
+	Cancellation   ReplayCancellationStatus `json:"cancellation,omitempty"`
 }

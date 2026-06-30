@@ -53,7 +53,21 @@ func (e endpoints) Run(ctx context.Context, params RunRequest) (err error) {
 }
 
 func (e endpoints) Delete(ctx context.Context, params DeleteRequest) (err error) {
-	return e.deleteReplay(ctx, params)
+	body := new(bytes.Buffer)
+	if err = json.NewEncoder(body).Encode(params); err != nil {
+		return fmt.Errorf("cannot marshal: %w", err)
+	}
+	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
+	req, err := e.client.CreateRequest(ctx, http.MethodDelete, apiDeleteReplay, header, nil, body)
+	if err != nil {
+		return err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	return nil
 }
 
 func (e endpoints) Cancel(ctx context.Context, params CancelRequest) (err error) {
@@ -136,24 +150,6 @@ func (e endpoints) GetAvailability(
 		return nil, errors.Wrap(err, "cannot decode Replay availability response")
 	}
 	return &availability, nil
-}
-
-func (e endpoints) deleteReplay(ctx context.Context, params DeleteRequest) (err error) {
-	body := new(bytes.Buffer)
-	if err = json.NewEncoder(body).Encode(params); err != nil {
-		return fmt.Errorf("cannot marshal: %w", err)
-	}
-	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
-	req, err := e.client.CreateRequest(ctx, http.MethodDelete, apiDeleteReplay, header, nil, body)
-	if err != nil {
-		return err
-	}
-	resp, err := e.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = resp.Body.Close() }()
-	return nil
 }
 
 func (r GetAvailabilityRequest) queryValues() url.Values {
