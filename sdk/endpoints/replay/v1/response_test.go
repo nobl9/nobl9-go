@@ -39,6 +39,7 @@ func TestReplayWithStatusUnmarshal(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, ReplayStatusInProgress, replay.Status.Status)
 	assert.Equal(t, ReplayCancellationStatusPossible, replay.Status.Cancellation)
+	assert.Equal(t, DurationUnitHour, replay.Status.Unit)
 }
 
 func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
