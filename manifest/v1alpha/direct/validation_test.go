@@ -179,8 +179,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			direct.Spec.ReleaseChannel = rc
 			err := validate(direct)
 			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-				Prop: "spec.releaseChannel",
-				Code: errCodeUnsupportedReleaseChannel,
+				Prop:            "spec.releaseChannel",
+				Code:            errCodeUnsupportedReleaseChannel,
+				ContainsMessage: "must be 'beta' for ClickHouse",
 			})
 		}
 	})
@@ -1163,6 +1164,32 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 			Prop: "spec.azurePrometheus.url",
 			Code: errorCodeHTTPSSchemeRequired,
 		})
+	})
+}
+
+func TestValidateSpec_ClickHouse(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("required credentials", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.ClickHouse.Username = ""
+		direct.Spec.ClickHouse.Password = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.username",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.password",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
 	})
 }
 

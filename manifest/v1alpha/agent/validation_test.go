@@ -149,8 +149,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			agent.Spec.ReleaseChannel = rc
 			err := validate(agent)
 			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-				Prop: "spec.releaseChannel",
-				Code: errCodeUnsupportedReleaseChannel,
+				Prop:            "spec.releaseChannel",
+				Code:            errCodeUnsupportedReleaseChannel,
+				ContainsMessage: "must be 'beta' for ClickHouse",
 			})
 		}
 	})

@@ -43,6 +43,16 @@ func TestClickHouse(t *testing.T) {
 			})
 		}
 	})
+	t.Run("max parameters passes", func(t *testing.T) {
+		params := make(map[string]string, maxClickHouseParameters)
+		for i := 0; i < maxClickHouseParameters; i++ {
+			params[fmt.Sprintf("param_%d", i)] = "value"
+		}
+		slo := validRawMetricSLO(v1alpha.ClickHouse)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.ClickHouse.Parameters = params
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
 	t.Run("too many parameters", func(t *testing.T) {
 		params := make(map[string]string, maxClickHouseParameters+1)
 		for i := 0; i <= maxClickHouseParameters; i++ {

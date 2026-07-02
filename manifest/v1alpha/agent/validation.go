@@ -556,18 +556,18 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 
 var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
+	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for ClickHouse"),
+		)
+	}
+
 	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
 		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be one of [stable, beta]"),
-		)
-	}
-
-	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'beta' for ClickHouse"),
 		)
 	}
 
