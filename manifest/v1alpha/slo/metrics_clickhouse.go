@@ -13,6 +13,10 @@ type ClickHouseMetric struct {
 	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
+// maxClickHouseParameters is a high, defensive ceiling on the number of
+// query parameters; it blocks abuse without limiting realistic queries.
+const maxClickHouseParameters = 100
+
 var clickHouseValidation = govy.New[ClickHouseMetric](
 	govy.For(func(c ClickHouseMetric) string { return c.Query }).
 		WithName("query").
@@ -29,4 +33,7 @@ var clickHouseValidation = govy.New[ClickHouseMetric](
 			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date_to\b`)).
 				WithDetails("must contain 'n9date_to' placeholder"),
 		),
+	govy.For(func(c ClickHouseMetric) map[string]string { return c.Parameters }).
+		WithName("parameters").
+		Rules(rules.MapMaxLength[map[string]string](maxClickHouseParameters)),
 )

@@ -312,6 +312,7 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	clickHouseValidation    = newURLValidator(func(c ClickHouseConfig) string { return c.URL })
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()
@@ -320,12 +321,6 @@ var (
 	redshiftValidation     = govy.New[RedshiftConfig]()
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
-	clickHouseValidation   = govy.New[ClickHouseConfig](
-		govy.For(func(c ClickHouseConfig) string { return c.URL }).
-			WithName("url").
-			Required().
-			Rules(rules.StringURL()),
-	)
 )
 
 const (
