@@ -151,8 +151,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
+			Prop:            "spec.releaseChannel",
+			Code:            errCodeUnsupportedReleaseChannel,
+			ContainsMessage: "must be one of [stable, beta]",
 		})
 	})
 	t.Run("data source type using unsupported release channel", func(t *testing.T) {

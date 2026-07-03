@@ -166,8 +166,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
+			Prop:            "spec.releaseChannel",
+			Code:            errCodeUnsupportedReleaseChannel,
+			ContainsMessage: "must be one of [stable, beta]",
 		})
 	})
 }
