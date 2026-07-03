@@ -173,6 +173,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	})
 	t.Run("ClickHouse requires beta", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
+			0, // unset must not silently pass as stable
 			v1alpha.ReleaseChannelStable,
 			v1alpha.ReleaseChannelAlpha,
 		} {
@@ -1170,24 +1171,42 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 
 func TestValidateSpec_ClickHouse(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.ClickHouse)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
+		// Password is not required: a real value, an empty value (for the
+		// legit empty-password 'default' user) and the hidden placeholder
+		// (edit-without-retype) all must validate.
+		for name, direct := range map[string]Direct{
+			"with password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				return d
+			}(),
+			"empty password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				d.Spec.ClickHouse.Password = ""
+				return d
+			}(),
+			"hidden password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				d.Spec.ClickHouse.Password = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
 	})
 	t.Run("required credentials", func(t *testing.T) {
 		direct := validDirect(v1alpha.ClickHouse)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.ClickHouse.Username = ""
-		direct.Spec.ClickHouse.Password = ""
 		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 2,
+		testutils.AssertContainsErrors(t, direct, err, 1,
 			testutils.ExpectedError{
 				Prop: "spec.clickHouse.username",
-				Code: rules.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.clickHouse.password",
 				Code: rules.ErrorCodeRequired,
 			},
 		)

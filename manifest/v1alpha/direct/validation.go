@@ -262,8 +262,7 @@ var (
 			Required(),
 		govy.For(func(c ClickHouseConfig) string { return c.Password }).
 			WithName("password").
-			HideValue().
-			Required(),
+			HideValue(),
 	)
 )
 
