@@ -286,6 +286,13 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	clickHouseValidation = govy.New[ClickHouseConfig](
+		govy.Transform(func(c ClickHouseConfig) string { return c.URL }, url.Parse).
+			WithName("url").
+			Cascade(govy.CascadeModeStop).
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -312,7 +319,6 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
-	clickHouseValidation    = newURLValidator(func(c ClickHouseConfig) string { return c.URL })
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()

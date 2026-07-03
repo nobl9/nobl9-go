@@ -142,6 +142,7 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	})
 	t.Run("ClickHouse requires beta", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
+			0, // unset must not silently pass as stable
 			v1alpha.ReleaseChannelStable,
 			v1alpha.ReleaseChannelAlpha,
 		} {
@@ -1054,6 +1055,30 @@ func TestValidateSpec_Atlas(t *testing.T) {
 				Code: errCodeHTTPOrHTTPSSchemeRequired,
 			},
 		)
+	})
+}
+
+func TestValidateSpec_ClickHouse(t *testing.T) {
+	t.Run("schemeless url rejected", func(t *testing.T) {
+		// A schemeless host:port is parsed by Go as scheme:opaque, so it must
+		// be rejected explicitly for lacking an http/https scheme.
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "clickhouse.example.com:8123"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+	t.Run("https url passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "https://clickhouse.example.com:8443"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
 	})
 }
 
