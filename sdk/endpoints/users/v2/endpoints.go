@@ -46,7 +46,6 @@ func (e endpoints) GetUser(ctx context.Context, id string) (*User, error) {
 	}
 }
 
-// GetUsers fetches users filtered by the provided request.
 func (e endpoints) GetUsers(ctx context.Context, params GetUsersRequest) ([]User, error) {
 	return e.getUsers(ctx, getUsersRequest{GetUsersRequest: params})
 }
