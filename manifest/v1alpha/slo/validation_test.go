@@ -368,6 +368,12 @@ func TestValidate_Spec_AnomalyConfig(t *testing.T) {
 			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
 				Name: "my-name",
 			}}, AlertAfter: ptr("10m")}},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name: "my-name",
+			}}, TreatZeroAsNoData: ptr(true)}},
+			{NoData: &AnomalyConfigNoData{AlertMethods: []AnomalyConfigAlertMethod{{
+				Name: "my-name",
+			}}, TreatZeroAsNoData: ptr(false)}},
 		} {
 			slo := validSLO()
 			slo.Spec.AnomalyConfig = config
