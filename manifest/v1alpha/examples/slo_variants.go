@@ -182,7 +182,8 @@ func exampleAnomalyConfig() *v1alphaSLO.AnomalyConfig {
 					Project: sdk.DefaultProject,
 				},
 			},
-			AlertAfter: ptr("1h"),
+			AlertAfter:        ptr("1h"),
+			TreatZeroAsNoData: ptr(true),
 		},
 	}
 }
