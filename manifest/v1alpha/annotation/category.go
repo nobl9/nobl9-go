@@ -16,6 +16,7 @@ IncrementalMismatchAnomaly
 NoBurnAnomaly
 ConstantBurnAnomaly
 GoodOverTotalAnomaly
+Replay
 )*/
 type Category string
 
@@ -28,6 +29,7 @@ var systemCategories = []Category{
 	CategoryNoBurnAnomaly,
 	CategoryConstantBurnAnomaly,
 	CategoryGoodOverTotalAnomaly,
+	CategoryReplay,
 }
 
 var userCategories = []Category{
