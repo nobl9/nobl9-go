@@ -69,7 +69,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: error
 # Budgeting method: Occurrences
@@ -138,7 +138,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: error
 # Budgeting method: Timeslices
@@ -211,7 +211,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: error
 # Budgeting method: Timeslices
@@ -281,7 +281,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: metrics
 # Budgeting method: Occurrences
@@ -353,7 +353,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: metrics
 # Budgeting method: Occurrences
@@ -422,7 +422,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: metrics
 # Budgeting method: Timeslices
@@ -495,7 +495,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: good over total
 # Metric variant: metrics
 # Budgeting method: Timeslices
@@ -565,7 +565,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: error
 # Budgeting method: Occurrences
@@ -633,7 +633,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: error
 # Budgeting method: Occurrences
@@ -698,7 +698,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: error
 # Budgeting method: Timeslices
@@ -767,7 +767,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: error
 # Budgeting method: Timeslices
@@ -833,7 +833,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: latency
 # Budgeting method: Occurrences
@@ -902,7 +902,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: latency
 # Budgeting method: Occurrences
@@ -968,7 +968,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: latency
 # Budgeting method: Timeslices
@@ -1038,7 +1038,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: latency
 # Budgeting method: Timeslices
@@ -1105,7 +1105,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: metrics
 # Budgeting method: Occurrences
@@ -1173,7 +1173,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: metrics
 # Budgeting method: Occurrences
@@ -1238,7 +1238,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: metrics
 # Budgeting method: Timeslices
@@ -1307,7 +1307,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false
 # Metric type: threshold
 # Metric variant: metrics
 # Budgeting method: Timeslices
@@ -1373,4 +1373,4 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
-        treatZeroAsNoData: true
+        treatZeroAsNoData: false

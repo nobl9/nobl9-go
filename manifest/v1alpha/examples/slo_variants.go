@@ -183,7 +183,7 @@ func exampleAnomalyConfig() *v1alphaSLO.AnomalyConfig {
 				},
 			},
 			AlertAfter:        ptr("1h"),
-			TreatZeroAsNoData: ptr(true),
+			TreatZeroAsNoData: ptr(false),
 		},
 	}
 }
