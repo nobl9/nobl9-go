@@ -108,38 +108,7 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 }
 
 func Test_Objects_V2_Apply_ReturnsConflict_WhenObjectAlreadyExists(t *testing.T) {
-	testCases := newObjectsV2ConflictTestCases()
-	requireObjectsV2ConflictCasesCoverApplicableKinds(t, testCases)
-
-	for _, test := range testCases {
-		t.Run(test.kind.String(), func(t *testing.T) {
-			object, dependencies := test.build(t)
-			require.Equal(t, test.kind, object.GetKind())
-			_, isProjectScoped := object.(manifest.ProjectScopedObject)
-			require.Equal(t, test.kind.ProjectScoped(), isProjectScoped)
-
-			if len(dependencies) > 0 {
-				e2etestutils.V1Apply(t, dependencies)
-				t.Cleanup(func() { e2etestutils.V1Delete(t, dependencies) })
-			}
-
-			err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: []manifest.Object{object}})
-			require.NoError(t, err)
-			t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{object}) })
-
-			err = client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: []manifest.Object{object}})
-			requireHTTPStatus(t, err, http.StatusConflict)
-		})
-	}
-}
-
-type objectsV2ConflictTestCase struct {
-	kind  manifest.Kind
-	build func(t *testing.T) (manifest.Object, []manifest.Object)
-}
-
-func newObjectsV2ConflictTestCases() []objectsV2ConflictTestCase {
-	return []objectsV2ConflictTestCase{
+	testCases := []objectsV2ConflictTestCase{
 		{
 			kind: manifest.KindSLO,
 			build: func(t *testing.T) (manifest.Object, []manifest.Object) {
@@ -360,6 +329,34 @@ func newObjectsV2ConflictTestCases() []objectsV2ConflictTestCase {
 			},
 		},
 	}
+
+	requireObjectsV2ConflictCasesCoverApplicableKinds(t, testCases)
+
+	for _, test := range testCases {
+		t.Run(test.kind.String(), func(t *testing.T) {
+			object, dependencies := test.build(t)
+			require.Equal(t, test.kind, object.GetKind())
+			_, isProjectScoped := object.(manifest.ProjectScopedObject)
+			require.Equal(t, test.kind.ProjectScoped(), isProjectScoped)
+
+			if len(dependencies) > 0 {
+				e2etestutils.V1Apply(t, dependencies)
+				t.Cleanup(func() { e2etestutils.V1Delete(t, dependencies) })
+			}
+
+			err := client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: []manifest.Object{object}})
+			require.NoError(t, err)
+			t.Cleanup(func() { e2etestutils.V1Delete(t, []manifest.Object{object}) })
+
+			err = client.Objects().V2().Apply(t.Context(), v2.ApplyRequest{Objects: []manifest.Object{object}})
+			requireHTTPStatus(t, err, http.StatusConflict)
+		})
+	}
+}
+
+type objectsV2ConflictTestCase struct {
+	kind  manifest.Kind
+	build func(t *testing.T) (manifest.Object, []manifest.Object)
 }
 
 func requireObjectsV2ConflictCasesCoverApplicableKinds(
