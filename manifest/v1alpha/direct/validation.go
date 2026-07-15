@@ -115,6 +115,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
+		WithName("elasticsearch").
+		Include(elasticsearchValidation),
 )
 
 var (
@@ -252,6 +255,17 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	elasticsearchValidation = govy.New[ElasticsearchConfig](
+		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
+		govy.For(func(e ElasticsearchConfig) string { return e.APIKey }).
+			WithName("apiKey").
+			HideValue().
+			When(
+				func(e ElasticsearchConfig) bool { return e.APIKey != v1alpha.HiddenValue },
+				govy.WhenDescriptionf("is equal to '%s'", v1alpha.HiddenValue),
+			).
+			Required(),
+	)
 )
 
 const (
@@ -375,6 +389,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Dash0 != nil {
 		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
+	if spec.Elasticsearch != nil {
+		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
 			return err
 		}
 	}
