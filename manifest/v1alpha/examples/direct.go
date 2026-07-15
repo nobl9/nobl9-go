@@ -213,6 +213,11 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			AuthToken: "[secret]",
 			Step:      60,
 		}
+	case v1alpha.Elasticsearch:
+		direct.Spec.Elasticsearch = &v1alphaDirect.ElasticsearchConfig{
+			URL:    "https://example.aws.found.io",
+			APIKey: "[secret]",
+		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))
 	}

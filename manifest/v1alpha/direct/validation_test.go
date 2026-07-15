@@ -516,6 +516,39 @@ func TestValidateSpec_Datadog(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_Elasticsearch(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		for name, apiKey := range map[string]string{
+			"api key":        "encoded-api-key",
+			"hidden api key": v1alpha.HiddenValue,
+		} {
+			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.Elasticsearch)
+				direct.Spec.Elasticsearch.APIKey = apiKey
+				testutils.AssertNoError(t, direct, validate(direct))
+			})
+		}
+	})
+	t.Run("requires api key", func(t *testing.T) {
+		direct := validDirect(v1alpha.Elasticsearch)
+		direct.Spec.Elasticsearch.APIKey = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.elasticsearch.apiKey",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("requires https URL", func(t *testing.T) {
+		direct := validDirect(v1alpha.Elasticsearch)
+		direct.Spec.Elasticsearch.URL = "http://example.aws.found.io"
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.elasticsearch.url",
+			Code: errorCodeHTTPSSchemeRequired,
+		})
+	})
+}
+
 func TestValidateSpec_NewRelic(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
 		for name, direct := range map[string]Direct{
@@ -1287,6 +1320,12 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 			Dash0: &Dash0Config{
 				URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 				AuthToken: "secret",
+			},
+		},
+		v1alpha.Elasticsearch: {
+			Elasticsearch: &ElasticsearchConfig{
+				URL:    "https://example.aws.found.io",
+				APIKey: "secret",
 			},
 		},
 	}

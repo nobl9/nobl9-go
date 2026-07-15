@@ -1,0 +1,27 @@
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: elasticsearch
+  displayName: Elasticsearch Direct
+  project: default
+  annotations:
+    area: latency
+    env: prod
+    region: us
+    team: sales
+spec:
+  description: Example Elasticsearch Direct
+  releaseChannel: stable
+  elasticsearch:
+    url: https://example.aws.found.io
+    apiKey: "[secret]"
+  historicalDataRetrieval:
+    maxDuration:
+      value: 30
+      unit: Day
+    defaultDuration:
+      value: 15
+      unit: Day
+  queryDelay:
+    value: 2
+    unit: Minute
