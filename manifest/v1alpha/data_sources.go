@@ -414,6 +414,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	ThousandEyes:          {Value: ptr(30), Unit: HRDDay},
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
 	Dash0:                 {Value: ptr(30), Unit: HRDDay},
+	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
