@@ -130,8 +130,10 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 				slo.Spec.AnomalyConfig = nil
 			case 1:
 				slo.Metadata.Labels["team"] = []string{"green"}
+				slo.Spec.AnomalyConfig.NoData.TreatZeroAsNoData = ptr(true)
 			case 2:
 				slo.Metadata.Labels["team"] = []string{"orange"}
+				slo.Spec.AnomalyConfig.NoData.TreatZeroAsNoData = ptr(false)
 			case 3:
 				slo.Metadata.Labels["team"] = []string{"orange"}
 			}

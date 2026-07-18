@@ -63,6 +63,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
+        treatZeroAsNoData: false
 # Metric type: single query good over total
 # Budgeting method: Occurrences
 # Time window type: Rolling
@@ -125,6 +126,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
+        treatZeroAsNoData: false
 # Metric type: single query good over total
 # Budgeting method: Timeslices
 # Time window type: Calendar
@@ -191,6 +193,7 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
+        treatZeroAsNoData: false
 # Metric type: single query good over total
 # Budgeting method: Timeslices
 # Time window type: Rolling
@@ -254,3 +257,4 @@
         - name: slack-notification
           project: default
         alertAfter: 1h
+        treatZeroAsNoData: false

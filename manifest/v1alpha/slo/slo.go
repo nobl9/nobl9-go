@@ -162,8 +162,9 @@ type AnomalyConfig struct {
 
 // AnomalyConfigNoData contains alertMethods used for No Data anomaly type.
 type AnomalyConfigNoData struct {
-	AlertMethods []AnomalyConfigAlertMethod `json:"alertMethods"`
-	AlertAfter   *string                    `json:"alertAfter,omitempty"`
+	AlertMethods      []AnomalyConfigAlertMethod `json:"alertMethods"`
+	AlertAfter        *string                    `json:"alertAfter,omitempty"`
+	TreatZeroAsNoData *bool                      `json:"treatZeroAsNoData,omitempty"`
 }
 
 // AnomalyConfigAlertMethod represents a single alert method used in AnomalyConfig
