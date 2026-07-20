@@ -2,7 +2,7 @@ package report
 
 //go:generate ../../../bin/go-enum --nocase --lower --names --values
 
-// ReliabilityScoreType specifies the time range used to calculate reliability scores.
+// ReliabilityScoreType identifies a type of Reliability Rollup Report.
 /* ENUM(
 SLOTimeWindow
 ReportTimeFrame
