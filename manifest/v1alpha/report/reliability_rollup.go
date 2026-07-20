@@ -1,8 +1,11 @@
 package report
 
 type ReliabilityRollupConfig struct {
-	TimeFrame       ReliabilityRollupTimeFrame `json:"timeFrame"`
-	CustomHierarchy []HierarchyFolder          `json:"customHierarchy,omitempty"`
+	TimeFrame ReliabilityRollupTimeFrame `json:"timeFrame"`
+	// ReliabilityScoreType selects the time range used to calculate reliability scores.
+	// The zero value preserves the SLO time window calculation.
+	ReliabilityScoreType ReliabilityScoreType `json:"reliabilityScoreType,omitempty"`
+	CustomHierarchy      []HierarchyFolder    `json:"customHierarchy,omitempty"`
 }
 
 type ReliabilityRollupTimeFrame struct {
