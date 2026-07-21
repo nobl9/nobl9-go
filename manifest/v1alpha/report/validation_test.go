@@ -1495,18 +1495,13 @@ func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
 		testutils.AssertNoError(t, report, err)
 	})
 
-	t.Run("passes with SLOTimeWindow reliabilityScoreType", func(t *testing.T) {
-		report := validReliabilityRollupReport()
-		report.Spec.ReliabilityRollup.ReliabilityScoreType = ReliabilityScoreTypeSLOTimeWindow
-		err := validate(report)
-		testutils.AssertNoError(t, report, err)
-	})
-
-	t.Run("passes with ReportTimeFrame reliabilityScoreType", func(t *testing.T) {
-		report := validReliabilityRollupReport()
-		report.Spec.ReliabilityRollup.ReliabilityScoreType = ReliabilityScoreTypeReportTimeFrame
-		err := validate(report)
-		testutils.AssertNoError(t, report, err)
+	t.Run("passes with valid reliabilityScoreType", func(t *testing.T) {
+		for _, typ := range ReliabilityScoreTypeValues() {
+			report := validReliabilityRollupReport()
+			report.Spec.ReliabilityRollup.ReliabilityScoreType = typ
+			err := validate(report)
+			testutils.AssertNoError(t, report, err)
+		}
 	})
 
 	t.Run("fails with unsupported reliabilityScoreType", func(t *testing.T) {

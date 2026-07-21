@@ -2,9 +2,8 @@ package report
 
 type ReliabilityRollupConfig struct {
 	TimeFrame ReliabilityRollupTimeFrame `json:"timeFrame"`
-	// ReliabilityScoreType selects the reliability scoring mechanism used by the
-	// Reliability Rollup Report. The zero value defaults to
-	// [ReliabilityScoreTypeSLOTimeWindow].
+	// ReliabilityScoreType selects the reliability scoring mechanism used by the report.
+	// It defaults to [ReliabilityScoreTypeSLOTimeWindow].
 	ReliabilityScoreType ReliabilityScoreType `json:"reliabilityScoreType,omitempty"`
 	CustomHierarchy      []HierarchyFolder    `json:"customHierarchy,omitempty"`
 }

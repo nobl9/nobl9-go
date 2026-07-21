@@ -253,7 +253,6 @@ func Report() []Example {
 						},
 					},
 					ReliabilityRollup: &report.ReliabilityRollupConfig{
-						ReliabilityScoreType: report.ReliabilityScoreTypeReportTimeFrame,
 						TimeFrame: report.ReliabilityRollupTimeFrame{
 							Rolling: &report.RollingTimeFrame{
 								Repeat: report.Repeat{

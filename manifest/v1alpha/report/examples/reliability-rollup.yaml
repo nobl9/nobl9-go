@@ -47,4 +47,3 @@
           unit: Week
           count: 1
         timeZone: Europe/Warsaw
-      reliabilityScoreType: ReportTimeFrame
