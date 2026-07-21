@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-retryablehttp"
+	client "github.com/influxdata/influxdb1-client"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
@@ -95,6 +96,11 @@ func Test_Objects_V2_Apply_And_Delete(t *testing.T) {
 	})
 }
 
+// These tests are a non-perfect safeguard which ensures the API returns 409
+// in case concurrent apply operations conflict with each other.
+// It is impossible to reliably test this behavior on this level,
+// in case there's no conflict, the test will still succeed, without proving anything.
+// This is acceptable, run enough times, it will eventually fail and catch a regression.
 func Test_Objects_V2_Apply_ConcurrentServiceRequests_ReturnSuccessOrConflict(t *testing.T) {
 	const (
 		rounds  = 3
