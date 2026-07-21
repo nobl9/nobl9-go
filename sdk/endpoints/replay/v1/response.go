@@ -2,15 +2,18 @@ package v1
 
 import v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 
+// ReplayWithStatus identifies a replay and includes its current detailed status.
 type ReplayWithStatus struct {
 	Project string       `json:"project"`
 	SLO     string       `json:"slo"`
 	Status  ReplayStatus `json:"status"`
 }
 
+// ReplayStatus describes the current state of a replay.
+// Status is a fine-grained platform status and must be treated as an open set.
 type ReplayStatus struct {
 	Source       ReplaySource             `json:"source"`
-	Status       ReplayProcessStatus      `json:"status"`
+	Status       string                   `json:"status"`
 	Cancellation ReplayCancellationStatus `json:"cancellation"`
 	CanceledBy   string                   `json:"canceledBy,omitempty"`
 	TriggeredBy  string                   `json:"triggeredBy"`
@@ -20,9 +23,10 @@ type ReplayStatus struct {
 	Value        int                      `json:"value"`
 }
 
+// ToProcessStatus converts ReplayStatus to the SLO manifest process status.
 func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	return v1alphaSLO.ProcessStatus{
-		Status:       string(s.Status),
+		Status:       s.Status,
 		Cancellation: string(s.Cancellation),
 		CanceledBy:   s.CanceledBy,
 		TriggeredBy:  s.TriggeredBy,
@@ -33,21 +37,10 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	}
 }
 
-// ReplayProcessStatus is the coarse public replay processing status.
-type ReplayProcessStatus string
-
-const (
-	ReplayStatusUnknown    ReplayProcessStatus = "unknown"
-	ReplayStatusQueued     ReplayProcessStatus = "queued"
-	ReplayStatusInProgress ReplayProcessStatus = "in progress"
-	ReplayStatusCompleted  ReplayProcessStatus = "completed"
-	ReplayStatusFailed     ReplayProcessStatus = "failed"
-	ReplayStatusCanceled   ReplayProcessStatus = "canceled"
-)
-
 // ReplayCancellationStatus describes server-side replay cancellation state.
 type ReplayCancellationStatus string
 
+// Replay cancellation states returned by Nobl9.
 const (
 	ReplayCancellationStatusPossible  ReplayCancellationStatus = "possible"
 	ReplayCancellationStatusBlocked   ReplayCancellationStatus = "blocked"
@@ -56,6 +49,7 @@ const (
 	ReplayCancellationStatusDone      ReplayCancellationStatus = "done"
 )
 
+// ReplayAvailability reports whether a replay can be started.
 type ReplayAvailability struct {
 	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
 	Available bool                     `json:"available"`
@@ -66,6 +60,7 @@ type ReplayAvailability struct {
 // fixed set, so callers should keep unknown values as raw strings.
 type ReplayAvailabilityReason string
 
+// Known replay unavailability reasons.
 const (
 	ReplayDataSourceTypeInvalid              ReplayAvailabilityReason = "datasource_type_invalid"
 	ReplayProjectDoesNotExist                ReplayAvailabilityReason = "project_does_not_exist"
@@ -80,18 +75,20 @@ const (
 	ReplayPromQLInGCMNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
 )
 
-// ReplayListStatus uses the same coarse status values as ReplayProcessStatus.
-type ReplayListStatus = ReplayProcessStatus
+// ReplayListStatus is the coarse status returned by the replay list endpoint.
+type ReplayListStatus string
 
+// Replay list statuses returned by Nobl9.
 const (
-	ReplayListStatusUnknown    = ReplayStatusUnknown
-	ReplayListStatusQueued     = ReplayStatusQueued
-	ReplayListStatusInProgress = ReplayStatusInProgress
-	ReplayListStatusCompleted  = ReplayStatusCompleted
-	ReplayListStatusFailed     = ReplayStatusFailed
-	ReplayListStatusCanceled   = ReplayStatusCanceled
+	ReplayListStatusUnknown    ReplayListStatus = "unknown"
+	ReplayListStatusQueued     ReplayListStatus = "queued"
+	ReplayListStatusInProgress ReplayListStatus = "in progress"
+	ReplayListStatusCompleted  ReplayListStatus = "completed"
+	ReplayListStatusFailed     ReplayListStatus = "failed"
+	ReplayListStatusCanceled   ReplayListStatus = "canceled"
 )
 
+// ReplayListItem summarizes an active replay.
 type ReplayListItem struct {
 	SLO            string                   `json:"slo,omitempty"`
 	Project        string                   `json:"project"`

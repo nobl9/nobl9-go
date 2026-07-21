@@ -12,33 +12,42 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
+// RunRequest describes a replay to start.
+// Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
 type RunRequest struct {
-	TimeRange  TimeRange    `json:"timeRange,omitempty,omitzero"`
-	SourceSLO  *SourceSLO   `json:"sourceSlo,omitempty"`
-	Source     ReplaySource `json:"source,omitempty"`
-	Project    string       `json:"project"`
-	SLO        string       `json:"slo"`
-	ReplayType ReplayType   `json:"replayType,omitempty"`
-	Duration   Duration     `json:"duration,omitempty,omitzero"`
+	TimeRange  TimeRange  `json:"timeRange,omitempty,omitzero"`
+	SourceSLO  *SourceSLO `json:"sourceSlo,omitempty"`
+	Project    string     `json:"project"`
+	SLO        string     `json:"slo"`
+	ReplayType ReplayType `json:"replayType,omitempty"`
+	Duration   Duration   `json:"duration,omitempty,omitzero"`
 }
 
+// DeleteRequest identifies queued replay requests to delete.
 type DeleteRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
-	// If All is provided, Project and SLO are ignored and all replays are deleted.
+	// All deletes all queued reimport-and-recalculation replay requests in the
+	// organization. When All is true, Project and SLO are ignored.
 	All bool `json:"all,omitempty"`
 }
 
+// CancelRequest identifies a replay to cancel.
 type CancelRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
 }
 
+// GetStatusRequest identifies the replay whose status should be returned.
 type GetStatusRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
 }
 
+// GetAvailabilityRequest describes a replay availability check.
+// Project can be empty to use the SDK client's configured project.
+// Set SLOName to check an existing SLO. Otherwise, DataSourceProject,
+// DataSource, and DataSourceKind are required.
 type GetAvailabilityRequest struct {
 	Project           string
 	DataSourceProject string
@@ -50,32 +59,31 @@ type GetAvailabilityRequest struct {
 	DurationValue     int
 }
 
+// Duration defines how far back a replay should retrieve data.
 type Duration struct {
 	Unit  DurationUnit `json:"unit"`
 	Value int          `json:"value"`
 }
 
+// TimeRange defines the earliest point from which a replay should retrieve data.
 type TimeRange struct {
 	StartDate time.Time `json:"startDate,omitzero"`
 }
 
+// SourceSLO maps objectives from another SLO to the replayed SLO.
 type SourceSLO struct {
 	SLO           string          `json:"slo"`
 	Project       string          `json:"project"`
 	ObjectivesMap []SourceSLOItem `json:"objectivesMap"`
 }
 
+// SourceSLOItem maps one source objective to a target objective.
 type SourceSLOItem struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 }
 
 var runRequestValidation = govy.New(
-	govy.For(func(r RunRequest) ReplaySource { return r.Source }).
-		WithName("source").
-		When(func(r RunRequest) bool { return r.Source != "" }).
-		Rules(govy.NewRule(ValidateReplaySource).
-			WithErrorCode(replaySourceValidationErrorCode)),
 	govy.For(func(r RunRequest) ReplayType { return r.ReplayType }).
 		WithName("replayType").
 		When(func(r RunRequest) bool { return r.ReplayType != "" }).
@@ -114,6 +122,36 @@ var runRequestValidation = govy.New(
 		}).WithErrorCode(durationAndStartDateValidationError)),
 )
 
+var getAvailabilityRequestValidation = govy.New(
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
+		WithName("dataSourceProject").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSource }).
+		WithName("dataSource").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceKind }).
+		WithName("dataSourceKind").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) ReplayType { return r.Type }).
+		WithName("type").
+		When(func(r GetAvailabilityRequest) bool { return r.Type != "" }).
+		Rules(govy.NewRule(ValidateReplayType).
+			WithErrorCode(replayTypeValidationErrorCode)),
+	govy.For(func(r GetAvailabilityRequest) DurationUnit { return r.DurationUnit }).
+		WithName("durationUnit").
+		When(hasAvailabilityDuration).
+		Required().
+		Rules(govy.NewRule(ValidateDurationUnit).
+			WithErrorCode(durationUnitValidationErrorCode)),
+	govy.For(func(r GetAvailabilityRequest) int { return r.DurationValue }).
+		WithName("durationValue").
+		When(hasAvailabilityDuration).
+		Rules(rules.GT(0)),
+)
+
 var durationValidation = govy.New(
 	govy.For(func(d Duration) DurationUnit { return d.Unit }).
 		WithName("unit").
@@ -147,13 +185,18 @@ var sourceSLOItemValidation = govy.New(
 		Required(),
 )
 
+// Validate verifies that the run request is complete and internally consistent.
 func (r RunRequest) Validate() error {
 	return runRequestValidation.Validate(r)
 }
 
+// Validate verifies the availability request before it is sent to Nobl9.
+func (r GetAvailabilityRequest) Validate() error {
+	return getAvailabilityRequestValidation.Validate(r)
+}
+
 const (
 	durationUnitValidationErrorCode     = "replay_duration_unit"
-	replaySourceValidationErrorCode     = "replay_source"
 	replayTypeValidationErrorCode       = "replay_type"
 	durationAndStartDateValidationError = "replay_duration_or_start_date"
 	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
@@ -181,6 +224,7 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 	return replay, nil
 }
 
+// Supported replay duration units.
 const (
 	DurationUnitMinute DurationUnit = "Minute"
 	DurationUnitHour   DurationUnit = "Hour"
@@ -193,6 +237,7 @@ type DurationUnit string
 // ReplaySource identifies the workflow that created a replay request.
 type ReplaySource string
 
+// Replay sources returned by the replay status endpoint.
 const (
 	ReplaySourceUser                  ReplaySource = "user"
 	ReplaySourceErrorBudgetAdjustment ReplaySource = "error_budget_adjustment"
@@ -202,17 +247,21 @@ const (
 // or recalculates from already available data.
 type ReplayType string
 
+// Supported replay types.
 const (
 	ReplayTypeReimportAndRecalculation ReplayType = "reimport_and_recalculation"
 	ReplayTypeRecalculation            ReplayType = "recalculation"
 )
 
+// ErrInvalidReplayDurationUnit indicates an unsupported replay duration unit.
 var ErrInvalidReplayDurationUnit = errors.Errorf(
 	"invalid duration unit, available units are: %v", allowedDurationUnit)
 
+// ErrInvalidReplaySource indicates an unsupported replay source.
 var ErrInvalidReplaySource = errors.Errorf(
 	"invalid source, available sources are: %v", allowedReplaySource)
 
+// ErrInvalidReplayType indicates an unsupported replay type.
 var ErrInvalidReplayType = errors.Errorf(
 	"invalid replayType, available types are: %v", allowedReplayType)
 
@@ -248,7 +297,7 @@ func (d Duration) Duration() (time.Duration, error) {
 	return 0, nil
 }
 
-// ValidateDurationUnit reports whether unit is an allowed replay duration unit.
+// ValidateDurationUnit returns an error unless unit is an allowed replay duration unit.
 func ValidateDurationUnit(unit DurationUnit) error {
 	if slices.Contains(allowedDurationUnit, unit) {
 		return nil
@@ -256,7 +305,7 @@ func ValidateDurationUnit(unit DurationUnit) error {
 	return ErrInvalidReplayDurationUnit
 }
 
-// ValidateReplaySource reports whether source is an allowed replay source.
+// ValidateReplaySource returns an error unless source is an allowed replay source.
 func ValidateReplaySource(source ReplaySource) error {
 	if slices.Contains(allowedReplaySource, source) {
 		return nil
@@ -264,7 +313,7 @@ func ValidateReplaySource(source ReplaySource) error {
 	return ErrInvalidReplaySource
 }
 
-// ValidateReplayType reports whether replayType is an allowed replay type.
+// ValidateReplayType returns an error unless replayType is an allowed replay type.
 func ValidateReplayType(replayType ReplayType) error {
 	if slices.Contains(allowedReplayType, replayType) {
 		return nil
@@ -273,5 +322,9 @@ func ValidateReplayType(replayType ReplayType) error {
 }
 
 func isEmpty(duration Duration) bool {
-	return duration.Unit == "" || duration.Value == 0
+	return duration.Unit == "" && duration.Value == 0
+}
+
+func hasAvailabilityDuration(r GetAvailabilityRequest) bool {
+	return r.DurationUnit != "" || r.DurationValue != 0
 }

@@ -27,7 +27,6 @@ func TestRunRequestDatesValidation(t *testing.T) {
 			replay: RunRequest{
 				Project:    "project",
 				SLO:        "slo",
-				Source:     ReplaySourceUser,
 				ReplayType: ReplayTypeRecalculation,
 				Duration: Duration{
 					Unit:  DurationUnitDay,
@@ -35,20 +34,6 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid: true,
-		},
-		{
-			name: "invalid replay source",
-			replay: RunRequest{
-				Project: "project",
-				SLO:     "slo",
-				Source:  ReplaySource("unsupported"),
-				Duration: Duration{
-					Unit:  DurationUnitDay,
-					Value: 30,
-				},
-			},
-			isValid:   false,
-			errorCode: replaySourceValidationErrorCode,
 		},
 		{
 			name: "invalid replay type",
@@ -216,6 +201,21 @@ func TestRunRequestDatesValidation(t *testing.T) {
 			isValid: true,
 		},
 		{
+			name: "partial duration with start date",
+			replay: RunRequest{
+				Project: "project",
+				SLO:     "slo",
+				Duration: Duration{
+					Value: 30,
+				},
+				TimeRange: TimeRange{
+					StartDate: time.Now().Add(-time.Hour * 24),
+				},
+			},
+			isValid:   false,
+			errorCode: rules.ErrorCodeRequired,
+		},
+		{
 			name: "only one of duration",
 			replay: RunRequest{
 				Project: "project",
@@ -324,17 +324,16 @@ func TestRunRequestDatesValidation(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tc := tt
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			err := tc.replay.Validate()
-			if tc.isValid {
-				assert.Nil(t, err)
+			err := tt.replay.Validate()
+			if tt.isValid {
+				assert.NoError(t, err)
 			} else {
 				require.Error(t, err)
 				require.IsType(t, &govy.ValidatorError{}, err)
-				assert.True(t, govy.HasErrorCode(err, tc.errorCode))
+				assert.True(t, govy.HasErrorCode(err, tt.errorCode))
 			}
 		})
 	}
@@ -354,7 +353,6 @@ func TestParseJSONToRunRequest(t *testing.T) {
 			inputJSON: `{
 				"project": "default",
 				"slo": "annotation-test",
-				"source": "user",
 				"replayType": "recalculation",
 				"duration": {
 					"unit": "Day",
@@ -364,7 +362,6 @@ func TestParseJSONToRunRequest(t *testing.T) {
 			want: RunRequest{
 				Project:    "default",
 				SLO:        "annotation-test",
-				Source:     ReplaySourceUser,
 				ReplayType: ReplayTypeRecalculation,
 				Duration: Duration{
 					Unit:  DurationUnitDay,
@@ -384,20 +381,6 @@ func TestParseJSONToRunRequest(t *testing.T) {
 			inputJSON: `{"project": "default","slo": "annotation-test", "duration": {"unit": "Days", "value": 20}}`,
 			want:      RunRequest{},
 			wantErr:   true,
-		},
-		{
-			name: "pass invalid source",
-			inputJSON: `{
-				"project": "default",
-				"slo": "annotation-test",
-				"source": "unsupported",
-				"duration": {
-					"unit": "Day",
-					"value": 20
-				}
-			}`,
-			want:    RunRequest{},
-			wantErr: true,
 		},
 		{
 			name: "pass invalid replay type",
@@ -422,19 +405,119 @@ func TestParseJSONToRunRequest(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tc := tt
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			reader := strings.NewReader(tc.inputJSON)
+			reader := strings.NewReader(tt.inputJSON)
 			got, err := ParseJSONToReplayStruct(reader)
 
-			if tc.wantErr {
+			if tt.wantErr {
 				assert.NotEmpty(t, err)
 			} else {
 				assert.Empty(t, err)
 			}
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestGetAvailabilityRequestValidation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		request   GetAvailabilityRequest
+		isValid   bool
+		errorCode govy.ErrorCode
+	}{
+		{
+			name: "existing slo with default project",
+			request: GetAvailabilityRequest{
+				SLOName: "slo",
+			},
+			isValid: true,
+		},
+		{
+			name: "data source with duration",
+			request: GetAvailabilityRequest{
+				Project:           "project",
+				DataSourceProject: "data-source-project",
+				DataSource:        "data-source",
+				DataSourceKind:    "Direct",
+				Type:              ReplayTypeReimportAndRecalculation,
+				DurationUnit:      DurationUnitHour,
+				DurationValue:     1,
+			},
+			isValid: true,
+		},
+		{
+			name: "missing data source selection",
+			request: GetAvailabilityRequest{
+				Project: "project",
+			},
+			errorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "invalid replay type",
+			request: GetAvailabilityRequest{
+				Project: "project",
+				SLOName: "slo",
+				Type:    ReplayType("unsupported"),
+			},
+			errorCode: replayTypeValidationErrorCode,
+		},
+		{
+			name: "duration unit without value",
+			request: GetAvailabilityRequest{
+				Project:      "project",
+				SLOName:      "slo",
+				DurationUnit: DurationUnitHour,
+			},
+			errorCode: rules.ErrorCodeGreaterThan,
+		},
+		{
+			name: "duration value without unit",
+			request: GetAvailabilityRequest{
+				Project:       "project",
+				SLOName:       "slo",
+				DurationValue: 1,
+			},
+			errorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "negative duration",
+			request: GetAvailabilityRequest{
+				Project:       "project",
+				SLOName:       "slo",
+				DurationUnit:  DurationUnitHour,
+				DurationValue: -1,
+			},
+			errorCode: rules.ErrorCodeGreaterThan,
+		},
+		{
+			name: "invalid duration unit",
+			request: GetAvailabilityRequest{
+				Project:       "project",
+				SLOName:       "slo",
+				DurationUnit:  DurationUnit("Hours"),
+				DurationValue: 1,
+			},
+			errorCode: durationUnitValidationErrorCode,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tt.request.Validate()
+			if tt.isValid {
+				require.NoError(t, err)
+				return
+			}
+			require.Error(t, err)
+			require.IsType(t, &govy.ValidatorError{}, err)
+			assert.True(t, govy.HasErrorCode(err, tt.errorCode))
 		})
 	}
 }

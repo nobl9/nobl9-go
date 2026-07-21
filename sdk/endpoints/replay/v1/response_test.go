@@ -27,7 +27,7 @@ func TestReplayWithStatusUnmarshal(t *testing.T) {
 		"slo": "latency",
 		"status": {
 			"source": "user",
-			"status": "in progress",
+			"status": "fetching_historical_data",
 			"cancellation": "possible",
 			"triggeredBy": "user@example.com",
 			"unit": "Hour",
@@ -37,7 +37,7 @@ func TestReplayWithStatusUnmarshal(t *testing.T) {
 	}`), &replay)
 
 	require.NoError(t, err)
-	assert.Equal(t, ReplayStatusInProgress, replay.Status.Status)
+	assert.Equal(t, "fetching_historical_data", replay.Status.Status)
 	assert.Equal(t, ReplayCancellationStatusPossible, replay.Status.Cancellation)
 	assert.Equal(t, DurationUnitHour, replay.Status.Unit)
 }
