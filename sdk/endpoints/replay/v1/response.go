@@ -37,56 +37,11 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	}
 }
 
-// ReplayCancellationStatus describes server-side replay cancellation state.
-type ReplayCancellationStatus string
-
-// Replay cancellation states returned by Nobl9.
-const (
-	ReplayCancellationStatusPossible  ReplayCancellationStatus = "possible"
-	ReplayCancellationStatusBlocked   ReplayCancellationStatus = "blocked"
-	ReplayCancellationStatusRequested ReplayCancellationStatus = "requested"
-	ReplayCancellationStatusDenied    ReplayCancellationStatus = "denied"
-	ReplayCancellationStatusDone      ReplayCancellationStatus = "done"
-)
-
 // ReplayAvailability reports whether a replay can be started.
 type ReplayAvailability struct {
 	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
 	Available bool                     `json:"available"`
 }
-
-// ReplayAvailabilityReason is a machine-readable reason why replay is unavailable.
-// The availability endpoint can also return formatted reason text outside this
-// fixed set, so callers should keep unknown values as raw strings.
-type ReplayAvailabilityReason string
-
-// Known replay unavailability reasons.
-const (
-	ReplayDataSourceTypeInvalid              ReplayAvailabilityReason = "datasource_type_invalid"
-	ReplayProjectDoesNotExist                ReplayAvailabilityReason = "project_does_not_exist"
-	ReplayDataSourceDoesNotExist             ReplayAvailabilityReason = "data_source_does_not_exist"
-	ReplayIntegrationDoesNotSupportReplay    ReplayAvailabilityReason = "integration_does_not_support_replay"
-	ReplayAgentVersionDoesNotSupportReplay   ReplayAvailabilityReason = "agent_version_does_not_support_replay"
-	ReplayMaxHistoricalDataRetrievalTooLow   ReplayAvailabilityReason = "max_historical_data_retrieval_too_low"
-	ReplayConcurrentReplayRunsLimitExhausted ReplayAvailabilityReason = "concurrent_replay_runs_limit_exhausted"
-	ReplayUnknownAgentVersion                ReplayAvailabilityReason = "unknown_agent_version"
-	ReplaySingleQueryNotSupported            ReplayAvailabilityReason = "single_query_not_supported"
-	ReplayCompositeSLONotSupported           ReplayAvailabilityReason = "composite_slo_not_supported"
-	ReplayPromQLInGCMNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
-)
-
-// ReplayListStatus is the coarse status returned by the replay list endpoint.
-type ReplayListStatus string
-
-// Replay list statuses returned by Nobl9.
-const (
-	ReplayListStatusUnknown    ReplayListStatus = "unknown"
-	ReplayListStatusQueued     ReplayListStatus = "queued"
-	ReplayListStatusInProgress ReplayListStatus = "in progress"
-	ReplayListStatusCompleted  ReplayListStatus = "completed"
-	ReplayListStatusFailed     ReplayListStatus = "failed"
-	ReplayListStatusCanceled   ReplayListStatus = "canceled"
-)
 
 // ReplayListItem summarizes an active replay.
 type ReplayListItem struct {

@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"io"
-	"slices"
 	"time"
 
 	"github.com/pkg/errors"
@@ -11,6 +10,85 @@ import (
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 )
+
+//go:generate ../../../../bin/go-enum --values --nocomments
+
+// DurationUnit is the granularity for replay lookback duration in run and availability requests.
+/* ENUM(
+Minute
+Hour
+Day
+)*/
+type DurationUnit string
+
+// ReplaySource identifies the workflow that created a replay request.
+/* ENUM(
+user
+error_budget_adjustment
+)*/
+type ReplaySource string
+
+// ReplayType selects whether Nobl9 reimports historical data before recalculation
+// or recalculates from already available data.
+/* ENUM(
+reimport_and_recalculation
+recalculation
+)*/
+type ReplayType string
+
+// ReplayCancellationStatus describes server-side replay cancellation state.
+/* ENUM(
+possible
+blocked
+requested
+denied
+done
+)*/
+type ReplayCancellationStatus string
+
+// ReplayAvailabilityReason is a machine-readable reason why replay is unavailable.
+// The availability endpoint can also return formatted reason text outside this
+// fixed set, so callers should keep unknown values as raw strings.
+/* ENUM(
+datasource_type_invalid
+project_does_not_exist
+data_source_does_not_exist
+integration_does_not_support_replay
+agent_version_does_not_support_replay
+max_historical_data_retrieval_too_low
+concurrent_replay_runs_limit_exhausted
+unknown_agent_version
+single_query_not_supported
+composite_slo_not_supported
+promql_in_gcm_not_supported
+)*/
+type ReplayAvailabilityReason string
+
+// Replay availability reason aliases preserve the established public prefix and initialism casing.
+const (
+	ReplayDataSourceTypeInvalid              = ReplayAvailabilityReasonDatasourceTypeInvalid
+	ReplayProjectDoesNotExist                = ReplayAvailabilityReasonProjectDoesNotExist
+	ReplayDataSourceDoesNotExist             = ReplayAvailabilityReasonDataSourceDoesNotExist
+	ReplayIntegrationDoesNotSupportReplay    = ReplayAvailabilityReasonIntegrationDoesNotSupportReplay
+	ReplayAgentVersionDoesNotSupportReplay   = ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay
+	ReplayMaxHistoricalDataRetrievalTooLow   = ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow
+	ReplayConcurrentReplayRunsLimitExhausted = ReplayAvailabilityReasonConcurrentReplayRunsLimitExhausted
+	ReplayUnknownAgentVersion                = ReplayAvailabilityReasonUnknownAgentVersion
+	ReplaySingleQueryNotSupported            = ReplayAvailabilityReasonSingleQueryNotSupported
+	ReplayCompositeSLONotSupported           = ReplayAvailabilityReasonCompositeSloNotSupported
+	ReplayPromQLInGCMNotSupported            = ReplayAvailabilityReasonPromqlInGcmNotSupported
+)
+
+// ReplayListStatus is the coarse status returned by the replay list endpoint.
+/* ENUM(
+unknown
+queued
+in progress
+completed
+failed
+canceled
+)*/
+type ReplayListStatus string
 
 // RunRequest describes a replay to start.
 // Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
@@ -87,8 +165,7 @@ var runRequestValidation = govy.New(
 	govy.For(func(r RunRequest) ReplayType { return r.ReplayType }).
 		WithName("replayType").
 		When(func(r RunRequest) bool { return r.ReplayType != "" }).
-		Rules(govy.NewRule(ValidateReplayType).
-			WithErrorCode(replayTypeValidationErrorCode)),
+		Rules(rules.OneOf(ReplayTypeValues()...)),
 	govy.For(func(r RunRequest) string { return r.Project }).
 		WithName("project").
 		Required(),
@@ -138,14 +215,12 @@ var getAvailabilityRequestValidation = govy.New(
 	govy.For(func(r GetAvailabilityRequest) ReplayType { return r.Type }).
 		WithName("type").
 		When(func(r GetAvailabilityRequest) bool { return r.Type != "" }).
-		Rules(govy.NewRule(ValidateReplayType).
-			WithErrorCode(replayTypeValidationErrorCode)),
+		Rules(rules.OneOf(ReplayTypeValues()...)),
 	govy.For(func(r GetAvailabilityRequest) DurationUnit { return r.DurationUnit }).
 		WithName("durationUnit").
 		When(hasAvailabilityDuration).
 		Required().
-		Rules(govy.NewRule(ValidateDurationUnit).
-			WithErrorCode(durationUnitValidationErrorCode)),
+		Rules(rules.OneOf(DurationUnitValues()...)),
 	govy.For(func(r GetAvailabilityRequest) int { return r.DurationValue }).
 		WithName("durationValue").
 		When(hasAvailabilityDuration).
@@ -156,8 +231,7 @@ var durationValidation = govy.New(
 	govy.For(func(d Duration) DurationUnit { return d.Unit }).
 		WithName("unit").
 		Required().
-		Rules(govy.NewRule(ValidateDurationUnit).
-			WithErrorCode(durationUnitValidationErrorCode)),
+		Rules(rules.OneOf(DurationUnitValues()...)),
 	govy.For(func(d Duration) int { return d.Value }).
 		WithName("value").
 		Rules(rules.GT(0)),
@@ -196,8 +270,6 @@ func (r GetAvailabilityRequest) Validate() error {
 }
 
 const (
-	durationUnitValidationErrorCode     = "replay_duration_unit"
-	replayTypeValidationErrorCode       = "replay_type"
 	durationAndStartDateValidationError = "replay_duration_or_start_date"
 	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
 )
@@ -224,101 +296,17 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 	return replay, nil
 }
 
-// Supported replay duration units.
-const (
-	DurationUnitMinute DurationUnit = "Minute"
-	DurationUnitHour   DurationUnit = "Hour"
-	DurationUnitDay    DurationUnit = "Day"
-)
-
-// DurationUnit is the granularity for replay lookback duration in run and availability requests.
-type DurationUnit string
-
-// ReplaySource identifies the workflow that created a replay request.
-type ReplaySource string
-
-// Replay sources returned by the replay status endpoint.
-const (
-	ReplaySourceUser                  ReplaySource = "user"
-	ReplaySourceErrorBudgetAdjustment ReplaySource = "error_budget_adjustment"
-)
-
-// ReplayType selects whether Nobl9 reimports historical data before recalculation
-// or recalculates from already available data.
-type ReplayType string
-
-// Supported replay types.
-const (
-	ReplayTypeReimportAndRecalculation ReplayType = "reimport_and_recalculation"
-	ReplayTypeRecalculation            ReplayType = "recalculation"
-)
-
-// ErrInvalidReplayDurationUnit indicates an unsupported replay duration unit.
-var ErrInvalidReplayDurationUnit = errors.Errorf(
-	"invalid duration unit, available units are: %v", allowedDurationUnit)
-
-// ErrInvalidReplaySource indicates an unsupported replay source.
-var ErrInvalidReplaySource = errors.Errorf(
-	"invalid source, available sources are: %v", allowedReplaySource)
-
-// ErrInvalidReplayType indicates an unsupported replay type.
-var ErrInvalidReplayType = errors.Errorf(
-	"invalid replayType, available types are: %v", allowedReplayType)
-
-var allowedDurationUnit = []DurationUnit{
-	DurationUnitMinute,
-	DurationUnitHour,
-	DurationUnitDay,
-}
-
-var allowedReplaySource = []ReplaySource{
-	ReplaySourceUser,
-	ReplaySourceErrorBudgetAdjustment,
-}
-
-var allowedReplayType = []ReplayType{
-	ReplayTypeReimportAndRecalculation,
-	ReplayTypeRecalculation,
-}
-
 // Duration converts unit and value to [time.Duration].
-func (d Duration) Duration() (time.Duration, error) {
-	if err := ValidateDurationUnit(d.Unit); err != nil {
-		return 0, err
-	}
+func (d Duration) Duration() time.Duration {
 	switch d.Unit {
 	case DurationUnitMinute:
-		return time.Duration(d.Value) * time.Minute, nil
+		return time.Duration(d.Value) * time.Minute
 	case DurationUnitHour:
-		return time.Duration(d.Value) * time.Hour, nil
+		return time.Duration(d.Value) * time.Hour
 	case DurationUnitDay:
-		return time.Duration(d.Value) * time.Hour * 24, nil
+		return time.Duration(d.Value) * time.Hour * 24
 	}
-	return 0, nil
-}
-
-// ValidateDurationUnit returns an error unless unit is an allowed replay duration unit.
-func ValidateDurationUnit(unit DurationUnit) error {
-	if slices.Contains(allowedDurationUnit, unit) {
-		return nil
-	}
-	return ErrInvalidReplayDurationUnit
-}
-
-// ValidateReplaySource returns an error unless source is an allowed replay source.
-func ValidateReplaySource(source ReplaySource) error {
-	if slices.Contains(allowedReplaySource, source) {
-		return nil
-	}
-	return ErrInvalidReplaySource
-}
-
-// ValidateReplayType returns an error unless replayType is an allowed replay type.
-func ValidateReplayType(replayType ReplayType) error {
-	if slices.Contains(allowedReplayType, replayType) {
-		return nil
-	}
-	return ErrInvalidReplayType
+	return 0
 }
 
 func isEmpty(duration Duration) bool {

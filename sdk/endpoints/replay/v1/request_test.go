@@ -47,7 +47,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			errorCode: replayTypeValidationErrorCode,
+			errorCode: rules.ErrorCodeOneOf,
 		},
 		{
 			name: "missing slo",
@@ -110,7 +110,7 @@ func TestRunRequestDatesValidation(t *testing.T) {
 				},
 			},
 			isValid:   false,
-			errorCode: durationUnitValidationErrorCode,
+			errorCode: rules.ErrorCodeOneOf,
 		},
 		{
 			name: "invalid duration value",
@@ -464,7 +464,7 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 				SLOName: "slo",
 				Type:    ReplayType("unsupported"),
 			},
-			errorCode: replayTypeValidationErrorCode,
+			errorCode: rules.ErrorCodeOneOf,
 		},
 		{
 			name: "duration unit without value",
@@ -502,7 +502,7 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 				DurationUnit:  DurationUnit("Hours"),
 				DurationValue: 1,
 			},
-			errorCode: durationUnitValidationErrorCode,
+			errorCode: rules.ErrorCodeOneOf,
 		},
 	}
 
@@ -547,43 +547,12 @@ func TestGetAvailabilityRequestQueryValues(t *testing.T) {
 	}, values)
 }
 
-func TestCheckPeriodUnit(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		unit    DurationUnit
-		wantErr error
-	}{
-		{
-			name:    "Proper duration unit",
-			unit:    DurationUnitDay,
-			wantErr: nil,
-		},
-		{
-			name:    "Invalid duration unit",
-			unit:    DurationUnit("Days"),
-			wantErr: ErrInvalidReplayDurationUnit,
-		},
-	}
-	for _, tt := range tests {
-		tc := tt
-		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
-			if err := ValidateDurationUnit(tc.unit); err != tc.wantErr {
-				t.Errorf("ValidateReplayDurationUnit() error = %v, wantErr %v", err, tc.wantErr)
-			}
-		})
-	}
-}
-
-func TestConvertDurationToTimeDuration(t *testing.T) {
+func TestDuration_Duration(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name         string
 		duration     Duration
-		wantErr      error
 		wantDuration time.Duration
 	}{
 		{
@@ -592,7 +561,6 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 				Unit:  DurationUnitMinute,
 				Value: 30,
 			},
-			wantErr:      nil,
 			wantDuration: 30 * time.Minute,
 		},
 		{
@@ -601,7 +569,6 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 				Unit:  DurationUnitDay,
 				Value: 15,
 			},
-			wantErr:      nil,
 			wantDuration: 24 * time.Hour * 15,
 		},
 		{
@@ -610,7 +577,6 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 				Unit:  DurationUnitHour,
 				Value: 5,
 			},
-			wantErr:      nil,
 			wantDuration: 5 * time.Hour,
 		},
 		{
@@ -619,7 +585,6 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 				Unit:  DurationUnit("TEST"),
 				Value: 30,
 			},
-			wantErr:      ErrInvalidReplayDurationUnit,
 			wantDuration: 0,
 		},
 	}
@@ -627,9 +592,7 @@ func TestConvertDurationToTimeDuration(t *testing.T) {
 		tc := tt
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			duration, err := tc.duration.Duration()
-
-			assert.Equal(t, tc.wantErr, err)
+			duration := tc.duration.Duration()
 			assert.Equal(t, tc.wantDuration, duration)
 		})
 	}
