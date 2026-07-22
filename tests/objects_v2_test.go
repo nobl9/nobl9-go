@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-retryablehttp"
-	client "github.com/influxdata/influxdb1-client"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
