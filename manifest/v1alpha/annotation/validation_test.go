@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 
@@ -94,6 +95,49 @@ func TestValidate_Spec_Description(t *testing.T) {
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
 			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("required for a non-Replay category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryComment
+		annotation.Spec.Description = ""
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("optional for a Replay category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Description = ""
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("Replay may still exceed the length bound", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: rules.ErrorCodeStringLength,
+		})
+	})
+	t.Run("category rules omitted: Replay empty passes, Comment empty required", func(t *testing.T) {
+		validator := GetValidatorWithoutCategoryRules()
+
+		replay := validAnnotation()
+		replay.Spec.Category = CategoryReplay
+		replay.Spec.Description = ""
+		govytest.AssertNoError(t, validator.Validate(replay))
+
+		comment := validAnnotation()
+		comment.Spec.Category = CategoryComment
+		comment.Spec.Description = ""
+		govytest.AssertError(t, validator.Validate(comment), govytest.ExpectedRuleError{
+			PropertyPath: "spec.description",
+			Code:         rules.ErrorCodeRequired,
 		})
 	})
 }
