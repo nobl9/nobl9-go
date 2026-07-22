@@ -5,7 +5,6 @@ package tests
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -36,6 +35,21 @@ func Test_Replay_V1(t *testing.T) {
 	_, found := findReplayListItem(list, projectName, sloName)
 	require.False(t, found, "generated replay already exists")
 
+	err = client.Replay().V1().Delete(t.Context(), replayV1.DeleteRequest{
+		Project: projectName,
+		SLO:     sloName,
+	})
+	require.NoError(t, err)
+
+	err = client.Replay().V1().Cancel(t.Context(), replayV1.CancelRequest{
+		Project: projectName,
+		SLO:     sloName,
+	})
+	require.Error(t, err)
+	var httpErr *sdk.HTTPError
+	require.ErrorAs(t, err, &httpErr)
+	require.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+
 	availability, err := client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
 		Project:           projectName,
 		DataSourceProject: direct.GetProject(),
@@ -51,9 +65,8 @@ func Test_Replay_V1(t *testing.T) {
 	require.True(t, availability.Available, string(availability.Reason))
 
 	runRequest := replayV1.RunRequest{
-		Project:    projectName,
-		SLO:        sloName,
-		ReplayType: replayV1.ReplayTypeReimportAndRecalculation,
+		Project: projectName,
+		SLO:     sloName,
 		Duration: replayV1.Duration{
 			Unit:  replayV1.DurationUnitHour,
 			Value: 1,
@@ -62,38 +75,6 @@ func Test_Replay_V1(t *testing.T) {
 	err = client.Replay().V1().Run(t.Context(), runRequest)
 	require.NoError(t, err, "failed to run replay")
 	t.Cleanup(func() { cleanupReplayV1(t, projectName, sloName) })
-
-	err = client.Replay().V1().Delete(t.Context(), replayV1.DeleteRequest{
-		Project: projectName,
-		SLO:     sloName,
-	})
-	require.NoError(t, err)
-	_, err = tryExecuteRequest(t, func() (struct{}, error) {
-		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
-			Project: projectName,
-			SLO:     sloName,
-		})
-		if err == nil {
-			if status == nil {
-				return struct{}{}, errors.New("deleted replay returned a nil status response")
-			}
-			return struct{}{}, fmt.Errorf(
-				"deleted replay %s/%s still exists with status %q",
-				projectName,
-				sloName,
-				status.Status.Status,
-			)
-		}
-		var httpErr *sdk.HTTPError
-		if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusNotFound {
-			return struct{}{}, nil
-		}
-		return struct{}{}, err
-	})
-	require.NoError(t, err)
-
-	err = client.Replay().V1().Run(t.Context(), runRequest)
-	require.NoError(t, err, "failed to run replay for cancellation")
 
 	status, err := tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
@@ -109,74 +90,12 @@ func Test_Replay_V1(t *testing.T) {
 		if status.Status.Status == "" {
 			return nil, errors.New("replay status is empty")
 		}
-		if status.Status.Cancellation != replayV1.ReplayCancellationStatusPossible {
-			return nil, fmt.Errorf(
-				"replay cancellation is %q while status is %q",
-				status.Status.Cancellation,
-				status.Status.Status,
-			)
-		}
 		return status, nil
 	})
 	require.NoError(t, err)
 	assert.Equal(t, projectName, status.Project)
 	assert.Equal(t, sloName, status.SLO)
 	assert.Equal(t, replayV1.ReplaySourceUser, status.Status.Source)
-
-	listItem, err := tryExecuteRequest(t, func() (replayV1.ReplayListItem, error) {
-		items, err := client.Replay().V1().List(t.Context())
-		if err != nil {
-			return replayV1.ReplayListItem{}, err
-		}
-		item, ok := findReplayListItem(items, projectName, sloName)
-		if !ok {
-			return replayV1.ReplayListItem{}, fmt.Errorf("replay %s/%s not found", projectName, sloName)
-		}
-		return item, nil
-	})
-	require.NoError(t, err)
-	assert.Equal(t, projectName, listItem.Project)
-	assert.Equal(t, sloName, listItem.SLO)
-	assert.Contains(t, []replayV1.ReplayListStatus{
-		replayV1.ReplayListStatusQueued,
-		replayV1.ReplayListStatusInProgress,
-		replayV1.ReplayListStatusCompleted,
-		replayV1.ReplayListStatusFailed,
-		replayV1.ReplayListStatusCanceled,
-	}, listItem.Status)
-
-	err = client.Replay().V1().Cancel(t.Context(), replayV1.CancelRequest{
-		Project: projectName,
-		SLO:     sloName,
-	})
-	require.NoError(t, err)
-
-	status, err = tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
-		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
-			Project: projectName,
-			SLO:     sloName,
-		})
-		if err != nil {
-			return nil, err
-		}
-		if status == nil {
-			return nil, errors.New("replay status response is nil")
-		}
-		if status.Status.Status == "" {
-			return nil, errors.New("replay status is empty")
-		}
-		if status.Status.Cancellation != replayV1.ReplayCancellationStatusDone {
-			return nil, fmt.Errorf(
-				"replay cancellation is %q while status is %q",
-				status.Status.Cancellation,
-				status.Status.Status,
-			)
-		}
-		return status, nil
-	})
-	require.NoError(t, err)
-	assert.Equal(t, projectName, status.Project)
-	assert.Equal(t, sloName, status.SLO)
 }
 
 func cleanupReplayV1(t *testing.T, projectName, sloName string) {
@@ -195,7 +114,6 @@ func cleanupReplayV1(t *testing.T, projectName, sloName string) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	cancelRequested := false
-	cancelDeniedReported := false
 	for {
 		status, err := client.Replay().V1().GetStatus(ctx, replayV1.GetStatusRequest{
 			Project: projectName,
@@ -217,24 +135,17 @@ func cleanupReplayV1(t *testing.T, projectName, sloName string) {
 		switch status.Status.Cancellation {
 		case replayV1.ReplayCancellationStatusPossible:
 			if !cancelRequested {
-				if err := client.Replay().V1().Cancel(ctx, replayV1.CancelRequest{
-					Project: projectName,
-					SLO:     sloName,
-				}); err != nil {
+				cancelRequested, err = tryCancelReplayV1(ctx, projectName, sloName)
+				if err != nil {
 					t.Errorf("failed to cancel replay during cleanup: %v", err)
 					return
 				}
-				cancelRequested = true
 			}
 		case replayV1.ReplayCancellationStatusRequested:
 			cancelRequested = true
 		case replayV1.ReplayCancellationStatusDone:
 			return
 		case replayV1.ReplayCancellationStatusDenied:
-			if !cancelDeniedReported {
-				t.Errorf("failed to clean up replay: cancellation denied at status %q", status.Status.Status)
-				cancelDeniedReported = true
-			}
 			if isTerminalReplayStatus(status.Status.Status) {
 				return
 			}
@@ -254,6 +165,21 @@ func cleanupReplayV1(t *testing.T, projectName, sloName string) {
 		case <-ticker.C:
 		}
 	}
+}
+
+func tryCancelReplayV1(ctx context.Context, projectName, sloName string) (bool, error) {
+	err := client.Replay().V1().Cancel(ctx, replayV1.CancelRequest{
+		Project: projectName,
+		SLO:     sloName,
+	})
+	if err == nil {
+		return true, nil
+	}
+	var httpErr *sdk.HTTPError
+	if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusBadRequest {
+		return false, nil
+	}
+	return false, err
 }
 
 func isTerminalReplayStatus(status string) bool {

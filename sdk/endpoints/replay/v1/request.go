@@ -92,6 +92,7 @@ type ReplayListStatus string
 
 // RunRequest describes a replay to start.
 // Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
+// When [RunRequest.ReplayType] is omitted, Nobl9 defaults to [ReplayTypeReimportAndRecalculation].
 type RunRequest struct {
 	TimeRange  TimeRange  `json:"timeRange,omitempty,omitzero"`
 	SourceSLO  *SourceSLO `json:"sourceSlo,omitempty"`
@@ -176,7 +177,7 @@ var runRequestValidation = govy.New(
 		WithName("duration").
 		When(
 			func(r RunRequest) bool {
-				return !isEmpty(r.Duration) || (r.TimeRange.StartDate.IsZero() && isEmpty(r.Duration))
+				return !isEmpty(r.Duration) || r.TimeRange.StartDate.IsZero()
 			},
 		).
 		Cascade(govy.CascadeModeStop).
@@ -297,6 +298,7 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 }
 
 // Duration converts unit and value to [time.Duration].
+// It returns zero when the unit is unsupported.
 func (d Duration) Duration() time.Duration {
 	switch d.Unit {
 	case DurationUnitMinute:

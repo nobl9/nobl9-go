@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
 )
 
@@ -425,10 +426,11 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		request   GetAvailabilityRequest
-		isValid   bool
-		errorCode govy.ErrorCode
+		name           string
+		request        GetAvailabilityRequest
+		isValid        bool
+		errorCode      govy.ErrorCode
+		expectedErrors []govytest.ExpectedRuleError
 	}{
 		{
 			name: "existing slo with default project",
@@ -455,7 +457,11 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 			request: GetAvailabilityRequest{
 				Project: "project",
 			},
-			errorCode: rules.ErrorCodeRequired,
+			expectedErrors: []govytest.ExpectedRuleError{
+				{PropertyPath: "dataSourceProject", Code: rules.ErrorCodeRequired},
+				{PropertyPath: "dataSource", Code: rules.ErrorCodeRequired},
+				{PropertyPath: "dataSourceKind", Code: rules.ErrorCodeRequired},
+			},
 		},
 		{
 			name: "invalid replay type",
@@ -517,6 +523,10 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 			}
 			require.Error(t, err)
 			require.IsType(t, &govy.ValidatorError{}, err)
+			if len(tt.expectedErrors) > 0 {
+				govytest.AssertError(t, err, tt.expectedErrors...)
+				return
+			}
 			assert.True(t, govy.HasErrorCode(err, tt.errorCode))
 		})
 	}
