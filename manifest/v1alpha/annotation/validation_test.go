@@ -114,7 +114,7 @@ func TestValidate_Spec_Description(t *testing.T) {
 		err := validate(annotation)
 		testutils.AssertNoError(t, annotation, err)
 	})
-	t.Run("Replay may still exceed the length bound", func(t *testing.T) {
+	t.Run("still enforces the length bound for Replay", func(t *testing.T) {
 		annotation := validAnnotation()
 		annotation.Spec.Category = CategoryReplay
 		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
