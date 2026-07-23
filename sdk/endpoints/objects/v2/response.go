@@ -22,10 +22,14 @@ type getAnnotationModel struct {
 }
 
 type getAnnotationModelStatus struct {
-	UpdatedAt          time.Time  `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
-	IsSystem           bool       `json:"isSystem" example:"false"`
-	ReplayPeriodStart  *time.Time `json:"replayPeriodStart,omitempty"`
-	ReplayPeriodEnd    *time.Time `json:"replayPeriodEnd,omitempty"`
+	UpdatedAt time.Time                 `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
+	IsSystem  bool                      `json:"isSystem" example:"false"`
+	Replay    *getAnnotationModelReplay `json:"replay,omitempty"`
+}
+
+type getAnnotationModelReplay struct {
+	PeriodStart        *time.Time `json:"periodStart,omitempty"`
+	PeriodEnd          *time.Time `json:"periodEnd,omitempty"`
 	ElapsedTimeSeconds *int64     `json:"elapsedTimeSeconds,omitempty"`
 }
 
@@ -49,11 +53,15 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 		v1alphaModel.Spec.EndTime = *resp.EndTime
 	}
 	v1alphaModel.Status = &v1alphaAnnotation.Status{
-		UpdatedAt:          resp.Status.UpdatedAt.Format(time.RFC3339),
-		IsSystem:           resp.Status.IsSystem,
-		ReplayPeriodStart:  resp.Status.ReplayPeriodStart,
-		ReplayPeriodEnd:    resp.Status.ReplayPeriodEnd,
-		ElapsedTimeSeconds: resp.Status.ElapsedTimeSeconds,
+		UpdatedAt: resp.Status.UpdatedAt.Format(time.RFC3339),
+		IsSystem:  resp.Status.IsSystem,
+	}
+	if resp.Status.Replay != nil {
+		v1alphaModel.Status.Replay = &v1alphaAnnotation.ReplayStatus{
+			PeriodStart:        resp.Status.Replay.PeriodStart,
+			PeriodEnd:          resp.Status.Replay.PeriodEnd,
+			ElapsedTimeSeconds: resp.Status.Replay.ElapsedTimeSeconds,
+		}
 	}
 	return v1alphaModel
 }

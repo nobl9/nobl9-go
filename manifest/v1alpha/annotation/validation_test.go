@@ -257,11 +257,13 @@ func TestValidate_Status_NeverValidated(t *testing.T) {
 	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
 	replayStatus := func() *Status {
 		return &Status{
-			UpdatedAt:          "2023-05-02T17:10:05Z",
-			IsSystem:           true,
-			ReplayPeriodStart:  &replayStart,
-			ReplayPeriodEnd:    &replayEnd,
-			ElapsedTimeSeconds: ptr(int64(3600)),
+			UpdatedAt: "2023-05-02T17:10:05Z",
+			IsSystem:  true,
+			Replay: &ReplayStatus{
+				PeriodStart:        &replayStart,
+				PeriodEnd:          &replayEnd,
+				ElapsedTimeSeconds: ptr(int64(3600)),
+			},
 		}
 	}
 
