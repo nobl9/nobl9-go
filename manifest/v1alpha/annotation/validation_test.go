@@ -252,6 +252,42 @@ func TestSpec_Category(t *testing.T) {
 	}
 }
 
+func TestValidate_Status_NeverValidated(t *testing.T) {
+	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
+	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
+	replayStatus := func() *Status {
+		return &Status{
+			UpdatedAt:          "2023-05-02T17:10:05Z",
+			IsSystem:           true,
+			ReplayPeriodStart:  &replayStart,
+			ReplayPeriodEnd:    &replayEnd,
+			ElapsedTimeSeconds: ptr(int64(3600)),
+		}
+	}
+
+	t.Run("Replay annotation with Status fields passes", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Status = replayStatus()
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("Replay annotation without Status fields passes", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Status = nil
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("non-Replay annotation with Status fields set passes (Status is never validated)", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryComment
+		annotation.Status = replayStatus()
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+}
+
 func TestValidate_Metadata_Labels(t *testing.T) {
 	for name, test := range v1alphatest.GetLabelsTestCases[Annotation](t, "metadata.labels") {
 		t.Run(name, func(t *testing.T) {
