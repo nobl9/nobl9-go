@@ -50,4 +50,15 @@ type Spec struct {
 type Status struct {
 	UpdatedAt string `json:"updatedAt"`
 	IsSystem  bool   `json:"isSystem"`
+
+	// Replay holds facts about the Replay run that created this annotation.
+	// Set only on Replay-generated annotations; absent otherwise.
+	Replay *ReplayStatus `json:"replay,omitempty"`
+}
+
+// ReplayStatus describes the Replay run that created a Replay-generated annotation.
+type ReplayStatus struct {
+	PeriodStart        *time.Time `json:"periodStart,omitempty"`
+	PeriodEnd          *time.Time `json:"periodEnd,omitempty"`
+	ElapsedTimeSeconds *int64     `json:"elapsedTimeSeconds,omitempty"`
 }

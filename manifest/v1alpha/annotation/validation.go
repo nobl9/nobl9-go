@@ -59,10 +59,14 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 			WithName("objectiveName").
 			OmitEmpty().
 			Rules(validationV1Alpha.StringName()),
+		// The description length is bounded for every annotation. A Replay annotation may leave it
+		// empty (the description is the user's optional note); every other category still requires a
+		// description, which descriptionRequiredForNonReplayValidation enforces.
 		govy.For(func(s Spec) string { return s.Description }).
 			WithName("description").
-			Required().
 			Rules(rules.StringLength(0, specDescriptionMaxLength)),
+		govy.For(govy.GetSelf[Spec]()).
+			Include(descriptionRequiredForNonReplayValidation),
 	}
 	if includeUserCategoryRules {
 		properties = append(
@@ -75,6 +79,18 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 	}
 	return govy.New[Spec](properties...)
 }
+
+// descriptionRequiredForNonReplayValidation requires a non-empty description for every annotation
+// category except Replay. A Replay annotation's description is an optional user note, so it may be
+// empty; the length bound in getSpecValidation still applies to all categories.
+var descriptionRequiredForNonReplayValidation = govy.New[Spec](
+	govy.For(func(s Spec) string { return s.Description }).
+		WithName("description").
+		Required(),
+).When(
+	func(s Spec) bool { return s.Category != CategoryReplay },
+	govy.WhenDescription("category is not Replay"),
+)
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
 
