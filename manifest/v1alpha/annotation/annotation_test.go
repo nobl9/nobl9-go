@@ -112,7 +112,7 @@ func TestStatus_ReplayFieldsSerialization(t *testing.T) {
 	})
 }
 
-// decodeStatus unmarshals a marshaled Annotation and returns its status object.
+// decodeStatus reads a JSON-encoded Annotation and returns its status object.
 func decodeStatus(t *testing.T, data []byte) map[string]any {
 	t.Helper()
 	var decoded map[string]any
