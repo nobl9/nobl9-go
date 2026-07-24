@@ -46,8 +46,11 @@ type Spec struct {
 	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
 	// Replay holds facts about the Replay run that created this annotation.
 	// Set only on Replay-generated annotations; absent otherwise. The Nobl9
-	// platform computes and owns these facts, so the field is tagged computed:
-	// GET returns it, and the sanitizer strips it before an Apply.
+	// platform computes and owns these facts, so the field is tagged computed
+	// and GET returns it. Applying an object that still carries the field is
+	// harmless, because the platform never derives the stored facts from a
+	// request. To drop it from the payload anyway, call
+	// sdk.RemoveComputedFieldsFromObjects yourself; Apply does not call it.
 	Replay *ReplayFacts `json:"replay,omitempty" nobl9:"computed"`
 }
 
