@@ -151,8 +151,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
+			Prop:            "spec.releaseChannel",
+			Code:            errCodeUnsupportedReleaseChannel,
+			ContainsMessage: "must be one of [stable, beta]",
 		})
 	})
 	t.Run("data source type using unsupported release channel", func(t *testing.T) {
@@ -167,6 +168,28 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
 		direct := validDirect(v1alpha.Honeycomb)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("ClickHouse requires beta", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			0, // unset must not silently pass as stable
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelAlpha,
+		} {
+			direct := validDirect(v1alpha.ClickHouse)
+			direct.Spec.ReleaseChannel = rc
+			err := validate(direct)
+			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+				Prop:            "spec.releaseChannel",
+				Code:            errCodeUnsupportedReleaseChannel,
+				ContainsMessage: "must be 'beta' for ClickHouse",
+			})
+		}
+	})
+	t.Run("ClickHouse beta passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
@@ -1146,6 +1169,50 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_ClickHouse(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		// Password is not required: a real value, an empty value (for the
+		// legit empty-password 'default' user) and the hidden placeholder
+		// (edit-without-retype) all must validate.
+		for name, direct := range map[string]Direct{
+			"with password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				return d
+			}(),
+			"empty password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				d.Spec.ClickHouse.Password = ""
+				return d
+			}(),
+			"hidden password": func() Direct {
+				d := validDirect(v1alpha.ClickHouse)
+				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				d.Spec.ClickHouse.Password = v1alpha.HiddenValue
+				return d
+			}(),
+		} {
+			t.Run(name, func(t *testing.T) {
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
+	t.Run("required credentials", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.ClickHouse.Username = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.username",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+}
+
 func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
@@ -1287,6 +1354,13 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 			Dash0: &Dash0Config{
 				URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 				AuthToken: "secret",
+			},
+		},
+		v1alpha.ClickHouse: {
+			ClickHouse: &ClickHouseConfig{
+				URL:      "https://clickhouse.example.com:8443",
+				Username: "readonly_slo",
+				Password: "[secret]",
 			},
 		},
 	}
