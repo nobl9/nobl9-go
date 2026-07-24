@@ -19,18 +19,21 @@ type getAnnotationModel struct {
 	Category       v1alphaAnnotation.Category `json:"category"`
 	Labels         v1alpha.Labels             `json:"labels"`
 	ExternalUserID string                     `json:"author"`
+	// Replay is the platform-computed Replay-run facts. The transport carries
+	// them as one optional root object; the converter places them into
+	// Spec.Replay, the public manifest home.
+	Replay *getAnnotationModelReplay `json:"replay,omitempty"`
 }
 
 type getAnnotationModelStatus struct {
-	UpdatedAt time.Time                 `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
-	IsSystem  bool                      `json:"isSystem" example:"false"`
-	Replay    *getAnnotationModelReplay `json:"replay,omitempty"`
+	UpdatedAt time.Time `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
+	IsSystem  bool      `json:"isSystem" example:"false"`
 }
 
 type getAnnotationModelReplay struct {
-	PeriodStart        *time.Time `json:"periodStart,omitempty"`
-	PeriodEnd          *time.Time `json:"periodEnd,omitempty"`
-	ElapsedTimeSeconds *int64     `json:"elapsedTimeSeconds,omitempty"`
+	PeriodStart        time.Time `json:"periodStart"`
+	PeriodEnd          time.Time `json:"periodEnd"`
+	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
 }
 
 func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Annotation {
@@ -52,16 +55,16 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 	if resp.EndTime != nil {
 		v1alphaModel.Spec.EndTime = *resp.EndTime
 	}
+	if resp.Replay != nil {
+		v1alphaModel.Spec.Replay = &v1alphaAnnotation.ReplayFacts{
+			PeriodStart:        resp.Replay.PeriodStart,
+			PeriodEnd:          resp.Replay.PeriodEnd,
+			ElapsedTimeSeconds: resp.Replay.ElapsedTimeSeconds,
+		}
+	}
 	v1alphaModel.Status = &v1alphaAnnotation.Status{
 		UpdatedAt: resp.Status.UpdatedAt.Format(time.RFC3339),
 		IsSystem:  resp.Status.IsSystem,
-	}
-	if resp.Status.Replay != nil {
-		v1alphaModel.Status.Replay = &v1alphaAnnotation.ReplayStatus{
-			PeriodStart:        resp.Status.Replay.PeriodStart,
-			PeriodEnd:          resp.Status.Replay.PeriodEnd,
-			ElapsedTimeSeconds: resp.Status.Replay.ElapsedTimeSeconds,
-		}
 	}
 	return v1alphaModel
 }

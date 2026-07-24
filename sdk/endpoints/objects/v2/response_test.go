@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetAnnotationsModelToV1alpha_ReplayStatusFields(t *testing.T) {
+func TestGetAnnotationsModelToV1alpha_ReplayFacts(t *testing.T) {
 	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
 
-	t.Run("copies the Replay block when set", func(t *testing.T) {
+	t.Run("maps the root replay object into spec.replay when set", func(t *testing.T) {
 		resp := getAnnotationModel{
 			Name:    "annotation",
 			Project: "project",
@@ -20,27 +20,41 @@ func TestGetAnnotationsModelToV1alpha_ReplayStatusFields(t *testing.T) {
 			Status: getAnnotationModelStatus{
 				UpdatedAt: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
 				IsSystem:  true,
-				Replay: &getAnnotationModelReplay{
-					PeriodStart:        &replayStart,
-					PeriodEnd:          &replayEnd,
-					ElapsedTimeSeconds: ptr(int64(3600)),
-				},
+			},
+			Replay: &getAnnotationModelReplay{
+				PeriodStart:        replayStart,
+				PeriodEnd:          replayEnd,
+				ElapsedTimeSeconds: ptr(int64(3600)),
 			},
 		}
 
 		result := getAnnotationsModelToV1alpha(resp)
 
-		require.NotNil(t, result.Status)
-		require.NotNil(t, result.Status.Replay)
-		require.NotNil(t, result.Status.Replay.PeriodStart)
-		require.NotNil(t, result.Status.Replay.PeriodEnd)
-		require.NotNil(t, result.Status.Replay.ElapsedTimeSeconds)
-		assert.Equal(t, replayStart, *result.Status.Replay.PeriodStart)
-		assert.Equal(t, replayEnd, *result.Status.Replay.PeriodEnd)
-		assert.Equal(t, int64(3600), *result.Status.Replay.ElapsedTimeSeconds)
+		require.NotNil(t, result.Spec.Replay)
+		assert.Equal(t, replayStart, result.Spec.Replay.PeriodStart)
+		assert.Equal(t, replayEnd, result.Spec.Replay.PeriodEnd)
+		require.NotNil(t, result.Spec.Replay.ElapsedTimeSeconds)
+		assert.Equal(t, int64(3600), *result.Spec.Replay.ElapsedTimeSeconds)
 	})
 
-	t.Run("leaves the Replay block nil when absent", func(t *testing.T) {
+	t.Run("omits elapsed time when the transport leaves it absent", func(t *testing.T) {
+		resp := getAnnotationModel{
+			Name:    "annotation",
+			Project: "project",
+			SloName: "my-slo",
+			Replay: &getAnnotationModelReplay{
+				PeriodStart: replayStart,
+				PeriodEnd:   replayEnd,
+			},
+		}
+
+		result := getAnnotationsModelToV1alpha(resp)
+
+		require.NotNil(t, result.Spec.Replay)
+		assert.Nil(t, result.Spec.Replay.ElapsedTimeSeconds)
+	})
+
+	t.Run("leaves spec.replay nil when the transport omits the replay object", func(t *testing.T) {
 		resp := getAnnotationModel{
 			Name:    "annotation",
 			Project: "project",
@@ -53,8 +67,7 @@ func TestGetAnnotationsModelToV1alpha_ReplayStatusFields(t *testing.T) {
 
 		result := getAnnotationsModelToV1alpha(resp)
 
-		require.NotNil(t, result.Status)
-		assert.Nil(t, result.Status.Replay)
+		assert.Nil(t, result.Spec.Replay)
 	})
 }
 
