@@ -29,7 +29,7 @@ type API interface {
 		matches []string,
 		startTime, endTime time.Time,
 		opts ...promv1.Option,
-	) ([]string, promv1.Warnings, error)
+	) (model.LabelNames, promv1.Warnings, error)
 	LabelValues(
 		ctx context.Context,
 		label string,
@@ -70,10 +70,14 @@ func (e endpoints) QueryRange(ctx context.Context, request QueryRangeRequest) (m
 			End:   request.End,
 			Step:  request.Step,
 		},
-		queryRangeOptions(request)...)
+		queryRangeOptions(request)...,
+	)
 }
 
-func (e endpoints) LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error) {
+func (e endpoints) LabelNames(
+	ctx context.Context,
+	request LabelNamesRequest,
+) (model.LabelNames, promv1.Warnings, error) {
 	api, err := e.api(ctx)
 	if err != nil {
 		return nil, nil, err
@@ -95,7 +99,8 @@ func (e endpoints) LabelValues(
 		request.Matches,
 		time.Time{},
 		time.Time{},
-		limitOption(request.Limit)...)
+		limitOption(request.Limit)...,
+	)
 }
 
 func (e endpoints) Metadata(ctx context.Context, request MetadataRequest) (map[string][]promv1.Metadata, error) {
@@ -106,7 +111,8 @@ func (e endpoints) Metadata(ctx context.Context, request MetadataRequest) (map[s
 	return api.Metadata(
 		ctx,
 		request.Metric,
-		strconv.Itoa(int(request.Limit)))
+		strconv.Itoa(int(request.Limit)),
+	)
 }
 
 func (e endpoints) Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error) {
