@@ -1174,26 +1174,15 @@ func TestValidateSpec_ClickHouse(t *testing.T) {
 		// Password is not required: a real value, an empty value (for the
 		// legit empty-password 'default' user) and the hidden placeholder
 		// (edit-without-retype) all must validate.
-		for name, direct := range map[string]Direct{
-			"with password": func() Direct {
-				d := validDirect(v1alpha.ClickHouse)
-				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-				return d
-			}(),
-			"empty password": func() Direct {
-				d := validDirect(v1alpha.ClickHouse)
-				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-				d.Spec.ClickHouse.Password = ""
-				return d
-			}(),
-			"hidden password": func() Direct {
-				d := validDirect(v1alpha.ClickHouse)
-				d.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-				d.Spec.ClickHouse.Password = v1alpha.HiddenValue
-				return d
-			}(),
+		for name, password := range map[string]string{
+			"with password":   "secret",
+			"empty password":  "",
+			"hidden password": v1alpha.HiddenValue,
 		} {
 			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.ClickHouse)
+				direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				direct.Spec.ClickHouse.Password = password
 				err := validate(direct)
 				testutils.AssertNoError(t, direct, err)
 			})
