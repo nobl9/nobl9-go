@@ -78,7 +78,6 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 }
 
 // Replay descriptions are optional user notes; other categories require a description.
-// All categories retain the length limit.
 var descriptionRequiredForNonReplayValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").

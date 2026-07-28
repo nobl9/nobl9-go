@@ -16,6 +16,10 @@ import (
 // The original slice is modified to save computing, If you wish to prevent that,
 // copy it first before passing it to this function.
 //
+// A pointer object is stripped in place. A value object is wrapped in a new pointer which
+// is returned in the result slice, leaving the caller's original value untouched, so read
+// the sanitized object from the returned slice rather than from the value you passed in.
+//
 // The function CANNOT handle [github.com/nobl9/nobl9-go/v1alpha.GenericObject]
 func RemoveComputedFieldsFromObjects(objects []manifest.Object) ([]manifest.Object, error) {
 	for i := range objects {

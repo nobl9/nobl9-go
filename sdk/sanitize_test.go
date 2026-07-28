@@ -108,11 +108,6 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 		assert.Equal(t, v1alphaAnnotation.CategoryReplay, got.Spec.Category)
 	}
 
-	// RemoveComputedFieldsFromObjects mutates the objects it is given. For a pointer
-	// object it strips the tagged fields in place. For a value object it wraps the value
-	// in a new pointer and returns that pointer in the result slice, leaving the caller's
-	// original value untouched; callers must therefore read the sanitized object from the
-	// returned slice, not from the value they passed in.
 	t.Run("pointer object is stripped in place", func(t *testing.T) {
 		a := newAnnotation()
 		objects, err := RemoveComputedFieldsFromObjects(objectsOf(&a))

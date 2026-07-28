@@ -19,8 +19,7 @@ type getAnnotationModel struct {
 	Category       v1alphaAnnotation.Category `json:"category"`
 	Labels         v1alpha.Labels             `json:"labels"`
 	ExternalUserID string                     `json:"author"`
-	// Replay contains platform-computed facts received as an optional root object and exposed as Spec.Replay.
-	Replay *getAnnotationModelReplay `json:"replay,omitempty"`
+	Replay         *getAnnotationModelReplay  `json:"replay,omitempty"`
 }
 
 type getAnnotationModelStatus struct {
