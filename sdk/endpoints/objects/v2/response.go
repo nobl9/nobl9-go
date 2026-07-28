@@ -19,9 +19,7 @@ type getAnnotationModel struct {
 	Category       v1alphaAnnotation.Category `json:"category"`
 	Labels         v1alpha.Labels             `json:"labels"`
 	ExternalUserID string                     `json:"author"`
-	// Replay is the platform-computed Replay-run facts. The transport carries
-	// them as one optional root object; the converter places them into
-	// Spec.Replay, the public manifest home.
+	// Replay contains platform-computed facts received as an optional root object and exposed as Spec.Replay.
 	Replay *getAnnotationModelReplay `json:"replay,omitempty"`
 }
 

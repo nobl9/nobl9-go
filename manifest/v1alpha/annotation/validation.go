@@ -59,9 +59,6 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 			WithName("objectiveName").
 			OmitEmpty().
 			Rules(validationV1Alpha.StringName()),
-		// The description length is bounded for every annotation. A Replay annotation may leave it
-		// empty (the description is the user's optional note); every other category still requires a
-		// description, which descriptionRequiredForNonReplayValidation enforces.
 		govy.For(func(s Spec) string { return s.Description }).
 			WithName("description").
 			Rules(rules.StringLength(0, specDescriptionMaxLength)),
@@ -80,9 +77,8 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 	return govy.New[Spec](properties...)
 }
 
-// descriptionRequiredForNonReplayValidation requires a non-empty description for every annotation
-// category except Replay. A Replay annotation's description is an optional user note, so it may be
-// empty; the length bound in getSpecValidation still applies to all categories.
+// Replay descriptions are optional user notes; other categories require a description.
+// All categories retain the length limit.
 var descriptionRequiredForNonReplayValidation = govy.New[Spec](
 	govy.For(func(s Spec) string { return s.Description }).
 		WithName("description").

@@ -119,7 +119,6 @@ func TestSpec_ReplayFactsSerialization(t *testing.T) {
 	})
 }
 
-// decodeSpec reads a JSON-encoded Annotation and returns its spec object.
 func decodeSpec(t *testing.T, data []byte) map[string]any {
 	t.Helper()
 	var decoded map[string]any
@@ -129,7 +128,6 @@ func decodeSpec(t *testing.T, data []byte) map[string]any {
 	return spec
 }
 
-// decodeReplay returns the spec.replay object from a marshaled Annotation.
 func decodeReplay(t *testing.T, data []byte) map[string]any {
 	t.Helper()
 	replay, ok := decodeSpec(t, data)["replay"].(map[string]any)

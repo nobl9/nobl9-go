@@ -152,7 +152,6 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 	})
 }
 
-// objectsOf collects objects into a slice. Passing the objects through this helper
-// keeps the slice length opaque at the call site, which avoids a gosec G602
-// false positive on the range loop inside RemoveComputedFieldsFromObjects.
+// objectsOf keeps the slice length opaque at the call site to avoid a gosec G602 false positive
+// in RemoveComputedFieldsFromObjects.
 func objectsOf(objects ...manifest.Object) []manifest.Object { return objects }
