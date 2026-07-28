@@ -70,13 +70,14 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	"github.com/nobl9/nobl9-go/sdk"
+	objectsV1 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v1"
 	objectsV2 "github.com/nobl9/nobl9-go/sdk/endpoints/objects/v2"
 )
 
 func main() {
 	ctx := context.Background()
 
-	// Create client.
+	// Create the client.
 	client, err := sdk.DefaultClient()
 	if err != nil {
 		log.Fatalf("failed to create sdk client, err: %v", err)
