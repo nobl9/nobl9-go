@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetAnnotationsModelToV1alpha_ReplayFacts(t *testing.T) {
+func TestGetAnnotationsModelToV1alpha_Replay(t *testing.T) {
 	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
 

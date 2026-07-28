@@ -53,7 +53,7 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 		v1alphaModel.Spec.EndTime = *resp.EndTime
 	}
 	if resp.Replay != nil {
-		v1alphaModel.Spec.Replay = &v1alphaAnnotation.ReplayFacts{
+		v1alphaModel.Spec.Replay = &v1alphaAnnotation.Replay{
 			PeriodStart:        resp.Replay.PeriodStart,
 			PeriodEnd:          resp.Replay.PeriodEnd,
 			ElapsedTimeSeconds: resp.Replay.ElapsedTimeSeconds,

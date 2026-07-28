@@ -83,7 +83,7 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 				EndTime:     replayEnd,
 				Category:    v1alphaAnnotation.CategoryReplay,
 				CreatedBy:   "user-id",
-				Replay: &v1alphaAnnotation.ReplayFacts{
+				Replay: &v1alphaAnnotation.Replay{
 					PeriodStart:        replayStart,
 					PeriodEnd:          replayEnd,
 					ElapsedTimeSeconds: &elapsed,

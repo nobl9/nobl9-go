@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSpec_ReplayFactsSerialization(t *testing.T) {
+func TestSpec_ReplaySerialization(t *testing.T) {
 	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
 
 	t.Run("all Replay facts present are marshaled under spec.replay", func(t *testing.T) {
 		a := validAnnotation()
 		a.Spec.Category = CategoryReplay
-		a.Spec.Replay = &ReplayFacts{
+		a.Spec.Replay = &Replay{
 			PeriodStart:        replayStart,
 			PeriodEnd:          replayEnd,
 			ElapsedTimeSeconds: ptr(int64(3600)),
@@ -34,7 +34,7 @@ func TestSpec_ReplayFactsSerialization(t *testing.T) {
 	t.Run("spec.replay is the only manifest home for Replay facts", func(t *testing.T) {
 		a := validAnnotation()
 		a.Spec.Category = CategoryReplay
-		a.Spec.Replay = &ReplayFacts{
+		a.Spec.Replay = &Replay{
 			PeriodStart:        replayStart,
 			PeriodEnd:          replayEnd,
 			ElapsedTimeSeconds: ptr(int64(3600)),
@@ -82,7 +82,7 @@ func TestSpec_ReplayFactsSerialization(t *testing.T) {
 	t.Run("replay block with only the period bounds omits elapsedTimeSeconds", func(t *testing.T) {
 		a := validAnnotation()
 		a.Spec.Category = CategoryReplay
-		a.Spec.Replay = &ReplayFacts{
+		a.Spec.Replay = &Replay{
 			PeriodStart: replayStart,
 			PeriodEnd:   replayEnd,
 		}
@@ -100,7 +100,7 @@ func TestSpec_ReplayFactsSerialization(t *testing.T) {
 	t.Run("marshal-unmarshal-marshal round-trip is stable", func(t *testing.T) {
 		a := validAnnotation()
 		a.Spec.Category = CategoryReplay
-		a.Spec.Replay = &ReplayFacts{
+		a.Spec.Replay = &Replay{
 			PeriodStart:        replayStart,
 			PeriodEnd:          replayEnd,
 			ElapsedTimeSeconds: ptr(int64(3600)),

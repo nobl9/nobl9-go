@@ -255,8 +255,8 @@ func TestSpec_Category(t *testing.T) {
 func TestValidate_ComputedFields_NeverValidated(t *testing.T) {
 	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
 	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
-	replayFacts := func() *ReplayFacts {
-		return &ReplayFacts{
+	replayFacts := func() *Replay {
+		return &Replay{
 			PeriodStart:        replayStart,
 			PeriodEnd:          replayEnd,
 			ElapsedTimeSeconds: ptr(int64(3600)),
@@ -280,7 +280,7 @@ func TestValidate_ComputedFields_NeverValidated(t *testing.T) {
 	t.Run("computed spec.replay is never validated: reversed period on a non-Replay category passes", func(t *testing.T) {
 		annotation := validAnnotation()
 		annotation.Spec.Category = CategoryComment
-		annotation.Spec.Replay = &ReplayFacts{
+		annotation.Spec.Replay = &Replay{
 			PeriodStart: replayEnd,
 			PeriodEnd:   replayStart,
 		}
