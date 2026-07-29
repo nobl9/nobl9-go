@@ -187,7 +187,11 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Empty(t, warnings)
-			assert.Equal(t, tt.expected, labelNames)
+			expectedLabelNames := make(model.LabelNames, 0, len(tt.expected))
+			for _, name := range tt.expected {
+				expectedLabelNames = append(expectedLabelNames, model.LabelName(name))
+			}
+			assert.Equal(t, expectedLabelNames, labelNames)
 		})
 	}
 }
