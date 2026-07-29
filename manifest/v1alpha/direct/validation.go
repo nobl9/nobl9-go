@@ -471,6 +471,14 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		)
 	}
 
+	if typ == v1alpha.Elasticsearch &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for Elasticsearch"),
+		)
+	}
+
 	return nil
 }).WithErrorCode(errCodeUnsupportedReleaseChannel)
 

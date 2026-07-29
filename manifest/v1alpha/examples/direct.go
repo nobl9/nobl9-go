@@ -49,6 +49,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.SplunkObservability,
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
+	v1alpha.Elasticsearch,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
