@@ -7,7 +7,7 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
-// ClickHouseMetric represents metric from ClickHouse.
+// ClickHouseMetric defines a parameterized SQL query for a ClickHouse SLI.
 type ClickHouseMetric struct {
 	Query      string            `json:"query"`
 	Parameters map[string]string `json:"parameters,omitempty"`

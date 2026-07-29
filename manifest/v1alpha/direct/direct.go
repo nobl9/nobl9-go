@@ -301,7 +301,7 @@ type Dash0Config struct {
 	Step      int    `json:"step,omitempty"`
 }
 
-// ClickHouseConfig represents content of ClickHouse Configuration typical for Direct Object.
+// ClickHouseConfig configures a Direct connection to ClickHouse.
 type ClickHouseConfig struct {
 	URL      string `json:"url"`
 	Database string `json:"database,omitempty"`

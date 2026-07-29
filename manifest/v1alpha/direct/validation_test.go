@@ -1171,9 +1171,7 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 
 func TestValidateSpec_ClickHouse(t *testing.T) {
 	t.Run("passes", func(t *testing.T) {
-		// Password is not required: a real value, an empty value (for the
-		// legit empty-password 'default' user) and the hidden placeholder
-		// (edit-without-retype) all must validate.
+		// Empty passwords and hidden edit placeholders are valid ClickHouse Direct credentials.
 		for name, password := range map[string]string{
 			"with password":   "secret",
 			"empty password":  "",
