@@ -10,7 +10,6 @@ type ReplayWithStatus struct {
 }
 
 // ReplayStatus describes the current state of a replay.
-// Status is a fine-grained platform status and must be treated as an open set.
 type ReplayStatus struct {
 	Source       ReplaySource             `json:"source"`
 	Status       string                   `json:"status"`

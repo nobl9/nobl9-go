@@ -96,6 +96,7 @@ func Test_Replay_V1(t *testing.T) {
 	assert.Equal(t, projectName, status.Project)
 	assert.Equal(t, sloName, status.SLO)
 	assert.Equal(t, replayV1.ReplaySourceUser, status.Status.Source)
+	assert.Contains(t, replayV1.ReplayListStatusValues(), replayV1.ReplayListStatus(status.Status.Status))
 }
 
 func cleanupReplayV1(t *testing.T, projectName, sloName string) {
