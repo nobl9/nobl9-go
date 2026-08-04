@@ -257,14 +257,6 @@ var (
 	)
 	elasticsearchValidation = govy.New[ElasticsearchConfig](
 		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
-		govy.For(func(e ElasticsearchConfig) string { return e.APIKey }).
-			WithName("apiKey").
-			HideValue().
-			When(
-				func(e ElasticsearchConfig) bool { return e.APIKey != v1alpha.HiddenValue },
-				govy.WhenDescriptionf("is equal to '%s'", v1alpha.HiddenValue),
-			).
-			Required(),
 	)
 )
 
