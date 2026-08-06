@@ -51,11 +51,21 @@ func Test_Replay_V1(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
 
 	availability, err := client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
+		Project:       projectName,
+		SLOName:       sloName,
+		Type:          replayV1.ReplayTypeReimportAndRecalculation,
+		DurationUnit:  replayV1.DurationUnitHour,
+		DurationValue: 1,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, availability)
+	require.True(t, availability.Available, string(availability.Reason))
+
+	availability, err = client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
 		Project:           projectName,
 		DataSourceProject: direct.GetProject(),
 		DataSource:        direct.GetName(),
 		DataSourceKind:    direct.GetKind().String(),
-		SLOName:           sloName,
 		Type:              replayV1.ReplayTypeReimportAndRecalculation,
 		DurationUnit:      replayV1.DurationUnitHour,
 		DurationValue:     1,
@@ -72,26 +82,47 @@ func Test_Replay_V1(t *testing.T) {
 			Value: 1,
 		},
 	}
-	err = client.Replay().V1().Run(t.Context(), runRequest)
-	require.NoError(t, err, "failed to run replay")
+	recalculationRequest := runRequest
+	recalculationRequest.ReplayType = replayV1.ReplayTypeRecalculation
+	err = client.Replay().V1().Run(t.Context(), recalculationRequest)
+	require.NoError(t, err, "failed to run blocking recalculation")
 	t.Cleanup(func() { cleanupReplayV1(t, projectName, sloName) })
 
-	listItem, err := tryExecuteRequest(t, func() (replayV1.ReplayListItem, error) {
-		list, err := client.Replay().V1().List(t.Context())
-		if err != nil {
-			return replayV1.ReplayListItem{}, err
+	require.EventuallyWithT(t, func(collect *assert.CollectT) {
+		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
+			Project: projectName,
+			SLO:     sloName,
+		})
+		if !assert.NoError(collect, err) || !assert.NotNil(collect, status) {
+			return
 		}
-		item, found := findReplayListItem(list, projectName, sloName)
-		if !found {
-			return replayV1.ReplayListItem{}, errors.New("replay is not listed")
-		}
-		if item.CreatedAt == "" {
-			return replayV1.ReplayListItem{}, errors.New("replay createdAt is empty")
-		}
-		return item, nil
+		assert.Equal(collect, replayV1.ReplayListStatusInProgress, status.Status.Status)
+	}, 45*time.Second, 100*time.Millisecond)
+
+	err = client.Replay().V1().Run(t.Context(), recalculationRequest)
+	require.NoError(t, err, "failed to queue recalculation runway")
+
+	err = client.Replay().V1().Run(t.Context(), runRequest)
+	require.NoError(t, err, "failed to queue replay")
+
+	list, err = client.Replay().V1().List(t.Context())
+	require.NoError(t, err)
+	listItem, found := findReplayListItem(list, projectName, sloName)
+	require.True(t, found, "queued replay is not listed")
+	require.Equal(t, replayV1.ReplayListStatusQueued, listItem.Status)
+	_, err = time.Parse(time.RFC3339, listItem.CreatedAt)
+	require.NoError(t, err)
+
+	err = client.Replay().V1().Delete(t.Context(), replayV1.DeleteRequest{
+		Project: projectName,
+		SLO:     sloName,
 	})
 	require.NoError(t, err)
-	require.NotEmpty(t, listItem.CreatedAt)
+
+	list, err = client.Replay().V1().List(t.Context())
+	require.NoError(t, err)
+	_, found = findReplayListItem(list, projectName, sloName)
+	require.False(t, found, "deleted replay is still listed")
 
 	status, err := tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
@@ -113,7 +144,7 @@ func Test_Replay_V1(t *testing.T) {
 	assert.Equal(t, projectName, status.Project)
 	assert.Equal(t, sloName, status.SLO)
 	assert.Equal(t, replayV1.ReplaySourceUser, status.Status.Source)
-	assert.Contains(t, replayV1.ReplayListStatusValues(), replayV1.ReplayListStatus(status.Status.Status))
+	assert.Contains(t, replayV1.ReplayListStatusValues(), status.Status.Status)
 }
 
 func cleanupReplayV1(t *testing.T, projectName, sloName string) {
@@ -207,9 +238,11 @@ func tryCancelReplayV1(ctx context.Context, projectName, sloName string) (bool, 
 	return false, err
 }
 
-func isTerminalReplayStatus(status string) bool {
+func isTerminalReplayStatus(status replayV1.ReplayListStatus) bool {
 	switch status {
-	case "completed", "failed", "canceled":
+	case replayV1.ReplayListStatusCompleted,
+		replayV1.ReplayListStatusFailed,
+		replayV1.ReplayListStatusCanceled:
 		return true
 	default:
 		return false

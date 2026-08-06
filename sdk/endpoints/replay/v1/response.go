@@ -2,7 +2,7 @@ package v1
 
 import v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 
-// ReplayWithStatus identifies a replay and includes its current detailed status.
+// ReplayWithStatus identifies a replay and includes its current status.
 type ReplayWithStatus struct {
 	Project string       `json:"project"`
 	SLO     string       `json:"slo"`
@@ -12,7 +12,7 @@ type ReplayWithStatus struct {
 // ReplayStatus describes the current state of a replay.
 type ReplayStatus struct {
 	Source       ReplaySource             `json:"source"`
-	Status       string                   `json:"status"`
+	Status       ReplayListStatus         `json:"status"`
 	Cancellation ReplayCancellationStatus `json:"cancellation"`
 	CanceledBy   string                   `json:"canceledBy,omitempty"`
 	TriggeredBy  string                   `json:"triggeredBy"`
@@ -25,7 +25,7 @@ type ReplayStatus struct {
 // ToProcessStatus converts ReplayStatus to the SLO manifest process status.
 func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 	return v1alphaSLO.ProcessStatus{
-		Status:       s.Status,
+		Status:       string(s.Status),
 		Cancellation: string(s.Cancellation),
 		CanceledBy:   s.CanceledBy,
 		TriggeredBy:  s.TriggeredBy,

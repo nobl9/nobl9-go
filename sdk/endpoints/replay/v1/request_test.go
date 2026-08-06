@@ -12,6 +12,8 @@ import (
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
 func TestRunRequestDatesValidation(t *testing.T) {
@@ -301,6 +303,36 @@ func TestRunRequestDatesValidation(t *testing.T) {
 			errorCode: rules.ErrorCodeSliceMinLength,
 		},
 		{
+			name: "source objective is required",
+			replay: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: Duration{Unit: DurationUnitDay, Value: 30},
+				SourceSLO: &SourceSLO{
+					Project:       "project",
+					SLO:           "slo",
+					ObjectivesMap: []SourceSLOItem{{Target: "objective-1"}},
+				},
+			},
+			isValid:   false,
+			errorCode: rules.ErrorCodeRequired,
+		},
+		{
+			name: "target objective is required",
+			replay: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: Duration{Unit: DurationUnitDay, Value: 30},
+				SourceSLO: &SourceSLO{
+					Project:       "project",
+					SLO:           "slo",
+					ObjectivesMap: []SourceSLOItem{{Source: "objective-1"}},
+				},
+			},
+			isValid:   false,
+			errorCode: rules.ErrorCodeRequired,
+		},
+		{
 			name: "not empty objectives map when replaying source slo",
 			replay: RunRequest{
 				Project: "project",
@@ -560,6 +592,163 @@ func TestGetStatusRequestValidation(t *testing.T) {
 	require.Error(t, GetStatusRequest{Project: "project"}.Validate())
 }
 
+func TestReplaySelectorValidation(t *testing.T) {
+	t.Parallel()
+
+	validDuration := Duration{Unit: DurationUnitHour, Value: 1}
+	tooLong := strings.Repeat("a", validationV1Alpha.NameMaximumLength+1)
+	tests := []struct {
+		name         string
+		propertyPath string
+		request      interface{ Validate() error }
+	}{
+		{
+			name:         "uppercase run project",
+			propertyPath: "project",
+			request:      RunRequest{Project: "Project", SLO: "slo", Duration: validDuration},
+		},
+		{
+			name:         "slash in run SLO",
+			propertyPath: "slo",
+			request:      RunRequest{Project: "project", SLO: "team/slo", Duration: validDuration},
+		},
+		{
+			name:         "overlength source SLO project",
+			propertyPath: "sourceSLO.project",
+			request: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: validDuration,
+				SourceSLO: &SourceSLO{
+					Project:       tooLong,
+					SLO:           "source-slo",
+					ObjectivesMap: []SourceSLOItem{{Source: "source", Target: "target"}},
+				},
+			},
+		},
+		{
+			name:         "slash in source SLO",
+			propertyPath: "sourceSLO.slo",
+			request: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: validDuration,
+				SourceSLO: &SourceSLO{
+					Project:       "source-project",
+					SLO:           "team/source-slo",
+					ObjectivesMap: []SourceSLOItem{{Source: "source", Target: "target"}},
+				},
+			},
+		},
+		{
+			name:         "uppercase source objective",
+			propertyPath: "sourceSLO.objectivesMap[0].source",
+			request: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: validDuration,
+				SourceSLO: &SourceSLO{
+					Project:       "source-project",
+					SLO:           "source-slo",
+					ObjectivesMap: []SourceSLOItem{{Source: "Source", Target: "target"}},
+				},
+			},
+		},
+		{
+			name:         "slash in target objective",
+			propertyPath: "sourceSLO.objectivesMap[0].target",
+			request: RunRequest{
+				Project:  "project",
+				SLO:      "slo",
+				Duration: validDuration,
+				SourceSLO: &SourceSLO{
+					Project:       "source-project",
+					SLO:           "source-slo",
+					ObjectivesMap: []SourceSLOItem{{Source: "source", Target: "team/target"}},
+				},
+			},
+		},
+		{
+			name:         "slash in delete project",
+			propertyPath: "project",
+			request:      DeleteRequest{Project: "team/project", SLO: "slo"},
+		},
+		{
+			name:         "uppercase delete SLO",
+			propertyPath: "slo",
+			request:      DeleteRequest{Project: "project", SLO: "SLO"},
+		},
+		{
+			name:         "slash in cancel project",
+			propertyPath: "project",
+			request:      CancelRequest{Project: "team/project", SLO: "slo"},
+		},
+		{
+			name:         "uppercase cancel SLO",
+			propertyPath: "slo",
+			request:      CancelRequest{Project: "project", SLO: "SLO"},
+		},
+		{
+			name:         "slash in status project",
+			propertyPath: "project",
+			request:      GetStatusRequest{Project: "team/project", SLO: "slo"},
+		},
+		{
+			name:         "uppercase status SLO",
+			propertyPath: "slo",
+			request:      GetStatusRequest{Project: "project", SLO: "SLO"},
+		},
+		{
+			name:         "slash in availability project",
+			propertyPath: "project",
+			request:      GetAvailabilityRequest{Project: "team/project", SLOName: "slo"},
+		},
+		{
+			name:         "overlength availability SLO",
+			propertyPath: "sloName",
+			request:      GetAvailabilityRequest{SLOName: tooLong},
+		},
+		{
+			name:         "uppercase availability data source",
+			propertyPath: "dataSource",
+			request: GetAvailabilityRequest{
+				DataSourceProject: "data-source-project",
+				DataSource:        "DataSource",
+				DataSourceKind:    "Direct",
+			},
+		},
+		{
+			name:         "slash in optional availability data source project",
+			propertyPath: "dataSourceProject",
+			request: GetAvailabilityRequest{
+				SLOName:           "slo",
+				DataSourceProject: "team/project",
+			},
+		},
+		{
+			name:         "uppercase optional availability data source",
+			propertyPath: "dataSource",
+			request: GetAvailabilityRequest{
+				SLOName:    "slo",
+				DataSource: "DataSource",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := tt.request.Validate()
+			require.Error(t, err)
+			govytest.AssertError(t, err, govytest.ExpectedRuleError{
+				PropertyPath: tt.propertyPath,
+				Code:         validationV1Alpha.ErrorCodeStringName,
+			})
+		})
+	}
+}
+
 func TestGetAvailabilityRequestQueryValues(t *testing.T) {
 	t.Parallel()
 
@@ -592,6 +781,7 @@ func TestDuration_Duration(t *testing.T) {
 		name         string
 		duration     Duration
 		wantDuration time.Duration
+		wantErr      error
 	}{
 		{
 			name: "30 minutes",
@@ -624,14 +814,21 @@ func TestDuration_Duration(t *testing.T) {
 				Value: 30,
 			},
 			wantDuration: 0,
+			wantErr:      ErrInvalidDurationUnit,
 		},
 	}
 	for _, tt := range tests {
 		tc := tt
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			duration := tc.duration.Duration()
+			duration, err := tc.duration.Duration()
 			assert.Equal(t, tc.wantDuration, duration)
+			if tc.wantErr == nil {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorIs(t, err, tc.wantErr)
+			assert.Contains(t, err.Error(), "Minute, Hour, Day")
 		})
 	}
 }

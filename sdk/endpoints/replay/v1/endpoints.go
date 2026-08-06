@@ -120,7 +120,7 @@ func (e endpoints) List(ctx context.Context) ([]ReplayListItem, error) {
 	return list, nil
 }
 
-// GetStatus validates params and returns the latest detailed replay status for an SLO.
+// GetStatus validates params and returns the latest replay status for an SLO.
 func (e endpoints) GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error) {
 	if err := params.Validate(); err != nil {
 		return nil, err

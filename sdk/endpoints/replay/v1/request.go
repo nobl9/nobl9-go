@@ -9,9 +9,11 @@ import (
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 )
 
-//go:generate ../../../../bin/go-enum --values --nocomments
+//go:generate ../../../../bin/go-enum --names --values --nocomments
 
 // DurationUnit is the granularity for replay lookback duration in run and availability requests.
 /* ENUM(
@@ -79,7 +81,7 @@ const (
 	ReplayPromQLInGCMNotSupported            = ReplayAvailabilityReasonPromqlInGcmNotSupported
 )
 
-// ReplayListStatus is the coarse status returned by the replay list endpoint.
+// ReplayListStatus is the coarse status returned by replay status and list endpoints.
 /* ENUM(
 unknown
 queued
@@ -170,10 +172,12 @@ var runRequestValidation = govy.New(
 		Rules(rules.OneOf(ReplayTypeValues()...)),
 	govy.For(func(r RunRequest) string { return r.Project }).
 		WithName("project").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r RunRequest) string { return r.SLO }).
 		WithName("slo").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r RunRequest) Duration { return r.Duration }).
 		WithName("duration").
 		When(
@@ -205,37 +209,62 @@ var deleteRequestValidation = govy.New(
 	govy.For(func(r DeleteRequest) string { return r.Project }).
 		WithName("project").
 		When(func(r DeleteRequest) bool { return !r.All }).
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r DeleteRequest) string { return r.SLO }).
 		WithName("slo").
 		When(func(r DeleteRequest) bool { return !r.All }).
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 )
 
 var cancelRequestValidation = govy.New(
 	govy.For(func(r CancelRequest) string { return r.Project }).
 		WithName("project").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r CancelRequest) string { return r.SLO }).
 		WithName("slo").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 )
 
 var getStatusRequestValidation = govy.New(
+	govy.For(func(r GetStatusRequest) string { return r.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r GetStatusRequest) string { return r.SLO }).
 		WithName("slo").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 )
 
 var getAvailabilityRequestValidation = govy.New(
+	govy.For(func(r GetAvailabilityRequest) string { return r.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetAvailabilityRequest) string { return r.SLOName }).
+		WithName("sloName").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
 		WithName("dataSourceProject").
 		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
 		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
+		WithName("dataSourceProject").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r GetAvailabilityRequest) string { return r.DataSource }).
 		WithName("dataSource").
 		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
 		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSource }).
+		WithName("dataSource").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceKind }).
 		WithName("dataSourceKind").
 		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
@@ -268,10 +297,12 @@ var durationValidation = govy.New(
 var sourceSLOValidation = govy.New(
 	govy.For(func(r SourceSLO) string { return r.Project }).
 		WithName("project").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r SourceSLO) string { return r.SLO }).
 		WithName("slo").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.ForSlice(func(r SourceSLO) []SourceSLOItem { return r.ObjectivesMap }).
 		WithName("objectivesMap").
 		Rules(rules.SliceMinLength[[]SourceSLOItem](1)).
@@ -281,10 +312,12 @@ var sourceSLOValidation = govy.New(
 var sourceSLOItemValidation = govy.New(
 	govy.For(func(r SourceSLOItem) string { return r.Source }).
 		WithName("source").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 	govy.For(func(r SourceSLOItem) string { return r.Target }).
 		WithName("target").
-		Required(),
+		Required().
+		Rules(validationV1Alpha.StringName()),
 )
 
 // Validate verifies that the run request is complete and internally consistent.
@@ -340,17 +373,16 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 }
 
 // Duration converts unit and value to [time.Duration].
-// It returns zero when the unit is unsupported.
-func (d Duration) Duration() time.Duration {
+func (d Duration) Duration() (time.Duration, error) {
 	switch d.Unit {
 	case DurationUnitMinute:
-		return time.Duration(d.Value) * time.Minute
+		return time.Duration(d.Value) * time.Minute, nil
 	case DurationUnitHour:
-		return time.Duration(d.Value) * time.Hour
+		return time.Duration(d.Value) * time.Hour, nil
 	case DurationUnitDay:
-		return time.Duration(d.Value) * time.Hour * 24
+		return time.Duration(d.Value) * time.Hour * 24, nil
 	}
-	return 0
+	return 0, ErrInvalidDurationUnit
 }
 
 func isEmpty(duration Duration) bool {

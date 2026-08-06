@@ -8,8 +8,7 @@ package v1
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
+	"strings"
 )
 
 const (
@@ -18,7 +17,20 @@ const (
 	DurationUnitDay    DurationUnit = "Day"
 )
 
-var ErrInvalidDurationUnit = errors.New("not a valid DurationUnit")
+var ErrInvalidDurationUnit = fmt.Errorf("not a valid DurationUnit, try [%s]", strings.Join(_DurationUnitNames, ", "))
+
+var _DurationUnitNames = []string{
+	string(DurationUnitMinute),
+	string(DurationUnitHour),
+	string(DurationUnitDay),
+}
+
+// DurationUnitNames returns a list of possible string values of DurationUnit.
+func DurationUnitNames() []string {
+	tmp := make([]string, len(_DurationUnitNames))
+	copy(tmp, _DurationUnitNames)
+	return tmp
+}
 
 // DurationUnitValues returns a list of the values for DurationUnit
 func DurationUnitValues() []DurationUnit {
@@ -69,7 +81,28 @@ const (
 	ReplayAvailabilityReasonPromqlInGcmNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
 )
 
-var ErrInvalidReplayAvailabilityReason = errors.New("not a valid ReplayAvailabilityReason")
+var ErrInvalidReplayAvailabilityReason = fmt.Errorf("not a valid ReplayAvailabilityReason, try [%s]", strings.Join(_ReplayAvailabilityReasonNames, ", "))
+
+var _ReplayAvailabilityReasonNames = []string{
+	string(ReplayAvailabilityReasonDatasourceTypeInvalid),
+	string(ReplayAvailabilityReasonProjectDoesNotExist),
+	string(ReplayAvailabilityReasonDataSourceDoesNotExist),
+	string(ReplayAvailabilityReasonIntegrationDoesNotSupportReplay),
+	string(ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay),
+	string(ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow),
+	string(ReplayAvailabilityReasonConcurrentReplayRunsLimitExhausted),
+	string(ReplayAvailabilityReasonUnknownAgentVersion),
+	string(ReplayAvailabilityReasonSingleQueryNotSupported),
+	string(ReplayAvailabilityReasonCompositeSloNotSupported),
+	string(ReplayAvailabilityReasonPromqlInGcmNotSupported),
+}
+
+// ReplayAvailabilityReasonNames returns a list of possible string values of ReplayAvailabilityReason.
+func ReplayAvailabilityReasonNames() []string {
+	tmp := make([]string, len(_ReplayAvailabilityReasonNames))
+	copy(tmp, _ReplayAvailabilityReasonNames)
+	return tmp
+}
 
 // ReplayAvailabilityReasonValues returns a list of the values for ReplayAvailabilityReason
 func ReplayAvailabilityReasonValues() []ReplayAvailabilityReason {
@@ -130,7 +163,22 @@ const (
 	ReplayCancellationStatusDone      ReplayCancellationStatus = "done"
 )
 
-var ErrInvalidReplayCancellationStatus = errors.New("not a valid ReplayCancellationStatus")
+var ErrInvalidReplayCancellationStatus = fmt.Errorf("not a valid ReplayCancellationStatus, try [%s]", strings.Join(_ReplayCancellationStatusNames, ", "))
+
+var _ReplayCancellationStatusNames = []string{
+	string(ReplayCancellationStatusPossible),
+	string(ReplayCancellationStatusBlocked),
+	string(ReplayCancellationStatusRequested),
+	string(ReplayCancellationStatusDenied),
+	string(ReplayCancellationStatusDone),
+}
+
+// ReplayCancellationStatusNames returns a list of possible string values of ReplayCancellationStatus.
+func ReplayCancellationStatusNames() []string {
+	tmp := make([]string, len(_ReplayCancellationStatusNames))
+	copy(tmp, _ReplayCancellationStatusNames)
+	return tmp
+}
 
 // ReplayCancellationStatusValues returns a list of the values for ReplayCancellationStatus
 func ReplayCancellationStatusValues() []ReplayCancellationStatus {
@@ -180,7 +228,23 @@ const (
 	ReplayListStatusCanceled   ReplayListStatus = "canceled"
 )
 
-var ErrInvalidReplayListStatus = errors.New("not a valid ReplayListStatus")
+var ErrInvalidReplayListStatus = fmt.Errorf("not a valid ReplayListStatus, try [%s]", strings.Join(_ReplayListStatusNames, ", "))
+
+var _ReplayListStatusNames = []string{
+	string(ReplayListStatusUnknown),
+	string(ReplayListStatusQueued),
+	string(ReplayListStatusInProgress),
+	string(ReplayListStatusCompleted),
+	string(ReplayListStatusFailed),
+	string(ReplayListStatusCanceled),
+}
+
+// ReplayListStatusNames returns a list of possible string values of ReplayListStatus.
+func ReplayListStatusNames() []string {
+	tmp := make([]string, len(_ReplayListStatusNames))
+	copy(tmp, _ReplayListStatusNames)
+	return tmp
+}
 
 // ReplayListStatusValues returns a list of the values for ReplayListStatus
 func ReplayListStatusValues() []ReplayListStatus {
@@ -228,7 +292,19 @@ const (
 	ReplaySourceErrorBudgetAdjustment ReplaySource = "error_budget_adjustment"
 )
 
-var ErrInvalidReplaySource = errors.New("not a valid ReplaySource")
+var ErrInvalidReplaySource = fmt.Errorf("not a valid ReplaySource, try [%s]", strings.Join(_ReplaySourceNames, ", "))
+
+var _ReplaySourceNames = []string{
+	string(ReplaySourceUser),
+	string(ReplaySourceErrorBudgetAdjustment),
+}
+
+// ReplaySourceNames returns a list of possible string values of ReplaySource.
+func ReplaySourceNames() []string {
+	tmp := make([]string, len(_ReplaySourceNames))
+	copy(tmp, _ReplaySourceNames)
+	return tmp
+}
 
 // ReplaySourceValues returns a list of the values for ReplaySource
 func ReplaySourceValues() []ReplaySource {
@@ -268,7 +344,19 @@ const (
 	ReplayTypeRecalculation            ReplayType = "recalculation"
 )
 
-var ErrInvalidReplayType = errors.New("not a valid ReplayType")
+var ErrInvalidReplayType = fmt.Errorf("not a valid ReplayType, try [%s]", strings.Join(_ReplayTypeNames, ", "))
+
+var _ReplayTypeNames = []string{
+	string(ReplayTypeReimportAndRecalculation),
+	string(ReplayTypeRecalculation),
+}
+
+// ReplayTypeNames returns a list of possible string values of ReplayType.
+func ReplayTypeNames() []string {
+	tmp := make([]string, len(_ReplayTypeNames))
+	copy(tmp, _ReplayTypeNames)
+	return tmp
+}
 
 // ReplayTypeValues returns a list of the values for ReplayType
 func ReplayTypeValues() []ReplayType {

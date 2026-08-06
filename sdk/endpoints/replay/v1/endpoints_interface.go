@@ -16,7 +16,7 @@ type Endpoints interface {
 	// List returns queued and in-progress reimport-and-recalculation replays visible
 	// to the current organization.
 	List(ctx context.Context) ([]ReplayListItem, error)
-	// GetStatus validates params and returns the latest detailed replay status for an SLO.
+	// GetStatus validates params and returns the latest replay status for an SLO.
 	GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error)
 	// GetAvailability validates params and reports whether a replay can be started.
 	GetAvailability(ctx context.Context, params GetAvailabilityRequest) (*ReplayAvailability, error)
