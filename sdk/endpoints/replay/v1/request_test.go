@@ -613,7 +613,7 @@ func TestReplaySelectorValidation(t *testing.T) {
 			request:      RunRequest{Project: "project", SLO: "team/slo", Duration: validDuration},
 		},
 		{
-			name:         "overlength source SLO project",
+			name:         "source SLO project is too long",
 			propertyPath: "sourceSLO.project",
 			request: RunRequest{
 				Project:  "project",
@@ -704,7 +704,7 @@ func TestReplaySelectorValidation(t *testing.T) {
 			request:      GetAvailabilityRequest{Project: "team/project", SLOName: "slo"},
 		},
 		{
-			name:         "overlength availability SLO",
+			name:         "availability SLO is too long",
 			propertyPath: "sloName",
 			request:      GetAvailabilityRequest{SLOName: tooLong},
 		},
