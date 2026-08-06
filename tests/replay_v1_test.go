@@ -76,6 +76,23 @@ func Test_Replay_V1(t *testing.T) {
 	require.NoError(t, err, "failed to run replay")
 	t.Cleanup(func() { cleanupReplayV1(t, projectName, sloName) })
 
+	listItem, err := tryExecuteRequest(t, func() (replayV1.ReplayListItem, error) {
+		list, err := client.Replay().V1().List(t.Context())
+		if err != nil {
+			return replayV1.ReplayListItem{}, err
+		}
+		item, found := findReplayListItem(list, projectName, sloName)
+		if !found {
+			return replayV1.ReplayListItem{}, errors.New("replay is not listed")
+		}
+		if item.CreatedAt == "" {
+			return replayV1.ReplayListItem{}, errors.New("replay createdAt is empty")
+		}
+		return item, nil
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, listItem.CreatedAt)
+
 	status, err := tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
 			Project: projectName,
@@ -121,8 +138,7 @@ func cleanupReplayV1(t *testing.T, projectName, sloName string) {
 			SLO:     sloName,
 		})
 		if err != nil {
-			var httpErr *sdk.HTTPError
-			if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusNotFound {
+			if isReplayNotFoundError(err) {
 				return
 			}
 			t.Errorf("failed to inspect replay during cleanup: %v", err)
@@ -166,6 +182,14 @@ func cleanupReplayV1(t *testing.T, projectName, sloName string) {
 		case <-ticker.C:
 		}
 	}
+}
+
+func isReplayNotFoundError(err error) bool {
+	var httpErr *sdk.HTTPError
+	return errors.As(err, &httpErr) &&
+		httpErr.StatusCode == http.StatusBadRequest &&
+		len(httpErr.Errors) == 1 &&
+		httpErr.Errors[0].Title == "time travel not found for selected slo"
 }
 
 func tryCancelReplayV1(ctx context.Context, projectName, sloName string) (bool, error) {

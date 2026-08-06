@@ -9,14 +9,14 @@ import (
 type Endpoints interface {
 	// Run validates params and starts a replay.
 	Run(ctx context.Context, params RunRequest) (err error)
-	// Delete removes queued replay requests selected by params.
+	// Delete validates params and removes queued replay requests selected by them.
 	Delete(ctx context.Context, params DeleteRequest) (err error)
-	// Cancel requests cancellation of the replay selected by params.
+	// Cancel validates params and requests cancellation of the selected replay.
 	Cancel(ctx context.Context, params CancelRequest) (err error)
 	// List returns queued and in-progress reimport-and-recalculation replays visible
 	// to the current organization.
 	List(ctx context.Context) ([]ReplayListItem, error)
-	// GetStatus returns the latest detailed replay status for an SLO.
+	// GetStatus validates params and returns the latest detailed replay status for an SLO.
 	GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error)
 	// GetAvailability validates params and reports whether a replay can be started.
 	GetAvailability(ctx context.Context, params GetAvailabilityRequest) (*ReplayAvailability, error)

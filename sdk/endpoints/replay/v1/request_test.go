@@ -532,6 +532,34 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 	}
 }
 
+func TestDeleteRequestValidation(t *testing.T) {
+	t.Parallel()
+
+	require.NoError(t, DeleteRequest{All: true}.Validate())
+	require.NoError(t, DeleteRequest{Project: "project", SLO: "slo"}.Validate())
+	require.Error(t, DeleteRequest{}.Validate())
+	require.Error(t, DeleteRequest{Project: "project"}.Validate())
+	require.Error(t, DeleteRequest{SLO: "slo"}.Validate())
+}
+
+func TestCancelRequestValidation(t *testing.T) {
+	t.Parallel()
+
+	require.NoError(t, CancelRequest{Project: "project", SLO: "slo"}.Validate())
+	require.Error(t, CancelRequest{}.Validate())
+	require.Error(t, CancelRequest{Project: "project"}.Validate())
+	require.Error(t, CancelRequest{SLO: "slo"}.Validate())
+}
+
+func TestGetStatusRequestValidation(t *testing.T) {
+	t.Parallel()
+
+	require.NoError(t, GetStatusRequest{SLO: "slo"}.Validate())
+	require.NoError(t, GetStatusRequest{Project: "project", SLO: "slo"}.Validate())
+	require.Error(t, GetStatusRequest{}.Validate())
+	require.Error(t, GetStatusRequest{Project: "project"}.Validate())
+}
+
 func TestGetAvailabilityRequestQueryValues(t *testing.T) {
 	t.Parallel()
 

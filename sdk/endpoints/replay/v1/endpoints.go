@@ -57,8 +57,11 @@ func (e endpoints) Run(ctx context.Context, params RunRequest) (err error) {
 	return nil
 }
 
-// Delete removes queued replay requests selected by params.
+// Delete validates params and removes queued replay requests selected by them.
 func (e endpoints) Delete(ctx context.Context, params DeleteRequest) (err error) {
+	if err = params.Validate(); err != nil {
+		return err
+	}
 	body := new(bytes.Buffer)
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
@@ -76,8 +79,11 @@ func (e endpoints) Delete(ctx context.Context, params DeleteRequest) (err error)
 	return nil
 }
 
-// Cancel requests cancellation of the replay selected by params.
+// Cancel validates params and requests cancellation of the selected replay.
 func (e endpoints) Cancel(ctx context.Context, params CancelRequest) (err error) {
+	if err = params.Validate(); err != nil {
+		return err
+	}
 	body := new(bytes.Buffer)
 	if err = json.NewEncoder(body).Encode(params); err != nil {
 		return fmt.Errorf("cannot marshal: %w", err)
@@ -114,8 +120,11 @@ func (e endpoints) List(ctx context.Context) ([]ReplayListItem, error) {
 	return list, nil
 }
 
-// GetStatus returns the latest detailed replay status for an SLO.
+// GetStatus validates params and returns the latest detailed replay status for an SLO.
 func (e endpoints) GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error) {
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
 	path := fmt.Sprintf(apiReplayStatus, params.SLO)
 	header := http.Header{internalSDK.HeaderProject: []string{params.Project}}
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, path, header, nil, nil)

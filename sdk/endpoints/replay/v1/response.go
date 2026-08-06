@@ -43,9 +43,11 @@ type ReplayAvailability struct {
 }
 
 // ReplayListItem summarizes an active replay.
+// CreatedAt, when present, is an RFC3339 timestamp.
 type ReplayListItem struct {
 	SLO            string                   `json:"slo,omitempty"`
 	Project        string                   `json:"project"`
+	CreatedAt      string                   `json:"createdAt,omitempty"`
 	ElapsedTime    string                   `json:"elapsedTime,omitempty"`
 	RetrievedScope string                   `json:"retrievedScope,omitempty"`
 	RetrievedFrom  string                   `json:"retrievedFrom,omitempty"`

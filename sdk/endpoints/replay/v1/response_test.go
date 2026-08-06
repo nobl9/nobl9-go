@@ -8,13 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestReplayListItemStatusUnmarshal(t *testing.T) {
+func TestReplayListItemUnmarshal(t *testing.T) {
 	t.Parallel()
 
 	var item ReplayListItem
-	err := json.Unmarshal([]byte(`{"project":"default","slo":"latency","status":"in progress"}`), &item)
+	err := json.Unmarshal([]byte(`{
+		"project": "default",
+		"slo": "latency",
+		"createdAt": "2026-01-01T00:00:00Z",
+		"status": "in progress"
+	}`), &item)
 
 	require.NoError(t, err)
+	assert.Equal(t, "2026-01-01T00:00:00Z", item.CreatedAt)
 	assert.Equal(t, ReplayListStatusInProgress, item.Status)
 }
 

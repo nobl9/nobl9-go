@@ -118,6 +118,7 @@ type CancelRequest struct {
 }
 
 // GetStatusRequest identifies the replay whose status should be returned.
+// Project can be empty to use the SDK client's configured project.
 type GetStatusRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
@@ -200,6 +201,32 @@ var runRequestValidation = govy.New(
 		}).WithErrorCode(durationAndStartDateValidationError)),
 )
 
+var deleteRequestValidation = govy.New(
+	govy.For(func(r DeleteRequest) string { return r.Project }).
+		WithName("project").
+		When(func(r DeleteRequest) bool { return !r.All }).
+		Required(),
+	govy.For(func(r DeleteRequest) string { return r.SLO }).
+		WithName("slo").
+		When(func(r DeleteRequest) bool { return !r.All }).
+		Required(),
+)
+
+var cancelRequestValidation = govy.New(
+	govy.For(func(r CancelRequest) string { return r.Project }).
+		WithName("project").
+		Required(),
+	govy.For(func(r CancelRequest) string { return r.SLO }).
+		WithName("slo").
+		Required(),
+)
+
+var getStatusRequestValidation = govy.New(
+	govy.For(func(r GetStatusRequest) string { return r.SLO }).
+		WithName("slo").
+		Required(),
+)
+
 var getAvailabilityRequestValidation = govy.New(
 	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
 		WithName("dataSourceProject").
@@ -263,6 +290,21 @@ var sourceSLOItemValidation = govy.New(
 // Validate verifies that the run request is complete and internally consistent.
 func (r RunRequest) Validate() error {
 	return runRequestValidation.Validate(r)
+}
+
+// Validate verifies that the delete request selects one SLO or all queued replays.
+func (r DeleteRequest) Validate() error {
+	return deleteRequestValidation.Validate(r)
+}
+
+// Validate verifies that the cancel request selects one SLO.
+func (r CancelRequest) Validate() error {
+	return cancelRequestValidation.Validate(r)
+}
+
+// Validate verifies that the status request selects one SLO.
+func (r GetStatusRequest) Validate() error {
+	return getStatusRequestValidation.Validate(r)
 }
 
 // Validate verifies the availability request before it is sent to Nobl9.
