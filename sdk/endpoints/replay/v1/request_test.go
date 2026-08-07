@@ -878,7 +878,7 @@ func TestDuration_Duration(t *testing.T) {
 			duration: Duration{
 				Unit: DurationUnitHour,
 			},
-			wantErr: errors.New("duration value must be greater than zero"),
+			wantErr: ErrInvalidDurationValue,
 		},
 		{
 			name: "negative value",
@@ -886,7 +886,7 @@ func TestDuration_Duration(t *testing.T) {
 				Unit:  DurationUnitHour,
 				Value: -1,
 			},
-			wantErr: errors.New("duration value must be greater than zero"),
+			wantErr: ErrInvalidDurationValue,
 		},
 	}
 	for _, tt := range tests {
@@ -898,12 +898,10 @@ func TestDuration_Duration(t *testing.T) {
 				require.NoError(t, err)
 				return
 			}
+			require.ErrorIs(t, err, tt.wantErr)
 			if errors.Is(tt.wantErr, ErrInvalidDurationUnit) {
-				require.ErrorIs(t, err, tt.wantErr)
 				assert.Contains(t, err.Error(), "Minute, Hour, Day")
-				return
 			}
-			require.EqualError(t, err, tt.wantErr.Error())
 		})
 	}
 }
@@ -929,7 +927,7 @@ func TestDuration_DurationOverflow(t *testing.T) {
 			assert.Equal(t, time.Duration(maxValue)*multiplier, duration)
 
 			duration, err = (Duration{Unit: unit, Value: int(maxValue + 1)}).Duration()
-			require.Error(t, err)
+			require.ErrorIs(t, err, ErrDurationOverflow)
 			assert.Zero(t, duration)
 		})
 	}

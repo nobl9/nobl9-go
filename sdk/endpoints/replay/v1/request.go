@@ -2,11 +2,11 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"math"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
@@ -166,6 +166,12 @@ type SourceSLOItem struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 }
+
+// Duration conversion errors can be inspected with [errors.Is].
+var (
+	ErrInvalidDurationValue = errors.New("duration value must be greater than zero")
+	ErrDurationOverflow     = errors.New("duration overflows time.Duration")
+)
 
 var runRequestValidation = govy.New(
 	govy.For(func(r RunRequest) ReplayType { return r.ReplayType }).
@@ -370,7 +376,7 @@ func startTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 	return govy.NewRule(func(v time.Time) error {
 		now := time.Now()
 		if v.After(now) {
-			return errors.Errorf("startDate %s must not be in the future", v)
+			return fmt.Errorf("startDate %s must not be in the future", v)
 		}
 		return nil
 	}).WithErrorCode(startDateInTheFutureValidationError)
@@ -402,12 +408,12 @@ func (d Duration) Duration() (time.Duration, error) {
 		return 0, ErrInvalidDurationUnit
 	}
 	if d.Value <= 0 {
-		return 0, errors.New("duration value must be greater than zero")
+		return 0, ErrInvalidDurationValue
 	}
 
 	value := int64(d.Value)
 	if value > math.MaxInt64/int64(multiplier) {
-		return 0, errors.Errorf("duration %d %s overflows time.Duration", d.Value, d.Unit)
+		return 0, fmt.Errorf("duration %d %s: %w", d.Value, d.Unit, ErrDurationOverflow)
 	}
 	return time.Duration(value) * multiplier, nil
 }

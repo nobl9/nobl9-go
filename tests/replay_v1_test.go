@@ -74,6 +74,17 @@ func Test_Replay_V1(t *testing.T) {
 	require.NotNil(t, availability)
 	require.True(t, availability.Available, string(availability.Reason))
 
+	availability, err = client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
+		Project:           projectName,
+		DataSourceProject: direct.GetProject(),
+		DataSource:        direct.GetName(),
+		DataSourceKind:    manifest.KindSLO.String(),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, availability)
+	require.False(t, availability.Available)
+	require.Equal(t, replayV1.ReplayDataSourceTypeInvalid, availability.Reason)
+
 	runRequest := replayV1.RunRequest{
 		Project: projectName,
 		SLO:     sloName,
