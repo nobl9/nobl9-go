@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"io"
+	"math"
 	"time"
 
 	"github.com/pkg/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 //go:generate ../../../../bin/go-enum --names --values --nocomments
@@ -269,6 +271,20 @@ var getAvailabilityRequestValidation = govy.New(
 		WithName("dataSourceKind").
 		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
 		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceKind }).
+		WithName("dataSourceKind").
+		OmitEmpty().
+		Rules(govy.NewRule(func(kind string) error {
+			_, err := manifest.ParseKind(kind)
+			return err
+		}).WithErrorCode(rules.ErrorCodeOneOf)),
+	govy.For(func(r GetAvailabilityRequest) GetAvailabilityRequest { return r }).
+		Rules(rules.MutuallyExclusive(false, map[string]func(GetAvailabilityRequest) any{
+			"sloName": func(r GetAvailabilityRequest) any { return r.SLOName },
+			"dataSource": func(r GetAvailabilityRequest) any {
+				return r.DataSourceProject != "" || r.DataSource != "" || r.DataSourceKind != ""
+			},
+		})),
 	govy.For(func(r GetAvailabilityRequest) ReplayType { return r.Type }).
 		WithName("type").
 		When(func(r GetAvailabilityRequest) bool { return r.Type != "" }).
@@ -374,15 +390,26 @@ func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
 
 // Duration converts unit and value to [time.Duration].
 func (d Duration) Duration() (time.Duration, error) {
+	var multiplier time.Duration
 	switch d.Unit {
 	case DurationUnitMinute:
-		return time.Duration(d.Value) * time.Minute, nil
+		multiplier = time.Minute
 	case DurationUnitHour:
-		return time.Duration(d.Value) * time.Hour, nil
+		multiplier = time.Hour
 	case DurationUnitDay:
-		return time.Duration(d.Value) * time.Hour * 24, nil
+		multiplier = 24 * time.Hour
+	default:
+		return 0, ErrInvalidDurationUnit
 	}
-	return 0, ErrInvalidDurationUnit
+	if d.Value <= 0 {
+		return 0, errors.New("duration value must be greater than zero")
+	}
+
+	value := int64(d.Value)
+	if value > math.MaxInt64/int64(multiplier) {
+		return 0, errors.Errorf("duration %d %s overflows time.Duration", d.Value, d.Unit)
+	}
+	return time.Duration(value) * multiplier, nil
 }
 
 func isEmpty(duration Duration) bool {

@@ -1,6 +1,9 @@
 package v1
 
 import (
+	"encoding/json"
+	"errors"
+	"math"
 	"net/url"
 	"strings"
 	"testing"
@@ -454,6 +457,37 @@ func TestParseJSONToRunRequest(t *testing.T) {
 	}
 }
 
+func TestRunRequestMarshalSourceSLO(t *testing.T) {
+	t.Parallel()
+
+	data, err := json.Marshal(RunRequest{
+		Project:  "target-project",
+		SLO:      "target-slo",
+		Duration: Duration{Unit: DurationUnitHour, Value: 1},
+		SourceSLO: &SourceSLO{
+			Project: "source-project",
+			SLO:     "source-slo",
+			ObjectivesMap: []SourceSLOItem{
+				{Source: "source-objective", Target: "target-objective"},
+			},
+		},
+	})
+
+	require.NoError(t, err)
+	assert.JSONEq(t, `{
+		"sourceSlo": {
+			"slo": "source-slo",
+			"project": "source-project",
+			"objectivesMap": [
+				{"source": "source-objective", "target": "target-objective"}
+			]
+		},
+		"project": "target-project",
+		"slo": "target-slo",
+		"duration": {"unit": "Hour", "value": 1}
+	}`, string(data))
+}
+
 func TestGetAvailabilityRequestValidation(t *testing.T) {
 	t.Parallel()
 
@@ -503,6 +537,34 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 				Type:    ReplayType("unsupported"),
 			},
 			errorCode: rules.ErrorCodeOneOf,
+		},
+		{
+			name: "non-data-source manifest kind is handled by the server",
+			request: GetAvailabilityRequest{
+				DataSourceProject: "data-source-project",
+				DataSource:        "data-source",
+				DataSourceKind:    "SLO",
+			},
+			isValid: true,
+		},
+		{
+			name: "invalid data source kind",
+			request: GetAvailabilityRequest{
+				DataSourceProject: "data-source-project",
+				DataSource:        "data-source",
+				DataSourceKind:    "not-a-kind",
+			},
+			errorCode: rules.ErrorCodeOneOf,
+		},
+		{
+			name: "mixed SLO and data source selectors",
+			request: GetAvailabilityRequest{
+				SLOName:           "slo",
+				DataSourceProject: "data-source-project",
+				DataSource:        "data-source",
+				DataSourceKind:    "Direct",
+			},
+			errorCode: rules.ErrorCodeMutuallyExclusive,
 		},
 		{
 			name: "duration unit without value",
@@ -568,6 +630,7 @@ func TestDeleteRequestValidation(t *testing.T) {
 	t.Parallel()
 
 	require.NoError(t, DeleteRequest{All: true}.Validate())
+	require.NoError(t, DeleteRequest{Project: "BadProject", SLO: "team/slo", All: true}.Validate())
 	require.NoError(t, DeleteRequest{Project: "project", SLO: "slo"}.Validate())
 	require.Error(t, DeleteRequest{}.Validate())
 	require.Error(t, DeleteRequest{Project: "project"}.Validate())
@@ -718,19 +781,12 @@ func TestReplaySelectorValidation(t *testing.T) {
 			},
 		},
 		{
-			name:         "slash in optional availability data source project",
+			name:         "slash in availability data source project",
 			propertyPath: "dataSourceProject",
 			request: GetAvailabilityRequest{
-				SLOName:           "slo",
 				DataSourceProject: "team/project",
-			},
-		},
-		{
-			name:         "uppercase optional availability data source",
-			propertyPath: "dataSource",
-			request: GetAvailabilityRequest{
-				SLOName:    "slo",
-				DataSource: "DataSource",
+				DataSource:        "data-source",
+				DataSourceKind:    "Direct",
 			},
 		},
 	}
@@ -752,12 +808,11 @@ func TestReplaySelectorValidation(t *testing.T) {
 func TestGetAvailabilityRequestQueryValues(t *testing.T) {
 	t.Parallel()
 
-	values := GetAvailabilityRequest{
+	dataSourceValues := GetAvailabilityRequest{
 		Project:           "request-project",
 		DataSourceProject: "source-project",
 		DataSource:        "datadog",
 		DataSourceKind:    "Direct",
-		SLOName:           "latency-slo",
 		Type:              ReplayTypeRecalculation,
 		DurationUnit:      DurationUnitHour,
 		DurationValue:     1,
@@ -767,11 +822,13 @@ func TestGetAvailabilityRequestQueryValues(t *testing.T) {
 		"dataSourceProject": {"source-project"},
 		"dataSource":        {"datadog"},
 		"dataSourceKind":    {"Direct"},
-		"sloName":           {"latency-slo"},
 		"type":              {"recalculation"},
 		"durationUnit":      {"Hour"},
 		"durationValue":     {"1"},
-	}, values)
+	}, dataSourceValues)
+
+	sloValues := GetAvailabilityRequest{SLOName: "latency-slo"}.queryValues()
+	assert.Equal(t, url.Values{"sloName": {"latency-slo"}}, sloValues)
 }
 
 func TestDuration_Duration(t *testing.T) {
@@ -816,19 +873,64 @@ func TestDuration_Duration(t *testing.T) {
 			wantDuration: 0,
 			wantErr:      ErrInvalidDurationUnit,
 		},
+		{
+			name: "zero value",
+			duration: Duration{
+				Unit: DurationUnitHour,
+			},
+			wantErr: errors.New("duration value must be greater than zero"),
+		},
+		{
+			name: "negative value",
+			duration: Duration{
+				Unit:  DurationUnitHour,
+				Value: -1,
+			},
+			wantErr: errors.New("duration value must be greater than zero"),
+		},
 	}
 	for _, tt := range tests {
-		tc := tt
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			duration, err := tc.duration.Duration()
-			assert.Equal(t, tc.wantDuration, duration)
-			if tc.wantErr == nil {
+			duration, err := tt.duration.Duration()
+			assert.Equal(t, tt.wantDuration, duration)
+			if tt.wantErr == nil {
 				require.NoError(t, err)
 				return
 			}
-			require.ErrorIs(t, err, tc.wantErr)
-			assert.Contains(t, err.Error(), "Minute, Hour, Day")
+			if errors.Is(tt.wantErr, ErrInvalidDurationUnit) {
+				require.ErrorIs(t, err, tt.wantErr)
+				assert.Contains(t, err.Error(), "Minute, Hour, Day")
+				return
+			}
+			require.EqualError(t, err, tt.wantErr.Error())
+		})
+	}
+}
+
+func TestDuration_DurationOverflow(t *testing.T) {
+	t.Parallel()
+
+	for unit, multiplier := range map[DurationUnit]time.Duration{
+		DurationUnitMinute: time.Minute,
+		DurationUnitHour:   time.Hour,
+		DurationUnitDay:    24 * time.Hour,
+	} {
+		t.Run(unit.String(), func(t *testing.T) {
+			t.Parallel()
+
+			maxValue := math.MaxInt64 / int64(multiplier)
+			if maxValue >= int64(math.MaxInt) {
+				t.Skip("time.Duration cannot overflow with an int-sized value on this platform")
+			}
+
+			duration, err := (Duration{Unit: unit, Value: int(maxValue)}).Duration()
+			require.NoError(t, err)
+			assert.Equal(t, time.Duration(maxValue)*multiplier, duration)
+
+			duration, err = (Duration{Unit: unit, Value: int(maxValue + 1)}).Duration()
+			require.Error(t, err)
+			assert.Zero(t, duration)
 		})
 	}
 }

@@ -81,8 +81,8 @@ func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 	t.Parallel()
 
 	var availability ReplayAvailability
-	err := json.Unmarshal([]byte(`{"available":false,"reason":"single_query_not_supported"}`), &availability)
+	err := json.Unmarshal([]byte(`{"available":false,"reason":"formatted reason from server"}`), &availability)
 
 	require.NoError(t, err)
-	assert.Equal(t, ReplaySingleQueryNotSupported, availability.Reason)
+	assert.Equal(t, ReplayAvailabilityReason("formatted reason from server"), availability.Reason)
 }

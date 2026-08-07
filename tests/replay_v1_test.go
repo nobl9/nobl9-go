@@ -23,7 +23,7 @@ import (
 )
 
 func Test_Replay_V1(t *testing.T) {
-	objects, direct, slo := setupReplayV1Test(t)
+	objects, direct, slo, sourceSLO := setupReplayV1Test(t)
 	e2etestutils.V1Apply(t, objects)
 	t.Cleanup(func() { e2etestutils.V1Delete(t, objects) })
 
@@ -82,7 +82,21 @@ func Test_Replay_V1(t *testing.T) {
 			Value: 1,
 		},
 	}
-	err = client.Replay().V1().Run(t.Context(), runRequest)
+	require.Len(t, slo.Spec.Objectives, 1)
+	require.Len(t, sourceSLO.Spec.Objectives, 1)
+	sourceReplayRequest := runRequest
+	sourceReplayRequest.ReplayType = replayV1.ReplayTypeReimportAndRecalculation
+	sourceReplayRequest.SourceSLO = &replayV1.SourceSLO{
+		Project: sourceSLO.GetProject(),
+		SLO:     sourceSLO.GetName(),
+		ObjectivesMap: []replayV1.SourceSLOItem{
+			{
+				Source: sourceSLO.Spec.Objectives[0].Name,
+				Target: slo.Spec.Objectives[0].Name,
+			},
+		},
+	}
+	err = client.Replay().V1().Run(t.Context(), sourceReplayRequest)
 	require.NoError(t, err, "failed to run replay for cancellation")
 
 	require.EventuallyWithT(t, func(collect *assert.CollectT) {
@@ -258,6 +272,7 @@ func setupReplayV1Test(t *testing.T) (
 	objects []manifest.Object,
 	direct v1alphaDirect.Direct,
 	slo v1alphaSLO.SLO,
+	sourceSLO v1alphaSLO.SLO,
 ) {
 	t.Helper()
 
@@ -284,8 +299,10 @@ func setupReplayV1Test(t *testing.T) (
 	slo.Spec.Indicator.MetricSource.Project = direct.GetProject()
 	slo.Spec.AlertPolicies = nil
 	slo.Spec.AnomalyConfig = nil
+	sourceSLO = slo
+	sourceSLO.Metadata.Name = e2etestutils.GenerateName()
 
-	return []manifest.Object{project, service, slo}, direct, slo
+	return []manifest.Object{project, service, sourceSLO, slo}, direct, slo, sourceSLO
 }
 
 func findReplayListItem(
