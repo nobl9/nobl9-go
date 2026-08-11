@@ -94,7 +94,7 @@ type ReplayListStatus string
 
 // RunRequest describes a replay to start.
 // When [RunRequest.ReplayType] is omitted, Nobl9 defaults to [ReplayTypeReimportAndRecalculation].
-// Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
+// Exactly one of [TimeRange.StartDate] and [RunRequest.Duration] must be set.
 type RunRequest struct {
 	TimeRange  TimeRange  `json:"timeRange,omitempty,omitzero"`
 	SourceSLO  *SourceSLO `json:"sourceSlo,omitempty"`
@@ -172,9 +172,11 @@ type Duration struct {
 	Value int          `json:"value"`
 }
 
-// TimeRange defines the earliest point from which a replay should retrieve data.
+// TimeRange defines replay request bounds.
+// Run currently uses StartDate as the lower bound and does not use EndDate to select replay data.
 type TimeRange struct {
 	StartDate time.Time `json:"startDate,omitzero"`
+	EndDate   time.Time `json:"endDate,omitzero"`
 }
 
 // SourceSLO maps objectives from another SLO to the replayed SLO.
