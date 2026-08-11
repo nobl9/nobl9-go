@@ -406,42 +406,6 @@ func TestRunRequestMarshalSourceSLO(t *testing.T) {
 	}`, string(data))
 }
 
-func TestRunRequestMarshalTimeRange(t *testing.T) {
-	t.Parallel()
-
-	startDate := time.Date(2026, time.August, 11, 12, 0, 0, 0, time.UTC)
-	request := RunRequest{
-		Project: "project",
-		SLO:     "slo",
-		TimeRange: TimeRange{
-			StartDate: startDate,
-			EndDate:   startDate.Add(time.Hour),
-		},
-	}
-
-	data, err := json.Marshal(request)
-	require.NoError(t, err)
-	assert.JSONEq(t, `{
-		"project": "project",
-		"slo": "slo",
-		"timeRange": {
-			"startDate": "2026-08-11T12:00:00Z",
-			"endDate": "2026-08-11T13:00:00Z"
-		}
-	}`, string(data))
-
-	request.TimeRange.EndDate = time.Time{}
-	data, err = json.Marshal(request)
-	require.NoError(t, err)
-	assert.JSONEq(t, `{
-		"project": "project",
-		"slo": "slo",
-		"timeRange": {
-			"startDate": "2026-08-11T12:00:00Z"
-		}
-	}`, string(data))
-}
-
 func TestGetAvailabilityRequestValidation(t *testing.T) {
 	t.Parallel()
 

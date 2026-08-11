@@ -172,11 +172,9 @@ type Duration struct {
 	Value int          `json:"value"`
 }
 
-// TimeRange defines replay request bounds.
-// Run currently uses StartDate as the lower bound and does not use EndDate to select replay data.
+// TimeRange defines the earliest point from which a replay should retrieve data.
 type TimeRange struct {
 	StartDate time.Time `json:"startDate,omitzero"`
-	EndDate   time.Time `json:"endDate,omitzero"`
 }
 
 // SourceSLO maps objectives from another SLO to the replayed SLO.
