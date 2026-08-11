@@ -1,10 +1,8 @@
 package v1
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"time"
 
@@ -95,8 +93,8 @@ canceled
 type ReplayListStatus string
 
 // RunRequest describes a replay to start.
-// Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
 // When [RunRequest.ReplayType] is omitted, Nobl9 defaults to [ReplayTypeReimportAndRecalculation].
+// Exactly one of [RunRequest.TimeRange] and [RunRequest.Duration] must be set.
 type RunRequest struct {
 	TimeRange  TimeRange  `json:"timeRange,omitempty,omitzero"`
 	SourceSLO  *SourceSLO `json:"sourceSlo,omitempty"`
@@ -104,6 +102,11 @@ type RunRequest struct {
 	SLO        string     `json:"slo"`
 	ReplayType ReplayType `json:"replayType,omitempty"`
 	Duration   Duration   `json:"duration,omitempty,omitzero"`
+}
+
+// Validate verifies that the run request is complete and internally consistent.
+func (r RunRequest) Validate() error {
+	return runRequestValidation.Validate(r)
 }
 
 // DeleteRequest identifies queued replay requests to delete.
@@ -115,10 +118,20 @@ type DeleteRequest struct {
 	All bool `json:"all,omitempty"`
 }
 
+// Validate verifies that the delete request selects one SLO or all queued replays.
+func (r DeleteRequest) Validate() error {
+	return deleteRequestValidation.Validate(r)
+}
+
 // CancelRequest identifies a replay to cancel.
 type CancelRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
+}
+
+// Validate verifies that the cancel request selects one SLO.
+func (r CancelRequest) Validate() error {
+	return cancelRequestValidation.Validate(r)
 }
 
 // GetStatusRequest identifies the replay whose status should be returned.
@@ -126,6 +139,11 @@ type CancelRequest struct {
 type GetStatusRequest struct {
 	Project string `json:"project,omitempty"`
 	SLO     string `json:"slo,omitempty"`
+}
+
+// Validate verifies that the status request selects one SLO.
+func (r GetStatusRequest) Validate() error {
+	return getStatusRequestValidation.Validate(r)
 }
 
 // GetAvailabilityRequest describes a replay availability check.
@@ -141,6 +159,11 @@ type GetAvailabilityRequest struct {
 	Type              ReplayType
 	DurationUnit      DurationUnit
 	DurationValue     int
+}
+
+// Validate verifies the availability request before it is sent to Nobl9.
+func (r GetAvailabilityRequest) Validate() error {
+	return getAvailabilityRequestValidation.Validate(r)
 }
 
 // Duration defines how far back a replay should retrieve data.
@@ -342,31 +365,6 @@ var sourceSLOItemValidation = govy.New(
 		Rules(validationV1Alpha.StringName()),
 )
 
-// Validate verifies that the run request is complete and internally consistent.
-func (r RunRequest) Validate() error {
-	return runRequestValidation.Validate(r)
-}
-
-// Validate verifies that the delete request selects one SLO or all queued replays.
-func (r DeleteRequest) Validate() error {
-	return deleteRequestValidation.Validate(r)
-}
-
-// Validate verifies that the cancel request selects one SLO.
-func (r CancelRequest) Validate() error {
-	return cancelRequestValidation.Validate(r)
-}
-
-// Validate verifies that the status request selects one SLO.
-func (r GetStatusRequest) Validate() error {
-	return getStatusRequestValidation.Validate(r)
-}
-
-// Validate verifies the availability request before it is sent to Nobl9.
-func (r GetAvailabilityRequest) Validate() error {
-	return getAvailabilityRequestValidation.Validate(r)
-}
-
 const (
 	durationAndStartDateValidationError = "replay_duration_or_start_date"
 	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
@@ -380,18 +378,6 @@ func startTimeNotInFutureValidationRule() govy.Rule[time.Time] {
 		}
 		return nil
 	}).WithErrorCode(startDateInTheFutureValidationError)
-}
-
-// ParseJSONToReplayStruct parses raw JSON into [RunRequest] with govy validation.
-func ParseJSONToReplayStruct(data io.Reader) (RunRequest, error) {
-	replay := RunRequest{}
-	if err := json.NewDecoder(data).Decode(&replay); err != nil {
-		return RunRequest{}, err
-	}
-	if err := replay.Validate(); err != nil {
-		return RunRequest{}, err
-	}
-	return replay, nil
 }
 
 // Duration converts unit and value to [time.Duration].

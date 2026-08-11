@@ -29,6 +29,45 @@ func Test_Replay_V1(t *testing.T) {
 
 	projectName := slo.GetProject()
 	sloName := slo.GetName()
+	runRequest := replayV1.RunRequest{
+		Project: projectName,
+		SLO:     sloName,
+		Duration: replayV1.Duration{
+			Unit:  replayV1.DurationUnitHour,
+			Value: 1,
+		},
+	}
+
+	if !t.Run("without existing replay", func(t *testing.T) {
+		testReplayV1WithoutExistingReplay(t, projectName, sloName)
+	}) {
+		return
+	}
+
+	if !t.Run("availability", func(t *testing.T) {
+		testReplayV1Availability(t, projectName, sloName, direct)
+	}) {
+		return
+	}
+
+	if !t.Run("cancellation", func(t *testing.T) {
+		testReplayV1Cancellation(t, projectName, sloName, slo, sourceSLO, runRequest)
+	}) {
+		return
+	}
+
+	t.Run("queue lifecycle", func(t *testing.T) {
+		testReplayV1QueueLifecycle(t, projectName, sloName, runRequest)
+	})
+}
+
+type replayV1StatusExpectation struct {
+	status       replayV1.ReplayListStatus
+	cancellation replayV1.ReplayCancellationStatus
+}
+
+func testReplayV1WithoutExistingReplay(t *testing.T, projectName, sloName string) {
+	t.Helper()
 
 	list, err := client.Replay().V1().List(t.Context())
 	require.NoError(t, err)
@@ -49,50 +88,76 @@ func Test_Replay_V1(t *testing.T) {
 	var httpErr *sdk.HTTPError
 	require.ErrorAs(t, err, &httpErr)
 	require.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+}
 
-	availability, err := client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
-		Project:       projectName,
-		SLOName:       sloName,
-		Type:          replayV1.ReplayTypeReimportAndRecalculation,
-		DurationUnit:  replayV1.DurationUnitHour,
-		DurationValue: 1,
-	})
-	require.NoError(t, err)
-	require.NotNil(t, availability)
-	require.True(t, availability.Available, string(availability.Reason))
+func testReplayV1Availability(
+	t *testing.T,
+	projectName string,
+	sloName string,
+	direct v1alphaDirect.Direct,
+) {
+	t.Helper()
 
-	availability, err = client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
-		Project:           projectName,
-		DataSourceProject: direct.GetProject(),
-		DataSource:        direct.GetName(),
-		DataSourceKind:    direct.GetKind().String(),
-		Type:              replayV1.ReplayTypeReimportAndRecalculation,
-		DurationUnit:      replayV1.DurationUnitHour,
-		DurationValue:     1,
-	})
-	require.NoError(t, err)
-	require.NotNil(t, availability)
-	require.True(t, availability.Available, string(availability.Reason))
-
-	availability, err = client.Replay().V1().GetAvailability(t.Context(), replayV1.GetAvailabilityRequest{
-		Project:           projectName,
-		DataSourceProject: direct.GetProject(),
-		DataSource:        direct.GetName(),
-		DataSourceKind:    manifest.KindSLO.String(),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, availability)
-	require.False(t, availability.Available)
-	require.Equal(t, replayV1.ReplayDataSourceTypeInvalid, availability.Reason)
-
-	runRequest := replayV1.RunRequest{
-		Project: projectName,
-		SLO:     sloName,
-		Duration: replayV1.Duration{
-			Unit:  replayV1.DurationUnitHour,
-			Value: 1,
+	testCases := map[string]struct {
+		request   replayV1.GetAvailabilityRequest
+		available bool
+		reason    replayV1.ReplayAvailabilityReason
+	}{
+		"by SLO": {
+			request: replayV1.GetAvailabilityRequest{
+				Project:       projectName,
+				SLOName:       sloName,
+				Type:          replayV1.ReplayTypeReimportAndRecalculation,
+				DurationUnit:  replayV1.DurationUnitHour,
+				DurationValue: 1,
+			},
+			available: true,
+		},
+		"by data source": {
+			request: replayV1.GetAvailabilityRequest{
+				Project:           projectName,
+				DataSourceProject: direct.GetProject(),
+				DataSource:        direct.GetName(),
+				DataSourceKind:    direct.GetKind().String(),
+				Type:              replayV1.ReplayTypeReimportAndRecalculation,
+				DurationUnit:      replayV1.DurationUnitHour,
+				DurationValue:     1,
+			},
+			available: true,
+		},
+		"invalid data source kind": {
+			request: replayV1.GetAvailabilityRequest{
+				Project:           projectName,
+				DataSourceProject: direct.GetProject(),
+				DataSource:        direct.GetName(),
+				DataSourceKind:    manifest.KindSLO.String(),
+			},
+			reason: replayV1.ReplayDataSourceTypeInvalid,
 		},
 	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			availability, err := client.Replay().V1().GetAvailability(t.Context(), testCase.request)
+			require.NoError(t, err)
+			require.NotNil(t, availability)
+			require.Equal(t, testCase.available, availability.Available, string(availability.Reason))
+			if testCase.reason != "" {
+				require.Equal(t, testCase.reason, availability.Reason)
+			}
+		})
+	}
+}
+
+func testReplayV1Cancellation(
+	t *testing.T,
+	projectName string,
+	sloName string,
+	slo v1alphaSLO.SLO,
+	sourceSLO v1alphaSLO.SLO,
+	runRequest replayV1.RunRequest,
+) {
+	t.Helper()
+
 	require.Len(t, slo.Spec.Objectives, 1)
 	require.Len(t, sourceSLO.Spec.Objectives, 1)
 	sourceReplayRequest := runRequest
@@ -107,19 +172,20 @@ func Test_Replay_V1(t *testing.T) {
 			},
 		},
 	}
-	err = client.Replay().V1().Run(t.Context(), sourceReplayRequest)
+	err := client.Replay().V1().Run(t.Context(), sourceReplayRequest)
 	require.NoError(t, err, "failed to run replay for cancellation")
+	t.Cleanup(func() { cleanupReplayV1(t, projectName, sloName) })
 
-	require.EventuallyWithT(t, func(collect *assert.CollectT) {
-		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
-			Project: projectName,
-			SLO:     sloName,
-		})
-		if !assert.NoError(collect, err) || !assert.NotNil(collect, status) {
-			return
-		}
-		assert.Equal(collect, replayV1.ReplayCancellationStatusPossible, status.Status.Cancellation)
-	}, 45*time.Second, 100*time.Millisecond)
+	requireReplayV1StatusEventually(
+		t,
+		projectName,
+		sloName,
+		replayV1StatusExpectation{
+			cancellation: replayV1.ReplayCancellationStatusPossible,
+		},
+		45*time.Second,
+		100*time.Millisecond,
+	)
 
 	err = client.Replay().V1().Cancel(t.Context(), replayV1.CancelRequest{
 		Project: projectName,
@@ -127,34 +193,41 @@ func Test_Replay_V1(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.EventuallyWithT(t, func(collect *assert.CollectT) {
-		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
-			Project: projectName,
-			SLO:     sloName,
-		})
-		if !assert.NoError(collect, err) || !assert.NotNil(collect, status) {
-			return
-		}
-		assert.Equal(collect, replayV1.ReplayListStatusCanceled, status.Status.Status)
-		assert.Equal(collect, replayV1.ReplayCancellationStatusDone, status.Status.Cancellation)
-	}, 45*time.Second, 100*time.Millisecond)
+	requireReplayV1StatusEventually(
+		t,
+		projectName,
+		sloName,
+		replayV1StatusExpectation{
+			status:       replayV1.ReplayListStatusCanceled,
+			cancellation: replayV1.ReplayCancellationStatusDone,
+		},
+		45*time.Second,
+		100*time.Millisecond,
+	)
+}
+
+func testReplayV1QueueLifecycle(
+	t *testing.T,
+	projectName string,
+	sloName string,
+	runRequest replayV1.RunRequest,
+) {
+	t.Helper()
 
 	recalculationRequest := runRequest
 	recalculationRequest.ReplayType = replayV1.ReplayTypeRecalculation
-	err = client.Replay().V1().Run(t.Context(), recalculationRequest)
+	err := client.Replay().V1().Run(t.Context(), recalculationRequest)
 	require.NoError(t, err, "failed to run blocking recalculation")
 	t.Cleanup(func() { cleanupReplayV1(t, projectName, sloName) })
 
-	require.EventuallyWithT(t, func(collect *assert.CollectT) {
-		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
-			Project: projectName,
-			SLO:     sloName,
-		})
-		if !assert.NoError(collect, err) || !assert.NotNil(collect, status) {
-			return
-		}
-		assert.Equal(collect, replayV1.ReplayListStatusInProgress, status.Status.Status)
-	}, 45*time.Second, 100*time.Millisecond)
+	requireReplayV1StatusEventually(
+		t,
+		projectName,
+		sloName,
+		replayV1StatusExpectation{status: replayV1.ReplayListStatusInProgress},
+		45*time.Second,
+		100*time.Millisecond,
+	)
 
 	err = client.Replay().V1().Run(t.Context(), recalculationRequest)
 	require.NoError(t, err, "failed to queue recalculation runway")
@@ -162,10 +235,18 @@ func Test_Replay_V1(t *testing.T) {
 	err = client.Replay().V1().Run(t.Context(), runRequest)
 	require.NoError(t, err, "failed to queue replay")
 
-	list, err = client.Replay().V1().List(t.Context())
+	listItem, err := tryExecuteRequest(t, func() (replayV1.ReplayListItem, error) {
+		list, err := client.Replay().V1().List(t.Context())
+		if err != nil {
+			return replayV1.ReplayListItem{}, err
+		}
+		listItem, found := findReplayListItem(list, projectName, sloName)
+		if !found {
+			return replayV1.ReplayListItem{}, errors.New("queued replay is not listed")
+		}
+		return listItem, nil
+	})
 	require.NoError(t, err)
-	listItem, found := findReplayListItem(list, projectName, sloName)
-	require.True(t, found, "queued replay is not listed")
 	require.Equal(t, replayV1.ReplayListStatusQueued, listItem.Status)
 	_, err = time.Parse(time.RFC3339, listItem.CreatedAt)
 	require.NoError(t, err)
@@ -176,10 +257,17 @@ func Test_Replay_V1(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	list, err = client.Replay().V1().List(t.Context())
+	_, err = tryExecuteRequest(t, func() (struct{}, error) {
+		list, err := client.Replay().V1().List(t.Context())
+		if err != nil {
+			return struct{}{}, err
+		}
+		if _, found := findReplayListItem(list, projectName, sloName); found {
+			return struct{}{}, errors.New("deleted replay is still listed")
+		}
+		return struct{}{}, nil
+	})
 	require.NoError(t, err)
-	_, found = findReplayListItem(list, projectName, sloName)
-	require.False(t, found, "deleted replay is still listed")
 
 	status, err := tryExecuteRequest(t, func() (*replayV1.ReplayWithStatus, error) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
@@ -203,6 +291,27 @@ func Test_Replay_V1(t *testing.T) {
 	assert.Equal(t, replayV1.ReplaySourceUser, status.Status.Source)
 	assert.Contains(t, replayV1.ReplayListStatusValues(), status.Status.Status)
 
+	requireReplayV1StatusEventually(
+		t,
+		projectName,
+		sloName,
+		replayV1StatusExpectation{status: replayV1.ReplayListStatusCompleted},
+		2*time.Minute,
+		time.Second,
+	)
+}
+
+func requireReplayV1StatusEventually(
+	t *testing.T,
+	projectName string,
+	sloName string,
+	expected replayV1StatusExpectation,
+	timeout time.Duration,
+	interval time.Duration,
+) {
+	t.Helper()
+	require.NotEqual(t, replayV1StatusExpectation{}, expected)
+
 	require.EventuallyWithT(t, func(collect *assert.CollectT) {
 		status, err := client.Replay().V1().GetStatus(t.Context(), replayV1.GetStatusRequest{
 			Project: projectName,
@@ -211,8 +320,13 @@ func Test_Replay_V1(t *testing.T) {
 		if !assert.NoError(collect, err) || !assert.NotNil(collect, status) {
 			return
 		}
-		assert.Equal(collect, replayV1.ReplayListStatusCompleted, status.Status.Status)
-	}, 2*time.Minute, time.Second)
+		if expected.status != "" {
+			assert.Equal(collect, expected.status, status.Status.Status)
+		}
+		if expected.cancellation != "" {
+			assert.Equal(collect, expected.cancellation, status.Status.Cancellation)
+		}
+	}, timeout, interval)
 }
 
 func cleanupReplayV1(t *testing.T, projectName, sloName string) {
