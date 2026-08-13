@@ -375,6 +375,41 @@ func TestRunRequestDatesValidation(t *testing.T) {
 	}
 }
 
+func TestRunRequestValidationRejectsDurationOverflow(t *testing.T) {
+	t.Parallel()
+
+	err := (RunRequest{
+		Project: "project",
+		SLO:     "slo",
+		Duration: Duration{
+			Unit:  DurationUnitDay,
+			Value: overflowingDurationValue(t),
+		},
+	}).Validate()
+
+	require.ErrorIs(t, err, ErrDurationOverflow)
+}
+
+func TestRunRequestValidationChecksStructureBeforeDurationOverflow(t *testing.T) {
+	t.Parallel()
+
+	err := (RunRequest{
+		Project: "project",
+		SLO:     "slo",
+		Duration: Duration{
+			Unit:  DurationUnitDay,
+			Value: overflowingDurationValue(t),
+		},
+		TimeRange: TimeRange{
+			StartDate: time.Now().Add(-time.Hour),
+		},
+	}).Validate()
+
+	require.IsType(t, &govy.ValidatorError{}, err)
+	assert.True(t, govy.HasErrorCode(err, durationAndStartDateValidationError))
+	assert.NotErrorIs(t, err, ErrDurationOverflow)
+}
+
 func TestRunRequestMarshalSourceSLO(t *testing.T) {
 	t.Parallel()
 
@@ -403,6 +438,25 @@ func TestRunRequestMarshalSourceSLO(t *testing.T) {
 		"project": "target-project",
 		"slo": "target-slo",
 		"duration": {"unit": "Hour", "value": 1}
+	}`, string(data))
+}
+
+func TestRunRequestMarshalTimeRange(t *testing.T) {
+	t.Parallel()
+
+	data, err := json.Marshal(RunRequest{
+		Project: "project",
+		SLO:     "slo",
+		TimeRange: TimeRange{
+			StartDate: time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC),
+		},
+	})
+
+	require.NoError(t, err)
+	assert.JSONEq(t, `{
+		"project": "project",
+		"slo": "slo",
+		"timeRange": {"startDate": "2026-01-02T03:04:05Z"}
 	}`, string(data))
 }
 
@@ -542,6 +596,35 @@ func TestGetAvailabilityRequestValidation(t *testing.T) {
 			assert.True(t, govy.HasErrorCode(err, tt.errorCode))
 		})
 	}
+}
+
+func TestGetAvailabilityRequestValidationRejectsDurationOverflow(t *testing.T) {
+	t.Parallel()
+
+	err := (GetAvailabilityRequest{
+		SLOName:       "slo",
+		DurationUnit:  DurationUnitDay,
+		DurationValue: overflowingDurationValue(t),
+	}).Validate()
+
+	require.ErrorIs(t, err, ErrDurationOverflow)
+}
+
+func TestGetAvailabilityRequestValidationChecksStructureBeforeDurationOverflow(t *testing.T) {
+	t.Parallel()
+
+	err := (GetAvailabilityRequest{
+		SLOName:           "slo",
+		DataSourceProject: "data-source-project",
+		DataSource:        "data-source",
+		DataSourceKind:    "Direct",
+		DurationUnit:      DurationUnitDay,
+		DurationValue:     overflowingDurationValue(t),
+	}).Validate()
+
+	require.IsType(t, &govy.ValidatorError{}, err)
+	assert.True(t, govy.HasErrorCode(err, rules.ErrorCodeMutuallyExclusive))
+	assert.NotErrorIs(t, err, ErrDurationOverflow)
 }
 
 func TestDeleteRequestValidation(t *testing.T) {
@@ -849,4 +932,14 @@ func TestDuration_DurationOverflow(t *testing.T) {
 			assert.Zero(t, duration)
 		})
 	}
+}
+
+func overflowingDurationValue(t *testing.T) int {
+	t.Helper()
+
+	maxValue := math.MaxInt64 / int64(24*time.Hour)
+	if maxValue >= int64(math.MaxInt) {
+		t.Skip("time.Duration cannot overflow with an int-sized value on this platform")
+	}
+	return int(maxValue + 1)
 }

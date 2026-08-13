@@ -106,7 +106,14 @@ type RunRequest struct {
 
 // Validate verifies that the run request is complete and internally consistent.
 func (r RunRequest) Validate() error {
-	return runRequestValidation.Validate(r)
+	if err := runRequestValidation.Validate(r); err != nil {
+		return err
+	}
+	if isEmpty(r.Duration) {
+		return nil
+	}
+	_, err := r.Duration.Duration()
+	return err
 }
 
 // DeleteRequest identifies queued replay requests to delete.
@@ -163,7 +170,14 @@ type GetAvailabilityRequest struct {
 
 // Validate verifies the availability request before it is sent to Nobl9.
 func (r GetAvailabilityRequest) Validate() error {
-	return getAvailabilityRequestValidation.Validate(r)
+	if err := getAvailabilityRequestValidation.Validate(r); err != nil {
+		return err
+	}
+	if !hasAvailabilityDuration(r) {
+		return nil
+	}
+	_, err := (Duration{Unit: r.DurationUnit, Value: r.DurationValue}).Duration()
+	return err
 }
 
 // Duration defines how far back a replay should retrieve data.
@@ -172,7 +186,7 @@ type Duration struct {
 	Value int          `json:"value"`
 }
 
-// TimeRange defines the earliest point from which a replay should retrieve data.
+// TimeRange describes the replay start date. Nobl9 treats the processing time as the effective end.
 type TimeRange struct {
 	StartDate time.Time `json:"startDate,omitzero"`
 }

@@ -37,6 +37,13 @@ func Test_Replay_V1(t *testing.T) {
 			Value: 1,
 		},
 	}
+	timeRangeRequest := replayV1.RunRequest{
+		Project: projectName,
+		SLO:     sloName,
+		TimeRange: replayV1.TimeRange{
+			StartDate: time.Now().Add(-time.Hour).UTC(),
+		},
+	}
 
 	if !t.Run("without existing replay", func(t *testing.T) {
 		testReplayV1WithoutExistingReplay(t, projectName, sloName)
@@ -51,7 +58,7 @@ func Test_Replay_V1(t *testing.T) {
 	}
 
 	if !t.Run("cancellation", func(t *testing.T) {
-		testReplayV1Cancellation(t, projectName, sloName, slo, sourceSLO, runRequest)
+		testReplayV1Cancellation(t, projectName, sloName, slo, sourceSLO, timeRangeRequest)
 	}) {
 		return
 	}
