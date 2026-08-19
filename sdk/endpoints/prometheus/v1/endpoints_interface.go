@@ -12,7 +12,7 @@ import (
 type Endpoints interface {
 	Query(ctx context.Context, request QueryRequest) (model.Value, promv1.Warnings, error)
 	QueryRange(ctx context.Context, request QueryRangeRequest) (model.Value, promv1.Warnings, error)
-	LabelNames(ctx context.Context, request LabelNamesRequest) ([]string, promv1.Warnings, error)
+	LabelNames(ctx context.Context, request LabelNamesRequest) (model.LabelNames, promv1.Warnings, error)
 	LabelValues(ctx context.Context, request LabelValuesRequest) (model.LabelValues, promv1.Warnings, error)
 	Metadata(ctx context.Context, request MetadataRequest) (map[string][]promv1.Metadata, error)
 	Buildinfo(ctx context.Context) (promv1.BuildinfoResult, error)
