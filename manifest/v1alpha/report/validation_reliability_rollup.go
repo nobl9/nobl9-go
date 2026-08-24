@@ -31,6 +31,10 @@ var reliabilityRollupValidation = govy.New[ReliabilityRollupConfig](
 				WithName("calendar").
 				Include(calendarTimeFrameValidation),
 		)),
+	govy.For(func(c ReliabilityRollupConfig) ReliabilityScoreType { return c.ReliabilityScoreType }).
+		WithName("reliabilityScoreType").
+		OmitEmpty().
+		Rules(rules.OneOf(ReliabilityScoreTypeValues()...)),
 	govy.ForSlice(func(c ReliabilityRollupConfig) []HierarchyFolder { return c.CustomHierarchy }).
 		WithName("customHierarchy").
 		Rules(govy.NewRule(func(folders []HierarchyFolder) error {
