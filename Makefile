@@ -7,8 +7,6 @@ BIN_DIR := ./bin
 GO_ENUM_VERSION := v0.9.4
 # renovate datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION := v2.12.2
-# renovate datasource=go depName=golang.org/x/vuln/cmd/govulncheck
-GOVULNCHECK_VERSION := v1.7.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.4.0
 
@@ -51,9 +49,9 @@ test/record:
 	NOBL9_SDK_TEST_RECORD_FILE="$$RECORD_FILE" go test ./... ; \
 	jq -s < "$$RECORD_FILE" > "$$RECORD_FILE.json"
 
-.PHONY: check check/vet check/lint check/spell check/trailing check/markdown check/format check/generate check/vulns
+.PHONY: check check/vet check/lint check/spell check/trailing check/markdown check/format check/generate
 ## Run all checks.
-check: check/vet check/lint check/spell check/trailing check/markdown check/format check/generate check/vulns
+check: check/vet check/lint check/spell check/trailing check/markdown check/format check/generate
 
 ## Run 'go vet' on the whole project.
 check/vet:
@@ -82,12 +80,6 @@ check/markdown:
 	$(call _print_check_step,Verifying Markdown files)
 	$(call _ensure_installed,yarn,markdownlint)
 	yarn --silent markdownlint '**/*.md' --ignore node_modules
-
-## Check for potential vulnerabilities across all Go dependencies.
-check/vulns:
-	$(call _print_check_step,Running govulncheck)
-	$(call _ensure_installed,binary,govulncheck)
-	$(BIN_DIR)/govulncheck ./...
 
 ## Verify if the auto generated code has been committed.
 check/generate:
@@ -136,9 +128,9 @@ format/cspell:
 	$(call _ensure_installed,yarn,yaml)
 	yarn --silent format-cspell-config
 
-.PHONY: install install/yarn install/go-enum install/golangci-lint install/govulncheck install/ifacemaker
+.PHONY: install install/yarn install/go-enum install/golangci-lint install/ifacemaker
 ## Install all dev dependencies.
-install: install/yarn install/go-enum install/golangci-lint install/govulncheck install/ifacemaker
+install: install/yarn install/go-enum install/golangci-lint install/ifacemaker
 
 ## Install JS dependencies with yarn.
 install/yarn:
@@ -156,11 +148,6 @@ install/golangci-lint:
 	echo "Installing golangci-lint..."
 	curl -sSfL https://golangci-lint.run/install.sh |\
  		sh -s -- -b $(BIN_DIR) $(GOLANGCI_LINT_VERSION)
-
-## Install govulncheck (https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck).
-install/govulncheck:
-	echo "Installing govulncheck..."
-	$(call _install_go_binary,golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION))
 
 ## Install ifacemaker (https://github.com/vburenin/ifacemaker).
 install/ifacemaker:

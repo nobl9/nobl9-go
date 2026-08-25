@@ -107,7 +107,6 @@
     "gopackage",
     "goreleaser",
     "gosec",
-    "govulncheck",
     "govy",
     "govytest",
     "group-Q72HorLyjjCc",
@@ -203,8 +202,6 @@
     "upsert",
     "usergroup",
     "usrmgmt",
-    "vuln",
-    "vulns",
     "wincrypt"
   ]
 }
