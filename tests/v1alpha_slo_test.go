@@ -3,6 +3,7 @@
 package tests
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"slices"
@@ -267,6 +268,43 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			assertSubset(t, actual, test.expected, assertV1alphaSLOsAreEqual)
 		})
 	}
+
+	t.Run("pagination and descending SLO sort", func(t *testing.T) {
+		t.Parallel()
+
+		expected := slices.Clone(inputs[1 : len(inputs)-len(serviceNameFilterSLOs)])
+		slices.SortFunc(expected, func(left, right v1alphaSLO.SLO) int {
+			leftName := left.Metadata.DisplayName
+			if leftName == "" {
+				leftName = left.Metadata.Name
+			}
+			rightName := right.Metadata.DisplayName
+			if rightName == "" {
+				rightName = right.Metadata.Name
+			}
+			return cmp.Compare(rightName, leftName)
+		})
+		require.Greater(t, len(expected), 3)
+		expected = expected[1:4]
+
+		actual, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), objectsV1.GetSLOsRequest{
+			Project: project.GetName(),
+			Pagination: &objectsV1.GetSLOsPagination{
+				Limit:  3,
+				Offset: 1,
+			},
+			Sort: &objectsV1.GetSLOsSort{
+				Column:    objectsV1.GetSLOsSortColumnSLO,
+				Direction: objectsV1.GetSLOsSortDirectionDesc,
+			},
+		})
+
+		require.NoError(t, err)
+		require.Len(t, actual, len(expected))
+		for i := range expected {
+			assertV1alphaSLOsAreEqual(t, expected[i], actual[i])
+		}
+	})
 }
 
 func prepareObjectsForServiceNameFilteringTests(t *testing.T) (slos []v1alphaSLO.SLO, dependencies []manifest.Object) {
