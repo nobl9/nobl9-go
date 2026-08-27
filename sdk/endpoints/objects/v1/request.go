@@ -25,14 +25,14 @@ type GetSLOsRequest struct {
 	Names      []string
 	Labels     v1alpha.Labels
 	Services   []string
-	Pagination *GetSLOsPagination `json:"pagination,omitempty" form:"pagination"`
-	Sort       *GetSLOsSort       `json:"sort,omitempty" form:"sort"`
+	Pagination *GetSLOsPagination `form:"pagination"`
+	Sort       *GetSLOsSort       `form:"sort"`
 }
 
 // GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
 type GetSLOsPagination struct {
-	Limit  int `json:"limit,omitempty" form:"limit"`
-	Offset int `json:"offset,omitempty" form:"offset"`
+	Limit  int `form:"limit"`
+	Offset int `form:"offset"`
 }
 
 // GetSLOsSortColumn identifies a field that can order SLO results.
@@ -53,8 +53,8 @@ type GetSLOsSortDirection string
 
 // GetSLOsSort controls the field and direction used to order SLO results.
 type GetSLOsSort struct {
-	Column    GetSLOsSortColumn    `json:"column,omitempty" form:"column"`
-	Direction GetSLOsSortDirection `json:"direction,omitempty" form:"direction"`
+	Column    GetSLOsSortColumn    `form:"column"`
+	Direction GetSLOsSortDirection `form:"direction"`
 }
 
 type GetAgentsRequest struct {
