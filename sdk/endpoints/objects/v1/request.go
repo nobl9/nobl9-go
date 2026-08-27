@@ -6,6 +6,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+//go:generate ../../../../bin/go-enum --names --values --nocomments
+
 type GetProjectsRequest struct {
 	Names  []string
 	Labels v1alpha.Labels
@@ -26,24 +28,20 @@ type GetSLOsPagination struct {
 }
 
 // GetSLOsSortColumn identifies a field that can order SLO results.
+/* ENUM(
+project
+service
+SLO = slo
+lastModifiedAt
+)*/
 type GetSLOsSortColumn string
 
-// Supported SLO sort columns.
-const (
-	GetSLOsSortColumnProject        GetSLOsSortColumn = "project"
-	GetSLOsSortColumnService        GetSLOsSortColumn = "service"
-	GetSLOsSortColumnSLO            GetSLOsSortColumn = "slo"
-	GetSLOsSortColumnLastModifiedAt GetSLOsSortColumn = "lastModifiedAt"
-)
-
 // GetSLOsSortDirection identifies the direction of SLO result ordering.
+/* ENUM(
+asc
+desc
+)*/
 type GetSLOsSortDirection string
-
-// Supported SLO sort directions.
-const (
-	GetSLOsSortDirectionAsc  GetSLOsSortDirection = "asc"
-	GetSLOsSortDirectionDesc GetSLOsSortDirection = "desc"
-)
 
 // GetSLOsSort controls the field and direction used to order SLO results.
 // Empty fields default to SLO name in ascending order.

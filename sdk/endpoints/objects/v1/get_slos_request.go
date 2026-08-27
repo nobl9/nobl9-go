@@ -32,15 +32,10 @@ var getSLOsRequestValidation = govy.New[GetSLOsRequest](
 			govy.For(func(s GetSLOsSort) GetSLOsSortColumn { return s.Column }).
 				WithName("column").
 				OmitEmpty().
-				Rules(rules.OneOf(
-					GetSLOsSortColumnProject,
-					GetSLOsSortColumnService,
-					GetSLOsSortColumnSLO,
-					GetSLOsSortColumnLastModifiedAt,
-				)),
+				Rules(rules.OneOf(GetSLOsSortColumnValues()...)),
 			govy.For(func(s GetSLOsSort) GetSLOsSortDirection { return s.Direction }).
 				WithName("direction").
 				OmitEmpty().
-				Rules(rules.OneOf(GetSLOsSortDirectionAsc, GetSLOsSortDirectionDesc)),
+				Rules(rules.OneOf(GetSLOsSortDirectionValues()...)),
 		)),
 ).WithName("Get SLOs request")
