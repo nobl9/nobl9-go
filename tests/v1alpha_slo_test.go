@@ -6,8 +6,11 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/url"
 	"slices"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,6 +20,7 @@ import (
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
 	v1alphaExamples "github.com/nobl9/nobl9-go/manifest/v1alpha/examples"
+	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 	"github.com/nobl9/nobl9-go/sdk"
@@ -169,6 +173,9 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	e2etestutils.V1Apply(t, dependencies)
 	e2etestutils.V1ApplyBatch(t, slos, 50)
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
+	require.Greater(t, len(inputs), 3)
+	inputs[1].Metadata.DisplayName += " updated"
+	e2etestutils.V1Apply(t, []v1alphaSLO.SLO{inputs[1]})
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetSLOsRequest
@@ -269,42 +276,220 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		})
 	}
 
-	t.Run("pagination and descending SLO sort", func(t *testing.T) {
-		t.Parallel()
-
-		expected := slices.Clone(inputs[1 : len(inputs)-len(serviceNameFilterSLOs)])
-		slices.SortFunc(expected, func(left, right v1alphaSLO.SLO) int {
-			leftName := left.Metadata.DisplayName
-			if leftName == "" {
-				leftName = left.Metadata.Name
-			}
-			rightName := right.Metadata.DisplayName
-			if rightName == "" {
-				rightName = right.Metadata.Name
-			}
-			return cmp.Compare(rightName, leftName)
-		})
-		require.Greater(t, len(expected), 3)
-		expected = expected[1:4]
-
-		actual, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), objectsV1.GetSLOsRequest{
-			Project: project.GetName(),
-			Pagination: &objectsV1.GetSLOsPagination{
-				Limit:  3,
-				Offset: 1,
-			},
-			Sort: &objectsV1.GetSLOsSort{
-				Column:    objectsV1.GetSLOsSortColumnSLO,
-				Direction: objectsV1.GetSLOsSortDirectionDesc,
-			},
-		})
-
-		require.NoError(t, err)
-		require.Len(t, actual, len(expected))
-		for i := range expected {
-			assertV1alphaSLOsAreEqual(t, expected[i], actual[i])
-		}
+	t.Run("pagination and sorting", func(t *testing.T) {
+		testSLOListSortingAndPagination(t, inputs, dependencies)
 	})
+	t.Run("invalid list query", func(t *testing.T) {
+		testSLOListValidation(t, project.GetName())
+	})
+}
+
+func testSLOListSortingAndPagination(
+	t *testing.T,
+	inputs []v1alphaSLO.SLO,
+	dependencies []manifest.Object,
+) {
+	t.Helper()
+
+	names := make([]string, len(inputs))
+	for i := range inputs {
+		names[i] = inputs[i].Metadata.Name
+	}
+	projectSortValues := map[string]string{defaultProject: defaultProject}
+	for _, project := range manifest.FilterByKind[v1alphaProject.Project](dependencies) {
+		projectSortValues[project.Metadata.Name] = displayNameOrName(
+			project.Metadata.DisplayName,
+			project.Metadata.Name,
+		)
+	}
+	serviceSortValues := make(map[string]string)
+	for _, service := range manifest.FilterByKind[v1alphaService.Service](dependencies) {
+		serviceSortValues[service.Metadata.Project+"/"+service.Metadata.Name] = displayNameOrName(
+			service.Metadata.DisplayName,
+			service.Metadata.Name,
+		)
+	}
+	sortTests := []struct {
+		column    objectsV1.GetSLOsSortColumn
+		value     func(v1alphaSLO.SLO) string
+		timestamp bool
+	}{
+		{
+			column: objectsV1.GetSLOsSortColumnProject,
+			value:  func(slo v1alphaSLO.SLO) string { return projectSortValues[slo.Metadata.Project] },
+		},
+		{
+			column: objectsV1.GetSLOsSortColumnService,
+			value: func(slo v1alphaSLO.SLO) string {
+				return serviceSortValues[slo.Metadata.Project+"/"+slo.Spec.Service]
+			},
+		},
+		{
+			column: objectsV1.GetSLOsSortColumnSLO,
+			value: func(slo v1alphaSLO.SLO) string {
+				return displayNameOrName(slo.Metadata.DisplayName, slo.Metadata.Name)
+			},
+		},
+		{
+			column: objectsV1.GetSLOsSortColumnLastModifiedAt,
+			value: func(slo v1alphaSLO.SLO) string {
+				if slo.Status == nil {
+					return ""
+				}
+				return slo.Status.UpdatedAt
+			},
+			timestamp: true,
+		},
+	}
+	directions := []objectsV1.GetSLOsSortDirection{
+		objectsV1.GetSLOsSortDirectionAsc,
+		objectsV1.GetSLOsSortDirectionDesc,
+	}
+
+	for _, sortTest := range sortTests {
+		for _, direction := range directions {
+			t.Run(string(sortTest.column)+"_"+string(direction), func(t *testing.T) {
+				request := objectsV1.GetSLOsRequest{
+					Project: sdk.ProjectsWildcard,
+					Names:   names,
+					Sort: &objectsV1.GetSLOsSort{
+						Column:    sortTest.column,
+						Direction: direction,
+					},
+				}
+				all, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), request)
+				require.NoError(t, err)
+				require.Len(t, all, len(inputs))
+				assertSLOListSortOrder(t, all, sortTest.value, sortTest.timestamp, direction)
+
+				request.Pagination = &objectsV1.GetSLOsPagination{Limit: 3, Offset: 1}
+				page, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), request)
+				require.NoError(t, err)
+				require.Equal(t, sloListIdentities(all[1:4]), sloListIdentities(page))
+			})
+		}
+	}
+}
+
+func displayNameOrName(displayName, name string) string {
+	if displayName != "" {
+		return displayName
+	}
+	return name
+}
+
+func assertSLOListSortOrder(
+	t *testing.T,
+	slos []v1alphaSLO.SLO,
+	value func(v1alphaSLO.SLO) string,
+	timestamp bool,
+	direction objectsV1.GetSLOsSortDirection,
+) {
+	t.Helper()
+
+	distinct := make(map[string]struct{}, len(slos))
+	for _, slo := range slos {
+		sortValue := value(slo)
+		require.NotEmpty(t, sortValue)
+		distinct[sortValue] = struct{}{}
+	}
+	require.Greater(t, len(distinct), 1)
+	for i := 1; i < len(slos); i++ {
+		comparison := compareSLOListSortValues(t, value(slos[i-1]), value(slos[i]), timestamp)
+		if direction == objectsV1.GetSLOsSortDirectionAsc {
+			require.LessOrEqual(t, comparison, 0)
+		} else {
+			require.GreaterOrEqual(t, comparison, 0)
+		}
+	}
+}
+
+func compareSLOListSortValues(t *testing.T, left, right string, timestamp bool) int {
+	t.Helper()
+	if !timestamp {
+		return cmp.Compare(left, right)
+	}
+	leftTime, err := time.Parse(time.RFC3339Nano, left)
+	require.NoError(t, err)
+	rightTime, err := time.Parse(time.RFC3339Nano, right)
+	require.NoError(t, err)
+	return leftTime.Compare(rightTime)
+}
+
+func sloListIdentities(slos []v1alphaSLO.SLO) []string {
+	result := make([]string, len(slos))
+	for i := range slos {
+		result[i] = slos[i].Metadata.Project + "/" + slos[i].Metadata.Name
+	}
+	return result
+}
+
+func testSLOListValidation(t *testing.T, project string) {
+	t.Helper()
+
+	tests := []struct {
+		name    string
+		query   url.Values
+		wantErr string
+	}{
+		{
+			name:    "zero limit",
+			query:   url.Values{objectsV1.QueryKeyPaginationLimit: []string{"0"}},
+			wantErr: "'pagination.limit' with value '0'",
+		},
+		{
+			name:    "limit above maximum",
+			query:   url.Values{objectsV1.QueryKeyPaginationLimit: []string{"1001"}},
+			wantErr: "must be less than or equal to '1000'",
+		},
+		{
+			name:    "offset without limit",
+			query:   url.Values{objectsV1.QueryKeyPaginationOffset: []string{"1"}},
+			wantErr: "'pagination.limit' with value '0'",
+		},
+		{
+			name: "negative offset",
+			query: url.Values{
+				objectsV1.QueryKeyPaginationLimit:  []string{"1"},
+				objectsV1.QueryKeyPaginationOffset: []string{"-1"},
+			},
+			wantErr: "must be greater than or equal to '0'",
+		},
+		{
+			name: "offset above maximum",
+			query: url.Values{
+				objectsV1.QueryKeyPaginationLimit:  []string{"1"},
+				objectsV1.QueryKeyPaginationOffset: []string{"2147483648"},
+			},
+			wantErr: "must be less than or equal to '2147483647'",
+		},
+		{
+			name:    "invalid sort column",
+			query:   url.Values{objectsV1.QueryKeySortColumn: []string{"createdAt"}},
+			wantErr: "must be one of: project, service, slo, lastModifiedAt",
+		},
+		{
+			name:    "invalid sort direction",
+			query:   url.Values{objectsV1.QueryKeySortDirection: []string{"up"}},
+			wantErr: "must be one of: asc, desc",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := client.Objects().V1().Get(
+				t.Context(),
+				manifest.KindSLO,
+				http.Header{sdk.HeaderProject: []string{project}},
+				test.query,
+			)
+			require.Error(t, err)
+			var httpErr *sdk.HTTPError
+			require.ErrorAs(t, err, &httpErr)
+			require.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+			require.ErrorContains(t, err, test.wantErr)
+		})
+	}
 }
 
 func prepareObjectsForServiceNameFilteringTests(t *testing.T) (slos []v1alphaSLO.SLO, dependencies []manifest.Object) {
