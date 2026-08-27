@@ -27,10 +27,6 @@ const (
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
 	QueryKeyCategory          = "category"
-	QueryKeyPaginationLimit   = "pagination.limit"
-	QueryKeyPaginationOffset  = "pagination.offset"
-	QueryKeySortColumn        = "sort.column"
-	QueryKeySortDirection     = "sort.direction"
 )
 
 type filters struct {
@@ -92,14 +88,14 @@ func (f *filters) String(k, value string) *filters {
 func (r GetSLOsRequest) addListQuery(f *filters) {
 	if r.Pagination != nil {
 		if r.Pagination.Limit > 0 {
-			f.String(QueryKeyPaginationLimit, strconv.Itoa(r.Pagination.Limit))
+			f.String("pagination.limit", strconv.Itoa(r.Pagination.Limit))
 		}
 		if r.Pagination.Offset > 0 {
-			f.String(QueryKeyPaginationOffset, strconv.Itoa(r.Pagination.Offset))
+			f.String("pagination.offset", strconv.Itoa(r.Pagination.Offset))
 		}
 	}
 	if r.Sort != nil {
-		f.String(QueryKeySortColumn, string(r.Sort.Column))
-		f.String(QueryKeySortDirection, string(r.Sort.Direction))
+		f.String("sort.column", string(r.Sort.Column))
+		f.String("sort.direction", string(r.Sort.Direction))
 	}
 }

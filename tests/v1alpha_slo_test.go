@@ -434,43 +434,43 @@ func testSLOListValidation(t *testing.T, project string) {
 	}{
 		{
 			name:    "zero limit",
-			query:   url.Values{objectsV1.QueryKeyPaginationLimit: []string{"0"}},
+			query:   url.Values{"pagination.limit": []string{"0"}},
 			wantErr: "'pagination.limit' with value '0'",
 		},
 		{
 			name:    "limit above maximum",
-			query:   url.Values{objectsV1.QueryKeyPaginationLimit: []string{"1001"}},
+			query:   url.Values{"pagination.limit": []string{"1001"}},
 			wantErr: "must be less than or equal to '1000'",
 		},
 		{
 			name:    "offset without limit",
-			query:   url.Values{objectsV1.QueryKeyPaginationOffset: []string{"1"}},
+			query:   url.Values{"pagination.offset": []string{"1"}},
 			wantErr: "'pagination.limit' with value '0'",
 		},
 		{
 			name: "negative offset",
 			query: url.Values{
-				objectsV1.QueryKeyPaginationLimit:  []string{"1"},
-				objectsV1.QueryKeyPaginationOffset: []string{"-1"},
+				"pagination.limit":  []string{"1"},
+				"pagination.offset": []string{"-1"},
 			},
 			wantErr: "must be greater than or equal to '0'",
 		},
 		{
 			name: "offset above maximum",
 			query: url.Values{
-				objectsV1.QueryKeyPaginationLimit:  []string{"1"},
-				objectsV1.QueryKeyPaginationOffset: []string{"2147483648"},
+				"pagination.limit":  []string{"1"},
+				"pagination.offset": []string{"2147483648"},
 			},
 			wantErr: "must be less than or equal to '2147483647'",
 		},
 		{
 			name:    "invalid sort column",
-			query:   url.Values{objectsV1.QueryKeySortColumn: []string{"createdAt"}},
+			query:   url.Values{"sort.column": []string{"createdAt"}},
 			wantErr: "must be one of: project, service, slo, lastModifiedAt",
 		},
 		{
 			name:    "invalid sort direction",
-			query:   url.Values{objectsV1.QueryKeySortDirection: []string{"up"}},
+			query:   url.Values{"sort.direction": []string{"up"}},
 			wantErr: "must be one of: asc, desc",
 		},
 	}
