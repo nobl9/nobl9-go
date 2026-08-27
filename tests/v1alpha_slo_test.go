@@ -28,7 +28,10 @@ import (
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
-const slosPerService = 50
+const (
+	slosPerService          = 50
+	sloListSortFixtureLabel = "slo-list-sort-fixture"
+)
 
 // nolint: gocognit
 func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
@@ -174,8 +177,15 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	e2etestutils.V1ApplyBatch(t, slos, 50)
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
 	require.Greater(t, len(inputs), 3)
-	inputs[1].Metadata.DisplayName += " updated"
-	e2etestutils.V1Apply(t, []v1alphaSLO.SLO{inputs[1]})
+	sortInputs := inputs[len(inputs)-len(serviceNameFilterSLOs):]
+	require.Len(t, sortInputs, len(serviceNameFilterSLOs))
+	updatedSortInput := len(sortInputs) - 1
+	sortInputs[updatedSortInput].Metadata.DisplayName += " updated"
+	serviceNameFilterSLOs[updatedSortInput] = sortInputs[updatedSortInput]
+	e2etestutils.V1Apply(t, []v1alphaSLO.SLO{sortInputs[updatedSortInput]})
+	sortFixtureLabels := e2etestutils.AnnotateLabels(t, v1alpha.Labels{
+		sloListSortFixtureLabel: []string{""},
+	})
 
 	filterTests := map[string]struct {
 		request    objectsV1.GetSLOsRequest
@@ -277,10 +287,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	}
 
 	t.Run("pagination and sorting", func(t *testing.T) {
-		names := make([]string, len(inputs))
-		for i := range inputs {
-			names[i] = inputs[i].Metadata.Name
-		}
 		projectSortValues := map[string]string{defaultProject: defaultProject}
 		for _, project := range manifest.FilterByKind[v1alphaProject.Project](dependencies) {
 			projectSortValues[project.Metadata.Name] = displayNameOrName(
@@ -337,7 +343,7 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 				t.Run(string(sortTest.column)+"_"+string(direction), func(t *testing.T) {
 					request := objectsV1.GetSLOsRequest{
 						Project: sdk.ProjectsWildcard,
-						Names:   names,
+						Labels:  sortFixtureLabels,
 						Sort: &objectsV1.GetSLOsSort{
 							Column:    sortTest.column,
 							Direction: direction,
@@ -345,13 +351,14 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					}
 					all, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), request)
 					require.NoError(t, err)
-					require.Len(t, all, len(inputs))
-					assertSLOListSortOrder(t, all, sortTest.value, sortTest.timestamp, direction)
+					require.Len(t, all, len(sortInputs))
+					expected := expectedSLOListOrder(t, all, sortTest.value, sortTest.timestamp, direction)
+					require.Equal(t, sloListIdentities(expected), sloListIdentities(all))
 
 					request.Pagination = &objectsV1.GetSLOsPagination{Limit: 3, Offset: 1}
 					page, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), request)
 					require.NoError(t, err)
-					require.Equal(t, sloListIdentities(all[1:4]), sloListIdentities(page))
+					require.Equal(t, sloListIdentities(expected[1:4]), sloListIdentities(page))
 				})
 			}
 		}
@@ -430,13 +437,13 @@ func displayNameOrName(displayName, name string) string {
 	return name
 }
 
-func assertSLOListSortOrder(
+func expectedSLOListOrder(
 	t *testing.T,
 	slos []v1alphaSLO.SLO,
 	value func(v1alphaSLO.SLO) string,
 	timestamp bool,
 	direction objectsV1.GetSLOsSortDirection,
-) {
+) []v1alphaSLO.SLO {
 	t.Helper()
 
 	distinct := make(map[string]struct{}, len(slos))
@@ -446,14 +453,25 @@ func assertSLOListSortOrder(
 		distinct[sortValue] = struct{}{}
 	}
 	require.Greater(t, len(distinct), 1)
-	for i := 1; i < len(slos); i++ {
-		comparison := compareSLOListSortValues(t, value(slos[i-1]), value(slos[i]), timestamp)
-		if direction == objectsV1.GetSLOsSortDirectionAsc {
-			require.LessOrEqual(t, comparison, 0)
-		} else {
-			require.GreaterOrEqual(t, comparison, 0)
+
+	expected := slices.Clone(slos)
+	slices.SortFunc(expected, func(left, right v1alphaSLO.SLO) int {
+		comparison := compareSLOListSortValues(t, value(left), value(right), timestamp)
+		if direction == objectsV1.GetSLOsSortDirectionDesc {
+			comparison = -comparison
 		}
-	}
+		if comparison != 0 {
+			return comparison
+		}
+		if comparison = cmp.Compare(left.Metadata.Project, right.Metadata.Project); comparison != 0 {
+			return comparison
+		}
+		if comparison = cmp.Compare(left.Spec.Service, right.Spec.Service); comparison != 0 {
+			return comparison
+		}
+		return cmp.Compare(left.Metadata.Name, right.Metadata.Name)
+	})
+	return expected
 }
 
 func compareSLOListSortValues(t *testing.T, left, right string, timestamp bool) int {
@@ -483,20 +501,27 @@ func prepareObjectsForServiceNameFilteringTests(t *testing.T) (slos []v1alphaSLO
 	agent := e2etestutils.ProvisionStaticAgent(t, v1alpha.Prometheus)
 
 	// Projects.
-	project1 := generateV1alphaProject(t)
-	project2 := generateV1alphaProject(t)
+	project1 := newV1alphaProject(t, v1alphaProject.Metadata{
+		Name:        "z-" + e2etestutils.GenerateName(),
+		DisplayName: "a-project",
+	})
+	project2 := newV1alphaProject(t, v1alphaProject.Metadata{
+		Name: "m-" + e2etestutils.GenerateName(),
+	})
 	// Services.
 	service1Proj1 := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    e2etestutils.GenerateName(),
-		Project: project1.GetName(),
+		Name:        "z-" + e2etestutils.GenerateName(),
+		DisplayName: "a-service",
+		Project:     project1.GetName(),
 	})
 	service2Proj1 := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    e2etestutils.GenerateName(),
+		Name:    "m-" + e2etestutils.GenerateName(),
 		Project: project1.GetName(),
 	})
 	service1Proj2 := newV1alphaService(t, v1alphaService.Metadata{
-		Name:    service1Proj1.GetName(),
-		Project: project2.GetName(),
+		Name:        service1Proj1.GetName(),
+		DisplayName: "z-service",
+		Project:     project2.GetName(),
 	})
 
 	dependencies = append(
@@ -514,21 +539,53 @@ func prepareObjectsForServiceNameFilteringTests(t *testing.T) (slos []v1alphaSLO
 		e2etestutils.FilterExamplesByDataSourceType(agentType),
 	)
 
-	for i, params := range []struct {
-		project string
-		service string
-		labels  v1alpha.Labels
+	for _, params := range []struct {
+		namePrefix  string
+		displayName string
+		project     string
+		service     string
+		labels      v1alpha.Labels
 	}{
-		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{}},
-		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{"service-name-filter": []string{"bar"}}},
-		{project1.GetName(), service1Proj1.GetName(), v1alpha.Labels{"service-name-filter": []string{"foo"}}},
-		{project1.GetName(), service2Proj1.GetName(), v1alpha.Labels{}},
-		{project2.GetName(), service1Proj2.GetName(), v1alpha.Labels{}},
+		{
+			namePrefix:  "z",
+			displayName: "a-slo",
+			project:     project1.GetName(),
+			service:     service1Proj1.GetName(),
+			labels:      v1alpha.Labels{},
+		},
+		{
+			namePrefix: "b",
+			project:    project1.GetName(),
+			service:    service1Proj1.GetName(),
+			labels:     v1alpha.Labels{"service-name-filter": []string{"bar"}},
+		},
+		{
+			namePrefix:  "a",
+			displayName: "shared-slo",
+			project:     project1.GetName(),
+			service:     service1Proj1.GetName(),
+			labels:      v1alpha.Labels{"service-name-filter": []string{"foo"}},
+		},
+		{
+			namePrefix:  "y",
+			displayName: "shared-slo",
+			project:     project1.GetName(),
+			service:     service2Proj1.GetName(),
+			labels:      v1alpha.Labels{},
+		},
+		{
+			namePrefix:  "c",
+			displayName: "z-slo",
+			project:     project2.GetName(),
+			service:     service1Proj2.GetName(),
+			labels:      v1alpha.Labels{},
+		},
 	} {
+		params.labels[sloListSortFixtureLabel] = []string{""}
 		slo := clone(t, sloTemplate)
 		slo.Metadata = v1alphaSLO.Metadata{
-			Name:        e2etestutils.GenerateName(),
-			DisplayName: fmt.Sprintf("SLO filtered by service %d", i),
+			Name:        params.namePrefix + "-" + e2etestutils.GenerateName(),
+			DisplayName: params.displayName,
 			Project:     params.project,
 			Labels:      e2etestutils.AnnotateLabels(t, params.labels),
 			Annotations: commonAnnotations,
