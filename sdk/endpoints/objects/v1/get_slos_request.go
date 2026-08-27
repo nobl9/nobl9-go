@@ -1,52 +1,46 @@
 package v1
 
-import "errors"
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
 
-const maxGetSLOsLimit = 1000
+const (
+	maxGetSLOsLimit  = 1000
+	maxGetSLOsOffset = 1<<31 - 1
+)
 
 // Validate checks the pagination and sorting contract.
 func (r GetSLOsRequest) Validate() error {
-	if r.Pagination != nil {
-		switch {
-		case r.Pagination.Limit < 0:
-			return errors.New("pagination.limit must be greater than 0 when set")
-		case r.Pagination.Limit > maxGetSLOsLimit:
-			return errors.New("pagination.limit must not exceed 1000")
-		case r.Pagination.Offset < 0:
-			return errors.New("pagination.offset must be greater than or equal to 0")
-		case r.Pagination.Offset > 0 && r.Pagination.Limit == 0:
-			return errors.New("pagination.limit is required when pagination.offset is greater than 0")
-		}
-	}
-	if r.Sort == nil {
-		return nil
-	}
-	if r.Sort.Column != "" && !validGetSLOsSortColumn(r.Sort.Column) {
-		return errors.New("sort.column must be one of: project, service, slo, lastModifiedAt")
-	}
-	if r.Sort.Direction != "" && !validGetSLOsSortDirection(r.Sort.Direction) {
-		return errors.New("sort.direction must be one of: asc, desc")
-	}
-	return nil
+	return getSLOsRequestValidation.Validate(r)
 }
 
-func validGetSLOsSortColumn(column GetSLOsSortColumn) bool {
-	switch column {
-	case GetSLOsSortColumnProject,
-		GetSLOsSortColumnService,
-		GetSLOsSortColumnSLO,
-		GetSLOsSortColumnLastModifiedAt:
-		return true
-	default:
-		return false
-	}
-}
-
-func validGetSLOsSortDirection(direction GetSLOsSortDirection) bool {
-	switch direction {
-	case GetSLOsSortDirectionAsc, GetSLOsSortDirectionDesc:
-		return true
-	default:
-		return false
-	}
-}
+var getSLOsRequestValidation = govy.New[GetSLOsRequest](
+	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsPagination { return r.Pagination }).
+		WithName("pagination").
+		Include(govy.New[GetSLOsPagination](
+			govy.For(func(p GetSLOsPagination) int { return p.Limit }).
+				WithName("limit").
+				Rules(rules.GT(0), rules.LTE(maxGetSLOsLimit)),
+			govy.For(func(p GetSLOsPagination) int { return p.Offset }).
+				WithName("offset").
+				Rules(rules.GTE(0), rules.LTE(maxGetSLOsOffset)),
+		)),
+	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsSort { return r.Sort }).
+		WithName("sort").
+		Include(govy.New[GetSLOsSort](
+			govy.For(func(s GetSLOsSort) GetSLOsSortColumn { return s.Column }).
+				WithName("column").
+				OmitEmpty().
+				Rules(rules.OneOf(
+					GetSLOsSortColumnProject,
+					GetSLOsSortColumnService,
+					GetSLOsSortColumnSLO,
+					GetSLOsSortColumnLastModifiedAt,
+				)),
+			govy.For(func(s GetSLOsSort) GetSLOsSortDirection { return s.Direction }).
+				WithName("direction").
+				OmitEmpty().
+				Rules(rules.OneOf(GetSLOsSortDirectionAsc, GetSLOsSortDirectionDesc)),
+		)),
+).WithName("Get SLOs request")

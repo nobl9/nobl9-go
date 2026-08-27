@@ -18,10 +18,11 @@ type GetServicesRequest struct {
 }
 
 // GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
-// A zero Limit disables pagination. A positive Offset requires a positive Limit.
+// Limit must be between 1 and 1000, and Offset must be between 0 and 2147483647.
+// A nil [GetSLOsRequest.Pagination] returns all matching SLOs.
 type GetSLOsPagination struct {
-	Limit  int `json:"limit,omitempty"`
-	Offset int `json:"offset,omitempty"`
+	Limit  int `json:"limit,omitempty" form:"limit"`
+	Offset int `json:"offset,omitempty" form:"offset"`
 }
 
 // GetSLOsSortColumn identifies a field that can order SLO results.
@@ -47,8 +48,8 @@ const (
 // GetSLOsSort controls the field and direction used to order SLO results.
 // Empty fields default to SLO name in ascending order.
 type GetSLOsSort struct {
-	Column    GetSLOsSortColumn    `json:"column,omitempty"`
-	Direction GetSLOsSortDirection `json:"direction,omitempty"`
+	Column    GetSLOsSortColumn    `json:"column,omitempty" form:"column"`
+	Direction GetSLOsSortDirection `json:"direction,omitempty" form:"direction"`
 }
 
 // GetSLOsRequest filters, orders, and paginates SLO results.
@@ -57,8 +58,8 @@ type GetSLOsRequest struct {
 	Names      []string
 	Labels     v1alpha.Labels
 	Services   []string
-	Pagination *GetSLOsPagination
-	Sort       *GetSLOsSort
+	Pagination *GetSLOsPagination `json:"pagination,omitempty" form:"pagination"`
+	Sort       *GetSLOsSort       `json:"sort,omitempty" form:"sort"`
 }
 
 type GetAgentsRequest struct {
