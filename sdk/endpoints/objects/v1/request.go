@@ -30,6 +30,8 @@ type GetSLOsRequest struct {
 }
 
 // GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
+// Limit must be between 1 and 1000. Offset must be between 0 and 2147483647.
+// A nil [GetSLOsRequest.Pagination] returns all matching SLOs.
 type GetSLOsPagination struct {
 	Limit  int `form:"limit"`
 	Offset int `form:"offset"`
@@ -52,6 +54,9 @@ desc
 type GetSLOsSortDirection string
 
 // GetSLOsSort controls the field and direction used to order SLO results.
+// An empty Column defaults to [GetSLOsSortColumnSLO].
+// An empty Direction defaults to [GetSLOsSortDirectionAsc].
+// A nil [GetSLOsRequest.Sort] uses both defaults.
 type GetSLOsSort struct {
 	Column    GetSLOsSortColumn    `form:"column"`
 	Direction GetSLOsSortDirection `form:"direction"`

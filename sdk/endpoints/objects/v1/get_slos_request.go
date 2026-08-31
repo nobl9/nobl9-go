@@ -15,10 +15,10 @@ func (r GetSLOsRequest) Validate() error {
 	return getSLOsRequestValidation.Validate(r)
 }
 
-var getSLOsRequestValidation = govy.New[GetSLOsRequest](
+var getSLOsRequestValidation = govy.New(
 	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsPagination { return r.Pagination }).
 		WithName("pagination").
-		Include(govy.New[GetSLOsPagination](
+		Include(govy.New(
 			govy.For(func(p GetSLOsPagination) int { return p.Limit }).
 				WithName("limit").
 				Rules(rules.GT(0), rules.LTE(maxGetSLOsLimit)),
@@ -28,7 +28,7 @@ var getSLOsRequestValidation = govy.New[GetSLOsRequest](
 		)),
 	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsSort { return r.Sort }).
 		WithName("sort").
-		Include(govy.New[GetSLOsSort](
+		Include(govy.New(
 			govy.For(func(s GetSLOsSort) GetSLOsSortColumn { return s.Column }).
 				WithName("column").
 				OmitEmpty().
