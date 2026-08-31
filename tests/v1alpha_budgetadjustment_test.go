@@ -40,7 +40,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 						},
 					},
 				},
-			}),
+			},
+		),
 		v1alphaBudgetAdjustment.New(
 			v1alphaBudgetAdjustment.Metadata{
 				Name: e2etestutils.GenerateName(),
@@ -58,7 +59,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments(t *testing.T) {
 						},
 					},
 				},
-			}),
+			},
+		),
 	}
 
 	e2etestutils.V1Apply(t, budgetAdjustments)
@@ -124,7 +126,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+			),
 			error: "string must match regular expression: '^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
 		},
 		"missing duration": {
@@ -142,7 +145,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+			),
 			error: "spec.duration':\n    - property is required but was empty",
 		},
 		"missing first event start": {
@@ -160,7 +164,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+			),
 			error: "spec.firstEventStart':\n    - property is required but was empty",
 		},
 		"duplicated slo": {
@@ -183,7 +188,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+			),
 			error: "SLOs must be unique",
 		},
 		"not existing slo": {
@@ -202,7 +208,8 @@ func Test_Objects_V1_V1alpha_BudgetAdjustments_validation(t *testing.T) {
 							},
 						},
 					},
-				}),
+				},
+			),
 			error: "object SLO foo referenced in its spec does not exist",
 		},
 	}

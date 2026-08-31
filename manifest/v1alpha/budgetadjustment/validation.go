@@ -22,7 +22,8 @@ var validator = govy.New[BudgetAdjustment](
 	validationV1Alpha.FieldRuleAPIVersion(func(b BudgetAdjustment) manifest.Version { return b.APIVersion }),
 	validationV1Alpha.FieldRuleKind(
 		func(b BudgetAdjustment) manifest.Kind { return b.Kind },
-		manifest.KindBudgetAdjustment),
+		manifest.KindBudgetAdjustment,
+	),
 	govy.For(func(b BudgetAdjustment) Metadata { return b.Metadata }).
 		Include(metadataValidation),
 	govy.For(func(b BudgetAdjustment) Spec { return b.Spec }).

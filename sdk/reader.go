@@ -163,18 +163,21 @@ func ReadRawDefinitionsFromSources(ctx context.Context, sources ...*ObjectSource
 var (
 	ErrIoReaderIsNil          = errors.New("io.Reader must no be nil")
 	ErrNoFilesMatchingPattern = errors.Errorf(
-		"no Nobl9 resource definition files matched the provided path pattern, %s", matchingRulesDisclaimer)
+		"no Nobl9 resource definition files matched the provided path pattern, %s", matchingRulesDisclaimer,
+	)
 	ErrNoFilesInPath = errors.Errorf("no Nobl9 resource definition files were found under selected path, %s",
 		matchingRulesDisclaimer)
 	ErrInvalidFile = errors.Errorf("valid Nobl9 resource definition must match against the following regex: '%s'",
 		APIVersionRegex)
 	ErrInvalidSourceType    = errors.New("invalid ObjectSourceType provided")
 	ErrSourceTypeReaderPath = errors.New(
-		"ObjectSourceTypeReader ObjectSource may define at most a single ObjectSource.Path")
+		"ObjectSourceTypeReader ObjectSource may define at most a single ObjectSource.Path",
+	)
 
 	matchingRulesDisclaimer = fmt.Sprintf(
 		"valid resource definition file must have one of the extensions: [%s]",
-		strings.Join(supportedFileExtensions, ","))
+		strings.Join(supportedFileExtensions, ","),
+	)
 )
 
 func getRawDefinitionHash(def []byte) string {

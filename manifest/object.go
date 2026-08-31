@@ -110,7 +110,8 @@ func validateObjectsUniqueness(objects []Object) (err error) {
 		for kind, details := range conflicts {
 			errs = append(errs, fmt.Errorf(
 				`constraint "%s" was violated due to the following conflicts: [%s]`,
-				uniquenessConstraintDetails(kind), strings.Join(details, ", ")))
+				uniquenessConstraintDetails(kind), strings.Join(details, ", "),
+			))
 		}
 	}
 	if len(errs) > 0 {
