@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"slices"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -174,7 +173,11 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 		e2etestutils.V1Delete(t, dependencies)
 	})
 	e2etestutils.V1Apply(t, dependencies)
-	e2etestutils.V1ApplyBatch(t, slos, 50)
+	batchedSLOs := slos[:len(slos)-len(serviceNameFilterSLOs)]
+	e2etestutils.V1ApplyBatch(t, batchedSLOs, 50)
+	for _, slo := range serviceNameFilterSLOs {
+		e2etestutils.V1Apply(t, []v1alphaSLO.SLO{slo})
+	}
 	inputs := manifest.FilterByKind[v1alphaSLO.SLO](slos)
 	require.Greater(t, len(inputs), 3)
 	sortInputs := inputs[len(inputs)-len(serviceNameFilterSLOs):]
@@ -302,9 +305,8 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			)
 		}
 		sortTests := []struct {
-			column    objectsV1.GetSLOsSortColumn
-			value     func(v1alphaSLO.SLO) string
-			timestamp bool
+			column objectsV1.GetSLOsSortColumn
+			value  func(v1alphaSLO.SLO) string
 		}{
 			{
 				column: objectsV1.GetSLOsSortColumnProject,
@@ -330,7 +332,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					}
 					return slo.Status.UpdatedAt
 				},
-				timestamp: true,
 			},
 		}
 		directions := []objectsV1.GetSLOsSortDirection{
@@ -352,7 +353,18 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					all, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), request)
 					require.NoError(t, err)
 					require.Len(t, all, len(sortInputs))
-					expected := expectedSLOListOrder(t, all, sortTest.value, sortTest.timestamp, direction)
+					var expected []v1alphaSLO.SLO
+					if sortTest.column == objectsV1.GetSLOsSortColumnLastModifiedAt {
+						for _, slo := range all {
+							require.NotEmpty(t, sortTest.value(slo))
+						}
+						expected = slices.Clone(sortInputs)
+						if direction == objectsV1.GetSLOsSortDirectionDesc {
+							slices.Reverse(expected)
+						}
+					} else {
+						expected = expectedSLOListOrder(t, all, sortTest.value, direction)
+					}
 					require.Equal(t, sloListIdentities(expected), sloListIdentities(all))
 
 					request.Pagination = &objectsV1.GetSLOsPagination{Limit: 3, Offset: 1}
@@ -441,7 +453,6 @@ func expectedSLOListOrder(
 	t *testing.T,
 	slos []v1alphaSLO.SLO,
 	value func(v1alphaSLO.SLO) string,
-	timestamp bool,
 	direction objectsV1.GetSLOsSortDirection,
 ) []v1alphaSLO.SLO {
 	t.Helper()
@@ -456,7 +467,7 @@ func expectedSLOListOrder(
 
 	expected := slices.Clone(slos)
 	slices.SortFunc(expected, func(left, right v1alphaSLO.SLO) int {
-		comparison := compareSLOListSortValues(t, value(left), value(right), timestamp)
+		comparison := cmp.Compare(value(left), value(right))
 		if direction == objectsV1.GetSLOsSortDirectionDesc {
 			comparison = -comparison
 		}
@@ -472,18 +483,6 @@ func expectedSLOListOrder(
 		return cmp.Compare(left.Metadata.Name, right.Metadata.Name)
 	})
 	return expected
-}
-
-func compareSLOListSortValues(t *testing.T, left, right string, timestamp bool) int {
-	t.Helper()
-	if !timestamp {
-		return cmp.Compare(left, right)
-	}
-	leftTime, err := time.Parse(time.RFC3339Nano, left)
-	require.NoError(t, err)
-	rightTime, err := time.Parse(time.RFC3339Nano, right)
-	require.NoError(t, err)
-	return leftTime.Compare(rightTime)
 }
 
 func sloListIdentities(slos []v1alphaSLO.SLO) []string {
