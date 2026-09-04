@@ -135,7 +135,8 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
 				Code: rules.ErrorCodeRequired,
-			})
+			},
+		)
 	})
 	t.Run("fails with invalid bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
@@ -153,7 +154,8 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
 				Code: rules.ErrorCodeStringMatchRegexp,
-			})
+			},
+		)
 	})
 	t.Run("fails with invalid role ARN", func(t *testing.T) {
 		dataExport := validDataExport()
@@ -171,7 +173,8 @@ func TestValidate_Spec_Spec_S3(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
 				Code: rules.ErrorCodeStringLength,
-			})
+			},
+		)
 	})
 }
 
@@ -203,7 +206,8 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
 				Code: rules.ErrorCodeRequired,
-			})
+			},
+		)
 	})
 	t.Run("fails with invalid bucket name", func(t *testing.T) {
 		dataExport := validDataExport()
@@ -221,7 +225,8 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.bucketName",
 				Code: rules.ErrorCodeStringMatchRegexp,
-			})
+			},
+		)
 	})
 	t.Run("fails with invalid role ARN", func(t *testing.T) {
 		dataExport := validDataExport()
@@ -239,7 +244,8 @@ func TestValidate_Spec_Spec_Snowflake(t *testing.T) {
 			testutils.ExpectedError{
 				Prop: "spec.spec.roleArn",
 				Code: rules.ErrorCodeStringLength,
-			})
+			},
+		)
 	})
 }
 

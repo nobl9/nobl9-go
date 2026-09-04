@@ -55,7 +55,8 @@ var instanaCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("instana.metricType", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(rules.ErrorCodeEqualTo)),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
+		),
 ).When(
 	whenCountMetricsIs(v1alpha.Instana),
 	govy.WhenDescription("countMetrics is instana"),
@@ -73,13 +74,15 @@ var instanaValidation = govy.ForPointer(func(m MetricSpec) *InstanaMetric { retu
 			if v.Infrastructure == nil {
 				return errors.Errorf(
 					"when 'metricType' is '%s', 'instana.infrastructure' is required",
-					instanaMetricTypeInfrastructure)
+					instanaMetricTypeInfrastructure,
+				)
 			}
 		case instanaMetricTypeApplication:
 			if v.Application == nil {
 				return errors.Errorf(
 					"when 'metricType' is '%s', 'instana.application' is required",
-					instanaMetricTypeApplication)
+					instanaMetricTypeApplication,
+				)
 			}
 		}
 		return nil

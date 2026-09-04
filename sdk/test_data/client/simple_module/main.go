@@ -17,7 +17,8 @@ import (
 func main() {
 	config, err := sdk.ReadConfig(
 		sdk.ConfigOptionWithCredentials("clientId", "clientSecret"),
-		sdk.ConfigOptionNoConfigFile())
+		sdk.ConfigOptionNoConfigFile(),
+	)
 	config.DisableOkta = true
 	config.Organization = "organization"
 	if err != nil {

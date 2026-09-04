@@ -43,7 +43,8 @@ var specValidation = govy.New[Spec](
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayValidationRule,
-			releaseChannelValidationRule),
+			releaseChannelValidationRule,
+		),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -198,7 +199,8 @@ var (
 						(u.Scheme != "https" || pathURL != "") {
 						return errors.New(
 							"Dynatrace SaaS URL (live.dynatrace.com) requires https scheme and empty URL path" +
-								"; example: https://rxh50243.live.dynatrace.com/")
+								"; example: https://rxh50243.live.dynatrace.com/",
+						)
 					}
 					return nil
 				}),
@@ -336,7 +338,8 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 		if onlyType != typ {
 			return errors.Errorf(
 				"must have exactly one data source type, detected both %s and %s",
-				onlyType, typ)
+				onlyType, typ,
+			)
 		}
 		return nil
 	}

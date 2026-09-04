@@ -246,7 +246,8 @@ func (timeWindow CalendarTimeWindow) String() string {
 		"Calendar %s %s %s",
 		timeWindow.unitCount,
 		timeWindow.TimeZone,
-		timeWindow.GetStartTime().Format(time.RFC3339))
+		timeWindow.GetStartTime().Format(time.RFC3339),
+	)
 }
 
 func (timeWindow CalendarTimeWindow) Type() TimeWindowTypeEnum {

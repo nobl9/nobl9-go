@@ -72,7 +72,8 @@ var s3Validation = govy.New[S3DataExportSpec](
 		Required().
 		Rules(
 			rules.StringMatchRegexp(S3BucketNameRegexp).
-				WithDetails("must be a valid S3 bucket name")),
+				WithDetails("must be a valid S3 bucket name"),
+		),
 	govy.For(func(c S3DataExportSpec) string { return c.RoleARN }).
 		WithName("roleArn").
 		Required().
@@ -81,7 +82,8 @@ var s3Validation = govy.New[S3DataExportSpec](
 			//nolint:lll
 			//cspell:ignore FFFD
 			rules.StringMatchRegexp(regexp.MustCompile(`^[\x{0009}\x{000A}\x{000D}\x{0020}-\x{007E}\x{0085}\x{00A0}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]+$`)).
-				WithDetails("must be a valid ARN")),
+				WithDetails("must be a valid ARN"),
+		),
 )
 
 var gcsSpecValidation = govy.New[Spec](

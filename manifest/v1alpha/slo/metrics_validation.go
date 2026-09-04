@@ -87,21 +87,24 @@ var goodAndBadOverTotalMetricsValidation = govy.New[CountMetricsSpec](
 		Include(
 			metricSpecValidation,
 			countMetricsValidation,
-			lightstepTotalCountMetricValidation),
+			lightstepTotalCountMetricValidation,
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.GoodMetric }).
 		WithName("good").
 		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.BadMetric == nil }).
 		Include(
 			metricSpecValidation,
 			countMetricsValidation,
-			lightstepGoodCountMetricValidation),
+			lightstepGoodCountMetricValidation,
+		),
 	govy.ForPointer(func(c CountMetricsSpec) *MetricSpec { return c.BadMetric }).
 		WithName("bad").
 		When(func(c CountMetricsSpec) bool { return c.TotalMetric != nil && c.GoodMetric == nil }).
 		Rules(oneOfBadOverTotalValidationRule).
 		Include(
 			countMetricsValidation,
-			metricSpecValidation),
+			metricSpecValidation,
+		),
 ).
 	Cascade(govy.CascadeModeContinue)
 
@@ -144,7 +147,8 @@ var countMetricsValidation = govy.New[MetricSpec](
 		Include(
 			pingdomCountMetricsValidation,
 			thousandEyesCountMetricsValidation,
-			instanaCountMetricsValidation),
+			instanaCountMetricsValidation,
+		),
 )
 
 var singleQueryMetricSpecValidation = govy.New[MetricSpec](
@@ -289,7 +293,8 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		if onlyType != typ {
 			return errors.Errorf(
 				"must have exactly one metric spec type, detected both %s and %s",
-				onlyType, typ)
+				onlyType, typ,
+			)
 		}
 		return nil
 	}
@@ -458,7 +463,8 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 			if objective.TimeSliceTarget == nil {
 				return govy.NewPropertyError(
 					jsonpath.New().Name("objectives").Index(uint(i)).Name("timeSliceTarget"),
-					objective.TimeSliceTarget, validationV1Alpha.NewRequiredError())
+					objective.TimeSliceTarget, validationV1Alpha.NewRequiredError(),
+				)
 			}
 		case BudgetingMethodOccurrences.String():
 			if objective.TimeSliceTarget != nil {
@@ -468,8 +474,11 @@ var timeSliceTargetsValidationRule = govy.NewRule(func(s Spec) error {
 					govy.NewRuleError(
 						fmt.Sprintf(
 							"property may only be used with budgetingMethod == '%s'",
-							BudgetingMethodTimeslices),
-						rules.ErrorCodeForbidden))
+							BudgetingMethodTimeslices,
+						),
+						rules.ErrorCodeForbidden,
+					),
+				)
 			}
 		}
 	}

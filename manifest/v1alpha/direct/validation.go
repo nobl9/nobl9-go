@@ -41,7 +41,8 @@ var specValidation = govy.New[Spec](
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayValidationRule,
-			releaseChannelValidationRule),
+			releaseChannelValidationRule,
+		),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -275,7 +276,8 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 		if onlyType != typ {
 			return errors.Errorf(
 				"must have exactly one data source type, detected both %s and %s",
-				onlyType, typ)
+				onlyType, typ,
+			)
 		}
 		return nil
 	}
