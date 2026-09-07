@@ -1488,8 +1488,8 @@ func TestValidate_Spec_CountMetrics(t *testing.T) {
 	})
 	t.Run("bad over total disabled", func(t *testing.T) {
 		for _, typ := range v1alpha.DataSourceTypeValues() {
-			// ThousandEyes is not supported for good/bad over total at all.
-			if typ == v1alpha.ThousandEyes {
+			// These data sources support only raw metrics.
+			if typ == v1alpha.ThousandEyes || typ == v1alpha.Zscaler {
 				continue
 			}
 			if slices.Contains(internal.BadOverTotalEnabledSources, typ) {
@@ -2019,6 +2019,11 @@ fetch consumed_api
 	}},
 	v1alpha.Dash0: {Dash0: &Dash0Metric{
 		PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
+	}},
+	v1alpha.Zscaler: {Zscaler: &ZscalerMetric{
+		AppID:      12345,
+		LocationID: ptr(int64(6789)),
+		Metric:     "score",
 	}},
 }
 

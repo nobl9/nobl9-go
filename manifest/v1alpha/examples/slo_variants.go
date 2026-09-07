@@ -1123,6 +1123,32 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				},
 			}))
 		}
+	case v1alpha.Zscaler:
+		objective := &slo.Spec.Objectives[0]
+		objective.BudgetTarget = ptr(0.99)
+		switch s.MetricSubVariant {
+		case "score":
+			objective.DisplayName = "Application ZDX score above 65"
+			objective.Value = ptr(65.0)
+			objective.Operator = ptr(v1alpha.GreaterThan.String())
+		case "availability":
+			objective.DisplayName = "Application availability at least 99 percent"
+			objective.Value = ptr(99.0)
+			objective.Operator = ptr(v1alpha.GreaterThanEqual.String())
+		case "pft":
+			objective.DisplayName = "Page fetch time below 2000 ms"
+			objective.Value = ptr(2000.0)
+			objective.Operator = ptr(v1alpha.LessThan.String())
+		case "dns":
+			objective.DisplayName = "DNS time below 100 ms"
+			objective.Value = ptr(100.0)
+			objective.Operator = ptr(v1alpha.LessThan.String())
+		}
+		return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ZscalerMetric{
+			AppID:      12345,
+			LocationID: ptr(int64(6789)),
+			Metric:     s.MetricSubVariant,
+		}))
 	case v1alpha.Dash0:
 		switch s.MetricVariant {
 		case metricVariantThreshold:
@@ -1240,6 +1266,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.Atlas = &v
 	case v1alphaSLO.Dash0Metric:
 		spec.Dash0 = &v
+	case v1alphaSLO.ZscalerMetric:
+		spec.Zscaler = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}
