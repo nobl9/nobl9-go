@@ -203,6 +203,7 @@
     "upsert",
     "usergroup",
     "usrmgmt",
-    "wincrypt"
+    "wincrypt",
+    "zslogin"
   ]
 }
