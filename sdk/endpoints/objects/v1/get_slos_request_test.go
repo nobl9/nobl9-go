@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"math"
 	"testing"
 
 	"github.com/nobl9/govy/pkg/govytest"
@@ -28,7 +29,7 @@ func TestGetSLOsRequest_Validate(t *testing.T) {
 		{
 			name: "maximum pagination values",
 			request: GetSLOsRequest{
-				Pagination: &GetSLOsPagination{Limit: maxGetSLOsLimit, Offset: maxGetSLOsOffset},
+				Pagination: &GetSLOsPagination{Limit: maxGetSLOsLimit, Offset: math.MaxInt},
 			},
 		},
 		{
@@ -81,19 +82,6 @@ func TestGetSLOsRequest_Validate(t *testing.T) {
 				{
 					PropertyPath:  "pagination.offset",
 					Code:          rules.ErrorCodeGreaterThanOrEqualTo,
-					ValidatorName: "Get SLOs request",
-				},
-			},
-		},
-		{
-			name: "offset above maximum",
-			request: GetSLOsRequest{
-				Pagination: &GetSLOsPagination{Limit: 1, Offset: maxGetSLOsOffset + 1},
-			},
-			expectedErrors: []govytest.ExpectedRuleError{
-				{
-					PropertyPath:  "pagination.offset",
-					Code:          rules.ErrorCodeLessThanOrEqualTo,
 					ValidatorName: "Get SLOs request",
 				},
 			},

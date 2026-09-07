@@ -5,10 +5,7 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
-const (
-	maxGetSLOsLimit  = 1000
-	maxGetSLOsOffset = 1<<31 - 1
-)
+const maxGetSLOsLimit = 1000
 
 // Validate checks the pagination and sorting contract.
 func (r GetSLOsRequest) Validate() error {
@@ -24,7 +21,7 @@ var getSLOsRequestValidation = govy.New(
 				Rules(rules.GT(0), rules.LTE(maxGetSLOsLimit)),
 			govy.For(func(p GetSLOsPagination) int { return p.Offset }).
 				WithName("offset").
-				Rules(rules.GTE(0), rules.LTE(maxGetSLOsOffset)),
+				Rules(rules.GTE(0)),
 		)),
 	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsSort { return r.Sort }).
 		WithName("sort").

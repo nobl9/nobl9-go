@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"slices"
@@ -290,6 +291,19 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 	}
 
 	t.Run("pagination and sorting", func(t *testing.T) {
+		t.Run("offset beyond result set", func(t *testing.T) {
+			slos, err := client.Objects().V1().GetV1alphaSLOs(t.Context(), objectsV1.GetSLOsRequest{
+				Project: sdk.ProjectsWildcard,
+				Labels:  sortFixtureLabels,
+				Pagination: &objectsV1.GetSLOsPagination{
+					Limit:  1,
+					Offset: math.MaxInt,
+				},
+			})
+			require.NoError(t, err)
+			require.Empty(t, slos)
+		})
+
 		projectSortValues := map[string]string{defaultProject: defaultProject}
 		for _, project := range manifest.FilterByKind[v1alphaProject.Project](dependencies) {
 			projectSortValues[project.Metadata.Name] = displayNameOrName(
@@ -403,14 +417,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 					"pagination.offset": []string{"-1"},
 				},
 				wantErr: "must be greater than or equal to '0'",
-			},
-			{
-				name: "offset above maximum",
-				query: url.Values{
-					"pagination.limit":  []string{"1"},
-					"pagination.offset": []string{"2147483648"},
-				},
-				wantErr: "must be less than or equal to '2147483647'",
 			},
 			{
 				name:    "invalid sort column",

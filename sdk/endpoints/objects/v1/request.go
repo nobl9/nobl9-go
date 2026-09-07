@@ -20,17 +20,18 @@ type GetServicesRequest struct {
 }
 
 // GetSLOsRequest filters, orders, and paginates SLO results.
+// Form decoding excludes filters, which the API parses separately.
 type GetSLOsRequest struct {
-	Project    string
-	Names      []string
-	Labels     v1alpha.Labels
-	Services   []string
+	Project    string             `form:"-"`
+	Names      []string           `form:"-"`
+	Labels     v1alpha.Labels     `form:"-"`
+	Services   []string           `form:"-"`
 	Pagination *GetSLOsPagination `form:"pagination"`
 	Sort       *GetSLOsSort       `form:"sort"`
 }
 
 // GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
-// Limit must be between 1 and 1000. Offset must be between 0 and 2147483647.
+// Limit must be between 1 and 1000. Offset must be nonnegative.
 // A nil [GetSLOsRequest.Pagination] returns all matching SLOs.
 type GetSLOsPagination struct {
 	Limit  int `form:"limit"`
