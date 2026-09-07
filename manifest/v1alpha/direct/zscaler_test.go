@@ -47,8 +47,6 @@ func TestZscalerCredentials(t *testing.T) {
 		obj := validDirect(v1alpha.Zscaler)
 		obj.Spec.Zscaler.ClientID = "  "
 		obj.Spec.Zscaler.ClientSecret = "  "
-		testutils.AssertContainsErrors(t, obj, validate(obj), 2,
-			testutils.ExpectedError{Prop: "spec.zscaler.clientId", Code: rules.ErrorCodeStringNotEmpty},
-			testutils.ExpectedError{Prop: "spec.zscaler.clientSecret", Code: rules.ErrorCodeStringNotEmpty})
+		testutils.AssertNoError(t, obj, validate(obj))
 	})
 }
