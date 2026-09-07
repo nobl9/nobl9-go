@@ -129,16 +129,6 @@ var (
 			WithName("vanityDomain").
 			Required().
 			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
-		govy.For(func(z ZscalerConfig) string { return z.ClientID }).
-			WithName("clientId").
-			HideValue().
-			OmitEmpty().
-			Rules(rules.StringNotEmpty()),
-		govy.For(func(z ZscalerConfig) string { return z.ClientSecret }).
-			WithName("clientSecret").
-			HideValue().
-			OmitEmpty().
-			Rules(rules.StringNotEmpty()),
 	)
 	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
