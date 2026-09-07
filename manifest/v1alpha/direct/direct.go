@@ -63,6 +63,7 @@ type Spec struct {
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
+	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	Elasticsearch           *ElasticsearchConfig             `json:"elasticsearch,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
@@ -99,6 +100,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.LogicMonitor:        {},
 	v1alpha.AzurePrometheus:     {},
 	v1alpha.Dash0:               {},
+	v1alpha.Zscaler:             {},
 	v1alpha.Elasticsearch:       {},
 }
 
@@ -151,6 +153,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzurePrometheus, nil
 	case spec.Dash0 != nil:
 		return v1alpha.Dash0, nil
+	case spec.Zscaler != nil:
+		return v1alpha.Zscaler, nil
 	case spec.Elasticsearch != nil:
 		return v1alpha.Elasticsearch, nil
 	}
@@ -292,6 +296,16 @@ type AzurePrometheusConfig struct {
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
 	Step         int    `json:"step,omitempty"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	// VanityDomain is the tenant label in <tenant>.zslogin.net, without the suffix.
+	VanityDomain string `json:"vanityDomain"`
+	// ClientID identifies the OneAPI client. Omit it on updates to preserve the stored value.
+	ClientID string `json:"clientId,omitempty"`
+	// ClientSecret authenticates the OneAPI client. Omit it on updates to preserve the stored value.
+	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
 // Dash0Config represents content of Dash0 Configuration typical for Direct Object.

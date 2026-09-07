@@ -115,12 +115,31 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
 )
 
 var (
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
+		govy.For(func(z ZscalerConfig) string { return z.ClientID }).
+			WithName("clientId").
+			HideValue().
+			OmitEmpty().
+			Rules(rules.StringNotEmpty()),
+		govy.For(func(z ZscalerConfig) string { return z.ClientSecret }).
+			WithName("clientSecret").
+			HideValue().
+			OmitEmpty().
+			Rules(rules.StringNotEmpty()),
+	)
 	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
@@ -386,6 +405,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Elasticsearch != nil {
 		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
+			return err
+		}
+	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
 			return err
 		}
 	}

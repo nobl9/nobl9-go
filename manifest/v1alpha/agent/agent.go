@@ -73,6 +73,7 @@ type Spec struct {
 	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
 	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
+	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -160,6 +161,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Atlas, nil
 	case s.Dash0 != nil:
 		return v1alpha.Dash0, nil
+	case s.Zscaler != nil:
+		return v1alpha.Zscaler, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -305,6 +308,12 @@ type AtlasConfig struct {
 	SlicURL       string `json:"slicUrl"`
 	SlicStep      int    `json:"slicStep,omitempty"`
 	DataReplayURL string `json:"dataReplayUrl"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	// VanityDomain is the tenant label in <tenant>.zslogin.net, without the suffix.
+	VanityDomain string `json:"vanityDomain"`
 }
 
 // Dash0Config represents content of Dash0 Configuration typical for Agent Object.
