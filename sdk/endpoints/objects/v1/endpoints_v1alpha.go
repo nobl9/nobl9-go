@@ -58,6 +58,9 @@ func (e endpoints) GetV1alphaSLOs(
 	ctx context.Context,
 	params GetSLOsRequest,
 ) ([]v1alphaSLO.SLO, error) {
+	if err := params.Validate(); err != nil {
+		return nil, err
+	}
 	f := filterBy().
 		Project(params.Project).
 		Labels(params.Labels).
@@ -65,6 +68,7 @@ func (e endpoints) GetV1alphaSLOs(
 	if len(params.Services) > 0 {
 		f = f.Strings(QueryKeyServiceName, params.Services)
 	}
+	params.addListQuery(f)
 	objects, err := e.Get(ctx, manifest.KindSLO, f.Header, f.Query)
 	if err != nil {
 		return nil, err
