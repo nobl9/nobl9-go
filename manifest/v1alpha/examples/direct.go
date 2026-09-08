@@ -49,6 +49,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.SplunkObservability,
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
+	v1alpha.Elasticsearch,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -212,6 +213,11 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 			AuthToken: "[secret]",
 			Step:      60,
+		}
+	case v1alpha.Elasticsearch:
+		direct.Spec.Elasticsearch = &v1alphaDirect.ElasticsearchConfig{
+			URL:    "https://example.aws.found.io",
+			APIKey: "[secret]",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

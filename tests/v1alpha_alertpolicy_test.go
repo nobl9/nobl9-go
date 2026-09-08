@@ -4,6 +4,7 @@ package tests
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -145,6 +146,7 @@ func newV1alphaAlertPolicy(
 
 func assertV1alphaAlertPoliciesAreEqual(t *testing.T, expected, actual v1alphaAlertPolicy.AlertPolicy) {
 	t.Helper()
+	expected.Spec.Conditions = slices.Clone(expected.Spec.Conditions)
 	for i := range expected.Spec.Conditions {
 		if expected.Spec.Conditions[i].AlertingWindow == "" && expected.Spec.Conditions[i].LastsForDuration == "" {
 			expected.Spec.Conditions[i].LastsForDuration = "0m"

@@ -63,6 +63,7 @@ type Spec struct {
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
+	Elasticsearch           *ElasticsearchConfig             `json:"elasticsearch,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -98,6 +99,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.LogicMonitor:        {},
 	v1alpha.AzurePrometheus:     {},
 	v1alpha.Dash0:               {},
+	v1alpha.Elasticsearch:       {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -149,6 +151,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzurePrometheus, nil
 	case spec.Dash0 != nil:
 		return v1alpha.Dash0, nil
+	case spec.Elasticsearch != nil:
+		return v1alpha.Elasticsearch, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -295,4 +299,10 @@ type Dash0Config struct {
 	URL       string `json:"url"`
 	AuthToken string `json:"authToken"`
 	Step      int    `json:"step,omitempty"`
+}
+
+// ElasticsearchConfig represents Elasticsearch configuration for a Direct object.
+type ElasticsearchConfig struct {
+	URL    string `json:"url"`
+	APIKey string `json:"apiKey"`
 }

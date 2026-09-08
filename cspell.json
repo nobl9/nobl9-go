@@ -107,7 +107,6 @@
     "gopackage",
     "goreleaser",
     "gosec",
-    "govulncheck",
     "govy",
     "govytest",
     "group-Q72HorLyjjCc",
@@ -159,6 +158,7 @@
     "promql",
     "promv",
     "puml",
+    "reimports",
     "retryable",
     "retryablehttp",
     "retryhttp",
@@ -189,9 +189,11 @@
     "submatches",
     "sumologic",
     "testutils",
+    "timemachine",
     "timeseries",
     "timeslice",
     "timeslices",
+    "timetravel",
     "tmpl",
     "tpng",
     "tsdb",
@@ -200,8 +202,6 @@
     "upsert",
     "usergroup",
     "usrmgmt",
-    "vuln",
-    "vulns",
     "wincrypt"
   ]
 }

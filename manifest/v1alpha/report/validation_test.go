@@ -1489,6 +1489,31 @@ func TestAtLeastDailyFreq(t *testing.T) {
 }
 
 func TestValidate_Spec_ReliabilityRollup(t *testing.T) {
+	t.Run("passes with omitted reliabilityScoreType", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		err := validate(report)
+		testutils.AssertNoError(t, report, err)
+	})
+
+	t.Run("passes with valid reliabilityScoreType", func(t *testing.T) {
+		for _, typ := range ReliabilityScoreTypeValues() {
+			report := validReliabilityRollupReport()
+			report.Spec.ReliabilityRollup.ReliabilityScoreType = typ
+			err := validate(report)
+			testutils.AssertNoError(t, report, err)
+		}
+	})
+
+	t.Run("fails with unsupported reliabilityScoreType", func(t *testing.T) {
+		report := validReliabilityRollupReport()
+		report.Spec.ReliabilityRollup.ReliabilityScoreType = ReliabilityScoreType("unsupported")
+		err := validate(report)
+		testutils.AssertContainsErrors(t, report, err, 1, testutils.ExpectedError{
+			Prop: "spec.reliabilityRollup.reliabilityScoreType",
+			Code: rules.ErrorCodeOneOf,
+		})
+	})
+
 	t.Run("passes with filters and no customHierarchy", func(t *testing.T) {
 		report := validReliabilityRollupReport()
 		err := validate(report)

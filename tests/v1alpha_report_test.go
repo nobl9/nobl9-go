@@ -21,7 +21,7 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 	t.Parallel()
 	project := generateV1alphaProject(t)
 	timeZone := "Europe/Warsaw"
-	reports := []v1alphaReport.Report{
+	systemHealthReviewReports := []v1alphaReport.Report{
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -193,6 +193,57 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 				},
 			}),
 	}
+	reliabilityRollupReports := []v1alphaReport.Report{
+		v1alphaReport.New(
+			v1alphaReport.Metadata{
+				Name:        e2etestutils.GenerateName(),
+				DisplayName: "Reliability Rollup - SLO Time Window",
+			},
+			v1alphaReport.Spec{
+				Shared: true,
+				Filters: &v1alphaReport.Filters{
+					Projects: []string{project.GetName()},
+				},
+				ReliabilityRollup: &v1alphaReport.ReliabilityRollupConfig{
+					ReliabilityScoreType: v1alphaReport.ReliabilityScoreTypeSLOTimeWindow,
+					TimeFrame: v1alphaReport.ReliabilityRollupTimeFrame{
+						Rolling: &v1alphaReport.RollingTimeFrame{
+							Repeat: v1alphaReport.Repeat{
+								Unit:  ptr("Week"),
+								Count: ptr(1),
+							},
+						},
+						TimeZone: timeZone,
+					},
+				},
+			}),
+		v1alphaReport.New(
+			v1alphaReport.Metadata{
+				Name:        e2etestutils.GenerateName(),
+				DisplayName: "Reliability Rollup - Report Time Frame",
+			},
+			v1alphaReport.Spec{
+				Shared: true,
+				Filters: &v1alphaReport.Filters{
+					Projects: []string{project.GetName()},
+				},
+				ReliabilityRollup: &v1alphaReport.ReliabilityRollupConfig{
+					ReliabilityScoreType: v1alphaReport.ReliabilityScoreTypeReportTimeFrame,
+					TimeFrame: v1alphaReport.ReliabilityRollupTimeFrame{
+						Rolling: &v1alphaReport.RollingTimeFrame{
+							Repeat: v1alphaReport.Repeat{
+								Unit:  ptr("Week"),
+								Count: ptr(1),
+							},
+						},
+						TimeZone: timeZone,
+					},
+				},
+			}),
+	}
+	reports := make([]v1alphaReport.Report, 0, len(systemHealthReviewReports)+len(reliabilityRollupReports))
+	reports = append(reports, systemHealthReviewReports...)
+	reports = append(reports, reliabilityRollupReports...)
 
 	allObjects := make([]manifest.Object, 0, 1+len(reports))
 	allObjects = append(
@@ -221,6 +272,15 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 				Names: []string{reports[0].Metadata.Name},
 			},
 			expected: []v1alphaReport.Report{reports[0]},
+		},
+		"filter Reliability Rollup by name": {
+			request: objectsV1.GetReportsRequest{
+				Names: []string{
+					reliabilityRollupReports[0].Metadata.Name,
+					reliabilityRollupReports[1].Metadata.Name,
+				},
+			},
+			expected: reliabilityRollupReports,
 		},
 	}
 	for name, test := range filterTests {
