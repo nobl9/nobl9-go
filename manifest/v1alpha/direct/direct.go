@@ -63,8 +63,8 @@ type Spec struct {
 	LogicMonitor            *LogicMonitorConfig              `json:"logicMonitor,omitempty"`
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
-	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	Elasticsearch           *ElasticsearchConfig             `json:"elasticsearch,omitempty"`
+	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -100,8 +100,8 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.LogicMonitor:        {},
 	v1alpha.AzurePrometheus:     {},
 	v1alpha.Dash0:               {},
-	v1alpha.Zscaler:             {},
 	v1alpha.Elasticsearch:       {},
+	v1alpha.Zscaler:             {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -153,10 +153,10 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.AzurePrometheus, nil
 	case spec.Dash0 != nil:
 		return v1alpha.Dash0, nil
-	case spec.Zscaler != nil:
-		return v1alpha.Zscaler, nil
 	case spec.Elasticsearch != nil:
 		return v1alpha.Elasticsearch, nil
+	case spec.Zscaler != nil:
+		return v1alpha.Zscaler, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -298,13 +298,6 @@ type AzurePrometheusConfig struct {
 	Step         int    `json:"step,omitempty"`
 }
 
-// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
-type ZscalerConfig struct {
-	VanityDomain string `json:"vanityDomain"`
-	ClientID     string `json:"clientId,omitempty"`
-	ClientSecret string `json:"clientSecret,omitempty"`
-}
-
 // Dash0Config represents content of Dash0 Configuration typical for Direct Object.
 type Dash0Config struct {
 	URL       string `json:"url"`
@@ -316,4 +309,11 @@ type Dash0Config struct {
 type ElasticsearchConfig struct {
 	URL    string `json:"url"`
 	APIKey string `json:"apiKey"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	VanityDomain string `json:"vanityDomain"`
+	ClientID     string `json:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty"`
 }
