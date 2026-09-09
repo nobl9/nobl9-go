@@ -312,7 +312,6 @@ type AtlasConfig struct {
 
 // ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
 type ZscalerConfig struct {
-	// VanityDomain is the tenant label in <tenant>.zslogin.net, without the suffix.
 	VanityDomain string `json:"vanityDomain"`
 }
 

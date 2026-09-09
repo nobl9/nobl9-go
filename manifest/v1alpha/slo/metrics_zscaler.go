@@ -7,12 +7,9 @@ import (
 
 // ZscalerMetric selects an application-level ZDX time series, optionally filtered by location.
 type ZscalerMetric struct {
-	// AppID is the positive numeric ZDX application ID.
-	AppID int64 `json:"appId"`
-	// LocationID is the positive numeric ZDX location ID. Omit it to include all locations.
+	AppID      int64  `json:"appId"`
 	LocationID *int64 `json:"locationId,omitempty"`
-	// Metric selects score, page fetch time (pft), DNS time (dns), or availability.
-	Metric string `json:"metric"`
+	Metric     string `json:"metric"`
 }
 
 var zscalerValidation = govy.New[ZscalerMetric](
