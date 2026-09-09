@@ -150,12 +150,6 @@ var specValidation = govy.New[Spec](
 )
 
 var (
-	zscalerValidation = govy.New[ZscalerConfig](
-		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
-			WithName("vanityDomain").
-			Required().
-			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
-	)
 	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
@@ -291,6 +285,12 @@ var (
 			WithName("step").
 			OmitEmpty().
 			Rules(rules.GTE(15)),
+	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
 	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).

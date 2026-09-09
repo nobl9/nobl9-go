@@ -310,13 +310,13 @@ type AtlasConfig struct {
 	DataReplayURL string `json:"dataReplayUrl"`
 }
 
-// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
-type ZscalerConfig struct {
-	VanityDomain string `json:"vanityDomain"`
-}
-
 // Dash0Config represents content of Dash0 Configuration typical for Agent Object.
 type Dash0Config struct {
 	URL  string `json:"url"`
 	Step int    `json:"step,omitempty"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	VanityDomain string `json:"vanityDomain"`
 }

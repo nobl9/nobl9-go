@@ -115,21 +115,15 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
-	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
-		WithName("zscaler").
-		Include(zscalerValidation),
 	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
-	zscalerValidation = govy.New[ZscalerConfig](
-		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
-			WithName("vanityDomain").
-			Required().
-			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
-	)
 	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
@@ -266,6 +260,12 @@ var (
 	)
 	elasticsearchValidation = govy.New[ElasticsearchConfig](
 		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
+	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
 	)
 )
 
