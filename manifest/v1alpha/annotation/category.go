@@ -16,8 +16,8 @@ IncrementalMismatchAnomaly
 NoBurnAnomaly
 ConstantBurnAnomaly
 GoodOverTotalAnomaly
-DensityMismatchAnomaly
-DensityChangeAnomaly
+SamplingRateMismatchAnomaly
+SamplingRateChangeAnomaly
 )*/
 type Category string
 
@@ -30,8 +30,8 @@ var systemCategories = []Category{
 	CategoryNoBurnAnomaly,
 	CategoryConstantBurnAnomaly,
 	CategoryGoodOverTotalAnomaly,
-	CategoryDensityMismatchAnomaly,
-	CategoryDensityChangeAnomaly,
+	CategorySamplingRateMismatchAnomaly,
+	CategorySamplingRateChangeAnomaly,
 }
 
 var userCategories = []Category{

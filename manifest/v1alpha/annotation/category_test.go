@@ -16,10 +16,10 @@ func TestCategory_GoodOverTotalAnomaly(t *testing.T) {
 	assert.NotContains(t, GetUserCategories(), CategoryGoodOverTotalAnomaly)
 }
 
-func TestCategory_SLIDensityAnomalies(t *testing.T) {
+func TestCategory_SLISamplingRateAnomalies(t *testing.T) {
 	for _, expected := range []Category{
-		CategoryDensityMismatchAnomaly,
-		CategoryDensityChangeAnomaly,
+		CategorySamplingRateMismatchAnomaly,
+		CategorySamplingRateChangeAnomaly,
 	} {
 		actual, err := ParseCategory(expected.String())
 		require.NoError(t, err)
