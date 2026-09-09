@@ -18,7 +18,6 @@ func TestCategory_GoodOverTotalAnomaly(t *testing.T) {
 
 func TestCategory_SLIDensityAnomalies(t *testing.T) {
 	for _, expected := range []Category{
-		CategoryMissingPairAnomaly,
 		CategoryDensityMismatchAnomaly,
 		CategoryDensityChangeAnomaly,
 	} {

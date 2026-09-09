@@ -22,7 +22,6 @@ const (
 	CategoryNoBurnAnomaly              Category = "NoBurnAnomaly"
 	CategoryConstantBurnAnomaly        Category = "ConstantBurnAnomaly"
 	CategoryGoodOverTotalAnomaly       Category = "GoodOverTotalAnomaly"
-	CategoryMissingPairAnomaly         Category = "MissingPairAnomaly"
 	CategoryDensityMismatchAnomaly     Category = "DensityMismatchAnomaly"
 	CategoryDensityChangeAnomaly       Category = "DensityChangeAnomaly"
 )
@@ -42,7 +41,6 @@ func CategoryValues() []Category {
 		CategoryNoBurnAnomaly,
 		CategoryConstantBurnAnomaly,
 		CategoryGoodOverTotalAnomaly,
-		CategoryMissingPairAnomaly,
 		CategoryDensityMismatchAnomaly,
 		CategoryDensityChangeAnomaly,
 	}
@@ -71,7 +69,6 @@ var _CategoryValue = map[string]Category{
 	"NoBurnAnomaly":              CategoryNoBurnAnomaly,
 	"ConstantBurnAnomaly":        CategoryConstantBurnAnomaly,
 	"GoodOverTotalAnomaly":       CategoryGoodOverTotalAnomaly,
-	"MissingPairAnomaly":         CategoryMissingPairAnomaly,
 	"DensityMismatchAnomaly":     CategoryDensityMismatchAnomaly,
 	"DensityChangeAnomaly":       CategoryDensityChangeAnomaly,
 }
