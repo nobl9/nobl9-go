@@ -12,16 +12,18 @@ import (
 )
 
 const (
-	CategoryComment                    Category = "Comment"
-	CategoryReviewNote                 Category = "ReviewNote"
-	CategorySloEdit                    Category = "SloEdit"
-	CategoryAlert                      Category = "Alert"
-	CategoryAdjustment                 Category = "Adjustment"
-	CategoryNoDataAnomaly              Category = "NoDataAnomaly"
-	CategoryIncrementalMismatchAnomaly Category = "IncrementalMismatchAnomaly"
-	CategoryNoBurnAnomaly              Category = "NoBurnAnomaly"
-	CategoryConstantBurnAnomaly        Category = "ConstantBurnAnomaly"
-	CategoryGoodOverTotalAnomaly       Category = "GoodOverTotalAnomaly"
+	CategoryComment                     Category = "Comment"
+	CategoryReviewNote                  Category = "ReviewNote"
+	CategorySloEdit                     Category = "SloEdit"
+	CategoryAlert                       Category = "Alert"
+	CategoryAdjustment                  Category = "Adjustment"
+	CategoryNoDataAnomaly               Category = "NoDataAnomaly"
+	CategoryIncrementalMismatchAnomaly  Category = "IncrementalMismatchAnomaly"
+	CategoryNoBurnAnomaly               Category = "NoBurnAnomaly"
+	CategoryConstantBurnAnomaly         Category = "ConstantBurnAnomaly"
+	CategoryGoodOverTotalAnomaly        Category = "GoodOverTotalAnomaly"
+	CategorySamplingRateMismatchAnomaly Category = "SamplingRateMismatchAnomaly"
+	CategorySamplingRateChangeAnomaly   Category = "SamplingRateChangeAnomaly"
 )
 
 var ErrInvalidCategory = errors.New("not a valid Category")
@@ -39,6 +41,8 @@ func CategoryValues() []Category {
 		CategoryNoBurnAnomaly,
 		CategoryConstantBurnAnomaly,
 		CategoryGoodOverTotalAnomaly,
+		CategorySamplingRateMismatchAnomaly,
+		CategorySamplingRateChangeAnomaly,
 	}
 }
 
@@ -55,16 +59,18 @@ func (x Category) IsValid() bool {
 }
 
 var _CategoryValue = map[string]Category{
-	"Comment":                    CategoryComment,
-	"ReviewNote":                 CategoryReviewNote,
-	"SloEdit":                    CategorySloEdit,
-	"Alert":                      CategoryAlert,
-	"Adjustment":                 CategoryAdjustment,
-	"NoDataAnomaly":              CategoryNoDataAnomaly,
-	"IncrementalMismatchAnomaly": CategoryIncrementalMismatchAnomaly,
-	"NoBurnAnomaly":              CategoryNoBurnAnomaly,
-	"ConstantBurnAnomaly":        CategoryConstantBurnAnomaly,
-	"GoodOverTotalAnomaly":       CategoryGoodOverTotalAnomaly,
+	"Comment":                     CategoryComment,
+	"ReviewNote":                  CategoryReviewNote,
+	"SloEdit":                     CategorySloEdit,
+	"Alert":                       CategoryAlert,
+	"Adjustment":                  CategoryAdjustment,
+	"NoDataAnomaly":               CategoryNoDataAnomaly,
+	"IncrementalMismatchAnomaly":  CategoryIncrementalMismatchAnomaly,
+	"NoBurnAnomaly":               CategoryNoBurnAnomaly,
+	"ConstantBurnAnomaly":         CategoryConstantBurnAnomaly,
+	"GoodOverTotalAnomaly":        CategoryGoodOverTotalAnomaly,
+	"SamplingRateMismatchAnomaly": CategorySamplingRateMismatchAnomaly,
+	"SamplingRateChangeAnomaly":   CategorySamplingRateChangeAnomaly,
 }
 
 // ParseCategory attempts to convert a string to a Category.
