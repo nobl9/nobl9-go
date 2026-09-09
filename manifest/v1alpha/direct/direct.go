@@ -300,11 +300,8 @@ type AzurePrometheusConfig struct {
 
 // ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
 type ZscalerConfig struct {
-	// VanityDomain is the tenant label in <tenant>.zslogin.net, without the suffix.
 	VanityDomain string `json:"vanityDomain"`
-	// ClientID identifies the OneAPI client. Omit it on updates to preserve the stored value.
-	ClientID string `json:"clientId,omitempty"`
-	// ClientSecret authenticates the OneAPI client. Omit it on updates to preserve the stored value.
+	ClientID     string `json:"clientId,omitempty"`
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
