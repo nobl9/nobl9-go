@@ -144,6 +144,7 @@ var countMetricsValidation = govy.New[MetricSpec](
 		Include(
 			pingdomCountMetricsValidation,
 			thousandEyesCountMetricsValidation,
+			zscalerCountMetricsValidation,
 			instanaCountMetricsValidation),
 )
 
@@ -254,6 +255,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *Dash0Metric { return m.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(m MetricSpec) *ZscalerMetric { return m.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -444,6 +448,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Dash0 != nil {
 			if err := typesMatch(v1alpha.Dash0); err != nil {
+				return err
+			}
+		}
+		if metric.Zscaler != nil {
+			if err := typesMatch(v1alpha.Zscaler); err != nil {
 				return err
 			}
 		}

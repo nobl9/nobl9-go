@@ -139,6 +139,9 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 		metricVariantThreshold: []metricSubVariant{},
 		metricVariantGoodRatio: []metricSubVariant{},
 	},
+	v1alpha.Zscaler: {
+		metricVariantThreshold: []metricSubVariant{"score", "availability", "latency"},
+	},
 }
 
 var goodOverTotalVariants = []string{

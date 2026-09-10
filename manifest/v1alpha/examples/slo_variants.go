@@ -1123,6 +1123,36 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				},
 			}))
 		}
+	case v1alpha.Zscaler:
+		objective := &slo.Spec.Objectives[0]
+		objective.BudgetTarget = ptr(0.99)
+		query := v1alphaSLO.ZscalerMetric{
+			Type:   v1alphaSLO.ZscalerTypeApplication,
+			AppID:  12345,
+			Metric: s.MetricSubVariant,
+		}
+		switch s.MetricSubVariant {
+		case "score":
+			query.LocationID = ptr(int64(6789))
+			objective.DisplayName = "Application ZDX score above 65"
+			objective.Value = ptr(65.0)
+			objective.Operator = ptr(v1alpha.GreaterThan.String())
+		case "availability":
+			query.Type = v1alphaSLO.ZscalerTypeWebProbe
+			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(13579))
+			objective.DisplayName = "Web probe reports full availability"
+			objective.BudgetTarget = ptr(0.999)
+			objective.Value = ptr(100.0)
+			objective.Operator = ptr(v1alpha.GreaterThanEqual.String())
+		case "latency":
+			query.Type = v1alphaSLO.ZscalerTypeCloudPath
+			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(24680))
+			query.LegSrc, query.LegDst = ptr("end"), ptr("end")
+			objective.DisplayName = "End-to-End network latency below 100 ms"
+			objective.Value = ptr(100.0)
+			objective.Operator = ptr(v1alpha.LessThan.String())
+		}
+		return setThresholdMetric(slo, newMetricSpec(query))
 	case v1alpha.Dash0:
 		switch s.MetricVariant {
 		case metricVariantThreshold:
@@ -1240,6 +1270,8 @@ func newMetricSpec(metric any) *v1alphaSLO.MetricSpec {
 		spec.Atlas = &v
 	case v1alphaSLO.Dash0Metric:
 		spec.Dash0 = &v
+	case v1alphaSLO.ZscalerMetric:
+		spec.Zscaler = &v
 	default:
 		panic(fmt.Sprintf("unsupported metric type: %T", metric))
 	}

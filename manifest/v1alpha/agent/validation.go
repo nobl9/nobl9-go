@@ -144,6 +144,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
@@ -282,6 +285,12 @@ var (
 			WithName("step").
 			OmitEmpty().
 			Rules(rules.GTE(15)),
+	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
 	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
@@ -487,6 +496,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Dash0 != nil {
 		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
 			return err
 		}
 	}
