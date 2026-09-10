@@ -35,16 +35,18 @@
         kind: Agent
     budgetingMethod: Occurrences
     objectives:
-    - displayName: Application availability at least 99 percent
-      value: 99.0
+    - displayName: Web probe reports full availability
+      value: 100.0
       name: ok
-      target: 0.99
+      target: 0.999
       rawMetric:
         query:
           zscaler:
-            appId: 12345
-            locationId: 6789
+            type: web-probe
             metric: availability
+            appId: 12345
+            deviceId: 67890
+            probeId: 13579
       op: gte
       primary: true
     service: api-server
@@ -104,16 +106,18 @@
         kind: Agent
     budgetingMethod: Occurrences
     objectives:
-    - displayName: Application availability at least 99 percent
-      value: 99.0
+    - displayName: Web probe reports full availability
+      value: 100.0
       name: ok
-      target: 0.99
+      target: 0.999
       rawMetric:
         query:
           zscaler:
-            appId: 12345
-            locationId: 6789
+            type: web-probe
             metric: availability
+            appId: 12345
+            deviceId: 67890
+            probeId: 13579
       op: gte
       primary: true
     service: api-server
@@ -170,17 +174,19 @@
         kind: Agent
     budgetingMethod: Timeslices
     objectives:
-    - displayName: Application availability at least 99 percent
-      value: 99.0
+    - displayName: Web probe reports full availability
+      value: 100.0
       name: ok
-      target: 0.99
+      target: 0.999
       timeSliceTarget: 0.9
       rawMetric:
         query:
           zscaler:
-            appId: 12345
-            locationId: 6789
+            type: web-probe
             metric: availability
+            appId: 12345
+            deviceId: 67890
+            probeId: 13579
       op: gte
       primary: true
     service: api-server
@@ -240,17 +246,19 @@
         kind: Agent
     budgetingMethod: Timeslices
     objectives:
-    - displayName: Application availability at least 99 percent
-      value: 99.0
+    - displayName: Web probe reports full availability
+      value: 100.0
       name: ok
-      target: 0.99
+      target: 0.999
       timeSliceTarget: 0.9
       rawMetric:
         query:
           zscaler:
-            appId: 12345
-            locationId: 6789
+            type: web-probe
             metric: availability
+            appId: 12345
+            deviceId: 67890
+            probeId: 13579
       op: gte
       primary: true
     service: api-server
@@ -271,7 +279,7 @@
         alertAfter: 1h
         treatZeroAsNoData: false
 # Metric type: threshold
-# Metric variant: dns
+# Metric variant: latency
 # Budgeting method: Occurrences
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
@@ -307,16 +315,20 @@
         kind: Agent
     budgetingMethod: Occurrences
     objectives:
-    - displayName: DNS time below 100 ms
+    - displayName: End-to-End network latency below 100 ms
       value: 100.0
       name: ok
       target: 0.99
       rawMetric:
         query:
           zscaler:
+            type: cloudpath
+            metric: latency
             appId: 12345
-            locationId: 6789
-            metric: dns
+            deviceId: 67890
+            probeId: 24680
+            legSrc: end
+            legDst: end
       op: lt
       primary: true
     service: api-server
@@ -340,7 +352,7 @@
         alertAfter: 1h
         treatZeroAsNoData: false
 # Metric type: threshold
-# Metric variant: dns
+# Metric variant: latency
 # Budgeting method: Occurrences
 # Time window type: Rolling
 - apiVersion: n9/v1alpha
@@ -376,16 +388,20 @@
         kind: Agent
     budgetingMethod: Occurrences
     objectives:
-    - displayName: DNS time below 100 ms
+    - displayName: End-to-End network latency below 100 ms
       value: 100.0
       name: ok
       target: 0.99
       rawMetric:
         query:
           zscaler:
+            type: cloudpath
+            metric: latency
             appId: 12345
-            locationId: 6789
-            metric: dns
+            deviceId: 67890
+            probeId: 24680
+            legSrc: end
+            legDst: end
       op: lt
       primary: true
     service: api-server
@@ -406,7 +422,7 @@
         alertAfter: 1h
         treatZeroAsNoData: false
 # Metric type: threshold
-# Metric variant: dns
+# Metric variant: latency
 # Budgeting method: Timeslices
 # Time window type: Calendar
 - apiVersion: n9/v1alpha
@@ -442,7 +458,7 @@
         kind: Agent
     budgetingMethod: Timeslices
     objectives:
-    - displayName: DNS time below 100 ms
+    - displayName: End-to-End network latency below 100 ms
       value: 100.0
       name: ok
       target: 0.99
@@ -450,9 +466,13 @@
       rawMetric:
         query:
           zscaler:
+            type: cloudpath
+            metric: latency
             appId: 12345
-            locationId: 6789
-            metric: dns
+            deviceId: 67890
+            probeId: 24680
+            legSrc: end
+            legDst: end
       op: lt
       primary: true
     service: api-server
@@ -476,7 +496,7 @@
         alertAfter: 1h
         treatZeroAsNoData: false
 # Metric type: threshold
-# Metric variant: dns
+# Metric variant: latency
 # Budgeting method: Timeslices
 # Time window type: Rolling
 - apiVersion: n9/v1alpha
@@ -512,7 +532,7 @@
         kind: Agent
     budgetingMethod: Timeslices
     objectives:
-    - displayName: DNS time below 100 ms
+    - displayName: End-to-End network latency below 100 ms
       value: 100.0
       name: ok
       target: 0.99
@@ -520,281 +540,13 @@
       rawMetric:
         query:
           zscaler:
+            type: cloudpath
+            metric: latency
             appId: 12345
-            locationId: 6789
-            metric: dns
-      op: lt
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-        treatZeroAsNoData: false
-# Metric type: threshold
-# Metric variant: pft
-# Budgeting method: Occurrences
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Zscaler SLO
-    indicator:
-      metricSource:
-        name: zscaler
-        project: default
-        kind: Agent
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Page fetch time below 2000 ms
-      value: 2000.0
-      name: ok
-      target: 0.99
-      rawMetric:
-        query:
-          zscaler:
-            appId: 12345
-            locationId: 6789
-            metric: pft
-      op: lt
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: "2022-12-01 00:00:00"
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-        treatZeroAsNoData: false
-# Metric type: threshold
-# Metric variant: pft
-# Budgeting method: Occurrences
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Zscaler SLO
-    indicator:
-      metricSource:
-        name: zscaler
-        project: default
-        kind: Agent
-    budgetingMethod: Occurrences
-    objectives:
-    - displayName: Page fetch time below 2000 ms
-      value: 2000.0
-      name: ok
-      target: 0.99
-      rawMetric:
-        query:
-          zscaler:
-            appId: 12345
-            locationId: 6789
-            metric: pft
-      op: lt
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Hour
-      count: 1
-      isRolling: true
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-        treatZeroAsNoData: false
-# Metric type: threshold
-# Metric variant: pft
-# Budgeting method: Timeslices
-# Time window type: Calendar
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Zscaler SLO
-    indicator:
-      metricSource:
-        name: zscaler
-        project: default
-        kind: Agent
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Page fetch time below 2000 ms
-      value: 2000.0
-      name: ok
-      target: 0.99
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          zscaler:
-            appId: 12345
-            locationId: 6789
-            metric: pft
-      op: lt
-      primary: true
-    service: api-server
-    timeWindows:
-    - unit: Month
-      count: 1
-      isRolling: false
-      calendar:
-        startTime: "2022-12-01 00:00:00"
-        timeZone: UTC
-    alertPolicies:
-    - fast-burn-5x-for-last-10m
-    attachments:
-    - url: https://docs.nobl9.com
-      displayName: Nobl9 Documentation
-    anomalyConfig:
-      noData:
-        alertMethods:
-        - name: slack-notification
-          project: default
-        alertAfter: 1h
-        treatZeroAsNoData: false
-# Metric type: threshold
-# Metric variant: pft
-# Budgeting method: Timeslices
-# Time window type: Rolling
-- apiVersion: n9/v1alpha
-  kind: SLO
-  metadata:
-    name: api-server-slo
-    displayName: API Server SLO
-    project: default
-    labels:
-      area:
-      - latency
-      - slow-check
-      env:
-      - prod
-      - dev
-      region:
-      - us
-      - eu
-      team:
-      - green
-      - sales
-    annotations:
-      area: latency
-      env: prod
-      region: us
-      team: sales
-  spec:
-    description: Example Zscaler SLO
-    indicator:
-      metricSource:
-        name: zscaler
-        project: default
-        kind: Agent
-    budgetingMethod: Timeslices
-    objectives:
-    - displayName: Page fetch time below 2000 ms
-      value: 2000.0
-      name: ok
-      target: 0.99
-      timeSliceTarget: 0.9
-      rawMetric:
-        query:
-          zscaler:
-            appId: 12345
-            locationId: 6789
-            metric: pft
+            deviceId: 67890
+            probeId: 24680
+            legSrc: end
+            legDst: end
       op: lt
       primary: true
     service: api-server
@@ -858,9 +610,10 @@
       rawMetric:
         query:
           zscaler:
+            type: application
+            metric: score
             appId: 12345
             locationId: 6789
-            metric: score
       op: gt
       primary: true
     service: api-server
@@ -927,9 +680,10 @@
       rawMetric:
         query:
           zscaler:
+            type: application
+            metric: score
             appId: 12345
             locationId: 6789
-            metric: score
       op: gt
       primary: true
     service: api-server
@@ -994,9 +748,10 @@
       rawMetric:
         query:
           zscaler:
+            type: application
+            metric: score
             appId: 12345
             locationId: 6789
-            metric: score
       op: gt
       primary: true
     service: api-server
@@ -1064,9 +819,10 @@
       rawMetric:
         query:
           zscaler:
+            type: application
+            metric: score
             appId: 12345
             locationId: 6789
-            metric: score
       op: gt
       primary: true
     service: api-server
