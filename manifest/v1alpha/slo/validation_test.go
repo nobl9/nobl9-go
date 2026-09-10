@@ -2021,6 +2021,7 @@ fetch consumed_api
 		PromQL: ptr(`sum(rate(http_requests_total[5m]))`),
 	}},
 	v1alpha.Zscaler: {Zscaler: &ZscalerMetric{
+		Type:       ZscalerTypeApplication,
 		AppID:      12345,
 		LocationID: ptr(int64(6789)),
 		Metric:     "score",

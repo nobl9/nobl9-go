@@ -1126,29 +1126,33 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 	case v1alpha.Zscaler:
 		objective := &slo.Spec.Objectives[0]
 		objective.BudgetTarget = ptr(0.99)
+		query := v1alphaSLO.ZscalerMetric{
+			Type:   v1alphaSLO.ZscalerTypeApplication,
+			AppID:  12345,
+			Metric: s.MetricSubVariant,
+		}
 		switch s.MetricSubVariant {
 		case "score":
+			query.LocationID = ptr(int64(6789))
 			objective.DisplayName = "Application ZDX score above 65"
 			objective.Value = ptr(65.0)
 			objective.Operator = ptr(v1alpha.GreaterThan.String())
 		case "availability":
-			objective.DisplayName = "Application availability at least 99 percent"
-			objective.Value = ptr(99.0)
+			query.Type = v1alphaSLO.ZscalerTypeWebProbe
+			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(13579))
+			objective.DisplayName = "Web probe reports full availability"
+			objective.BudgetTarget = ptr(0.999)
+			objective.Value = ptr(100.0)
 			objective.Operator = ptr(v1alpha.GreaterThanEqual.String())
-		case "pft":
-			objective.DisplayName = "Page fetch time below 2000 ms"
-			objective.Value = ptr(2000.0)
-			objective.Operator = ptr(v1alpha.LessThan.String())
-		case "dns":
-			objective.DisplayName = "DNS time below 100 ms"
+		case "latency":
+			query.Type = v1alphaSLO.ZscalerTypeCloudPath
+			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(24680))
+			query.LegSrc, query.LegDst = ptr("end"), ptr("end")
+			objective.DisplayName = "End-to-End network latency below 100 ms"
 			objective.Value = ptr(100.0)
 			objective.Operator = ptr(v1alpha.LessThan.String())
 		}
-		return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.ZscalerMetric{
-			AppID:      12345,
-			LocationID: ptr(int64(6789)),
-			Metric:     s.MetricSubVariant,
-		}))
+		return setThresholdMetric(slo, newMetricSpec(query))
 	case v1alpha.Dash0:
 		switch s.MetricVariant {
 		case metricVariantThreshold:
