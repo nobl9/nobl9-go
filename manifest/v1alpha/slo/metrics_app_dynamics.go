@@ -47,7 +47,8 @@ var appDynamicsCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 				}
 			}
 			return nil
-		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo),
+	),
 ).When(
 	whenCountMetricsIs(v1alpha.AppDynamics),
 	govy.WhenDescription("countMetric is appDynamics"),
@@ -69,7 +70,8 @@ var appDynamicsValidation = govy.New[AppDynamicsMetric](
 					"Wildcards like: 'App | MyApp* | Latency' are not supported by AppDynamics," +
 						" only using '*' as an entire path segment ex: 'App | * | Latency'." +
 						" Refer to https://docs.appdynamics.com/display/PRO21/Metric+and+Snapshot+API" +
-						" paragraph 'Using Wildcards'")
+						" paragraph 'Using Wildcards'",
+				)
 			}
 			return nil
 		}).WithErrorCode(errCodeAppDynamicsWildcardNotSupported)),

@@ -96,7 +96,8 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 		Include(
 			cloudWatchStandardConfigValidation,
 			cloudWatchSQLConfigValidation,
-			cloudWatchJSONConfigValidation),
+			cloudWatchJSONConfigValidation,
+		),
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Region }).
 		WithName("region").
 		Required().
@@ -108,7 +109,8 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 					codes = append(codes, region.Code)
 				}
 				return codes
-			}()...)),
+			}()...),
+		),
 )
 
 var cloudWatchSQLConfigValidation = govy.New[CloudWatchMetric](
@@ -194,14 +196,16 @@ var cloudwatchMetricDimensionValidation = govy.New[CloudWatchMetricDimension](
 		Rules(
 			rules.StringNotEmpty(),
 			rules.StringMaxLength(255),
-			rules.StringASCII()),
+			rules.StringASCII(),
+		),
 	govy.ForPointer(func(c CloudWatchMetricDimension) *string { return c.Value }).
 		WithName("value").
 		Required().
 		Rules(
 			rules.StringNotEmpty(),
 			rules.StringMaxLength(255),
-			rules.StringASCII()),
+			rules.StringASCII(),
+		),
 )
 
 var cloudWatchMetricDataQueryValidation = govy.New(

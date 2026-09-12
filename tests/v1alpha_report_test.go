@@ -54,7 +54,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						ShowNoData:         false,
 					},
 				},
-			}),
+			},
+		),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -88,7 +89,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						ShowNoData:         false,
 					},
 				},
-			}),
+			},
+		),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -123,7 +125,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						ShowNoData:         false,
 					},
 				},
-			}),
+			},
+		),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -158,7 +161,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						ShowNoData:         false,
 					},
 				},
-			}),
+			},
+		),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -191,7 +195,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						ShowNoData:         false,
 					},
 				},
-			}),
+			},
+		),
 	}
 	reliabilityRollupReports := []v1alphaReport.Report{
 		v1alphaReport.New(
@@ -216,7 +221,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						TimeZone: timeZone,
 					},
 				},
-			}),
+			},
+		),
 		v1alphaReport.New(
 			v1alphaReport.Metadata{
 				Name:        e2etestutils.GenerateName(),
@@ -239,7 +245,8 @@ func Test_Objects_V1_V1alpha_Report(t *testing.T) {
 						TimeZone: timeZone,
 					},
 				},
-			}),
+			},
+		),
 	}
 	reports := make([]v1alphaReport.Report, 0, len(systemHealthReviewReports)+len(reliabilityRollupReports))
 	reports = append(reports, systemHealthReviewReports...)
@@ -357,7 +364,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 							ShowNoData:         false,
 						},
 					},
-				}),
+				},
+			),
 			error: "failed, because object Project non-existing-project referenced in its spec does not exist",
 		},
 		"service doesn't exist": {
@@ -398,7 +406,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 							ShowNoData:         false,
 						},
 					},
-				}),
+				},
+			),
 			error: "failed, because object Service non-existing-service referenced in its spec does not exist",
 		},
 		"slo doesn't exist": {
@@ -439,7 +448,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 							ShowNoData:         false,
 						},
 					},
-				}),
+				},
+			),
 			error: "failed, because object SLO non-existing-slo referenced in its spec does not exist",
 		},
 		"label doesn't exist": {
@@ -478,7 +488,8 @@ func Test_Objects_V1_V1alpha_ReportErrors(t *testing.T) {
 							ShowNoData:         false,
 						},
 					},
-				}),
+				},
+			),
 			error: "Validation failed: Label `non-existing-label` not found",
 		},
 	}

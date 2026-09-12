@@ -76,7 +76,8 @@ var timeWindowsValidation = govy.New[TimeWindow](
 						return errors.Wrap(err, "not a valid time zone")
 					}
 					return nil
-				}))),
+				})),
+		),
 		),
 )
 
@@ -115,11 +116,13 @@ func rollingWindowSizeValidation(timeWindow TimeWindow) error {
 	case timeWindowSize > maximumRollingTimeWindowSize:
 		return errors.Errorf(
 			"rolling time window size must be less than or equal to %s",
-			maximumRollingTimeWindowSize)
+			maximumRollingTimeWindowSize,
+		)
 	case timeWindowSize < minimumRollingTimeWindowSize:
 		return errors.Errorf(
 			"rolling time window size must be greater than or equal to %s",
-			minimumRollingTimeWindowSize)
+			minimumRollingTimeWindowSize,
+		)
 	}
 	return nil
 }
@@ -144,11 +147,13 @@ func calendarWindowSizeValidation(timeWindow TimeWindow) error {
 func validateTimeWindowAmbiguity(timeWindow TimeWindow) error {
 	if timeWindow.IsRolling && timeWindow.isCalendar() {
 		return errors.New(
-			"if 'isRolling' property is true, 'calendar' property must be omitted")
+			"if 'isRolling' property is true, 'calendar' property must be omitted",
+		)
 	}
 	if !timeWindow.IsRolling && !timeWindow.isCalendar() {
 		return errors.New(
-			"if 'isRolling' property is false or not set, 'calendar' property must be provided")
+			"if 'isRolling' property is false or not set, 'calendar' property must be provided",
+		)
 	}
 	return nil
 }
@@ -180,7 +185,8 @@ func calendarStartTimeValidationRule() govy.Rule[string] {
 		}
 		if date.Nanosecond() != 0 {
 			return errors.New(
-				"setting nanoseconds or milliseconds in time are forbidden to be set")
+				"setting nanoseconds or milliseconds in time are forbidden to be set",
+			)
 		}
 		return nil
 	})

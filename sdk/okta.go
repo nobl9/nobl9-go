@@ -65,7 +65,8 @@ func (okta *oktaClient) RequestAccessToken(
 		ctx,
 		http.MethodPost,
 		okta.getTokenEndpoint(),
-		strings.NewReader(data.Encode()))
+		strings.NewReader(data.Encode()),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -82,7 +83,8 @@ func (okta *oktaClient) RequestAccessToken(
 		body, _ := io.ReadAll(resp.Body)
 		return "", errors.Errorf(
 			"cannot access the token from POST %s, IDP replied with (status: %d): %s",
-			okta.getTokenEndpoint(), resp.StatusCode, string(body))
+			okta.getTokenEndpoint(), resp.StatusCode, string(body),
+		)
 	}
 	var tr oktaTokenResponse
 	if err = json.NewDecoder(resp.Body).Decode(&tr); err != nil {

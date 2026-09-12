@@ -284,10 +284,12 @@ var defaultDataRetrievalDurationValidation = govy.NewRule(
 				dataRetrieval.DefaultDuration,
 				errors.Errorf(
 					"must be less than or equal to 'maxDuration' (%d %s)",
-					maxDurationValue, dataRetrieval.MaxDuration.Unit))
+					maxDurationValue, dataRetrieval.MaxDuration.Unit,
+				))
 		}
 		return nil
-	})
+	},
+)
 
 // HistoricalRetrievalDuration struct was previously called Duration. However, this name was too generic
 // since we also needed to introduce a Duration struct for QueryDelay, which allowed for different time units.
@@ -442,7 +444,8 @@ func DataDogSiteValidationRule() govy.Rule[string] {
 		"us5.datadoghq.com",
 		"datadoghq.eu",
 		"ddog-gov.com",
-		"ap1.datadoghq.com")
+		"ap1.datadoghq.com",
+	)
 }
 
 func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {

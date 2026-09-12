@@ -129,7 +129,8 @@ var webhookValidation = govy.New[WebhookAlertMethod](
 					return errors.New("must contain either 'template' or 'templateFields'")
 				}
 				return nil
-			})),
+			}),
+		),
 	govy.For(func(w WebhookAlertMethod) string { return w.URL }).
 		WithName("url").
 		HideValue().
@@ -192,7 +193,8 @@ var discordValidation = govy.New[DiscordAlertMethod](
 					return errors.New("must not end with /slack or /github")
 				}
 				return nil
-			})).
+			}),
+		).
 		Include(optionalUrlValidation()),
 )
 
@@ -219,7 +221,8 @@ var opsgenieValidation = govy.New[OpsgenieAlertMethod](
 					return errors.New("invalid auth format, should start with either GenieKey or Basic")
 				}
 				return nil
-			})),
+			}),
+		),
 )
 
 var serviceNowValidation = govy.New[ServiceNowAlertMethod](
@@ -292,7 +295,8 @@ var emailValidation = govy.New[EmailAlertMethod](
 					return errors.New("must contain at least one recipient")
 				}
 				return nil
-			})),
+			}),
+		),
 	govy.For(func(s EmailAlertMethod) []string { return s.To }).
 		WithName("to").
 		Rules(rules.SliceMaxLength[[]string](maxEmailRecipients)),
@@ -333,11 +337,13 @@ var webhookHeaderValidation = govy.New[WebhookHeader](
 		Rules(
 			rules.StringNotEmpty(),
 			rules.StringMatchRegexp(headerNameRegex).
-				WithDetails("must be a valid header name")),
+				WithDetails("must be a valid header name"),
+		),
 	govy.For(govy.GetSelf[WebhookHeader]()).
 		Include(
 			webhookHeaderValueValidation,
-			webhookHeaderSecretValueValidation),
+			webhookHeaderSecretValueValidation,
+		),
 )
 
 var webhookHeaderValueValidation = govy.New[WebhookHeader](

@@ -34,7 +34,8 @@ var redshiftCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("redshift.databaseName", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(rules.ErrorCodeEqualTo)),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
+		),
 ).When(
 	whenCountMetricsIs(v1alpha.Redshift),
 	govy.WhenDescription("countMetrics is redshift"),
@@ -62,5 +63,6 @@ var redshiftValidation = govy.New[RedshiftMetric](
 			rules.StringMatchRegexp(regexp.MustCompile(`WHERE[\s\S]*\W:n9date_from\b[\s\S]*`)).
 				WithDetails("must filter by ':n9date_from' column"),
 			rules.StringMatchRegexp(regexp.MustCompile(`WHERE[\s\S]*\W:n9date_to\b[\s\S]*`)).
-				WithDetails("must filter by ':n9date_to' column")),
+				WithDetails("must filter by ':n9date_to' column"),
+		),
 )

@@ -98,7 +98,8 @@ func (s sloExample) SLO() v1alphaSLO.SLO {
 			AlertPolicies:   exampleAlertPolicies(),
 			AnomalyConfig:   exampleAnomalyConfig(),
 			TimeWindows:     exampleTimeWindows(s.TimeWindowType),
-		})
+		},
+	)
 	objective := v1alphaSLO.Objective{
 		ObjectiveBase: v1alphaSLO.ObjectiveBase{
 			DisplayName: "Good response (200)",

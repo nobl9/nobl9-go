@@ -171,7 +171,8 @@ func TestClient_GetUserEmail(t *testing.T) {
 
 			assert.Empty(t, emailFromAPI)
 			assert.Error(t, err)
-		})
+		},
+	)
 
 	t.Run("get user returns error when token does not contain email and API returns error", func(t *testing.T) {
 		client, srv := prepareTestClient(t, endpointConfig{
@@ -285,7 +286,8 @@ func prepareTestClientWithClaimsUser(
 	// Prepare client.
 	config, err := ReadConfig(
 		ConfigOptionWithCredentials(clientID, clientSecret),
-		ConfigOptionNoConfigFile())
+		ConfigOptionNoConfigFile(),
+	)
 	require.NoError(t, err)
 	config.OktaOrgURL = oktaOrgURL
 	config.OktaAuthServer = oktaAuthServer

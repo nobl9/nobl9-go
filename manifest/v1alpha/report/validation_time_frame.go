@@ -100,7 +100,8 @@ var calendarTimeFrameValidation = govy.New[CalendarTimeFrame](
 					return errors.New("valid 'unit' and 'count' pairs are: 1 Week, 1 Month, 1 Quarter, 1 Year")
 				}
 				return nil
-			})),
+			}),
+		),
 	govy.ForPointer(func(t CalendarTimeFrame) *string { return t.Unit }).
 		WithName("unit").
 		Rules(validationRuleTimeUnit()),

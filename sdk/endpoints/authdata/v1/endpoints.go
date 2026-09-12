@@ -47,7 +47,8 @@ func (e endpoints) GetAgentCredentials(
 		"/internal/agent/clientcreds",
 		http.Header{sdk.HeaderProject: {project}},
 		url.Values{QueryKeyName: {agentsName}},
-		nil)
+		nil,
+	)
 	if err != nil {
 		return creds, err
 	}
