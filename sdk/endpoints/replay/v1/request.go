@@ -1,0 +1,427 @@
+package v1
+
+import (
+	"errors"
+	"fmt"
+	"math"
+	"time"
+
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+
+	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest"
+)
+
+//go:generate ../../../../bin/go-enum --names --values --nocomments
+
+// DurationUnit is the granularity for replay lookback duration in run and availability requests.
+/* ENUM(
+Minute
+Hour
+Day
+)*/
+type DurationUnit string
+
+// ReplaySource identifies the workflow that created a replay request.
+/* ENUM(
+user
+error_budget_adjustment
+)*/
+type ReplaySource string
+
+// ReplayType selects whether Nobl9 reimports historical data before recalculation
+// or recalculates from already available data.
+/* ENUM(
+reimport_and_recalculation
+recalculation
+)*/
+type ReplayType string
+
+// ReplayCancellationStatus describes server-side replay cancellation state.
+/* ENUM(
+possible
+blocked
+requested
+denied
+done
+)*/
+type ReplayCancellationStatus string
+
+// ReplayAvailabilityReason is a machine-readable reason why replay is unavailable.
+// The availability endpoint can also return formatted reason text outside this
+// fixed set, so callers should keep unknown values as raw strings.
+/* ENUM(
+datasource_type_invalid
+project_does_not_exist
+data_source_does_not_exist
+integration_does_not_support_replay
+agent_version_does_not_support_replay
+max_historical_data_retrieval_too_low
+concurrent_replay_runs_limit_exhausted
+unknown_agent_version
+single_query_not_supported
+composite_slo_not_supported
+promql_in_gcm_not_supported
+)*/
+type ReplayAvailabilityReason string
+
+// Replay availability reason aliases preserve the established public prefix and initialism casing.
+const (
+	ReplayDataSourceTypeInvalid              = ReplayAvailabilityReasonDatasourceTypeInvalid
+	ReplayProjectDoesNotExist                = ReplayAvailabilityReasonProjectDoesNotExist
+	ReplayDataSourceDoesNotExist             = ReplayAvailabilityReasonDataSourceDoesNotExist
+	ReplayIntegrationDoesNotSupportReplay    = ReplayAvailabilityReasonIntegrationDoesNotSupportReplay
+	ReplayAgentVersionDoesNotSupportReplay   = ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay
+	ReplayMaxHistoricalDataRetrievalTooLow   = ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow
+	ReplayConcurrentReplayRunsLimitExhausted = ReplayAvailabilityReasonConcurrentReplayRunsLimitExhausted
+	ReplayUnknownAgentVersion                = ReplayAvailabilityReasonUnknownAgentVersion
+	ReplaySingleQueryNotSupported            = ReplayAvailabilityReasonSingleQueryNotSupported
+	ReplayCompositeSLONotSupported           = ReplayAvailabilityReasonCompositeSloNotSupported
+	ReplayPromQLInGCMNotSupported            = ReplayAvailabilityReasonPromqlInGcmNotSupported
+)
+
+// ReplayListStatus is the coarse status returned by replay status and list endpoints.
+/* ENUM(
+unknown
+queued
+in progress
+completed
+failed
+canceled
+)*/
+type ReplayListStatus string
+
+// RunRequest describes a replay to start.
+// When [RunRequest.ReplayType] is omitted, Nobl9 defaults to [ReplayTypeReimportAndRecalculation].
+// Exactly one of [TimeRange.StartDate] and [RunRequest.Duration] must be set.
+type RunRequest struct {
+	TimeRange  TimeRange  `json:"timeRange,omitempty,omitzero"`
+	SourceSLO  *SourceSLO `json:"sourceSlo,omitempty"`
+	Project    string     `json:"project"`
+	SLO        string     `json:"slo"`
+	ReplayType ReplayType `json:"replayType,omitempty"`
+	Duration   Duration   `json:"duration,omitempty,omitzero"`
+}
+
+// Validate verifies that the run request is complete and internally consistent.
+func (r RunRequest) Validate() error {
+	if err := runRequestValidation.Validate(r); err != nil {
+		return err
+	}
+	if isEmpty(r.Duration) {
+		return nil
+	}
+	_, err := r.Duration.Duration()
+	return err
+}
+
+// DeleteRequest identifies queued replay requests to delete.
+type DeleteRequest struct {
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
+	// All deletes all queued reimport-and-recalculation replay requests in the
+	// organization. When All is true, Project and SLO are ignored.
+	All bool `json:"all,omitempty"`
+}
+
+// Validate verifies that the delete request selects one SLO or all queued replays.
+func (r DeleteRequest) Validate() error {
+	return deleteRequestValidation.Validate(r)
+}
+
+// CancelRequest identifies a replay to cancel.
+type CancelRequest struct {
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
+}
+
+// Validate verifies that the cancel request selects one SLO.
+func (r CancelRequest) Validate() error {
+	return cancelRequestValidation.Validate(r)
+}
+
+// GetStatusRequest identifies the replay whose status should be returned.
+// Project can be empty to use the SDK client's configured project.
+type GetStatusRequest struct {
+	Project string `json:"project,omitempty"`
+	SLO     string `json:"slo,omitempty"`
+}
+
+// Validate verifies that the status request selects one SLO.
+func (r GetStatusRequest) Validate() error {
+	return getStatusRequestValidation.Validate(r)
+}
+
+// GetAvailabilityRequest describes a replay availability check.
+// Project can be empty to use the SDK client's configured project.
+// Set SLOName to check an existing SLO. Otherwise, DataSourceProject,
+// DataSource, and DataSourceKind are required.
+type GetAvailabilityRequest struct {
+	Project           string
+	DataSourceProject string
+	DataSource        string
+	DataSourceKind    string
+	SLOName           string
+	Type              ReplayType
+	DurationUnit      DurationUnit
+	DurationValue     int
+}
+
+// Validate verifies the availability request before it is sent to Nobl9.
+func (r GetAvailabilityRequest) Validate() error {
+	if err := getAvailabilityRequestValidation.Validate(r); err != nil {
+		return err
+	}
+	if !hasAvailabilityDuration(r) {
+		return nil
+	}
+	_, err := (Duration{Unit: r.DurationUnit, Value: r.DurationValue}).Duration()
+	return err
+}
+
+// Duration defines how far back a replay should retrieve data.
+type Duration struct {
+	Unit  DurationUnit `json:"unit"`
+	Value int          `json:"value"`
+}
+
+// TimeRange describes the replay start date. Nobl9 treats the processing time as the effective end.
+type TimeRange struct {
+	StartDate time.Time `json:"startDate,omitzero"`
+}
+
+// SourceSLO maps objectives from another SLO to the replayed SLO.
+type SourceSLO struct {
+	SLO           string          `json:"slo"`
+	Project       string          `json:"project"`
+	ObjectivesMap []SourceSLOItem `json:"objectivesMap"`
+}
+
+// SourceSLOItem maps one source objective to a target objective.
+type SourceSLOItem struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+}
+
+// Duration conversion errors can be inspected with [errors.Is].
+var (
+	ErrInvalidDurationValue = errors.New("duration value must be greater than zero")
+	ErrDurationOverflow     = errors.New("duration overflows time.Duration")
+)
+
+var runRequestValidation = govy.New(
+	govy.For(func(r RunRequest) ReplayType { return r.ReplayType }).
+		WithName("replayType").
+		When(func(r RunRequest) bool { return r.ReplayType != "" }).
+		Rules(rules.OneOf(ReplayTypeValues()...)),
+	govy.For(func(r RunRequest) string { return r.Project }).
+		WithName("project").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r RunRequest) string { return r.SLO }).
+		WithName("slo").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r RunRequest) Duration { return r.Duration }).
+		WithName("duration").
+		When(
+			func(r RunRequest) bool {
+				return !isEmpty(r.Duration) || r.TimeRange.StartDate.IsZero()
+			},
+		).
+		Cascade(govy.CascadeModeStop).
+		Include(durationValidation),
+	govy.ForPointer(func(r RunRequest) *SourceSLO { return r.SourceSLO }).
+		WithName("sourceSLO").
+		Include(sourceSLOValidation),
+	govy.For(func(r RunRequest) time.Time { return r.TimeRange.StartDate }).
+		WithName("startDate").
+		When(
+			func(r RunRequest) bool { return !r.TimeRange.StartDate.IsZero() },
+		).
+		Rules(startTimeNotInFutureValidationRule()),
+	govy.For(func(r RunRequest) RunRequest { return r }).
+		Rules(govy.NewRule(func(r RunRequest) error {
+			if !isEmpty(r.Duration) && !r.TimeRange.StartDate.IsZero() {
+				return errors.New("only one of duration or startDate can be set")
+			}
+			return nil
+		}).WithErrorCode(durationAndStartDateValidationError)),
+)
+
+var deleteRequestValidation = govy.New(
+	govy.For(func(r DeleteRequest) string { return r.Project }).
+		WithName("project").
+		When(func(r DeleteRequest) bool { return !r.All }).
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r DeleteRequest) string { return r.SLO }).
+		WithName("slo").
+		When(func(r DeleteRequest) bool { return !r.All }).
+		Required().
+		Rules(validationV1Alpha.StringName()),
+)
+
+var cancelRequestValidation = govy.New(
+	govy.For(func(r CancelRequest) string { return r.Project }).
+		WithName("project").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r CancelRequest) string { return r.SLO }).
+		WithName("slo").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+)
+
+var getStatusRequestValidation = govy.New(
+	govy.For(func(r GetStatusRequest) string { return r.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetStatusRequest) string { return r.SLO }).
+		WithName("slo").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+)
+
+var getAvailabilityRequestValidation = govy.New(
+	govy.For(func(r GetAvailabilityRequest) string { return r.Project }).
+		WithName("project").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetAvailabilityRequest) string { return r.SLOName }).
+		WithName("sloName").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
+		WithName("dataSourceProject").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceProject }).
+		WithName("dataSourceProject").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSource }).
+		WithName("dataSource").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSource }).
+		WithName("dataSource").
+		OmitEmpty().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceKind }).
+		WithName("dataSourceKind").
+		When(func(r GetAvailabilityRequest) bool { return r.SLOName == "" }).
+		Required(),
+	govy.For(func(r GetAvailabilityRequest) string { return r.DataSourceKind }).
+		WithName("dataSourceKind").
+		OmitEmpty().
+		Rules(govy.NewRule(func(kind string) error {
+			_, err := manifest.ParseKind(kind)
+			return err
+		}).WithErrorCode(rules.ErrorCodeOneOf)),
+	govy.For(func(r GetAvailabilityRequest) GetAvailabilityRequest { return r }).
+		Rules(rules.MutuallyExclusive(false, map[string]func(GetAvailabilityRequest) any{
+			"sloName": func(r GetAvailabilityRequest) any { return r.SLOName },
+			"dataSource": func(r GetAvailabilityRequest) any {
+				return r.DataSourceProject != "" || r.DataSource != "" || r.DataSourceKind != ""
+			},
+		})),
+	govy.For(func(r GetAvailabilityRequest) ReplayType { return r.Type }).
+		WithName("type").
+		When(func(r GetAvailabilityRequest) bool { return r.Type != "" }).
+		Rules(rules.OneOf(ReplayTypeValues()...)),
+	govy.For(func(r GetAvailabilityRequest) DurationUnit { return r.DurationUnit }).
+		WithName("durationUnit").
+		When(hasAvailabilityDuration).
+		Required().
+		Rules(rules.OneOf(DurationUnitValues()...)),
+	govy.For(func(r GetAvailabilityRequest) int { return r.DurationValue }).
+		WithName("durationValue").
+		When(hasAvailabilityDuration).
+		Rules(rules.GT(0)),
+)
+
+var durationValidation = govy.New(
+	govy.For(func(d Duration) DurationUnit { return d.Unit }).
+		WithName("unit").
+		Required().
+		Rules(rules.OneOf(DurationUnitValues()...)),
+	govy.For(func(d Duration) int { return d.Value }).
+		WithName("value").
+		Rules(rules.GT(0)),
+)
+
+var sourceSLOValidation = govy.New(
+	govy.For(func(r SourceSLO) string { return r.Project }).
+		WithName("project").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r SourceSLO) string { return r.SLO }).
+		WithName("slo").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.ForSlice(func(r SourceSLO) []SourceSLOItem { return r.ObjectivesMap }).
+		WithName("objectivesMap").
+		Rules(rules.SliceMinLength[[]SourceSLOItem](1)).
+		IncludeForEach(sourceSLOItemValidation),
+)
+
+var sourceSLOItemValidation = govy.New(
+	govy.For(func(r SourceSLOItem) string { return r.Source }).
+		WithName("source").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+	govy.For(func(r SourceSLOItem) string { return r.Target }).
+		WithName("target").
+		Required().
+		Rules(validationV1Alpha.StringName()),
+)
+
+const (
+	durationAndStartDateValidationError = "replay_duration_or_start_date"
+	startDateInTheFutureValidationError = "replay_duration_or_start_date_future"
+)
+
+func startTimeNotInFutureValidationRule() govy.Rule[time.Time] {
+	return govy.NewRule(func(v time.Time) error {
+		now := time.Now()
+		if v.After(now) {
+			return fmt.Errorf("startDate %s must not be in the future", v)
+		}
+		return nil
+	}).WithErrorCode(startDateInTheFutureValidationError)
+}
+
+// Duration converts unit and value to [time.Duration].
+func (d Duration) Duration() (time.Duration, error) {
+	var multiplier time.Duration
+	switch d.Unit {
+	case DurationUnitMinute:
+		multiplier = time.Minute
+	case DurationUnitHour:
+		multiplier = time.Hour
+	case DurationUnitDay:
+		multiplier = 24 * time.Hour
+	default:
+		return 0, ErrInvalidDurationUnit
+	}
+	if d.Value <= 0 {
+		return 0, ErrInvalidDurationValue
+	}
+
+	value := int64(d.Value)
+	if value > math.MaxInt64/int64(multiplier) {
+		return 0, fmt.Errorf("duration %d %s: %w", d.Value, d.Unit, ErrDurationOverflow)
+	}
+	return time.Duration(value) * multiplier, nil
+}
+
+func isEmpty(duration Duration) bool {
+	return duration.Unit == "" && duration.Value == 0
+}
+
+func hasAvailabilityDuration(r GetAvailabilityRequest) bool {
+	return r.DurationUnit != "" || r.DurationValue != 0
+}

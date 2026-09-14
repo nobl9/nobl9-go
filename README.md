@@ -16,9 +16,6 @@
       <td>
         <img alt="tests" src="https://github.com/nobl9/nobl9-go/actions/workflows/tests.yml/badge.svg?event=push">
       </td>
-      <td>
-        <img alt="vulnerabilities" src="https://github.com/nobl9/nobl9-go/actions/workflows/vulns.yml/badge.svg?event=push">
-      </td>
     </tr>
   </table>
 </div>

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,6 +27,10 @@ const (
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
 	QueryKeyCategory          = "category"
+	queryKeyPaginationLimit   = "pagination.limit"
+	queryKeyPaginationOffset  = "pagination.offset"
+	queryKeySortColumn        = "sort.column"
+	queryKeySortDirection     = "sort.direction"
 )
 
 type filters struct {
@@ -82,4 +87,19 @@ func (f *filters) Floats(k string, values []float64) *filters {
 func (f *filters) String(k, value string) *filters {
 	f.Filters.String(k, value)
 	return f
+}
+
+func (r GetSLOsRequest) addListQuery(f *filters) {
+	if r.Pagination != nil {
+		if r.Pagination.Limit > 0 {
+			f.String(queryKeyPaginationLimit, strconv.Itoa(r.Pagination.Limit))
+		}
+		if r.Pagination.Offset > 0 {
+			f.String(queryKeyPaginationOffset, strconv.Itoa(r.Pagination.Offset))
+		}
+	}
+	if r.Sort != nil {
+		f.String(queryKeySortColumn, string(r.Sort.Column))
+		f.String(queryKeySortDirection, string(r.Sort.Direction))
+	}
 }
