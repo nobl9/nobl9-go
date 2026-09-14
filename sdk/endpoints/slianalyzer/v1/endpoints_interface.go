@@ -21,7 +21,7 @@ type Endpoints interface {
 	DeleteAnalysis(ctx context.Context, project, name string) error
 	// CreateCalculation starts a calculation for an SLI analysis.
 	CreateCalculation(ctx context.Context, project, name string, request CreateCalculationRequest) error
-	// GetCalculation returns the error budget burn-down series for an SLI analysis.
+	// GetCalculation returns the good-to-total ratio series for the latest calculation.
 	GetCalculation(ctx context.Context, project, name string) (response Timeseries, err error)
 	// GetSummary returns the calculation summary for an SLI analysis.
 	GetSummary(ctx context.Context, project, name string) (response AnalysisCalculationSummary, err error)
@@ -31,6 +31,7 @@ type Endpoints interface {
 	GetStats(ctx context.Context, project, name string) (response AnalysisStats, err error)
 	// GetHistogram returns histogram data for an SLI analysis.
 	GetHistogram(ctx context.Context, project, name string) (response AnalysisHistogram, err error)
-	// GenerateSLO returns an SLO generated from an SLI analysis.
+	// GenerateSLO returns an SLO template after the analysis calculation completes.
+	// Replace the SLO name, project, and service placeholders before applying it.
 	GenerateSLO(ctx context.Context, project, name string) (response v1alphaSLO.SLO, err error)
 }

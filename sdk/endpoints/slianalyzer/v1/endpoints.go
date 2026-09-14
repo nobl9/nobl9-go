@@ -172,7 +172,7 @@ func (e endpoints) CreateCalculation(
 	return nil
 }
 
-// GetCalculation returns the error budget burn-down series for an SLI analysis.
+// GetCalculation returns the good-to-total ratio series for the latest calculation.
 func (e endpoints) GetCalculation(
 	ctx context.Context,
 	project, name string,
@@ -242,7 +242,8 @@ func (e endpoints) GetHistogram(
 	return response, err
 }
 
-// GenerateSLO returns an SLO generated from an SLI analysis.
+// GenerateSLO returns an SLO template after the analysis calculation completes.
+// Replace the SLO name, project, and service placeholders before applying it.
 func (e endpoints) GenerateSLO(
 	ctx context.Context,
 	project, name string,

@@ -28,6 +28,7 @@ type CreateCalculationRequest struct {
 }
 
 // AnalysisMetadata identifies an SLI analysis and its project.
+// The API generates Name from DisplayName and ignores Name in create requests.
 type AnalysisMetadata struct {
 	Name        string `json:"name,omitempty"`
 	DisplayName string `json:"displayName"`
@@ -44,7 +45,8 @@ type AnalysisMetricSpec struct {
 }
 
 // AnalysisPeriod defines the time range for an SLI analysis.
-// StartTime and EndTime use the `2006-01-02 15:04:05` layout in TimeZone.
+// StartTime and EndTime use the `2006-01-02 15:04:05` layout in UTC.
+// TimeZone specifies the display time zone.
 type AnalysisPeriod struct {
 	StartTime string `json:"startTime"`
 	EndTime   string `json:"endTime"`

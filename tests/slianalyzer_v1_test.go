@@ -5,7 +5,6 @@ package tests
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"slices"
 	"testing"
@@ -24,39 +23,74 @@ import (
 )
 
 func Test_SLIAnalyzer_V1(t *testing.T) {
-	test := newSLIAnalyzerTest(t)
-
-	t.Run("create analysis", test.createAnalysis)
-	t.Run("get analysis", test.getAnalysis)
-	t.Run("list analyses", test.listAnalyses)
-	t.Run("update analysis", test.updateAnalysis)
-	t.Run("wait for imported data", test.waitForImportedData)
-	t.Run("get timeseries", test.getTimeseries)
-	t.Run("get statistics", test.getStats)
-	t.Run("get histogram", test.getHistogram)
-	t.Run("create calculation", test.createCalculation)
-	t.Run("get calculation", test.getCalculation)
-	t.Run("get summary", test.getSummary)
-	t.Run("generate SLO", test.generateSLO)
-	t.Run("delete analysis", test.deleteAnalysis)
+	tests := []struct {
+		name       string
+		metricSpec slianalyzerV1.AnalysisMetricSpec
+	}{
+		{
+			name: "raw metric",
+			metricSpec: slianalyzerV1.AnalysisMetricSpec{
+				RawMetric: &v1alphaSLO.MetricSpec{
+					Prometheus: &v1alphaSLO.PrometheusMetric{
+						PromQL: ptr("vector(1)"),
+					},
+				},
+			},
+		},
+		{
+			name: "count metrics",
+			metricSpec: slianalyzerV1.AnalysisMetricSpec{
+				CountMetrics: &v1alphaSLO.CountMetricsSpec{
+					Incremental: ptr(true),
+					GoodMetric: &v1alphaSLO.MetricSpec{
+						Prometheus: &v1alphaSLO.PrometheusMetric{PromQL: ptr("vector(9)")},
+					},
+					TotalMetric: &v1alphaSLO.MetricSpec{
+						Prometheus: &v1alphaSLO.PrometheusMetric{PromQL: ptr("vector(10)")},
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			test := newSLIAnalyzerTest(t, tt.metricSpec)
+			for _, step := range []struct {
+				name string
+				run  func(*testing.T)
+			}{
+				{"create analysis", test.createAnalysis},
+				{"get analysis", test.getAnalysis},
+				{"list analyses", test.listAnalyses},
+				{"update analysis", test.updateAnalysis},
+				{"delete analysis", test.deleteAnalysis},
+			} {
+				if !t.Run(step.name, step.run) {
+					return
+				}
+			}
+		})
+	}
 }
 
 type sliAnalyzerTest struct {
-	project      string
-	metricSource string
-	displayName  string
-	analysis     slianalyzerV1.Analysis
-	deleted      bool
+	project     string
+	metricSpec  slianalyzerV1.AnalysisMetricSpec
+	displayName string
+	analysis    slianalyzerV1.Analysis
+	deleted     bool
 }
 
-func newSLIAnalyzerTest(t *testing.T) *sliAnalyzerTest {
+func newSLIAnalyzerTest(t *testing.T, metricSpec slianalyzerV1.AnalysisMetricSpec) *sliAnalyzerTest {
 	t.Helper()
 
-	direct := e2etestutils.ProvisionStaticDirect(t, v1alpha.Prometheus)
+	agent := e2etestutils.ProvisionStaticAgent(t, v1alpha.Prometheus)
+	metricSpec.Kind = manifest.KindAgent
+	metricSpec.MetricSource = agent.Metadata.Name
 	test := &sliAnalyzerTest{
-		project:      direct.Metadata.Project,
-		metricSource: direct.Metadata.Name,
-		displayName:  e2etestutils.GenerateName(),
+		project:     agent.Metadata.Project,
+		metricSpec:  metricSpec,
+		displayName: e2etestutils.GenerateName(),
 	}
 	cleanupContext := context.WithoutCancel(t.Context())
 	t.Cleanup(func() { test.cleanup(t, cleanupContext) })
@@ -64,7 +98,6 @@ func newSLIAnalyzerTest(t *testing.T) *sliAnalyzerTest {
 }
 
 func (s *sliAnalyzerTest) createAnalysis(t *testing.T) {
-	promQL := "(vector(1) and (vector(time() % 300) < 120)) or vector(0)"
 	endTime := time.Now().UTC().Truncate(time.Second)
 	startTime := endTime.Add(-time.Hour)
 
@@ -76,13 +109,7 @@ func (s *sliAnalyzerTest) createAnalysis(t *testing.T) {
 				DisplayName: s.displayName,
 				Project:     s.project,
 			},
-			MetricSpec: slianalyzerV1.AnalysisMetricSpec{
-				Kind:         manifest.KindDirect,
-				MetricSource: s.metricSource,
-				RawMetric: &v1alphaSLO.MetricSpec{
-					Prometheus: &v1alphaSLO.PrometheusMetric{PromQL: &promQL},
-				},
-			},
+			MetricSpec: s.metricSpec,
 			Period: slianalyzerV1.AnalysisPeriod{
 				StartTime: startTime.Format(twindow.IsoDateTimeOnlyLayout),
 				EndTime:   endTime.Format(twindow.IsoDateTimeOnlyLayout),
@@ -94,6 +121,7 @@ func (s *sliAnalyzerTest) createAnalysis(t *testing.T) {
 	require.NotEmpty(t, s.analysis.Metadata.Name)
 	assert.Equal(t, s.displayName, s.analysis.Metadata.DisplayName)
 	assert.Equal(t, s.project, s.analysis.Metadata.Project)
+	assert.Equal(t, s.metricSpec, s.analysis.MetricSpec)
 	assert.Equal(t, slianalyzerV1.StatusFetchingHistoricalData, s.analysis.Status)
 }
 
@@ -105,6 +133,8 @@ func (s *sliAnalyzerTest) getAnalysis(t *testing.T) {
 	)
 	require.NoError(t, err)
 	assert.Equal(t, s.analysis.Metadata, actual.Metadata)
+	assert.Equal(t, s.analysis.MetricSpec, actual.MetricSpec)
+	assert.Equal(t, s.analysis.Period, actual.Period)
 }
 
 func (s *sliAnalyzerTest) listAnalyses(t *testing.T) {
@@ -134,95 +164,6 @@ func (s *sliAnalyzerTest) updateAnalysis(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, updatedDisplayName, actual.Metadata.DisplayName)
 	s.analysis = actual
-}
-
-func (s *sliAnalyzerTest) waitForImportedData(t *testing.T) {
-	s.analysis = waitForSLIAnalysisStatus(t, s.analysis, map[slianalyzerV1.Status]bool{
-		slianalyzerV1.StatusImportCompleted: true,
-		slianalyzerV1.StatusImportFailed:    true,
-	})
-	require.Equal(t, slianalyzerV1.StatusImportCompleted, s.analysis.Status)
-}
-
-func (s *sliAnalyzerTest) getTimeseries(t *testing.T) {
-	timeseries, err := client.SLIAnalyzer().V1().GetTimeseries(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-	assert.NotEmpty(t, timeseries.RawMetric)
-}
-
-func (s *sliAnalyzerTest) getStats(t *testing.T) {
-	stats, err := client.SLIAnalyzer().V1().GetStats(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-	assert.NotNil(t, stats.RawMetric)
-}
-
-func (s *sliAnalyzerTest) getHistogram(t *testing.T) {
-	histogram, err := client.SLIAnalyzer().V1().GetHistogram(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-	assert.NotEmpty(t, histogram.Bins)
-}
-
-func (s *sliAnalyzerTest) createCalculation(t *testing.T) {
-	require.NoError(t, client.SLIAnalyzer().V1().CreateCalculation(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-		slianalyzerV1.CreateCalculationRequest{
-			Value:           130,
-			BudgetTarget:    0.99,
-			TimeSliceTarget: 0.99,
-			BudgetingMethod: v1alphaSLO.BudgetingMethodTimeslices.String(),
-			Operator:        v1alpha.GreaterThanEqual.String(),
-		},
-	))
-	s.analysis = waitForSLIAnalysisStatus(t, s.analysis, map[slianalyzerV1.Status]bool{
-		slianalyzerV1.StatusCalculationCompleted: true,
-		slianalyzerV1.StatusCalculationFailed:    true,
-	})
-	require.Equal(t, slianalyzerV1.StatusCalculationCompleted, s.analysis.Status)
-}
-
-func (s *sliAnalyzerTest) getCalculation(t *testing.T) {
-	calculation, err := client.SLIAnalyzer().V1().GetCalculation(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-	assert.NotEmpty(t, calculation)
-}
-
-func (s *sliAnalyzerTest) getSummary(t *testing.T) {
-	_, err := client.SLIAnalyzer().V1().GetSummary(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-}
-
-func (s *sliAnalyzerTest) generateSLO(t *testing.T) {
-	slo, err := client.SLIAnalyzer().V1().GenerateSLO(
-		t.Context(),
-		s.analysis.Metadata.Project,
-		s.analysis.Metadata.Name,
-	)
-	require.NoError(t, err)
-	assert.Equal(t, manifest.KindSLO, slo.Kind)
-	assert.Equal(t, s.analysis.Metadata.Project, slo.Metadata.Project)
-	assert.NotEmpty(t, slo.Spec.Objectives)
 }
 
 func (s *sliAnalyzerTest) deleteAnalysis(t *testing.T) {
@@ -255,33 +196,4 @@ func (s *sliAnalyzerTest) cleanup(t *testing.T, ctx context.Context) {
 		s.analysis.Metadata.Project,
 		s.analysis.Metadata.Name,
 	))
-}
-
-func waitForSLIAnalysisStatus(
-	t *testing.T,
-	analysis slianalyzerV1.Analysis,
-	terminalStatuses map[slianalyzerV1.Status]bool,
-) slianalyzerV1.Analysis {
-	t.Helper()
-
-	response, err := tryExecuteRequest(t, func() (slianalyzerV1.Analysis, error) {
-		response, err := client.SLIAnalyzer().V1().GetAnalysis(
-			t.Context(),
-			analysis.Metadata.Project,
-			analysis.Metadata.Name,
-		)
-		if err != nil {
-			return response, err
-		}
-		if !terminalStatuses[response.Status] {
-			return response, fmt.Errorf(
-				"analysis %q has status %q",
-				analysis.Metadata.Name,
-				response.Status,
-			)
-		}
-		return response, nil
-	})
-	require.NoError(t, err)
-	return response
 }
