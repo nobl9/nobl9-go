@@ -244,6 +244,10 @@ const (
 	// AzureMonitor.
 	metricSubVariantAzureMonitorMetrics metricVariant = "metrics"
 	metricSubVariantAzureMonitorLogs    metricVariant = "logs"
+	// Zscaler.
+	metricSubVariantZscalerScore        metricVariant = "score"
+	metricSubVariantZscalerAvailability metricVariant = "availability"
+	metricSubVariantZscalerLatency      metricVariant = "latency"
 )
 
 // generateMetricVariant returns a [v1alphaSLO.SLO] with all [v1alphaSLO.MetricSpec] variants filled out.
@@ -1132,19 +1136,19 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 			Metric: s.MetricSubVariant,
 		}
 		switch s.MetricSubVariant {
-		case "score":
+		case metricSubVariantZscalerScore:
 			query.LocationID = ptr(int64(6789))
 			objective.DisplayName = "Application ZDX score above 65"
 			objective.Value = ptr(65.0)
 			objective.Operator = ptr(v1alpha.GreaterThan.String())
-		case "availability":
+		case metricSubVariantZscalerAvailability:
 			query.Type = v1alphaSLO.ZscalerTypeWebProbe
 			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(13579))
 			objective.DisplayName = "Web probe reports full availability"
 			objective.BudgetTarget = ptr(0.999)
 			objective.Value = ptr(100.0)
 			objective.Operator = ptr(v1alpha.GreaterThanEqual.String())
-		case "latency":
+		case metricSubVariantZscalerLatency:
 			query.Type = v1alphaSLO.ZscalerTypeCloudPath
 			query.DeviceID, query.ProbeID = ptr(int64(67890)), ptr(int64(24680))
 			query.LegSrc, query.LegDst = ptr("end"), ptr("end")
