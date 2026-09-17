@@ -101,8 +101,8 @@ func (e endpoints) Cancel(ctx context.Context, params CancelRequest) (err error)
 	return nil
 }
 
-// List returns queued and in-progress reimport-and-recalculation replays visible
-// to the current organization.
+// List returns queued and in-progress replays started by users in the current organization.
+// Composite SLO replays are included only when composite Replay is enabled for the organization.
 func (e endpoints) List(ctx context.Context) ([]ReplayListItem, error) {
 	req, err := e.client.CreateRequest(ctx, http.MethodGet, apiListReplays, nil, nil, nil)
 	if err != nil {
