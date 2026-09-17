@@ -13,8 +13,8 @@ type Endpoints interface {
 	Delete(ctx context.Context, params DeleteRequest) (err error)
 	// Cancel validates params and requests cancellation of the selected replay.
 	Cancel(ctx context.Context, params CancelRequest) (err error)
-	// List returns queued and in-progress reimport-and-recalculation replays visible
-	// to the current organization.
+	// List returns queued and in-progress replays started by users in the current organization.
+	// Composite SLO replays are included only when composite Replay is enabled for the organization.
 	List(ctx context.Context) ([]ReplayListItem, error)
 	// GetStatus validates params and returns the latest replay status for an SLO.
 	GetStatus(ctx context.Context, params GetStatusRequest) (*ReplayWithStatus, error)
