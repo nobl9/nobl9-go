@@ -1321,6 +1321,13 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 				ClientSecret: "secret",
 			},
 		},
+		v1alpha.Zscaler: {
+			Zscaler: &ZscalerConfig{
+				VanityDomain: "example",
+				ClientID:     "example-client",
+				ClientSecret: "secret",
+			},
+		},
 		v1alpha.Dash0: {
 			Dash0: &Dash0Config{
 				URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
