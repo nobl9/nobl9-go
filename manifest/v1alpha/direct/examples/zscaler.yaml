@@ -18,10 +18,10 @@ spec:
     clientSecret: "[secret]"
   historicalDataRetrieval:
     maxDuration:
-      value: 14
+      value: 13
       unit: Day
     defaultDuration:
-      value: 7
+      value: 6
       unit: Day
   queryDelay:
     value: 21
