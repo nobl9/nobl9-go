@@ -26,5 +26,6 @@ var graphiteValidation = govy.New[GraphiteMetric](
 			rules.StringDenyRegexp(regexp.MustCompile(`\[[^.]*\]`)).WithExamples("[a-z0-9]").
 				WithDetails("character list or range is not allowed"),
 			rules.StringDenyRegexp(regexp.MustCompile(`{[^.]*}`)).WithExamples("{user,system,iowait}").
-				WithDetails("value list is not allowed")),
+				WithDetails("value list is not allowed"),
+		),
 )

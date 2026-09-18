@@ -103,14 +103,16 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "stdin"))
+			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "stdin"),
+		)
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: "stdin"})
 	})
 	t.Run("read definitions from reader - composite", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "composite_v2_slo.yaml"), "stdin"))
+			NewObjectSourceReader(readTestFile(t, "composite_v2_slo.yaml"), "stdin"),
+		)
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
@@ -120,7 +122,8 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 	t.Run("read definitions from reader for empty source", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "test"))
+			NewObjectSourceReader(readTestFile(t, "service_and_agent.yaml"), "test"),
+		)
 		require.NoError(t, err)
 		definitionsMatchExpected(t,
 			definitions,
@@ -133,7 +136,8 @@ func TestReadDefinitions_FromReader(t *testing.T) {
 			&ObjectSource{
 				Reader: readTestFile(t, "service_and_agent.yaml"),
 				Type:   ObjectSourceTypeReader,
-			})
+			},
+		)
 		require.NoError(t, err)
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "service_and_agent", ManifestSrc: unknownSource})
 	})
@@ -160,7 +164,8 @@ func TestReadDefinitions_UsingCustomizedUnmarshal(t *testing.T) {
 	t.Run("report an error when unexpected structure was returned", func(t *testing.T) {
 		definitions, err := ReadObjectsFromSources(
 			context.Background(),
-			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"))
+			NewObjectSourceReader(readTestFile(t, "dataexport.yaml"), "stdin"),
+		)
 		require.NoError(t, err)
 
 		definitionsMatchExpected(t, definitions, expectedMeta{Name: "dataexport", ManifestSrc: "stdin"})
@@ -255,13 +260,15 @@ func TestReadDefinitions_FromFS(t *testing.T) {
 		require.NoError(t, os.WriteFile(
 			tmpDir(path),
 			readTestFile(t, filepath.Base(path)).Bytes(),
-			0o600))
+			0o600,
+		))
 	}
 	// - Create temporary directory.
 	createDir := func(path string) {
 		require.NoError(t, os.Mkdir(
 			tmpDir(path),
-			0o750))
+			0o750,
+		))
 	}
 	// - Create symlink.
 	createSymlink := func(oldName, newName string) { require.NoError(t, os.Symlink(oldName, newName)) }

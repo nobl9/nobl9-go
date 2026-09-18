@@ -63,7 +63,8 @@ func createPingdomMetricSpecValidation(
 	return govy.New[MetricSpec](
 		govy.ForPointer(func(m MetricSpec) *PingdomMetric { return m.Pingdom }).
 			WithName("pingdom").
-			Include(include))
+			Include(include),
+	)
 }
 
 var pingdomRawMetricValidation = createPingdomMetricSpecValidation(govy.New[PingdomMetric](
@@ -97,7 +98,8 @@ var pingdomValidation = govy.New[PingdomMetric](
 		Rules(
 			rules.StringNotEmpty(),
 			// This regexp is crafted in order to not interweave with StringNotEmpty govy.
-			rules.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`))), // nolint: gocritic
+			rules.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`)),
+		), // nolint: gocritic
 )
 
 var pingdomUptimeCheckTypeValidation = govy.New[PingdomMetric](
@@ -109,7 +111,8 @@ var pingdomUptimeCheckTypeValidation = govy.New[PingdomMetric](
 					pingdomStatusUp,
 					pingdomStatusDown,
 					pingdomStatusUnconfirmed,
-					pingdomStatusUnknown).Validate(status); err != nil {
+					pingdomStatusUnknown,
+				).Validate(status); err != nil {
 					return err
 				}
 			}

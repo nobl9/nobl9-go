@@ -115,7 +115,8 @@ var logicMonitorCountMetricsQueryTypeValidation = govy.New[CountMetricsSpec](
 				}
 			}
 			return nil
-		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo),
+	),
 ).When(
 	whenCountMetricsIs(v1alpha.LogicMonitor),
 	govy.WhenDescription("countMetrics is logicMonitor"),
