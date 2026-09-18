@@ -24,6 +24,28 @@ func TestReplayListItemUnmarshal(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "2026-01-01T00:00:00Z", item.CreatedAt)
 	assert.Equal(t, ReplayListStatusInProgress, item.Status)
+	assert.Nil(t, item.IsComposite)
+}
+
+func TestReplayListItemUnmarshalIsComposite(t *testing.T) {
+	t.Parallel()
+
+	for name, test := range map[string]struct {
+		json     string
+		expected *bool
+	}{
+		"composite":     {json: `{"project":"p","status":"queued","isComposite":true}`, expected: ptr(true)},
+		"not composite": {json: `{"project":"p","status":"queued","isComposite":false}`, expected: ptr(false)},
+		"unknown":       {json: `{"project":"p","status":"queued"}`, expected: nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			var item ReplayListItem
+			require.NoError(t, json.Unmarshal([]byte(test.json), &item))
+			assert.Equal(t, test.expected, item.IsComposite)
+		})
+	}
 }
 
 func TestReplayWithStatusUnmarshal(t *testing.T) {
@@ -86,3 +108,5 @@ func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, ReplayAvailabilityReason("formatted reason from server"), availability.Reason)
 }
+
+func ptr[T any](v T) *T { return &v }
