@@ -144,6 +144,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
+		WithName("clickHouse").
+		Include(clickHouseValidation),
 )
 
 var (
@@ -282,6 +285,13 @@ var (
 			WithName("step").
 			OmitEmpty().
 			Rules(rules.GTE(15)),
+	)
+	clickHouseValidation = govy.New[ClickHouseConfig](
+		govy.Transform(func(c ClickHouseConfig) string { return c.URL }, url.Parse).
+			WithName("url").
+			Cascade(govy.CascadeModeStop).
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
 	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
@@ -490,6 +500,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.ClickHouse != nil {
+		if err := typesMatch(v1alpha.ClickHouse); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -547,6 +562,21 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 
 var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
+	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for ClickHouse"),
+		)
+	}
+
+	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
+		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be one of [stable, beta]"),
+		)
+	}
+
 	if typ == v1alpha.SplunkObservability &&
 		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
 		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
