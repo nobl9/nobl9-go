@@ -64,6 +64,7 @@ type Spec struct {
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
 	ClickHouse              *ClickHouseConfig                `json:"clickHouse,omitempty"`
+	Elasticsearch           *ElasticsearchConfig             `json:"elasticsearch,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -100,6 +101,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.AzurePrometheus:     {},
 	v1alpha.Dash0:               {},
 	v1alpha.ClickHouse:          {},
+	v1alpha.Elasticsearch:       {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -153,6 +155,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Dash0, nil
 	case spec.ClickHouse != nil:
 		return v1alpha.ClickHouse, nil
+	case spec.Elasticsearch != nil:
+		return v1alpha.Elasticsearch, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -307,4 +311,10 @@ type ClickHouseConfig struct {
 	Database string `json:"database,omitempty"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+// ElasticsearchConfig represents Elasticsearch configuration for a Direct object.
+type ElasticsearchConfig struct {
+	URL    string `json:"url"`
+	APIKey string `json:"apiKey"`
 }

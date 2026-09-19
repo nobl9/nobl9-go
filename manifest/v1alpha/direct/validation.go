@@ -118,6 +118,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
 		WithName("clickHouse").
 		Include(clickHouseValidation),
+	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
+		WithName("elasticsearch").
+		Include(elasticsearchValidation),
 )
 
 var (
@@ -264,6 +267,9 @@ var (
 			WithName("password").
 			HideValue(),
 	)
+	elasticsearchValidation = govy.New[ElasticsearchConfig](
+		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
+	)
 )
 
 const (
@@ -395,6 +401,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Elasticsearch != nil {
+		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -473,6 +484,14 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
+		)
+	}
+
+	if typ == v1alpha.Elasticsearch &&
+		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for Elasticsearch"),
 		)
 	}
 

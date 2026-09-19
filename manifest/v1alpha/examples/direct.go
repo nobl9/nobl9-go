@@ -50,6 +50,7 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
 	v1alpha.ClickHouse,
+	v1alpha.Elasticsearch,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {
@@ -220,6 +221,11 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			Database: "observability",
 			Username: "readonly_slo",
 			Password: "[secret]",
+		}
+	case v1alpha.Elasticsearch:
+		direct.Spec.Elasticsearch = &v1alphaDirect.ElasticsearchConfig{
+			URL:    "https://example.aws.found.io",
+			APIKey: "[secret]",
 		}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", d.typ))

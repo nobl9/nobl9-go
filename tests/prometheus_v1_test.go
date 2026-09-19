@@ -35,7 +35,19 @@ var allPrometheusMetricNames = []string{
 	"component_weight",
 	"composite_max_delay",
 	"count_good",
+	"count_good_delta",
+	"count_good_delta_15m",
+	"count_good_delta_1d",
+	"count_good_delta_1h",
+	"count_good_delta_1m",
+	"count_good_delta_5m",
 	"count_total",
+	"count_total_delta",
+	"count_total_delta_15m",
+	"count_total_delta_1d",
+	"count_total_delta_1h",
+	"count_total_delta_1m",
+	"count_total_delta_5m",
 	"reliability",
 	"sli_ratio_received_bad",
 	"sli_ratio_received_good",
@@ -45,6 +57,11 @@ var allPrometheusMetricNames = []string{
 	"sli_threshold",
 	"sli_threshold_status",
 	"target",
+	"target_15m",
+	"target_1d",
+	"target_1h",
+	"target_1m",
+	"target_5m",
 	"threshold",
 	"time_slice_allowance",
 	"time_slice_reliability",
@@ -187,7 +204,11 @@ func Test_Prometheus_V1_LabelNames(t *testing.T) {
 
 			require.NoError(t, err)
 			assert.Empty(t, warnings)
-			assert.Equal(t, tt.expected, labelNames)
+			expectedLabelNames := make(model.LabelNames, 0, len(tt.expected))
+			for _, name := range tt.expected {
+				expectedLabelNames = append(expectedLabelNames, model.LabelName(name))
+			}
+			assert.Equal(t, expectedLabelNames, labelNames)
 		})
 	}
 }
