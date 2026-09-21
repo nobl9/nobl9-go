@@ -128,6 +128,12 @@ var RawMetricsValidation = govy.New[RawMetricSpec](
 	govy.ForPointer(func(r RawMetricSpec) *MetricSpec { return r.MetricQuery }).
 		WithName("query").
 		Required().
+		Include(RawMetricQueryValidation),
+)
+
+// RawMetricQueryValidation checks a metric query with the provider restrictions for raw metrics.
+var RawMetricQueryValidation = govy.New[MetricSpec](
+	govy.For(govy.GetSelf[MetricSpec]()).
 		Include(
 			metricSpecValidation,
 			lightstepRawMetricValidation,

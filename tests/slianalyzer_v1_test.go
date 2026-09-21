@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/govytest"
+	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -65,6 +67,8 @@ func Test_SLIAnalyzer_V1(t *testing.T) {
 				{"get empty stats", test.getEmptyStats},
 				{"get empty histogram", test.getEmptyHistogram},
 				{"reject invalid period", test.rejectInvalidPeriod},
+				{"reject invalid update", test.rejectInvalidUpdate},
+				{"reject invalid calculation", test.rejectInvalidCalculation},
 				{"reject SLO generation before calculation", test.rejectSLOGenerationBeforeCalculation},
 				{"update analysis", test.updateAnalysis},
 				{"delete analysis", test.deleteAnalysis},
@@ -218,10 +222,9 @@ func (s *sliAnalyzerTest) rejectInvalidPeriod(t *testing.T) {
 			))
 		})
 	}
-	var httpErr *sdk.HTTPError
-	require.ErrorAs(t, err, &httpErr)
-	assert.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
-	assert.ErrorContains(t, err, "must be after startTime")
+	govytest.AssertError(t, err, govytest.ExpectedRuleError{
+		PropertyPath: "period", Code: "sli_analysis_period",
+	})
 }
 
 func (s *sliAnalyzerTest) rejectSLOGenerationBeforeCalculation(t *testing.T) {
@@ -233,6 +236,24 @@ func (s *sliAnalyzerTest) rejectSLOGenerationBeforeCalculation(t *testing.T) {
 	var httpErr *sdk.HTTPError
 	require.ErrorAs(t, err, &httpErr)
 	assert.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+}
+
+func (s *sliAnalyzerTest) rejectInvalidUpdate(t *testing.T) {
+	err := client.SLIAnalyzer().V1().UpdateAnalysis(t.Context(), s.analysis.Metadata.Name,
+		slianalyzerV1.UpdateAnalysisRequest{Project: s.project},
+	)
+	govytest.AssertError(t, err, govytest.ExpectedRuleError{
+		PropertyPath: "displayName", Code: rules.ErrorCodeRequired,
+	})
+}
+
+func (s *sliAnalyzerTest) rejectInvalidCalculation(t *testing.T) {
+	err := client.SLIAnalyzer().V1().CreateCalculation(t.Context(), s.project, s.analysis.Metadata.Name,
+		slianalyzerV1.CreateCalculationRequest{Value: 1, BudgetTarget: 1, BudgetingMethod: "Occurrences", Operator: "lte"},
+	)
+	govytest.AssertError(t, err, govytest.ExpectedRuleError{
+		PropertyPath: "target", Code: rules.ErrorCodeLessThan,
+	})
 }
 
 func (s *sliAnalyzerTest) updateAnalysis(t *testing.T) {

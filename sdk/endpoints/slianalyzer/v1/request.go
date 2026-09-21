@@ -12,10 +12,20 @@ type CreateAnalysisRequest struct {
 	Period     AnalysisPeriod     `json:"period"`
 }
 
+// Validate checks the analysis metadata, metric query, and import period.
+func (r CreateAnalysisRequest) Validate() error {
+	return createAnalysisValidation.Validate(r)
+}
+
 // UpdateAnalysisRequest defines the mutable metadata of an SLI analysis.
 type UpdateAnalysisRequest struct {
 	Project     string `json:"project"`
 	DisplayName string `json:"displayName"`
+}
+
+// Validate checks the project and display name of the analysis to update.
+func (r UpdateAnalysisRequest) Validate() error {
+	return updateAnalysisValidation.Validate(r)
 }
 
 // CreateCalculationRequest defines the threshold and budget settings for an analysis calculation.
@@ -25,6 +35,11 @@ type CreateCalculationRequest struct {
 	TimeSliceTarget float64 `json:"timeSliceTarget,omitempty"`
 	BudgetingMethod string  `json:"budgetingMethod"`
 	Operator        string  `json:"op,omitempty"`
+}
+
+// Validate checks the calculation target, budgeting method, and comparison operator.
+func (r CreateCalculationRequest) Validate() error {
+	return createCalculationValidation.Validate(r)
 }
 
 // AnalysisMetadata identifies an SLI analysis and its project.

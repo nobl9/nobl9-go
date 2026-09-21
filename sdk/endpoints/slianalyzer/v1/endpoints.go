@@ -34,6 +34,9 @@ func (e endpoints) CreateAnalysis(
 	ctx context.Context,
 	request CreateAnalysisRequest,
 ) (response Analysis, err error) {
+	if err = request.Validate(); err != nil {
+		return response, err
+	}
 	buf := new(bytes.Buffer)
 	if err = json.NewEncoder(buf).Encode(request); err != nil {
 		return response, fmt.Errorf("failed to encode request body: %w", err)
@@ -99,6 +102,9 @@ func (e endpoints) UpdateAnalysis(
 	name string,
 	request UpdateAnalysisRequest,
 ) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(request); err != nil {
 		return fmt.Errorf("failed to encode request body: %w", err)
@@ -149,6 +155,9 @@ func (e endpoints) CreateCalculation(
 	project, name string,
 	request CreateCalculationRequest,
 ) error {
+	if err := request.Validate(); err != nil {
+		return err
+	}
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(request); err != nil {
 		return fmt.Errorf("failed to encode request body: %w", err)
