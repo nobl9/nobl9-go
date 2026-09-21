@@ -2,6 +2,7 @@ package direct
 
 import (
 	"net/url"
+	"regexp"
 	"slices"
 
 	"github.com/pkg/errors"
@@ -265,9 +266,15 @@ var (
 		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
 			WithName("vanityDomain").
 			Required().
-			Rules(v1alpha.ZscalerVanityDomainValidationRule()),
+			Rules(zscalerVanityDomainValidationRule()),
 	)
 )
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
 
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"

@@ -25,7 +25,8 @@ const (
 
 var zscalerValidation = govy.New[ZscalerMetric](
 	govy.For(func(z ZscalerMetric) string { return z.Type }).
-		WithName("type").Required().
+		WithName("type").
+		Required().
 		Rules(rules.OneOf(ZscalerTypeApplication, ZscalerTypeWebProbe, ZscalerTypeCloudPath)),
 	govy.For(func(z ZscalerMetric) int64 { return z.AppID }).
 		WithName("appId").
@@ -54,38 +55,54 @@ var zscalerValidation = govy.New[ZscalerMetric](
 
 var zscalerApplicationValidation = govy.New[ZscalerMetric](
 	govy.For(func(z ZscalerMetric) string { return z.Metric }).
-		WithName("metric").OmitEmpty().Rules(rules.OneOf("score", "pft")),
+		WithName("metric").
+		OmitEmpty().
+		Rules(rules.OneOf("score", "pft")),
 	govy.ForPointer(func(z ZscalerMetric) *int64 { return z.LocationID }).
-		WithName("locationId").Rules(rules.GT[int64](0)),
+		WithName("locationId").
+		Rules(rules.GT[int64](0)),
 	govy.For(func(z ZscalerMetric) *int64 { return z.DeviceID }).
-		WithName("deviceId").Rules(rules.Forbidden[*int64]()),
+		WithName("deviceId").
+		Rules(rules.Forbidden[*int64]()),
 	govy.For(func(z ZscalerMetric) *int64 { return z.ProbeID }).
-		WithName("probeId").Rules(rules.Forbidden[*int64]()),
+		WithName("probeId").
+		Rules(rules.Forbidden[*int64]()),
 ).When(func(z ZscalerMetric) bool { return z.Type == ZscalerTypeApplication },
 	govy.WhenDescription("type is application"))
 
 var zscalerProbeValidation = govy.New[ZscalerMetric](
 	govy.ForPointer(func(z ZscalerMetric) *int64 { return z.DeviceID }).
-		WithName("deviceId").Required().Rules(rules.GT[int64](0)),
+		WithName("deviceId").
+		Required().
+		Rules(rules.GT[int64](0)),
 	govy.ForPointer(func(z ZscalerMetric) *int64 { return z.ProbeID }).
-		WithName("probeId").Required().Rules(rules.GT[int64](0)),
+		WithName("probeId").
+		Required().
+		Rules(rules.GT[int64](0)),
 	govy.For(func(z ZscalerMetric) *int64 { return z.LocationID }).
-		WithName("locationId").Rules(rules.Forbidden[*int64]()),
+		WithName("locationId").
+		Rules(rules.Forbidden[*int64]()),
 ).When(func(z ZscalerMetric) bool { return z.Type == ZscalerTypeWebProbe || z.Type == ZscalerTypeCloudPath },
 	govy.WhenDescription("type is web-probe or cloudpath"))
 
 var zscalerWebProbeValidation = govy.New[ZscalerMetric](
 	govy.For(func(z ZscalerMetric) string { return z.Metric }).
-		WithName("metric").OmitEmpty().Rules(rules.OneOf("pft", "ttfb", "dns", "availability")),
+		WithName("metric").
+		OmitEmpty().
+		Rules(rules.OneOf("pft", "ttfb", "dns", "availability")),
 ).When(func(z ZscalerMetric) bool { return z.Type == ZscalerTypeWebProbe }, govy.WhenDescription("type is web-probe"))
 
 var zscalerCloudPathValidation = govy.New[ZscalerMetric](
 	govy.For(func(z ZscalerMetric) string { return z.Metric }).
-		WithName("metric").OmitEmpty().Rules(rules.OneOf("latency", "loss")),
+		WithName("metric").
+		OmitEmpty().
+		Rules(rules.OneOf("latency", "loss")),
 	govy.ForPointer(func(z ZscalerMetric) *string { return z.LegSrc }).
-		WithName("legSrc").Rules(rules.StringNotEmpty()),
+		WithName("legSrc").
+		Rules(rules.StringNotEmpty()),
 	govy.ForPointer(func(z ZscalerMetric) *string { return z.LegDst }).
-		WithName("legDst").Rules(rules.StringNotEmpty()),
+		WithName("legDst").
+		Rules(rules.StringNotEmpty()),
 	govy.For(func(z ZscalerMetric) *string { return z.LegSrc }).
 		WithName("legSrc").
 		When(func(z ZscalerMetric) bool { return z.LegDst != nil }, govy.WhenDescription("legDst is set")).

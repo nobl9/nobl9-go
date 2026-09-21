@@ -2,7 +2,6 @@ package v1alpha
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/pkg/errors"
@@ -448,11 +447,6 @@ func DataDogSiteValidationRule() govy.Rule[string] {
 		"datadoghq.eu",
 		"ddog-gov.com",
 		"ap1.datadoghq.com")
-}
-
-func ZscalerVanityDomainValidationRule() govy.Rule[string] {
-	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
-		WithDetails("provide the tenant label only, for example 'example' for example.zslogin.net")
 }
 
 func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {
