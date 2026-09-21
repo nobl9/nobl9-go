@@ -12,9 +12,16 @@ type CreateAnalysisRequest struct {
 	Period     AnalysisPeriod     `json:"period"`
 }
 
-// Validate checks the analysis metadata, metric query, and import period.
+// Validate checks fields, then the import period, then the metric query.
+// It returns after the first failing stage to preserve the API's validation order.
 func (r CreateAnalysisRequest) Validate() error {
-	return createAnalysisValidation.Validate(r)
+	if err := createAnalysisValidation.Validate(r); err != nil {
+		return err
+	}
+	if err := analysisPeriodRangeValidation.Validate(r.Period); err != nil {
+		return err
+	}
+	return analysisMetricValidation.Validate(r.MetricSpec)
 }
 
 // UpdateAnalysisRequest defines the mutable metadata of an SLI analysis.

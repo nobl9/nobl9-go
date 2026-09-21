@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"math"
 	"strings"
 	"testing"
 
@@ -42,7 +43,7 @@ func TestCreateAnalysisRequest_Validate(t *testing.T) {
 		{
 			name:   "missing project",
 			change: func(r *CreateAnalysisRequest) { r.Metadata.Project = "" },
-			errors: []govytest.ExpectedRuleError{{PropertyPath: "metadata.project", Code: rules.ErrorCodeRequired}},
+			errors: []govytest.ExpectedRuleError{{PropertyPath: "metadata.project", Code: "string_name"}},
 		},
 		{
 			name:   "invalid kind",
@@ -62,25 +63,37 @@ func TestCreateAnalysisRequest_Validate(t *testing.T) {
 		{
 			name:   "missing metric",
 			change: func(r *CreateAnalysisRequest) { r.MetricSpec.RawMetric = nil },
-			errors: []govytest.ExpectedRuleError{{PropertyPath: "metricSpec", Code: rules.ErrorCodeMutuallyExclusive}},
+			errors: []govytest.ExpectedRuleError{{Message: "rawMetric or countMetrics must be provided"}},
 		},
 		{
 			name:   "both metric types",
 			change: func(r *CreateAnalysisRequest) { r.MetricSpec.CountMetrics = validCountMetrics() },
-			errors: []govytest.ExpectedRuleError{{PropertyPath: "metricSpec", Code: rules.ErrorCodeMutuallyExclusive}},
+			errors: []govytest.ExpectedRuleError{{Message: "rawMetric and countMetrics cannot be provided together"}},
 		},
 		{
 			name:   "missing raw query",
 			change: func(r *CreateAnalysisRequest) { r.MetricSpec.RawMetric.Prometheus.PromQL = nil },
 			errors: []govytest.ExpectedRuleError{{
-				PropertyPath: "metricSpec.rawMetric.prometheus.promql", Code: rules.ErrorCodeRequired,
+				PropertyPath: "rawMetric.query.prometheus.promql", Code: rules.ErrorCodeRequired,
 			}},
 		},
 		{
 			name:   "empty raw query",
 			change: func(r *CreateAnalysisRequest) { *r.MetricSpec.RawMetric.Prometheus.PromQL = "" },
 			errors: []govytest.ExpectedRuleError{{
-				PropertyPath: "metricSpec.rawMetric.prometheus.promql", Code: rules.ErrorCodeStringNotEmpty,
+				PropertyPath: "rawMetric.query.prometheus.promql", Code: rules.ErrorCodeStringNotEmpty,
+			}},
+		},
+		{
+			name: "count data type in raw Lightstep query",
+			change: func(r *CreateAnalysisRequest) {
+				streamID, dataType := "123", v1alphaSLO.LightstepTotalCountDataType
+				r.MetricSpec.RawMetric = &v1alphaSLO.MetricSpec{Lightstep: &v1alphaSLO.LightstepMetric{
+					StreamID: &streamID, TypeOfData: &dataType,
+				}}
+			},
+			errors: []govytest.ExpectedRuleError{{
+				PropertyPath: "rawMetric.query.lightstep.typeOfData", Code: rules.ErrorCodeOneOf,
 			}},
 		},
 		{
@@ -91,7 +104,7 @@ func TestCreateAnalysisRequest_Validate(t *testing.T) {
 				r.MetricSpec.CountMetrics.TotalMetric.Prometheus.PromQL = nil
 			},
 			errors: []govytest.ExpectedRuleError{{
-				PropertyPath: "metricSpec.countMetrics.total.prometheus.promql", Code: rules.ErrorCodeRequired,
+				PropertyPath: "countMetric.total.prometheus.promql", Code: rules.ErrorCodeRequired,
 			}},
 		},
 		{
@@ -102,7 +115,7 @@ func TestCreateAnalysisRequest_Validate(t *testing.T) {
 				r.MetricSpec.CountMetrics.Incremental = nil
 			},
 			errors: []govytest.ExpectedRuleError{{
-				PropertyPath: "metricSpec.countMetrics.incremental", Code: rules.ErrorCodeRequired,
+				PropertyPath: "countMetric.incremental", Code: rules.ErrorCodeRequired,
 			}},
 		},
 		{
@@ -189,6 +202,52 @@ func TestCreateAnalysisRequest_Validate(t *testing.T) {
 	})
 }
 
+func TestCreateAnalysisRequest_ValidateStageOrder(t *testing.T) {
+	t.Parallel()
+
+	for _, tt := range []struct {
+		name     string
+		change   func(*CreateAnalysisRequest)
+		expected govytest.ExpectedRuleError
+	}{
+		{
+			name:   "metadata errors precede metric queries",
+			change: func(r *CreateAnalysisRequest) { r.Metadata.DisplayName = "" },
+			expected: govytest.ExpectedRuleError{
+				PropertyPath: "metadata.displayName", Code: rules.ErrorCodeRequired,
+				ValidatorName: "CreateAnalysisRequest",
+			},
+		},
+		{
+			name:   "period field errors precede metric queries",
+			change: func(r *CreateAnalysisRequest) { r.Period.TimeZone = "" },
+			expected: govytest.ExpectedRuleError{
+				PropertyPath: "period.timeZone", Code: rules.ErrorCodeRequired,
+				ValidatorName: "CreateAnalysisRequest",
+			},
+		},
+		{
+			name:   "short periods precede metric queries",
+			change: func(r *CreateAnalysisRequest) { r.Period.EndTime = "2026-09-01 00:04:00" },
+			expected: govytest.ExpectedRuleError{
+				PropertyPath: "period", Code: "sli_analysis_period", ValidatorName: "AnalysisPeriod",
+			},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			request := validCreateAnalysisRequest()
+			request.MetricSpec.RawMetric = nil
+			request.MetricSpec.CountMetrics = &v1alphaSLO.CountMetricsSpec{
+				GoodMetric:  &v1alphaSLO.MetricSpec{BigQuery: &v1alphaSLO.BigQueryMetric{}},
+				TotalMetric: &v1alphaSLO.MetricSpec{},
+			}
+			tt.change(&request)
+			govytest.AssertError(t, request.Validate(), tt.expected)
+		})
+	}
+}
+
 func TestUpdateAnalysisRequest_Validate(t *testing.T) {
 	t.Parallel()
 
@@ -197,7 +256,7 @@ func TestUpdateAnalysisRequest_Validate(t *testing.T) {
 		Project: strings.Repeat("x", 253), DisplayName: strings.Repeat("x", 253),
 	}).Validate())
 	govytest.AssertError(t, (UpdateAnalysisRequest{}).Validate(),
-		govytest.ExpectedRuleError{PropertyPath: "project", Code: rules.ErrorCodeRequired},
+		govytest.ExpectedRuleError{PropertyPath: "project", Code: "string_name"},
 		govytest.ExpectedRuleError{PropertyPath: "displayName", Code: rules.ErrorCodeRequired},
 	)
 	govytest.AssertError(t, (UpdateAnalysisRequest{
@@ -230,7 +289,11 @@ func TestCreateCalculationRequest_Validate(t *testing.T) {
 	}{
 		{
 			"negative target", func(r *CreateCalculationRequest) { r.BudgetTarget = -0.1 },
-			govytest.ExpectedRuleError{PropertyPath: "target", Code: rules.ErrorCodeGreaterThan},
+			govytest.ExpectedRuleError{PropertyPath: "target", Code: rules.ErrorCodeGreaterThanOrEqualTo},
+		},
+		{
+			"NaN target", func(r *CreateCalculationRequest) { r.BudgetTarget = math.NaN() },
+			govytest.ExpectedRuleError{PropertyPath: "target", Code: rules.ErrorCodeGreaterThanOrEqualTo},
 		},
 		{
 			"zero target", func(r *CreateCalculationRequest) { r.BudgetTarget = 0 },
