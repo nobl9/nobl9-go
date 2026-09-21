@@ -4,7 +4,6 @@ package tests
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"slices"
 	"testing"
@@ -242,12 +241,10 @@ func (s *sliAnalyzerTest) rejectInvalidUpdate(t *testing.T) {
 	err := client.SLIAnalyzer().V1().UpdateAnalysis(t.Context(), s.analysis.Metadata.Name,
 		slianalyzerV1.UpdateAnalysisRequest{Project: s.project},
 	)
-	// The API returns field errors as strings, which the existing SDK decoder rejects.
-	var typeErr *json.UnmarshalTypeError
-	require.ErrorAs(t, err, &typeErr)
-	assert.EqualError(t, err,
-		"failed to decode JSON response body: json: cannot unmarshal string into Go struct field "+
-			"APIErrors.errors of type sdk.APIError")
+	require.Error(t, err)
+	unchanged, err := client.SLIAnalyzer().V1().GetAnalysis(t.Context(), s.project, s.analysis.Metadata.Name)
+	require.NoError(t, err)
+	assert.Equal(t, s.analysis.Metadata, unchanged.Metadata)
 }
 
 func (s *sliAnalyzerTest) rejectCalculationForMissingAnalysis(t *testing.T) {
