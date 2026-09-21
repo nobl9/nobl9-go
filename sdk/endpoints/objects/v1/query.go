@@ -27,8 +27,8 @@ const (
 	QueryKeySystemAnnotations = "system_annotations"
 	QueryKeyUserAnnotations   = "user_annotations"
 	QueryKeyCategory          = "category"
-	queryKeyPaginationLimit   = "pagination.limit"
-	queryKeyPaginationOffset  = "pagination.offset"
+	QueryKeyPaginationLimit   = "pagination.limit"
+	QueryKeyPaginationOffset  = "pagination.offset"
 	queryKeySortColumn        = "sort.column"
 	queryKeySortDirection     = "sort.direction"
 )
@@ -92,10 +92,10 @@ func (f *filters) String(k, value string) *filters {
 func (r GetSLOsRequest) addListQuery(f *filters) {
 	if r.Pagination != nil {
 		if r.Pagination.Limit > 0 {
-			f.String(queryKeyPaginationLimit, strconv.Itoa(r.Pagination.Limit))
+			f.String(QueryKeyPaginationLimit, strconv.Itoa(r.Pagination.Limit))
 		}
 		if r.Pagination.Offset > 0 {
-			f.String(queryKeyPaginationOffset, strconv.Itoa(r.Pagination.Offset))
+			f.String(QueryKeyPaginationOffset, strconv.Itoa(r.Pagination.Offset))
 		}
 	}
 	if r.Sort != nil {
