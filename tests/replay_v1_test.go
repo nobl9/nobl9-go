@@ -272,7 +272,7 @@ func testReplayV1QueueLifecycle(
 		if err != nil {
 			return struct{}{}, err
 		}
-		// An in-progress recalculation for this SLO may still be listed.
+		// Deleting queued replays leaves the running recalculation listed.
 		if _, found := findQueuedReplayListItem(list, projectName, sloName); found {
 			return struct{}{}, errors.New("deleted replay is still listed")
 		}
