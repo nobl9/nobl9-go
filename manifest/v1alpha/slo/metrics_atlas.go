@@ -92,7 +92,8 @@ var atlasCountMetricsValidation = govy.New[CountMetricsSpec](
 					return errors.New("only single-query 'goodTotal' metric is allowed for Atlas")
 				}
 				return nil
-			}).WithErrorCode(rules.ErrorCodeForbidden)),
+			}).WithErrorCode(rules.ErrorCodeForbidden),
+		),
 ).When(
 	whenCountMetricsIs(v1alpha.Atlas),
 	govy.WhenDescription("countMetrics is atlas"),

@@ -159,7 +159,8 @@ func resolveGlobPattern(path string) (paths []string, err error) {
 			os.DirFS(base),
 			path,
 			doublestar.WithFilesOnly(),
-			doublestar.WithFailOnPatternNotExist())
+			doublestar.WithFailOnPatternNotExist(),
+		)
 		// Unlike filepath.Glob, doublestar.Glob operates on provided
 		// filesystem, which is the base directory. We need to append it
 		// afterwards to keep the absolute path.
