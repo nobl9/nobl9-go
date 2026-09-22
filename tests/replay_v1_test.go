@@ -254,10 +254,8 @@ func testReplayV1QueueLifecycle(
 		return listItem, nil
 	})
 	require.NoError(t, err)
-	// Servers that do not report isComposite yet leave it nil.
-	if listItem.IsComposite != nil {
-		assert.False(t, *listItem.IsComposite)
-	}
+	require.NotNil(t, listItem.IsComposite)
+	assert.False(t, *listItem.IsComposite)
 	_, err = time.Parse(time.RFC3339, listItem.CreatedAt)
 	require.NoError(t, err)
 
