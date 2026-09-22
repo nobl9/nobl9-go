@@ -22,6 +22,7 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/prometheus"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/replay"
+	"github.com/nobl9/nobl9-go/sdk/endpoints/slianalyzer"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/slostatusapi"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/statuspage"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/users"
@@ -45,6 +46,7 @@ const (
 //   - [Client.AuthData] for accessing the authentication APIs.
 //   - [Client.AlertAnalysis] for accessing the Alert Policy Analyzer APIs.
 //   - [Client.DataSource] for accessing data source APIs.
+//   - [Client.SLIAnalyzer] for accessing SLI Analyzer APIs.
 //   - [Client.SLOStatusAPI] for accessing the [SLO Status API].
 //   - [Client.StatusPage] for accessing the Status Page APIs.
 //   - [Client.Prometheus] for accessing the Prometheus-compatible API.
@@ -118,6 +120,11 @@ func (c *Client) AlertAnalysis() alertanalysis.Versions {
 // DataSource is used to access specific data source API version.
 func (c *Client) DataSource() datasource.Versions {
 	return datasource.NewVersions(c)
+}
+
+// SLIAnalyzer is used to access a specific SLI Analyzer API version.
+func (c *Client) SLIAnalyzer() slianalyzer.Versions {
+	return slianalyzer.NewVersions(c)
 }
 
 // SLOStatusAPI is used to access specific SLO Status API version.
