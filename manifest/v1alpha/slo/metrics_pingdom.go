@@ -98,7 +98,7 @@ var pingdomValidation = govy.New[PingdomMetric](
 		Rules(
 			rules.StringNotEmpty(),
 			// This regexp is crafted in order to not interweave with StringNotEmpty govy.
-			rules.StringMatchRegexp(regexp.MustCompile(`^(?:|\d+)$`)),
+			rules.StringMatchRegexp(regexp.MustCompile(`^(?:|?)$`)),
 		), // nolint: gocritic
 )
 
