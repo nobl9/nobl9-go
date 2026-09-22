@@ -2,6 +2,7 @@ package direct
 
 import (
 	"net/url"
+	"regexp"
 	"slices"
 
 	"github.com/pkg/errors"
@@ -118,6 +119,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
@@ -258,7 +262,19 @@ var (
 	elasticsearchValidation = govy.New[ElasticsearchConfig](
 		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
 	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(zscalerVanityDomainValidationRule()),
+	)
 )
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
 
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
@@ -386,6 +402,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Elasticsearch != nil {
 		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
+			return err
+		}
+	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
 			return err
 		}
 	}

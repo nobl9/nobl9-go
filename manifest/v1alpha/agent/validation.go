@@ -3,6 +3,7 @@ package agent
 import (
 	"net/url"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -144,6 +145,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
@@ -283,6 +287,12 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(zscalerVanityDomainValidationRule()),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -318,6 +328,12 @@ var (
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
 
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
@@ -487,6 +503,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 	}
 	if spec.Dash0 != nil {
 		if err := typesMatch(v1alpha.Dash0); err != nil {
+			return err
+		}
+	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
 			return err
 		}
 	}
