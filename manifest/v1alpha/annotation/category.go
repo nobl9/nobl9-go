@@ -37,21 +37,28 @@ var systemCategories = []Category{
 var userCategories = []Category{
 	CategoryComment,
 	CategoryReviewNote,
+	// Replay annotations are created by the Nobl9 platform when a replay
+	// completes and are owned by the user who requested the replay. Listing
+	// the category here is what puts their edit and delete under the regular
+	// annotation permissions.
 	CategoryReplay,
 }
 
-// GetSystemCategories returns all annotation [Category] owned and managed
-// exclusively by the Nobl9 platform. Users cannot create or modify
-// annotations in these categories.
+// GetSystemCategories returns all annotation [Category] created and managed
+// by the Nobl9 platform. Users cannot create or edit annotations in these
+// categories; deleting one requires the system-annotation delete permission.
 func GetSystemCategories() []Category {
 	return slices.Clone(systemCategories)
 }
 
-// GetUserCategories returns all annotation [Category] owned by users.
-// Users can edit and delete annotations in these categories, but not
-// necessarily create them: [CategoryReplay] annotations are created by the
-// Nobl9 platform when a replay completes, and users can only edit their
-// description. The API rejects attempts to create a Replay annotation.
+// GetUserCategories returns all annotation [Category] owned by users. The
+// regular annotation permissions apply: only the owner can edit an
+// annotation, and only with the annotation edit permission on its project;
+// any role with the annotation delete permission can delete it.
+// Users cannot create [CategoryReplay] annotations: the Nobl9 platform
+// creates one when a replay completes, owned by the user who requested
+// the replay, and the API rejects attempts to create a Replay annotation.
+// Users can only edit its description.
 func GetUserCategories() []Category {
 	return slices.Clone(userCategories)
 }
