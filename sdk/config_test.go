@@ -108,7 +108,8 @@ func TestReadConfig_CreateConfigFileIfNotPresent(t *testing.T) {
 
 		conf, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
-			ConfigOptionFilePath(filePath))
+			ConfigOptionFilePath(filePath),
+		)
 		require.NoError(t, err)
 
 		require.FileExists(t, conf.fileConfig.GetPath())
@@ -153,7 +154,8 @@ func TestReadConfig_ConfigOption(t *testing.T) {
 		ConfigOptionUseContext("my-context"),
 		ConfigOptionWithCredentials("clientId", "clientSecret"),
 		ConfigOptionFilePath(filePath),
-		ConfigOptionNoConfigFile())
+		ConfigOptionNoConfigFile(),
+	)
 	require.NoError(t, err)
 
 	// Check ConfigOptionNoConfigFile.
@@ -178,7 +180,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 		conf, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionPlatformInstance(PlatformInstanceDefault),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.NoError(t, err)
 
 		assert.Equal(t, "https://accounts.nobl9.com", conf.OktaOrgURL.String())
@@ -189,7 +192,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 		conf, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionPlatformInstance(PlatformInstanceUS1),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.NoError(t, err)
 
 		assert.Equal(t, "https://accounts-us1.nobl9.com", conf.OktaOrgURL.String())
@@ -200,7 +204,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 		_, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionPlatformInstance(PlatformInstanceCustom),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.Error(t, err)
 		assert.EqualError(t, err, `"custom" platform instance is not supported as a config option, `+
 			`provide auth server URL and ID directly in the sdk.ContextlessConfig`)
@@ -210,7 +215,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 		_, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
 			ConfigOptionPlatformInstance(PlatformInstance("invalid.instance.com")),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.Error(t, err)
 		assert.EqualError(t, err, `"invalid.instance.com" platform instance is not supported`)
 	})
@@ -219,7 +225,8 @@ func TestConfigOptionPlatformInstance(t *testing.T) {
 func TestReadConfig_Defaults(t *testing.T) {
 	conf, err := ReadConfig(
 		ConfigOptionWithCredentials("clientId", "clientSecret"),
-		ConfigOptionNoConfigFile())
+		ConfigOptionNoConfigFile(),
+	)
 	require.NoError(t, err)
 
 	assertConfigsAreEqual(t, &Config{
@@ -433,7 +440,8 @@ func TestReadConfig_Errors(t *testing.T) {
 
 		_, err := ReadConfig(
 			ConfigOptionUseContext("non-existent"),
-			ConfigOptionFilePath(filePath))
+			ConfigOptionFilePath(filePath),
+		)
 		require.Error(t, err)
 		assert.EqualError(t, err, fmt.Sprintf(errFmtConfigNoContextFoundInFile, "non-existent", filePath))
 	})
@@ -444,7 +452,8 @@ func TestReadConfig_Verify(t *testing.T) {
 		config, err := ReadConfig(
 			ConfigOptionEnvPrefix(""),
 			ConfigOptionUseContext("non-existent"),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.NoError(t, err)
 		config.DisableOkta = true
 		assert.NoError(t, config.Verify())
@@ -457,7 +466,8 @@ func TestReadConfig_Verify(t *testing.T) {
 
 		config, err := ReadConfig(
 			ConfigOptionFilePath(configPath),
-			ConfigOptionEnvPrefix(""))
+			ConfigOptionEnvPrefix(""),
+		)
 		require.NoError(t, err)
 		err = config.Verify()
 		require.Error(t, err)
@@ -471,7 +481,8 @@ func TestReadConfig_Verify(t *testing.T) {
 		config, err := ReadConfig(
 			ConfigOptionEnvPrefix(""),
 			ConfigOptionUseContext("non-existent"),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.NoError(t, err)
 		err = config.Verify()
 		require.Error(t, err)
@@ -522,7 +533,8 @@ func TestGetFileConfig(t *testing.T) {
 	t.Run("returns nil when NoConfigFile option is set", func(t *testing.T) {
 		conf, err := ReadConfig(
 			ConfigOptionWithCredentials("clientId", "clientSecret"),
-			ConfigOptionNoConfigFile())
+			ConfigOptionNoConfigFile(),
+		)
 		require.NoError(t, err)
 
 		result := conf.GetFileConfig()

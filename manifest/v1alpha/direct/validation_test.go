@@ -517,7 +517,7 @@ func TestValidateSpec_Datadog(t *testing.T) {
 }
 
 func TestValidateSpec_Elasticsearch(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
+	t.Run("supports stable release channel", func(t *testing.T) {
 		for name, apiKey := range map[string]string{
 			"api key":         "encoded-api-key",
 			"hidden api key":  v1alpha.HiddenValue,
@@ -530,15 +530,10 @@ func TestValidateSpec_Elasticsearch(t *testing.T) {
 			})
 		}
 	})
-	t.Run("rejects non-beta release channel", func(t *testing.T) {
+	t.Run("supports beta release channel", func(t *testing.T) {
 		direct := validDirect(v1alpha.Elasticsearch)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.releaseChannel",
-			Code:    errCodeUnsupportedReleaseChannel,
-			Message: "must be 'beta' for Elasticsearch",
-		})
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		testutils.AssertNoError(t, direct, validate(direct))
 	})
 	t.Run("requires https URL", func(t *testing.T) {
 		direct := validDirect(v1alpha.Elasticsearch)
@@ -1185,9 +1180,6 @@ func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
 	spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-	if typ == v1alpha.Elasticsearch {
-		spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	}
 	return New(Metadata{
 		Name:        strings.ToLower(typ.String()),
 		DisplayName: typ.String() + " Direct",

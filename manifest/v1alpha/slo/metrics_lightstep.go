@@ -51,7 +51,8 @@ func createLightstepMetricSpecValidation(
 	return govy.New[MetricSpec](
 		govy.ForPointer(func(m MetricSpec) *LightstepMetric { return m.Lightstep }).
 			WithName("lightstep").
-			Include(include))
+			Include(include),
+	)
 }
 
 var lightstepRawMetricValidation = createLightstepMetricSpecValidation(govy.New[LightstepMetric](

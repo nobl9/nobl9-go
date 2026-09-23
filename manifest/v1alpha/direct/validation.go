@@ -41,7 +41,8 @@ var specValidation = govy.New[Spec](
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayValidationRule,
-			releaseChannelValidationRule),
+			releaseChannelValidationRule,
+		),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
 		OmitEmpty().
@@ -275,7 +276,8 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 		if onlyType != typ {
 			return errors.Errorf(
 				"must have exactly one data source type, detected both %s and %s",
-				onlyType, typ)
+				onlyType, typ,
+			)
 		}
 		return nil
 	}
@@ -460,14 +462,6 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
-		)
-	}
-
-	if typ == v1alpha.Elasticsearch &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'beta' for Elasticsearch"),
 		)
 	}
 
