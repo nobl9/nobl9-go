@@ -12,7 +12,6 @@ var standardGoodOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.Prometheus,
 	v1alpha.Datadog,
 	v1alpha.NewRelic,
-	v1alpha.SplunkObservability,
 	v1alpha.Dynatrace,
 	v1alpha.Elasticsearch,
 	v1alpha.Graphite,
@@ -31,6 +30,7 @@ var standardBadOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.AppDynamics,
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
+	v1alpha.SplunkObservability,
 }
 
 var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metricSubVariant{
