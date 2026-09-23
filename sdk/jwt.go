@@ -94,7 +94,7 @@ func (j jwtClaims) Validate() error {
 		return errTokenMissingExpiryClaim
 	}
 	// if 15:00 is after 15:00+00:02=15:02 then it is expired
-	if time.Now().After((j.ExpiresAt).Add(-jwtLeeway)) {
+	if time.Now().After(j.ExpiresAt.Add(-jwtLeeway)) {
 		return errTokenExpired
 	}
 	return nil
