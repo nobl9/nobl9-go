@@ -50,7 +50,6 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
 	v1alpha.ClickHouse,
-	v1alpha.Elasticsearch,
 }
 
 func (d directExample) Generate() v1alphaDirect.Direct {

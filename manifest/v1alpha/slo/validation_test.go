@@ -718,7 +718,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 						Prop: "spec.timeWindows[0]",
 						Message: fmt.Sprintf(
 							"rolling time window size must be greater than or equal to %s",
-							minimumRollingTimeWindowSize),
+							minimumRollingTimeWindowSize,
+						),
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -734,7 +735,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 						Prop: "spec.timeWindows[0]",
 						Message: fmt.Sprintf(
 							"rolling time window size must be less than or equal to %s",
-							maximumRollingTimeWindowSize),
+							maximumRollingTimeWindowSize,
+						),
 					},
 				},
 				ExpectedErrorsCount: 1,
@@ -754,7 +756,8 @@ func TestValidate_Spec_TimeWindows(t *testing.T) {
 						Prop: "spec.timeWindows[0]",
 						Message: fmt.Sprintf(
 							"calendar time window size must be less than %s",
-							maximumCalendarTimeWindowSize),
+							maximumCalendarTimeWindowSize,
+						),
 					},
 				},
 				ExpectedErrorsCount: 1,

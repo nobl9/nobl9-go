@@ -128,7 +128,8 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				v1alphaService.Spec{
 					Description: fmt.Sprintf(
 						"Service created by moving '%s' SLO from '%s' Project",
-						slo.GetName(), oldProject.GetName()),
+						slo.GetName(), oldProject.GetName(),
+					),
 				},
 			)
 
@@ -200,7 +201,8 @@ func Test_Objects_V1_MoveSLOs(t *testing.T) {
 				v1alphaService.Spec{
 					Description: fmt.Sprintf(
 						"Service created by moving '%s' SLO from '%s' Project",
-						slo.GetName(), oldProject.GetName()),
+						slo.GetName(), oldProject.GetName(),
+					),
 				},
 			)
 

@@ -154,14 +154,16 @@ var azureMonitorMetricDimensionValidation = govy.New[AzureMonitorMetricDimension
 		Rules(
 			rules.StringNotEmpty(),
 			rules.StringMaxLength(255),
-			rules.StringASCII()),
+			rules.StringASCII(),
+		),
 	govy.ForPointer(func(a AzureMonitorMetricDimension) *string { return a.Value }).
 		WithName("value").
 		Required().
 		Rules(
 			rules.StringNotEmpty(),
 			rules.StringMaxLength(255),
-			rules.StringASCII()),
+			rules.StringASCII(),
+		),
 )
 
 var azureMonitorCountMetricsLevelValidation = govy.New[CountMetricsSpec](
@@ -219,7 +221,8 @@ var azureMonitorCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 				}
 			}
 			return nil
-		}).WithErrorCode(rules.ErrorCodeNotEqualTo)),
+		}).WithErrorCode(rules.ErrorCodeNotEqualTo),
+	),
 ).When(
 	whenCountMetricsIs(v1alpha.AzureMonitor),
 	govy.WhenDescription("countMetrics is azureMonitor"),

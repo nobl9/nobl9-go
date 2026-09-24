@@ -23,5 +23,6 @@ var influxdbValidation = govy.New[InfluxDBMetric](
 				WithDetails("must contain a bucket name"),
 			//nolint: lll
 			rules.StringMatchRegexp(regexp.MustCompile(`\s*range\s*\(\s*start\s*:\s*time\s*\(\s*v\s*:\s*params\.n9time_start\s*\)\s*,\s*stop\s*:\s*time\s*\(\s*v\s*:\s*params\.n9time_stop\s*\)\s*\)`)).
-				WithDetails("must contain both 'params.n9time_start' and 'params.n9time_stop'")),
+				WithDetails("must contain both 'params.n9time_start' and 'params.n9time_stop'"),
+		),
 )
