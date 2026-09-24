@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
-	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 type UsageSummary struct {
@@ -13,9 +12,9 @@ type UsageSummary struct {
 }
 
 type UsageSummaryMetadata struct {
-	Tier           Tier   `json:"tier"`
-	GeneratedAt    string `json:"generatedAt"`
-	LicenseEndDate string `json:"licenseEndDate"`
+	Tier           Tier       `json:"tier"`
+	GeneratedAt    time.Time  `json:"generatedAt"`
+	LicenseEndDate *time.Time `json:"licenseEndDate,omitempty"`
 }
 
 type Tier struct {
@@ -117,13 +116,13 @@ type FolderMetadata struct {
 }
 
 type SLO struct {
-	Metadata             SLOMetadata           `json:"metadata"`
-	SyntheticProjectName string                `json:"syntheticProjectName"`
-	Objectives           []Objective           `json:"objectives"`
-	TimeWindow           v1alphaSLO.TimeWindow `json:"timeWindow"`
-	ReliabilityGauge     *float64              `json:"reliabilityGauge"`
-	IsComposite          bool                  `json:"isComposite"`
-	IsCompositeV2        bool                  `json:"isCompositeV2"`
+	Metadata             SLOMetadata `json:"metadata"`
+	SyntheticProjectName string      `json:"syntheticProjectName"`
+	Objectives           []Objective `json:"objectives"`
+	TimeWindow           TimeWindow  `json:"timeWindow"`
+	ReliabilityGauge     *float64    `json:"reliabilityGauge"`
+	IsComposite          bool        `json:"isComposite"`
+	IsCompositeV2        bool        `json:"isCompositeV2"`
 }
 
 type SLOMetadata struct {
@@ -131,6 +130,25 @@ type SLOMetadata struct {
 	DisplayName string         `json:"displayName"`
 	Project     string         `json:"project"`
 	Labels      v1alpha.Labels `json:"labels"`
+}
+
+type TimeWindow struct {
+	Unit      string    `json:"unit"`
+	Count     int       `json:"count"`
+	IsRolling bool      `json:"isRolling"`
+	Calendar  *Calendar `json:"calendar,omitempty"`
+	Period    *Period   `json:"period,omitempty"`
+}
+
+type Calendar struct {
+	// StartTime uses the local YYYY-MM-DD HH:MM:SS format in TimeZone.
+	StartTime string `json:"startTime"`
+	TimeZone  string `json:"timeZone"`
+}
+
+type Period struct {
+	Begin time.Time `json:"begin"`
+	End   time.Time `json:"end"`
 }
 
 type Objective struct {

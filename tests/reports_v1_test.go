@@ -35,8 +35,10 @@ func Test_Reports_V1_GetUsageSummary(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, response.Metadata.Tier.Name)
-	_, err = time.Parse(time.RFC3339Nano, response.Metadata.GeneratedAt)
-	assert.NoError(t, err)
+	assert.False(t, response.Metadata.GeneratedAt.IsZero())
+	if response.Metadata.LicenseEndDate != nil {
+		assert.False(t, response.Metadata.LicenseEndDate.IsZero())
+	}
 	for name, usage := range map[string]reportsV1.Usage{
 		"SLOs":                 response.UsageSummary.SLOs,
 		"SLO units":            response.UsageSummary.SLOUnits,
@@ -331,12 +333,19 @@ func assertReportsRollup(
 		actual := actualSLOs[i]
 		assert.NotEmpty(t, actual.SyntheticProjectName)
 		require.NotNil(t, actual.TimeWindow.Period)
-		_, err := time.Parse(time.RFC3339Nano, actual.TimeWindow.Period.Begin)
-		assert.NoError(t, err)
-		_, err = time.Parse(time.RFC3339Nano, actual.TimeWindow.Period.End)
-		assert.NoError(t, err)
-		timeWindow := slo.Spec.TimeWindows[0]
-		timeWindow.Period = actual.TimeWindow.Period
+		assert.False(t, actual.TimeWindow.Period.Begin.IsZero())
+		assert.False(t, actual.TimeWindow.Period.End.IsZero())
+		assert.True(t, actual.TimeWindow.Period.Begin.Before(actual.TimeWindow.Period.End))
+		window := slo.Spec.TimeWindows[0]
+		timeWindow := reportsV1.TimeWindow{
+			Unit: window.Unit, Count: window.Count, IsRolling: window.IsRolling,
+			Period: actual.TimeWindow.Period,
+		}
+		if window.Calendar != nil {
+			timeWindow.Calendar = &reportsV1.Calendar{
+				StartTime: window.Calendar.StartTime, TimeZone: window.Calendar.TimeZone,
+			}
+		}
 
 		objective := slo.Spec.Objectives[0]
 		expectedSLOs[i] = reportsV1.SLO{
