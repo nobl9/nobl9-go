@@ -7,6 +7,15 @@ import (
 	"github.com/nobl9/govy/pkg/rules"
 )
 
+// Column names a ClickHouse query must select and the parameters it must bind
+// for the evaluation window.
+const (
+	ClickHouseDateColumn        = "n9date"
+	ClickHouseValueColumn       = "n9value"
+	ClickHouseDateFromParameter = "n9date_from"
+	ClickHouseDateToParameter   = "n9date_to"
+)
+
 // ClickHouseMetric defines a parameterized SQL query for a ClickHouse SLI.
 type ClickHouseMetric struct {
 	Query      string            `json:"query"`
@@ -24,14 +33,14 @@ var clickHouseValidation = govy.New[ClickHouseMetric](
 		Rules(
 			rules.StringMatchRegexp(regexp.MustCompile(`(?i)\bSELECT\b`)).
 				WithDetails("must contain a SELECT statement"),
-			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date\b`)).
-				WithDetails("must contain 'n9date' column"),
-			rules.StringMatchRegexp(regexp.MustCompile(`\bn9value\b`)).
-				WithDetails("must contain 'n9value' column"),
-			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date_from\b`)).
-				WithDetails("must contain 'n9date_from' placeholder"),
-			rules.StringMatchRegexp(regexp.MustCompile(`\bn9date_to\b`)).
-				WithDetails("must contain 'n9date_to' placeholder"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\b`+ClickHouseDateColumn+`\b`)).
+				WithDetails("must contain '"+ClickHouseDateColumn+"' column"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\b`+ClickHouseValueColumn+`\b`)).
+				WithDetails("must contain '"+ClickHouseValueColumn+"' column"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\b`+ClickHouseDateFromParameter+`\b`)).
+				WithDetails("must contain '"+ClickHouseDateFromParameter+"' placeholder"),
+			rules.StringMatchRegexp(regexp.MustCompile(`\b`+ClickHouseDateToParameter+`\b`)).
+				WithDetails("must contain '"+ClickHouseDateToParameter+"' placeholder"),
 		),
 	govy.For(func(c ClickHouseMetric) map[string]string { return c.Parameters }).
 		WithName("parameters").
