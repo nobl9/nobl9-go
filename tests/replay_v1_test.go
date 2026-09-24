@@ -247,14 +247,15 @@ func testReplayV1QueueLifecycle(
 		if err != nil {
 			return replayV1.ReplayListItem{}, err
 		}
-		listItem, found := findReplayListItem(list, projectName, sloName)
+		listItem, found := findQueuedReplayListItem(list, projectName, sloName)
 		if !found {
 			return replayV1.ReplayListItem{}, errors.New("queued replay is not listed")
 		}
 		return listItem, nil
 	})
 	require.NoError(t, err)
-	require.Equal(t, replayV1.ReplayListStatusQueued, listItem.Status)
+	require.NotNil(t, listItem.IsComposite)
+	assert.False(t, *listItem.IsComposite)
 	_, err = time.Parse(time.RFC3339, listItem.CreatedAt)
 	require.NoError(t, err)
 
@@ -269,7 +270,8 @@ func testReplayV1QueueLifecycle(
 		if err != nil {
 			return struct{}{}, err
 		}
-		if _, found := findReplayListItem(list, projectName, sloName); found {
+		// Deleting queued replays leaves the running recalculation listed.
+		if _, found := findQueuedReplayListItem(list, projectName, sloName); found {
 			return struct{}{}, errors.New("deleted replay is still listed")
 		}
 		return struct{}{}, nil
@@ -444,6 +446,19 @@ func findReplayListItem(
 ) (replayV1.ReplayListItem, bool) {
 	for _, item := range items {
 		if item.Project == projectName && item.SLO == sloName {
+			return item, true
+		}
+	}
+	return replayV1.ReplayListItem{}, false
+}
+
+func findQueuedReplayListItem(
+	items []replayV1.ReplayListItem,
+	projectName string,
+	sloName string,
+) (replayV1.ReplayListItem, bool) {
+	for _, item := range items {
+		if item.Project == projectName && item.SLO == sloName && item.Status == replayV1.ReplayListStatusQueued {
 			return item, true
 		}
 	}

@@ -65,6 +65,8 @@ func Test_SLIAnalyzer_V1(t *testing.T) {
 				{"get empty stats", test.getEmptyStats},
 				{"get empty histogram", test.getEmptyHistogram},
 				{"reject invalid period", test.rejectInvalidPeriod},
+				{"reject invalid update", test.rejectInvalidUpdate},
+				{"missing analysis before calculation validation", test.rejectCalculationForMissingAnalysis},
 				{"reject SLO generation before calculation", test.rejectSLOGenerationBeforeCalculation},
 				{"update analysis", test.updateAnalysis},
 				{"delete analysis", test.deleteAnalysis},
@@ -233,6 +235,25 @@ func (s *sliAnalyzerTest) rejectSLOGenerationBeforeCalculation(t *testing.T) {
 	var httpErr *sdk.HTTPError
 	require.ErrorAs(t, err, &httpErr)
 	assert.Equal(t, http.StatusBadRequest, httpErr.StatusCode)
+}
+
+func (s *sliAnalyzerTest) rejectInvalidUpdate(t *testing.T) {
+	err := client.SLIAnalyzer().V1().UpdateAnalysis(t.Context(), s.analysis.Metadata.Name,
+		slianalyzerV1.UpdateAnalysisRequest{Project: s.project},
+	)
+	require.Error(t, err)
+	unchanged, err := client.SLIAnalyzer().V1().GetAnalysis(t.Context(), s.project, s.analysis.Metadata.Name)
+	require.NoError(t, err)
+	assert.Equal(t, s.analysis.Metadata, unchanged.Metadata)
+}
+
+func (s *sliAnalyzerTest) rejectCalculationForMissingAnalysis(t *testing.T) {
+	err := client.SLIAnalyzer().V1().CreateCalculation(t.Context(), s.project, e2etestutils.GenerateName(),
+		slianalyzerV1.CreateCalculationRequest{Value: 1, BudgetTarget: 1, BudgetingMethod: "Occurrences", Operator: "lte"},
+	)
+	var httpErr *sdk.HTTPError
+	require.ErrorAs(t, err, &httpErr)
+	assert.Equal(t, http.StatusNotFound, httpErr.StatusCode)
 }
 
 func (s *sliAnalyzerTest) updateAnalysis(t *testing.T) {
