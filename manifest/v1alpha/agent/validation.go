@@ -291,7 +291,6 @@ var (
 	clickHouseValidation = govy.New[ClickHouseConfig](
 		govy.Transform(func(c ClickHouseConfig) string { return c.URL }, url.Parse).
 			WithName("url").
-			Cascade(govy.CascadeModeStop).
 			Required().
 			Rules(rules.URL(), newHTTPSchemeRule()),
 	)

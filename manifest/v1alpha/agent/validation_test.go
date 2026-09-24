@@ -1073,6 +1073,18 @@ func TestValidateSpec_ClickHouse(t *testing.T) {
 			},
 		)
 	})
+	t.Run("non-http scheme rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "tcp://clickhouse.example.com:9000"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
 	t.Run("https url passes", func(t *testing.T) {
 		agent := validAgent(v1alpha.ClickHouse)
 		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
