@@ -26,6 +26,10 @@ func TestDirect_Spec_GetType(t *testing.T) {
 	}
 }
 
+func TestIsValidDirectType(t *testing.T) {
+	assert.True(t, IsValidDirectType(v1alpha.ClickHouse))
+}
+
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
 func setZeroValue(t *testing.T, obj interface{}, fieldName string) {
 	t.Helper()

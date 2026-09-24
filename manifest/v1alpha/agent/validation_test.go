@@ -1092,6 +1092,56 @@ func TestValidateSpec_ClickHouse(t *testing.T) {
 		err := validate(agent)
 		testutils.AssertNoError(t, agent, err)
 	})
+	t.Run("http url passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "http://clickhouse.example.com:8123"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	// Literal values pin the ClickHouse defaults instead of reading them back from production tables.
+	t.Run("query delay below 30s default rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(29), Unit: v1alpha.Second}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+	t.Run("query delay at 30s default passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(30), Unit: v1alpha.Second}}
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("historical data retrieval above 30 days rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(31), Unit: v1alpha.HRDDay},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(0), Unit: v1alpha.HRDDay},
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval.maxDuration",
+			Message: "must be less than or equal to 30 Day",
+		})
+	})
 }
 
 func validAgent(typ v1alpha.DataSourceType) Agent {

@@ -12,6 +12,7 @@ import (
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 
+	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -1227,6 +1228,58 @@ func TestValidateSpec_ClickHouse(t *testing.T) {
 				Code: rules.ErrorCodeRequired,
 			},
 		)
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			URL  string
+			Code govy.ErrorCode
+		}{
+			"empty":      {URL: "", Code: rules.ErrorCodeRequired},
+			"http":       {URL: "http://clickhouse.example.com:8123", Code: errorCodeHTTPSSchemeRequired},
+			"schemeless": {URL: "clickhouse.example.com:8443", Code: errorCodeHTTPSSchemeRequired},
+		} {
+			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.ClickHouse)
+				direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				direct.Spec.ClickHouse.URL = test.URL
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.clickHouse.url",
+					Code: test.Code,
+				})
+			})
+		}
+	})
+	// Literal values pin the ClickHouse defaults instead of reading them back from production tables.
+	t.Run("query delay below 30s default rejected", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(29), Unit: v1alpha.Second}}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+	t.Run("query delay at 30s default passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(30), Unit: v1alpha.Second}}
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("historical data retrieval above 30 days rejected", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(31), Unit: v1alpha.HRDDay},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(0), Unit: v1alpha.HRDDay},
+		}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval.maxDuration",
+			Message: "must be less than or equal to 30 Day",
+		})
 	})
 }
 
