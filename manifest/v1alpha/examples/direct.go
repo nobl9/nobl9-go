@@ -46,7 +46,6 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.AzurePrometheus,
 	v1alpha.ThousandEyes,
 	// Support for Replay only in beta.
-	v1alpha.SplunkObservability,
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
 }
