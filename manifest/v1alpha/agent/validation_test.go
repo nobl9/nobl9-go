@@ -140,6 +140,38 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: rules.ErrorCodeOneOf,
 		})
 	})
+	t.Run("ClickHouse requires beta", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			0, // unset must not silently pass as stable
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelAlpha,
+		} {
+			agent := validAgent(v1alpha.ClickHouse)
+			agent.Spec.ReleaseChannel = rc
+			err := validate(agent)
+			testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+				Prop:            "spec.releaseChannel",
+				Code:            errCodeUnsupportedReleaseChannel,
+				ContainsMessage: "must be 'beta' for ClickHouse",
+			})
+		}
+	})
+	t.Run("ClickHouse beta passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("alpha rejected for non-alpha-enabled source", func(t *testing.T) {
+		agent := validAgent(v1alpha.Prometheus)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:            "spec.releaseChannel",
+			Code:            errCodeUnsupportedReleaseChannel,
+			ContainsMessage: "must be one of [stable, beta]",
+		})
+	})
 }
 
 func TestValidateSpec_QueryDelay(t *testing.T) {
@@ -1026,6 +1058,92 @@ func TestValidateSpec_Atlas(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_ClickHouse(t *testing.T) {
+	t.Run("schemeless url rejected", func(t *testing.T) {
+		// A schemeless host:port is parsed by Go as scheme:opaque, so it must
+		// be rejected explicitly for lacking an http/https scheme.
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "clickhouse.example.com:8123"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+	t.Run("non-http scheme rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "tcp://clickhouse.example.com:9000"
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: errCodeHTTPOrHTTPSSchemeRequired,
+			},
+		)
+	})
+	t.Run("https url passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "https://clickhouse.example.com:8443"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("http url passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = "http://clickhouse.example.com:8123"
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("required url", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.ClickHouse.URL = ""
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.url",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	// Literal values pin the ClickHouse defaults instead of reading them back from production tables.
+	t.Run("query delay below 30s default rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(29), Unit: v1alpha.Second}}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+	t.Run("query delay at 30s default passes", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(30), Unit: v1alpha.Second}}
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("historical data retrieval above 30 days rejected", func(t *testing.T) {
+		agent := validAgent(v1alpha.ClickHouse)
+		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		agent.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(31), Unit: v1alpha.HRDDay},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(0), Unit: v1alpha.HRDDay},
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval.maxDuration",
+			Message: "must be less than or equal to 30 Day",
+		})
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)
@@ -1181,6 +1299,11 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 			Dash0: &Dash0Config{
 				URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 				Step: 60,
+			},
+		},
+		v1alpha.ClickHouse: {
+			ClickHouse: &ClickHouseConfig{
+				URL: "https://clickhouse.example.com:8443",
 			},
 		},
 	}

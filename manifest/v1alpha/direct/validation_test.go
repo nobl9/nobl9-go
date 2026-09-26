@@ -12,6 +12,7 @@ import (
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
 
+	"github.com/nobl9/govy/pkg/govy"
 	"github.com/nobl9/govy/pkg/rules"
 
 	"github.com/nobl9/nobl9-go/internal/testutils"
@@ -151,8 +152,9 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
+			Prop:            "spec.releaseChannel",
+			Code:            errCodeUnsupportedReleaseChannel,
+			ContainsMessage: "must be one of [stable, beta]",
 		})
 	})
 	t.Run("data source type using unsupported release channel", func(t *testing.T) {
@@ -167,6 +169,28 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
 		direct := validDirect(v1alpha.Honeycomb)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("ClickHouse requires beta", func(t *testing.T) {
+		for _, rc := range []v1alpha.ReleaseChannel{
+			0, // unset must not silently pass as stable
+			v1alpha.ReleaseChannelStable,
+			v1alpha.ReleaseChannelAlpha,
+		} {
+			direct := validDirect(v1alpha.ClickHouse)
+			direct.Spec.ReleaseChannel = rc
+			err := validate(direct)
+			testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+				Prop:            "spec.releaseChannel",
+				Code:            errCodeUnsupportedReleaseChannel,
+				ContainsMessage: "must be 'beta' for ClickHouse",
+			})
+		}
+	})
+	t.Run("ClickHouse beta passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		err := validate(direct)
 		testutils.AssertNoError(t, direct, err)
 	})
@@ -1176,6 +1200,89 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_ClickHouse(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		// Empty passwords and hidden edit placeholders are valid ClickHouse Direct credentials.
+		for name, password := range map[string]string{
+			"with password":   "secret",
+			"empty password":  "",
+			"hidden password": v1alpha.HiddenValue,
+		} {
+			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.ClickHouse)
+				direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				direct.Spec.ClickHouse.Password = password
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
+	t.Run("required credentials", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.ClickHouse.Username = ""
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1,
+			testutils.ExpectedError{
+				Prop: "spec.clickHouse.username",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid url", func(t *testing.T) {
+		for name, test := range map[string]struct {
+			URL  string
+			Code govy.ErrorCode
+		}{
+			"empty":      {URL: "", Code: rules.ErrorCodeRequired},
+			"http":       {URL: "http://clickhouse.example.com:8123", Code: errorCodeHTTPSSchemeRequired},
+			"schemeless": {URL: "clickhouse.example.com:8443", Code: errorCodeHTTPSSchemeRequired},
+		} {
+			t.Run(name, func(t *testing.T) {
+				direct := validDirect(v1alpha.ClickHouse)
+				direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+				direct.Spec.ClickHouse.URL = test.URL
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.clickHouse.url",
+					Code: test.Code,
+				})
+			})
+		}
+	})
+	// Literal values pin the ClickHouse defaults instead of reading them back from production tables.
+	t.Run("query delay below 30s default rejected", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(29), Unit: v1alpha.Second}}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop: "spec.queryDelay",
+			Code: errCodeQueryDelayOutOfBounds,
+		})
+	})
+	t.Run("query delay at 30s default passes", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.QueryDelay = &v1alpha.QueryDelay{Duration: v1alpha.Duration{Value: ptr(30), Unit: v1alpha.Second}}
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	t.Run("historical data retrieval above 30 days rejected", func(t *testing.T) {
+		direct := validDirect(v1alpha.ClickHouse)
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		direct.Spec.HistoricalDataRetrieval = &v1alpha.HistoricalDataRetrieval{
+			MaxDuration:     v1alpha.HistoricalRetrievalDuration{Value: ptr(31), Unit: v1alpha.HRDDay},
+			DefaultDuration: v1alpha.HistoricalRetrievalDuration{Value: ptr(0), Unit: v1alpha.HRDDay},
+		}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+			Prop:    "spec.historicalDataRetrieval.maxDuration",
+			Message: "must be less than or equal to 30 Day",
+		})
+	})
+}
+
 func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
@@ -1317,6 +1424,13 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 			Dash0: &Dash0Config{
 				URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 				AuthToken: "secret",
+			},
+		},
+		v1alpha.ClickHouse: {
+			ClickHouse: &ClickHouseConfig{
+				URL:      "https://clickhouse.example.com:8443",
+				Username: "readonly_slo",
+				Password: "[secret]",
 			},
 		},
 		v1alpha.Elasticsearch: {

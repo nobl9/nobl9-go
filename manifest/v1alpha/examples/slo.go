@@ -25,6 +25,7 @@ var standardGoodOverTotalMetrics = []v1alpha.DataSourceType{
 	v1alpha.GCM,
 	v1alpha.Generic,
 	v1alpha.Coralogix,
+	v1alpha.ClickHouse,
 }
 
 var standardBadOverTotalMetrics = []v1alpha.DataSourceType{

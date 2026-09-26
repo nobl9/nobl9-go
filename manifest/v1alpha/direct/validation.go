@@ -116,6 +116,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
+		WithName("clickHouse").
+		Include(clickHouseValidation),
 	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
@@ -256,6 +259,15 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	clickHouseValidation = govy.New[ClickHouseConfig](
+		urlPropertyRules(func(c ClickHouseConfig) string { return c.URL }),
+		govy.For(func(c ClickHouseConfig) string { return c.Username }).
+			WithName("username").
+			Required(),
+		govy.For(func(c ClickHouseConfig) string { return c.Password }).
+			WithName("password").
+			HideValue(),
+	)
 	elasticsearchValidation = govy.New[ElasticsearchConfig](
 		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
 	)
@@ -386,6 +398,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.ClickHouse != nil {
+		if err := typesMatch(v1alpha.ClickHouse); err != nil {
+			return err
+		}
+	}
 	if spec.Elasticsearch != nil {
 		if err := typesMatch(v1alpha.Elasticsearch); err != nil {
 			return err
@@ -448,6 +465,13 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 
 var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 	typ, _ := spec.GetType()
+	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for ClickHouse"),
+		)
+	}
+
 	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
 		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
