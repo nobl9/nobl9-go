@@ -155,15 +155,6 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
-	t.Run("data source type using unsupported release channel", func(t *testing.T) {
-		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
-		})
-	})
 	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
 		direct := validDirect(v1alpha.Honeycomb)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
@@ -676,25 +667,28 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes with alpha or beta release channel", func(t *testing.T) {
+	t.Run("passes with stable, beta, alpha, or omitted release channel", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
+			0,
+			v1alpha.ReleaseChannelStable,
 			v1alpha.ReleaseChannelAlpha,
 			v1alpha.ReleaseChannelBeta,
 		} {
-			direct := validDirect(v1alpha.SplunkObservability)
-			direct.Spec.ReleaseChannel = rc
-			err := validate(direct)
-			testutils.AssertNoError(t, direct, err)
+			t.Run(rc.String(), func(t *testing.T) {
+				direct := validDirect(v1alpha.SplunkObservability)
+				direct.Spec.ReleaseChannel = rc
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
 		}
 	})
-	t.Run("rejects non-alpha/beta release channel", func(t *testing.T) {
+	t.Run("rejects invalid release channel", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+		direct.Spec.ReleaseChannel = -1
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.releaseChannel",
-			Code:    errCodeUnsupportedReleaseChannel,
-			Message: "must be 'alpha' or 'beta' for Splunk Observability",
+			Prop: "spec.releaseChannel",
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 	t.Run("required realm", func(t *testing.T) {
