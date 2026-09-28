@@ -234,7 +234,8 @@ var specCompositeValidationRule = govy.NewRule(func(s Spec) error {
 				govy.NewRuleError(
 					fmt.Sprintf(
 						"burnRateCondition may only be used with budgetingMethod == '%s'",
-						BudgetingMethodOccurrences),
+						BudgetingMethodOccurrences,
+					),
 					rules.ErrorCodeForbidden,
 				),
 			)
@@ -294,9 +295,11 @@ var anomalyConfigValidation = govy.New[AnomalyConfig](
 						Rules(
 							rules.DurationPrecision(time.Minute),
 							rules.GTE(5*time.Minute),
-							rules.LTE(31*24*time.Hour)),
+							rules.LTE(31*24*time.Hour),
+						),
 				)),
-		)))
+		)),
+)
 
 var indicatorValidation = govy.New[Indicator](
 	govy.For(func(i Indicator) MetricSourceSpec { return i.MetricSource }).

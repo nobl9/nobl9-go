@@ -24,6 +24,7 @@ func TestReplayListItemUnmarshal(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "2026-01-01T00:00:00Z", item.CreatedAt)
 	assert.Equal(t, ReplayListStatusInProgress, item.Status)
+	assert.Nil(t, item.IsComposite)
 }
 
 func TestReplayWithStatusUnmarshal(t *testing.T) {

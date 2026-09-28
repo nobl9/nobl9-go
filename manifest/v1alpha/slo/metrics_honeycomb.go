@@ -20,7 +20,8 @@ var honeycombSingleQueryValidation = govy.New[HoneycombMetric](
 		Required().
 		Rules(
 			rules.StringMaxLength(255),
-			rules.StringNotEmpty()),
+			rules.StringNotEmpty(),
+		),
 )
 
 var honeycombRawMetricValidation = govy.New[MetricSpec](
@@ -37,7 +38,8 @@ var honeycombCountMetricsValidation = govy.New[CountMetricsSpec](
 					return errors.New("only one metric ('goodTotal') allowed")
 				}
 				return nil
-			}).WithErrorCode(rules.ErrorCodeForbidden)),
+			}).WithErrorCode(rules.ErrorCodeForbidden),
+		),
 ).When(
 	whenCountMetricsIs(v1alpha.Honeycomb),
 	govy.WhenDescription("countMetrics is honeycomb"),

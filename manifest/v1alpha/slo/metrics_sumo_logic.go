@@ -81,7 +81,8 @@ var sumoLogicCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 				if goodTimeSlice.duration != totalTimeSlice.duration {
 					return errors.Errorf(
 						"'sumologic.query' with segment 'timeslice ${duration}', " +
-							"${duration} must be the same for both 'good' and 'total' metrics")
+							"${duration} must be the same for both 'good' and 'total' metrics",
+					)
 				}
 				return nil
 			}).WithErrorCode(rules.ErrorCodeEqualTo),

@@ -40,7 +40,8 @@ func GetLabelsTestCases[T manifest.Object](
 
 	sourcedTestCases, err := os.ReadFile(filepath.Join(
 		pathutils.FindModuleRoot(),
-		"manifest/v1alpha/labels_examples.yaml"))
+		"manifest/v1alpha/labels_examples.yaml",
+	))
 	require.NoError(t, err)
 	var examples v1alpha.Labels
 	err = yaml.Unmarshal(sourcedTestCases, &examples)

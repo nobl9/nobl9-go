@@ -41,7 +41,8 @@ func GetMetadataAnnotationsTestCases[T manifest.Object](
 
 	sourcedTestCases, err := os.ReadFile(filepath.Join(
 		pathutils.FindModuleRoot(),
-		"manifest/v1alpha/metadata_annotations_examples.yaml"))
+		"manifest/v1alpha/metadata_annotations_examples.yaml",
+	))
 	require.NoError(t, err)
 	var examples v1alpha.MetadataAnnotations
 	err = yaml.Unmarshal(sourcedTestCases, &examples)

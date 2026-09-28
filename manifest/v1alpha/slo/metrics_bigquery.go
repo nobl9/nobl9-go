@@ -30,7 +30,8 @@ var bigQueryCountMetricsLevelValidation = govy.New[CountMetricsSpec](
 					return countMetricsPropertyEqualityError("bigQuery.location", goodMetric)
 				}
 				return nil
-			}).WithErrorCode(rules.ErrorCodeEqualTo)),
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
+		),
 ).When(
 	whenCountMetricsIs(v1alpha.BigQuery),
 	govy.WhenDescription("countMetrics is bigQuery"),
@@ -55,5 +56,6 @@ var bigQueryValidation = govy.New[BigQueryMetric](
 			rules.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_from\s*\)`)).
 				WithDetails("must have DATETIME placeholder with '@n9date_from'"),
 			rules.StringMatchRegexp(regexp.MustCompile(`DATETIME\(\s*@n9date_to\s*\)`)).
-				WithDetails("must have DATETIME placeholder with '@n9date_to'")),
+				WithDetails("must have DATETIME placeholder with '@n9date_to'"),
+		),
 )
