@@ -64,6 +64,7 @@ type Spec struct {
 	AzurePrometheus         *AzurePrometheusConfig           `json:"azurePrometheus,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
 	Elasticsearch           *ElasticsearchConfig             `json:"elasticsearch,omitempty"`
+	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -100,6 +101,7 @@ var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
 	v1alpha.AzurePrometheus:     {},
 	v1alpha.Dash0:               {},
 	v1alpha.Elasticsearch:       {},
+	v1alpha.Zscaler:             {},
 }
 
 func IsValidDirectType(directType v1alpha.DataSourceType) bool {
@@ -153,6 +155,8 @@ func (spec Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Dash0, nil
 	case spec.Elasticsearch != nil:
 		return v1alpha.Elasticsearch, nil
+	case spec.Zscaler != nil:
+		return v1alpha.Zscaler, nil
 	}
 	return 0, errors.New("BUG: unknown direct type")
 }
@@ -305,4 +309,11 @@ type Dash0Config struct {
 type ElasticsearchConfig struct {
 	URL    string `json:"url"`
 	APIKey string `json:"apiKey"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	VanityDomain string `json:"vanityDomain"`
+	ClientID     string `json:"clientId,omitempty"`
+	ClientSecret string `json:"clientSecret,omitempty"`
 }
