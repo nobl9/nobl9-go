@@ -61,8 +61,9 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 			Rules(validationV1Alpha.StringName()),
 		govy.For(func(s Spec) string { return s.Description }).
 			WithName("description").
-			Required().
 			Rules(rules.StringLength(0, specDescriptionMaxLength)),
+		govy.For(govy.GetSelf[Spec]()).
+			Include(descriptionRequiredForNonReplayValidation),
 	}
 	if includeUserCategoryRules {
 		properties = append(
@@ -75,6 +76,16 @@ func getSpecValidation(includeUserCategoryRules bool) govy.Validator[Spec] {
 	}
 	return govy.New[Spec](properties...)
 }
+
+// Replay descriptions are optional user notes; other categories require a description.
+var descriptionRequiredForNonReplayValidation = govy.New[Spec](
+	govy.For(func(s Spec) string { return s.Description }).
+		WithName("description").
+		Required(),
+).When(
+	func(s Spec) bool { return s.Category != CategoryReplay },
+	govy.WhenDescription("category is not Replay"),
+)
 
 const errorCodeEndTimeNotBeforeStartTime govy.ErrorCode = "end_time_not_before_start_time"
 
