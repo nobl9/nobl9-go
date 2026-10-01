@@ -664,7 +664,6 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 	})
 	t.Run("required fields", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		agent.Spec.SplunkObservability.Realm = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{

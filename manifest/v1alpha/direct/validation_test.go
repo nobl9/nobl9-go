@@ -693,7 +693,6 @@ func TestValidateSpec_SplunkObservability(t *testing.T) {
 	})
 	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
