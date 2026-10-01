@@ -51,7 +51,6 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.Atlas,
 	v1alpha.Dash0,
 	v1alpha.Zscaler,
-	v1alpha.SplunkObservability,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
