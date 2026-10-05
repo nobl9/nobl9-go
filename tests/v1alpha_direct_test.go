@@ -164,6 +164,9 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 		expected.Spec.AzurePrometheus.ClientSecret = "[hidden]"
 	case v1alpha.Dash0:
 		expected.Spec.Dash0.AuthToken = "[hidden]"
+	case v1alpha.Zscaler:
+		expected.Spec.Zscaler.ClientID = "[hidden]"
+		expected.Spec.Zscaler.ClientSecret = "[hidden]"
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", typ))
 	}
