@@ -44,10 +44,22 @@ type Spec struct {
 	EndTime       time.Time `json:"endTime,omitzero"`
 	Category      Category  `json:"category,omitempty"`
 	CreatedBy     string    `json:"createdBy,omitempty" nobl9:"computed"`
+	// Replay holds facts about the Replay run that created this annotation.
+	// Set only on Replay-generated annotations; the Nobl9 platform computes it and ignores it on Apply.
+	Replay *Replay `json:"replay,omitempty" nobl9:"computed"`
 }
 
 // Status represents content of Status optional for Annotation Object
 type Status struct {
 	UpdatedAt string `json:"updatedAt"`
 	IsSystem  bool   `json:"isSystem"`
+}
+
+// Replay describes the Replay run that created a Replay-generated annotation.
+// When present, both period bounds are set; elapsed time is absent when no truthful
+// value exists.
+type Replay struct {
+	PeriodStart        time.Time `json:"periodStart"`
+	PeriodEnd          time.Time `json:"periodEnd"`
+	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
 }
