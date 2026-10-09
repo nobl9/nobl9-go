@@ -172,10 +172,10 @@ func TestGetSLOsRequest_addListQuery_type(t *testing.T) {
 			f := filterBy()
 			tt.request.addListQuery(f)
 			if tt.want == "" {
-				assert.False(t, f.Query.Has(queryKeyType))
+				assert.False(t, f.Query.Has(QueryKeyType))
 				return
 			}
-			assert.Equal(t, tt.want, f.Query.Get(queryKeyType))
+			assert.Equal(t, tt.want, f.Query.Get(QueryKeyType))
 		})
 	}
 }
