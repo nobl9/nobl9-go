@@ -22,13 +22,23 @@ type GetServicesRequest struct {
 // GetSLOsRequest filters, orders, and paginates SLO results.
 // Form decoding excludes filters, which the API parses separately.
 type GetSLOsRequest struct {
-	Project    string             `form:"-"`
-	Names      []string           `form:"-"`
-	Labels     v1alpha.Labels     `form:"-"`
-	Services   []string           `form:"-"`
+	Project  string         `form:"-"`
+	Names    []string       `form:"-"`
+	Labels   v1alpha.Labels `form:"-"`
+	Services []string       `form:"-"`
+	// Type keeps only SLOs of this type. An empty Type returns both.
+	// An SLO is composite when any of its objectives is composite.
+	Type       GetSLOsType        `form:"type"`
 	Pagination *GetSLOsPagination `form:"pagination"`
 	Sort       *GetSLOsSort       `form:"sort"`
 }
+
+// GetSLOsType identifies the kind of SLOs to return.
+/* ENUM(
+standard
+composite
+)*/
+type GetSLOsType string
 
 // GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
 // Limit must be between 1 and 1000. Offset must be nonnegative.

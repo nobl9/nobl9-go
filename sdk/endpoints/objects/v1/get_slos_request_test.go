@@ -6,6 +6,7 @@ import (
 
 	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetSLOsRequest_Validate(t *testing.T) {
@@ -30,6 +31,25 @@ func TestGetSLOsRequest_Validate(t *testing.T) {
 			name: "maximum pagination values",
 			request: GetSLOsRequest{
 				Pagination: &GetSLOsPagination{Limit: maxGetSLOsLimit, Offset: math.MaxInt},
+			},
+		},
+		{
+			name:    "standard type",
+			request: GetSLOsRequest{Type: GetSLOsTypeStandard},
+		},
+		{
+			name:    "composite type",
+			request: GetSLOsRequest{Type: GetSLOsTypeComposite},
+		},
+		{
+			name:    "invalid type",
+			request: GetSLOsRequest{Type: GetSLOsType("invalid")},
+			expectedErrors: []govytest.ExpectedRuleError{
+				{
+					PropertyPath:  "type",
+					Code:          rules.ErrorCodeOneOf,
+					ValidatorName: "Get SLOs request",
+				},
 			},
 		},
 		{
@@ -130,6 +150,32 @@ func TestGetSLOsRequest_Validate(t *testing.T) {
 				return
 			}
 			govytest.AssertError(t, err, tt.expectedErrors...)
+		})
+	}
+}
+
+func TestGetSLOsRequest_addListQuery_type(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		request GetSLOsRequest
+		want    string
+	}{
+		"empty type is omitted": {request: GetSLOsRequest{}, want: ""},
+		"standard":              {request: GetSLOsRequest{Type: GetSLOsTypeStandard}, want: "standard"},
+		"composite":             {request: GetSLOsRequest{Type: GetSLOsTypeComposite}, want: "composite"},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			f := filterBy()
+			tt.request.addListQuery(f)
+			if tt.want == "" {
+				assert.False(t, f.Query.Has(queryKeyType))
+				return
+			}
+			assert.Equal(t, tt.want, f.Query.Get(queryKeyType))
 		})
 	}
 }

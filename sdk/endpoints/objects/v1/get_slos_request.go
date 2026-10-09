@@ -13,6 +13,10 @@ func (r GetSLOsRequest) Validate() error {
 }
 
 var getSLOsRequestValidation = govy.New(
+	govy.For(func(r GetSLOsRequest) GetSLOsType { return r.Type }).
+		WithName("type").
+		OmitEmpty().
+		Rules(rules.OneOf(GetSLOsTypeValues()...)),
 	govy.ForPointer(func(r GetSLOsRequest) *GetSLOsPagination { return r.Pagination }).
 		WithName("pagination").
 		Include(govy.New(

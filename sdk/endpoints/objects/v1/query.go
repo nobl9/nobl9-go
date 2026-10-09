@@ -29,6 +29,7 @@ const (
 	QueryKeyCategory          = "category"
 	QueryKeyPaginationLimit   = "pagination.limit"
 	QueryKeyPaginationOffset  = "pagination.offset"
+	queryKeyType              = "type"
 	queryKeySortColumn        = "sort.column"
 	queryKeySortDirection     = "sort.direction"
 )
@@ -90,6 +91,9 @@ func (f *filters) String(k, value string) *filters {
 }
 
 func (r GetSLOsRequest) addListQuery(f *filters) {
+	if r.Type != "" {
+		f.String(queryKeyType, string(r.Type))
+	}
 	if r.Pagination != nil {
 		if r.Pagination.Limit > 0 {
 			f.String(QueryKeyPaginationLimit, strconv.Itoa(r.Pagination.Limit))

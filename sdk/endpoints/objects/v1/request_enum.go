@@ -122,3 +122,55 @@ func ParseGetSLOsSortDirection(name string) (GetSLOsSortDirection, error) {
 	}
 	return GetSLOsSortDirection(""), fmt.Errorf("%s is %w", name, ErrInvalidGetSLOsSortDirection)
 }
+
+const (
+	GetSLOsTypeStandard  GetSLOsType = "standard"
+	GetSLOsTypeComposite GetSLOsType = "composite"
+)
+
+var ErrInvalidGetSLOsType = fmt.Errorf("not a valid GetSLOsType, try [%s]", strings.Join(_GetSLOsTypeNames, ", "))
+
+var _GetSLOsTypeNames = []string{
+	string(GetSLOsTypeStandard),
+	string(GetSLOsTypeComposite),
+}
+
+// GetSLOsTypeNames returns a list of possible string values of GetSLOsType.
+func GetSLOsTypeNames() []string {
+	tmp := make([]string, len(_GetSLOsTypeNames))
+	copy(tmp, _GetSLOsTypeNames)
+	return tmp
+}
+
+// GetSLOsTypeValues returns a list of the values for GetSLOsType
+func GetSLOsTypeValues() []GetSLOsType {
+	return []GetSLOsType{
+		GetSLOsTypeStandard,
+		GetSLOsTypeComposite,
+	}
+}
+
+// String implements the Stringer interface.
+func (x GetSLOsType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x GetSLOsType) IsValid() bool {
+	_, err := ParseGetSLOsType(string(x))
+	return err == nil
+}
+
+var _GetSLOsTypeValue = map[string]GetSLOsType{
+	"standard":  GetSLOsTypeStandard,
+	"composite": GetSLOsTypeComposite,
+}
+
+// ParseGetSLOsType attempts to convert a string to a GetSLOsType.
+func ParseGetSLOsType(name string) (GetSLOsType, error) {
+	if x, ok := _GetSLOsTypeValue[name]; ok {
+		return x, nil
+	}
+	return GetSLOsType(""), fmt.Errorf("%s is %w", name, ErrInvalidGetSLOsType)
+}
