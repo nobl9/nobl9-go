@@ -63,6 +63,8 @@ func runTestMain(m *testing.M) int {
 		return 1
 	}
 
+	sweepStaleObjects(context.Background(), time.Now())
+
 	e2etestutils.SetClient(client)
 	e2etestutils.SetToolName("SDK")
 	defer e2etestutils.Cleanup()
