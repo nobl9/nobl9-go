@@ -21,6 +21,11 @@ func TestIsStaleName(t *testing.T) {
 		name := generateNameAt(age(time.Hour))
 		assert.False(t, IsStaleName(name, now, 3*time.Hour))
 	})
+	t.Run("generated name with a suffix", func(t *testing.T) {
+		name := generateNameAt(age(4*time.Hour)) + "-primary-composite"
+		assert.True(t, IsStaleName(name, now, 3*time.Hour))
+		assert.False(t, IsStaleName(generateNameAt(age(time.Hour))+"-primary", now, 3*time.Hour))
+	})
 	t.Run("current GenerateName output", func(t *testing.T) {
 		assert.False(t, IsStaleName(GenerateName(), now, 3*time.Hour))
 		assert.True(t, IsStaleName(GenerateName(), now.Add(4*time.Hour), 3*time.Hour))

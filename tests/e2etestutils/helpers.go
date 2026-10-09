@@ -31,13 +31,18 @@ func generateNameAt(startTime time.Time) string {
 }
 
 // IsStaleName reports whether name was produced by [GenerateName] more than maxAge before now.
-// The generated name ends with the test start time in Unix nanoseconds.
+// The generated name is `<tool>-e2e-<counter>-<start time in Unix nanoseconds>`,
+// optionally followed by a suffix added by the caller.
 func IsStaleName(name string, now time.Time, maxAge time.Duration) bool {
 	prefix := strings.ToLower(toolName) + "-e2e-"
 	if !strings.HasPrefix(name, prefix) {
 		return false
 	}
-	nanos, err := strconv.ParseInt(name[strings.LastIndexByte(name, '-')+1:], 10, 64)
+	parts := strings.SplitN(strings.TrimPrefix(name, prefix), "-", 3)
+	if len(parts) < 2 {
+		return false
+	}
+	nanos, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil || nanos <= 0 {
 		return false
 	}
