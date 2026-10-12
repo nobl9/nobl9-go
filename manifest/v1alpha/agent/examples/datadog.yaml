@@ -13,7 +13,7 @@ spec:
   description: Example Datadog Agent
   releaseChannel: stable
   datadog:
-    site: com
+    site: datadoghq.com
   historicalDataRetrieval:
     maxDuration:
       value: 30

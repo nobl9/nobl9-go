@@ -13,7 +13,7 @@ spec:
   description: Example Datadog Direct
   releaseChannel: stable
   datadog:
-    site: com
+    site: datadoghq.com
     apiKey: "[secret]"
     applicationKey: "[secret]"
   historicalDataRetrieval:
