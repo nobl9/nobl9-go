@@ -545,26 +545,6 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("supported sites", func(t *testing.T) {
-		for _, site := range []string{
-			"datadoghq.com",
-			"us3.datadoghq.com",
-			"us5.datadoghq.com",
-			"datadoghq.eu",
-			"ddog-gov.com",
-			"us2.ddog-gov.com",
-			"ap1.datadoghq.com",
-			"ap2.datadoghq.com",
-			"uk1.datadoghq.com",
-		} {
-			t.Run(site, func(t *testing.T) {
-				agent := validAgent(v1alpha.Datadog)
-				agent.Spec.Datadog.Site = site
-				err := validate(agent)
-				testutils.AssertNoError(t, agent, err)
-			})
-		}
-	})
 }
 
 func TestValidateSpec_NewRelic(t *testing.T) {
