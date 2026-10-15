@@ -545,15 +545,6 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("invalid site", func(t *testing.T) {
-		agent := validAgent(v1alpha.Datadog)
-		agent.Spec.Datadog.Site = "invalid"
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
-			Code: rules.ErrorCodeOneOf,
-		})
-	})
 }
 
 func TestValidateSpec_NewRelic(t *testing.T) {

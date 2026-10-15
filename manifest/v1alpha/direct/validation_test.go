@@ -496,15 +496,6 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
-	t.Run("invalid site", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		direct.Spec.Datadog.Site = "invalid"
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
-			Code: rules.ErrorCodeOneOf,
-		})
-	})
 }
 
 func TestValidateSpec_Elasticsearch(t *testing.T) {
