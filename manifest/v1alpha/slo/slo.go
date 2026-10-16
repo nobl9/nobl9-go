@@ -210,6 +210,8 @@ type ErrorDetails struct {
 	LogTimestamp     *time.Time `json:"logTimestamp"`
 	HTTPStatusCode   *int       `json:"httpStatusCode"`
 	Query            string     `json:"query"`
+	// Reason is credentialsError or invalidQuery.
+	Reason string `json:"reason,omitempty"`
 }
 
 type ValidationDetails struct {

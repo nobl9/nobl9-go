@@ -75,7 +75,8 @@ type Spec struct {
 
 // Status represents content of Status optional for Direct Object
 type Status struct {
-	DirectType string `json:"directType"`
+	DirectType       string                    `json:"directType"`
+	CredentialsError *v1alpha.CredentialsError `json:"credentialsError,omitempty"`
 }
 
 var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
