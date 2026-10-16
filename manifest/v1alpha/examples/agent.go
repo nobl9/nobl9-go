@@ -36,7 +36,6 @@ func Agent() []Example {
 }
 
 var betaChannelAgents = []v1alpha.DataSourceType{
-	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
