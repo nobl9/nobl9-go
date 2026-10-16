@@ -64,3 +64,54 @@ func TestAnomalyConfigNoData_TreatZeroAsNoDataSerialization(t *testing.T) {
 		})
 	}
 }
+
+func TestErrorDetails_ReasonSerialization(t *testing.T) {
+	tests := map[string]struct {
+		details      ErrorDetails
+		expectedJSON string
+	}{
+		"empty reason is omitted": {
+			details:      ErrorDetails{ValidationResult: "invalid"},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":null,"query":""}`,
+		},
+		"credentialsError reason is preserved": {
+			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(401), Reason: "credentialsError"},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":401,` +
+				`"query":"","reason":"credentialsError"}`,
+		},
+		"invalidQuery reason is preserved": {
+			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400), Reason: "invalidQuery"},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":400,` +
+				`"query":"","reason":"invalidQuery"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.details)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded ErrorDetails
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.details, decoded)
+		})
+	}
+
+	t.Run("JSON without reason decodes to an empty reason", func(t *testing.T) {
+		var decoded ErrorDetails
+		require.NoError(t, json.Unmarshal([]byte(`{"validationResult":"invalid","httpStatusCode":400}`), &decoded))
+		assert.Equal(t, ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400)}, decoded)
+	})
+
+	t.Run("struct without reason ignores it", func(t *testing.T) {
+		type oldErrorDetails struct {
+			ValidationResult string `json:"validationResult"`
+			HTTPStatusCode   *int   `json:"httpStatusCode"`
+		}
+		var decoded oldErrorDetails
+		data := []byte(`{"validationResult":"invalid","httpStatusCode":403,"reason":"credentialsError"}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, oldErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(403)}, decoded)
+	})
+}
