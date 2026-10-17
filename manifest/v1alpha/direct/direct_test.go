@@ -51,16 +51,15 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 			expectedJSON: `{"directType":"Datadog","invalidCredentials":{"state":"degraded",` +
 				`"since":"2026-10-16T09:30:00Z","httpStatusCode":401,"affectedSLOs":1,"totalSLOs":2}}`,
 		},
-		"none state has no since and no HTTP status code": {
+		"none state has only the state": {
 			status: Status{
 				DirectType: "Datadog",
 				InvalidCredentials: &v1alpha.InvalidCredentials{
-					State:     v1alpha.InvalidCredentialsStateNone,
-					TotalSLOs: 2,
+					State: v1alpha.InvalidCredentialsStateNone,
 				},
 			},
 			expectedJSON: `{"directType":"Datadog",` +
-				`"invalidCredentials":{"state":"none","affectedSLOs":0,"totalSLOs":2}}`,
+				`"invalidCredentials":{"state":"none"}}`,
 		},
 	}
 

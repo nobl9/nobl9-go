@@ -159,11 +159,13 @@ type Timeout struct {
 // from the data source (HTTP 401 or 403).
 type InvalidCredentials struct {
 	State InvalidCredentialsState `json:"state"`
-	// Since is the time of the first rejected request. It is empty for [InvalidCredentialsStateNone].
+	// Since is the time of the first rejected request.
+	// Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// [InvalidCredentialsStateDegraded] and [InvalidCredentialsStateAll].
 	Since          time.Time `json:"since,omitzero"`
 	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int       `json:"affectedSLOs"`
-	TotalSLOs      int       `json:"totalSLOs"`
+	AffectedSLOs   int       `json:"affectedSLOs,omitzero"`
+	TotalSLOs      int       `json:"totalSLOs,omitzero"`
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
