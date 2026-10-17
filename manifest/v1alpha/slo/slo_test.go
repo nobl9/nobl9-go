@@ -74,13 +74,17 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			details:      ErrorDetails{ValidationResult: "invalid"},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":null,"query":""}`,
 		},
-		"credentialsError reason is preserved": {
-			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(401), Reason: "credentialsError"},
+		"invalidCredentials reason is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(401),
+				Reason:           ErrorDetailsReasonInvalidCredentials,
+			},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":401,` +
-				`"query":"","reason":"credentialsError"}`,
+				`"query":"","reason":"invalidCredentials"}`,
 		},
 		"invalidQuery reason is preserved": {
-			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400), Reason: "invalidQuery"},
+			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400), Reason: ErrorDetailsReasonInvalidQuery},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":400,` +
 				`"query":"","reason":"invalidQuery"}`,
 		},
@@ -110,7 +114,7 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			HTTPStatusCode   *int   `json:"httpStatusCode"`
 		}
 		var decoded oldErrorDetails
-		data := []byte(`{"validationResult":"invalid","httpStatusCode":403,"reason":"credentialsError"}`)
+		data := []byte(`{"validationResult":"invalid","httpStatusCode":403,"reason":"invalidCredentials"}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(403)}, decoded)
 	})
