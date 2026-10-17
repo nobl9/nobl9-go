@@ -37,16 +37,30 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 			status:       Status{AgentType: "Datadog"},
 			expectedJSON: `{"agentType":"Datadog","environment":{}}`,
 		},
-		"invalid credentials is preserved": {
+		"degraded invalid credentials is preserved": {
 			status: Status{
 				AgentType: "Datadog",
 				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State:          v1alpha.InvalidCredentialsStateDegraded,
 					Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
 					HTTPStatusCode: 403,
+					AffectedSLOs:   1,
+					TotalSLOs:      2,
+				},
+			},
+			expectedJSON: `{"agentType":"Datadog","environment":{},"invalidCredentials":{"state":"degraded",` +
+				`"since":"2026-10-16T09:30:00Z","httpStatusCode":403,"affectedSLOs":1,"totalSLOs":2}}`,
+		},
+		"none state has no since and no HTTP status code": {
+			status: Status{
+				AgentType: "Datadog",
+				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State:     v1alpha.InvalidCredentialsStateNone,
+					TotalSLOs: 2,
 				},
 			},
 			expectedJSON: `{"agentType":"Datadog","environment":{},` +
-				`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`,
+				`"invalidCredentials":{"state":"none","affectedSLOs":0,"totalSLOs":2}}`,
 		},
 	}
 
@@ -66,6 +80,19 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 		var decoded Status
 		require.NoError(t, json.Unmarshal([]byte(`{"agentType":"Datadog","agentVersion":"1.0.0"}`), &decoded))
 		assert.Equal(t, Status{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
+	})
+
+	t.Run("invalid credentials without state and counts decodes to zero values", func(t *testing.T) {
+		var decoded Status
+		data := []byte(`{"agentType":"Datadog","invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, Status{
+			AgentType: "Datadog",
+			InvalidCredentials: &v1alpha.InvalidCredentials{
+				Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 403,
+			},
+		}, decoded)
 	})
 
 	t.Run("struct without invalid credentials ignores it", func(t *testing.T) {
