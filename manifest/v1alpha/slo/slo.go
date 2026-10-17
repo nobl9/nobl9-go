@@ -211,7 +211,7 @@ type ErrorDetails struct {
 	HTTPStatusCode   *int       `json:"httpStatusCode"`
 	Query            string     `json:"query"`
 	// Reason is [ErrorDetailsReasonInvalidCredentials] or [ErrorDetailsReasonInvalidQuery]
-	// for an invalid metric, empty otherwise.
+	// for an invalid metric with a known cause, empty otherwise.
 	Reason string `json:"reason,omitempty"`
 }
 
