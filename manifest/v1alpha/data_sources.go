@@ -155,12 +155,25 @@ type Timeout struct {
 	Duration `yaml:",inline"`
 }
 
-// InvalidCredentials reports that the data source rejects its credentials (HTTP 401 or 403).
+// InvalidCredentials reports how many SLOs of a data source get a credentials error
+// from the data source (HTTP 401 or 403).
 type InvalidCredentials struct {
-	// Since is the time of the first rejected request.
-	Since          time.Time `json:"since"`
-	HTTPStatusCode int       `json:"httpStatusCode"`
+	State InvalidCredentialsState `json:"state"`
+	// Since is the time of the first rejected request. It is empty for [InvalidCredentialsStateNone].
+	Since          time.Time `json:"since,omitzero"`
+	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
+	AffectedSLOs   int       `json:"affectedSLOs"`
+	TotalSLOs      int       `json:"totalSLOs"`
 }
+
+// InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
+type InvalidCredentialsState string
+
+const (
+	InvalidCredentialsStateNone     InvalidCredentialsState = "none"
+	InvalidCredentialsStateDegraded InvalidCredentialsState = "degraded"
+	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
+)
 
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
