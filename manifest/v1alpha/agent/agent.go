@@ -84,13 +84,13 @@ type Spec struct {
 
 // Status holds dynamic content which is not part of the static Agent definition.
 type Status struct {
-	AgentType                string                    `json:"agentType"`
-	AgentVersion             string                    `json:"agentVersion,omitempty"`
-	LastConnection           string                    `json:"lastConnection,omitempty"`
-	NewestStableAgentVersion string                    `json:"newestStableAgentVersion,omitempty"`
-	NewestBetaAgentVersion   string                    `json:"newestBetaAgentVersion,omitempty"`
-	Environment              Environment               `json:"environment"`
-	CredentialsError         *v1alpha.CredentialsError `json:"credentialsError,omitempty"`
+	AgentType                string                      `json:"agentType"`
+	AgentVersion             string                      `json:"agentVersion,omitempty"`
+	LastConnection           string                      `json:"lastConnection,omitempty"`
+	NewestStableAgentVersion string                      `json:"newestStableAgentVersion,omitempty"`
+	NewestBetaAgentVersion   string                      `json:"newestBetaAgentVersion,omitempty"`
+	Environment              Environment                 `json:"environment"`
+	InvalidCredentials       *v1alpha.InvalidCredentials `json:"invalidCredentials,omitempty"`
 }
 
 // Environment holds environment-specific variables for the Agent.
