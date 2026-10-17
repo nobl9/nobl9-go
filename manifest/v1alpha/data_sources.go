@@ -155,6 +155,13 @@ type Timeout struct {
 	Duration `yaml:",inline"`
 }
 
+// InvalidCredentials reports that the data source rejects its credentials (HTTP 401 or 403).
+type InvalidCredentials struct {
+	// Since is the time of the first rejected request.
+	Since          time.Time `json:"since"`
+	HTTPStatusCode int       `json:"httpStatusCode"`
+}
+
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
 	Duration            `yaml:",inline"`
