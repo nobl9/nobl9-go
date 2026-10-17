@@ -28,25 +28,25 @@ func TestDirect_Spec_GetType(t *testing.T) {
 	}
 }
 
-func TestStatus_CredentialsErrorSerialization(t *testing.T) {
+func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 	tests := map[string]struct {
 		status       Status
 		expectedJSON string
 	}{
-		"no credentials error is omitted": {
+		"no invalid credentials is omitted": {
 			status:       Status{DirectType: "Datadog"},
 			expectedJSON: `{"directType":"Datadog"}`,
 		},
-		"credentials error is preserved": {
+		"invalid credentials is preserved": {
 			status: Status{
 				DirectType: "Datadog",
-				CredentialsError: &v1alpha.CredentialsError{
+				InvalidCredentials: &v1alpha.InvalidCredentials{
 					Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
 					HTTPStatusCode: 401,
 				},
 			},
 			expectedJSON: `{"directType":"Datadog",` +
-				`"credentialsError":{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}}`,
+				`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}}`,
 		},
 	}
 
@@ -62,19 +62,19 @@ func TestStatus_CredentialsErrorSerialization(t *testing.T) {
 		})
 	}
 
-	t.Run("JSON without credentials error decodes to nil", func(t *testing.T) {
+	t.Run("JSON without invalid credentials decodes to nil", func(t *testing.T) {
 		var decoded Status
 		require.NoError(t, json.Unmarshal([]byte(`{"directType":"Datadog"}`), &decoded))
 		assert.Equal(t, Status{DirectType: "Datadog"}, decoded)
 	})
 
-	t.Run("struct without credentials error ignores it", func(t *testing.T) {
+	t.Run("struct without invalid credentials ignores it", func(t *testing.T) {
 		type oldStatus struct {
 			DirectType string `json:"directType"`
 		}
 		var decoded oldStatus
 		data := []byte(`{"directType":"Datadog",` +
-			`"credentialsError":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`)
+			`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{DirectType: "Datadog"}, decoded)
 	})

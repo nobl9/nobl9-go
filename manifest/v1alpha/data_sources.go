@@ -155,8 +155,8 @@ type Timeout struct {
 	Duration `yaml:",inline"`
 }
 
-// CredentialsError tells that the data source rejects its credentials (HTTP 401 or 403).
-type CredentialsError struct {
+// InvalidCredentials reports that the data source rejects its credentials (HTTP 401 or 403).
+type InvalidCredentials struct {
 	// Since is the time of the first rejected request.
 	Since          time.Time `json:"since"`
 	HTTPStatusCode int       `json:"httpStatusCode"`
