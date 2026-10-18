@@ -28,25 +28,38 @@ func TestAgent_Spec_GetType(t *testing.T) {
 	}
 }
 
-func TestStatus_CredentialsErrorSerialization(t *testing.T) {
+func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 	tests := map[string]struct {
 		status       Status
 		expectedJSON string
 	}{
-		"no credentials error is omitted": {
+		"no invalid credentials is omitted": {
 			status:       Status{AgentType: "Datadog"},
 			expectedJSON: `{"agentType":"Datadog","environment":{}}`,
 		},
-		"credentials error is preserved": {
+		"degraded invalid credentials is preserved": {
 			status: Status{
 				AgentType: "Datadog",
-				CredentialsError: &v1alpha.CredentialsError{
+				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State:          v1alpha.InvalidCredentialsStateDegraded,
 					Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
 					HTTPStatusCode: 403,
+					AffectedSLOs:   1,
+					TotalSLOs:      2,
+				},
+			},
+			expectedJSON: `{"agentType":"Datadog","environment":{},"invalidCredentials":{"state":"degraded",` +
+				`"since":"2026-10-16T09:30:00Z","httpStatusCode":403,"affectedSLOs":1,"totalSLOs":2}}`,
+		},
+		"none state has only the state": {
+			status: Status{
+				AgentType: "Datadog",
+				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State: v1alpha.InvalidCredentialsStateNone,
 				},
 			},
 			expectedJSON: `{"agentType":"Datadog","environment":{},` +
-				`"credentialsError":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`,
+				`"invalidCredentials":{"state":"none"}}`,
 		},
 	}
 
@@ -62,20 +75,33 @@ func TestStatus_CredentialsErrorSerialization(t *testing.T) {
 		})
 	}
 
-	t.Run("JSON without credentials error decodes to nil", func(t *testing.T) {
+	t.Run("JSON without invalid credentials decodes to nil", func(t *testing.T) {
 		var decoded Status
 		require.NoError(t, json.Unmarshal([]byte(`{"agentType":"Datadog","agentVersion":"1.0.0"}`), &decoded))
 		assert.Equal(t, Status{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
 	})
 
-	t.Run("struct without credentials error ignores it", func(t *testing.T) {
+	t.Run("invalid credentials without state and counts decodes to zero values", func(t *testing.T) {
+		var decoded Status
+		data := []byte(`{"agentType":"Datadog","invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, Status{
+			AgentType: "Datadog",
+			InvalidCredentials: &v1alpha.InvalidCredentials{
+				Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 403,
+			},
+		}, decoded)
+	})
+
+	t.Run("struct without invalid credentials ignores it", func(t *testing.T) {
 		type oldStatus struct {
 			AgentType    string `json:"agentType"`
 			AgentVersion string `json:"agentVersion,omitempty"`
 		}
 		var decoded oldStatus
 		data := []byte(`{"agentType":"Datadog","agentVersion":"1.0.0",` +
-			`"credentialsError":{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}}`)
+			`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
 	})
