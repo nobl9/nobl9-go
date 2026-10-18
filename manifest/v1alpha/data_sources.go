@@ -177,6 +177,27 @@ const (
 	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
 )
 
+// DataSourceUnreachable reports how many SLOs of a data source cannot reach it,
+// because its endpoint (URL, host, realm or site) is wrong.
+type DataSourceUnreachable struct {
+	State DataSourceUnreachableState `json:"state"`
+	// Since is the time of the first unreachable result.
+	// Since, AffectedSLOs and TotalSLOs are set only for
+	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
+	Since        time.Time `json:"since,omitzero"`
+	AffectedSLOs int       `json:"affectedSLOs,omitzero"`
+	TotalSLOs    int       `json:"totalSLOs,omitzero"`
+}
+
+// DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
+type DataSourceUnreachableState string
+
+const (
+	DataSourceUnreachableStateNone     DataSourceUnreachableState = "none"
+	DataSourceUnreachableStateDegraded DataSourceUnreachableState = "degraded"
+	DataSourceUnreachableStateAll      DataSourceUnreachableState = "all"
+)
+
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
 	Duration            `yaml:",inline"`
