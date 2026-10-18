@@ -106,6 +106,82 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 	})
 }
 
+func TestStatus_DataSourceUnreachableSerialization(t *testing.T) {
+	tests := map[string]struct {
+		status       Status
+		expectedJSON string
+	}{
+		"no data source unreachable is omitted": {
+			status:       Status{DirectType: "Prometheus"},
+			expectedJSON: `{"directType":"Prometheus"}`,
+		},
+		"all data source unreachable is preserved": {
+			status: Status{
+				DirectType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State:        v1alpha.DataSourceUnreachableStateAll,
+					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+					AffectedSLOs: 2,
+					TotalSLOs:    2,
+				},
+			},
+			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"all",` +
+				`"since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2}}`,
+		},
+		"degraded data source unreachable is preserved": {
+			status: Status{
+				DirectType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State:        v1alpha.DataSourceUnreachableStateDegraded,
+					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+					AffectedSLOs: 1,
+					TotalSLOs:    3,
+				},
+			},
+			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"degraded",` +
+				`"since":"2026-10-18T09:30:00Z","affectedSLOs":1,"totalSLOs":3}}`,
+		},
+		"none state has only the state": {
+			status: Status{
+				DirectType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State: v1alpha.DataSourceUnreachableStateNone,
+				},
+			},
+			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"none"}}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.status)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded Status
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.status, decoded)
+		})
+	}
+
+	t.Run("JSON without data source unreachable decodes to nil", func(t *testing.T) {
+		var decoded Status
+		require.NoError(t, json.Unmarshal([]byte(`{"directType":"Prometheus"}`), &decoded))
+		assert.Equal(t, Status{DirectType: "Prometheus"}, decoded)
+	})
+
+	t.Run("struct without data source unreachable ignores it", func(t *testing.T) {
+		type oldStatus struct {
+			DirectType string `json:"directType"`
+		}
+		var decoded oldStatus
+		data := []byte(`{"directType":"Prometheus",` +
+			`"dataSourceUnreachable":{"state":"all","since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2}}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, oldStatus{DirectType: "Prometheus"}, decoded)
+	})
+}
+
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
 func setZeroValue(t *testing.T, obj interface{}, fieldName string) {
 	t.Helper()

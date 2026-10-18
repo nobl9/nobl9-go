@@ -88,6 +88,15 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":400,` +
 				`"query":"","reason":"invalidQuery"}`,
 		},
+		"dataSourceUnreachable reason is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(500),
+				Reason:           ErrorDetailsReasonDataSourceUnreachable,
+			},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":500,` +
+				`"query":"","reason":"dataSourceUnreachable"}`,
+		},
 	}
 
 	for name, test := range tests {
