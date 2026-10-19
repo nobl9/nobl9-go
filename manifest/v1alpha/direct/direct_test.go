@@ -100,7 +100,109 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 		}
 		var decoded oldStatus
 		data := []byte(`{"directType":"Datadog",` +
-			`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":403}}`)
+			`"invalidCredentials":{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, oldStatus{DirectType: "Datadog"}, decoded)
+	})
+}
+
+func TestStatus_AccessDeniedSerialization(t *testing.T) {
+	tests := map[string]struct {
+		status       Status
+		expectedJSON string
+	}{
+		"no access denied is omitted": {
+			status:       Status{DirectType: "Datadog"},
+			expectedJSON: `{"directType":"Datadog"}`,
+		},
+		"all access denied is preserved": {
+			status: Status{
+				DirectType: "Datadog",
+				AccessDenied: &v1alpha.AccessDenied{
+					State:          v1alpha.AccessDeniedStateAll,
+					Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+					HTTPStatusCode: 403,
+					AffectedSLOs:   2,
+					TotalSLOs:      2,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog","accessDenied":{"state":"all",` +
+				`"since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSLOs":2,"totalSLOs":2}}`,
+		},
+		"degraded access denied keeps the vendor status code": {
+			status: Status{
+				DirectType: "Datadog",
+				AccessDenied: &v1alpha.AccessDenied{
+					State:          v1alpha.AccessDeniedStateDegraded,
+					Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+					HTTPStatusCode: 402,
+					AffectedSLOs:   1,
+					TotalSLOs:      3,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog","accessDenied":{"state":"degraded",` +
+				`"since":"2026-10-19T09:30:00Z","httpStatusCode":402,"affectedSLOs":1,"totalSLOs":3}}`,
+		},
+		"none state has only the state": {
+			status: Status{
+				DirectType: "Datadog",
+				AccessDenied: &v1alpha.AccessDenied{
+					State: v1alpha.AccessDeniedStateNone,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog","accessDenied":{"state":"none"}}`,
+		},
+		"access denied next to invalid credentials": {
+			status: Status{
+				DirectType: "Datadog",
+				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State:          v1alpha.InvalidCredentialsStateDegraded,
+					Since:          time.Date(2026, 10, 19, 9, 0, 0, 0, time.UTC),
+					HTTPStatusCode: 401,
+					AffectedSLOs:   1,
+					TotalSLOs:      3,
+				},
+				AccessDenied: &v1alpha.AccessDenied{
+					State:          v1alpha.AccessDeniedStateDegraded,
+					Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+					HTTPStatusCode: 403,
+					AffectedSLOs:   2,
+					TotalSLOs:      3,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog",` +
+				`"invalidCredentials":{"state":"degraded","since":"2026-10-19T09:00:00Z","httpStatusCode":401,` +
+				`"affectedSLOs":1,"totalSLOs":3},` +
+				`"accessDenied":{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
+				`"affectedSLOs":2,"totalSLOs":3}}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.status)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded Status
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.status, decoded)
+		})
+	}
+
+	t.Run("JSON without access denied decodes to nil", func(t *testing.T) {
+		var decoded Status
+		require.NoError(t, json.Unmarshal([]byte(`{"directType":"Datadog"}`), &decoded))
+		assert.Equal(t, Status{DirectType: "Datadog"}, decoded)
+	})
+
+	t.Run("struct without access denied ignores it", func(t *testing.T) {
+		type oldStatus struct {
+			DirectType string `json:"directType"`
+		}
+		var decoded oldStatus
+		data := []byte(`{"directType":"Datadog",` +
+			`"accessDenied":{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSLOs":2,"totalSLOs":2}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{DirectType: "Datadog"}, decoded)
 	})

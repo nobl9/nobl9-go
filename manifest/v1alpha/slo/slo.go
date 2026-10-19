@@ -210,14 +210,15 @@ type ErrorDetails struct {
 	LogTimestamp     *time.Time `json:"logTimestamp"`
 	HTTPStatusCode   *int       `json:"httpStatusCode"`
 	Query            string     `json:"query"`
-	// Reason is [ErrorDetailsReasonInvalidCredentials] or [ErrorDetailsReasonInvalidQuery]
-	// for an invalid metric with a known cause, empty otherwise.
+	// Reason is [ErrorDetailsReasonInvalidCredentials], [ErrorDetailsReasonAccessDenied] or
+	// [ErrorDetailsReasonInvalidQuery] for an invalid metric with a known cause, empty otherwise.
 	Reason string `json:"reason,omitempty"`
 }
 
 // Values of [ErrorDetails.Reason].
 const (
 	ErrorDetailsReasonInvalidCredentials = "invalidCredentials"
+	ErrorDetailsReasonAccessDenied       = "accessDenied"
 	ErrorDetailsReasonInvalidQuery       = "invalidQuery"
 )
 
