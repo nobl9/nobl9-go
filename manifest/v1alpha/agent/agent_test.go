@@ -129,6 +129,15 @@ func TestStatus_DataSourceUnreachableSerialization(t *testing.T) {
 			},
 			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"none"}}`,
 		},
+		"verifying state has only the state": {
+			status: Status{
+				AgentType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State: v1alpha.DataSourceUnreachableStateVerifying,
+				},
+			},
+			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"verifying"}}`,
+		},
 	}
 
 	for name, test := range tests {
