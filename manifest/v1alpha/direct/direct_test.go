@@ -162,6 +162,15 @@ func TestStatus_AccessDeniedSerialization(t *testing.T) {
 			},
 			expectedJSON: `{"directType":"Datadog","accessDenied":{"state":"none"}}`,
 		},
+		"verifying state has only the state": {
+			status: Status{
+				DirectType: "Datadog",
+				AccessDenied: &v1alpha.AccessDenied{
+					State: v1alpha.AccessDeniedStateVerifying,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog","accessDenied":{"state":"verifying"}}`,
+		},
 		"access denied next to invalid credentials": {
 			status: Status{
 				DirectType: "Datadog",

@@ -163,6 +163,15 @@ func TestStatus_AccessDeniedSerialization(t *testing.T) {
 			},
 			expectedJSON: `{"agentType":"Datadog","environment":{},"accessDenied":{"state":"none"}}`,
 		},
+		"verifying state has only the state": {
+			status: Status{
+				AgentType: "Datadog",
+				AccessDenied: &v1alpha.AccessDenied{
+					State: v1alpha.AccessDeniedStateVerifying,
+				},
+			},
+			expectedJSON: `{"agentType":"Datadog","environment":{},"accessDenied":{"state":"verifying"}}`,
+		},
 		"access denied next to invalid credentials": {
 			status: Status{
 				AgentType: "Datadog",

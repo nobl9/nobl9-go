@@ -194,16 +194,20 @@ type AccessDenied struct {
 }
 
 // AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
+// [AccessDeniedStateVerifying] means that the data source was edited after an access denied error
+// and some of its SLOs have no answer yet.
 type AccessDeniedState string
 
 const (
-	AccessDeniedStateNone     AccessDeniedState = "none"
-	AccessDeniedStateDegraded AccessDeniedState = "degraded"
-	AccessDeniedStateAll      AccessDeniedState = "all"
+	AccessDeniedStateNone      AccessDeniedState = "none"
+	AccessDeniedStateDegraded  AccessDeniedState = "degraded"
+	AccessDeniedStateAll       AccessDeniedState = "all"
+	AccessDeniedStateVerifying AccessDeniedState = "verifying"
 )
 
 // DataSourceUnreachable reports how many SLOs of a data source cannot reach it,
-// because its endpoint (URL, host, realm or site) is wrong.
+// because its endpoint (URL, host, realm or site) is wrong,
+// or its certificate is expired, not yet valid or not trusted.
 type DataSourceUnreachable struct {
 	State DataSourceUnreachableState `json:"state"`
 	// Since is the time of the first unreachable result.
