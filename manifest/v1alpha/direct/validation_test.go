@@ -1066,11 +1066,14 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 }
 
 func TestValidateSpec_AzureMonitor(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.AzureMonitor)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
-	})
+	for _, channel := range []v1alpha.ReleaseChannel{0, v1alpha.ReleaseChannelStable, v1alpha.ReleaseChannelBeta} {
+		t.Run(channel.String(), func(t *testing.T) {
+			direct := validDirect(v1alpha.AzureMonitor)
+			direct.Spec.ReleaseChannel = channel
+			err := validate(direct)
+			testutils.AssertNoError(t, direct, err)
+		})
+	}
 	t.Run("required tenantId", func(t *testing.T) {
 		direct := validDirect(v1alpha.AzureMonitor)
 		direct.Spec.AzureMonitor.TenantID = ""
