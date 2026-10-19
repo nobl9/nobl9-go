@@ -91,6 +91,7 @@ type Status struct {
 	NewestBetaAgentVersion   string                      `json:"newestBetaAgentVersion,omitempty"`
 	Environment              Environment                 `json:"environment"`
 	InvalidCredentials       *v1alpha.InvalidCredentials `json:"invalidCredentials,omitempty"`
+	AccessDenied             *v1alpha.AccessDenied       `json:"accessDenied,omitempty"`
 }
 
 // Environment holds environment-specific variables for the Agent.

@@ -77,6 +77,7 @@ type Spec struct {
 type Status struct {
 	DirectType         string                      `json:"directType"`
 	InvalidCredentials *v1alpha.InvalidCredentials `json:"invalidCredentials,omitempty"`
+	AccessDenied       *v1alpha.AccessDenied       `json:"accessDenied,omitempty"`
 }
 
 var validDirectTypes = map[v1alpha.DataSourceType]struct{}{

@@ -156,7 +156,7 @@ type Timeout struct {
 }
 
 // InvalidCredentials reports how many SLOs of a data source get a credentials error
-// from the data source (HTTP 401 or 403).
+// from the data source (HTTP 401).
 type InvalidCredentials struct {
 	State InvalidCredentialsState `json:"state"`
 	// Since is the time of the first rejected request.
@@ -175,6 +175,28 @@ const (
 	InvalidCredentialsStateNone     InvalidCredentialsState = "none"
 	InvalidCredentialsStateDegraded InvalidCredentialsState = "degraded"
 	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
+)
+
+// AccessDenied reports how many SLOs of a data source get an access denied error
+// from the data source (HTTP 403, or 402 for an account or license problem).
+type AccessDenied struct {
+	State AccessDeniedState `json:"state"`
+	// Since is the time of the first denied request.
+	// Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// [AccessDeniedStateDegraded] and [AccessDeniedStateAll].
+	Since          time.Time `json:"since,omitzero"`
+	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
+	AffectedSLOs   int       `json:"affectedSLOs,omitzero"`
+	TotalSLOs      int       `json:"totalSLOs,omitzero"`
+}
+
+// AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
+type AccessDeniedState string
+
+const (
+	AccessDeniedStateNone     AccessDeniedState = "none"
+	AccessDeniedStateDegraded AccessDeniedState = "degraded"
+	AccessDeniedStateAll      AccessDeniedState = "all"
 )
 
 type QueryDelay struct {
