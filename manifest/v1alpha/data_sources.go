@@ -191,9 +191,8 @@ const (
 	DataSourceErrorReasonAccessDenied DataSourceErrorReason = "accessDenied"
 )
 
-// DataSourceUnreachable reports how many SLOs of a data source cannot reach it,
-// because its endpoint (URL, host, realm or site) is wrong,
-// or its certificate is expired, not yet valid or not trusted.
+// DataSourceUnreachable reports how many SLOs of a data source cannot reach it.
+// [DataSourceUnreachable.Cause] tells why.
 type DataSourceUnreachable struct {
 	State DataSourceUnreachableState `json:"state"`
 	// Since is the time of the first unreachable result.
@@ -202,7 +201,23 @@ type DataSourceUnreachable struct {
 	Since        time.Time `json:"since,omitzero"`
 	AffectedSLOs int       `json:"affectedSLOs,omitzero"`
 	TotalSLOs    int       `json:"totalSLOs,omitzero"`
+	// Cause is set for every state except [DataSourceUnreachableStateNone].
+	Cause DataSourceUnreachableCause `json:"cause,omitempty"`
 }
+
+// DataSourceUnreachableCause tells why a data source cannot be reached.
+type DataSourceUnreachableCause string
+
+const (
+	// DataSourceUnreachableCauseHostNotFound means that DNS finds no host with the name of the data source.
+	DataSourceUnreachableCauseHostNotFound DataSourceUnreachableCause = "hostNotFound"
+	// DataSourceUnreachableCauseCertificate means that the certificate of the data source
+	// is expired, not yet valid, not trusted or issued for another host.
+	DataSourceUnreachableCauseCertificate DataSourceUnreachableCause = "certificate"
+	// DataSourceUnreachableCauseNotDataSource means that the endpoint answers,
+	// but not as the data source API (404 or 405 without an API error, HTML or a body that is not JSON).
+	DataSourceUnreachableCauseNotDataSource DataSourceUnreachableCause = "notDataSource"
+)
 
 // DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
 // [DataSourceUnreachableStateVerifying] means that the data source was edited after an unreachable
