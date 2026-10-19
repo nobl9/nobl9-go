@@ -169,12 +169,15 @@ type InvalidCredentials struct {
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
+// [InvalidCredentialsStateVerifying] means that the data source was edited after a credentials error
+// and some of its SLOs have no answer yet.
 type InvalidCredentialsState string
 
 const (
-	InvalidCredentialsStateNone     InvalidCredentialsState = "none"
-	InvalidCredentialsStateDegraded InvalidCredentialsState = "degraded"
-	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
+	InvalidCredentialsStateNone      InvalidCredentialsState = "none"
+	InvalidCredentialsStateDegraded  InvalidCredentialsState = "degraded"
+	InvalidCredentialsStateAll       InvalidCredentialsState = "all"
+	InvalidCredentialsStateVerifying InvalidCredentialsState = "verifying"
 )
 
 // AccessDenied reports how many SLOs of a data source get an access denied error
@@ -212,12 +215,15 @@ type DataSourceUnreachable struct {
 }
 
 // DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
+// [DataSourceUnreachableStateVerifying] means that the data source was edited after an unreachable
+// error and some of its SLOs have no answer yet.
 type DataSourceUnreachableState string
 
 const (
-	DataSourceUnreachableStateNone     DataSourceUnreachableState = "none"
-	DataSourceUnreachableStateDegraded DataSourceUnreachableState = "degraded"
-	DataSourceUnreachableStateAll      DataSourceUnreachableState = "all"
+	DataSourceUnreachableStateNone      DataSourceUnreachableState = "none"
+	DataSourceUnreachableStateDegraded  DataSourceUnreachableState = "degraded"
+	DataSourceUnreachableStateAll       DataSourceUnreachableState = "all"
+	DataSourceUnreachableStateVerifying DataSourceUnreachableState = "verifying"
 )
 
 type QueryDelay struct {
