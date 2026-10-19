@@ -210,13 +210,12 @@ const (
 type DataSourceUnreachable struct {
 	State DataSourceUnreachableState `json:"state"`
 	// Since is the time of the first unreachable result.
-	// Since, AffectedSLOs and TotalSLOs are set only for
+	// Since, AffectedSLOs, TotalSLOs and Cause are set only for
 	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
-	Since        time.Time `json:"since,omitzero"`
-	AffectedSLOs int       `json:"affectedSLOs,omitzero"`
-	TotalSLOs    int       `json:"totalSLOs,omitzero"`
-	// Cause is set for every state except [DataSourceUnreachableStateNone].
-	Cause DataSourceUnreachableCause `json:"cause,omitempty"`
+	Since        time.Time                  `json:"since,omitzero"`
+	AffectedSLOs int                        `json:"affectedSLOs,omitzero"`
+	TotalSLOs    int                        `json:"totalSLOs,omitzero"`
+	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
 }
 
 // DataSourceUnreachableCause tells why a data source cannot be reached.

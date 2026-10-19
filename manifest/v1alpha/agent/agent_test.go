@@ -288,16 +288,14 @@ func TestStatus_DataSourceUnreachableSerialization(t *testing.T) {
 			},
 			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"none"}}`,
 		},
-		"verifying state has the state and the cause": {
+		"verifying state has only the state": {
 			status: Status{
 				AgentType: "Prometheus",
 				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
 					State: v1alpha.DataSourceUnreachableStateVerifying,
-					Cause: v1alpha.DataSourceUnreachableCauseHostNotFound,
 				},
 			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},` +
-				`"dataSourceUnreachable":{"state":"verifying","cause":"hostNotFound"}}`,
+			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"verifying"}}`,
 		},
 	}
 
