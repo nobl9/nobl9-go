@@ -73,6 +73,7 @@ type Spec struct {
 	Coralogix               *CoralogixConfig                 `json:"coralogix,omitempty"`
 	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
+	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
 	ClickHouse              *ClickHouseConfig                `json:"clickHouse,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
@@ -161,6 +162,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Atlas, nil
 	case s.Dash0 != nil:
 		return v1alpha.Dash0, nil
+	case s.Zscaler != nil:
+		return v1alpha.Zscaler, nil
 	case s.ClickHouse != nil:
 		return v1alpha.ClickHouse, nil
 	}
@@ -314,6 +317,11 @@ type AtlasConfig struct {
 type Dash0Config struct {
 	URL  string `json:"url"`
 	Step int    `json:"step,omitempty"`
+}
+
+// ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
+type ZscalerConfig struct {
+	VanityDomain string `json:"vanityDomain"`
 }
 
 // ClickHouseConfig configures an Agent connection to ClickHouse.

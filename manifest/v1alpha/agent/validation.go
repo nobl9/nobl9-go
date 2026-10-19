@@ -3,6 +3,7 @@ package agent
 import (
 	"net/url"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -145,6 +146,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
 		WithName("clickHouse").
 		Include(clickHouseValidation),
@@ -288,6 +292,12 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(zscalerVanityDomainValidationRule()),
+	)
 	clickHouseValidation = govy.New[ClickHouseConfig](
 		govy.Transform(func(c ClickHouseConfig) string { return c.URL }, url.Parse).
 			WithName("url").
@@ -329,6 +339,12 @@ var (
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
 
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
@@ -502,6 +518,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
+			return err
+		}
+	}
 	if spec.ClickHouse != nil {
 		if err := typesMatch(v1alpha.ClickHouse); err != nil {
 			return err
@@ -579,14 +600,6 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		)
 	}
 
-	if typ == v1alpha.SplunkObservability &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
-		)
-	}
 	return nil
 }).WithErrorCode(errCodeUnsupportedReleaseChannel)
 

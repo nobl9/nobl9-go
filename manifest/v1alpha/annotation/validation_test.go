@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 
@@ -94,6 +95,49 @@ func TestValidate_Spec_Description(t *testing.T) {
 		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
 			Prop: "spec.description",
 			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("required for a non-Replay category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryComment
+		annotation.Spec.Description = ""
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("optional for a Replay category", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Description = ""
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("still enforces the length bound for Replay", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Description = strings.Repeat("A", specDescriptionMaxLength+1)
+		err := validate(annotation)
+		testutils.AssertContainsErrors(t, annotation, err, 1, testutils.ExpectedError{
+			Prop: "spec.description",
+			Code: rules.ErrorCodeStringLength,
+		})
+	})
+	t.Run("category rules omitted: Replay empty passes, Comment empty required", func(t *testing.T) {
+		validator := GetValidatorWithoutCategoryRules()
+
+		replay := validAnnotation()
+		replay.Spec.Category = CategoryReplay
+		replay.Spec.Description = ""
+		govytest.AssertNoError(t, validator.Validate(replay))
+
+		comment := validAnnotation()
+		comment.Spec.Category = CategoryComment
+		comment.Spec.Description = ""
+		govytest.AssertError(t, validator.Validate(comment), govytest.ExpectedRuleError{
+			PropertyPath: "spec.description",
+			Code:         rules.ErrorCodeRequired,
 		})
 	})
 }
@@ -206,6 +250,49 @@ func TestSpec_Category(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestValidate_ComputedFields_NeverValidated(t *testing.T) {
+	replayStart := time.Date(2023, 5, 1, 17, 10, 5, 0, time.UTC)
+	replayEnd := time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC)
+	replayFacts := func() *Replay {
+		return &Replay{
+			PeriodStart:        replayStart,
+			PeriodEnd:          replayEnd,
+			ElapsedTimeSeconds: ptr(int64(3600)),
+		}
+	}
+
+	t.Run("Replay annotation with spec.replay facts passes", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Replay = replayFacts()
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("Replay annotation without spec.replay facts passes", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryReplay
+		annotation.Spec.Replay = nil
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("computed spec.replay is never validated: reversed period on a non-Replay category passes", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Spec.Category = CategoryComment
+		annotation.Spec.Replay = &Replay{
+			PeriodStart: replayEnd,
+			PeriodEnd:   replayStart,
+		}
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
+	t.Run("generic Status is never validated", func(t *testing.T) {
+		annotation := validAnnotation()
+		annotation.Status = &Status{UpdatedAt: "not-a-timestamp", IsSystem: true}
+		err := validate(annotation)
+		testutils.AssertNoError(t, annotation, err)
+	})
 }
 
 func TestValidate_Metadata_Labels(t *testing.T) {

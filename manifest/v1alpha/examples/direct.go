@@ -46,9 +46,9 @@ var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.AzurePrometheus,
 	v1alpha.ThousandEyes,
 	// Support for Replay only in beta.
-	v1alpha.SplunkObservability,
 	v1alpha.SumoLogic,
 	v1alpha.Dash0,
+	v1alpha.Zscaler,
 	v1alpha.ClickHouse,
 }
 
@@ -213,6 +213,12 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 			URL:       "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 			AuthToken: "[secret]",
 			Step:      60,
+		}
+	case v1alpha.Zscaler:
+		direct.Spec.Zscaler = &v1alphaDirect.ZscalerConfig{
+			VanityDomain: "example",
+			ClientID:     "[secret]",
+			ClientSecret: "[secret]",
 		}
 	case v1alpha.ClickHouse:
 		direct.Spec.ClickHouse = &v1alphaDirect.ClickHouseConfig{

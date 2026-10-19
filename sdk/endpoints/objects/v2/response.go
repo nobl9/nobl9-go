@@ -19,11 +19,18 @@ type getAnnotationModel struct {
 	Category       v1alphaAnnotation.Category `json:"category"`
 	Labels         v1alpha.Labels             `json:"labels"`
 	ExternalUserID string                     `json:"author"`
+	Replay         *getAnnotationModelReplay  `json:"replay,omitempty"`
 }
 
 type getAnnotationModelStatus struct {
 	UpdatedAt time.Time `json:"updatedAt" example:"2006-01-02T17:04:05Z"`
 	IsSystem  bool      `json:"isSystem" example:"false"`
+}
+
+type getAnnotationModelReplay struct {
+	PeriodStart        time.Time `json:"periodStart"`
+	PeriodEnd          time.Time `json:"periodEnd"`
+	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
 }
 
 func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Annotation {
@@ -44,6 +51,13 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 	)
 	if resp.EndTime != nil {
 		v1alphaModel.Spec.EndTime = *resp.EndTime
+	}
+	if resp.Replay != nil {
+		v1alphaModel.Spec.Replay = &v1alphaAnnotation.Replay{
+			PeriodStart:        resp.Replay.PeriodStart,
+			PeriodEnd:          resp.Replay.PeriodEnd,
+			ElapsedTimeSeconds: resp.Replay.ElapsedTimeSeconds,
+		}
 	}
 	v1alphaModel.Status = &v1alphaAnnotation.Status{
 		UpdatedAt: resp.Status.UpdatedAt.Format(time.RFC3339),

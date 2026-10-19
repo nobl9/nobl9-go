@@ -50,8 +50,8 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
 	v1alpha.Dash0,
+	v1alpha.Zscaler,
 	v1alpha.ClickHouse,
-	v1alpha.SplunkObservability,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -215,6 +215,8 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 			URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 			Step: 60,
 		}
+	case v1alpha.Zscaler:
+		agent.Spec.Zscaler = &v1alphaAgent.ZscalerConfig{VanityDomain: "example"}
 	case v1alpha.ClickHouse:
 		agent.Spec.ClickHouse = &v1alphaAgent.ClickHouseConfig{
 			URL:      "https://clickhouse.example.com:8443",

@@ -54,6 +54,7 @@ AzurePrometheus
 Coralogix
 Atlas
 Dash0
+Zscaler
 ClickHouse
 )*/
 type DataSourceType int
@@ -237,6 +238,7 @@ func GetQueryDelayDefaults() QueryDelayDefaults {
 		Coralogix:           {Value: ptr(0), Unit: Second},
 		Atlas:               {Value: ptr(10), Unit: Minute},
 		Dash0:               {Value: ptr(1), Unit: Minute},
+		Zscaler:             {Value: ptr(20), Unit: Minute},
 		ClickHouse:          {Value: ptr(30), Unit: Second},
 	}
 }
@@ -399,6 +401,7 @@ var agentDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurati
 	SumoLogic:             {Value: ptr(30), Unit: HRDDay},
 	Atlas:                 {Value: ptr(730), Unit: HRDDay},
 	Dash0:                 {Value: ptr(30), Unit: HRDDay},
+	Zscaler:               {Value: ptr(13), Unit: HRDDay},
 	ClickHouse:            {Value: ptr(30), Unit: HRDDay},
 }
 
@@ -421,6 +424,7 @@ var directDataRetrievalMaxDuration = map[DataSourceType]HistoricalRetrievalDurat
 	Dash0:                 {Value: ptr(30), Unit: HRDDay},
 	ClickHouse:            {Value: ptr(30), Unit: HRDDay},
 	Elasticsearch:         {Value: ptr(30), Unit: HRDDay},
+	Zscaler:               {Value: ptr(13), Unit: HRDDay},
 }
 
 func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (HistoricalRetrievalDuration, error) {
