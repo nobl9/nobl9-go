@@ -61,6 +61,16 @@ func TestStatus_InvalidCredentialsSerialization(t *testing.T) {
 			expectedJSON: `{"directType":"Datadog",` +
 				`"invalidCredentials":{"state":"none"}}`,
 		},
+		"verifying state has only the state": {
+			status: Status{
+				DirectType: "Datadog",
+				InvalidCredentials: &v1alpha.InvalidCredentials{
+					State: v1alpha.InvalidCredentialsStateVerifying,
+				},
+			},
+			expectedJSON: `{"directType":"Datadog",` +
+				`"invalidCredentials":{"state":"verifying"}}`,
+		},
 	}
 
 	for name, test := range tests {
@@ -149,6 +159,15 @@ func TestStatus_DataSourceUnreachableSerialization(t *testing.T) {
 				},
 			},
 			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"none"}}`,
+		},
+		"verifying state has only the state": {
+			status: Status{
+				DirectType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State: v1alpha.DataSourceUnreachableStateVerifying,
+				},
+			},
+			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"verifying"}}`,
 		},
 	}
 
