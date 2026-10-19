@@ -214,6 +214,9 @@ type ErrorDetails struct {
 	// [ErrorDetailsReasonInvalidQuery] or [ErrorDetailsReasonDataSourceUnreachable]
 	// for an invalid metric with a known cause, empty otherwise.
 	Reason string `json:"reason,omitempty"`
+	// Cause tells why the data source cannot be reached.
+	// It is set when Reason is [ErrorDetailsReasonDataSourceUnreachable], empty otherwise.
+	Cause v1alpha.DataSourceUnreachableCause `json:"cause,omitempty"`
 }
 
 // Values of [ErrorDetails.Reason].
