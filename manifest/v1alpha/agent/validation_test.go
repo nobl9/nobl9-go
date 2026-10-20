@@ -592,6 +592,22 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			})
 		}
 	})
+	t.Run("site with api prefix", func(t *testing.T) {
+		for _, site := range []string{
+			"api.datadoghq.com",
+			"api.us5.datadoghq.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				agent := validAgent(v1alpha.Datadog)
+				agent.Spec.Datadog.Site = site
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDenyRegexp,
+				})
+			})
+		}
+	})
 }
 
 func TestValidateSpec_NewRelic(t *testing.T) {

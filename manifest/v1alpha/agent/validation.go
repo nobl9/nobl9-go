@@ -155,7 +155,7 @@ var (
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
-			Rules(rules.StringDNSSubdomain()),
+			Rules(rules.StringDNSSubdomain(), datadogSiteAPIPrefixValidationRule()),
 	)
 	newRelicValidation = govy.New[NewRelicConfig](
 		govy.For(func(n NewRelicConfig) int { return n.AccountID }).
@@ -329,6 +329,12 @@ var (
 	genericValidation      = govy.New[GenericConfig]()
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )
+
+func datadogSiteAPIPrefixValidationRule() govy.Rule[string] {
+	return rules.StringDenyRegexp(regexp.MustCompile(`^api\.`)).
+		WithDetails("provide the site without the 'api.' prefix").
+		WithExamples("datadoghq.com")
+}
 
 func zscalerVanityDomainValidationRule() govy.Rule[string] {
 	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).

@@ -543,6 +543,22 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			})
 		}
 	})
+	t.Run("site with api prefix", func(t *testing.T) {
+		for _, site := range []string{
+			"api.datadoghq.com",
+			"api.us5.datadoghq.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDenyRegexp,
+				})
+			})
+		}
+	})
 }
 
 func TestValidateSpec_Elasticsearch(t *testing.T) {
