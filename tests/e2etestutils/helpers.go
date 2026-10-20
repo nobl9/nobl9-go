@@ -23,7 +23,30 @@ import (
 
 // GenerateName generates a unique name for the test object.
 func GenerateName() string {
-	return fmt.Sprintf("%s-e2e-%d-%d", strings.ToLower(toolName), objectsCounter.Add(1), testStartTime.UnixNano())
+	return generateNameAt(testStartTime)
+}
+
+func generateNameAt(startTime time.Time) string {
+	return fmt.Sprintf("%s-e2e-%d-%d", strings.ToLower(toolName), objectsCounter.Add(1), startTime.UnixNano())
+}
+
+// IsStaleName reports whether name was produced by [GenerateName] more than maxAge before now.
+// The generated name is `<tool>-e2e-<counter>-<start time in Unix nanoseconds>`,
+// optionally followed by a suffix added by the caller.
+func IsStaleName(name string, now time.Time, maxAge time.Duration) bool {
+	prefix := strings.ToLower(toolName) + "-e2e-"
+	if !strings.HasPrefix(name, prefix) {
+		return false
+	}
+	parts := strings.SplitN(strings.TrimPrefix(name, prefix), "-", 3)
+	if len(parts) < 2 {
+		return false
+	}
+	nanos, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil || nanos <= 0 {
+		return false
+	}
+	return now.Sub(time.Unix(0, nanos)) > maxAge
 }
 
 // GetObjectDescription returns a unified [manifest.Object] description.
