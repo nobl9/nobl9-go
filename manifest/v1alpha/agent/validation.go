@@ -154,7 +154,8 @@ var (
 	datadogValidation = govy.New[DatadogConfig](
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
-			Required(),
+			Required().
+			Rules(rules.StringDNSSubdomain()),
 	)
 	newRelicValidation = govy.New[NewRelicConfig](
 		govy.For(func(n NewRelicConfig) int { return n.AccountID }).

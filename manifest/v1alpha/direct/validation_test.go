@@ -496,6 +496,53 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
+	t.Run("valid site", func(t *testing.T) {
+		for _, site := range []string{
+			"com",
+			"eu",
+			"datadoghq.com",
+			"us3.datadoghq.com",
+			"us5.datadoghq.com",
+			"datadoghq.eu",
+			"ddog-gov.com",
+			"us2.ddog-gov.com",
+			"ap1.datadoghq.com",
+			"ap2.datadoghq.com",
+			"uk1.datadoghq.com",
+			"example.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
+	t.Run("invalid site", func(t *testing.T) {
+		for _, site := range []string{
+			"   ",
+			" datadoghq.com",
+			"data dog.com",
+			"-bad.com",
+			"https://datadoghq.com",
+			"https://api.datadoghq.com",
+			"datadoghq.com/",
+			"datadoghq.com/x",
+			"datadoghq.com#x",
+			"datadoghq.com:443",
+		} {
+			t.Run(fmt.Sprintf("%q", site), func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDNSSubdomain,
+				})
+			})
+		}
+	})
 }
 
 func TestValidateSpec_Elasticsearch(t *testing.T) {
