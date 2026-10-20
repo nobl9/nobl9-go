@@ -169,7 +169,7 @@ type InvalidCredentials struct {
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
-// [InvalidCredentialsStateVerifying] means that the data source was edited after a credentials error
+// [InvalidCredentialsStateVerifying] means that the data source was edited after an error
 // and some of its SLOs have no answer yet.
 type InvalidCredentialsState string
 
@@ -194,7 +194,7 @@ type AccessDenied struct {
 }
 
 // AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
-// [AccessDeniedStateVerifying] means that the data source was edited after an access denied error
+// [AccessDeniedStateVerifying] means that the data source was edited after an error
 // and some of its SLOs have no answer yet.
 type AccessDeniedState string
 
@@ -233,8 +233,8 @@ const (
 )
 
 // DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
-// [DataSourceUnreachableStateVerifying] means that the data source was edited after an unreachable
-// error and some of its SLOs have no answer yet.
+// [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type DataSourceUnreachableState string
 
 const (
