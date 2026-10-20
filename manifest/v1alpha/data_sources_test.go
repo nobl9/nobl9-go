@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -193,5 +194,164 @@ func TestGetQueryDelayDefaults_AllDataSourcesAreDefined(t *testing.T) {
 	defaults := GetQueryDelayDefaults()
 	for _, typ := range DataSourceTypeValues() {
 		assert.Contains(t, defaults, typ)
+	}
+}
+
+func TestInvalidCredentials_Serialization(t *testing.T) {
+	tests := map[string]struct {
+		value        InvalidCredentials
+		expectedJSON string
+	}{
+		"degraded keeps all fields": {
+			value: InvalidCredentials{
+				State:          InvalidCredentialsStateDegraded,
+				Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 401,
+				AffectedSLOs:   1,
+				TotalSLOs:      2,
+			},
+			expectedJSON: `{"state":"degraded","since":"2026-10-16T09:30:00Z","httpStatusCode":401,` +
+				`"affectedSLOs":1,"totalSLOs":2}`,
+		},
+		"none has only the state": {
+			value:        InvalidCredentials{State: InvalidCredentialsStateNone},
+			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        InvalidCredentials{State: InvalidCredentialsStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded InvalidCredentials
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.value, decoded)
+		})
+	}
+
+	t.Run("JSON without state and counts decodes to zero values", func(t *testing.T) {
+		var decoded InvalidCredentials
+		require.NoError(t, json.Unmarshal([]byte(`{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}`), &decoded))
+		assert.Equal(t, InvalidCredentials{
+			Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+			HTTPStatusCode: 401,
+		}, decoded)
+	})
+}
+
+func TestAccessDenied_Serialization(t *testing.T) {
+	tests := map[string]struct {
+		value        AccessDenied
+		expectedJSON string
+	}{
+		"all keeps all fields": {
+			value: AccessDenied{
+				State:          AccessDeniedStateAll,
+				Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 403,
+				AffectedSLOs:   2,
+				TotalSLOs:      2,
+			},
+			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
+				`"affectedSLOs":2,"totalSLOs":2}`,
+		},
+		"degraded keeps the vendor status code": {
+			value: AccessDenied{
+				State:          AccessDeniedStateDegraded,
+				Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 402,
+				AffectedSLOs:   1,
+				TotalSLOs:      3,
+			},
+			expectedJSON: `{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":402,` +
+				`"affectedSLOs":1,"totalSLOs":3}`,
+		},
+		"none has only the state": {
+			value:        AccessDenied{State: AccessDeniedStateNone},
+			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        AccessDenied{State: AccessDeniedStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded AccessDenied
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.value, decoded)
+		})
+	}
+}
+
+func TestDataSourceUnreachable_Serialization(t *testing.T) {
+	tests := map[string]struct {
+		value        DataSourceUnreachable
+		expectedJSON string
+	}{
+		"all keeps all fields and the cause": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateAll,
+				Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 2,
+				TotalSLOs:    2,
+				Cause:        DataSourceUnreachableCauseHostNotFound,
+			},
+			expectedJSON: `{"state":"all","since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+				`"cause":"hostNotFound"}`,
+		},
+		"degraded keeps all fields and the cause": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateDegraded,
+				Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 1,
+				TotalSLOs:    3,
+				Cause:        DataSourceUnreachableCauseNotDataSource,
+			},
+			expectedJSON: `{"state":"degraded","since":"2026-10-18T09:30:00Z","affectedSLOs":1,"totalSLOs":3,` +
+				`"cause":"notDataSource"}`,
+		},
+		"certificate cause is preserved": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateAll,
+				Since:        time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 2,
+				TotalSLOs:    2,
+				Cause:        DataSourceUnreachableCauseCertificate,
+			},
+			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+				`"cause":"certificate"}`,
+		},
+		"none has only the state": {
+			value:        DataSourceUnreachable{State: DataSourceUnreachableStateNone},
+			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        DataSourceUnreachable{State: DataSourceUnreachableStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded DataSourceUnreachable
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.value, decoded)
+		})
 	}
 }

@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 func TestSpec_HasCompositeObjectives(t *testing.T) {
@@ -83,6 +85,15 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":401,` +
 				`"query":"","reason":"invalidCredentials"}`,
 		},
+		"accessDenied reason is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(403),
+				Reason:           ErrorDetailsReasonAccessDenied,
+			},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":403,` +
+				`"query":"","reason":"accessDenied"}`,
+		},
 		"invalidQuery reason is preserved": {
 			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400), Reason: ErrorDetailsReasonInvalidQuery},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":400,` +
@@ -93,9 +104,20 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 				ValidationResult: "invalid",
 				HTTPStatusCode:   ptr(500),
 				Reason:           ErrorDetailsReasonDataSourceUnreachable,
+				Cause:            v1alpha.DataSourceUnreachableCauseHostNotFound,
 			},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":500,` +
-				`"query":"","reason":"dataSourceUnreachable"}`,
+				`"query":"","reason":"dataSourceUnreachable","cause":"hostNotFound"}`,
+		},
+		"dataSourceUnreachable reason with the certificate cause is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(500),
+				Reason:           ErrorDetailsReasonDataSourceUnreachable,
+				Cause:            v1alpha.DataSourceUnreachableCauseCertificate,
+			},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":500,` +
+				`"query":"","reason":"dataSourceUnreachable","cause":"certificate"}`,
 		},
 	}
 
@@ -123,8 +145,8 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			HTTPStatusCode   *int   `json:"httpStatusCode"`
 		}
 		var decoded oldErrorDetails
-		data := []byte(`{"validationResult":"invalid","httpStatusCode":403,"reason":"invalidCredentials"}`)
+		data := []byte(`{"validationResult":"invalid","httpStatusCode":401,"reason":"invalidCredentials"}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
-		assert.Equal(t, oldErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(403)}, decoded)
+		assert.Equal(t, oldErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(401)}, decoded)
 	})
 }

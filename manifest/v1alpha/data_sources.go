@@ -156,7 +156,7 @@ type Timeout struct {
 }
 
 // InvalidCredentials reports how many SLOs of a data source get a credentials error
-// from the data source (HTTP 401 or 403).
+// from the data source (HTTP 401).
 type InvalidCredentials struct {
 	State InvalidCredentialsState `json:"state"`
 	// Since is the time of the first rejected request.
@@ -169,7 +169,7 @@ type InvalidCredentials struct {
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
-// [InvalidCredentialsStateVerifying] means that the data source was edited after a credentials error
+// [InvalidCredentialsStateVerifying] means that the data source was edited after an error
 // and some of its SLOs have no answer yet.
 type InvalidCredentialsState string
 
@@ -180,21 +180,61 @@ const (
 	InvalidCredentialsStateVerifying InvalidCredentialsState = "verifying"
 )
 
-// DataSourceUnreachable reports how many SLOs of a data source cannot reach it,
-// because its endpoint (URL, host, realm or site) is wrong.
+// AccessDenied reports how many SLOs of a data source get an access denied error
+// from the data source (HTTP 403, or 402 for an account or license problem).
+type AccessDenied struct {
+	State AccessDeniedState `json:"state"`
+	// Since is the time of the first denied request.
+	// Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// [AccessDeniedStateDegraded] and [AccessDeniedStateAll].
+	Since          time.Time `json:"since,omitzero"`
+	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
+	AffectedSLOs   int       `json:"affectedSLOs,omitzero"`
+	TotalSLOs      int       `json:"totalSLOs,omitzero"`
+}
+
+// AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
+// [AccessDeniedStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
+type AccessDeniedState string
+
+const (
+	AccessDeniedStateNone      AccessDeniedState = "none"
+	AccessDeniedStateDegraded  AccessDeniedState = "degraded"
+	AccessDeniedStateAll       AccessDeniedState = "all"
+	AccessDeniedStateVerifying AccessDeniedState = "verifying"
+)
+
+// DataSourceUnreachable reports how many SLOs of a data source cannot reach it.
+// [DataSourceUnreachable.Cause] tells why.
 type DataSourceUnreachable struct {
 	State DataSourceUnreachableState `json:"state"`
 	// Since is the time of the first unreachable result.
-	// Since, AffectedSLOs and TotalSLOs are set only for
+	// Since, AffectedSLOs, TotalSLOs and Cause are set only for
 	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
-	Since        time.Time `json:"since,omitzero"`
-	AffectedSLOs int       `json:"affectedSLOs,omitzero"`
-	TotalSLOs    int       `json:"totalSLOs,omitzero"`
+	Since        time.Time                  `json:"since,omitzero"`
+	AffectedSLOs int                        `json:"affectedSLOs,omitzero"`
+	TotalSLOs    int                        `json:"totalSLOs,omitzero"`
+	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
 }
 
+// DataSourceUnreachableCause tells why a data source cannot be reached.
+type DataSourceUnreachableCause string
+
+const (
+	// DataSourceUnreachableCauseHostNotFound means that DNS finds no host with the name of the data source.
+	DataSourceUnreachableCauseHostNotFound DataSourceUnreachableCause = "hostNotFound"
+	// DataSourceUnreachableCauseCertificate means that the certificate of the data source
+	// is expired, not yet valid, not trusted or issued for another host.
+	DataSourceUnreachableCauseCertificate DataSourceUnreachableCause = "certificate"
+	// DataSourceUnreachableCauseNotDataSource means that the endpoint answers,
+	// but not as the data source API (404 or 405 without an API error, HTML or a body that is not JSON).
+	DataSourceUnreachableCauseNotDataSource DataSourceUnreachableCause = "notDataSource"
+)
+
 // DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
-// [DataSourceUnreachableStateVerifying] means that the data source was edited after an unreachable
-// error and some of its SLOs have no answer yet.
+// [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type DataSourceUnreachableState string
 
 const (
@@ -486,6 +526,19 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (Histor
 	}
 	return HistoricalRetrievalDuration{},
 		errors.Errorf("historical data retrieval is not supported for %s %s", typ, kind)
+}
+
+func DataDogSiteValidationRule() govy.Rule[string] {
+	return rules.OneOf(
+		"eu",
+		"com",
+		"datadoghq.com",
+		"us3.datadoghq.com",
+		"us5.datadoghq.com",
+		"datadoghq.eu",
+		"ddog-gov.com",
+		"ap1.datadoghq.com",
+	)
 }
 
 func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {

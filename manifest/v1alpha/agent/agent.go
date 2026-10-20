@@ -83,6 +83,7 @@ type Spec struct {
 }
 
 // Status holds dynamic content which is not part of the static Agent definition.
+// At most one of InvalidCredentials, AccessDenied and DataSourceUnreachable is degraded or all.
 type Status struct {
 	AgentType                string                         `json:"agentType"`
 	AgentVersion             string                         `json:"agentVersion,omitempty"`
@@ -91,6 +92,7 @@ type Status struct {
 	NewestBetaAgentVersion   string                         `json:"newestBetaAgentVersion,omitempty"`
 	Environment              Environment                    `json:"environment"`
 	InvalidCredentials       *v1alpha.InvalidCredentials    `json:"invalidCredentials,omitempty"`
+	AccessDenied             *v1alpha.AccessDenied          `json:"accessDenied,omitempty"`
 	DataSourceUnreachable    *v1alpha.DataSourceUnreachable `json:"dataSourceUnreachable,omitempty"`
 }
 

@@ -74,9 +74,11 @@ type Spec struct {
 }
 
 // Status represents content of Status optional for Direct Object
+// At most one of InvalidCredentials, AccessDenied and DataSourceUnreachable is degraded or all.
 type Status struct {
 	DirectType            string                         `json:"directType"`
 	InvalidCredentials    *v1alpha.InvalidCredentials    `json:"invalidCredentials,omitempty"`
+	AccessDenied          *v1alpha.AccessDenied          `json:"accessDenied,omitempty"`
 	DataSourceUnreachable *v1alpha.DataSourceUnreachable `json:"dataSourceUnreachable,omitempty"`
 }
 
