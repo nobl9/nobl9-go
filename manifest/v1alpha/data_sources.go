@@ -219,8 +219,8 @@ const (
 )
 
 // DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
-// [DataSourceUnreachableStateVerifying] means that the data source was edited after an unreachable
-// error and some of its SLOs have no answer yet.
+// [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type DataSourceUnreachableState string
 
 const (
