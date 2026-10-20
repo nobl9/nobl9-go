@@ -294,3 +294,64 @@ func TestAccessDenied_Serialization(t *testing.T) {
 		})
 	}
 }
+
+func TestDataSourceUnreachable_Serialization(t *testing.T) {
+	tests := map[string]struct {
+		value        DataSourceUnreachable
+		expectedJSON string
+	}{
+		"all keeps all fields and the cause": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateAll,
+				Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 2,
+				TotalSLOs:    2,
+				Cause:        DataSourceUnreachableCauseHostNotFound,
+			},
+			expectedJSON: `{"state":"all","since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+				`"cause":"hostNotFound"}`,
+		},
+		"degraded keeps all fields and the cause": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateDegraded,
+				Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 1,
+				TotalSLOs:    3,
+				Cause:        DataSourceUnreachableCauseNotDataSource,
+			},
+			expectedJSON: `{"state":"degraded","since":"2026-10-18T09:30:00Z","affectedSLOs":1,"totalSLOs":3,` +
+				`"cause":"notDataSource"}`,
+		},
+		"certificate cause is preserved": {
+			value: DataSourceUnreachable{
+				State:        DataSourceUnreachableStateAll,
+				Since:        time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+				AffectedSLOs: 2,
+				TotalSLOs:    2,
+				Cause:        DataSourceUnreachableCauseCertificate,
+			},
+			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+				`"cause":"certificate"}`,
+		},
+		"none has only the state": {
+			value:        DataSourceUnreachable{State: DataSourceUnreachableStateNone},
+			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        DataSourceUnreachable{State: DataSourceUnreachableStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded DataSourceUnreachable
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.value, decoded)
+		})
+	}
+}

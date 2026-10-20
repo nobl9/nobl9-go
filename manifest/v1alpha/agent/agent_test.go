@@ -69,6 +69,20 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 				`"accessDenied":{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
 				`"affectedSLOs":2,"totalSLOs":3}}`,
 		},
+		"data source unreachable is preserved": {
+			status: Status{
+				AgentType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State:        v1alpha.DataSourceUnreachableStateAll,
+					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+					AffectedSLOs: 2,
+					TotalSLOs:    2,
+					Cause:        v1alpha.DataSourceUnreachableCauseHostNotFound,
+				},
+			},
+			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"all",` +
+				`"since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,"cause":"hostNotFound"}}`,
+		},
 	}
 
 	for name, test := range tests {
@@ -96,111 +110,10 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 		}
 		var decoded oldStatus
 		data := []byte(`{"agentType":"Datadog","agentVersion":"1.0.0","invalidCredentials":{"state":"none"},` +
+			`"dataSourceUnreachable":{"state":"none"},` +
 			`"accessDenied":{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSLOs":2,"totalSLOs":2}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
-	})
-}
-
-func TestStatus_DataSourceUnreachableSerialization(t *testing.T) {
-	tests := map[string]struct {
-		status       Status
-		expectedJSON string
-	}{
-		"no data source unreachable is omitted": {
-			status:       Status{AgentType: "Prometheus"},
-			expectedJSON: `{"agentType":"Prometheus","environment":{}}`,
-		},
-		"all data source unreachable is preserved": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State:        v1alpha.DataSourceUnreachableStateAll,
-					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
-					AffectedSLOs: 2,
-					TotalSLOs:    2,
-					Cause:        v1alpha.DataSourceUnreachableCauseHostNotFound,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"all",` +
-				`"since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,"cause":"hostNotFound"}}`,
-		},
-		"degraded data source unreachable is preserved": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State:        v1alpha.DataSourceUnreachableStateDegraded,
-					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
-					AffectedSLOs: 1,
-					TotalSLOs:    3,
-					Cause:        v1alpha.DataSourceUnreachableCauseNotDataSource,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"degraded",` +
-				`"since":"2026-10-18T09:30:00Z","affectedSLOs":1,"totalSLOs":3,"cause":"notDataSource"}}`,
-		},
-		"certificate cause is preserved": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State:        v1alpha.DataSourceUnreachableStateAll,
-					Since:        time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
-					AffectedSLOs: 2,
-					TotalSLOs:    2,
-					Cause:        v1alpha.DataSourceUnreachableCauseCertificate,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"all",` +
-				`"since":"2026-10-19T09:30:00Z","affectedSLOs":2,"totalSLOs":2,"cause":"certificate"}}`,
-		},
-		"none state has only the state": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State: v1alpha.DataSourceUnreachableStateNone,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"none"}}`,
-		},
-		"verifying state has only the state": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State: v1alpha.DataSourceUnreachableStateVerifying,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"verifying"}}`,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			data, err := json.Marshal(test.status)
-			require.NoError(t, err)
-			assert.JSONEq(t, test.expectedJSON, string(data))
-
-			var decoded Status
-			require.NoError(t, json.Unmarshal(data, &decoded))
-			assert.Equal(t, test.status, decoded)
-		})
-	}
-
-	t.Run("JSON without data source unreachable decodes to nil", func(t *testing.T) {
-		var decoded Status
-		require.NoError(t, json.Unmarshal([]byte(`{"agentType":"Prometheus"}`), &decoded))
-		assert.Equal(t, Status{AgentType: "Prometheus"}, decoded)
-	})
-
-	t.Run("struct without data source unreachable ignores it", func(t *testing.T) {
-		type oldStatus struct {
-			AgentType string `json:"agentType"`
-		}
-		var decoded oldStatus
-		data := []byte(`{"agentType":"Prometheus",` +
-			`"dataSourceUnreachable":{"state":"all","since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
-			`"cause":"hostNotFound"}}`)
-		require.NoError(t, json.Unmarshal(data, &decoded))
-		assert.Equal(t, oldStatus{AgentType: "Prometheus"}, decoded)
 	})
 }
 
