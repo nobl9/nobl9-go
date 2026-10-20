@@ -39,7 +39,6 @@ func Direct() []Example {
 }
 
 var betaChannelDirects = []v1alpha.DataSourceType{
-	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
 	v1alpha.GoogleCloudMonitoring,

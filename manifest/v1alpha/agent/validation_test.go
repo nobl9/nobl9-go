@@ -853,11 +853,14 @@ func TestValidateSpec_AmazonPrometheus(t *testing.T) {
 }
 
 func TestValidateSpec_AzureMonitor(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		agent := validAgent(v1alpha.AzureMonitor)
-		err := validate(agent)
-		testutils.AssertNoError(t, agent, err)
-	})
+	for _, channel := range []v1alpha.ReleaseChannel{0, v1alpha.ReleaseChannelStable, v1alpha.ReleaseChannelBeta} {
+		t.Run(channel.String(), func(t *testing.T) {
+			agent := validAgent(v1alpha.AzureMonitor)
+			agent.Spec.ReleaseChannel = channel
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		})
+	}
 	t.Run("required tenantId", func(t *testing.T) {
 		agent := validAgent(v1alpha.AzureMonitor)
 		agent.Spec.AzureMonitor.TenantID = ""
