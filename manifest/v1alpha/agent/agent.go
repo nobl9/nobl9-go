@@ -83,6 +83,7 @@ type Spec struct {
 }
 
 // Status holds dynamic content which is not part of the static Agent definition.
+// At most one of InvalidCredentials and AccessDenied is degraded or all.
 type Status struct {
 	AgentType                string                         `json:"agentType"`
 	AgentVersion             string                         `json:"agentVersion,omitempty"`
