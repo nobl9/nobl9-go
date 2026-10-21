@@ -31,9 +31,9 @@ type CloudWatchMetric struct {
 // No field is taken from the primary query.
 type CloudWatchMetricFailover struct {
 	Region     *string                     `json:"region"`
-	Namespace  *string                     `json:"namespace"`
-	MetricName *string                     `json:"metricName"`
-	Stat       *string                     `json:"stat"`
+	Namespace  *string                     `json:"namespace,omitempty"`
+	MetricName *string                     `json:"metricName,omitempty"`
+	Stat       *string                     `json:"stat,omitempty"`
 	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
 	AccountID  *string                     `json:"accountId,omitempty"`
 }
@@ -133,13 +133,7 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 
 var cloudWatchRegionRules = []govy.RulesInterface[string]{
 	rules.StringMaxLength(255),
-	rules.OneOf(func() []string {
-		codes := make([]string, 0, len(v1alpha.AWSRegions()))
-		for _, region := range v1alpha.AWSRegions() {
-			codes = append(codes, region.Code)
-		}
-		return codes
-	}()...),
+	rules.OneOf(v1alpha.AWSRegionCodes()...),
 }
 
 var cloudWatchMetricFailoverValidation = govy.New[CloudWatchMetricFailover](

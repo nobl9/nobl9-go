@@ -192,11 +192,11 @@ var (
 		govy.For(func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion }).
 			WithName("primaryRegion").
 			Required().
-			Rules(rules.OneOf(awsRegionCodes()...)),
+			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
 		govy.For(func(c CloudWatchFailoverConfig) string { return c.FailoverRegion }).
 			WithName("failoverRegion").
 			Required().
-			Rules(rules.OneOf(awsRegionCodes()...)),
+			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
 	)
 	pingdomValidation  = govy.New[PingdomConfig]()
 	redshiftValidation = govy.New[RedshiftConfig](
@@ -298,14 +298,6 @@ func zscalerVanityDomainValidationRule() govy.Rule[string] {
 	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
 		WithDetails("provide the tenant label only").
 		WithExamples("acme")
-}
-
-func awsRegionCodes() []string {
-	codes := make([]string, 0, len(v1alpha.AWSRegions()))
-	for _, region := range v1alpha.AWSRegions() {
-		codes = append(codes, region.Code)
-	}
-	return codes
 }
 
 const (
