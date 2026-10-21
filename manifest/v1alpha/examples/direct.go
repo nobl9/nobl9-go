@@ -126,6 +126,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		}
 		if d.SubVariant == directSubVariantCloudWatchFailover {
 			direct.Metadata.Name += "-failover"
+			direct.Spec.Description += " with region failover"
 			direct.Spec.CloudWatch.Failover = &v1alphaDirect.CloudWatchFailoverConfig{
 				Enabled:        true,
 				PrimaryRegion:  "us-west-2",

@@ -444,7 +444,7 @@ func isUnsupportedCloudWatchSLOExample(slo v1alphaSLO.SLO) bool {
 		if slo.Spec.Indicator.MetricSource.Kind == manifest.KindAgent && spec.CloudWatch.AccountID != nil {
 			return true
 		}
-		// TODO: Remove this after the platform supports CloudWatch failover.
+		// TODO: Remove this after the platform supports CloudWatch failover (WI-3).
 		if spec.CloudWatch.Failover != nil {
 			return true
 		}

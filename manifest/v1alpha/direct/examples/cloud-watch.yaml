@@ -37,7 +37,7 @@
       region: us
       team: sales
   spec:
-    description: Example CloudWatch Direct
+    description: Example CloudWatch Direct with region failover
     releaseChannel: stable
     cloudWatch:
       roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app
