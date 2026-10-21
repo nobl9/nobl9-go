@@ -231,6 +231,7 @@ const (
 	metricSubVariantCloudWatchStandard metricVariant = "standard configuration"
 	metricSubVariantCloudWatchSQLQuery metricVariant = "sql query"
 	metricSubVariantCloudWatchJSON     metricVariant = "JSON"
+	metricSubVariantCloudWatchFailover metricVariant = "standard configuration with failover"
 	// Pingdom.
 	metricSubVariantPingdomUptime      metricVariant = "uptime"
 	metricSubVariantPingdomTransaction metricVariant = "transaction"
@@ -592,6 +593,36 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 					{
 						Name:  ptr("LoadBalancer"),
 						Value: ptr("app/api-server"),
+					},
+				},
+			}))
+		case metricVariantThreshold + metricSubVariantCloudWatchFailover:
+			// Failover works only with a CloudWatch Direct.
+			slo.Spec.Indicator.MetricSource.Name = "cloud-watch-failover"
+			slo.Spec.Indicator.MetricSource.Kind = manifest.KindDirect
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
+				AccountID:  ptr("123456789012"),
+				Region:     ptr("us-west-2"),
+				Namespace:  ptr("AWS/RDS"),
+				MetricName: ptr("ReadLatency"),
+				Stat:       ptr("Average"),
+				Dimensions: []v1alphaSLO.CloudWatchMetricDimension{
+					{
+						Name:  ptr("DBInstanceIdentifier"),
+						Value: ptr("api-server-db"),
+					},
+				},
+				Failover: &v1alphaSLO.CloudWatchMetricFailover{
+					AccountID:  ptr("123456789012"),
+					Region:     ptr("us-east-1"),
+					Namespace:  ptr("AWS/RDS"),
+					MetricName: ptr("ReadLatency"),
+					Stat:       ptr("Average"),
+					Dimensions: []v1alphaSLO.CloudWatchMetricDimension{
+						{
+							Name:  ptr("DBInstanceIdentifier"),
+							Value: ptr("api-server-db-replica"),
+						},
 					},
 				},
 			}))

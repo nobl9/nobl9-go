@@ -75,7 +75,24 @@ type Spec struct {
 
 // Status represents content of Status optional for Direct Object
 type Status struct {
-	DirectType string `json:"directType"`
+	DirectType string                    `json:"directType"`
+	Failover   *CloudWatchFailoverStatus `json:"failover,omitempty"`
+}
+
+// CloudWatchFailoverState is the region state of a CloudWatch Direct with failover.
+type CloudWatchFailoverState string
+
+const (
+	CloudWatchFailoverStatePrimary  CloudWatchFailoverState = "primary"
+	CloudWatchFailoverStateFailover CloudWatchFailoverState = "failover"
+)
+
+// CloudWatchFailoverStatus is the read-only failover state of a CloudWatch Direct.
+type CloudWatchFailoverStatus struct {
+	State              CloudWatchFailoverState `json:"state"`
+	ActiveRegion       string                  `json:"activeRegion"`
+	LastEventID        string                  `json:"lastEventId,omitempty"`
+	LastEventTimestamp string                  `json:"lastEventTimestamp,omitempty"`
 }
 
 var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
@@ -210,8 +227,17 @@ type CloudWatchConfig struct {
 	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
 	AccessKeyID string `json:"accessKeyID,omitempty"`
 	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	RoleARN         string `json:"roleARN,omitempty"`
+	SecretAccessKey string                    `json:"secretAccessKey,omitempty"`
+	RoleARN         string                    `json:"roleARN,omitempty"`
+	Failover        *CloudWatchFailoverConfig `json:"failover,omitempty"`
+}
+
+// CloudWatchFailoverConfig arms region failover for a CloudWatch Direct.
+// Only a failover event switches the active region.
+type CloudWatchFailoverConfig struct {
+	Enabled        bool   `json:"enabled"`
+	PrimaryRegion  string `json:"primaryRegion"`
+	FailoverRegion string `json:"failoverRegion"`
 }
 
 // PingdomConfig represents content of Pingdom Configuration typical for Direct Object.
