@@ -320,10 +320,33 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	cloudWatchValidation    = govy.New[CloudWatchConfig](
+		govy.ForPointer(func(c CloudWatchConfig) *CloudWatchFailoverConfig { return c.Failover }).
+			WithName("failover").
+			Include(cloudWatchFailoverValidation),
+	)
+	cloudWatchFailoverValidation = govy.New[CloudWatchFailoverConfig](
+		govy.For(govy.GetSelf[CloudWatchFailoverConfig]()).
+			Rules(rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(c CloudWatchFailoverConfig) string{
+				"primaryRegion":  func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion },
+				"failoverRegion": func(c CloudWatchFailoverConfig) string { return c.FailoverRegion },
+			})).
+			When(
+				func(c CloudWatchFailoverConfig) bool { return c.PrimaryRegion != "" && c.FailoverRegion != "" },
+				govy.WhenDescription("both regions are set"),
+			),
+		govy.For(func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion }).
+			WithName("primaryRegion").
+			Required().
+			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
+		govy.For(func(c CloudWatchFailoverConfig) string { return c.FailoverRegion }).
+			WithName("failoverRegion").
+			Required().
+			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
+	)
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()
-	cloudWatchValidation   = govy.New[CloudWatchConfig]()
 	pingdomValidation      = govy.New[PingdomConfig]()
 	redshiftValidation     = govy.New[RedshiftConfig]()
 	genericValidation      = govy.New[GenericConfig]()
