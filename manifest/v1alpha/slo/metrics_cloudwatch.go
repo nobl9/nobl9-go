@@ -27,7 +27,8 @@ type CloudWatchMetric struct {
 }
 
 // CloudWatchMetricFailover is the complete standard query that Nobl9 reads
-// instead of [CloudWatchMetric] while its Direct is in region failover.
+// instead of [CloudWatchMetric] while its data source (Direct or Agent) is in
+// region failover.
 // No field is taken from the primary query.
 type CloudWatchMetricFailover struct {
 	Region     *string                     `json:"region"`
