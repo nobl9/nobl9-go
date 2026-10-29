@@ -35,6 +35,16 @@ func AWSRegions() []AWSRegion {
 	}
 }
 
+// AWSRegionCodes returns the codes of [AWSRegions].
+func AWSRegionCodes() []string {
+	regions := AWSRegions()
+	codes := make([]string, 0, len(regions))
+	for _, region := range regions {
+		codes = append(codes, region.Code)
+	}
+	return codes
+}
+
 func IsValidRegion(code string, regions []AWSRegion) bool {
 	for _, region := range regions {
 		if region.Code == code {
