@@ -119,7 +119,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		}
 	case v1alpha.Datadog:
 		direct.Spec.Datadog = &v1alphaDirect.DatadogConfig{
-			Site:           "com",
+			Site:           "datadoghq.com",
 			APIKey:         "[secret]",
 			ApplicationKey: "[secret]",
 		}
