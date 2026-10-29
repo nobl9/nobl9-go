@@ -2029,6 +2029,11 @@ fetch consumed_api
 		LocationID: ptr(int64(6789)),
 		Metric:     "score",
 	}},
+	v1alpha.ClickHouse: {ClickHouse: &ClickHouseMetric{
+		Query: "SELECT toStartOfMinute(ts) AS n9date, quantileTDigest(0.95)(duration_ms) AS n9value " +
+			"FROM request_events WHERE ts >= {n9date_from:DateTime64(3)} AND ts < {n9date_to:DateTime64(3)} " +
+			"GROUP BY n9date ORDER BY n9date",
+	}},
 }
 
 func validSingleQueryMetricSpec(typ v1alpha.DataSourceType) *MetricSpec {

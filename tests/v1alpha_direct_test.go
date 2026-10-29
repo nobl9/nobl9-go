@@ -167,6 +167,8 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 	case v1alpha.Zscaler:
 		expected.Spec.Zscaler.ClientID = "[hidden]"
 		expected.Spec.Zscaler.ClientSecret = "[hidden]"
+	case v1alpha.ClickHouse:
+		expected.Spec.ClickHouse.Password = "[hidden]"
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", typ))
 	}
