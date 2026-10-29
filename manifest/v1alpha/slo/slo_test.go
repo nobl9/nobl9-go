@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
 func TestSpec_HasCompositeObjectives(t *testing.T) {
@@ -96,6 +98,26 @@ func TestErrorDetails_ReasonSerialization(t *testing.T) {
 			details: ErrorDetails{ValidationResult: "invalid", HTTPStatusCode: ptr(400), Reason: ErrorDetailsReasonInvalidQuery},
 			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":400,` +
 				`"query":"","reason":"invalidQuery"}`,
+		},
+		"dataSourceUnreachable reason is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(500),
+				Reason:           ErrorDetailsReasonDataSourceUnreachable,
+				Cause:            v1alpha.DataSourceUnreachableCauseHostNotFound,
+			},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":500,` +
+				`"query":"","reason":"dataSourceUnreachable","cause":"hostNotFound"}`,
+		},
+		"dataSourceUnreachable reason with the certificate cause is preserved": {
+			details: ErrorDetails{
+				ValidationResult: "invalid",
+				HTTPStatusCode:   ptr(500),
+				Reason:           ErrorDetailsReasonDataSourceUnreachable,
+				Cause:            v1alpha.DataSourceUnreachableCauseCertificate,
+			},
+			expectedJSON: `{"message":null,"validationResult":"invalid","logTimestamp":null,"httpStatusCode":500,` +
+				`"query":"","reason":"dataSourceUnreachable","cause":"certificate"}`,
 		},
 	}
 
