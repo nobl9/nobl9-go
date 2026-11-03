@@ -71,6 +71,6 @@ func TestClient_Logs_V1_Query_InvalidPageToken(t *testing.T) {
 	_, err := client.Logs().V1().Query(t.Context(), logsv1.QueryRequest{})
 	var apiErr *HTTPError
 	require.ErrorAs(t, err, &apiErr)
-	require.Len(t, apiErr.APIErrors.Errors, 1)
-	assert.Equal(t, "InvalidPageToken", apiErr.APIErrors.Errors[0].Code)
+	require.Len(t, apiErr.Errors, 1)
+	assert.Equal(t, "InvalidPageToken", apiErr.Errors[0].Code)
 }
