@@ -126,6 +126,7 @@
     "lightstep",
     "logfmt",
     "logql",
+    "logsv",
     "lookback",
     "mapstructure",
     "mcpserver",
