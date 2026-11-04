@@ -83,7 +83,17 @@ linters:
         text: "error-strings: error strings should not be capitalized or end with punctuation or a newline"
       - linters:
           - staticcheck
-        text: (WithDryRun is deprecated)|(Objects\(\).V1\(\).\w+ is deprecated)|(aws-sdk-go is deprecated.)
+        text: (WithDryRun is deprecated)|(aws-sdk-go is deprecated.)
+      # These tests cover the deprecated V1 endpoints.
+      - linters:
+          - staticcheck
+        path: ^tests/
+        text: 'SA1019: \(github\.com/nobl9/nobl9-go/sdk/endpoints/objects/v1\.Endpoints\)\.\w+ is deprecated:'
+      # Keep legacy single-query examples for compatibility coverage.
+      - linters:
+          - staticcheck
+        path: ^manifest/v1alpha/examples/slo_variants\.go$
+        text: 'SA1019: \(github\.com/nobl9/nobl9-go/manifest/v1alpha/slo\.SumoLogicMetric\)\.Query is deprecated:'
 issues:
   # Value 0 means show all.
   max-issues-per-linter: 0
@@ -97,6 +107,8 @@ formatters:
       local-prefixes:
         - github.com/nobl9/nobl9-go
     gofumpt:
-      extra-rules: true
+      extra:
+        group-params: true
+        clothe-returns: true
   exclusions:
     generated: strict
