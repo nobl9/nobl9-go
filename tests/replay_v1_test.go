@@ -388,7 +388,7 @@ func isReplayNotFoundError(err error) bool {
 	return errors.As(err, &httpErr) &&
 		httpErr.StatusCode == http.StatusBadRequest &&
 		len(httpErr.Errors) == 1 &&
-		httpErr.Errors[0].Title == "time travel not found for selected slo"
+		httpErr.Errors[0].Title == "Replay not found for the selected SLO"
 }
 
 func isTerminalReplayStatus(status replayV1.ReplayListStatus) bool {

@@ -11,7 +11,7 @@ metadata:
     team: sales
 spec:
   description: Example Azure Monitor Agent
-  releaseChannel: beta
+  releaseChannel: stable
   azureMonitor:
     tenantId: 5cdecca3-c2c5-4072-89dd-5555faf05202
   historicalDataRetrieval:
