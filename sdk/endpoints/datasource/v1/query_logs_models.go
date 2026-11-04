@@ -2,10 +2,10 @@ package v1
 
 import "time"
 
-// QueryRequest selects stored, grouped collection logs for one Direct data source.
+// QueryLogsRequest selects stored, grouped collection logs for one Direct data source.
 // From and To bound an inclusive overlap interval of at most 7 days.
 // Repeat every filter and sort value unchanged when using PageToken.
-type QueryRequest struct {
+type QueryLogsRequest struct {
 	Project string    `json:"project"`
 	Name    string    `json:"name"`
 	From    time.Time `json:"from"`
@@ -21,11 +21,11 @@ type QueryRequest struct {
 	SearchPhrase string              `json:"searchPhrase,omitempty"`
 	Levels       []string            `json:"levels,omitempty"`
 	Slos         []ResourceReference `json:"slos,omitempty"`
-	Sort         Sort                `json:"sort,omitempty"`
+	Sort         LogSort             `json:"sort,omitempty"`
 }
 
-// Sort controls the ordering of grouped logs within a snapshot.
-type Sort struct {
+// LogSort controls the ordering of grouped logs within a snapshot.
+type LogSort struct {
 	// Column is firstTimestamp (default), lastTimestamp, level, sloNumber, or message.
 	Column string `json:"column,omitempty"`
 	// Direction is asc or desc (default).
@@ -38,10 +38,10 @@ type ResourceReference struct {
 	Project string `json:"project"`
 }
 
-// QueryResponse contains one page, with a serialized response size below 1 MiB.
+// QueryLogsResponse contains one page, with a serialized response size below 1 MiB.
 // A short or empty page can have a NextPageToken when the scan budget was reached.
 // Total counts grouped records on this page, not all matches or raw occurrences.
-type QueryResponse struct {
+type QueryLogsResponse struct {
 	Data          []Log  `json:"data"`
 	Total         int    `json:"total"`
 	NextPageToken string `json:"nextPageToken,omitempty"`

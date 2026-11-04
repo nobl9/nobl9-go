@@ -18,7 +18,6 @@ import (
 	"github.com/nobl9/nobl9-go/sdk/endpoints/alertanalysis"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/authdata"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/datasource"
-	"github.com/nobl9/nobl9-go/sdk/endpoints/logs"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/mcp"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/objects"
 	"github.com/nobl9/nobl9-go/sdk/endpoints/prometheus"
@@ -309,6 +308,3 @@ func getDefaultUserAgent() string {
 	}
 	return fmt.Sprintf("sdk/%s (%s %s %s)", sdkVersion, runtime.GOOS, runtime.GOARCH, info.GoVersion)
 }
-
-// Logs returns the collection logs API endpoints.
-func (c *Client) Logs() logs.Versions { return logs.NewVersions(c) }

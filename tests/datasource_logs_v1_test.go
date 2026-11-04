@@ -8,17 +8,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	logsv1 "github.com/nobl9/nobl9-go/sdk/endpoints/logs/v1"
+	datasourcev1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
-func Test_Logs_V1_Query(t *testing.T) {
+func Test_DataSource_V1_QueryLogs(t *testing.T) {
 	now := time.Now().UTC()
-	query := logsv1.QueryRequest{
+	query := datasourcev1.QueryLogsRequest{
 		Project: defaultProject, Name: e2etestutils.GenerateName(),
 		From: now.Add(-time.Hour), To: now, Limit: 2,
 	}
-	response, err := client.Logs().V1().Query(t.Context(), query)
+	response, err := client.DataSource().V1().QueryLogs(t.Context(), query)
 	require.NoError(t, err)
 	require.Empty(t, response.Data)
 	require.Zero(t, response.Total)
@@ -26,6 +26,6 @@ func Test_Logs_V1_Query(t *testing.T) {
 	require.False(t, response.Incomplete)
 	require.Empty(t, response.NextPageToken)
 	query.PageToken = "invalid"
-	_, err = client.Logs().V1().Query(t.Context(), query)
+	_, err = client.DataSource().V1().QueryLogs(t.Context(), query)
 	require.Error(t, err)
 }

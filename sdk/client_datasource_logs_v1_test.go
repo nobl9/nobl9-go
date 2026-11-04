@@ -9,24 +9,24 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	logsv1 "github.com/nobl9/nobl9-go/sdk/endpoints/logs/v1"
+	datasourcev1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
 )
 
-func TestClient_Logs_V1_Query(t *testing.T) {
-	query := logsv1.QueryRequest{
+func TestClient_DataSource_V1_QueryLogs(t *testing.T) {
+	query := datasourcev1.QueryLogsRequest{
 		Project: "project", Name: "source",
 		From:  time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		To:    time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC),
 		Limit: 2, PageToken: "previous", Levels: []string{"ERROR"}, SearchPhrase: "timeout",
-		Slos: []logsv1.ResourceReference{{Name: "slo", Project: "project"}},
-		Sort: logsv1.Sort{Column: "firstTimestamp", Direction: "desc"},
+		Slos: []datasourcev1.ResourceReference{{Name: "slo", Project: "project"}},
+		Sort: datasourcev1.LogSort{Column: "firstTimestamp", Direction: "desc"},
 	}
-	for name, want := range map[string]logsv1.QueryResponse{
-		"empty continuation": {Data: []logsv1.Log{}, NextPageToken: "next"},
-		"exhausted":          {Data: []logsv1.Log{}, Complete: true},
-		"incomplete":         {Data: []logsv1.Log{}, Incomplete: true},
+	for name, want := range map[string]datasourcev1.QueryLogsResponse{
+		"empty continuation": {Data: []datasourcev1.Log{}, NextPageToken: "next"},
+		"exhausted":          {Data: []datasourcev1.Log{}, Complete: true},
+		"incomplete":         {Data: []datasourcev1.Log{}, Incomplete: true},
 		"truncated group": {
-			Data:  []logsv1.Log{{Message: "shortened", RepeatedCount: 42, Truncated: true}},
+			Data:  []datasourcev1.Log{{Message: "shortened", RepeatedCount: 42, Truncated: true}},
 			Total: 1, Truncated: true, Complete: true,
 		},
 	} {
@@ -41,13 +41,13 @@ func TestClient_Logs_V1_Query(t *testing.T) {
 					calls++
 					assert.Equal(t, http.MethodPost, r.Method)
 					assert.Equal(t, query.Project, r.Header.Get("Project"))
-					var got logsv1.QueryRequest
+					var got datasourcev1.QueryLogsRequest
 					require.NoError(t, json.NewDecoder(r.Body).Decode(&got))
 					assert.Equal(t, query, got)
 				},
 			})
 			t.Cleanup(srv.Close)
-			got, err := client.Logs().V1().Query(t.Context(), query)
+			got, err := client.DataSource().V1().QueryLogs(t.Context(), query)
 			require.NoError(t, err)
 			assert.Equal(t, want, got)
 			assert.Equal(t, 1, calls)
@@ -55,7 +55,7 @@ func TestClient_Logs_V1_Query(t *testing.T) {
 	}
 }
 
-func TestClient_Logs_V1_Query_InvalidPageToken(t *testing.T) {
+func TestClient_DataSource_V1_QueryLogs_InvalidPageToken(t *testing.T) {
 	client, srv := prepareTestClient(t, endpointConfig{
 		Path: "api/logs/v1/query",
 		ResponseFunc: func(t *testing.T, w http.ResponseWriter) {
@@ -68,7 +68,7 @@ func TestClient_Logs_V1_Query_InvalidPageToken(t *testing.T) {
 		},
 	})
 	t.Cleanup(srv.Close)
-	_, err := client.Logs().V1().Query(t.Context(), logsv1.QueryRequest{})
+	_, err := client.DataSource().V1().QueryLogs(t.Context(), datasourcev1.QueryLogsRequest{})
 	var apiErr *HTTPError
 	require.ErrorAs(t, err, &apiErr)
 	require.Len(t, apiErr.Errors, 1)
