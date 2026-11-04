@@ -6,7 +6,7 @@ BIN_DIR := ./bin
 # renovate datasource=github-releases depName=abice/go-enum
 GO_ENUM_VERSION := v0.9.5
 # renovate datasource=github-releases depName=golangci/golangci-lint
-GOLANGCI_LINT_VERSION := v2.13.2
+GOLANGCI_LINT_VERSION := v2.15.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
 IFACEMAKER_VERSION := v1.4.0
 
