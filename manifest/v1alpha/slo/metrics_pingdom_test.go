@@ -119,13 +119,20 @@ func TestPingdom(t *testing.T) {
 		})
 	})
 	t.Run("invalid checkId", func(t *testing.T) {
+		for _, checkID := range []string{"a12393", "?", "123?"} {
+			slo := validRawMetricSLO(v1alpha.Pingdom)
+			slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = ptr(checkID)
+			err := validate(slo)
+			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
+				Code: rules.ErrorCodeStringMatchRegexp,
+			})
+		}
+	})
+	t.Run("valid checkId", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.Pingdom)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = ptr("a12393")
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.pingdom.checkId",
-			Code: rules.ErrorCodeStringMatchRegexp,
-		})
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.Pingdom.CheckID = ptr("12393")
+		testutils.AssertNoError(t, slo, validate(slo))
 	})
 }
 

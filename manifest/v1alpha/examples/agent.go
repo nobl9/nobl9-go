@@ -36,7 +36,6 @@ func Agent() []Example {
 }
 
 var betaChannelAgents = []v1alpha.DataSourceType{
-	v1alpha.AzureMonitor,
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
 	v1alpha.AzurePrometheus,
@@ -50,7 +49,7 @@ var betaChannelAgents = []v1alpha.DataSourceType{
 	v1alpha.SumoLogic,
 	v1alpha.Atlas,
 	v1alpha.Dash0,
-	v1alpha.SplunkObservability,
+	v1alpha.Zscaler,
 }
 
 func (a agentExample) Generate() v1alphaAgent.Agent {
@@ -123,7 +122,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.CloudWatch = &v1alphaAgent.CloudWatchConfig{}
 	case v1alpha.Datadog:
 		agent.Spec.Datadog = &v1alphaAgent.DatadogConfig{
-			Site: "com",
+			Site: "datadoghq.com",
 		}
 	case v1alpha.Dynatrace:
 		agent.Spec.Dynatrace = &v1alphaAgent.DynatraceConfig{
@@ -214,6 +213,8 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 			URL:  "https://api.eu-west-1.aws.dash0.com/api/prometheus",
 			Step: 60,
 		}
+	case v1alpha.Zscaler:
+		agent.Spec.Zscaler = &v1alphaAgent.ZscalerConfig{VanityDomain: "example"}
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", a.typ))
 	}

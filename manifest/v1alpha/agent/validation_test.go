@@ -545,14 +545,68 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
+	t.Run("valid site", func(t *testing.T) {
+		for _, site := range []string{
+			"com",
+			"eu",
+			"datadoghq.com",
+			"us3.datadoghq.com",
+			"us5.datadoghq.com",
+			"datadoghq.eu",
+			"ddog-gov.com",
+			"us2.ddog-gov.com",
+			"ap1.datadoghq.com",
+			"ap2.datadoghq.com",
+			"uk1.datadoghq.com",
+			"example.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				agent := validAgent(v1alpha.Datadog)
+				agent.Spec.Datadog.Site = site
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
+		}
+	})
 	t.Run("invalid site", func(t *testing.T) {
-		agent := validAgent(v1alpha.Datadog)
-		agent.Spec.Datadog.Site = "invalid"
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
-			Code: rules.ErrorCodeOneOf,
-		})
+		for _, site := range []string{
+			"   ",
+			" datadoghq.com",
+			"data dog.com",
+			"-bad.com",
+			"https://datadoghq.com",
+			"https://api.datadoghq.com",
+			"datadoghq.com/",
+			"datadoghq.com/x",
+			"datadoghq.com#x",
+			"datadoghq.com:443",
+		} {
+			t.Run(fmt.Sprintf("%q", site), func(t *testing.T) {
+				agent := validAgent(v1alpha.Datadog)
+				agent.Spec.Datadog.Site = site
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDNSSubdomain,
+				})
+			})
+		}
+	})
+	t.Run("site with api prefix", func(t *testing.T) {
+		for _, site := range []string{
+			"api.datadoghq.com",
+			"api.us5.datadoghq.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				agent := validAgent(v1alpha.Datadog)
+				agent.Spec.Datadog.Site = site
+				err := validate(agent)
+				testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDenyRegexp,
+				})
+			})
+		}
 	})
 }
 
@@ -638,30 +692,32 @@ func TestValidateSpec_Lightstep(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes with alpha or beta release channel", func(t *testing.T) {
+	t.Run("passes with stable, beta, alpha, or omitted release channel", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
+			0,
+			v1alpha.ReleaseChannelStable,
 			v1alpha.ReleaseChannelAlpha,
 			v1alpha.ReleaseChannelBeta,
 		} {
-			agent := validAgent(v1alpha.SplunkObservability)
-			agent.Spec.ReleaseChannel = rc
-			err := validate(agent)
-			testutils.AssertNoError(t, agent, err)
+			t.Run(rc.String(), func(t *testing.T) {
+				agent := validAgent(v1alpha.SplunkObservability)
+				agent.Spec.ReleaseChannel = rc
+				err := validate(agent)
+				testutils.AssertNoError(t, agent, err)
+			})
 		}
 	})
-	t.Run("rejects non-alpha/beta release channel", func(t *testing.T) {
+	t.Run("rejects invalid release channel", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+		agent.Spec.ReleaseChannel = -1
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop:    "spec.releaseChannel",
-			Code:    errCodeUnsupportedReleaseChannel,
-			Message: "must be 'alpha' or 'beta' for Splunk Observability",
+			Prop: "spec.releaseChannel",
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 	t.Run("required fields", func(t *testing.T) {
 		agent := validAgent(v1alpha.SplunkObservability)
-		agent.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		agent.Spec.SplunkObservability.Realm = ""
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
@@ -819,11 +875,14 @@ func TestValidateSpec_AmazonPrometheus(t *testing.T) {
 }
 
 func TestValidateSpec_AzureMonitor(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		agent := validAgent(v1alpha.AzureMonitor)
-		err := validate(agent)
-		testutils.AssertNoError(t, agent, err)
-	})
+	for _, channel := range []v1alpha.ReleaseChannel{0, v1alpha.ReleaseChannelStable, v1alpha.ReleaseChannelBeta} {
+		t.Run(channel.String(), func(t *testing.T) {
+			agent := validAgent(v1alpha.AzureMonitor)
+			agent.Spec.ReleaseChannel = channel
+			err := validate(agent)
+			testutils.AssertNoError(t, agent, err)
+		})
+	}
 	t.Run("required tenantId", func(t *testing.T) {
 		agent := validAgent(v1alpha.AzureMonitor)
 		agent.Spec.AzureMonitor.TenantID = ""
@@ -1176,6 +1235,9 @@ func validAgentSpec(typ v1alpha.DataSourceType) Spec {
 				SlicStep:      60,
 				DataReplayURL: "https://replay.atlas.example.com",
 			},
+		},
+		v1alpha.Zscaler: {
+			Zscaler: &ZscalerConfig{VanityDomain: "example"},
 		},
 		v1alpha.Dash0: {
 			Dash0: &Dash0Config{

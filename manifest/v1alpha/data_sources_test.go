@@ -87,6 +87,12 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 			Expected:   HistoricalRetrievalDuration{Value: ptr(30), Unit: HRDDay},
 		},
 		{
+			Kind:       manifest.KindAgent,
+			SourceType: Zscaler,
+			Valid:      true,
+			Expected:   HistoricalRetrievalDuration{Value: ptr(13), Unit: HRDDay},
+		},
+		{
 			Kind: manifest.KindAgent,
 		},
 		{
@@ -100,6 +106,12 @@ func TestGetDataRetrievalMaxDuration(t *testing.T) {
 			SourceType: SplunkObservability,
 			Valid:      true,
 			Expected:   HistoricalRetrievalDuration{Value: ptr(30), Unit: HRDDay},
+		},
+		{
+			Kind:       manifest.KindDirect,
+			SourceType: Zscaler,
+			Valid:      true,
+			Expected:   HistoricalRetrievalDuration{Value: ptr(13), Unit: HRDDay},
 		},
 		{
 			Kind:       manifest.KindDirect,

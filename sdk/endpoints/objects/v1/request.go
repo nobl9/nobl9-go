@@ -6,6 +6,8 @@ import (
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 )
 
+//go:generate ../../../../bin/go-enum --names --values --nocomments
+
 type GetProjectsRequest struct {
 	Names  []string
 	Labels v1alpha.Labels
@@ -17,11 +19,48 @@ type GetServicesRequest struct {
 	Labels  v1alpha.Labels
 }
 
+// GetSLOsRequest filters, orders, and paginates SLO results.
+// Form decoding excludes filters, which the API parses separately.
 type GetSLOsRequest struct {
-	Project  string
-	Names    []string
-	Labels   v1alpha.Labels
-	Services []string
+	Project    string             `form:"-"`
+	Names      []string           `form:"-"`
+	Labels     v1alpha.Labels     `form:"-"`
+	Services   []string           `form:"-"`
+	Pagination *GetSLOsPagination `form:"pagination"`
+	Sort       *GetSLOsSort       `form:"sort"`
+}
+
+// GetSLOsPagination controls the maximum number of returned SLOs and the number skipped.
+// Limit must be between 1 and 1000. Offset must be nonnegative.
+// A nil [GetSLOsRequest.Pagination] returns all matching SLOs.
+type GetSLOsPagination struct {
+	Limit  int `form:"limit"`
+	Offset int `form:"offset"`
+}
+
+// GetSLOsSortColumn identifies a field that can order SLO results.
+/* ENUM(
+project
+service
+SLO = slo
+lastModifiedAt
+)*/
+type GetSLOsSortColumn string
+
+// GetSLOsSortDirection identifies the direction of SLO result ordering.
+/* ENUM(
+asc
+desc
+)*/
+type GetSLOsSortDirection string
+
+// GetSLOsSort controls the field and direction used to order SLO results.
+// An empty Column defaults to [GetSLOsSortColumnSLO].
+// An empty Direction defaults to [GetSLOsSortDirectionAsc].
+// A nil [GetSLOsRequest.Sort] uses both defaults.
+type GetSLOsSort struct {
+	Column    GetSLOsSortColumn    `form:"column"`
+	Direction GetSLOsSortDirection `form:"direction"`
 }
 
 type GetAgentsRequest struct {

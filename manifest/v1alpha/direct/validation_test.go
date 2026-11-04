@@ -155,15 +155,6 @@ func TestValidateSpec_ReleaseChannel(t *testing.T) {
 			Code: errCodeUnsupportedReleaseChannel,
 		})
 	})
-	t.Run("data source type using unsupported release channel", func(t *testing.T) {
-		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.releaseChannel",
-			Code: errCodeUnsupportedReleaseChannel,
-		})
-	})
 	t.Run("alpha enabled for Honeycomb", func(t *testing.T) {
 		direct := validDirect(v1alpha.Honeycomb)
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelAlpha
@@ -505,19 +496,73 @@ func TestValidateSpec_Datadog(t *testing.T) {
 			Code: rules.ErrorCodeRequired,
 		})
 	})
+	t.Run("valid site", func(t *testing.T) {
+		for _, site := range []string{
+			"com",
+			"eu",
+			"datadoghq.com",
+			"us3.datadoghq.com",
+			"us5.datadoghq.com",
+			"datadoghq.eu",
+			"ddog-gov.com",
+			"us2.ddog-gov.com",
+			"ap1.datadoghq.com",
+			"ap2.datadoghq.com",
+			"uk1.datadoghq.com",
+			"example.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
+		}
+	})
 	t.Run("invalid site", func(t *testing.T) {
-		direct := validDirect(v1alpha.Datadog)
-		direct.Spec.Datadog.Site = "invalid"
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop: "spec.datadog.site",
-			Code: rules.ErrorCodeOneOf,
-		})
+		for _, site := range []string{
+			"   ",
+			" datadoghq.com",
+			"data dog.com",
+			"-bad.com",
+			"https://datadoghq.com",
+			"https://api.datadoghq.com",
+			"datadoghq.com/",
+			"datadoghq.com/x",
+			"datadoghq.com#x",
+			"datadoghq.com:443",
+		} {
+			t.Run(fmt.Sprintf("%q", site), func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDNSSubdomain,
+				})
+			})
+		}
+	})
+	t.Run("site with api prefix", func(t *testing.T) {
+		for _, site := range []string{
+			"api.datadoghq.com",
+			"api.us5.datadoghq.com",
+		} {
+			t.Run(site, func(t *testing.T) {
+				direct := validDirect(v1alpha.Datadog)
+				direct.Spec.Datadog.Site = site
+				err := validate(direct)
+				testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
+					Prop: "spec.datadog.site",
+					Code: rules.ErrorCodeStringDenyRegexp,
+				})
+			})
+		}
 	})
 }
 
 func TestValidateSpec_Elasticsearch(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
+	t.Run("supports stable release channel", func(t *testing.T) {
 		for name, apiKey := range map[string]string{
 			"api key":         "encoded-api-key",
 			"hidden api key":  v1alpha.HiddenValue,
@@ -530,15 +575,10 @@ func TestValidateSpec_Elasticsearch(t *testing.T) {
 			})
 		}
 	})
-	t.Run("rejects non-beta release channel", func(t *testing.T) {
+	t.Run("supports beta release channel", func(t *testing.T) {
 		direct := validDirect(v1alpha.Elasticsearch)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-		err := validate(direct)
-		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.releaseChannel",
-			Code:    errCodeUnsupportedReleaseChannel,
-			Message: "must be 'beta' for Elasticsearch",
-		})
+		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
+		testutils.AssertNoError(t, direct, validate(direct))
 	})
 	t.Run("requires https URL", func(t *testing.T) {
 		direct := validDirect(v1alpha.Elasticsearch)
@@ -681,30 +721,32 @@ func TestValidateSpec_BigQuery(t *testing.T) {
 }
 
 func TestValidateSpec_SplunkObservability(t *testing.T) {
-	t.Run("passes with alpha or beta release channel", func(t *testing.T) {
+	t.Run("passes with stable, beta, alpha, or omitted release channel", func(t *testing.T) {
 		for _, rc := range []v1alpha.ReleaseChannel{
+			0,
+			v1alpha.ReleaseChannelStable,
 			v1alpha.ReleaseChannelAlpha,
 			v1alpha.ReleaseChannelBeta,
 		} {
-			direct := validDirect(v1alpha.SplunkObservability)
-			direct.Spec.ReleaseChannel = rc
-			err := validate(direct)
-			testutils.AssertNoError(t, direct, err)
+			t.Run(rc.String(), func(t *testing.T) {
+				direct := validDirect(v1alpha.SplunkObservability)
+				direct.Spec.ReleaseChannel = rc
+				err := validate(direct)
+				testutils.AssertNoError(t, direct, err)
+			})
 		}
 	})
-	t.Run("rejects non-alpha/beta release channel", func(t *testing.T) {
+	t.Run("rejects invalid release channel", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelStable
+		direct.Spec.ReleaseChannel = -1
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
-			Prop:    "spec.releaseChannel",
-			Code:    errCodeUnsupportedReleaseChannel,
-			Message: "must be 'alpha' or 'beta' for Splunk Observability",
+			Prop: "spec.releaseChannel",
+			Code: rules.ErrorCodeOneOf,
 		})
 	})
 	t.Run("required realm", func(t *testing.T) {
 		direct := validDirect(v1alpha.SplunkObservability)
-		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.SplunkObservability.Realm = ""
 		err := validate(direct)
 		testutils.AssertContainsErrors(t, direct, err, 1, testutils.ExpectedError{
@@ -1078,11 +1120,14 @@ func TestValidateSpec_Dynatrace(t *testing.T) {
 }
 
 func TestValidateSpec_AzureMonitor(t *testing.T) {
-	t.Run("passes", func(t *testing.T) {
-		direct := validDirect(v1alpha.AzureMonitor)
-		err := validate(direct)
-		testutils.AssertNoError(t, direct, err)
-	})
+	for _, channel := range []v1alpha.ReleaseChannel{0, v1alpha.ReleaseChannelStable, v1alpha.ReleaseChannelBeta} {
+		t.Run(channel.String(), func(t *testing.T) {
+			direct := validDirect(v1alpha.AzureMonitor)
+			direct.Spec.ReleaseChannel = channel
+			err := validate(direct)
+			testutils.AssertNoError(t, direct, err)
+		})
+	}
 	t.Run("required tenantId", func(t *testing.T) {
 		direct := validDirect(v1alpha.AzureMonitor)
 		direct.Spec.AzureMonitor.TenantID = ""
@@ -1185,9 +1230,6 @@ func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
 	spec.ReleaseChannel = v1alpha.ReleaseChannelStable
-	if typ == v1alpha.Elasticsearch {
-		spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
-	}
 	return New(Metadata{
 		Name:        strings.ToLower(typ.String()),
 		DisplayName: typ.String() + " Direct",
@@ -1318,6 +1360,13 @@ func validDirectSpec(typ v1alpha.DataSourceType) Spec {
 				URL:          "https://prometheus-service.monitoring:8080",
 				TenantID:     "abf988bf-86f1-41af-91ab-2d7cd011db46",
 				ClientID:     "secret",
+				ClientSecret: "secret",
+			},
+		},
+		v1alpha.Zscaler: {
+			Zscaler: &ZscalerConfig{
+				VanityDomain: "example",
+				ClientID:     "example-client",
 				ClientSecret: "secret",
 			},
 		},

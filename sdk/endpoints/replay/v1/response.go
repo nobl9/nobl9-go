@@ -53,4 +53,7 @@ type ReplayListItem struct {
 	RetrievedFrom  string                   `json:"retrievedFrom,omitempty"`
 	Status         ReplayListStatus         `json:"status"`
 	Cancellation   ReplayCancellationStatus `json:"cancellation,omitempty"`
+	// IsComposite reports whether the replayed SLO is a composite SLO.
+	// It is nil when the server does not report it or the caller cannot view the SLO.
+	IsComposite *bool `json:"isComposite,omitempty"`
 }

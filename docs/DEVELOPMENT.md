@@ -123,6 +123,29 @@ and cleanup.
 Use the retry helpers from `tests/helpers_test.go` for eventually consistent
 API reads instead of adding fixed sleeps in individual tests.
 
+#### SLI Analyzer tests
+
+`Test_SLIAnalyzer_V1` covers analysis CRUD for raw and count metrics with the
+static Prometheus Agent fixture.
+It also checks empty metric series, statistics, and histograms, invalid
+periods, SLO generation before calculation, and requests for deleted analyses.
+The tests create temporary analyses and delete them during cleanup.
+Successful calculations and results with data have no e2e coverage because
+the suite has no connected data source fixture.
+
+#### Reports tests
+
+`Test_Reports_V1_GetUsageSummary` checks resource usage and quota fields.
+`Test_Reports_V1_ReliabilityRollup` covers saved and ad hoc reports,
+automatic and custom hierarchies, filters, sorting, time ranges, and API errors.
+The tests create temporary reports and SLOs and delete them during cleanup.
+They also check that ad hoc generation does not save a report.
+
+The static data source fixture provides no metric data.
+These tests verify unavailable reliability gauges and time-range parameter handling.
+They do not verify numeric historical gauges or comparison trends,
+which require SLOs with historical data.
+
 #### Endpoints
 
 All [endpoints](../sdk/endpoints) must follow existing patterns and must implement

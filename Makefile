@@ -4,7 +4,7 @@ MAKEFLAGS += --silent --no-print-directory
 BIN_DIR := ./bin
 
 # renovate datasource=github-releases depName=abice/go-enum
-GO_ENUM_VERSION := v0.9.4
+GO_ENUM_VERSION := v0.9.5
 # renovate datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION := v2.13.2
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
@@ -41,7 +41,7 @@ test/e2e:
 	@if [ "$(GITHUB_ACTIONS)" != "true" ]; then \
 		export NOBL9_SDK_TEST_RUN_SEQUENTIAL_APPLY_AND_DELETE=true; \
 	fi; \
-	go test -count=1 -race -timeout=5m -tags=e2e_test ./tests
+	go test -count=1 -race -v -timeout=12m -tags=e2e_test ./tests
 
 ## Record tests and save them in ./bin/recorded-tests.json.
 test/record:

@@ -128,6 +128,8 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 	case v1alpha.Dynatrace:
 		expected.Spec.Dynatrace.DynatraceToken = "[hidden]"
 		expected.Spec.Dynatrace.PlatformToken = "[hidden]"
+	case v1alpha.Elasticsearch:
+		expected.Spec.Elasticsearch.APIKey = "[hidden]"
 	case v1alpha.GCM:
 		expected.Spec.GCM.ServiceAccountKey = "[hidden]"
 	case v1alpha.Honeycomb:
@@ -162,6 +164,9 @@ func assertV1alphaDirectsAreEqual(t *testing.T, expected, actual v1alphaDirect.D
 		expected.Spec.AzurePrometheus.ClientSecret = "[hidden]"
 	case v1alpha.Dash0:
 		expected.Spec.Dash0.AuthToken = "[hidden]"
+	case v1alpha.Zscaler:
+		expected.Spec.Zscaler.ClientID = "[hidden]"
+		expected.Spec.Zscaler.ClientSecret = "[hidden]"
 	default:
 		panic(fmt.Sprintf("unexpected v1alpha.DataSourceType: %#v", typ))
 	}

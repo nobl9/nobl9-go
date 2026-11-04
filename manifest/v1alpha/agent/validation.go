@@ -3,6 +3,7 @@ package agent
 import (
 	"net/url"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -43,7 +44,6 @@ var specValidation = govy.New[Spec](
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayValidationRule,
-			releaseChannelValidationRule,
 		),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
@@ -145,6 +145,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *Dash0Config { return s.Dash0 }).
 		WithName("dash0").
 		Include(dash0Validation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
@@ -152,7 +155,7 @@ var (
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
-			Rules(v1alpha.DataDogSiteValidationRule()),
+			Rules(rules.StringDNSSubdomain(), datadogSiteAPIPrefixValidationRule()),
 	)
 	newRelicValidation = govy.New[NewRelicConfig](
 		govy.For(func(n NewRelicConfig) int { return n.AccountID }).
@@ -285,6 +288,12 @@ var (
 			OmitEmpty().
 			Rules(rules.GTE(15)),
 	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(zscalerVanityDomainValidationRule()),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -321,10 +330,21 @@ var (
 	honeycombValidation    = govy.New[HoneycombConfig]()
 )
 
+func datadogSiteAPIPrefixValidationRule() govy.Rule[string] {
+	return rules.StringDenyRegexp(regexp.MustCompile(`^api\.`)).
+		WithDetails("provide the site without the 'api.' prefix").
+		WithExamples("datadoghq.com")
+}
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
+
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
-	errCodeUnsupportedReleaseChannel = "unsupported_release_channel"
 	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
 	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
@@ -493,6 +513,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -547,19 +572,6 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayOutOfBounds)
-
-var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
-	typ, _ := spec.GetType()
-	if typ == v1alpha.SplunkObservability &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
-		)
-	}
-	return nil
-}).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
 func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {

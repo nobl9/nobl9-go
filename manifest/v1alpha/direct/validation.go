@@ -2,6 +2,7 @@ package direct
 
 import (
 	"net/url"
+	"regexp"
 	"slices"
 
 	"github.com/pkg/errors"
@@ -119,6 +120,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *ElasticsearchConfig { return s.Elasticsearch }).
 		WithName("elasticsearch").
 		Include(elasticsearchValidation),
+	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
+		WithName("zscaler").
+		Include(zscalerValidation),
 )
 
 var (
@@ -126,7 +130,7 @@ var (
 		govy.For(func(d DatadogConfig) string { return d.Site }).
 			WithName("site").
 			Required().
-			Rules(v1alpha.DataDogSiteValidationRule()),
+			Rules(rules.StringDNSSubdomain(), datadogSiteAPIPrefixValidationRule()),
 	)
 	newRelicValidation = govy.New[NewRelicConfig](
 		govy.For(func(n NewRelicConfig) int { return n.AccountID }).
@@ -259,7 +263,25 @@ var (
 	elasticsearchValidation = govy.New[ElasticsearchConfig](
 		urlPropertyRules(func(e ElasticsearchConfig) string { return e.URL }),
 	)
+	zscalerValidation = govy.New[ZscalerConfig](
+		govy.For(func(z ZscalerConfig) string { return z.VanityDomain }).
+			WithName("vanityDomain").
+			Required().
+			Rules(zscalerVanityDomainValidationRule()),
+	)
 )
+
+func datadogSiteAPIPrefixValidationRule() govy.Rule[string] {
+	return rules.StringDenyRegexp(regexp.MustCompile(`^api\.`)).
+		WithDetails("provide the site without the 'api.' prefix").
+		WithExamples("datadoghq.com")
+}
+
+func zscalerVanityDomainValidationRule() govy.Rule[string] {
+	return rules.StringMatchRegexp(regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)).
+		WithDetails("provide the tenant label only").
+		WithExamples("acme")
+}
 
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
@@ -391,6 +413,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.Zscaler != nil {
+		if err := typesMatch(v1alpha.Zscaler); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -453,23 +480,6 @@ var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
 		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
 			spec.ReleaseChannel,
 			errors.New("must be one of [stable, beta]"),
-		)
-	}
-
-	if typ == v1alpha.SplunkObservability &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelAlpha {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'alpha' or 'beta' for Splunk Observability"),
-		)
-	}
-
-	if typ == v1alpha.Elasticsearch &&
-		spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
-		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
-			spec.ReleaseChannel,
-			errors.New("must be 'beta' for Elasticsearch"),
 		)
 	}
 
