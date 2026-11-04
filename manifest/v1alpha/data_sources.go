@@ -169,12 +169,15 @@ type InvalidCredentials struct {
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
+// [InvalidCredentialsStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type InvalidCredentialsState string
 
 const (
-	InvalidCredentialsStateNone     InvalidCredentialsState = "none"
-	InvalidCredentialsStateDegraded InvalidCredentialsState = "degraded"
-	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
+	InvalidCredentialsStateNone      InvalidCredentialsState = "none"
+	InvalidCredentialsStateDegraded  InvalidCredentialsState = "degraded"
+	InvalidCredentialsStateAll       InvalidCredentialsState = "all"
+	InvalidCredentialsStateVerifying InvalidCredentialsState = "verifying"
 )
 
 // AccessDenied reports how many SLOs of a data source get an access denied error
@@ -191,12 +194,54 @@ type AccessDenied struct {
 }
 
 // AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
+// [AccessDeniedStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type AccessDeniedState string
 
 const (
-	AccessDeniedStateNone     AccessDeniedState = "none"
-	AccessDeniedStateDegraded AccessDeniedState = "degraded"
-	AccessDeniedStateAll      AccessDeniedState = "all"
+	AccessDeniedStateNone      AccessDeniedState = "none"
+	AccessDeniedStateDegraded  AccessDeniedState = "degraded"
+	AccessDeniedStateAll       AccessDeniedState = "all"
+	AccessDeniedStateVerifying AccessDeniedState = "verifying"
+)
+
+// DataSourceUnreachable reports how many SLOs of a data source cannot reach it.
+// [DataSourceUnreachable.Cause] tells why.
+type DataSourceUnreachable struct {
+	State DataSourceUnreachableState `json:"state"`
+	// Since is the time of the first unreachable result.
+	// Since, AffectedSLOs, TotalSLOs and Cause are set only for
+	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
+	Since        time.Time                  `json:"since,omitzero"`
+	AffectedSLOs int                        `json:"affectedSLOs,omitzero"`
+	TotalSLOs    int                        `json:"totalSLOs,omitzero"`
+	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
+}
+
+// DataSourceUnreachableCause tells why a data source cannot be reached.
+type DataSourceUnreachableCause string
+
+const (
+	// DataSourceUnreachableCauseHostNotFound means that DNS finds no host with the name of the data source.
+	DataSourceUnreachableCauseHostNotFound DataSourceUnreachableCause = "hostNotFound"
+	// DataSourceUnreachableCauseCertificate means that the certificate of the data source
+	// is expired, not yet valid, not trusted or issued for another host.
+	DataSourceUnreachableCauseCertificate DataSourceUnreachableCause = "certificate"
+	// DataSourceUnreachableCauseNotDataSource means that the endpoint answers,
+	// but not as the data source API (404 or 405 without an API error, HTML or a body that is not JSON).
+	DataSourceUnreachableCauseNotDataSource DataSourceUnreachableCause = "notDataSource"
+)
+
+// DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
+// [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
+type DataSourceUnreachableState string
+
+const (
+	DataSourceUnreachableStateNone      DataSourceUnreachableState = "none"
+	DataSourceUnreachableStateDegraded  DataSourceUnreachableState = "degraded"
+	DataSourceUnreachableStateAll       DataSourceUnreachableState = "all"
+	DataSourceUnreachableStateVerifying DataSourceUnreachableState = "verifying"
 )
 
 type QueryDelay struct {

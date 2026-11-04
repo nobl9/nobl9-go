@@ -69,6 +69,20 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 				`"accessDenied":{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
 				`"affectedSLOs":2,"totalSLOs":3}}`,
 		},
+		"data source unreachable is preserved": {
+			status: Status{
+				DirectType: "Prometheus",
+				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
+					State:        v1alpha.DataSourceUnreachableStateAll,
+					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+					AffectedSLOs: 2,
+					TotalSLOs:    2,
+					Cause:        v1alpha.DataSourceUnreachableCauseHostNotFound,
+				},
+			},
+			expectedJSON: `{"directType":"Prometheus","dataSourceUnreachable":{"state":"all",` +
+				`"since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,"cause":"hostNotFound"}}`,
+		},
 	}
 
 	for name, test := range tests {
@@ -95,6 +109,7 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 		}
 		var decoded oldStatus
 		data := []byte(`{"directType":"Datadog","invalidCredentials":{"state":"none"},` +
+			`"dataSourceUnreachable":{"state":"none"},` +
 			`"accessDenied":{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSLOs":2,"totalSLOs":2}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{DirectType: "Datadog"}, decoded)
