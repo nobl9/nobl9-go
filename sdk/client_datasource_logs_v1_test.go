@@ -9,24 +9,24 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	datasourcev1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
+	datasourceV1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
 )
 
 func TestClient_DataSource_V1_QueryLogs(t *testing.T) {
-	query := datasourcev1.QueryLogsRequest{
+	query := datasourceV1.QueryLogsRequest{
 		Project: "project", Name: "source",
 		From:  time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		To:    time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC),
 		Limit: 2, PageToken: "previous", Levels: []string{"ERROR"}, SearchPhrase: "timeout",
-		Slos: []datasourcev1.ResourceReference{{Name: "slo", Project: "project"}},
-		Sort: datasourcev1.LogSort{Column: "firstTimestamp", Direction: "desc"},
+		Slos: []datasourceV1.ResourceReference{{Name: "slo", Project: "project"}},
+		Sort: datasourceV1.LogSort{Column: "firstTimestamp", Direction: "desc"},
 	}
-	for name, want := range map[string]datasourcev1.QueryLogsResponse{
-		"empty continuation": {Data: []datasourcev1.Log{}, NextPageToken: "next"},
-		"exhausted":          {Data: []datasourcev1.Log{}, Complete: true},
-		"incomplete":         {Data: []datasourcev1.Log{}, Incomplete: true},
+	for name, want := range map[string]datasourceV1.QueryLogsResponse{
+		"empty continuation": {Data: []datasourceV1.Log{}, NextPageToken: "next"},
+		"exhausted":          {Data: []datasourceV1.Log{}, Complete: true},
+		"incomplete":         {Data: []datasourceV1.Log{}, Incomplete: true},
 		"truncated group": {
-			Data:  []datasourcev1.Log{{Message: "shortened", RepeatedCount: 42, Truncated: true}},
+			Data:  []datasourceV1.Log{{Message: "shortened", RepeatedCount: 42, Truncated: true}},
 			Total: 1, Truncated: true, Complete: true,
 		},
 	} {
@@ -41,7 +41,7 @@ func TestClient_DataSource_V1_QueryLogs(t *testing.T) {
 					calls++
 					assert.Equal(t, http.MethodPost, r.Method)
 					assert.Equal(t, query.Project, r.Header.Get("Project"))
-					var got datasourcev1.QueryLogsRequest
+					var got datasourceV1.QueryLogsRequest
 					require.NoError(t, json.NewDecoder(r.Body).Decode(&got))
 					assert.Equal(t, query, got)
 				},
@@ -68,7 +68,7 @@ func TestClient_DataSource_V1_QueryLogs_InvalidPageToken(t *testing.T) {
 		},
 	})
 	t.Cleanup(srv.Close)
-	_, err := client.DataSource().V1().QueryLogs(t.Context(), datasourcev1.QueryLogsRequest{})
+	_, err := client.DataSource().V1().QueryLogs(t.Context(), datasourceV1.QueryLogsRequest{})
 	var apiErr *HTTPError
 	require.ErrorAs(t, err, &apiErr)
 	require.Len(t, apiErr.Errors, 1)

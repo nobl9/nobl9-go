@@ -8,13 +8,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	datasourcev1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
+	datasourceV1 "github.com/nobl9/nobl9-go/sdk/endpoints/datasource/v1"
 	"github.com/nobl9/nobl9-go/tests/e2etestutils"
 )
 
 func Test_DataSource_V1_QueryLogs(t *testing.T) {
 	now := time.Now().UTC()
-	query := datasourcev1.QueryLogsRequest{
+	query := datasourceV1.QueryLogsRequest{
 		Project: defaultProject, Name: e2etestutils.GenerateName(),
 		From: now.Add(-time.Hour), To: now, Limit: 2,
 	}
