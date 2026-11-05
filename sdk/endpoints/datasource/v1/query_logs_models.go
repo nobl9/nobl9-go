@@ -12,8 +12,8 @@ type QueryLogsRequest struct {
 	To      time.Time `json:"to"`
 	// Limit defaults to 50 and must be between 1 and 100 when supplied.
 	Limit int `json:"limit,omitempty"`
-	// PageToken continues a snapshot that expires after the configured cursor lifetime
-	// (1 minute by default, at most 5 minutes) from the first page, without renewal.
+	// PageToken continues a snapshot using NextPageToken from the latest response.
+	// Each continuation renews the snapshot for 5 minutes, up to 30 minutes after the first page.
 	// After an invalid or expired token error, restart without a token.
 	PageToken string `json:"pageToken,omitempty"`
 	// SearchPhrase matches every whitespace-separated word, ignoring case.
