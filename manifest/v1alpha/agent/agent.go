@@ -84,12 +84,29 @@ type Spec struct {
 
 // Status holds dynamic content which is not part of the static Agent definition.
 type Status struct {
-	AgentType                string      `json:"agentType"`
-	AgentVersion             string      `json:"agentVersion,omitempty"`
-	LastConnection           string      `json:"lastConnection,omitempty"`
-	NewestStableAgentVersion string      `json:"newestStableAgentVersion,omitempty"`
-	NewestBetaAgentVersion   string      `json:"newestBetaAgentVersion,omitempty"`
-	Environment              Environment `json:"environment"`
+	AgentType                string                    `json:"agentType"`
+	AgentVersion             string                    `json:"agentVersion,omitempty"`
+	LastConnection           string                    `json:"lastConnection,omitempty"`
+	NewestStableAgentVersion string                    `json:"newestStableAgentVersion,omitempty"`
+	NewestBetaAgentVersion   string                    `json:"newestBetaAgentVersion,omitempty"`
+	Environment              Environment               `json:"environment"`
+	Failover                 *CloudWatchFailoverStatus `json:"failover,omitempty"`
+}
+
+// CloudWatchFailoverState is the region state of a CloudWatch Agent with failover.
+type CloudWatchFailoverState string
+
+const (
+	CloudWatchFailoverStatePrimary  CloudWatchFailoverState = "primary"
+	CloudWatchFailoverStateFailover CloudWatchFailoverState = "failover"
+)
+
+// CloudWatchFailoverStatus is the read-only failover state of a CloudWatch Agent.
+type CloudWatchFailoverStatus struct {
+	State              CloudWatchFailoverState `json:"state"`
+	ActiveRegion       string                  `json:"activeRegion"`
+	LastEventID        string                  `json:"lastEventId,omitempty"`
+	LastEventTimestamp string                  `json:"lastEventTimestamp,omitempty"`
 }
 
 // Environment holds environment-specific variables for the Agent.
@@ -238,7 +255,17 @@ type GrafanaLokiConfig struct {
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
-type CloudWatchConfig struct{}
+type CloudWatchConfig struct {
+	Failover *CloudWatchFailoverConfig `json:"failover,omitempty"`
+}
+
+// CloudWatchFailoverConfig arms region failover for a CloudWatch Agent.
+// Only a failover event switches the active region.
+type CloudWatchFailoverConfig struct {
+	Enabled        bool   `json:"enabled"`
+	PrimaryRegion  string `json:"primaryRegion"`
+	FailoverRegion string `json:"failoverRegion"`
+}
 
 // PingdomConfig represents content of Pingdom Configuration typical for Agent Object.
 type PingdomConfig struct{}
