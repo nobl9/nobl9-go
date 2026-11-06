@@ -261,6 +261,9 @@ var metricSpecValidation = govy.New[MetricSpec](
 	govy.ForPointer(func(m MetricSpec) *ZscalerMetric { return m.Zscaler }).
 		WithName("zscaler").
 		Include(zscalerValidation),
+	govy.ForPointer(func(m MetricSpec) *ClickHouseMetric { return m.ClickHouse }).
+		WithName("clickHouse").
+		Include(clickHouseValidation),
 )
 
 // Support for bad/total metrics will be enabled gradually.
@@ -457,6 +460,11 @@ func validateExactlyOneMetricSpecType(metrics ...*MetricSpec) error {
 		}
 		if metric.Zscaler != nil {
 			if err := typesMatch(v1alpha.Zscaler); err != nil {
+				return err
+			}
+		}
+		if metric.ClickHouse != nil {
+			if err := typesMatch(v1alpha.ClickHouse); err != nil {
 				return err
 			}
 		}
