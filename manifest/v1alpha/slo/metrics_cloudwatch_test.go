@@ -2,11 +2,14 @@ package slo
 
 import (
 	"embed"
+	"encoding/json"
 	"path"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/goccy/go-yaml"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -432,6 +435,144 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 			Code: rules.ErrorCodeSliceUnique,
 		})
 	})
+}
+
+const cloudWatchFailoverQueryYAML = `
+region: us-east-1
+namespace: AWS/ApiGateway
+metricName: 4XXError
+stat: Sum
+dimensions:
+  - name: ApiName
+    value: api-east
+failover:
+  region: us-west-2
+  namespace: AWS/ApiGateway
+  metricName: 4XXError
+  stat: Sum
+  dimensions:
+    - name: ApiName
+      value: api-west
+  accountId: "123456789012"
+`
+
+func TestCloudWatch_Failover(t *testing.T) {
+	t.Run("example round-trips", func(t *testing.T) {
+		var metric CloudWatchMetric
+		err := yaml.UnmarshalWithOptions([]byte(cloudWatchFailoverQueryYAML), &metric, yaml.Strict())
+		require.NoError(t, err)
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &metric
+		testutils.AssertNoError(t, slo, validate(slo))
+
+		expected, err := yaml.YAMLToJSON([]byte(cloudWatchFailoverQueryYAML))
+		require.NoError(t, err)
+		actual, err := json.Marshal(metric)
+		require.NoError(t, err)
+		assert.JSONEq(t, string(expected), string(actual))
+	})
+	t.Run("required fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 4,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.metricName",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.stat",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("passes with no dimensions and no accountId", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = validCloudWatchMetricFailover()
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{
+			Region:     ptr("invalid"),
+			Namespace:  ptr("?"),
+			MetricName: ptr(strings.Repeat("l", 256)),
+			Stat:       ptr("invalid"),
+			AccountID:  ptr("invalid"),
+			Dimensions: []CloudWatchMetricDimension{
+				{Name: ptr("ApiName"), Value: ptr("api-west")},
+				{Name: ptr("ApiName"), Value: ptr("api-east")},
+			},
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 6,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+				Code: rules.ErrorCodeOneOf,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
+				Code: rules.ErrorCodeStringMatchRegexp,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.metricName",
+				Code: rules.ErrorCodeStringMaxLength,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.stat",
+				Code: rules.ErrorCodeStringMatchRegexp,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.accountId",
+				Code: rules.ErrorCodeStringMatchRegexp,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.dimensions",
+				Code: rules.ErrorCodeSliceUnique,
+			},
+		)
+	})
+	t.Run("forbidden with sql or json", func(t *testing.T) {
+		for name, metric := range map[string]*CloudWatchMetric{
+			"sql": {
+				Region: ptr("eu-central-1"),
+				SQL:    ptr("SELECT * FROM table"),
+			},
+			"json": {
+				Region: ptr("eu-central-1"),
+				JSON:   getCloudWatchJSON(t, "cloudwatch_valid_json"),
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.CloudWatch)
+				metric.Failover = validCloudWatchMetricFailover()
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = metric
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
+					Code: rules.ErrorCodeForbidden,
+				})
+			})
+		}
+	})
+}
+
+func validCloudWatchMetricFailover() *CloudWatchMetricFailover {
+	return &CloudWatchMetricFailover{
+		Region:     ptr("us-west-2"),
+		Namespace:  ptr("AWS/ApiGateway"),
+		MetricName: ptr("4XXError"),
+		Stat:       ptr("Sum"),
+	}
 }
 
 //go:embed test_data
