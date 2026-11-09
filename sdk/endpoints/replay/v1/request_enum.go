@@ -79,6 +79,7 @@ const (
 	ReplayAvailabilityReasonSingleQueryNotSupported            ReplayAvailabilityReason = "single_query_not_supported"
 	ReplayAvailabilityReasonCompositeSloNotSupported           ReplayAvailabilityReason = "composite_slo_not_supported"
 	ReplayAvailabilityReasonPromqlInGcmNotSupported            ReplayAvailabilityReason = "promql_in_gcm_not_supported"
+	ReplayAvailabilityReasonCloudwatchFailoverPeriodOverlap    ReplayAvailabilityReason = "cloudwatch_failover_period_overlap"
 )
 
 var ErrInvalidReplayAvailabilityReason = fmt.Errorf("not a valid ReplayAvailabilityReason, try [%s]", strings.Join(_ReplayAvailabilityReasonNames, ", "))
@@ -95,6 +96,7 @@ var _ReplayAvailabilityReasonNames = []string{
 	string(ReplayAvailabilityReasonSingleQueryNotSupported),
 	string(ReplayAvailabilityReasonCompositeSloNotSupported),
 	string(ReplayAvailabilityReasonPromqlInGcmNotSupported),
+	string(ReplayAvailabilityReasonCloudwatchFailoverPeriodOverlap),
 }
 
 // ReplayAvailabilityReasonNames returns a list of possible string values of ReplayAvailabilityReason.
@@ -118,6 +120,7 @@ func ReplayAvailabilityReasonValues() []ReplayAvailabilityReason {
 		ReplayAvailabilityReasonSingleQueryNotSupported,
 		ReplayAvailabilityReasonCompositeSloNotSupported,
 		ReplayAvailabilityReasonPromqlInGcmNotSupported,
+		ReplayAvailabilityReasonCloudwatchFailoverPeriodOverlap,
 	}
 }
 
@@ -145,6 +148,7 @@ var _ReplayAvailabilityReasonValue = map[string]ReplayAvailabilityReason{
 	"single_query_not_supported":             ReplayAvailabilityReasonSingleQueryNotSupported,
 	"composite_slo_not_supported":            ReplayAvailabilityReasonCompositeSloNotSupported,
 	"promql_in_gcm_not_supported":            ReplayAvailabilityReasonPromqlInGcmNotSupported,
+	"cloudwatch_failover_period_overlap":     ReplayAvailabilityReasonCloudwatchFailoverPeriodOverlap,
 }
 
 // ParseReplayAvailabilityReason attempts to convert a string to a ReplayAvailabilityReason.

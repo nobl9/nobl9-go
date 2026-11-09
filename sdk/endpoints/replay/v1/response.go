@@ -1,6 +1,11 @@
 package v1
 
-import v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+import (
+	"time"
+
+	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
+)
 
 // ReplayWithStatus identifies a replay and includes its current status.
 type ReplayWithStatus struct {
@@ -40,6 +45,23 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 type ReplayAvailability struct {
 	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
 	Available bool                     `json:"available"`
+	// RegionFailover is set only for [ReplayCloudWatchFailoverPeriodOverlap].
+	RegionFailover *ReplayRegionFailover `json:"regionFailover,omitempty"`
+}
+
+// ReplayRegionFailover describes the region failover period of a CloudWatch data source
+// that blocks the replay.
+type ReplayRegionFailover struct {
+	// DataSourceKind is [manifest.KindDirect] or [manifest.KindAgent].
+	DataSourceKind manifest.Kind `json:"dataSourceKind"`
+	DataSourceName string        `json:"dataSourceName"`
+	// DataSourceProject is the project of the data source, not of the SLO.
+	DataSourceProject string    `json:"dataSourceProject"`
+	PrimaryRegion     string    `json:"primaryRegion"`
+	FailoverRegion    string    `json:"failoverRegion"`
+	PeriodStart       time.Time `json:"periodStart"`
+	// PeriodEnd is nil while the failover period is open.
+	PeriodEnd *time.Time `json:"periodEnd,omitempty"`
 }
 
 // ReplayListItem summarizes an active replay.
