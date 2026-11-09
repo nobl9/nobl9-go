@@ -164,8 +164,8 @@ type InvalidCredentials struct {
 	// [InvalidCredentialsStateDegraded] and [InvalidCredentialsStateAll].
 	Since          time.Time `json:"since,omitzero"`
 	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int       `json:"affectedSLOs,omitzero"`
-	TotalSLOs      int       `json:"totalSLOs,omitzero"`
+	AffectedSLOs   int       `json:"affectedSlos,omitzero"`
+	TotalSLOs      int       `json:"totalSlos,omitzero"`
 }
 
 // InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
@@ -186,8 +186,8 @@ type AccessDenied struct {
 	// [AccessDeniedStateDegraded] and [AccessDeniedStateAll].
 	Since          time.Time `json:"since,omitzero"`
 	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int       `json:"affectedSLOs,omitzero"`
-	TotalSLOs      int       `json:"totalSLOs,omitzero"`
+	AffectedSLOs   int       `json:"affectedSlos,omitzero"`
+	TotalSLOs      int       `json:"totalSlos,omitzero"`
 }
 
 // AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.

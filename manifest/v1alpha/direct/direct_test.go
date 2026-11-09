@@ -49,7 +49,7 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 				},
 			},
 			expectedJSON: `{"directType":"Datadog","invalidCredentials":{"state":"degraded",` +
-				`"since":"2026-10-16T09:30:00Z","httpStatusCode":401,"affectedSLOs":1,"totalSLOs":2}}`,
+				`"since":"2026-10-16T09:30:00Z","httpStatusCode":401,"affectedSlos":1,"totalSlos":2}}`,
 		},
 		"access denied next to invalid credentials in state none": {
 			status: Status{
@@ -67,7 +67,7 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 			},
 			expectedJSON: `{"directType":"Datadog","invalidCredentials":{"state":"none"},` +
 				`"accessDenied":{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
-				`"affectedSLOs":2,"totalSLOs":3}}`,
+				`"affectedSlos":2,"totalSlos":3}}`,
 		},
 	}
 
@@ -95,7 +95,7 @@ func TestStatus_DataSourceErrorsSerialization(t *testing.T) {
 		}
 		var decoded oldStatus
 		data := []byte(`{"directType":"Datadog","invalidCredentials":{"state":"none"},` +
-			`"accessDenied":{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSLOs":2,"totalSLOs":2}}`)
+			`"accessDenied":{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSlos":2,"totalSlos":2}}`)
 		require.NoError(t, json.Unmarshal(data, &decoded))
 		assert.Equal(t, oldStatus{DirectType: "Datadog"}, decoded)
 	})

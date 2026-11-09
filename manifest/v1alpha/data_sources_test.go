@@ -211,7 +211,7 @@ func TestInvalidCredentials_Serialization(t *testing.T) {
 				TotalSLOs:      2,
 			},
 			expectedJSON: `{"state":"degraded","since":"2026-10-16T09:30:00Z","httpStatusCode":401,` +
-				`"affectedSLOs":1,"totalSLOs":2}`,
+				`"affectedSlos":1,"totalSlos":2}`,
 		},
 		"none has only the state": {
 			value:        InvalidCredentials{State: InvalidCredentialsStateNone},
@@ -255,7 +255,7 @@ func TestAccessDenied_Serialization(t *testing.T) {
 				TotalSLOs:      2,
 			},
 			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","httpStatusCode":403,` +
-				`"affectedSLOs":2,"totalSLOs":2}`,
+				`"affectedSlos":2,"totalSlos":2}`,
 		},
 		"degraded keeps the vendor status code": {
 			value: AccessDenied{
@@ -266,7 +266,7 @@ func TestAccessDenied_Serialization(t *testing.T) {
 				TotalSLOs:      3,
 			},
 			expectedJSON: `{"state":"degraded","since":"2026-10-19T09:30:00Z","httpStatusCode":402,` +
-				`"affectedSLOs":1,"totalSLOs":3}`,
+				`"affectedSlos":1,"totalSlos":3}`,
 		},
 		"none has only the state": {
 			value:        AccessDenied{State: AccessDeniedStateNone},
