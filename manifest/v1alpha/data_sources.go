@@ -199,8 +199,8 @@ type DataSourceUnreachable struct {
 	// Since, AffectedSLOs, TotalSLOs and Cause are set only for
 	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
 	Since        time.Time                  `json:"since,omitzero"`
-	AffectedSLOs int                        `json:"affectedSLOs,omitzero"`
-	TotalSLOs    int                        `json:"totalSLOs,omitzero"`
+	AffectedSLOs int                        `json:"affectedSlos,omitzero"`
+	TotalSLOs    int                        `json:"totalSlos,omitzero"`
 	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
 }
 

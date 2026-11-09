@@ -271,7 +271,7 @@ func TestDataSourceUnreachable_Serialization(t *testing.T) {
 				TotalSLOs:    2,
 				Cause:        DataSourceUnreachableCauseHostNotFound,
 			},
-			expectedJSON: `{"state":"all","since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+			expectedJSON: `{"state":"all","since":"2026-10-18T09:30:00Z","affectedSlos":2,"totalSlos":2,` +
 				`"cause":"hostNotFound"}`,
 		},
 		"degraded keeps all fields and the cause": {
@@ -282,7 +282,7 @@ func TestDataSourceUnreachable_Serialization(t *testing.T) {
 				TotalSLOs:    3,
 				Cause:        DataSourceUnreachableCauseNotDataSource,
 			},
-			expectedJSON: `{"state":"degraded","since":"2026-10-18T09:30:00Z","affectedSLOs":1,"totalSLOs":3,` +
+			expectedJSON: `{"state":"degraded","since":"2026-10-18T09:30:00Z","affectedSlos":1,"totalSlos":3,` +
 				`"cause":"notDataSource"}`,
 		},
 		"certificate cause is preserved": {
@@ -293,7 +293,7 @@ func TestDataSourceUnreachable_Serialization(t *testing.T) {
 				TotalSLOs:    2,
 				Cause:        DataSourceUnreachableCauseCertificate,
 			},
-			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","affectedSLOs":2,"totalSLOs":2,` +
+			expectedJSON: `{"state":"all","since":"2026-10-19T09:30:00Z","affectedSlos":2,"totalSlos":2,` +
 				`"cause":"certificate"}`,
 		},
 		"none has only the state": {

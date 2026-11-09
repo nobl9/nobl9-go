@@ -64,7 +64,7 @@ func TestStatus_DataSourceErrorSerialization(t *testing.T) {
 				},
 			},
 			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"all",` +
-				`"since":"2026-10-18T09:30:00Z","affectedSLOs":2,"totalSLOs":2,"cause":"hostNotFound"}}`,
+				`"since":"2026-10-18T09:30:00Z","affectedSlos":2,"totalSlos":2,"cause":"hostNotFound"}}`,
 		},
 	}
 
