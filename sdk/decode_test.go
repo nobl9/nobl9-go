@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"bufio"
-	"bytes"
 	"embed"
 	"fmt"
 	"os"
@@ -15,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
-	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
 )
@@ -197,45 +195,6 @@ func TestDecodeSingle(t *testing.T) {
 		require.Error(t, err)
 		assert.EqualError(t, err, "object of type project.Project is not of type service.Service")
 	})
-}
-
-func TestDecodeSingle_annotationRegionFailover(t *testing.T) {
-	for _, category := range []string{"RegionFailover", "RegionRecovery"} {
-		t.Run(category+" annotation keeps spec.regionFailover", func(t *testing.T) {
-			// arrange
-			input := fmt.Sprintf(`{
-  "apiVersion": "n9/v1alpha",
-  "kind": "Annotation",
-  "metadata": {"name": "failover-123", "project": "default"},
-  "spec": {
-    "slo": "my-slo",
-    "description": "Region failover of Direct cloudwatch-direct",
-    "startTime": "2026-10-20T10:00:00Z",
-    "category": %q,
-    "regionFailover": {
-      "dataSourceKind": "Direct",
-      "dataSourceName": "cloudwatch-direct",
-      "dataSourceProject": "infra",
-      "primaryRegion": "us-east-1",
-      "failoverRegion": "us-west-2",
-      "eventId": "event-1"
-    }
-  },
-  "status": {"updatedAt": "2026-10-20T10:00:05Z", "isSystem": true}
-}`, category)
-
-			// act
-			annotation, err := DecodeObject[v1alphaAnnotation.Annotation]([]byte(input))
-			require.NoError(t, err)
-			var buf bytes.Buffer
-			require.NoError(t, EncodeObject(annotation, &buf, manifest.ObjectFormatJSON))
-
-			// assert
-			assert.Equal(t, v1alphaAnnotation.Category(category), annotation.Spec.Category)
-			assert.JSONEq(t, input, buf.String())
-			assert.Empty(t, v1alphaAnnotation.GetValidatorWithoutCategoryRules().Validate(annotation))
-		})
-	}
 }
 
 func readInputFile(t *testing.T, name string) []byte {

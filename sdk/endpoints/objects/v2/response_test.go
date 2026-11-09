@@ -1,11 +1,15 @@
 package v2
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
+	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
 )
 
 func TestGetAnnotationsModelToV1alpha_Replay(t *testing.T) {
@@ -68,6 +72,58 @@ func TestGetAnnotationsModelToV1alpha_Replay(t *testing.T) {
 		result := getAnnotationsModelToV1alpha(resp)
 
 		assert.Nil(t, result.Spec.Replay)
+	})
+}
+
+func TestGetAnnotationsModelToV1alpha_RegionFailover(t *testing.T) {
+	t.Run("maps the root regionFailover object into spec.regionFailover when set", func(t *testing.T) {
+		// arrange
+		var resp getAnnotationModel
+		require.NoError(t, json.Unmarshal([]byte(`{
+  "name": "failover-123",
+  "project": "default",
+  "slo": "my-slo",
+  "category": "RegionFailover",
+  "startTime": "2026-10-20T10:00:00Z",
+  "status": {"updatedAt": "2026-10-20T10:00:05Z", "isSystem": true},
+  "regionFailover": {
+    "dataSourceKind": "Agent",
+    "dataSourceName": "cloudwatch-agent",
+    "dataSourceProject": "infra",
+    "primaryRegion": "us-east-1",
+    "failoverRegion": "us-west-2",
+    "eventId": "event-1"
+  }
+}`), &resp))
+
+		// act
+		result := getAnnotationsModelToV1alpha(resp)
+
+		// assert
+		assert.Equal(t, &v1alphaAnnotation.RegionFailover{
+			DataSourceKind:    manifest.KindAgent,
+			DataSourceName:    "cloudwatch-agent",
+			DataSourceProject: "infra",
+			PrimaryRegion:     "us-east-1",
+			FailoverRegion:    "us-west-2",
+			EventID:           "event-1",
+		}, result.Spec.RegionFailover)
+	})
+
+	t.Run("leaves spec.regionFailover nil when the transport omits the regionFailover object", func(t *testing.T) {
+		// arrange
+		resp := getAnnotationModel{
+			Name:     "annotation",
+			Project:  "project",
+			SloName:  "my-slo",
+			Category: v1alphaAnnotation.CategoryComment,
+		}
+
+		// act
+		result := getAnnotationsModelToV1alpha(resp)
+
+		// assert
+		assert.Nil(t, result.Spec.RegionFailover)
 	})
 }
 

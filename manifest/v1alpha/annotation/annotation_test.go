@@ -2,6 +2,7 @@ package annotation
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
@@ -117,6 +118,45 @@ func TestSpec_ReplaySerialization(t *testing.T) {
 
 		assert.JSONEq(t, string(first), string(second))
 	})
+}
+
+func TestSpec_RegionFailoverSerialization(t *testing.T) {
+	for _, category := range []Category{CategoryRegionFailover, CategoryRegionRecovery} {
+		t.Run(category.String()+" annotation keeps spec.regionFailover", func(t *testing.T) {
+			// arrange
+			input := fmt.Sprintf(`{
+  "apiVersion": "n9/v1alpha",
+  "kind": "Annotation",
+  "metadata": {"name": "failover-123", "project": "default"},
+  "spec": {
+    "slo": "my-slo",
+    "description": "Region failover of Direct cloudwatch-direct",
+    "startTime": "2026-10-20T10:00:00Z",
+    "category": %q,
+    "regionFailover": {
+      "dataSourceKind": "Direct",
+      "dataSourceName": "cloudwatch-direct",
+      "dataSourceProject": "infra",
+      "primaryRegion": "us-east-1",
+      "failoverRegion": "us-west-2",
+      "eventId": "event-1"
+    }
+  },
+  "status": {"updatedAt": "2026-10-20T10:00:05Z", "isSystem": true}
+}`, category)
+
+			// act
+			var decoded Annotation
+			require.NoError(t, json.Unmarshal([]byte(input), &decoded))
+			encoded, err := json.Marshal(decoded)
+			require.NoError(t, err)
+
+			// assert
+			assert.Equal(t, category, decoded.Spec.Category)
+			assert.JSONEq(t, input, string(encoded))
+			assert.Empty(t, GetValidatorWithoutCategoryRules().Validate(decoded))
+		})
+	}
 }
 
 func decodeSpec(t *testing.T, data []byte) map[string]any {
