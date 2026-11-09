@@ -47,6 +47,9 @@ type Spec struct {
 	// Replay holds facts about the Replay run that created this annotation.
 	// Set only on Replay-generated annotations; the Nobl9 platform computes it and ignores it on Apply.
 	Replay *Replay `json:"replay,omitempty" nobl9:"computed"`
+	// RegionFailover holds facts about the region failover event that created this annotation.
+	// Set only on RegionFailover and RegionRecovery annotations; the Nobl9 platform computes it and ignores it on Apply.
+	RegionFailover *RegionFailover `json:"regionFailover,omitempty" nobl9:"computed"`
 }
 
 // Status represents content of Status optional for Annotation Object
@@ -62,4 +65,17 @@ type Replay struct {
 	PeriodStart        time.Time `json:"periodStart"`
 	PeriodEnd          time.Time `json:"periodEnd"`
 	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
+}
+
+// RegionFailover describes the region failover event of a CloudWatch data source
+// that created a RegionFailover or RegionRecovery annotation.
+type RegionFailover struct {
+	// DataSourceKind is [manifest.KindDirect] or [manifest.KindAgent].
+	DataSourceKind manifest.Kind `json:"dataSourceKind"`
+	DataSourceName string        `json:"dataSourceName"`
+	// DataSourceProject is the project of the data source, not of the SLO.
+	DataSourceProject string `json:"dataSourceProject"`
+	PrimaryRegion     string `json:"primaryRegion"`
+	FailoverRegion    string `json:"failoverRegion"`
+	EventID           string `json:"eventId"`
 }

@@ -147,6 +147,39 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 	})
 }
 
+func TestRemoveComputedFieldsFromObjects_annotationRegionFailover(t *testing.T) {
+	// arrange
+	a := v1alphaAnnotation.New(
+		v1alphaAnnotation.Metadata{Name: "failover-123", Project: "default"},
+		v1alphaAnnotation.Spec{
+			Slo:         "my-slo",
+			Description: "Region failover of Direct cloudwatch-direct",
+			StartTime:   time.Date(2026, 10, 20, 10, 0, 0, 0, time.UTC),
+			Category:    v1alphaAnnotation.CategoryRegionFailover,
+			RegionFailover: &v1alphaAnnotation.RegionFailover{
+				DataSourceKind:    manifest.KindDirect,
+				DataSourceName:    "cloudwatch-direct",
+				DataSourceProject: "infra",
+				PrimaryRegion:     "us-east-1",
+				FailoverRegion:    "us-west-2",
+				EventID:           "event-1",
+			},
+		},
+	)
+
+	// act
+	objects, err := RemoveComputedFieldsFromObjects(objectsOf(&a))
+	require.NoError(t, err)
+	var buf bytes.Buffer
+	require.NoError(t, EncodeObject(objects[0], &buf, manifest.ObjectFormatJSON))
+
+	// assert
+	out := buf.String()
+	assert.NotContains(t, out, `"regionFailover"`, "computed spec.regionFailover must not survive to the applied manifest")
+	assert.NotContains(t, out, "eventId")
+	assert.Contains(t, out, `"category": "RegionFailover"`)
+}
+
 // objectsOf keeps the slice length opaque at the call site to avoid a gosec G602 false positive
 // in RemoveComputedFieldsFromObjects.
 func objectsOf(objects ...manifest.Object) []manifest.Object { return objects }
