@@ -2,12 +2,13 @@ package annotation
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
 )
 
 func TestSpec_ReplaySerialization(t *testing.T) {
@@ -124,36 +125,33 @@ func TestSpec_RegionFailoverSerialization(t *testing.T) {
 	for _, category := range []Category{CategoryRegionFailover, CategoryRegionRecovery} {
 		t.Run(category.String()+" annotation keeps spec.regionFailover", func(t *testing.T) {
 			// arrange
-			input := fmt.Sprintf(`{
-  "apiVersion": "n9/v1alpha",
-  "kind": "Annotation",
-  "metadata": {"name": "failover-123", "project": "default"},
-  "spec": {
-    "slo": "my-slo",
-    "description": "Region failover of Direct cloudwatch-direct",
-    "startTime": "2026-10-20T10:00:00Z",
-    "category": %q,
-    "regionFailover": {
-      "dataSourceKind": "Direct",
-      "dataSourceName": "cloudwatch-direct",
-      "dataSourceProject": "infra",
-      "primaryRegion": "us-east-1",
-      "failoverRegion": "us-west-2",
-      "eventId": "event-1"
-    }
-  },
-  "status": {"updatedAt": "2026-10-20T10:00:05Z", "isSystem": true}
-}`, category)
+			a := validAnnotation()
+			a.Spec.Category = category
+			a.Spec.RegionFailover = &RegionFailover{
+				DataSourceKind:    manifest.KindDirect,
+				DataSourceName:    "cloudwatch-direct",
+				DataSourceProject: "infra",
+				PrimaryRegion:     "us-east-1",
+				FailoverRegion:    "us-west-2",
+				EventID:           "event-1",
+			}
 
 			// act
-			var decoded Annotation
-			require.NoError(t, json.Unmarshal([]byte(input), &decoded))
-			encoded, err := json.Marshal(decoded)
+			data, err := json.Marshal(a)
 			require.NoError(t, err)
+			var decoded Annotation
+			require.NoError(t, json.Unmarshal(data, &decoded))
 
 			// assert
-			assert.Equal(t, category, decoded.Spec.Category)
-			assert.JSONEq(t, input, string(encoded))
+			assert.Equal(t, map[string]any{
+				"dataSourceKind":    "Direct",
+				"dataSourceName":    "cloudwatch-direct",
+				"dataSourceProject": "infra",
+				"primaryRegion":     "us-east-1",
+				"failoverRegion":    "us-west-2",
+				"eventId":           "event-1",
+			}, decodeSpec(t, data)["regionFailover"])
+			assert.Equal(t, a, decoded)
 			assert.Empty(t, GetValidatorWithoutCategoryRules().Validate(decoded))
 		})
 	}
