@@ -218,7 +218,7 @@ const (
 	DataSourceUnreachableCauseNotDataSource DataSourceUnreachableCause = "notDataSource"
 )
 
-// DataSourceUnreachableState tells if no, some or all SLOs of a data source cannot reach it.
+// DataSourceUnreachableState reports whether no, some or all SLOs of a data source cannot reach it.
 // [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
 // and some of its SLOs have no answer yet.
 type DataSourceUnreachableState string
