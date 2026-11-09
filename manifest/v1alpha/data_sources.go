@@ -169,12 +169,15 @@ type InvalidCredentials struct {
 }
 
 // InvalidCredentialsState reports whether no, some or all SLOs of a data source get a credentials error.
+// [InvalidCredentialsStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type InvalidCredentialsState string
 
 const (
-	InvalidCredentialsStateNone     InvalidCredentialsState = "none"
-	InvalidCredentialsStateDegraded InvalidCredentialsState = "degraded"
-	InvalidCredentialsStateAll      InvalidCredentialsState = "all"
+	InvalidCredentialsStateNone      InvalidCredentialsState = "none"
+	InvalidCredentialsStateDegraded  InvalidCredentialsState = "degraded"
+	InvalidCredentialsStateAll       InvalidCredentialsState = "all"
+	InvalidCredentialsStateVerifying InvalidCredentialsState = "verifying"
 )
 
 // AccessDenied reports how many SLOs of a data source get an access denied error
@@ -191,12 +194,15 @@ type AccessDenied struct {
 }
 
 // AccessDeniedState reports whether no, some or all SLOs of a data source get an access denied error.
+// [AccessDeniedStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
 type AccessDeniedState string
 
 const (
-	AccessDeniedStateNone     AccessDeniedState = "none"
-	AccessDeniedStateDegraded AccessDeniedState = "degraded"
-	AccessDeniedStateAll      AccessDeniedState = "all"
+	AccessDeniedStateNone      AccessDeniedState = "none"
+	AccessDeniedStateDegraded  AccessDeniedState = "degraded"
+	AccessDeniedStateAll       AccessDeniedState = "all"
+	AccessDeniedStateVerifying AccessDeniedState = "verifying"
 )
 
 type QueryDelay struct {

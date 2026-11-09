@@ -217,6 +217,10 @@ func TestInvalidCredentials_Serialization(t *testing.T) {
 			value:        InvalidCredentials{State: InvalidCredentialsStateNone},
 			expectedJSON: `{"state":"none"}`,
 		},
+		"verifying has only the state": {
+			value:        InvalidCredentials{State: InvalidCredentialsStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
 	}
 
 	for name, test := range tests {
@@ -271,6 +275,10 @@ func TestAccessDenied_Serialization(t *testing.T) {
 		"none has only the state": {
 			value:        AccessDenied{State: AccessDeniedStateNone},
 			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        AccessDenied{State: AccessDeniedStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
 		},
 	}
 
