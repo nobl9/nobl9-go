@@ -168,7 +168,7 @@ type InvalidCredentials struct {
 	TotalSLOs      int       `json:"totalSlos,omitzero"`
 }
 
-// InvalidCredentialsState tells if no, some or all SLOs of a data source get a credentials error.
+// InvalidCredentialsState reports whether no, some or all SLOs of a data source get a credentials error.
 type InvalidCredentialsState string
 
 const (
@@ -190,7 +190,7 @@ type AccessDenied struct {
 	TotalSLOs      int       `json:"totalSlos,omitzero"`
 }
 
-// AccessDeniedState tells if no, some or all SLOs of a data source get an access denied error.
+// AccessDeniedState reports whether no, some or all SLOs of a data source get an access denied error.
 type AccessDeniedState string
 
 const (
