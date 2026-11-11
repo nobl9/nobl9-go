@@ -138,7 +138,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		}
 	case v1alpha.Datadog:
 		agent.Spec.Datadog = &v1alphaAgent.DatadogConfig{
-			Site: "com",
+			Site: "datadoghq.com",
 		}
 	case v1alpha.Dynatrace:
 		agent.Spec.Dynatrace = &v1alphaAgent.DynatraceConfig{

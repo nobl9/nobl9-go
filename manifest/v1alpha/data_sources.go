@@ -439,19 +439,6 @@ func GetDataRetrievalMaxDuration(kind manifest.Kind, typ DataSourceType) (Histor
 		errors.Errorf("historical data retrieval is not supported for %s %s", typ, kind)
 }
 
-func DataDogSiteValidationRule() govy.Rule[string] {
-	return rules.OneOf(
-		"eu",
-		"com",
-		"datadoghq.com",
-		"us3.datadoghq.com",
-		"us5.datadoghq.com",
-		"datadoghq.eu",
-		"ddog-gov.com",
-		"ap1.datadoghq.com",
-	)
-}
-
 func GetReleaseChannelAlphaEnabledDataSources() []DataSourceType {
 	return []DataSourceType{
 		SplunkObservability,
