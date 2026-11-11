@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 	"strings"
 
@@ -340,6 +341,14 @@ func (m *MetricSpec) Query() interface{} {
 		sort.Slice(cloudWatchCopy.Dimensions, func(i, j int) bool {
 			return *cloudWatchCopy.Dimensions[i].Name < *cloudWatchCopy.Dimensions[j].Name
 		})
+		if cloudWatchCopy.Failover != nil {
+			failoverCopy := *cloudWatchCopy.Failover
+			failoverCopy.Dimensions = slices.Clone(failoverCopy.Dimensions)
+			sort.Slice(failoverCopy.Dimensions, func(i, j int) bool {
+				return *failoverCopy.Dimensions[i].Name < *failoverCopy.Dimensions[j].Name
+			})
+			cloudWatchCopy.Failover = &failoverCopy
+		}
 		return cloudWatchCopy
 	case v1alpha.Pingdom:
 		return m.Pingdom
