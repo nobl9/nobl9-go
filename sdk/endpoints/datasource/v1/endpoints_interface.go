@@ -8,4 +8,8 @@ import (
 
 type Endpoints interface {
 	Query(ctx context.Context, request QueryRequest) (response QueryResponse, err error)
+	// QueryLogs retrieves exactly one page of collection logs using the caller's credentials.
+	// It does not follow continuation tokens automatically. An invalid or expired token
+	// requires restarting without PageToken; a forbidden response requires project access.
+	QueryLogs(ctx context.Context, request QueryLogsRequest) (response QueryLogsResponse, err error)
 }
