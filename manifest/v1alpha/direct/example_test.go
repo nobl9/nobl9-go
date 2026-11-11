@@ -21,7 +21,7 @@ func ExampleDirect() {
 		direct.Spec{
 			Description: "Example Direct",
 			Datadog: &direct.DatadogConfig{
-				Site:           "eu",
+				Site:           "datadoghq.eu",
 				APIKey:         "secret",
 				ApplicationKey: "secret",
 			},
@@ -49,7 +49,7 @@ func ExampleDirect() {
 	// spec:
 	//   description: Example Direct
 	//   datadog:
-	//     site: eu
+	//     site: datadoghq.eu
 	//     apiKey: secret
 	//     applicationKey: secret
 }

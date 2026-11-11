@@ -1,6 +1,7 @@
 package direct
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -22,6 +23,42 @@ func TestDirect_Spec_GetType(t *testing.T) {
 			typ, err := spec.GetType()
 			require.NoError(t, err)
 			assert.Equal(t, typ, direct)
+		})
+	}
+}
+
+func TestStatus_Failover_JSON(t *testing.T) {
+	t.Run("omits failover when the Direct has no failover status", func(t *testing.T) {
+		// act
+		data, err := json.Marshal(Status{DirectType: "CloudWatch"})
+
+		// assert
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"directType":"CloudWatch"}`, string(data))
+	})
+	for state, value := range map[CloudWatchFailoverState]string{
+		CloudWatchFailoverStatePrimary:  "primary",
+		CloudWatchFailoverStateFailover: "failover",
+	} {
+		t.Run("writes the "+value+" state", func(t *testing.T) {
+			status := Status{
+				DirectType: "CloudWatch",
+				Failover: &CloudWatchFailoverStatus{
+					State:              state,
+					ActiveRegion:       "us-east-2",
+					LastEventID:        "event-1",
+					LastEventTimestamp: "2026-10-20T10:00:00Z",
+				},
+			}
+
+			// act
+			data, err := json.Marshal(status)
+
+			// assert
+			require.NoError(t, err)
+			assert.JSONEq(t, `{"directType":"CloudWatch","failover":{"state":"`+value+
+				`","activeRegion":"us-east-2","lastEventId":"event-1","lastEventTimestamp":"2026-10-20T10:00:00Z"}}`,
+				string(data))
 		})
 	}
 }

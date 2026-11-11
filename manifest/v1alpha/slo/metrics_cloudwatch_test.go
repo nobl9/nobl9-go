@@ -564,6 +564,27 @@ func TestCloudWatch_Failover(t *testing.T) {
 			})
 		}
 	})
+	t.Run("query sorts the failover dimensions by name and keeps the spec unchanged", func(t *testing.T) {
+		spec := validMetricSpec(v1alpha.CloudWatch)
+		spec.CloudWatch.Failover = validCloudWatchMetricFailover()
+		spec.CloudWatch.Failover.Dimensions = []CloudWatchMetricDimension{
+			{Name: ptr("b"), Value: ptr("2")},
+			{Name: ptr("a"), Value: ptr("1")},
+		}
+
+		// act
+		query := spec.Query()
+
+		// assert
+		assert.Equal(t, []CloudWatchMetricDimension{
+			{Name: ptr("a"), Value: ptr("1")},
+			{Name: ptr("b"), Value: ptr("2")},
+		}, query.(CloudWatchMetric).Failover.Dimensions)
+		assert.Equal(t, []CloudWatchMetricDimension{
+			{Name: ptr("b"), Value: ptr("2")},
+			{Name: ptr("a"), Value: ptr("1")},
+		}, spec.CloudWatch.Failover.Dimensions)
+	})
 }
 
 func validCloudWatchMetricFailover() *CloudWatchMetricFailover {
