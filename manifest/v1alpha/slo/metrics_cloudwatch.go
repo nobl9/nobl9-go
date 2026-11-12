@@ -39,6 +39,18 @@ type CloudWatchMetricFailover struct {
 	AccountID  *string                     `json:"accountId,omitempty"`
 }
 
+// Metric returns the standard query that the failover block describes.
+func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
+	return CloudWatchMetric{
+		Region:     f.Region,
+		Namespace:  f.Namespace,
+		MetricName: f.MetricName,
+		Stat:       f.Stat,
+		Dimensions: f.Dimensions,
+		AccountID:  f.AccountID,
+	}
+}
+
 // IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.
 func (c CloudWatchMetric) IsStandardConfiguration() bool {
 	return c.Stat != nil || c.Dimensions != nil || c.MetricName != nil || c.Namespace != nil
@@ -132,6 +144,32 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 		),
 )
 
+// cloudWatchCountMetricsFailoverValidation requires the failover block on both queries
+// of a ratio or on neither, so that a failover never moves only one side of the ratio.
+var cloudWatchCountMetricsFailoverValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
+		Rules(
+			govy.NewRule(func(c CountMetricsSpec) error {
+				metric, name := c.GoodMetric, goodMetric
+				if c.BadMetric != nil {
+					metric, name = c.BadMetric, badMetric
+				}
+				if hasCloudWatchFailover(metric) != hasCloudWatchFailover(c.TotalMetric) {
+					return fmt.Errorf(
+						"'cloudWatch.failover' must be set for both '%s' and 'total' metrics or for neither", name)
+				}
+				return nil
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
+		),
+).When(
+	whenCountMetricsIs(v1alpha.CloudWatch),
+	govy.WhenDescription("countMetrics is cloudWatch"),
+)
+
+func hasCloudWatchFailover(metric *MetricSpec) bool {
+	return metric != nil && metric.CloudWatch != nil && metric.CloudWatch.Failover != nil
+}
+
 var cloudWatchRegionRules = []govy.RulesInterface[string]{
 	rules.StringMaxLength(255),
 	rules.OneOf(v1alpha.AWSRegionCodes()...),
@@ -142,15 +180,7 @@ var cloudWatchMetricFailoverValidation = govy.New[CloudWatchMetricFailover](
 		WithName("region").
 		Required().
 		Rules(cloudWatchRegionRules...),
-	govy.For(func(f CloudWatchMetricFailover) CloudWatchMetric {
-		return CloudWatchMetric{
-			Namespace:  f.Namespace,
-			MetricName: f.MetricName,
-			Stat:       f.Stat,
-			Dimensions: f.Dimensions,
-			AccountID:  f.AccountID,
-		}
-	}).
+	govy.For(CloudWatchMetricFailover.Metric).
 		Include(cloudWatchStandardQueryValidation),
 )
 

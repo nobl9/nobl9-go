@@ -69,6 +69,7 @@ var customMetricExamples = map[v1alpha.DataSourceType]map[metricVariant][]metric
 			metricSubVariantCloudWatchStandard,
 			metricSubVariantCloudWatchJSON,
 			metricSubVariantCloudWatchSQLQuery,
+			metricSubVariantCloudWatchFailover,
 		},
 		metricVariantBadRatio: []metricSubVariant{
 			metricSubVariantCloudWatchStandard,

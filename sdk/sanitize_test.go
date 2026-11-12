@@ -183,3 +183,17 @@ func TestRemoveComputedFieldsFromObjects_annotationRegionFailover(t *testing.T) 
 // objectsOf keeps the slice length opaque at the call site to avoid a gosec G602 false positive
 // in RemoveComputedFieldsFromObjects.
 func objectsOf(objects ...manifest.Object) []manifest.Object { return objects }
+
+func TestRemoveComputedFieldsFromObjects_sloFailoverStatus(t *testing.T) {
+	// arrange
+	slo := v1alphaSLO.New(v1alphaSLO.Metadata{Name: "cw-ratio", Project: "default"}, v1alphaSLO.Spec{})
+	slo.Status = &v1alphaSLO.Status{Failover: &v1alphaSLO.SLOFailoverStatus{State: v1alpha.FailoverStateFailover}}
+
+	// act
+	objects, err := RemoveComputedFieldsFromObjects([]manifest.Object{slo})
+
+	// assert
+	require.NoError(t, err)
+	require.Len(t, objects, 1)
+	assert.Nil(t, objects[0].(*v1alphaSLO.SLO).Status)
+}

@@ -36,31 +36,26 @@ func TestStatus_Failover_JSON(t *testing.T) {
 		require.NoError(t, err)
 		assert.JSONEq(t, `{"directType":"CloudWatch"}`, string(data))
 	})
-	for state, value := range map[CloudWatchFailoverState]string{
-		CloudWatchFailoverStatePrimary:  "primary",
-		CloudWatchFailoverStateFailover: "failover",
-	} {
-		t.Run("writes the "+value+" state", func(t *testing.T) {
-			status := Status{
-				DirectType: "CloudWatch",
-				Failover: &CloudWatchFailoverStatus{
-					State:              state,
-					ActiveRegion:       "us-east-2",
-					LastEventID:        "event-1",
-					LastEventTimestamp: "2026-10-20T10:00:00Z",
-				},
-			}
+	t.Run("writes the failover status with the active target", func(t *testing.T) {
+		status := Status{
+			DirectType: "CloudWatch",
+			Failover: &v1alpha.FailoverStatus{
+				State:              v1alpha.FailoverStateFailover,
+				LastEventID:        "event-1",
+				LastEventTimestamp: "2026-10-20T10:00:00Z",
+				Active:             v1alpha.FailoverTarget{Region: "us-east-2"},
+			},
+		}
 
-			// act
-			data, err := json.Marshal(status)
+		// act
+		data, err := json.Marshal(status)
 
-			// assert
-			require.NoError(t, err)
-			assert.JSONEq(t, `{"directType":"CloudWatch","failover":{"state":"`+value+
-				`","activeRegion":"us-east-2","lastEventId":"event-1","lastEventTimestamp":"2026-10-20T10:00:00Z"}}`,
-				string(data))
-		})
-	}
+		// assert
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"directType":"CloudWatch","failover":{"state":"failover",`+
+			`"lastEventId":"event-1","lastEventTimestamp":"2026-10-20T10:00:00Z","active":{"region":"us-east-2"}}}`,
+			string(data))
+	})
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
