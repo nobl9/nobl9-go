@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
@@ -90,23 +91,23 @@ func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 	assert.Equal(t, ReplayAvailabilityReason("formatted reason from server"), availability.Reason)
 }
 
-func TestReplayAvailabilityReason_CloudWatchFailoverPeriodOverlap(t *testing.T) {
+func TestReplayAvailabilityReason_FailoverPeriodOverlap(t *testing.T) {
 	t.Parallel()
 
 	t.Run("parses the wire value into the alias", func(t *testing.T) {
 		t.Parallel()
 
 		// act
-		reason, err := ParseReplayAvailabilityReason("cloudwatch_failover_period_overlap")
+		reason, err := ParseReplayAvailabilityReason("failover_period_overlap")
 
 		// assert
 		require.NoError(t, err)
-		assert.Equal(t, ReplayCloudWatchFailoverPeriodOverlap, reason)
+		assert.Equal(t, ReplayFailoverPeriodOverlap, reason)
 		assert.True(t, reason.IsValid())
 	})
 }
 
-func TestReplayAvailability_RegionFailover(t *testing.T) {
+func TestReplayAvailability_Failover(t *testing.T) {
 	t.Parallel()
 
 	t.Run("decodes the details of a closed failover period", func(t *testing.T) {
@@ -115,13 +116,11 @@ func TestReplayAvailability_RegionFailover(t *testing.T) {
 		// arrange
 		body := `{
 			"available": false,
-			"reason": "cloudwatch_failover_period_overlap",
-			"regionFailover": {
-				"dataSourceKind": "Direct",
-				"dataSourceName": "cw-failover-test",
-				"dataSourceProject": "cloudwatch-failover-test",
-				"primaryRegion": "us-west-2",
-				"failoverRegion": "us-east-2",
+			"reason": "failover_period_overlap",
+			"failover": {
+				"metricSource": {"name": "cw-failover-test", "project": "cloudwatch-failover-test", "kind": "Direct"},
+				"from": {"region": "us-west-2"},
+				"to": {"region": "us-east-2"},
 				"periodStart": "2026-11-09T10:00:00Z",
 				"periodEnd": "2026-11-09T11:30:00Z"
 			}
@@ -136,15 +135,17 @@ func TestReplayAvailability_RegionFailover(t *testing.T) {
 		periodEnd := time.Date(2026, 11, 9, 11, 30, 0, 0, time.UTC)
 		assert.Equal(t, ReplayAvailability{
 			Available: false,
-			Reason:    ReplayCloudWatchFailoverPeriodOverlap,
-			RegionFailover: &ReplayRegionFailover{
-				DataSourceKind:    manifest.KindDirect,
-				DataSourceName:    "cw-failover-test",
-				DataSourceProject: "cloudwatch-failover-test",
-				PrimaryRegion:     "us-west-2",
-				FailoverRegion:    "us-east-2",
-				PeriodStart:       time.Date(2026, 11, 9, 10, 0, 0, 0, time.UTC),
-				PeriodEnd:         &periodEnd,
+			Reason:    ReplayFailoverPeriodOverlap,
+			Failover: &ReplayFailover{
+				MetricSource: v1alphaSLO.MetricSourceSpec{
+					Name:    "cw-failover-test",
+					Project: "cloudwatch-failover-test",
+					Kind:    manifest.KindDirect,
+				},
+				From:        v1alpha.FailoverTarget{Region: "us-west-2"},
+				To:          v1alpha.FailoverTarget{Region: "us-east-2"},
+				PeriodStart: time.Date(2026, 11, 9, 10, 0, 0, 0, time.UTC),
+				PeriodEnd:   &periodEnd,
 			},
 		}, availability)
 	})
@@ -154,14 +155,16 @@ func TestReplayAvailability_RegionFailover(t *testing.T) {
 
 		// arrange
 		availability := ReplayAvailability{
-			Reason: ReplayCloudWatchFailoverPeriodOverlap,
-			RegionFailover: &ReplayRegionFailover{
-				DataSourceKind:    manifest.KindAgent,
-				DataSourceName:    "cw-agent",
-				DataSourceProject: "cloudwatch-failover-test",
-				PrimaryRegion:     "us-west-2",
-				FailoverRegion:    "us-east-2",
-				PeriodStart:       time.Date(2026, 11, 9, 10, 0, 0, 0, time.UTC),
+			Reason: ReplayFailoverPeriodOverlap,
+			Failover: &ReplayFailover{
+				MetricSource: v1alphaSLO.MetricSourceSpec{
+					Name:    "cw-agent",
+					Project: "cloudwatch-failover-test",
+					Kind:    manifest.KindAgent,
+				},
+				From:        v1alpha.FailoverTarget{Region: "us-west-2"},
+				To:          v1alpha.FailoverTarget{Region: "us-east-2"},
+				PeriodStart: time.Date(2026, 11, 9, 10, 0, 0, 0, time.UTC),
 			},
 		}
 
@@ -172,19 +175,17 @@ func TestReplayAvailability_RegionFailover(t *testing.T) {
 		require.NoError(t, err)
 		assert.JSONEq(t, `{
 			"available": false,
-			"reason": "cloudwatch_failover_period_overlap",
-			"regionFailover": {
-				"dataSourceKind": "Agent",
-				"dataSourceName": "cw-agent",
-				"dataSourceProject": "cloudwatch-failover-test",
-				"primaryRegion": "us-west-2",
-				"failoverRegion": "us-east-2",
+			"reason": "failover_period_overlap",
+			"failover": {
+				"metricSource": {"name": "cw-agent", "project": "cloudwatch-failover-test", "kind": "Agent"},
+				"from": {"region": "us-west-2"},
+				"to": {"region": "us-east-2"},
 				"periodStart": "2026-11-09T10:00:00Z"
 			}
 		}`, string(encoded))
 	})
 
-	t.Run("encodes another reason without regionFailover", func(t *testing.T) {
+	t.Run("encodes another reason without failover", func(t *testing.T) {
 		t.Parallel()
 
 		// arrange

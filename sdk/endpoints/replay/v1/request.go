@@ -63,7 +63,7 @@ unknown_agent_version
 single_query_not_supported
 composite_slo_not_supported
 promql_in_gcm_not_supported
-cloudwatch_failover_period_overlap
+failover_period_overlap
 )*/
 type ReplayAvailabilityReason string
 
@@ -80,7 +80,7 @@ const (
 	ReplaySingleQueryNotSupported            = ReplayAvailabilityReasonSingleQueryNotSupported
 	ReplayCompositeSLONotSupported           = ReplayAvailabilityReasonCompositeSloNotSupported
 	ReplayPromQLInGCMNotSupported            = ReplayAvailabilityReasonPromqlInGcmNotSupported
-	ReplayCloudWatchFailoverPeriodOverlap    = ReplayAvailabilityReasonCloudwatchFailoverPeriodOverlap
+	ReplayFailoverPeriodOverlap              = ReplayAvailabilityReasonFailoverPeriodOverlap
 )
 
 // ReplayListStatus is the coarse status returned by replay status and list endpoints.

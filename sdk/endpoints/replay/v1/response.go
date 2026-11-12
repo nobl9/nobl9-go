@@ -3,7 +3,7 @@ package v1
 import (
 	"time"
 
-	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
@@ -45,21 +45,18 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 type ReplayAvailability struct {
 	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
 	Available bool                     `json:"available"`
-	// RegionFailover is set only for [ReplayCloudWatchFailoverPeriodOverlap].
-	RegionFailover *ReplayRegionFailover `json:"regionFailover,omitempty"`
+	// Failover is set only for [ReplayFailoverPeriodOverlap].
+	Failover *ReplayFailover `json:"failover,omitempty"`
 }
 
-// ReplayRegionFailover describes the region failover period of a CloudWatch data source
-// that blocks the replay.
-type ReplayRegionFailover struct {
-	// DataSourceKind is [manifest.KindDirect] or [manifest.KindAgent].
-	DataSourceKind manifest.Kind `json:"dataSourceKind"`
-	DataSourceName string        `json:"dataSourceName"`
-	// DataSourceProject is the project of the data source, not of the SLO.
-	DataSourceProject string    `json:"dataSourceProject"`
-	PrimaryRegion     string    `json:"primaryRegion"`
-	FailoverRegion    string    `json:"failoverRegion"`
-	PeriodStart       time.Time `json:"periodStart"`
+// ReplayFailover describes the failover period of a data source that overlaps the replay window.
+// It uses the same names as the facts of a Failover annotation.
+type ReplayFailover struct {
+	// MetricSource is the data source; its project is the project of the data source, not of the SLO.
+	MetricSource v1alphaSLO.MetricSourceSpec `json:"metricSource"`
+	From         v1alpha.FailoverTarget      `json:"from"`
+	To           v1alpha.FailoverTarget      `json:"to"`
+	PeriodStart  time.Time                   `json:"periodStart"`
 	// PeriodEnd is nil while the failover period is open.
 	PeriodEnd *time.Time `json:"periodEnd,omitempty"`
 }
