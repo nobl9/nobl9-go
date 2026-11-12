@@ -188,7 +188,7 @@ func TestRemoveComputedFieldsFromObjects_sloFailoverStatus(t *testing.T) {
 	slo.Status = &v1alphaSLO.Status{Failover: &v1alphaSLO.SLOFailoverStatus{State: v1alpha.FailoverStateFailover}}
 
 	// act
-	objects, err := RemoveComputedFieldsFromObjects([]manifest.Object{slo})
+	objects, err := RemoveComputedFieldsFromObjects(objectsOf(&slo))
 
 	// assert
 	require.NoError(t, err)
