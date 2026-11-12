@@ -42,7 +42,6 @@
     cloudWatch:
       roleARN: arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app
       failover:
-        enabled: true
         primaryRegion: us-west-2
         failoverRegion: us-east-1
     historicalDataRetrieval:

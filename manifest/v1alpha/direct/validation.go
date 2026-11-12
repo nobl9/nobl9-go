@@ -175,28 +175,9 @@ var (
 		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
 	)
 	cloudWatchValidation = govy.New[CloudWatchConfig](
-		govy.ForPointer(func(c CloudWatchConfig) *CloudWatchFailoverConfig { return c.Failover }).
+		govy.ForPointer(func(c CloudWatchConfig) *v1alpha.CloudWatchFailoverConfig { return c.Failover }).
 			WithName("failover").
-			Include(cloudWatchFailoverValidation),
-	)
-	cloudWatchFailoverValidation = govy.New[CloudWatchFailoverConfig](
-		govy.For(govy.GetSelf[CloudWatchFailoverConfig]()).
-			Rules(rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(c CloudWatchFailoverConfig) string{
-				"primaryRegion":  func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion },
-				"failoverRegion": func(c CloudWatchFailoverConfig) string { return c.FailoverRegion },
-			})).
-			When(
-				func(c CloudWatchFailoverConfig) bool { return c.PrimaryRegion != "" && c.FailoverRegion != "" },
-				govy.WhenDescription("both regions are set"),
-			),
-		govy.For(func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion }).
-			WithName("primaryRegion").
-			Required().
-			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
-		govy.For(func(c CloudWatchFailoverConfig) string { return c.FailoverRegion }).
-			WithName("failoverRegion").
-			Required().
-			Rules(rules.OneOf(v1alpha.AWSRegionCodes()...)),
+			Include(v1alpha.CloudWatchFailoverValidation()),
 	)
 	pingdomValidation  = govy.New[PingdomConfig]()
 	redshiftValidation = govy.New[RedshiftConfig](

@@ -296,6 +296,12 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 	}
 }
 
+func sortedDimensions(dimensions []CloudWatchMetricDimension) []CloudWatchMetricDimension {
+	sorted := slices.Clone(dimensions)
+	slices.SortFunc(sorted, func(a, b CloudWatchMetricDimension) int { return strings.Compare(*a.Name, *b.Name) })
+	return sorted
+}
+
 // Query returns interface containing metric query for this MetricSpec.
 // nolint: gocyclo
 func (m *MetricSpec) Query() interface{} {
@@ -338,15 +344,10 @@ func (m *MetricSpec) Query() interface{} {
 		}
 		// Dimensions are sorted so that metric_query = '...':jsonb comparison was insensitive to the order in slice.
 		// It assumes that all dimensions' names are unique (ensured by validation).
-		sort.Slice(cloudWatchCopy.Dimensions, func(i, j int) bool {
-			return *cloudWatchCopy.Dimensions[i].Name < *cloudWatchCopy.Dimensions[j].Name
-		})
+		cloudWatchCopy.Dimensions = sortedDimensions(cloudWatchCopy.Dimensions)
 		if cloudWatchCopy.Failover != nil {
 			failoverCopy := *cloudWatchCopy.Failover
-			failoverCopy.Dimensions = slices.Clone(failoverCopy.Dimensions)
-			sort.Slice(failoverCopy.Dimensions, func(i, j int) bool {
-				return *failoverCopy.Dimensions[i].Name < *failoverCopy.Dimensions[j].Name
-			})
+			failoverCopy.Dimensions = sortedDimensions(failoverCopy.Dimensions)
 			cloudWatchCopy.Failover = &failoverCopy
 		}
 		return cloudWatchCopy
