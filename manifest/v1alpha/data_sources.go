@@ -155,54 +155,40 @@ type Timeout struct {
 	Duration `yaml:",inline"`
 }
 
-// InvalidCredentials reports how many SLOs of a data source get a credentials error
-// from the data source (HTTP 401).
-type InvalidCredentials struct {
-	State InvalidCredentialsState `json:"state"`
-	// Since is the time of the first rejected request.
-	// Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
-	// [InvalidCredentialsStateDegraded] and [InvalidCredentialsStateAll].
-	Since          time.Time `json:"since,omitzero"`
-	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int       `json:"affectedSlos,omitzero"`
-	TotalSLOs      int       `json:"totalSlos,omitzero"`
+// DataSourceError reports the latest error type of a data source and how many of its SLOs have it.
+type DataSourceError struct {
+	State DataSourceErrorState `json:"state"`
+	// Since is the time of the first failed request.
+	// Reason, Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// [DataSourceErrorStateDegraded] and [DataSourceErrorStateAll].
+	Reason         DataSourceErrorReason `json:"reason,omitempty"`
+	Since          time.Time             `json:"since,omitzero"`
+	HTTPStatusCode int                   `json:"httpStatusCode,omitzero"`
+	AffectedSLOs   int                   `json:"affectedSlos,omitzero"`
+	TotalSLOs      int                   `json:"totalSlos,omitzero"`
 }
 
-// InvalidCredentialsState reports whether no, some or all SLOs of a data source get a credentials error.
-// [InvalidCredentialsStateVerifying] means that the data source was edited after an error
+// DataSourceErrorState reports whether no, some or all SLOs of a data source have the error.
+// [DataSourceErrorStateVerifying] means that the data source was edited after an error
 // and some of its SLOs have no answer yet.
-type InvalidCredentialsState string
+type DataSourceErrorState string
 
 const (
-	InvalidCredentialsStateNone      InvalidCredentialsState = "none"
-	InvalidCredentialsStateDegraded  InvalidCredentialsState = "degraded"
-	InvalidCredentialsStateAll       InvalidCredentialsState = "all"
-	InvalidCredentialsStateVerifying InvalidCredentialsState = "verifying"
+	DataSourceErrorStateNone      DataSourceErrorState = "none"
+	DataSourceErrorStateDegraded  DataSourceErrorState = "degraded"
+	DataSourceErrorStateAll       DataSourceErrorState = "all"
+	DataSourceErrorStateVerifying DataSourceErrorState = "verifying"
 )
 
-// AccessDenied reports how many SLOs of a data source get an access denied error
-// from the data source (HTTP 403, or 402 for an account or license problem).
-type AccessDenied struct {
-	State AccessDeniedState `json:"state"`
-	// Since is the time of the first denied request.
-	// Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
-	// [AccessDeniedStateDegraded] and [AccessDeniedStateAll].
-	Since          time.Time `json:"since,omitzero"`
-	HTTPStatusCode int       `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int       `json:"affectedSlos,omitzero"`
-	TotalSLOs      int       `json:"totalSlos,omitzero"`
-}
-
-// AccessDeniedState reports whether no, some or all SLOs of a data source get an access denied error.
-// [AccessDeniedStateVerifying] means that the data source was edited after an error
-// and some of its SLOs have no answer yet.
-type AccessDeniedState string
+// DataSourceErrorReason tells which error the data source returns.
+type DataSourceErrorReason string
 
 const (
-	AccessDeniedStateNone      AccessDeniedState = "none"
-	AccessDeniedStateDegraded  AccessDeniedState = "degraded"
-	AccessDeniedStateAll       AccessDeniedState = "all"
-	AccessDeniedStateVerifying AccessDeniedState = "verifying"
+	// DataSourceErrorReasonInvalidCredentials means that the data source rejects the credentials (HTTP 401).
+	DataSourceErrorReasonInvalidCredentials DataSourceErrorReason = "invalidCredentials"
+	// DataSourceErrorReasonAccessDenied means that the data source denies access
+	// (HTTP 403, or 402 for an account or license problem).
+	DataSourceErrorReasonAccessDenied DataSourceErrorReason = "accessDenied"
 )
 
 type QueryDelay struct {
