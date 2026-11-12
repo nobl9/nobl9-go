@@ -52,20 +52,6 @@ func TestStatus_DataSourceErrorSerialization(t *testing.T) {
 			expectedJSON: `{"agentType":"Datadog","environment":{},"dataSourceError":{"state":"degraded",` +
 				`"reason":"accessDenied","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSlos":2,"totalSlos":3}}`,
 		},
-		"data source unreachable is preserved": {
-			status: Status{
-				AgentType: "Prometheus",
-				DataSourceUnreachable: &v1alpha.DataSourceUnreachable{
-					State:        v1alpha.DataSourceUnreachableStateAll,
-					Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
-					AffectedSLOs: 2,
-					TotalSLOs:    2,
-					Cause:        v1alpha.DataSourceUnreachableCauseHostNotFound,
-				},
-			},
-			expectedJSON: `{"agentType":"Prometheus","environment":{},"dataSourceUnreachable":{"state":"all",` +
-				`"since":"2026-10-18T09:30:00Z","affectedSlos":2,"totalSlos":2,"cause":"hostNotFound"}}`,
-		},
 	}
 
 	for name, test := range tests {

@@ -84,14 +84,13 @@ type Spec struct {
 
 // Status holds dynamic content which is not part of the static Agent definition.
 type Status struct {
-	AgentType                string                         `json:"agentType"`
-	AgentVersion             string                         `json:"agentVersion,omitempty"`
-	LastConnection           string                         `json:"lastConnection,omitempty"`
-	NewestStableAgentVersion string                         `json:"newestStableAgentVersion,omitempty"`
-	NewestBetaAgentVersion   string                         `json:"newestBetaAgentVersion,omitempty"`
-	Environment              Environment                    `json:"environment"`
-	DataSourceError          *v1alpha.DataSourceError       `json:"dataSourceError,omitempty"`
-	DataSourceUnreachable    *v1alpha.DataSourceUnreachable `json:"dataSourceUnreachable,omitempty"`
+	AgentType                string                   `json:"agentType"`
+	AgentVersion             string                   `json:"agentVersion,omitempty"`
+	LastConnection           string                   `json:"lastConnection,omitempty"`
+	NewestStableAgentVersion string                   `json:"newestStableAgentVersion,omitempty"`
+	NewestBetaAgentVersion   string                   `json:"newestBetaAgentVersion,omitempty"`
+	Environment              Environment              `json:"environment"`
+	DataSourceError          *v1alpha.DataSourceError `json:"dataSourceError,omitempty"`
 }
 
 // Environment holds environment-specific variables for the Agent.

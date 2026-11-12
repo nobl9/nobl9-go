@@ -159,13 +159,16 @@ type Timeout struct {
 type DataSourceError struct {
 	State DataSourceErrorState `json:"state"`
 	// Since is the time of the first failed request.
-	// Reason, Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// Reason, Since, HTTPStatusCode, Cause, AffectedSLOs and TotalSLOs are set only for
 	// [DataSourceErrorStateDegraded] and [DataSourceErrorStateAll].
-	Reason         DataSourceErrorReason `json:"reason,omitempty"`
-	Since          time.Time             `json:"since,omitzero"`
-	HTTPStatusCode int                   `json:"httpStatusCode,omitzero"`
-	AffectedSLOs   int                   `json:"affectedSlos,omitzero"`
-	TotalSLOs      int                   `json:"totalSlos,omitzero"`
+	Reason DataSourceErrorReason `json:"reason,omitempty"`
+	Since  time.Time             `json:"since,omitzero"`
+	// HTTPStatusCode is not set for [DataSourceErrorReasonDataSourceUnreachable].
+	HTTPStatusCode int `json:"httpStatusCode,omitzero"`
+	// Cause is set only for [DataSourceErrorReasonDataSourceUnreachable].
+	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
+	AffectedSLOs int                        `json:"affectedSlos,omitzero"`
+	TotalSLOs    int                        `json:"totalSlos,omitzero"`
 }
 
 // DataSourceErrorState reports whether no, some or all SLOs of a data source have the error.
@@ -189,20 +192,10 @@ const (
 	// DataSourceErrorReasonAccessDenied means that the data source denies access
 	// (HTTP 403, or 402 for an account or license problem).
 	DataSourceErrorReasonAccessDenied DataSourceErrorReason = "accessDenied"
+	// DataSourceErrorReasonDataSourceUnreachable means that the data source cannot be reached.
+	// [DataSourceError.Cause] tells why.
+	DataSourceErrorReasonDataSourceUnreachable DataSourceErrorReason = "dataSourceUnreachable"
 )
-
-// DataSourceUnreachable reports how many SLOs of a data source cannot reach it.
-// [DataSourceUnreachable.Cause] tells why.
-type DataSourceUnreachable struct {
-	State DataSourceUnreachableState `json:"state"`
-	// Since is the time of the first unreachable result.
-	// Since, AffectedSLOs, TotalSLOs and Cause are set only for
-	// [DataSourceUnreachableStateDegraded] and [DataSourceUnreachableStateAll].
-	Since        time.Time                  `json:"since,omitzero"`
-	AffectedSLOs int                        `json:"affectedSlos,omitzero"`
-	TotalSLOs    int                        `json:"totalSlos,omitzero"`
-	Cause        DataSourceUnreachableCause `json:"cause,omitempty"`
-}
 
 // DataSourceUnreachableCause tells why a data source cannot be reached.
 type DataSourceUnreachableCause string
@@ -216,18 +209,6 @@ const (
 	// DataSourceUnreachableCauseNotDataSource means that the endpoint answers,
 	// but not as the data source API (404 or 405 without an API error, HTML or a body that is not JSON).
 	DataSourceUnreachableCauseNotDataSource DataSourceUnreachableCause = "notDataSource"
-)
-
-// DataSourceUnreachableState reports whether no, some or all SLOs of a data source cannot reach it.
-// [DataSourceUnreachableStateVerifying] means that the data source was edited after an error
-// and some of its SLOs have no answer yet.
-type DataSourceUnreachableState string
-
-const (
-	DataSourceUnreachableStateNone      DataSourceUnreachableState = "none"
-	DataSourceUnreachableStateDegraded  DataSourceUnreachableState = "degraded"
-	DataSourceUnreachableStateAll       DataSourceUnreachableState = "all"
-	DataSourceUnreachableStateVerifying DataSourceUnreachableState = "verifying"
 )
 
 type QueryDelay struct {
