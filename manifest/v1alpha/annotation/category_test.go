@@ -45,8 +45,8 @@ func TestCategory_EveryCategoryIsEitherSystemOrUser(t *testing.T) {
 	}
 }
 
-func TestCategory_RegionFailoverCategories(t *testing.T) {
-	for _, name := range []string{"RegionFailover", "RegionRecovery"} {
+func TestCategory_FailoverCategories(t *testing.T) {
+	for _, name := range []string{"Failover", "Recovery"} {
 		t.Run(name+" is a system category", func(t *testing.T) {
 			// act
 			category, err := ParseCategory(name)

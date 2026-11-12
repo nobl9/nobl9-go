@@ -40,7 +40,6 @@
     releaseChannel: beta
     cloudWatch:
       failover:
-        enabled: true
         primaryRegion: us-west-2
         failoverRegion: us-east-1
     historicalDataRetrieval:

@@ -1097,7 +1097,6 @@ metadata:
 spec:
   cloudWatch:
     failover:
-      enabled: true
       primaryRegion: us-east-1
       failoverRegion: us-west-2
 status:
@@ -1105,9 +1104,10 @@ status:
   environment: {}
   failover:
     state: failover
-    activeRegion: us-west-2
     lastEventId: failover-2025-10-20T06:02:18Z
     lastEventTimestamp: "2025-10-20T06:02:18Z"
+    active:
+      region: us-west-2
 `
 
 func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
@@ -1123,9 +1123,9 @@ func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
 		require.NoError(t, err)
 		assert.JSONEq(t, string(expected), string(actual))
 	})
-	t.Run("required regions", func(t *testing.T) {
+	t.Run("includes the shared failover validation", func(t *testing.T) {
 		agent := validAgent(v1alpha.CloudWatch)
-		agent.Spec.CloudWatch.Failover = &CloudWatchFailoverConfig{Enabled: true}
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{}
 		err := validate(agent)
 		testutils.AssertContainsErrors(t, agent, err, 2,
 			testutils.ExpectedError{
@@ -1137,51 +1137,6 @@ func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
 				Code: rules.ErrorCodeRequired,
 			},
 		)
-	})
-	t.Run("unknown regions", func(t *testing.T) {
-		agent := validAgent(v1alpha.CloudWatch)
-		agent.Spec.CloudWatch.Failover = &CloudWatchFailoverConfig{
-			Enabled:        true,
-			PrimaryRegion:  "us-east-9",
-			FailoverRegion: "mars-west-1",
-		}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.cloudWatch.failover.primaryRegion",
-				Code: rules.ErrorCodeOneOf,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.cloudWatch.failover.failoverRegion",
-				Code: rules.ErrorCodeOneOf,
-			},
-		)
-	})
-	t.Run("equal regions", func(t *testing.T) {
-		agent := validAgent(v1alpha.CloudWatch)
-		agent.Spec.CloudWatch.Failover = &CloudWatchFailoverConfig{
-			Enabled:        true,
-			PrimaryRegion:  "us-east-1",
-			FailoverRegion: "us-east-1",
-		}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.cloudWatch.failover",
-			Code: rules.ErrorCodeUniqueProperties,
-		})
-	})
-	t.Run("disabled failover is still validated", func(t *testing.T) {
-		agent := validAgent(v1alpha.CloudWatch)
-		agent.Spec.CloudWatch.Failover = &CloudWatchFailoverConfig{
-			Enabled:        false,
-			PrimaryRegion:  "us-east-1",
-			FailoverRegion: "us-east-1",
-		}
-		err := validate(agent)
-		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
-			Prop: "spec.cloudWatch.failover",
-			Code: rules.ErrorCodeUniqueProperties,
-		})
 	})
 }
 
