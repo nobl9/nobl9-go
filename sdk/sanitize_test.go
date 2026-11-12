@@ -147,22 +147,20 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 	})
 }
 
-func TestRemoveComputedFieldsFromObjects_annotationRegionFailover(t *testing.T) {
+func TestRemoveComputedFieldsFromObjects_annotationFailover(t *testing.T) {
 	// arrange
 	a := v1alphaAnnotation.New(
 		v1alphaAnnotation.Metadata{Name: "failover-123", Project: "default"},
 		v1alphaAnnotation.Spec{
 			Slo:         "my-slo",
-			Description: "Region failover of Direct cloudwatch-direct",
+			Description: "Failover of Direct cloudwatch-direct",
 			StartTime:   time.Date(2026, 10, 20, 10, 0, 0, 0, time.UTC),
-			Category:    v1alphaAnnotation.CategoryRegionFailover,
-			RegionFailover: &v1alphaAnnotation.RegionFailover{
-				DataSourceKind:    manifest.KindDirect,
-				DataSourceName:    "cloudwatch-direct",
-				DataSourceProject: "infra",
-				PrimaryRegion:     "us-east-1",
-				FailoverRegion:    "us-west-2",
-				EventID:           "event-1",
+			Category:    v1alphaAnnotation.CategoryFailover,
+			Failover: &v1alphaAnnotation.Failover{
+				MetricSource: v1alphaSLO.MetricSourceSpec{Name: "cloudwatch-direct", Project: "infra", Kind: manifest.KindDirect},
+				From:         v1alpha.FailoverTarget{Region: "us-east-1"},
+				To:           v1alpha.FailoverTarget{Region: "us-west-2"},
+				EventID:      "event-1",
 			},
 		},
 	)
@@ -175,11 +173,25 @@ func TestRemoveComputedFieldsFromObjects_annotationRegionFailover(t *testing.T) 
 
 	// assert
 	out := buf.String()
-	assert.NotContains(t, out, `"regionFailover"`, "computed spec.regionFailover must not survive to the applied manifest")
+	assert.NotContains(t, out, `"failover"`, "computed spec.failover must not survive to the applied manifest")
 	assert.NotContains(t, out, "eventId")
-	assert.Contains(t, out, `"category": "RegionFailover"`)
+	assert.Contains(t, out, `"category": "Failover"`)
 }
 
 // objectsOf keeps the slice length opaque at the call site to avoid a gosec G602 false positive
 // in RemoveComputedFieldsFromObjects.
 func objectsOf(objects ...manifest.Object) []manifest.Object { return objects }
+
+func TestRemoveComputedFieldsFromObjects_sloFailoverStatus(t *testing.T) {
+	// arrange
+	slo := v1alphaSLO.New(v1alphaSLO.Metadata{Name: "cw-ratio", Project: "default"}, v1alphaSLO.Spec{})
+	slo.Status = &v1alphaSLO.Status{Failover: &v1alphaSLO.SLOFailoverStatus{State: v1alpha.FailoverStateFailover}}
+
+	// act
+	objects, err := RemoveComputedFieldsFromObjects([]manifest.Object{slo})
+
+	// assert
+	require.NoError(t, err)
+	require.Len(t, objects, 1)
+	assert.Nil(t, objects[0].(*v1alphaSLO.SLO).Status)
+}
