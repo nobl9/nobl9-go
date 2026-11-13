@@ -35,7 +35,7 @@ func Direct() []Example {
 		example.Object = example.Generate()
 		examples = append(examples, example)
 		if typ == v1alpha.CloudWatch {
-			example.SubVariant = directSubVariantCloudWatchFailover
+			example.SubVariant = subVariantCloudWatchFailover
 			example.Object = example.Generate()
 			examples = append(examples, example)
 		}
@@ -43,7 +43,7 @@ func Direct() []Example {
 	return examples
 }
 
-const directSubVariantCloudWatchFailover = "region failover"
+const subVariantCloudWatchFailover = "region failover"
 
 var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.Honeycomb,
@@ -124,7 +124,7 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		direct.Spec.CloudWatch = &v1alphaDirect.CloudWatchConfig{
 			RoleARN: "arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app",
 		}
-		if d.SubVariant == directSubVariantCloudWatchFailover {
+		if d.SubVariant == subVariantCloudWatchFailover {
 			direct.Metadata.Name += "-failover"
 			direct.Spec.Description += " with region failover"
 			direct.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{

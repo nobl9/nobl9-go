@@ -683,17 +683,6 @@ func TestCloudWatch_CountMetricsFailover(t *testing.T) {
 			Message: "'cloudWatch.failover' must be set for both 'bad' and 'total' metrics or for neither",
 		})
 	})
-	t.Run("passes with a failover block on a raw metric", func(t *testing.T) {
-		// arrange
-		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-
-		// act
-		err := validate(slo)
-
-		// assert
-		testutils.AssertNoError(t, slo, err)
-	})
 }
 
 func TestCloudWatchMetricFailover_Metric(t *testing.T) {

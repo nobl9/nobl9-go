@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -48,6 +49,13 @@ func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
 		Dimensions: f.Dimensions,
 		AccountID:  f.AccountID,
 	}
+}
+
+// sortedDimensions returns a sorted copy of the dimensions, so that the stored query does not depend on their order.
+func sortedDimensions(dimensions []CloudWatchMetricDimension) []CloudWatchMetricDimension {
+	sorted := slices.Clone(dimensions)
+	slices.SortFunc(sorted, func(a, b CloudWatchMetricDimension) int { return strings.Compare(*a.Name, *b.Name) })
+	return sorted
 }
 
 // IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.

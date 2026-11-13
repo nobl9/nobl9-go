@@ -2,10 +2,9 @@ package v1alpha
 
 import (
 	"encoding/json"
-	"errors"
 	"testing"
 
-	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/govytest"
 	"github.com/nobl9/govy/pkg/rules"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,10 +26,10 @@ func TestCloudWatchFailoverValidation(t *testing.T) {
 		err := CloudWatchFailoverValidation().Validate(CloudWatchFailoverConfig{})
 
 		// assert
-		assertFailoverRuleErrors(t, err, map[string]govy.ErrorCode{
-			"primaryRegion":  rules.ErrorCodeRequired,
-			"failoverRegion": rules.ErrorCodeRequired,
-		})
+		govytest.AssertError(t, err,
+			govytest.ExpectedRuleError{PropertyPath: "primaryRegion", Code: rules.ErrorCodeRequired},
+			govytest.ExpectedRuleError{PropertyPath: "failoverRegion", Code: rules.ErrorCodeRequired},
+		)
 	})
 	t.Run("rejects unknown regions", func(t *testing.T) {
 		// arrange
@@ -40,10 +39,10 @@ func TestCloudWatchFailoverValidation(t *testing.T) {
 		err := CloudWatchFailoverValidation().Validate(config)
 
 		// assert
-		assertFailoverRuleErrors(t, err, map[string]govy.ErrorCode{
-			"primaryRegion":  rules.ErrorCodeOneOf,
-			"failoverRegion": rules.ErrorCodeOneOf,
-		})
+		govytest.AssertError(t, err,
+			govytest.ExpectedRuleError{PropertyPath: "primaryRegion", Code: rules.ErrorCodeOneOf},
+			govytest.ExpectedRuleError{PropertyPath: "failoverRegion", Code: rules.ErrorCodeOneOf},
+		)
 	})
 	t.Run("rejects equal regions", func(t *testing.T) {
 		// arrange
@@ -53,9 +52,7 @@ func TestCloudWatchFailoverValidation(t *testing.T) {
 		err := CloudWatchFailoverValidation().Validate(config)
 
 		// assert
-		assertFailoverRuleErrors(t, err, map[string]govy.ErrorCode{
-			"": rules.ErrorCodeUniqueProperties,
-		})
+		govytest.AssertError(t, err, govytest.ExpectedRuleError{Code: rules.ErrorCodeUniqueProperties})
 	})
 }
 
@@ -88,17 +85,4 @@ func TestFailoverStatus_JSON(t *testing.T) {
 		require.NoError(t, err)
 		assert.JSONEq(t, `{"state":"primary","active":{"region":"us-west-2"}}`, string(data))
 	})
-}
-
-func assertFailoverRuleErrors(t *testing.T, err error, expected map[string]govy.ErrorCode) {
-	t.Helper()
-	var validatorErr *govy.ValidatorError
-	require.True(t, errors.As(err, &validatorErr), "expected a validator error, got %v", err)
-	actual := make(map[string]govy.ErrorCode)
-	for _, propErr := range validatorErr.Errors {
-		for _, ruleErr := range propErr.Errors {
-			actual[propErr.PropertyPath.String()] = ruleErr.Code
-		}
-	}
-	assert.Equal(t, expected, actual)
 }
