@@ -1,6 +1,7 @@
 package v1alpha
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -194,4 +195,65 @@ func TestGetQueryDelayDefaults_AllDataSourcesAreDefined(t *testing.T) {
 	for _, typ := range DataSourceTypeValues() {
 		assert.Contains(t, defaults, typ)
 	}
+}
+
+func TestDataSourceError_Serialization(t *testing.T) {
+	tests := map[string]struct {
+		value        DataSourceError
+		expectedJSON string
+	}{
+		"degraded keeps all fields": {
+			value: DataSourceError{
+				State:          DataSourceErrorStateDegraded,
+				Reason:         DataSourceErrorReasonInvalidCredentials,
+				Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 401,
+				AffectedSLOs:   1,
+				TotalSLOs:      2,
+			},
+			expectedJSON: `{"state":"degraded","reason":"invalidCredentials","since":"2026-10-16T09:30:00Z",` +
+				`"httpStatusCode":401,"affectedSlos":1,"totalSlos":2}`,
+		},
+		"all keeps all fields": {
+			value: DataSourceError{
+				State:          DataSourceErrorStateAll,
+				Reason:         DataSourceErrorReasonAccessDenied,
+				Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+				HTTPStatusCode: 402,
+				AffectedSLOs:   2,
+				TotalSLOs:      2,
+			},
+			expectedJSON: `{"state":"all","reason":"accessDenied","since":"2026-10-19T09:30:00Z",` +
+				`"httpStatusCode":402,"affectedSlos":2,"totalSlos":2}`,
+		},
+		"none has only the state": {
+			value:        DataSourceError{State: DataSourceErrorStateNone},
+			expectedJSON: `{"state":"none"}`,
+		},
+		"verifying has only the state": {
+			value:        DataSourceError{State: DataSourceErrorStateVerifying},
+			expectedJSON: `{"state":"verifying"}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.value)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded DataSourceError
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.value, decoded)
+		})
+	}
+
+	t.Run("JSON without state and counts decodes to zero values", func(t *testing.T) {
+		var decoded DataSourceError
+		require.NoError(t, json.Unmarshal([]byte(`{"since":"2026-10-16T09:30:00Z","httpStatusCode":401}`), &decoded))
+		assert.Equal(t, DataSourceError{
+			Since:          time.Date(2026, 10, 16, 9, 30, 0, 0, time.UTC),
+			HTTPStatusCode: 401,
+		}, decoded)
+	})
 }

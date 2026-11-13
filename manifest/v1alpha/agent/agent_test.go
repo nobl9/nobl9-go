@@ -1,8 +1,10 @@
 package agent
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,6 +26,63 @@ func TestAgent_Spec_GetType(t *testing.T) {
 			assert.Equal(t, typ.String(), agent.String())
 		})
 	}
+}
+
+func TestStatus_DataSourceErrorSerialization(t *testing.T) {
+	tests := map[string]struct {
+		status       Status
+		expectedJSON string
+	}{
+		"no error is omitted": {
+			status:       Status{AgentType: "Datadog"},
+			expectedJSON: `{"agentType":"Datadog","environment":{}}`,
+		},
+		"data source error is preserved": {
+			status: Status{
+				AgentType: "Datadog",
+				DataSourceError: &v1alpha.DataSourceError{
+					State:          v1alpha.DataSourceErrorStateDegraded,
+					Reason:         v1alpha.DataSourceErrorReasonAccessDenied,
+					Since:          time.Date(2026, 10, 19, 9, 30, 0, 0, time.UTC),
+					HTTPStatusCode: 403,
+					AffectedSLOs:   2,
+					TotalSLOs:      3,
+				},
+			},
+			expectedJSON: `{"agentType":"Datadog","environment":{},"dataSourceError":{"state":"degraded",` +
+				`"reason":"accessDenied","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSlos":2,"totalSlos":3}}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			data, err := json.Marshal(test.status)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.expectedJSON, string(data))
+
+			var decoded Status
+			require.NoError(t, json.Unmarshal(data, &decoded))
+			assert.Equal(t, test.status, decoded)
+		})
+	}
+
+	t.Run("JSON without the error decodes to nil", func(t *testing.T) {
+		var decoded Status
+		require.NoError(t, json.Unmarshal([]byte(`{"agentType":"Datadog","agentVersion":"1.0.0"}`), &decoded))
+		assert.Equal(t, Status{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
+	})
+
+	t.Run("struct without the error ignores it", func(t *testing.T) {
+		type oldStatus struct {
+			AgentType    string `json:"agentType"`
+			AgentVersion string `json:"agentVersion,omitempty"`
+		}
+		var decoded oldStatus
+		data := []byte(`{"agentType":"Datadog","agentVersion":"1.0.0","dataSourceError":{"state":"all",` +
+			`"reason":"accessDenied","since":"2026-10-19T09:30:00Z","httpStatusCode":403,"affectedSlos":2,"totalSlos":2}}`)
+		require.NoError(t, json.Unmarshal(data, &decoded))
+		assert.Equal(t, oldStatus{AgentType: "Datadog", AgentVersion: "1.0.0"}, decoded)
+	})
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.
