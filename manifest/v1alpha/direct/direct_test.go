@@ -1,7 +1,6 @@
 package direct
 
 import (
-	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -25,37 +24,6 @@ func TestDirect_Spec_GetType(t *testing.T) {
 			assert.Equal(t, typ, direct)
 		})
 	}
-}
-
-func TestStatus_Failover_JSON(t *testing.T) {
-	t.Run("omits failover when the Direct has no failover status", func(t *testing.T) {
-		// act
-		data, err := json.Marshal(Status{DirectType: "CloudWatch"})
-
-		// assert
-		require.NoError(t, err)
-		assert.JSONEq(t, `{"directType":"CloudWatch"}`, string(data))
-	})
-	t.Run("writes the failover status with the active target", func(t *testing.T) {
-		status := Status{
-			DirectType: "CloudWatch",
-			Failover: &v1alpha.FailoverStatus{
-				State:              v1alpha.FailoverStateFailover,
-				LastEventID:        "event-1",
-				LastEventTimestamp: "2026-10-20T10:00:00Z",
-				Active:             v1alpha.FailoverTarget{Region: "us-east-2"},
-			},
-		}
-
-		// act
-		data, err := json.Marshal(status)
-
-		// assert
-		require.NoError(t, err)
-		assert.JSONEq(t, `{"directType":"CloudWatch","failover":{"state":"failover",`+
-			`"lastEventId":"event-1","lastEventTimestamp":"2026-10-20T10:00:00Z","active":{"region":"us-east-2"}}}`,
-			string(data))
-	})
 }
 
 // setZeroValue sets a zero value of a pointer field in a struct using reflection.

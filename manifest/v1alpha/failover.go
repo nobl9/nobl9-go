@@ -35,6 +35,7 @@ type CloudWatchFailoverConfig struct {
 }
 
 func CloudWatchFailoverValidation() govy.Validator[CloudWatchFailoverConfig] {
+	knownRegion := rules.OneOf(AWSRegionCodes()...)
 	return govy.New[CloudWatchFailoverConfig](
 		govy.For(govy.GetSelf[CloudWatchFailoverConfig]()).
 			Rules(rules.UniqueProperties(rules.HashFuncSelf[string](), map[string]func(c CloudWatchFailoverConfig) string{
@@ -48,10 +49,10 @@ func CloudWatchFailoverValidation() govy.Validator[CloudWatchFailoverConfig] {
 		govy.For(func(c CloudWatchFailoverConfig) string { return c.PrimaryRegion }).
 			WithName("primaryRegion").
 			Required().
-			Rules(rules.OneOf(AWSRegionCodes()...)),
+			Rules(knownRegion),
 		govy.For(func(c CloudWatchFailoverConfig) string { return c.FailoverRegion }).
 			WithName("failoverRegion").
 			Required().
-			Rules(rules.OneOf(AWSRegionCodes()...)),
+			Rules(knownRegion),
 	)
 }
