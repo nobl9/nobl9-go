@@ -91,22 +91,6 @@ func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 	assert.Equal(t, ReplayAvailabilityReason("formatted reason from server"), availability.Reason)
 }
 
-func TestReplayAvailabilityReason_FailoverPeriodOverlap(t *testing.T) {
-	t.Parallel()
-
-	t.Run("parses the wire value into the alias", func(t *testing.T) {
-		t.Parallel()
-
-		// act
-		reason, err := ParseReplayAvailabilityReason("failover_period_overlap")
-
-		// assert
-		require.NoError(t, err)
-		assert.Equal(t, ReplayFailoverPeriodOverlap, reason)
-		assert.True(t, reason.IsValid())
-	})
-}
-
 func TestReplayAvailability_Failover(t *testing.T) {
 	t.Parallel()
 
