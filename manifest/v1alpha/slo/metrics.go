@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"slices"
 	"sort"
 	"strings"
 
@@ -294,12 +293,6 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 	default:
 		return 0
 	}
-}
-
-func sortedDimensions(dimensions []CloudWatchMetricDimension) []CloudWatchMetricDimension {
-	sorted := slices.Clone(dimensions)
-	slices.SortFunc(sorted, func(a, b CloudWatchMetricDimension) int { return strings.Compare(*a.Name, *b.Name) })
-	return sorted
 }
 
 // Query returns interface containing metric query for this MetricSpec.

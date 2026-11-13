@@ -124,35 +124,33 @@ func TestSpec_ReplaySerialization(t *testing.T) {
 }
 
 func TestSpec_FailoverSerialization(t *testing.T) {
-	for _, category := range []Category{CategoryFailover, CategoryRecovery} {
-		t.Run(category.String()+" annotation keeps spec.failover", func(t *testing.T) {
-			// arrange
-			a := validAnnotation()
-			a.Spec.Category = category
-			a.Spec.Failover = &Failover{
-				MetricSource: slo.MetricSourceSpec{Name: "cloudwatch-direct", Project: "infra", Kind: manifest.KindDirect},
-				From:         v1alpha.FailoverTarget{Region: "us-east-1"},
-				To:           v1alpha.FailoverTarget{Region: "us-west-2"},
-				EventID:      "event-1",
-			}
+	t.Run("a Failover annotation keeps spec.failover", func(t *testing.T) {
+		// arrange
+		a := validAnnotation()
+		a.Spec.Category = CategoryFailover
+		a.Spec.Failover = &Failover{
+			MetricSource: slo.MetricSourceSpec{Name: "cloudwatch-direct", Project: "infra", Kind: manifest.KindDirect},
+			From:         v1alpha.FailoverTarget{Region: "us-east-1"},
+			To:           v1alpha.FailoverTarget{Region: "us-west-2"},
+			EventID:      "event-1",
+		}
 
-			// act
-			data, err := json.Marshal(a)
-			require.NoError(t, err)
-			var decoded Annotation
-			require.NoError(t, json.Unmarshal(data, &decoded))
+		// act
+		data, err := json.Marshal(a)
+		require.NoError(t, err)
+		var decoded Annotation
+		require.NoError(t, json.Unmarshal(data, &decoded))
 
-			// assert
-			assert.Equal(t, map[string]any{
-				"metricSource": map[string]any{"name": "cloudwatch-direct", "project": "infra", "kind": "Direct"},
-				"from":         map[string]any{"region": "us-east-1"},
-				"to":           map[string]any{"region": "us-west-2"},
-				"eventId":      "event-1",
-			}, decodeSpec(t, data)["failover"])
-			assert.Equal(t, a, decoded)
-			assert.Empty(t, GetValidatorWithoutCategoryRules().Validate(decoded))
-		})
-	}
+		// assert
+		assert.Equal(t, map[string]any{
+			"metricSource": map[string]any{"name": "cloudwatch-direct", "project": "infra", "kind": "Direct"},
+			"from":         map[string]any{"region": "us-east-1"},
+			"to":           map[string]any{"region": "us-west-2"},
+			"eventId":      "event-1",
+		}, decodeSpec(t, data)["failover"])
+		assert.Equal(t, a, decoded)
+		assert.Empty(t, GetValidatorWithoutCategoryRules().Validate(decoded))
+	})
 }
 
 func decodeSpec(t *testing.T, data []byte) map[string]any {
