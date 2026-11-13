@@ -43,8 +43,6 @@ func Direct() []Example {
 	return examples
 }
 
-const subVariantCloudWatchFailover = "region failover"
-
 var betaChannelDirects = []v1alpha.DataSourceType{
 	v1alpha.Honeycomb,
 	v1alpha.LogicMonitor,
