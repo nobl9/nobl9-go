@@ -34,7 +34,8 @@ func toKebabCase(input string) string {
 func dataSourceTypePrettyName(typ v1alpha.DataSourceType) string {
 	switch typ {
 	case v1alpha.AppDynamics, v1alpha.ThousandEyes, v1alpha.BigQuery,
-		v1alpha.OpenTSDB, v1alpha.CloudWatch, v1alpha.InfluxDB, v1alpha.LogicMonitor:
+		v1alpha.OpenTSDB, v1alpha.CloudWatch, v1alpha.InfluxDB, v1alpha.LogicMonitor,
+		v1alpha.ClickHouse:
 		return typ.String()
 	default:
 		return splitCamelCase(typ.String())
