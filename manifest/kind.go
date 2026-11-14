@@ -41,7 +41,7 @@ func (k Kind) Equals(s string) bool {
 // Applicable returns true if the [Kind] can be applied or deleted by the user.
 // In other words, it informs whether the [Kind] lifecycle is managed by the user.
 func (k Kind) Applicable() bool {
-	return k != KindAlert && k != KindUserGroup
+	return k != KindAlert
 }
 
 // ProjectScoped returns true if the [Kind] is tied to a specific [KindProject].

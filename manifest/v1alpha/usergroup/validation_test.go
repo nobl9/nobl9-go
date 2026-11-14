@@ -64,6 +64,41 @@ func TestValidate_Spec(t *testing.T) {
 			Code: rules.ErrorCodeStringLength,
 		})
 	})
+	t.Run("members must be explicit", func(t *testing.T) {
+		group := validUserGroup()
+		group.Spec.Members = nil
+		testutils.AssertContainsErrors(t, group, validate(group), 1, testutils.ExpectedError{
+			Prop: "spec.members",
+			Code: rules.ErrorCodeRequired,
+		})
+	})
+	t.Run("empty membership is valid", func(t *testing.T) {
+		group := validUserGroup()
+		testutils.AssertNoError(t, group, validate(group))
+	})
+	t.Run("member ID is required", func(t *testing.T) {
+		group := validUserGroup()
+		group.Spec.Members = []Member{{ID: "user-1"}, {}}
+		testutils.AssertContainsErrors(t, group, validate(group), 1, testutils.ExpectedError{
+			Prop: "spec.members[1].id",
+			Code: rules.ErrorCodeStringNotEmpty,
+		})
+	})
+	t.Run("member IDs are unique", func(t *testing.T) {
+		group := validUserGroup()
+		group.Spec.Members = []Member{{ID: "user-1"}, {ID: "user-1"}}
+		testutils.AssertContainsErrors(t, group, validate(group), 1, testutils.ExpectedError{
+			Prop: "spec.members",
+			Code: rules.ErrorCodeSliceUnique,
+		})
+	})
+	t.Run("computed fields round trip", func(t *testing.T) {
+		group := validUserGroup()
+		group.Origin = "manual"
+		group.Revision = "2026-11-13T12:00:00Z"
+		group.Spec.Members = []Member{{ID: "user-1"}, {ID: "user-2"}}
+		testutils.AssertNoError(t, group, validate(group))
+	})
 }
 
 func validUserGroup() UserGroup {
@@ -75,6 +110,7 @@ func validUserGroup() UserGroup {
 		},
 		Spec: Spec{
 			DisplayName: "My Group",
+			Members:     []Member{},
 		},
 	}
 }
