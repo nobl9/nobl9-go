@@ -44,3 +44,19 @@ func TestCategory_EveryCategoryIsEitherSystemOrUser(t *testing.T) {
 			"category %q is listed in systemCategories or userCategories but is not a valid Category", category)
 	}
 }
+
+func TestCategory_FailoverCategories(t *testing.T) {
+	for _, name := range []string{"Failover", "Recovery"} {
+		t.Run(name+" is a system category", func(t *testing.T) {
+			// act
+			category, err := ParseCategory(name)
+
+			// assert
+			require.NoError(t, err)
+			assert.Equal(t, Category(name), category)
+			assert.True(t, category.IsValid())
+			assert.Contains(t, GetSystemCategories(), Category(name))
+			assert.NotContains(t, GetUserCategories(), Category(name))
+		})
+	}
+}

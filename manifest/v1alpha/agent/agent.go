@@ -84,12 +84,13 @@ type Spec struct {
 
 // Status holds dynamic content which is not part of the static Agent definition.
 type Status struct {
-	AgentType                string      `json:"agentType"`
-	AgentVersion             string      `json:"agentVersion,omitempty"`
-	LastConnection           string      `json:"lastConnection,omitempty"`
-	NewestStableAgentVersion string      `json:"newestStableAgentVersion,omitempty"`
-	NewestBetaAgentVersion   string      `json:"newestBetaAgentVersion,omitempty"`
-	Environment              Environment `json:"environment"`
+	AgentType                string                  `json:"agentType"`
+	AgentVersion             string                  `json:"agentVersion,omitempty"`
+	LastConnection           string                  `json:"lastConnection,omitempty"`
+	NewestStableAgentVersion string                  `json:"newestStableAgentVersion,omitempty"`
+	NewestBetaAgentVersion   string                  `json:"newestBetaAgentVersion,omitempty"`
+	Environment              Environment             `json:"environment"`
+	Failover                 *v1alpha.FailoverStatus `json:"failover,omitempty"`
 }
 
 // Environment holds environment-specific variables for the Agent.
@@ -238,7 +239,9 @@ type GrafanaLokiConfig struct {
 }
 
 // CloudWatchConfig represents content of CloudWatch Configuration typical for Agent Object.
-type CloudWatchConfig struct{}
+type CloudWatchConfig struct {
+	Failover *v1alpha.CloudWatchFailoverConfig `json:"failover,omitempty"`
+}
 
 // PingdomConfig represents content of Pingdom Configuration typical for Agent Object.
 type PingdomConfig struct{}

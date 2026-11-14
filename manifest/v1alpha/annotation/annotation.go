@@ -5,6 +5,7 @@ import (
 
 	"github.com/nobl9/nobl9-go/manifest"
 	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 //go:generate go run ../../../internal/cmd/objectimpl Annotation
@@ -47,6 +48,9 @@ type Spec struct {
 	// Replay holds facts about the Replay run that created this annotation.
 	// Set only on Replay-generated annotations; the Nobl9 platform computes it and ignores it on Apply.
 	Replay *Replay `json:"replay,omitempty" nobl9:"computed"`
+	// Failover holds facts about the failover event that created this annotation.
+	// Set only on Failover and Recovery annotations; the Nobl9 platform computes it and ignores it on Apply.
+	Failover *Failover `json:"failover,omitempty" nobl9:"computed"`
 }
 
 // Status represents content of Status optional for Annotation Object
@@ -62,4 +66,15 @@ type Replay struct {
 	PeriodStart        time.Time `json:"periodStart"`
 	PeriodEnd          time.Time `json:"periodEnd"`
 	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
+}
+
+// Failover describes the failover event of a data source
+// that created a Failover or Recovery annotation.
+// A failover goes from the primary target to the failover target; a recovery goes back.
+type Failover struct {
+	// MetricSource is the data source; its project is the project of the data source, not of the SLO.
+	MetricSource slo.MetricSourceSpec   `json:"metricSource"`
+	From         v1alpha.FailoverTarget `json:"from"`
+	To           v1alpha.FailoverTarget `json:"to"`
+	EventID      string                 `json:"eventId"`
 }

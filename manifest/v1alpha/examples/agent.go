@@ -31,6 +31,11 @@ func Agent() []Example {
 		}
 		example.Object = example.Generate()
 		examples = append(examples, example)
+		if typ == v1alpha.CloudWatch {
+			example.SubVariant = subVariantCloudWatchFailover
+			example.Object = example.Generate()
+			examples = append(examples, example)
+		}
 	}
 	return examples
 }
@@ -120,6 +125,14 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		agent.Spec.BigQuery = &v1alphaAgent.BigQueryConfig{}
 	case v1alpha.CloudWatch:
 		agent.Spec.CloudWatch = &v1alphaAgent.CloudWatchConfig{}
+		if a.SubVariant == subVariantCloudWatchFailover {
+			agent.Metadata.Name += "-failover"
+			agent.Spec.Description += " with region failover"
+			agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+				PrimaryRegion:  "us-west-2",
+				FailoverRegion: "us-east-1",
+			}
+		}
 	case v1alpha.Datadog:
 		agent.Spec.Datadog = &v1alphaAgent.DatadogConfig{
 			Site: "datadoghq.com",
