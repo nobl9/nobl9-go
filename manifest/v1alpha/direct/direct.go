@@ -75,7 +75,8 @@ type Spec struct {
 
 // Status represents content of Status optional for Direct Object
 type Status struct {
-	DirectType string `json:"directType"`
+	DirectType string                  `json:"directType"`
+	Failover   *v1alpha.FailoverStatus `json:"failover,omitempty"`
 }
 
 var validDirectTypes = map[v1alpha.DataSourceType]struct{}{
@@ -210,8 +211,9 @@ type CloudWatchConfig struct {
 	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
 	AccessKeyID string `json:"accessKeyID,omitempty"`
 	// Deprecated: Access Keys are no longer supported. Switch to Cross Account IAM Roles.
-	SecretAccessKey string `json:"secretAccessKey,omitempty"`
-	RoleARN         string `json:"roleARN,omitempty"`
+	SecretAccessKey string                            `json:"secretAccessKey,omitempty"`
+	RoleARN         string                            `json:"roleARN,omitempty"`
+	Failover        *v1alpha.CloudWatchFailoverConfig `json:"failover,omitempty"`
 }
 
 // PingdomConfig represents content of Pingdom Configuration typical for Direct Object.

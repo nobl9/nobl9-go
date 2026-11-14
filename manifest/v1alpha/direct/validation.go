@@ -174,9 +174,13 @@ var (
 	splunkValidation = govy.New[SplunkConfig](
 		urlPropertyRules(func(s SplunkConfig) string { return s.URL }),
 	)
-	cloudWatchValidation = govy.New[CloudWatchConfig]()
-	pingdomValidation    = govy.New[PingdomConfig]()
-	redshiftValidation   = govy.New[RedshiftConfig](
+	cloudWatchValidation = govy.New[CloudWatchConfig](
+		govy.ForPointer(func(c CloudWatchConfig) *v1alpha.CloudWatchFailoverConfig { return c.Failover }).
+			WithName("failover").
+			Include(v1alpha.CloudWatchFailoverValidation()),
+	)
+	pingdomValidation  = govy.New[PingdomConfig]()
+	redshiftValidation = govy.New[RedshiftConfig](
 		govy.For(func(r RedshiftConfig) string { return r.SecretARN }).
 			WithName("secretARN").
 			Required(),

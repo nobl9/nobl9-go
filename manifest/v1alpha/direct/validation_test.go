@@ -2,12 +2,15 @@ package direct
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	validationV1Alpha "github.com/nobl9/nobl9-go/internal/manifest/v1alpha"
 	"github.com/nobl9/nobl9-go/internal/manifest/v1alphatest"
@@ -1223,6 +1226,58 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 			Prop: "spec.azurePrometheus.url",
 			Code: errorCodeHTTPSSchemeRequired,
 		})
+	})
+}
+
+const cloudWatchFailoverDirectYAML = `
+apiVersion: n9/v1alpha
+kind: Direct
+metadata:
+  name: cloudwatch-prod
+  project: us-individual-experience
+spec:
+  cloudWatch:
+    roleARN: arn:aws:iam::123456789012:role/nobl9
+    failover:
+      primaryRegion: us-east-1
+      failoverRegion: us-west-2
+status:
+  directType: CloudWatch
+  failover:
+    state: failover
+    lastEventId: failover-2025-10-20T06:02:18Z
+    lastEventTimestamp: "2025-10-20T06:02:18Z"
+    active:
+      region: us-west-2
+`
+
+func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
+	t.Run("example round-trips", func(t *testing.T) {
+		var direct Direct
+		err := yaml.UnmarshalWithOptions([]byte(cloudWatchFailoverDirectYAML), &direct, yaml.Strict())
+		require.NoError(t, err)
+		testutils.AssertNoError(t, direct, validate(direct))
+
+		expected, err := yaml.YAMLToJSON([]byte(cloudWatchFailoverDirectYAML))
+		require.NoError(t, err)
+		actual, err := json.Marshal(direct)
+		require.NoError(t, err)
+		assert.JSONEq(t, string(expected), string(actual))
+	})
+	t.Run("includes the shared failover validation", func(t *testing.T) {
+		direct := validDirect(v1alpha.CloudWatch)
+		direct.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{}
+		err := validate(direct)
+		testutils.AssertContainsErrors(t, direct, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.cloudWatch.failover.primaryRegion",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.cloudWatch.failover.failoverRegion",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
 	})
 }
 

@@ -231,6 +231,7 @@ const (
 	metricSubVariantCloudWatchStandard metricVariant = "standard configuration"
 	metricSubVariantCloudWatchSQLQuery metricVariant = "sql query"
 	metricSubVariantCloudWatchJSON     metricVariant = "JSON"
+	metricSubVariantCloudWatchFailover metricVariant = "standard configuration with failover"
 	// Pingdom.
 	metricSubVariantPingdomUptime      metricVariant = "uptime"
 	metricSubVariantPingdomTransaction metricVariant = "transaction"
@@ -569,6 +570,15 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 					},
 				},
 			}))
+		case metricVariantGoodRatio + metricSubVariantCloudWatchFailover:
+			// Failover works only with a CloudWatch data source with a failover block.
+			// Good and total both need a failover block; their regions are free.
+			slo.Spec.Indicator.MetricSource.Name = "cloud-watch-failover"
+			slo.Spec.Indicator.MetricSource.Kind = manifest.KindDirect
+			return setGoodOverTotalMetric(slo,
+				newMetricSpec(cloudWatchLoadBalancerMetric("HTTPCode_Target_2XX_Count", "us-west-2", "us-east-2")),
+				newMetricSpec(cloudWatchLoadBalancerMetric("RequestCount", "us-west-2", "us-east-1")),
+			)
 		case metricVariantBadRatio + metricSubVariantCloudWatchStandard:
 			return setBadOverTotalMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
 				AccountID:  ptr("123456789012"),
@@ -592,6 +602,36 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 					{
 						Name:  ptr("LoadBalancer"),
 						Value: ptr("app/api-server"),
+					},
+				},
+			}))
+		case metricVariantThreshold + metricSubVariantCloudWatchFailover:
+			// Failover works only with a CloudWatch Direct.
+			slo.Spec.Indicator.MetricSource.Name = "cloud-watch-failover"
+			slo.Spec.Indicator.MetricSource.Kind = manifest.KindDirect
+			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
+				AccountID:  ptr("123456789012"),
+				Region:     ptr("us-west-2"),
+				Namespace:  ptr("AWS/RDS"),
+				MetricName: ptr("ReadLatency"),
+				Stat:       ptr("Average"),
+				Dimensions: []v1alphaSLO.CloudWatchMetricDimension{
+					{
+						Name:  ptr("DBInstanceIdentifier"),
+						Value: ptr("api-server-db"),
+					},
+				},
+				Failover: &v1alphaSLO.CloudWatchMetricFailover{
+					AccountID:  ptr("123456789012"),
+					Region:     ptr("us-east-1"),
+					Namespace:  ptr("AWS/RDS"),
+					MetricName: ptr("ReadLatency"),
+					Stat:       ptr("Average"),
+					Dimensions: []v1alphaSLO.CloudWatchMetricDimension{
+						{
+							Name:  ptr("DBInstanceIdentifier"),
+							Value: ptr("api-server-db-replica"),
+						},
 					},
 				},
 			}))
@@ -1292,3 +1332,28 @@ func mustLoadQuery(name string) string {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+func cloudWatchLoadBalancerMetric(metricName, region, failoverRegion string) v1alphaSLO.CloudWatchMetric {
+	dimensions := []v1alphaSLO.CloudWatchMetricDimension{
+		{
+			Name:  ptr("LoadBalancer"),
+			Value: ptr("app/api-server"),
+		},
+	}
+	return v1alphaSLO.CloudWatchMetric{
+		AccountID:  ptr("123456789012"),
+		Region:     ptr(region),
+		Namespace:  ptr("AWS/ApplicationELB"),
+		MetricName: ptr(metricName),
+		Stat:       ptr("SampleCount"),
+		Dimensions: dimensions,
+		Failover: &v1alphaSLO.CloudWatchMetricFailover{
+			AccountID:  ptr("123456789012"),
+			Region:     ptr(failoverRegion),
+			Namespace:  ptr("AWS/ApplicationELB"),
+			MetricName: ptr(metricName),
+			Stat:       ptr("SampleCount"),
+			Dimensions: dimensions,
+		},
+	}
+}

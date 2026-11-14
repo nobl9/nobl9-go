@@ -2,6 +2,8 @@ package v1alphaExamples
 
 import "github.com/nobl9/nobl9-go/manifest/v1alpha"
 
+const subVariantCloudWatchFailover = "region failover"
+
 type Example interface {
 	GetObject() any
 	GetVariant() string
