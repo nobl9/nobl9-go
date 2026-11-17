@@ -45,6 +45,8 @@ func (s ReplayStatus) ToProcessStatus() v1alphaSLO.ProcessStatus {
 type ReplayAvailability struct {
 	Reason    ReplayAvailabilityReason `json:"reason,omitempty"`
 	Available bool                     `json:"available"`
+	// Message explains the reason to a person. The server sets it for [ReplayFailoverPeriodOverlap].
+	Message string `json:"message,omitempty"`
 	// Failover is set only for [ReplayFailoverPeriodOverlap].
 	Failover *ReplayFailover `json:"failover,omitempty"`
 }

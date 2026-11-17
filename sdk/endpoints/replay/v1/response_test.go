@@ -101,6 +101,7 @@ func TestReplayAvailability_Failover(t *testing.T) {
 		body := `{
 			"available": false,
 			"reason": "failover_period_overlap",
+			"message": "Replay is unavailable: Direct p/cw failed over.",
 			"failover": {
 				"metricSource": {"name": "cw-failover-test", "project": "cloudwatch-failover-test", "kind": "Direct"},
 				"from": {"region": "us-west-2"},
@@ -120,6 +121,7 @@ func TestReplayAvailability_Failover(t *testing.T) {
 		assert.Equal(t, ReplayAvailability{
 			Available: false,
 			Reason:    ReplayFailoverPeriodOverlap,
+			Message:   "Replay is unavailable: Direct p/cw failed over.",
 			Failover: &ReplayFailover{
 				MetricSource: v1alphaSLO.MetricSourceSpec{
 					Name:    "cw-failover-test",
@@ -139,7 +141,8 @@ func TestReplayAvailability_Failover(t *testing.T) {
 
 		// arrange
 		availability := ReplayAvailability{
-			Reason: ReplayFailoverPeriodOverlap,
+			Reason:  ReplayFailoverPeriodOverlap,
+			Message: "Replay is unavailable.",
 			Failover: &ReplayFailover{
 				MetricSource: v1alphaSLO.MetricSourceSpec{
 					Name:    "cw-agent",
@@ -160,6 +163,7 @@ func TestReplayAvailability_Failover(t *testing.T) {
 		assert.JSONEq(t, `{
 			"available": false,
 			"reason": "failover_period_overlap",
+			"message": "Replay is unavailable.",
 			"failover": {
 				"metricSource": {"name": "cw-agent", "project": "cloudwatch-failover-test", "kind": "Agent"},
 				"from": {"region": "us-west-2"},
