@@ -145,8 +145,18 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			case 3:
 				slo.Metadata.Labels["team"] = []string{"orange"}
 			}
-			if sourceType == v1alpha.CloudWatch && isUnsupportedCloudWatchSLOExample(slo) {
-				continue
+			// TODO: Remove this after PC-13575 is resolved.
+			if slo.Spec.Indicator.MetricSource.Kind == manifest.KindAgent && sourceType == v1alpha.CloudWatch {
+				skip := false
+				for _, spec := range slo.Spec.AllMetricSpecs() {
+					if spec.CloudWatch.AccountID != nil {
+						skip = true
+						break
+					}
+				}
+				if skip {
+					continue
+				}
 			}
 		}
 		slos = append(slos, slo)
@@ -436,20 +446,6 @@ func Test_Objects_V1_V1alpha_SLO(t *testing.T) {
 			})
 		}
 	})
-}
-
-func isUnsupportedCloudWatchSLOExample(slo v1alphaSLO.SLO) bool {
-	for _, spec := range slo.Spec.AllMetricSpecs() {
-		// TODO: Remove this after PC-13575 is resolved.
-		if slo.Spec.Indicator.MetricSource.Kind == manifest.KindAgent && spec.CloudWatch.AccountID != nil {
-			return true
-		}
-		// TODO: Remove this after the platform supports CloudWatch failover (WI-3).
-		if spec.CloudWatch.Failover != nil {
-			return true
-		}
-	}
-	return false
 }
 
 func displayNameOrName(displayName, name string) string {
