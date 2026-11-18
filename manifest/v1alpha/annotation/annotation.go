@@ -48,8 +48,7 @@ type Spec struct {
 	// Replay holds facts about the Replay run that created this annotation.
 	// Set only on Replay-generated annotations; the Nobl9 platform computes it and ignores it on Apply.
 	Replay *Replay `json:"replay,omitempty" nobl9:"computed"`
-	// Failover holds facts about the failover event that opened this annotation.
-	// Set only on Failover annotations; the Nobl9 platform computes it and ignores it on Apply.
+	// Failover is set by Nobl9 on Failover annotations only and is ignored on Apply.
 	Failover *Failover `json:"failover,omitempty" nobl9:"computed"`
 }
 
@@ -68,9 +67,7 @@ type Replay struct {
 	ElapsedTimeSeconds *int64    `json:"elapsedTimeSeconds,omitempty"`
 }
 
-// Failover describes the failover event of a data source that opened a Failover annotation.
-// The annotation covers the time from the failover event to the recovery event, when the
-// data source reads from the failover target.
+// Failover is the failover event that opened a Failover annotation. The annotation lasts until the recovery event.
 type Failover struct {
 	// MetricSource is the data source; its project is the project of the data source, not of the SLO.
 	MetricSource slo.MetricSourceSpec   `json:"metricSource"`
