@@ -17,6 +17,7 @@ import (
 	v1alphaProject "github.com/nobl9/nobl9-go/manifest/v1alpha/project"
 	v1alphaRoleBinding "github.com/nobl9/nobl9-go/manifest/v1alpha/rolebinding"
 	v1alphaService "github.com/nobl9/nobl9-go/manifest/v1alpha/service"
+	v1alphaUserGroup "github.com/nobl9/nobl9-go/manifest/v1alpha/usergroup"
 )
 
 func TestExamples_Validate_SLO(t *testing.T) {
@@ -112,6 +113,14 @@ func TestExamples_Validate_RoleBinding(t *testing.T) {
 	for _, variant := range RoleBinding() {
 		t.Run(variant.GetVariant()+" "+variant.GetSubVariant(), func(t *testing.T) {
 			assert.NoError(t, variant.GetObject().(v1alphaRoleBinding.RoleBinding).Validate())
+		})
+	}
+}
+
+func TestExamples_Validate_UserGroup(t *testing.T) {
+	for _, variant := range UserGroup() {
+		t.Run(variant.GetSubVariant(), func(t *testing.T) {
+			assert.NoError(t, variant.GetObject().(v1alphaUserGroup.UserGroup).Validate())
 		})
 	}
 }

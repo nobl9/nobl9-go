@@ -21,4 +21,12 @@ var validator = govy.New[UserGroup](
 	govy.For(func(u UserGroup) string { return u.Spec.DisplayName }).
 		WithPath(jsonpath.New().Name("spec").Name("displayName")).
 		Rules(rules.StringLength(0, validationV1Alpha.NameMaximumLength)),
+	govy.ForSlice(func(u UserGroup) []Member { return u.Spec.Members }).
+		WithPath(jsonpath.New().Name("spec").Name("members")).
+		Rules(rules.Required[[]Member](), rules.SliceUnique(func(m Member) string { return m.ID })).
+		IncludeForEach(govy.New[Member](
+			govy.For(func(m Member) string { return m.ID }).
+				WithName("id").
+				Rules(rules.StringNotEmpty()),
+		)),
 )
