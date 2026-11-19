@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaAgent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	v1alphaAlertMethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	v1alphaAlertPolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
@@ -37,6 +38,13 @@ type Endpoints interface {
 	// [MoveSLOsRequest] is not validated by this method,
 	// in order to verify the request parameters, use [MoveSLOsRequest.Validate].
 	MoveSLOs(ctx context.Context, params MoveSLOsRequest) error
+	// SendFailoverEvent sends a failover or recovery event of a Direct or an Agent
+	// and returns the failover status of the data source after the event.
+	// A retry with the same event ID returns the current status and changes nothing.
+	//
+	// [FailoverEventRequest] is not validated by this method,
+	// in order to verify the request parameters, use [FailoverEventRequest.Validate].
+	SendFailoverEvent(ctx context.Context, params FailoverEventRequest) (*v1alpha.FailoverStatus, error)
 	GetV1alphaProjects(ctx context.Context, params GetProjectsRequest) ([]v1alphaProject.Project, error)
 	GetV1alphaServices(ctx context.Context, params GetServicesRequest) ([]v1alphaService.Service, error)
 	GetV1alphaSLOs(ctx context.Context, params GetSLOsRequest) ([]v1alphaSLO.SLO, error)
