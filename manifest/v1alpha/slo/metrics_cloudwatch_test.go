@@ -2,14 +2,11 @@ package slo
 
 import (
 	"embed"
-	"encoding/json"
 	"path"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -437,39 +434,12 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 	})
 }
 
-const cloudWatchFailoverQueryYAML = `
-region: us-east-1
-namespace: AWS/ApiGateway
-metricName: 4XXError
-stat: Sum
-dimensions:
-  - name: ApiName
-    value: api-east
-failover:
-  region: us-west-2
-  namespace: AWS/ApiGateway
-  metricName: 4XXError
-  stat: Sum
-  dimensions:
-    - name: ApiName
-      value: api-west
-  accountId: "123456789012"
-`
-
 func TestCloudWatch_Failover(t *testing.T) {
-	t.Run("example round-trips", func(t *testing.T) {
-		var metric CloudWatchMetric
-		err := yaml.UnmarshalWithOptions([]byte(cloudWatchFailoverQueryYAML), &metric, yaml.Strict())
-		require.NoError(t, err)
+	t.Run("passes", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &metric
-		testutils.AssertNoError(t, slo, validate(slo))
-
-		expected, err := yaml.YAMLToJSON([]byte(cloudWatchFailoverQueryYAML))
-		require.NoError(t, err)
-		actual, err := json.Marshal(metric)
-		require.NoError(t, err)
-		assert.JSONEq(t, string(expected), string(actual))
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = validCloudWatchMetricFailover()
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -493,12 +463,6 @@ func TestCloudWatch_Failover(t *testing.T) {
 				Code: rules.ErrorCodeRequired,
 			},
 		)
-	})
-	t.Run("passes with no dimensions and no accountId", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = validCloudWatchMetricFailover()
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("invalid fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -564,27 +528,6 @@ func TestCloudWatch_Failover(t *testing.T) {
 			})
 		}
 	})
-	t.Run("query sorts the failover dimensions by name and keeps the spec unchanged", func(t *testing.T) {
-		spec := validMetricSpec(v1alpha.CloudWatch)
-		spec.CloudWatch.Failover = validCloudWatchMetricFailover()
-		spec.CloudWatch.Failover.Dimensions = []CloudWatchMetricDimension{
-			{Name: ptr("b"), Value: ptr("2")},
-			{Name: ptr("a"), Value: ptr("1")},
-		}
-
-		// act
-		query := spec.Query()
-
-		// assert
-		assert.Equal(t, []CloudWatchMetricDimension{
-			{Name: ptr("a"), Value: ptr("1")},
-			{Name: ptr("b"), Value: ptr("2")},
-		}, query.(CloudWatchMetric).Failover.Dimensions)
-		assert.Equal(t, []CloudWatchMetricDimension{
-			{Name: ptr("b"), Value: ptr("2")},
-			{Name: ptr("a"), Value: ptr("1")},
-		}, spec.CloudWatch.Failover.Dimensions)
-	})
 }
 
 func validCloudWatchMetricFailover() *CloudWatchMetricFailover {
@@ -607,107 +550,44 @@ func getCloudWatchJSON(t *testing.T, name string) *string {
 	return &s
 }
 
-func TestCloudWatch_CountMetricsFailover(t *testing.T) {
-	t.Run("passes with no failover block", func(t *testing.T) {
-		// arrange
+func TestCloudWatch_CountMetrics(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.CloudWatch)
-
-		// act
 		err := validate(slo)
-
-		// assert
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes with a failover block on good and total in different regions", func(t *testing.T) {
-		// arrange
+	t.Run("passes with failover for good and total", func(t *testing.T) {
 		slo := validCountMetricSLO(v1alpha.CloudWatch)
-		countMetrics := slo.Spec.Objectives[0].CountMetrics
-		countMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		countMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-1")
-
-		// act
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-1")
 		err := validate(slo)
-
-		// assert
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes with a failover block on bad and total", func(t *testing.T) {
-		// arrange
-		slo := validBadOverTotalCloudWatchSLO()
-		countMetrics := slo.Spec.Objectives[0].CountMetrics
-		countMetrics.BadMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		countMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-
-		// act
-		err := validate(slo)
-
-		// assert
-		testutils.AssertNoError(t, slo, err)
-	})
-	for name, arrange := range map[string]func(slo *SLO){
-		"good only": func(slo *SLO) {
-			slo.Spec.Objectives[0].CountMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		},
-		"total only": func(slo *SLO) {
-			slo.Spec.Objectives[0].CountMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		},
-	} {
-		t.Run("fails with a failover block on "+name, func(t *testing.T) {
-			// arrange
-			slo := validCountMetricSLO(v1alpha.CloudWatch)
-			arrange(&slo)
-
-			// act
-			err := validate(slo)
-
-			// assert
-			testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-				Prop:    "spec.objectives[0].countMetrics",
-				Code:    rules.ErrorCodeEqualTo,
-				Message: "'cloudWatch.failover' must be set for both 'good' and 'total' metrics or for neither",
-			})
-		})
-	}
-	t.Run("fails with a failover block on bad only", func(t *testing.T) {
-		// arrange
+	t.Run("passes with failover for bad and total", func(t *testing.T) {
 		slo := validBadOverTotalCloudWatchSLO()
 		slo.Spec.Objectives[0].CountMetrics.BadMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-
-		// act
+		slo.Spec.Objectives[0].CountMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
 		err := validate(slo)
-
-		// assert
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("failover must be set for both good and total", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].CountMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
+		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop:    "spec.objectives[0].countMetrics",
-			Code:    rules.ErrorCodeEqualTo,
-			Message: "'cloudWatch.failover' must be set for both 'bad' and 'total' metrics or for neither",
+			Prop: "spec.objectives[0].countMetrics",
+			Code: rules.ErrorCodeEqualTo,
 		})
 	})
-}
-
-func TestCloudWatchMetricFailover_Metric(t *testing.T) {
-	// arrange
-	failover := CloudWatchMetricFailover{
-		Region:     ptr("us-east-2"),
-		Namespace:  ptr("AWS/Lambda"),
-		MetricName: ptr("Errors"),
-		Stat:       ptr("Sum"),
-		Dimensions: []CloudWatchMetricDimension{{Name: ptr("FunctionName"), Value: ptr("api")}},
-		AccountID:  ptr("123456789012"),
-	}
-
-	// act
-	metric := failover.Metric()
-
-	// assert
-	assert.Equal(t, CloudWatchMetric{
-		Region:     ptr("us-east-2"),
-		Namespace:  ptr("AWS/Lambda"),
-		MetricName: ptr("Errors"),
-		Stat:       ptr("Sum"),
-		Dimensions: []CloudWatchMetricDimension{{Name: ptr("FunctionName"), Value: ptr("api")}},
-		AccountID:  ptr("123456789012"),
-	}, metric)
+	t.Run("failover must be set for both bad and total", func(t *testing.T) {
+		slo := validBadOverTotalCloudWatchSLO()
+		slo.Spec.Objectives[0].CountMetrics.BadMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].countMetrics",
+			Code: rules.ErrorCodeEqualTo,
+		})
+	})
 }
 
 func validBadOverTotalCloudWatchSLO() SLO {

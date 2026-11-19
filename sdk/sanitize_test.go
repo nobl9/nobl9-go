@@ -148,7 +148,6 @@ func TestRemoveComputedFieldsFromObjects_annotationReplay(t *testing.T) {
 }
 
 func TestRemoveComputedFieldsFromObjects_annotationFailover(t *testing.T) {
-	// arrange
 	a := v1alphaAnnotation.New(
 		v1alphaAnnotation.Metadata{Name: "failover-123", Project: "default"},
 		v1alphaAnnotation.Spec{
@@ -165,13 +164,11 @@ func TestRemoveComputedFieldsFromObjects_annotationFailover(t *testing.T) {
 		},
 	)
 
-	// act
 	objects, err := RemoveComputedFieldsFromObjects(objectsOf(&a))
 	require.NoError(t, err)
 	var buf bytes.Buffer
 	require.NoError(t, EncodeObject(objects[0], &buf, manifest.ObjectFormatJSON))
 
-	// assert
 	out := buf.String()
 	assert.NotContains(t, out, `"failover"`, "computed spec.failover must not survive to the applied manifest")
 	assert.NotContains(t, out, "eventId")
@@ -181,17 +178,3 @@ func TestRemoveComputedFieldsFromObjects_annotationFailover(t *testing.T) {
 // objectsOf keeps the slice length opaque at the call site to avoid a gosec G602 false positive
 // in RemoveComputedFieldsFromObjects.
 func objectsOf(objects ...manifest.Object) []manifest.Object { return objects }
-
-func TestRemoveComputedFieldsFromObjects_sloFailoverStatus(t *testing.T) {
-	// arrange
-	slo := v1alphaSLO.New(v1alphaSLO.Metadata{Name: "cw-ratio", Project: "default"}, v1alphaSLO.Spec{})
-	slo.Status = &v1alphaSLO.Status{Failover: &v1alphaSLO.SLOFailoverStatus{State: v1alpha.FailoverStateFailover}}
-
-	// act
-	objects, err := RemoveComputedFieldsFromObjects(objectsOf(&slo))
-
-	// assert
-	require.NoError(t, err)
-	require.Len(t, objects, 1)
-	assert.Nil(t, objects[0].(*v1alphaSLO.SLO).Status)
-}

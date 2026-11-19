@@ -125,7 +125,6 @@ func TestSpec_ReplaySerialization(t *testing.T) {
 
 func TestSpec_FailoverSerialization(t *testing.T) {
 	t.Run("a Failover annotation keeps spec.failover", func(t *testing.T) {
-		// arrange
 		a := validAnnotation()
 		a.Spec.Category = CategoryFailover
 		a.Spec.Failover = &Failover{
@@ -135,13 +134,11 @@ func TestSpec_FailoverSerialization(t *testing.T) {
 			EventID:      "event-1",
 		}
 
-		// act
 		data, err := json.Marshal(a)
 		require.NoError(t, err)
 		var decoded Annotation
 		require.NoError(t, json.Unmarshal(data, &decoded))
 
-		// assert
 		assert.Equal(t, map[string]any{
 			"metricSource": map[string]any{"name": "cloudwatch-direct", "project": "infra", "kind": "Direct"},
 			"from":         map[string]any{"region": "us-east-1"},

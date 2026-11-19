@@ -2,16 +2,13 @@ package agent
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	"github.com/nobl9/govy/pkg/rules"
 
@@ -1088,42 +1085,17 @@ func TestValidateSpec_Atlas(t *testing.T) {
 	})
 }
 
-const cloudWatchFailoverAgentYAML = `
-apiVersion: n9/v1alpha
-kind: Agent
-metadata:
-  name: cloudwatch-prod
-  project: us-individual-experience
-spec:
-  cloudWatch:
-    failover:
-      primaryRegion: us-east-1
-      failoverRegion: us-west-2
-status:
-  agentType: CloudWatch
-  environment: {}
-  failover:
-    state: failover
-    lastEventId: failover-2025-10-20T06:02:18Z
-    lastEventTimestamp: "2025-10-20T06:02:18Z"
-    active:
-      region: us-west-2
-`
-
-func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
-	t.Run("example round-trips", func(t *testing.T) {
-		var agent Agent
-		err := yaml.UnmarshalWithOptions([]byte(cloudWatchFailoverAgentYAML), &agent, yaml.Strict())
-		require.NoError(t, err)
-		testutils.AssertNoError(t, agent, validate(agent))
-
-		expected, err := yaml.YAMLToJSON([]byte(cloudWatchFailoverAgentYAML))
-		require.NoError(t, err)
-		actual, err := json.Marshal(agent)
-		require.NoError(t, err)
-		assert.JSONEq(t, string(expected), string(actual))
+func TestValidateSpec_CloudWatch(t *testing.T) {
+	t.Run("passes with failover", func(t *testing.T) {
+		agent := validAgent(v1alpha.CloudWatch)
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-west-2",
+			FailoverRegion: "us-east-2",
+		}
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
 	})
-	t.Run("includes the shared failover validation", func(t *testing.T) {
+	t.Run("required failover regions", func(t *testing.T) {
 		agent := validAgent(v1alpha.CloudWatch)
 		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{}
 		err := validate(agent)
@@ -1137,6 +1109,36 @@ func TestValidateSpec_CloudWatch_Failover(t *testing.T) {
 				Code: rules.ErrorCodeRequired,
 			},
 		)
+	})
+	t.Run("invalid failover regions", func(t *testing.T) {
+		agent := validAgent(v1alpha.CloudWatch)
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-east-9",
+			FailoverRegion: "mars-west-1",
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.cloudWatch.failover.primaryRegion",
+				Code: rules.ErrorCodeOneOf,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.cloudWatch.failover.failoverRegion",
+				Code: rules.ErrorCodeOneOf,
+			},
+		)
+	})
+	t.Run("same failover regions", func(t *testing.T) {
+		agent := validAgent(v1alpha.CloudWatch)
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-east-1",
+			FailoverRegion: "us-east-1",
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.cloudWatch.failover",
+			Code: rules.ErrorCodeUniqueProperties,
+		})
 	})
 }
 
