@@ -48,6 +48,7 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 			StartTime:     resp.StartTime,
 			Category:      resp.Category,
 			CreatedBy:     resp.ExternalUserID,
+			Failover:      resp.Failover,
 		},
 	)
 	if resp.EndTime != nil {
@@ -60,7 +61,6 @@ func getAnnotationsModelToV1alpha(resp getAnnotationModel) v1alphaAnnotation.Ann
 			ElapsedTimeSeconds: resp.Replay.ElapsedTimeSeconds,
 		}
 	}
-	v1alphaModel.Spec.Failover = resp.Failover
 	v1alphaModel.Status = &v1alphaAnnotation.Status{
 		UpdatedAt: resp.Status.UpdatedAt.Format(time.RFC3339),
 		IsSystem:  resp.Status.IsSystem,

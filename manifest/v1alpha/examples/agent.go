@@ -128,10 +128,7 @@ func (a agentExample) generateVariant(agent v1alphaAgent.Agent) v1alphaAgent.Age
 		if a.SubVariant == subVariantCloudWatchFailover {
 			agent.Metadata.Name += "-failover"
 			agent.Spec.Description += " with region failover"
-			agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
-				PrimaryRegion:  "us-west-2",
-				FailoverRegion: "us-east-1",
-			}
+			agent.Spec.CloudWatch.Failover = cloudWatchFailoverExampleConfig()
 		}
 	case v1alpha.Datadog:
 		agent.Spec.Datadog = &v1alphaAgent.DatadogConfig{

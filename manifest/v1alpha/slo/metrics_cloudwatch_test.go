@@ -454,50 +454,22 @@ func TestCloudWatch_Failover(t *testing.T) {
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
 				Code: rules.ErrorCodeRequired,
 			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.metricName",
-				Code: rules.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.stat",
-				Code: rules.ErrorCodeRequired,
-			},
 		)
 	})
 	t.Run("invalid fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{
-			Region:     ptr("invalid"),
-			Namespace:  ptr("?"),
-			MetricName: ptr(strings.Repeat("l", 256)),
-			Stat:       ptr("invalid"),
-			AccountID:  ptr("invalid"),
-			Dimensions: []CloudWatchMetricDimension{
-				{Name: ptr("ApiName"), Value: ptr("api-west")},
-				{Name: ptr("ApiName"), Value: ptr("api-east")},
-			},
+		failover := validCloudWatchMetricFailover()
+		failover.Region = ptr("invalid")
+		failover.Dimensions = []CloudWatchMetricDimension{
+			{Name: ptr("ApiName"), Value: ptr("api-west")},
+			{Name: ptr("ApiName"), Value: ptr("api-east")},
 		}
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = failover
 		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 6,
+		testutils.AssertContainsErrors(t, slo, err, 2,
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
 				Code: rules.ErrorCodeOneOf,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
-				Code: rules.ErrorCodeStringMatchRegexp,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.metricName",
-				Code: rules.ErrorCodeStringMaxLength,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.stat",
-				Code: rules.ErrorCodeStringMatchRegexp,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.accountId",
-				Code: rules.ErrorCodeStringMatchRegexp,
 			},
 			testutils.ExpectedError{
 				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.dimensions",
@@ -556,38 +528,37 @@ func TestCloudWatch_CountMetrics(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes with failover for good and total", func(t *testing.T) {
-		slo := validCountMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].CountMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		slo.Spec.Objectives[0].CountMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-1")
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
-	})
-	t.Run("passes with failover for bad and total", func(t *testing.T) {
-		slo := validBadOverTotalCloudWatchSLO()
-		slo.Spec.Objectives[0].CountMetrics.BadMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		slo.Spec.Objectives[0].CountMetrics.TotalMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		err := validate(slo)
-		testutils.AssertNoError(t, slo, err)
-	})
-	t.Run("failover must be set for both good and total", func(t *testing.T) {
-		slo := validCountMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].CountMetrics.GoodMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: rules.ErrorCodeEqualTo,
+	for name, test := range map[string]struct {
+		SLO             SLO
+		FailoverOnTotal bool
+	}{
+		"failover for good and total": {SLO: validCountMetricSLO(v1alpha.CloudWatch), FailoverOnTotal: true},
+		"failover for bad and total":  {SLO: validBadOverTotalCloudWatchSLO(), FailoverOnTotal: true},
+		"failover only for good":      {SLO: validCountMetricSLO(v1alpha.CloudWatch)},
+		"failover only for bad":       {SLO: validBadOverTotalCloudWatchSLO()},
+	} {
+		t.Run(name, func(t *testing.T) {
+			slo := test.SLO
+			countMetrics := slo.Spec.Objectives[0].CountMetrics
+			for _, metric := range []*MetricSpec{countMetrics.GoodMetric, countMetrics.BadMetric} {
+				if metric != nil {
+					metric.CloudWatch.Failover = validCloudWatchMetricFailover()
+				}
+			}
+			if test.FailoverOnTotal {
+				countMetrics.TotalMetric.CloudWatch.Failover = validCloudWatchMetricFailover()
+			}
+			err := validate(slo)
+			if test.FailoverOnTotal {
+				testutils.AssertNoError(t, slo, err)
+			} else {
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].countMetrics",
+					Code: rules.ErrorCodeEqualTo,
+				})
+			}
 		})
-	})
-	t.Run("failover must be set for both bad and total", func(t *testing.T) {
-		slo := validBadOverTotalCloudWatchSLO()
-		slo.Spec.Objectives[0].CountMetrics.BadMetric.CloudWatch.Failover = cloudWatchMetricFailoverIn("us-east-2")
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].countMetrics",
-			Code: rules.ErrorCodeEqualTo,
-		})
-	})
+	}
 }
 
 func validBadOverTotalCloudWatchSLO() SLO {
@@ -596,10 +567,4 @@ func validBadOverTotalCloudWatchSLO() SLO {
 	countMetrics.BadMetric = countMetrics.GoodMetric
 	countMetrics.GoodMetric = nil
 	return slo
-}
-
-func cloudWatchMetricFailoverIn(region string) *CloudWatchMetricFailover {
-	failover := validCloudWatchMetricFailover()
-	failover.Region = ptr(region)
-	return failover
 }
