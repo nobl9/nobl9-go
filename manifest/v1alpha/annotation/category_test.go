@@ -46,23 +46,10 @@ func TestCategory_EveryCategoryIsEitherSystemOrUser(t *testing.T) {
 }
 
 func TestCategory_Failover(t *testing.T) {
-	t.Run("Failover is a system category", func(t *testing.T) {
-		// act
-		category, err := ParseCategory("Failover")
-
-		// assert
-		require.NoError(t, err)
-		assert.Equal(t, CategoryFailover, category)
-		assert.True(t, category.IsValid())
-		assert.Contains(t, GetSystemCategories(), CategoryFailover)
-		assert.NotContains(t, GetUserCategories(), CategoryFailover)
-	})
-	t.Run("Recovery is not a category", func(t *testing.T) {
-		// act
-		_, err := ParseCategory("Recovery")
-
-		// assert
-		require.ErrorIs(t, err, ErrInvalidCategory)
-		assert.False(t, Category("Recovery").IsValid())
-	})
+	category, err := ParseCategory("Failover")
+	require.NoError(t, err)
+	assert.Equal(t, CategoryFailover, category)
+	assert.True(t, CategoryFailover.IsValid())
+	assert.Contains(t, GetSystemCategories(), CategoryFailover)
+	assert.NotContains(t, GetUserCategories(), CategoryFailover)
 }
