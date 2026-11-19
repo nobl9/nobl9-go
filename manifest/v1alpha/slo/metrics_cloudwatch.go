@@ -52,7 +52,6 @@ func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
 	}
 }
 
-// sortedDimensions returns a sorted copy of the dimensions, so that the stored query does not depend on their order.
 func sortedDimensions(dimensions []CloudWatchMetricDimension) []CloudWatchMetricDimension {
 	sorted := slices.Clone(dimensions)
 	slices.SortFunc(sorted, func(a, b CloudWatchMetricDimension) int { return strings.Compare(*a.Name, *b.Name) })
@@ -135,7 +134,7 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Region }).
 		WithName("region").
 		Required().
-		Rules(cloudWatchRegionRules...),
+		Rules(v1alpha.AWSRegionRules()),
 	govy.ForPointer(func(c CloudWatchMetric) *CloudWatchMetricFailover { return c.Failover }).
 		WithName("failover").
 		Rules(rules.Forbidden[CloudWatchMetricFailover]()).
@@ -178,16 +177,11 @@ func hasCloudWatchFailover(metric *MetricSpec) bool {
 	return metric != nil && metric.CloudWatch != nil && metric.CloudWatch.Failover != nil
 }
 
-var cloudWatchRegionRules = []govy.RulesInterface[string]{
-	rules.StringMaxLength(255),
-	rules.OneOf(v1alpha.AWSRegionCodes()...),
-}
-
 var cloudWatchMetricFailoverValidation = govy.New[CloudWatchMetricFailover](
 	govy.ForPointer(func(f CloudWatchMetricFailover) *string { return f.Region }).
 		WithName("region").
 		Required().
-		Rules(cloudWatchRegionRules...),
+		Rules(v1alpha.AWSRegionRules()),
 	govy.For(CloudWatchMetricFailover.Metric).
 		Include(cloudWatchStandardQueryValidation),
 )
