@@ -184,9 +184,8 @@ type Status struct {
 	TargetSLO                    *TargetSloStatus                      `json:"targetSlo,omitempty"`
 	ObjectiveIndicatorValidation []*ObjectiveIndicatorValidationStatus `json:"objectiveIndicatorValidation,omitempty"`
 	// Deprecated: use Status.Replay instead.
-	ReplayStatus *ReplayStatus      `json:"timeTravel,omitempty"`
-	ReviewStatus *ReviewStatus      `json:"review,omitempty"`
-	Failover     *SLOFailoverStatus `json:"failover,omitempty"`
+	ReplayStatus *ReplayStatus `json:"timeTravel,omitempty"`
+	ReviewStatus *ReviewStatus `json:"review,omitempty"`
 }
 
 type ObjectiveIndicatorValidationStatus struct {

@@ -66,7 +66,6 @@ var CountMetricsSpecValidation = govy.New[CountMetricsSpec](
 			dynatraceCountMetricsQueryTypeValidation,
 			honeycombCountMetricsValidation,
 			atlasCountMetricsValidation,
-			cloudWatchCountMetricsFailoverValidation,
 		).
 		Include(
 			goodAndBadOverTotalMetricsValidation,
