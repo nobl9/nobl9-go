@@ -4,6 +4,13 @@ import "github.com/nobl9/nobl9-go/manifest/v1alpha"
 
 const subVariantCloudWatchFailover = "region failover"
 
+func cloudWatchFailoverExampleConfig() *v1alpha.CloudWatchFailoverConfig {
+	return &v1alpha.CloudWatchFailoverConfig{
+		PrimaryRegion:  "us-west-2",
+		FailoverRegion: "us-east-1",
+	}
+}
+
 type Example interface {
 	GetObject() any
 	GetVariant() string

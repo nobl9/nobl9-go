@@ -1,12 +1,11 @@
 package v1alpha
 
-// FailoverState is the failover state of a data source.
-type FailoverState string
+//go:generate ../../bin/go-enum --values
 
-const (
-	FailoverStatePrimary  FailoverState = "primary"
-	FailoverStateFailover FailoverState = "failover"
-)
+// FailoverState is the failover state of a data source.
+//
+// ENUM(primary, failover)
+type FailoverState string
 
 // FailoverTarget is the place that a data source with failover reads from.
 // Each data source type sets its own keys. CloudWatch sets Region.
