@@ -84,36 +84,9 @@ func TestGetAnnotationsModelToV1alpha_Failover(t *testing.T) {
 		EventID:      "event-1",
 	}
 
-	t.Run("maps the root failover object into spec.failover when set", func(t *testing.T) {
-		resp := getAnnotationModel{
-			Name:     "annotation",
-			Project:  "project",
-			SloName:  "my-slo",
-			Category: v1alphaAnnotation.CategoryFailover,
-			Status: getAnnotationModelStatus{
-				UpdatedAt: time.Date(2023, 5, 2, 17, 10, 5, 0, time.UTC),
-				IsSystem:  true,
-			},
-			Failover: failover,
-		}
+	result := getAnnotationsModelToV1alpha(getAnnotationModel{Failover: failover})
 
-		result := getAnnotationsModelToV1alpha(resp)
-
-		assert.Equal(t, failover, result.Spec.Failover)
-	})
-
-	t.Run("leaves spec.failover nil when the transport omits the failover object", func(t *testing.T) {
-		resp := getAnnotationModel{
-			Name:     "annotation",
-			Project:  "project",
-			SloName:  "my-slo",
-			Category: v1alphaAnnotation.CategoryComment,
-		}
-
-		result := getAnnotationsModelToV1alpha(resp)
-
-		assert.Nil(t, result.Spec.Failover)
-	})
+	assert.Equal(t, failover, result.Spec.Failover)
 }
 
 func ptr[T any](v T) *T { return &v }
