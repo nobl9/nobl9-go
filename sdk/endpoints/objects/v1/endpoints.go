@@ -22,6 +22,7 @@ const (
 	apiGet       = "get"
 	apiGetGroups = "usrmgmt/groups"
 	apiMoveSLOs  = "objects/v1/slos/move"
+	apiObjectsV1 = "objects/v1"
 )
 
 //go:generate ../../../../bin/ifacemaker -y " " -f ./*.go -s endpoints -i Endpoints -o endpoints_interface.go -p "$GOPACKAGE"
@@ -137,6 +138,47 @@ func (e endpoints) MoveSLOs(ctx context.Context, params MoveSLOsRequest) error {
 	}
 	_ = resp.Body.Close()
 	return nil
+}
+
+// SendFailoverEvent sends a failover or recovery event of a Direct or an Agent
+// and returns the failover status of the data source after the event.
+// A retry with the same event ID returns the current status and changes nothing.
+//
+// [FailoverEventRequest] is not validated by this method,
+// in order to verify the request parameters, use [FailoverEventRequest.Validate].
+func (e endpoints) SendFailoverEvent(
+	ctx context.Context,
+	params FailoverEventRequest,
+) (*v1alpha.FailoverStatus, error) {
+	buf := new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(params); err != nil {
+		return nil, fmt.Errorf("cannot encode %T: %w", params, err)
+	}
+	req, err := e.client.CreateRequest(
+		ctx,
+		http.MethodPost,
+		path.Join(apiObjectsV1, params.Kind.ToLower()+"s", params.Name, "failover-events"),
+		http.Header{sdk.HeaderProject: []string{params.Project}},
+		nil,
+		buf,
+	)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := e.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	var result struct {
+		Status struct {
+			Failover v1alpha.FailoverStatus `json:"failover"`
+		} `json:"status"`
+	}
+	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("cannot decode the failover event response: %w", err)
+	}
+	return &result.Status.Failover, nil
 }
 
 func (e endpoints) applyOrDeleteObjects(
