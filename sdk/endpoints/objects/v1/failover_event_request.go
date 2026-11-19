@@ -56,12 +56,12 @@ var failoverEventRequestValidation = govy.New[FailoverEventRequest](
 	govy.For(func(r FailoverEventRequest) v1alpha.FailoverState { return r.State }).
 		WithName("state").
 		Required().
-		Rules(rules.OneOf(v1alpha.FailoverStatePrimary, v1alpha.FailoverStateFailover)),
+		Rules(rules.OneOf(v1alpha.FailoverStateValues()...)),
 	govy.For(func(r FailoverEventRequest) time.Time { return r.Timestamp }).
 		WithName("timestamp").
 		Required(),
 	govy.For(func(r FailoverEventRequest) string { return r.Reason }).
 		WithName("reason").
 		OmitEmpty().
-		Rules(rules.StringMaxLength(1050)),
+		Rules(validationV1Alpha.StringDescription()),
 ).WithName("Failover event request")

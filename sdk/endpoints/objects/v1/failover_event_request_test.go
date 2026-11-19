@@ -77,7 +77,11 @@ func TestFailoverEventRequest_Validate(t *testing.T) {
 				},
 				{PropertyPath: "eventId", Code: rules.ErrorCodeStringMatchRegexp, ValidatorName: "Failover event request"},
 				{PropertyPath: "state", Code: rules.ErrorCodeOneOf, ValidatorName: "Failover event request"},
-				{PropertyPath: "reason", Code: rules.ErrorCodeStringMaxLength, ValidatorName: "Failover event request"},
+				{
+					PropertyPath:  "reason",
+					Code:          validationV1Alpha.ErrorCodeStringDescription,
+					ValidatorName: "Failover event request",
+				},
 			},
 		},
 	}
