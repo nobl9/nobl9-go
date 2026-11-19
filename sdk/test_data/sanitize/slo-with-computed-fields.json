@@ -121,6 +121,19 @@
       "unit": "Minute",
       "value": 6
     },
+    "failover": {
+      "state": "failover",
+      "objectives": [
+        {
+          "name": "good",
+          "rawMetric": {
+            "active": {
+              "region": "us-east-2"
+            }
+          }
+        }
+      ]
+    },
     "replay": {
       "cancellation": "blocked",
       "endTime": "2025-06-27T07:45:07Z",
