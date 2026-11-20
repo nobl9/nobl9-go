@@ -434,6 +434,83 @@ func TestCloudWatch_Dimensions(t *testing.T) {
 	})
 }
 
+func TestCloudWatch_Failover(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = validCloudWatchMetricFailover()
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	t.Run("required fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 4,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+				Code: rules.ErrorCodeRequired,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
+				Code: rules.ErrorCodeRequired,
+			},
+		)
+	})
+	t.Run("invalid fields", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		failover := validCloudWatchMetricFailover()
+		failover.Region = ptr("invalid")
+		failover.Dimensions = []CloudWatchMetricDimension{
+			{Name: ptr("ApiName"), Value: ptr("api-west")},
+			{Name: ptr("ApiName"), Value: ptr("api-east")},
+		}
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = failover
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 2,
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+				Code: rules.ErrorCodeOneOf,
+			},
+			testutils.ExpectedError{
+				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.dimensions",
+				Code: rules.ErrorCodeSliceUnique,
+			},
+		)
+	})
+	t.Run("forbidden with sql or json", func(t *testing.T) {
+		for name, metric := range map[string]*CloudWatchMetric{
+			"sql": {
+				Region: ptr("eu-central-1"),
+				SQL:    ptr("SELECT * FROM table"),
+			},
+			"json": {
+				Region: ptr("eu-central-1"),
+				JSON:   getCloudWatchJSON(t, "cloudwatch_valid_json"),
+			},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.CloudWatch)
+				metric.Failover = validCloudWatchMetricFailover()
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = metric
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
+					Code: rules.ErrorCodeForbidden,
+				})
+			})
+		}
+	})
+}
+
+func validCloudWatchMetricFailover() *CloudWatchMetricFailover {
+	return &CloudWatchMetricFailover{
+		Region:     ptr("us-west-2"),
+		Namespace:  ptr("AWS/ApiGateway"),
+		MetricName: ptr("4XXError"),
+		Stat:       ptr("Sum"),
+	}
+}
+
 //go:embed test_data
 var testData embed.FS
 
@@ -443,4 +520,51 @@ func getCloudWatchJSON(t *testing.T, name string) *string {
 	require.NoError(t, err)
 	s := string(data)
 	return &s
+}
+
+func TestCloudWatch_CountMetrics(t *testing.T) {
+	t.Run("passes", func(t *testing.T) {
+		slo := validCountMetricSLO(v1alpha.CloudWatch)
+		err := validate(slo)
+		testutils.AssertNoError(t, slo, err)
+	})
+	for name, test := range map[string]struct {
+		SLO             SLO
+		FailoverOnTotal bool
+	}{
+		"failover for good and total": {SLO: validCountMetricSLO(v1alpha.CloudWatch), FailoverOnTotal: true},
+		"failover for bad and total":  {SLO: validBadOverTotalCloudWatchSLO(), FailoverOnTotal: true},
+		"failover only for good":      {SLO: validCountMetricSLO(v1alpha.CloudWatch)},
+		"failover only for bad":       {SLO: validBadOverTotalCloudWatchSLO()},
+	} {
+		t.Run(name, func(t *testing.T) {
+			slo := test.SLO
+			countMetrics := slo.Spec.Objectives[0].CountMetrics
+			for _, metric := range []*MetricSpec{countMetrics.GoodMetric, countMetrics.BadMetric} {
+				if metric != nil {
+					metric.CloudWatch.Failover = validCloudWatchMetricFailover()
+				}
+			}
+			if test.FailoverOnTotal {
+				countMetrics.TotalMetric.CloudWatch.Failover = validCloudWatchMetricFailover()
+			}
+			err := validate(slo)
+			if test.FailoverOnTotal {
+				testutils.AssertNoError(t, slo, err)
+			} else {
+				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+					Prop: "spec.objectives[0].countMetrics",
+					Code: rules.ErrorCodeEqualTo,
+				})
+			}
+		})
+	}
+}
+
+func validBadOverTotalCloudWatchSLO() SLO {
+	slo := validCountMetricSLO(v1alpha.CloudWatch)
+	countMetrics := slo.Spec.Objectives[0].CountMetrics
+	countMetrics.BadMetric = countMetrics.GoodMetric
+	countMetrics.GoodMetric = nil
+	return slo
 }
