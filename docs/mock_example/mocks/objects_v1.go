@@ -16,6 +16,7 @@ import (
 	reflect "reflect"
 
 	manifest "github.com/nobl9/nobl9-go/manifest"
+	v1alpha "github.com/nobl9/nobl9-go/manifest/v1alpha"
 	agent "github.com/nobl9/nobl9-go/manifest/v1alpha/agent"
 	alertmethod "github.com/nobl9/nobl9-go/manifest/v1alpha/alertmethod"
 	alertpolicy "github.com/nobl9/nobl9-go/manifest/v1alpha/alertpolicy"
@@ -875,6 +876,45 @@ func (c *MockObjectsV1EndpointsMoveSLOsCall) Do(f func(context.Context, v1.MoveS
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockObjectsV1EndpointsMoveSLOsCall) DoAndReturn(f func(context.Context, v1.MoveSLOsRequest) error) *MockObjectsV1EndpointsMoveSLOsCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// SendFailoverEvent mocks base method.
+func (m *MockObjectsV1Endpoints) SendFailoverEvent(ctx context.Context, params v1.FailoverEventRequest) (*v1alpha.FailoverStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendFailoverEvent", ctx, params)
+	ret0, _ := ret[0].(*v1alpha.FailoverStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SendFailoverEvent indicates an expected call of SendFailoverEvent.
+func (mr *MockObjectsV1EndpointsMockRecorder) SendFailoverEvent(ctx, params any) *MockObjectsV1EndpointsSendFailoverEventCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendFailoverEvent", reflect.TypeOf((*MockObjectsV1Endpoints)(nil).SendFailoverEvent), ctx, params)
+	return &MockObjectsV1EndpointsSendFailoverEventCall{Call: call}
+}
+
+// MockObjectsV1EndpointsSendFailoverEventCall wrap *gomock.Call
+type MockObjectsV1EndpointsSendFailoverEventCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockObjectsV1EndpointsSendFailoverEventCall) Return(arg0 *v1alpha.FailoverStatus, arg1 error) *MockObjectsV1EndpointsSendFailoverEventCall {
+	c.Call = c.Call.Return(arg0, arg1)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockObjectsV1EndpointsSendFailoverEventCall) Do(f func(context.Context, v1.FailoverEventRequest) (*v1alpha.FailoverStatus, error)) *MockObjectsV1EndpointsSendFailoverEventCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockObjectsV1EndpointsSendFailoverEventCall) DoAndReturn(f func(context.Context, v1.FailoverEventRequest) (*v1alpha.FailoverStatus, error)) *MockObjectsV1EndpointsSendFailoverEventCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
