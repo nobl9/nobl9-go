@@ -3,10 +3,13 @@ package v1
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
 	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
@@ -86,4 +89,41 @@ func TestReplayAvailabilityReasonUnmarshal(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, ReplayAvailabilityReason("formatted reason from server"), availability.Reason)
+}
+
+func TestReplayAvailabilityFailoverUnmarshal(t *testing.T) {
+	t.Parallel()
+
+	var availability ReplayAvailability
+	err := json.Unmarshal([]byte(`{
+		"available": false,
+		"reason": "failover_period_overlap",
+		"message": "Replay is unavailable: Direct p/cw failed over.",
+		"failover": {
+			"metricSource": {"name": "cw-failover-test", "project": "cloudwatch-failover-test", "kind": "Direct"},
+			"from": {"region": "us-west-2"},
+			"to": {"region": "us-east-2"},
+			"periodStart": "2026-11-09T10:00:00Z",
+			"periodEnd": "2026-11-09T11:30:00Z"
+		}
+	}`), &availability)
+
+	require.NoError(t, err)
+	periodEnd := time.Date(2026, 11, 9, 11, 30, 0, 0, time.UTC)
+	assert.Equal(t, ReplayAvailability{
+		Available: false,
+		Reason:    ReplayFailoverPeriodOverlap,
+		Message:   "Replay is unavailable: Direct p/cw failed over.",
+		Failover: &ReplayFailover{
+			MetricSource: v1alphaSLO.MetricSourceSpec{
+				Name:    "cw-failover-test",
+				Project: "cloudwatch-failover-test",
+				Kind:    manifest.KindDirect,
+			},
+			From:        v1alpha.FailoverTarget{Region: "us-west-2"},
+			To:          v1alpha.FailoverTarget{Region: "us-east-2"},
+			PeriodStart: time.Date(2026, 11, 9, 10, 0, 0, 0, time.UTC),
+			PeriodEnd:   &periodEnd,
+		},
+	}, availability)
 }
