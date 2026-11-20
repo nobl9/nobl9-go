@@ -6,6 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nobl9/nobl9-go/manifest"
+	"github.com/nobl9/nobl9-go/manifest/v1alpha"
+	v1alphaAnnotation "github.com/nobl9/nobl9-go/manifest/v1alpha/annotation"
+	v1alphaSLO "github.com/nobl9/nobl9-go/manifest/v1alpha/slo"
 )
 
 func TestGetAnnotationsModelToV1alpha_Replay(t *testing.T) {
@@ -69,6 +74,19 @@ func TestGetAnnotationsModelToV1alpha_Replay(t *testing.T) {
 
 		assert.Nil(t, result.Spec.Replay)
 	})
+}
+
+func TestGetAnnotationsModelToV1alpha_Failover(t *testing.T) {
+	failover := &v1alphaAnnotation.Failover{
+		MetricSource: v1alphaSLO.MetricSourceSpec{Name: "cloudwatch-agent", Project: "infra", Kind: manifest.KindAgent},
+		From:         v1alpha.FailoverTarget{Region: "us-east-1"},
+		To:           v1alpha.FailoverTarget{Region: "us-west-2"},
+		EventID:      "event-1",
+	}
+
+	result := getAnnotationsModelToV1alpha(getAnnotationModel{Failover: failover})
+
+	assert.Equal(t, failover, result.Spec.Failover)
 }
 
 func ptr[T any](v T) *T { return &v }
