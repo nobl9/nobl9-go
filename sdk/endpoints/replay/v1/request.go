@@ -51,6 +51,7 @@ type ReplayCancellationStatus string
 // ReplayAvailabilityReason is a machine-readable reason why replay is unavailable.
 // The availability endpoint can also return formatted reason text outside this
 // fixed set, so callers should keep unknown values as raw strings.
+// concurrent_replay_runs_limit_exhausted is deprecated and kept only for compatibility.
 /* ENUM(
 datasource_type_invalid
 project_does_not_exist
@@ -58,7 +59,7 @@ data_source_does_not_exist
 integration_does_not_support_replay
 agent_version_does_not_support_replay
 max_historical_data_retrieval_too_low
-concurrent_replay_runs_limit_exhausted
+concurrent_replay_runs_limit_exhausted // Deprecated: The Nobl9 API no longer returns it, Replays are always queued.
 unknown_agent_version
 single_query_not_supported
 composite_slo_not_supported
@@ -68,12 +69,14 @@ type ReplayAvailabilityReason string
 
 // Replay availability reason aliases preserve the established public prefix and initialism casing.
 const (
-	ReplayDataSourceTypeInvalid              = ReplayAvailabilityReasonDatasourceTypeInvalid
-	ReplayProjectDoesNotExist                = ReplayAvailabilityReasonProjectDoesNotExist
-	ReplayDataSourceDoesNotExist             = ReplayAvailabilityReasonDataSourceDoesNotExist
-	ReplayIntegrationDoesNotSupportReplay    = ReplayAvailabilityReasonIntegrationDoesNotSupportReplay
-	ReplayAgentVersionDoesNotSupportReplay   = ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay
-	ReplayMaxHistoricalDataRetrievalTooLow   = ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow
+	ReplayDataSourceTypeInvalid            = ReplayAvailabilityReasonDatasourceTypeInvalid
+	ReplayProjectDoesNotExist              = ReplayAvailabilityReasonProjectDoesNotExist
+	ReplayDataSourceDoesNotExist           = ReplayAvailabilityReasonDataSourceDoesNotExist
+	ReplayIntegrationDoesNotSupportReplay  = ReplayAvailabilityReasonIntegrationDoesNotSupportReplay
+	ReplayAgentVersionDoesNotSupportReplay = ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay
+	ReplayMaxHistoricalDataRetrievalTooLow = ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow
+	// Deprecated: The Nobl9 API no longer returns this reason since Replays are always queued.
+	// The value is kept for compatibility.
 	ReplayConcurrentReplayRunsLimitExhausted = ReplayAvailabilityReasonConcurrentReplayRunsLimitExhausted
 	ReplayUnknownAgentVersion                = ReplayAvailabilityReasonUnknownAgentVersion
 	ReplaySingleQueryNotSupported            = ReplayAvailabilityReasonSingleQueryNotSupported
