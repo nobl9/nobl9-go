@@ -74,6 +74,7 @@ type Spec struct {
 	Atlas                   *AtlasConfig                     `json:"atlas,omitempty"`
 	Dash0                   *Dash0Config                     `json:"dash0,omitempty"`
 	Zscaler                 *ZscalerConfig                   `json:"zscaler,omitempty"`
+	ClickHouse              *ClickHouseConfig                `json:"clickHouse,omitempty"`
 	HistoricalDataRetrieval *v1alpha.HistoricalDataRetrieval `json:"historicalDataRetrieval,omitempty"`
 	QueryDelay              *v1alpha.QueryDelay              `json:"queryDelay,omitempty"`
 	// Interval, Timeout and Jitter are readonly and cannot be set via API
@@ -163,6 +164,8 @@ func (s Spec) GetType() (v1alpha.DataSourceType, error) {
 		return v1alpha.Dash0, nil
 	case s.Zscaler != nil:
 		return v1alpha.Zscaler, nil
+	case s.ClickHouse != nil:
+		return v1alpha.ClickHouse, nil
 	}
 	return 0, errors.New("unknown agent type")
 }
@@ -319,4 +322,10 @@ type Dash0Config struct {
 // ZscalerConfig configures access to ZDX reports through Zscaler OneAPI.
 type ZscalerConfig struct {
 	VanityDomain string `json:"vanityDomain"`
+}
+
+// ClickHouseConfig configures an Agent connection to ClickHouse.
+type ClickHouseConfig struct {
+	URL      string `json:"url"`
+	Database string `json:"database,omitempty"`
 }

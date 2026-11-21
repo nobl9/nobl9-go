@@ -44,6 +44,7 @@ var specValidation = govy.New[Spec](
 		Rules(
 			historicalDataRetrievalValidationRule,
 			queryDelayValidationRule,
+			releaseChannelValidationRule,
 		),
 	govy.For(func(s Spec) v1alpha.ReleaseChannel { return s.ReleaseChannel }).
 		WithName("releaseChannel").
@@ -148,6 +149,9 @@ var specValidation = govy.New[Spec](
 	govy.ForPointer(func(s Spec) *ZscalerConfig { return s.Zscaler }).
 		WithName("zscaler").
 		Include(zscalerValidation),
+	govy.ForPointer(func(s Spec) *ClickHouseConfig { return s.ClickHouse }).
+		WithName("clickHouse").
+		Include(clickHouseValidation),
 )
 
 var (
@@ -294,6 +298,12 @@ var (
 			Required().
 			Rules(zscalerVanityDomainValidationRule()),
 	)
+	clickHouseValidation = govy.New[ClickHouseConfig](
+		govy.Transform(func(c ClickHouseConfig) string { return c.URL }, url.Parse).
+			WithName("url").
+			Required().
+			Rules(rules.URL(), newHTTPSchemeRule()),
+	)
 	prometheusValidation = govy.New[PrometheusConfig](
 		govy.For(func(p PrometheusConfig) string { return p.URL }).
 			WithName("url").
@@ -345,6 +355,7 @@ func zscalerVanityDomainValidationRule() govy.Rule[string] {
 const (
 	errCodeExactlyOneDataSourceType  = "exactly_one_data_source_type"
 	errCodeQueryDelayOutOfBounds     = "query_delay_out_of_bounds"
+	errCodeUnsupportedReleaseChannel = "unsupported_release_channel"
 	errCodeHTTPOrHTTPSSchemeRequired = "url_http_or_https_scheme"
 	errCodeHTTPSSchemeRequired       = "https_scheme_required"
 )
@@ -518,6 +529,11 @@ var exactlyOneDataSourceTypeValidationRule = govy.NewRule(func(spec Spec) error 
 			return err
 		}
 	}
+	if spec.ClickHouse != nil {
+		if err := typesMatch(v1alpha.ClickHouse); err != nil {
+			return err
+		}
+	}
 	if onlyType == 0 {
 		return errors.New("must have exactly one data source type, none were provided")
 	}
@@ -572,6 +588,26 @@ var queryDelayValidationRule = govy.NewRule(func(spec Spec) error {
 	}
 	return nil
 }).WithErrorCode(errCodeQueryDelayOutOfBounds)
+
+var releaseChannelValidationRule = govy.NewRule(func(spec Spec) error {
+	typ, _ := spec.GetType()
+	if typ == v1alpha.ClickHouse && spec.ReleaseChannel != v1alpha.ReleaseChannelBeta {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be 'beta' for ClickHouse"),
+		)
+	}
+
+	if spec.ReleaseChannel == v1alpha.ReleaseChannelAlpha &&
+		!slices.Contains(v1alpha.GetReleaseChannelAlphaEnabledDataSources(), typ) {
+		return govy.NewPropertyError(jsonpath.New().Name("releaseChannel"),
+			spec.ReleaseChannel,
+			errors.New("must be one of [stable, beta]"),
+		)
+	}
+
+	return nil
+}).WithErrorCode(errCodeUnsupportedReleaseChannel)
 
 // newURLValidator is a helper construct for Agent which only have a simple 'url' field govy.
 func newURLValidator[S any](getter govy.PropertyGetter[string, S]) govy.Validator[S] {

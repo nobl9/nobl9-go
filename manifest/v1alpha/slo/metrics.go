@@ -62,6 +62,7 @@ type MetricSpec struct {
 	Atlas               *AtlasMetric               `json:"atlas,omitempty"`
 	Dash0               *Dash0Metric               `json:"dash0,omitempty"`
 	Zscaler             *ZscalerMetric             `json:"zscaler,omitempty"`
+	ClickHouse          *ClickHouseMetric          `json:"clickHouse,omitempty"`
 }
 
 func (s *Spec) containsIndicatorRawMetric() bool {
@@ -290,6 +291,8 @@ func (m *MetricSpec) DataSourceType() v1alpha.DataSourceType {
 		return v1alpha.Dash0
 	case m.Zscaler != nil:
 		return v1alpha.Zscaler
+	case m.ClickHouse != nil:
+		return v1alpha.ClickHouse
 	default:
 		return 0
 	}
@@ -385,6 +388,8 @@ func (m *MetricSpec) Query() interface{} {
 		return m.Dash0
 	case v1alpha.Zscaler:
 		return m.Zscaler
+	case v1alpha.ClickHouse:
+		return m.ClickHouse
 	default:
 		return nil
 	}
