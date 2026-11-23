@@ -442,19 +442,31 @@ func TestCloudWatch_Failover(t *testing.T) {
 		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required fields", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{}
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 2,
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
-				Code: rules.ErrorCodeOneOf,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
-				Code: rules.ErrorCodeRequired,
-			},
-		)
+		validJSON := getCloudWatchJSON(t, "cloudwatch_valid_json")
+		standardQuery := validRawMetricSLO(v1alpha.CloudWatch).Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch
+		for name, query := range map[string]*CloudWatchMetric{
+			"standard query": standardQuery,
+			"sql query":      {Region: ptr("eu-central-1"), SQL: ptr("SELECT * FROM table")},
+			"json query":     {Region: ptr("eu-central-1"), JSON: validJSON},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.CloudWatch)
+				cloudWatch := *query
+				cloudWatch.Failover = &CloudWatchMetricFailover{}
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &cloudWatch
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 2,
+					testutils.ExpectedError{
+						Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
+						Code: rules.ErrorCodeOneOf,
+					},
+					testutils.ExpectedError{
+						Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+						Code: rules.ErrorCodeRequired,
+					},
+				)
+			})
+		}
 	})
 	t.Run("invalid fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -522,7 +534,8 @@ func TestCloudWatch_Failover(t *testing.T) {
 		}
 		err := validate(slo)
 		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.json",
+			Prop:            "spec.objectives[0].rawMetric.query.cloudWatch.failover.json",
+			ContainsMessage: "exactly one returned data required",
 		})
 	})
 }
