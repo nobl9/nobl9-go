@@ -27,7 +27,7 @@ type CloudWatchMetric struct {
 	Failover   *CloudWatchMetricFailover   `json:"failover,omitempty"`
 }
 
-// CloudWatchMetricFailover is the complete standard query that Nobl9 reads
+// CloudWatchMetricFailover is the complete query (standard, SQL or JSON) that Nobl9 reads
 // instead of [CloudWatchMetric] while its data source (Direct or Agent) is in
 // region failover.
 // No field is taken from the primary query.
@@ -38,9 +38,11 @@ type CloudWatchMetricFailover struct {
 	Stat       *string                     `json:"stat,omitempty"`
 	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
 	AccountID  *string                     `json:"accountId,omitempty"`
+	SQL        *string                     `json:"sql,omitempty"`
+	JSON       *string                     `json:"json,omitempty"`
 }
 
-// Metric returns the standard query that the failover block describes.
+// Metric returns the query that the failover block describes.
 func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
 	return CloudWatchMetric{
 		Region:     f.Region,
@@ -49,6 +51,8 @@ func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
 		Stat:       f.Stat,
 		Dimensions: f.Dimensions,
 		AccountID:  f.AccountID,
+		SQL:        f.SQL,
+		JSON:       f.JSON,
 	}
 }
 
@@ -107,6 +111,15 @@ type cloudWatchMetricDataDimension struct {
 
 var cloudWatchValidation = govy.New[CloudWatchMetric](
 	govy.For(govy.GetSelf[CloudWatchMetric]()).
+		Include(cloudWatchQueryValidation),
+	govy.ForPointer(func(c CloudWatchMetric) *CloudWatchMetricFailover { return c.Failover }).
+		WithName("failover").
+		Include(cloudWatchMetricFailoverValidation),
+)
+
+// cloudWatchQueryValidation validates one query: the primary query or the failover block.
+var cloudWatchQueryValidation = govy.New[CloudWatchMetric](
+	govy.For(govy.GetSelf[CloudWatchMetric]()).
 		Cascade(govy.CascadeModeStop).
 		Rules(govy.NewRule(func(c CloudWatchMetric) error {
 			var configOptions int
@@ -135,20 +148,6 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 		WithName("region").
 		Required().
 		Rules(v1alpha.AWSRegionRules()),
-	govy.ForPointer(func(c CloudWatchMetric) *CloudWatchMetricFailover { return c.Failover }).
-		WithName("failover").
-		Rules(rules.Forbidden[CloudWatchMetricFailover]()).
-		When(
-			func(c CloudWatchMetric) bool { return c.IsSQLConfiguration() || c.IsJSONConfiguration() },
-			govy.WhenDescription("sql or json is provided"),
-		),
-	govy.ForPointer(func(c CloudWatchMetric) *CloudWatchMetricFailover { return c.Failover }).
-		WithName("failover").
-		Include(cloudWatchMetricFailoverValidation).
-		When(
-			func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
-			govy.WhenDescription("standard configuration is provided"),
-		),
 )
 
 // cloudWatchCountMetricsFailoverValidation requires the failover block on both queries
@@ -178,12 +177,8 @@ func hasCloudWatchFailover(metric *MetricSpec) bool {
 }
 
 var cloudWatchMetricFailoverValidation = govy.New[CloudWatchMetricFailover](
-	govy.ForPointer(func(f CloudWatchMetricFailover) *string { return f.Region }).
-		WithName("region").
-		Required().
-		Rules(v1alpha.AWSRegionRules()),
 	govy.For(CloudWatchMetricFailover.Metric).
-		Include(cloudWatchStandardQueryValidation),
+		Include(cloudWatchQueryValidation),
 )
 
 var cloudWatchSQLConfigValidation = govy.New[CloudWatchMetric](
@@ -212,7 +207,7 @@ var cloudWatchJSONConfigValidation = govy.New[CloudWatchMetric](
 	govy.WhenDescription("json is provided"),
 )
 
-var cloudWatchStandardQueryValidation = govy.New[CloudWatchMetric](
+var cloudWatchStandardConfigValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Namespace }).
 		WithName("namespace").
 		Required().
@@ -249,9 +244,7 @@ var cloudWatchStandardQueryValidation = govy.New[CloudWatchMetric](
 		Cascade(govy.CascadeModeStop).
 		Rules(rules.StringNotEmpty()).
 		Rules(rules.StringMatchRegexp(cloudWatchAccountIDRegexp).WithExamples("123456789012")),
-)
-
-var cloudWatchStandardConfigValidation = cloudWatchStandardQueryValidation.When(
+).When(
 	func(c CloudWatchMetric) bool { return c.IsStandardConfiguration() },
 	govy.WhenDescription("either stat, dimensions, metricName or namespace are provided"),
 )
