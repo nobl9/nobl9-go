@@ -1085,6 +1085,30 @@ func TestValidateSpec_Atlas(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_CloudWatch(t *testing.T) {
+	t.Run("passes with failover", func(t *testing.T) {
+		agent := validAgent(v1alpha.CloudWatch)
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-west-2",
+			FailoverRegion: "us-east-2",
+		}
+		err := validate(agent)
+		testutils.AssertNoError(t, agent, err)
+	})
+	t.Run("same failover regions", func(t *testing.T) {
+		agent := validAgent(v1alpha.CloudWatch)
+		agent.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-east-1",
+			FailoverRegion: "us-east-1",
+		}
+		err := validate(agent)
+		testutils.AssertContainsErrors(t, agent, err, 1, testutils.ExpectedError{
+			Prop: "spec.cloudWatch.failover",
+			Code: rules.ErrorCodeUniqueProperties,
+		})
+	})
+}
+
 func validAgent(typ v1alpha.DataSourceType) Agent {
 	spec := validAgentSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s Agent", typ)

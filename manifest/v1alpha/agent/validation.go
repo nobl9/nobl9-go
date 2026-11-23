@@ -320,10 +320,14 @@ var (
 	sumoLogicValidation     = newURLValidator(func(s SumoLogicConfig) string { return s.URL })
 	instanaValidation       = newURLValidator(func(i InstanaConfig) string { return i.URL })
 	influxDBValidation      = newURLValidator(func(i InfluxDBConfig) string { return i.URL })
+	cloudWatchValidation    = govy.New[CloudWatchConfig](
+		govy.ForPointer(func(c CloudWatchConfig) *v1alpha.CloudWatchFailoverConfig { return c.Failover }).
+			WithName("failover").
+			Include(v1alpha.CloudWatchFailoverValidation()),
+	)
 	// Empty configs.
 	thousandEyesValidation = govy.New[ThousandEyesConfig]()
 	bigQueryValidation     = govy.New[BigQueryConfig]()
-	cloudWatchValidation   = govy.New[CloudWatchConfig]()
 	pingdomValidation      = govy.New[PingdomConfig]()
 	redshiftValidation     = govy.New[RedshiftConfig]()
 	genericValidation      = govy.New[GenericConfig]()
