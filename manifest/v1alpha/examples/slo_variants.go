@@ -606,7 +606,7 @@ func (s sloExample) generateMetricVariant(slo v1alphaSLO.SLO) v1alphaSLO.SLO {
 				},
 			}))
 		case metricVariantThreshold + metricSubVariantCloudWatchFailover:
-			// Failover works only with a CloudWatch Direct.
+			// Failover works only with a CloudWatch data source with a failover block.
 			slo.Spec.Indicator.MetricSource.Name = "cloud-watch-failover"
 			slo.Spec.Indicator.MetricSource.Kind = manifest.KindDirect
 			return setThresholdMetric(slo, newMetricSpec(v1alphaSLO.CloudWatchMetric{
