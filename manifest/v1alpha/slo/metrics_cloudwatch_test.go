@@ -442,19 +442,31 @@ func TestCloudWatch_Failover(t *testing.T) {
 		testutils.AssertNoError(t, slo, err)
 	})
 	t.Run("required fields", func(t *testing.T) {
-		slo := validRawMetricSLO(v1alpha.CloudWatch)
-		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{}
-		err := validate(slo)
-		testutils.AssertContainsErrors(t, slo, err, 4,
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
-				Code: rules.ErrorCodeRequired,
-			},
-			testutils.ExpectedError{
-				Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.namespace",
-				Code: rules.ErrorCodeRequired,
-			},
-		)
+		validJSON := getCloudWatchJSON(t, "cloudwatch_valid_json")
+		standardQuery := validRawMetricSLO(v1alpha.CloudWatch).Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch
+		for name, query := range map[string]*CloudWatchMetric{
+			"standard query": standardQuery,
+			"sql query":      {Region: ptr("eu-central-1"), SQL: ptr("SELECT * FROM table")},
+			"json query":     {Region: ptr("eu-central-1"), JSON: validJSON},
+		} {
+			t.Run(name, func(t *testing.T) {
+				slo := validRawMetricSLO(v1alpha.CloudWatch)
+				cloudWatch := *query
+				cloudWatch.Failover = &CloudWatchMetricFailover{}
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &cloudWatch
+				err := validate(slo)
+				testutils.AssertContainsErrors(t, slo, err, 2,
+					testutils.ExpectedError{
+						Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
+						Code: rules.ErrorCodeOneOf,
+					},
+					testutils.ExpectedError{
+						Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover.region",
+						Code: rules.ErrorCodeRequired,
+					},
+				)
+			})
+		}
 	})
 	t.Run("invalid fields", func(t *testing.T) {
 		slo := validRawMetricSLO(v1alpha.CloudWatch)
@@ -477,28 +489,54 @@ func TestCloudWatch_Failover(t *testing.T) {
 			},
 		)
 	})
-	t.Run("forbidden with sql or json", func(t *testing.T) {
-		for name, metric := range map[string]*CloudWatchMetric{
-			"sql": {
-				Region: ptr("eu-central-1"),
-				SQL:    ptr("SELECT * FROM table"),
-			},
-			"json": {
-				Region: ptr("eu-central-1"),
-				JSON:   getCloudWatchJSON(t, "cloudwatch_valid_json"),
-			},
+	t.Run("sql and json", func(t *testing.T) {
+		validJSON := getCloudWatchJSON(t, "cloudwatch_valid_json")
+		sqlQuery := &CloudWatchMetric{Region: ptr("eu-central-1"), SQL: ptr("SELECT * FROM table")}
+		jsonQuery := &CloudWatchMetric{Region: ptr("eu-central-1"), JSON: validJSON}
+		standardQuery := validRawMetricSLO(v1alpha.CloudWatch).Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch
+		sqlFailover := &CloudWatchMetricFailover{Region: ptr("us-west-2"), SQL: ptr("SELECT * FROM table")}
+		jsonFailover := &CloudWatchMetricFailover{Region: ptr("us-west-2"), JSON: validJSON}
+		for name, test := range map[string]struct {
+			Query    *CloudWatchMetric
+			Failover *CloudWatchMetricFailover
+		}{
+			"sql query, sql failover":       {Query: sqlQuery, Failover: sqlFailover},
+			"json query, json failover":     {Query: jsonQuery, Failover: jsonFailover},
+			"standard query, sql failover":  {Query: standardQuery, Failover: sqlFailover},
+			"json query, standard failover": {Query: jsonQuery, Failover: validCloudWatchMetricFailover()},
 		} {
 			t.Run(name, func(t *testing.T) {
 				slo := validRawMetricSLO(v1alpha.CloudWatch)
-				metric.Failover = validCloudWatchMetricFailover()
-				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = metric
+				query := *test.Query
+				query.Failover = test.Failover
+				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch = &query
 				err := validate(slo)
-				testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
-					Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
-					Code: rules.ErrorCodeForbidden,
-				})
+				testutils.AssertNoError(t, slo, err)
 			})
 		}
+	})
+	t.Run("more than one configuration type", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		failover := validCloudWatchMetricFailover()
+		failover.SQL = ptr("SELECT * FROM table")
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = failover
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop: "spec.objectives[0].rawMetric.query.cloudWatch.failover",
+			Code: rules.ErrorCodeOneOf,
+		})
+	})
+	t.Run("invalid json", func(t *testing.T) {
+		slo := validRawMetricSLO(v1alpha.CloudWatch)
+		slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Failover = &CloudWatchMetricFailover{
+			Region: ptr("us-west-2"),
+			JSON:   ptr("[]"),
+		}
+		err := validate(slo)
+		testutils.AssertContainsErrors(t, slo, err, 1, testutils.ExpectedError{
+			Prop:            "spec.objectives[0].rawMetric.query.cloudWatch.failover.json",
+			ContainsMessage: "exactly one returned data required",
+		})
 	})
 }
 
