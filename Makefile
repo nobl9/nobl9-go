@@ -8,7 +8,7 @@ GO_ENUM_VERSION := v0.9.5
 # renovate datasource=github-releases depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION := v2.15.0
 # renovate datasource=go depName=github.com/vburenin/ifacemaker
-IFACEMAKER_VERSION := v1.4.0
+IFACEMAKER_VERSION := v1.5.0
 
 # Check if the program is present in $PATH and install otherwise.
 # ${1} - oneOf{binary,yarn}
