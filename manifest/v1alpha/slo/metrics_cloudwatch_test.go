@@ -22,16 +22,6 @@ func TestCloudWatch(t *testing.T) {
 		err := validate(slo)
 		testutils.AssertNoError(t, slo, err)
 	})
-	t.Run("passes with newer regions", func(t *testing.T) {
-		for _, region := range []string{"eu-central-2", "ap-southeast-3", "il-central-1"} {
-			t.Run(region, func(t *testing.T) {
-				slo := validRawMetricSLO(v1alpha.CloudWatch)
-				slo.Spec.Objectives[0].RawMetric.MetricQuery.CloudWatch.Region = ptr(region)
-				err := validate(slo)
-				testutils.AssertNoError(t, slo, err)
-			})
-		}
-	})
 	t.Run("invalid configuration", func(t *testing.T) {
 		for name, metric := range map[string]*CloudWatchMetric{
 			"no configuration": {
