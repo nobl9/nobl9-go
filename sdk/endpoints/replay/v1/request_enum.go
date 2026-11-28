@@ -68,12 +68,13 @@ func ParseDurationUnit(name string) (DurationUnit, error) {
 }
 
 const (
-	ReplayAvailabilityReasonDatasourceTypeInvalid              ReplayAvailabilityReason = "datasource_type_invalid"
-	ReplayAvailabilityReasonProjectDoesNotExist                ReplayAvailabilityReason = "project_does_not_exist"
-	ReplayAvailabilityReasonDataSourceDoesNotExist             ReplayAvailabilityReason = "data_source_does_not_exist"
-	ReplayAvailabilityReasonIntegrationDoesNotSupportReplay    ReplayAvailabilityReason = "integration_does_not_support_replay"
-	ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay   ReplayAvailabilityReason = "agent_version_does_not_support_replay"
-	ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow   ReplayAvailabilityReason = "max_historical_data_retrieval_too_low"
+	ReplayAvailabilityReasonDatasourceTypeInvalid            ReplayAvailabilityReason = "datasource_type_invalid"
+	ReplayAvailabilityReasonProjectDoesNotExist              ReplayAvailabilityReason = "project_does_not_exist"
+	ReplayAvailabilityReasonDataSourceDoesNotExist           ReplayAvailabilityReason = "data_source_does_not_exist"
+	ReplayAvailabilityReasonIntegrationDoesNotSupportReplay  ReplayAvailabilityReason = "integration_does_not_support_replay"
+	ReplayAvailabilityReasonAgentVersionDoesNotSupportReplay ReplayAvailabilityReason = "agent_version_does_not_support_replay"
+	ReplayAvailabilityReasonMaxHistoricalDataRetrievalTooLow ReplayAvailabilityReason = "max_historical_data_retrieval_too_low"
+	// Deprecated: The Nobl9 API no longer returns it, Replays are always queued.
 	ReplayAvailabilityReasonConcurrentReplayRunsLimitExhausted ReplayAvailabilityReason = "concurrent_replay_runs_limit_exhausted"
 	ReplayAvailabilityReasonUnknownAgentVersion                ReplayAvailabilityReason = "unknown_agent_version"
 	ReplayAvailabilityReasonSingleQueryNotSupported            ReplayAvailabilityReason = "single_query_not_supported"
