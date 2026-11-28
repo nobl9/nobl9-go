@@ -155,6 +155,42 @@ type Timeout struct {
 	Duration `yaml:",inline"`
 }
 
+// DataSourceError reports the latest error type of a data source and how many of its SLOs have it.
+type DataSourceError struct {
+	State DataSourceErrorState `json:"state"`
+	// Since is the time of the first failed request.
+	// Reason, Since, HTTPStatusCode, AffectedSLOs and TotalSLOs are set only for
+	// [DataSourceErrorStateDegraded] and [DataSourceErrorStateAll].
+	Reason         DataSourceErrorReason `json:"reason,omitempty"`
+	Since          time.Time             `json:"since,omitzero"`
+	HTTPStatusCode int                   `json:"httpStatusCode,omitzero"`
+	AffectedSLOs   int                   `json:"affectedSlos,omitzero"`
+	TotalSLOs      int                   `json:"totalSlos,omitzero"`
+}
+
+// DataSourceErrorState reports whether no, some or all SLOs of a data source have the error.
+// [DataSourceErrorStateVerifying] means that the data source was edited after an error
+// and some of its SLOs have no answer yet.
+type DataSourceErrorState string
+
+const (
+	DataSourceErrorStateNone      DataSourceErrorState = "none"
+	DataSourceErrorStateDegraded  DataSourceErrorState = "degraded"
+	DataSourceErrorStateAll       DataSourceErrorState = "all"
+	DataSourceErrorStateVerifying DataSourceErrorState = "verifying"
+)
+
+// DataSourceErrorReason tells which error the data source returns.
+type DataSourceErrorReason string
+
+const (
+	// DataSourceErrorReasonInvalidCredentials means that the data source rejects the credentials (HTTP 401).
+	DataSourceErrorReasonInvalidCredentials DataSourceErrorReason = "invalidCredentials"
+	// DataSourceErrorReasonAccessDenied means that the data source denies access
+	// (HTTP 403, or 402 for an account or license problem).
+	DataSourceErrorReasonAccessDenied DataSourceErrorReason = "accessDenied"
+)
+
 type QueryDelay struct {
 	MinimumAgentVersion string `json:"minimumAgentVersion,omitempty"`
 	Duration            `yaml:",inline"`
