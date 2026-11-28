@@ -75,11 +75,13 @@ const (
 	Dash0
 	// Zscaler is a DataSourceType of type Zscaler.
 	Zscaler
+	// ClickHouse is a DataSourceType of type ClickHouse.
+	ClickHouse
 )
 
 var ErrInvalidDataSourceType = errors.New("not a valid DataSourceType")
 
-const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycombLogicMonitorAzurePrometheusCoralogixAtlasDash0Zscaler"
+const _DataSourceTypeName = "PrometheusDatadogNewRelicAppDynamicsSplunkLightstepSplunkObservabilityDynatraceThousandEyesGraphiteBigQueryElasticsearchOpenTSDBGrafanaLokiCloudWatchPingdomAmazonPrometheusRedshiftSumoLogicInstanaInfluxDBGoogleCloudMonitoringAzureMonitorGenericHoneycombLogicMonitorAzurePrometheusCoralogixAtlasDash0ZscalerClickHouse"
 
 // DataSourceTypeValues returns a list of the values for DataSourceType
 func DataSourceTypeValues() []DataSourceType {
@@ -115,6 +117,7 @@ func DataSourceTypeValues() []DataSourceType {
 		Atlas,
 		Dash0,
 		Zscaler,
+		ClickHouse,
 	}
 }
 
@@ -150,6 +153,7 @@ var _DataSourceTypeMap = map[DataSourceType]string{
 	Atlas:                 _DataSourceTypeName[289:294],
 	Dash0:                 _DataSourceTypeName[294:299],
 	Zscaler:               _DataSourceTypeName[299:306],
+	ClickHouse:            _DataSourceTypeName[306:316],
 }
 
 // String implements the Stringer interface.
@@ -199,6 +203,7 @@ var _DataSourceTypeValue = map[string]DataSourceType{
 	_DataSourceTypeName[289:294]: Atlas,
 	_DataSourceTypeName[294:299]: Dash0,
 	_DataSourceTypeName[299:306]: Zscaler,
+	_DataSourceTypeName[306:316]: ClickHouse,
 }
 
 // ParseDataSourceType attempts to convert a string to a DataSourceType.
