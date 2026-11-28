@@ -337,9 +337,12 @@ func (m *MetricSpec) Query() interface{} {
 		}
 		// Dimensions are sorted so that metric_query = '...':jsonb comparison was insensitive to the order in slice.
 		// It assumes that all dimensions' names are unique (ensured by validation).
-		sort.Slice(cloudWatchCopy.Dimensions, func(i, j int) bool {
-			return *cloudWatchCopy.Dimensions[i].Name < *cloudWatchCopy.Dimensions[j].Name
-		})
+		cloudWatchCopy.Dimensions = sortedDimensions(cloudWatchCopy.Dimensions)
+		if cloudWatchCopy.Failover != nil {
+			failoverCopy := *cloudWatchCopy.Failover
+			failoverCopy.Dimensions = sortedDimensions(failoverCopy.Dimensions)
+			cloudWatchCopy.Failover = &failoverCopy
+		}
 		return cloudWatchCopy
 	case v1alpha.Pingdom:
 		return m.Pingdom

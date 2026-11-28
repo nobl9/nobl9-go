@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/nobl9/govy/pkg/govy"
@@ -23,6 +24,42 @@ type CloudWatchMetric struct {
 	AccountID  *string                     `json:"accountId,omitempty"`
 	SQL        *string                     `json:"sql,omitempty"`
 	JSON       *string                     `json:"json,omitempty"`
+	Failover   *CloudWatchMetricFailover   `json:"failover,omitempty"`
+}
+
+// CloudWatchMetricFailover is the complete query (standard, SQL or JSON) that Nobl9 reads
+// instead of [CloudWatchMetric] while its data source (Direct or Agent) is in
+// region failover.
+// No field is taken from the primary query.
+type CloudWatchMetricFailover struct {
+	Region     *string                     `json:"region"`
+	Namespace  *string                     `json:"namespace,omitempty"`
+	MetricName *string                     `json:"metricName,omitempty"`
+	Stat       *string                     `json:"stat,omitempty"`
+	Dimensions []CloudWatchMetricDimension `json:"dimensions,omitempty"`
+	AccountID  *string                     `json:"accountId,omitempty"`
+	SQL        *string                     `json:"sql,omitempty"`
+	JSON       *string                     `json:"json,omitempty"`
+}
+
+// Metric returns the query that the failover block describes.
+func (f CloudWatchMetricFailover) Metric() CloudWatchMetric {
+	return CloudWatchMetric{
+		Region:     f.Region,
+		Namespace:  f.Namespace,
+		MetricName: f.MetricName,
+		Stat:       f.Stat,
+		Dimensions: f.Dimensions,
+		AccountID:  f.AccountID,
+		SQL:        f.SQL,
+		JSON:       f.JSON,
+	}
+}
+
+func sortedDimensions(dimensions []CloudWatchMetricDimension) []CloudWatchMetricDimension {
+	sorted := slices.Clone(dimensions)
+	slices.SortFunc(sorted, func(a, b CloudWatchMetricDimension) int { return strings.Compare(*a.Name, *b.Name) })
+	return sorted
 }
 
 // IsStandardConfiguration returns true if the struct represents CloudWatch standard configuration.
@@ -74,6 +111,15 @@ type cloudWatchMetricDataDimension struct {
 
 var cloudWatchValidation = govy.New[CloudWatchMetric](
 	govy.For(govy.GetSelf[CloudWatchMetric]()).
+		Include(cloudWatchQueryValidation),
+	govy.ForPointer(func(c CloudWatchMetric) *CloudWatchMetricFailover { return c.Failover }).
+		WithName("failover").
+		Include(cloudWatchMetricFailoverValidation),
+)
+
+// cloudWatchQueryValidation validates one query: the primary query or the failover block.
+var cloudWatchQueryValidation = govy.New[CloudWatchMetric](
+	govy.For(govy.GetSelf[CloudWatchMetric]()).
 		Cascade(govy.CascadeModeStop).
 		Rules(govy.NewRule(func(c CloudWatchMetric) error {
 			var configOptions int
@@ -101,16 +147,38 @@ var cloudWatchValidation = govy.New[CloudWatchMetric](
 	govy.ForPointer(func(c CloudWatchMetric) *string { return c.Region }).
 		WithName("region").
 		Required().
+		Rules(v1alpha.AWSRegionRules()),
+)
+
+// cloudWatchCountMetricsFailoverValidation requires the failover block on both queries
+// of a ratio or on neither, so that a failover never moves only one side of the ratio.
+var cloudWatchCountMetricsFailoverValidation = govy.New[CountMetricsSpec](
+	govy.For(govy.GetSelf[CountMetricsSpec]()).
 		Rules(
-			rules.StringMaxLength(255),
-			rules.OneOf(func() []string {
-				codes := make([]string, 0, len(v1alpha.AWSRegions()))
-				for _, region := range v1alpha.AWSRegions() {
-					codes = append(codes, region.Code)
+			govy.NewRule(func(c CountMetricsSpec) error {
+				metric, name := c.GoodMetric, goodMetric
+				if c.BadMetric != nil {
+					metric, name = c.BadMetric, badMetric
 				}
-				return codes
-			}()...),
+				if hasCloudWatchFailover(metric) != hasCloudWatchFailover(c.TotalMetric) {
+					return fmt.Errorf(
+						"'cloudWatch.failover' must be set for both '%s' and 'total' metrics or for neither", name)
+				}
+				return nil
+			}).WithErrorCode(rules.ErrorCodeEqualTo),
 		),
+).When(
+	whenCountMetricsIs(v1alpha.CloudWatch),
+	govy.WhenDescription("countMetrics is cloudWatch"),
+)
+
+func hasCloudWatchFailover(metric *MetricSpec) bool {
+	return metric != nil && metric.CloudWatch != nil && metric.CloudWatch.Failover != nil
+}
+
+var cloudWatchMetricFailoverValidation = govy.New[CloudWatchMetricFailover](
+	govy.For(CloudWatchMetricFailover.Metric).
+		Include(cloudWatchQueryValidation),
 )
 
 var cloudWatchSQLConfigValidation = govy.New[CloudWatchMetric](
