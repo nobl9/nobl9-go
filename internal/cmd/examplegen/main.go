@@ -72,6 +72,7 @@ func getV1alphaExamplesConfigs() []examplesGeneratorConfig {
 		v1alphaExamples.BudgetAdjustment(),
 		v1alphaExamples.DataExport(),
 		v1alphaExamples.RoleBinding(),
+		v1alphaExamples.UserGroup(),
 		v1alphaExamples.Report(),
 	}
 	for _, examples := range allExamples {

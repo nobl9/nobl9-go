@@ -1,8 +1,17 @@
-apiVersion: n9/v1alpha
-kind: UserGroup
-metadata:
-  name: my-group
-spec:
-  displayName: My Group
-  members:
-  - id: some-id
+# manual group with existing organization users
+- apiVersion: n9/v1alpha
+  kind: UserGroup
+  metadata:
+    name: platform-team
+  spec:
+    displayName: Platform Team
+    members:
+    - id: 00u2y4e4atkzaYkXP4x8
+# manual group with no members
+- apiVersion: n9/v1alpha
+  kind: UserGroup
+  metadata:
+    name: empty-team
+  spec:
+    displayName: Empty Team
+    members: []
