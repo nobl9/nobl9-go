@@ -34,6 +34,11 @@ func Direct() []Example {
 		}
 		example.Object = example.Generate()
 		examples = append(examples, example)
+		if typ == v1alpha.CloudWatch {
+			example.SubVariant = subVariantCloudWatchFailover
+			example.Object = example.Generate()
+			examples = append(examples, example)
+		}
 	}
 	return examples
 }
@@ -116,6 +121,11 @@ func (d directExample) generateVariant(direct v1alphaDirect.Direct) v1alphaDirec
 		direct.Spec.ReleaseChannel = v1alpha.ReleaseChannelBeta
 		direct.Spec.CloudWatch = &v1alphaDirect.CloudWatchConfig{
 			RoleARN: "arn:aws:iam::123456578901:role/awsCrossAccountProdCloudwatch-prod-app",
+		}
+		if d.SubVariant == subVariantCloudWatchFailover {
+			direct.Metadata.Name += "-failover"
+			direct.Spec.Description += " with region failover"
+			direct.Spec.CloudWatch.Failover = cloudWatchFailoverExampleConfig()
 		}
 	case v1alpha.Datadog:
 		direct.Spec.Datadog = &v1alphaDirect.DatadogConfig{

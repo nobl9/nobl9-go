@@ -1,5 +1,10 @@
 package v1alpha
 
+import (
+	"github.com/nobl9/govy/pkg/govy"
+	"github.com/nobl9/govy/pkg/rules"
+)
+
 type AWSRegion struct {
 	RegionName string `json:"regionName"`
 	Code       string `json:"code"`
@@ -48,6 +53,24 @@ func AWSRegions() []AWSRegion {
 		{RegionName: "South America (Chile)", Code: "sa-west-1"},
 		{RegionName: "South America (São Paulo)", Code: "sa-east-1"},
 	}
+}
+
+// AWSRegionCodes returns the codes of [AWSRegions].
+func AWSRegionCodes() []string {
+	regions := AWSRegions()
+	codes := make([]string, 0, len(regions))
+	for _, region := range regions {
+		codes = append(codes, region.Code)
+	}
+	return codes
+}
+
+// AWSRegionRules validates that a value is one of [AWSRegionCodes].
+func AWSRegionRules() govy.RuleSet[string] {
+	return govy.NewRuleSet(
+		rules.StringMaxLength(255),
+		rules.OneOf(AWSRegionCodes()...),
+	)
 }
 
 func IsValidRegion(code string, regions []AWSRegion) bool {

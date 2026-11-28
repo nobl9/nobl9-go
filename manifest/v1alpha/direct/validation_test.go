@@ -1226,6 +1226,60 @@ func TestValidateSpec_AzurePrometheus(t *testing.T) {
 	})
 }
 
+func TestValidateSpec_CloudWatch(t *testing.T) {
+	t.Run("passes with failover", func(t *testing.T) {
+		direct := validDirect(v1alpha.CloudWatch)
+		direct.Spec.CloudWatch.Failover = &v1alpha.CloudWatchFailoverConfig{
+			PrimaryRegion:  "us-west-2",
+			FailoverRegion: "us-east-2",
+		}
+		err := validate(direct)
+		testutils.AssertNoError(t, direct, err)
+	})
+	for name, test := range map[string]struct {
+		Failover    v1alpha.CloudWatchFailoverConfig
+		Errors      []testutils.ExpectedError
+		ErrorsCount int
+	}{
+		"required regions": {
+			Failover:    v1alpha.CloudWatchFailoverConfig{},
+			ErrorsCount: 2,
+			Errors: []testutils.ExpectedError{
+				{Prop: "spec.cloudWatch.failover.primaryRegion", Code: rules.ErrorCodeRequired},
+				{Prop: "spec.cloudWatch.failover.failoverRegion", Code: rules.ErrorCodeRequired},
+			},
+		},
+		"invalid regions": {
+			Failover: v1alpha.CloudWatchFailoverConfig{
+				PrimaryRegion:  "us-east-9",
+				FailoverRegion: "mars-west-1",
+			},
+			ErrorsCount: 2,
+			Errors: []testutils.ExpectedError{
+				{Prop: "spec.cloudWatch.failover.primaryRegion", Code: rules.ErrorCodeOneOf},
+				{Prop: "spec.cloudWatch.failover.failoverRegion", Code: rules.ErrorCodeOneOf},
+			},
+		},
+		"same regions": {
+			Failover: v1alpha.CloudWatchFailoverConfig{
+				PrimaryRegion:  "us-east-1",
+				FailoverRegion: "us-east-1",
+			},
+			ErrorsCount: 1,
+			Errors: []testutils.ExpectedError{
+				{Prop: "spec.cloudWatch.failover", Code: rules.ErrorCodeUniqueProperties},
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			direct := validDirect(v1alpha.CloudWatch)
+			direct.Spec.CloudWatch.Failover = &test.Failover
+			err := validate(direct)
+			testutils.AssertContainsErrors(t, direct, err, test.ErrorsCount, test.Errors...)
+		})
+	}
+}
+
 func validDirect(typ v1alpha.DataSourceType) Direct {
 	spec := validDirectSpec(typ)
 	spec.Description = fmt.Sprintf("Example %s direct", typ)
