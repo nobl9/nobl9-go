@@ -226,6 +226,18 @@ func TestDataSourceError_Serialization(t *testing.T) {
 			expectedJSON: `{"state":"all","reason":"accessDenied","since":"2026-10-19T09:30:00Z",` +
 				`"httpStatusCode":402,"affectedSlos":2,"totalSlos":2}`,
 		},
+		"data source unreachable has the cause and no status code": {
+			value: DataSourceError{
+				State:        DataSourceErrorStateAll,
+				Reason:       DataSourceErrorReasonDataSourceUnreachable,
+				Since:        time.Date(2026, 10, 18, 9, 30, 0, 0, time.UTC),
+				Cause:        DataSourceUnreachableCauseHostNotFound,
+				AffectedSLOs: 2,
+				TotalSLOs:    2,
+			},
+			expectedJSON: `{"state":"all","reason":"dataSourceUnreachable","since":"2026-10-18T09:30:00Z",` +
+				`"cause":"hostNotFound","affectedSlos":2,"totalSlos":2}`,
+		},
 		"none has only the state": {
 			value:        DataSourceError{State: DataSourceErrorStateNone},
 			expectedJSON: `{"state":"none"}`,
